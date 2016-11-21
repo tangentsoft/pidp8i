@@ -1,0 +1,120 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:		pidp
+# Required-Start:	$syslog
+# Required-Stop:	$syslog
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:	PiDP-8 emulator
+### END INIT INFO
+
+# Init script for Oscar Vermeulen's pidp8 emulator front panel.  
+# Author: Mark G Thomas <mark@misty.com> 2015-05-09
+#
+# Suggestions:
+#  - Relocate from /home/pi to /opt/pidp8 (assumed done).
+#  - Rename simh from pdp to pidp8, or something else more distinctive so it's easier to
+#      avoid starting multiples.
+#  - Provide locking within pidp8 to avoid front-panel GPIO access contention.
+#  - Reorganize pidp directory to /opt/pidp8/bin, /opt/pidp8/libexec, etc...
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+umask 022
+. /lib/lsb/init-functions
+
+# Selected pidp8 simh startup script.
+#
+#pidpscript="/opt/pidp8/bootscripts/os8rk05.script"
+#pidpscript="focal.script"
+
+# Assuming pidp and scanswitch are in /opt/pidp8
+#
+pidp="/opt/pidp8/bin/pidp8"
+scanswitch="/opt/pidp8/bin/scanswitch"
+
+pidp_dir=`dirname $pidp`
+pidp_bin=`basename $pidp`
+
+# Requires screen utility for detached pidp console functionality.
+#
+test -x /usr/bin/screen || ( echo "screen not found" && exit 0 )
+test -x $scanswitch || ( echo "scanswitch not found" && exit 0 )
+test -x $pidp || ( echo "pidp8 not found" && exit 0 )
+
+# Check if pidp is already runnning under screen.
+#
+is_running() {
+	procs=`screen -ls pidp | egrep '[0-9]+\.pidp' | wc -l`
+	return $procs
+}
+
+do_start() {
+	is_running
+	if [ $? -gt 0 ]; then
+	    echo "PiDP-8 is already running, not starting again." >&2
+	    exit 0
+	fi
+
+	$scanswitch >/dev/null 2>&1
+	script=$?
+	if [ $script -ne 8 ]; then
+	    pidpscript="/opt/pidp8/bootscripts/""$script"".script"
+	    echo "$pidpscript"
+	else
+	    echo "PiDP-8 STOP switch detected, aborting." >&2
+	    exit 0
+	fi
+
+#	pgrep "$pidp_bin" >/dev/null 2>&1
+#	if [ $? -eq 0 ]; then
+#	    echo "Another pidp process is running, not starting again." >&2
+#	    exit 0
+#	fi
+
+	log_daemon_msg "Starting PiDP-8" "pidp"
+	cd $pidp_dir
+	screen -dmS pidp ./$pidp_bin $pidpscript
+	status=$?
+	log_end_msg $status
+	return $status
+}
+
+do_stop() {
+	is_running
+	if [ $? -eq 0 ]; then
+	    echo "PiDP-8 is already stopped." >&2
+	    status=1
+	else
+	    log_daemon_msg "Stopping PiDP-8" "pidp"
+	    screen -S pidp -X quit
+	    status=$?
+	    log_end_msg $status
+	fi
+	return $status
+}
+
+case "$1" in
+  start)
+	do_start
+	;;
+
+  stop)
+	do_stop
+	;;
+
+  restart)
+	do_stop
+	do_start
+	;;
+
+  status)
+	screen -ls pidp | egrep '[0-9]+\.pidp'
+	;;
+
+  *)
+	log_action_msg "Usage: /etc/init.d/pidp {start|stop|restart|status}" || true
+	exit 1
+esac
+
+exit 0
