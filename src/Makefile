@@ -15,6 +15,7 @@ LIBS =  -lm -ldl -lpthread -lrt
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 pidp8: $(OBJ)
+	mkdir -p ../bin
 	$(CC) -o ../bin/$@ $^ $(CFLAGS) $(LIBS)
 
 # next two lines force make to always recompile gpio.c
