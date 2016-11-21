@@ -1,6 +1,6 @@
 load ../imagefiles/tss8/tss8_init.bin
 set rf enabled
 set df disabled
-attach ../rf imagefiles/tss8/tss8_rf.dsk
+attach rf ../imagefiles/tss8/tss8_rf.dsk
 attach ttix 4000
 run 24200
