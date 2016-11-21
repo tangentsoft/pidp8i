@@ -1,7 +1,9 @@
 # CC=gcc
 
 CFLAGS=-std=c99 -U__STRICT_ANSI__  -Wno-unused-result -D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -I . -I PDP8 -DPIDP8
-# append to above for 'serial mod': -DSERIALSETUP
+
+# uncomment below for 'serial mod'
+#CFLAGS+=-DSERIALSETUP
 
 DEPS = gpio.h sim_console.h sim_ether.h sim_rev.h sim_tape.h sim_tmxr.h scp.h sim_defs.h sim_fio.h sim_sock.h sim_timer.h PDP8/pdp8_defs.h
 
