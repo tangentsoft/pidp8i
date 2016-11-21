@@ -188,6 +188,7 @@
 */
 
 #include "pdp8_defs.h"
+#include <unistd.h>
 
 #define PCQ_SIZE        64                              /* must be 2**n */
 #define PCQ_MASK        (PCQ_SIZE - 1)
@@ -201,6 +202,7 @@
 #define HIST_PC         0x40000000
 #define HIST_MIN        64
 #define HIST_MAX        65536
+#define DECAY		0.01
 
 typedef struct {
     int32               pc;
@@ -246,11 +248,14 @@ extern uint32 sim_brk_types, sim_brk_dflt, sim_brk_summ; /* breakpoint info */
 extern DEVICE *sim_devices[];
 extern FILE *sim_log;
 extern t_bool sim_idle_enab;
+extern float brtval[96];
 
 /* ------------------------------------------------------------------------------------------------- */
 extern uint32 switchstatus[3]; // bitfields: 3 rows of up to 12 switches
 extern uint32 ledstatus[8];	// bitfields: 8 ledrows of up to 12 LEDs
-void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF);
+extern uint32 syncstatus[8];
+void setleds(uint32 sPC, uint32 sMA, uint16 sMB, uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sTT);
+uint16 lctr=0;
 /* ------------------------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------------------------------- */
 int swStop = 0, swExam = 0, swDep = 0, swCont2 = 0, swStart = 0, swSingStep = 0, swAttach = 0;
@@ -367,8 +372,8 @@ reason = 0;
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 int swDevice;
 char sScript[256];
-MA = 0;	// have to add this to avoid crash when stop switch is set at start - MA would be undefined in setleds
-setleds(PC, MA, MB, LAC, MQ, IF, DF); // note MB used // light up leds for 1st time, only needed when stop switch set at start
+MA = MB = IR = 0;	// have to add this to avoid crash when stop switch is set at start - MA would be undefined in setleds
+setleds(PC, MA, MB, MB, LAC, MQ, IF, DF, 0); // note MB used // light up leds for 1st time, only needed when stop switch set at start
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -379,9 +384,6 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 awfulHackFlag = 0; // no do script pending. Did I mention awful?
-
-ledstatus[5] |= 1<<3; // set fetch
-ledstatus[5] &= ~(1<<2); // clear execute
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -399,7 +401,7 @@ ledstatus[5] &= ~(1<<2); // clear execute
 if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 {
 	if (swAttach==0)		// if this is the first time we detect it,
-	{	
+	{
 		swAttach=1;		// make this a momentary switch in software
 
 		// 1. Scan DF to see if any devices need to be mounted (DF=0 --> nothing to mount)
@@ -432,10 +434,17 @@ if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 
 		if (swDevice!=0)
 		{
-			sprintf(sScript,"/opt/pidp8/bootscripts/%d.script", swDevice);	// make filename
+			sprintf(sScript,"../bootscripts/%d.script", swDevice);	// make filename
 			printf("\r\n\nRebooting %s\r\n\n", sScript);
 			reason = STOP_HALT;
-			awfulHackFlag = swDevice;	// this triggers a do command after leaving the simulator run. 
+			awfulHackFlag = swDevice;	// this triggers a do command after leaving the simulator run.
+			PC = saved_PC = 0;                                 /* Clear all registers */
+            IF = saved_PC = 0;
+            DF = saved_DF = 0;
+            LAC = saved_LAC = 0;
+            MQ = saved_MQ = 0;
+            int_req = 0;
+
 		}
 
 		// 3. Scan for shutdown command (Sing_Step + Sing_inst + Start)
@@ -444,26 +453,26 @@ if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 		{
 			printf("\r\nShutdown\r\n\r\n");
 			reason = STOP_HALT;
-			awfulHackFlag = 8;	// this triggers an exit command after leaving the simulator run. 
+			awfulHackFlag = 8;	// this triggers an exit command after leaving the simulator run.
 			if(spawn_cmd ((int32) 0, " shutdown -h -t 1 now")!=SCPE_OK)		// issue simh attach command (no sudo in buildroot)
 				printf("\r\n\n\nshutdown failed\r\n\n");
 		}
 
 		// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Cont)
-	
+
 		if (((switchstatus[2] & 0x0080)==0) && ((switchstatus[2] & 0x0010)==0))
 		{
 			printf("\r\nReboot\r\n\r\n");
 			reason = STOP_HALT;
-			awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run. 
+			awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
 			if(spawn_cmd ((int32) 0, " reboot")!=SCPE_OK) {// no sudo in buildroot env
 				printf("\r\n\n\nreboot failed\r\n\n");
 			}
 		}
-	
-	
+
+
 		// 5. Scan for mount command (Sing_Step + Sing_Inst + Load Add)
-	
+
 		if ((switchstatus[2] & 0x0410)==0)
 		{
 			printf("\r\nMount\r\n\r\n");
@@ -471,9 +480,9 @@ if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 				printf("\r\n\n\nmount USB drive failed\r\n\n");
 			}
 		}
-	
+
 		// 6. Scan for unmount command (Sing_Step + Sing_Inst + Deposit)
-	
+
 		if ((switchstatus[2] & 0x0210)==0)
 		{
 			printf("\r\nUnmount\r\n\r\n");
@@ -498,7 +507,7 @@ if ((switchstatus[2] & 0x0800)==0)	// START switch activated
 	        int_req = int_req & ~INT_ION;		// disable ION. says so in handbook, true?
 		LAC = 0;				// Clear LAC;
 		// IR = 0 				// clear IR (handbook says so but would be weird)
-		MB = 0;					// clear MB. 
+		MB = 0;					// clear MB.
 		MA = PC & 07777;			// transfer PC into MA  (not necessary because IR is redone in code below?
 		swStop = 0;
 		swStart = 1;				// single shot
@@ -563,10 +572,11 @@ if (swExam==1)
 
 
 // do what needs to be done in STOP mode:
-if (swStop==1) 
-{	setleds(PC, MA, MB, LAC, MQ, IF, DF); 		// note MB used in this call, not M[MA]
-	sim_interval = sim_interval - 1;		// otherwise, CTRL-E will never be acted upon in stop mode
-							// WARNING: THIS MAY LEAD TO TROUBLE. MAYBE?
+if (swStop==1)
+{
+	setleds(PC, MA, M[MA] , IR, LAC, MQ, IF, DF, 0); 		// note M[MA] used in this call, not MB
+	sim_interval = sim_interval - 1;		                // otherwise, CTRL-E will never be acted upon in stop mode
+                                                            // WARNING: THIS MAY LEAD TO TROUBLE. MAYBE?
 	goto skip;					// a goto is period correct methinks
 }
 
@@ -591,8 +601,7 @@ if (swStop==1)
     IR = M[MA];                                         /* fetch instruction */
 
 //PC increment was moved down before, bad idea? now is where it originally was.
-
-    PC = (PC + 1) & 07777;                              /* increment PC */
+    setleds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, 0);	// State=0:Fetch
 
     int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
     sim_interval = sim_interval - 1;
@@ -600,13 +609,10 @@ if (swStop==1)
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-setleds(PC, MA, M[MA], LAC, MQ, IF, DF); // note M[MA] used not MB
-
 if  ((switchstatus[2] & 0x040)==0)  		// STOP switch activated
 {	swStop = 1;
-	goto skip;	
+	goto skip;
 }
-
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -632,6 +638,7 @@ if ((switchstatus[2] & 0x0010)==0)		// SING_INST switch activated
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
+    PC = (PC + 1) & 07777;                              /* increment PC */
 
 /* Instruction decoding.
 
@@ -651,8 +658,7 @@ if ((switchstatus[2] & 0x0010)==0)		// SING_INST switch activated
 */
 
 /* --------------------------------------------------------------------------------------------------------- */
-ledstatus[5] |= 1<<2; // set execute
-ledstatus[5] &= ~(1<<3); // clear fetch
+
 /* --------------------------------------------------------------------------------------------------------- */
 
 
@@ -1269,7 +1275,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
    1x001        SCA + SCL       DAD
    1x010        SCA + MUY       DST
    1x011        SCA + DVI       SWBA            NOP if not detected earlier
-   1x100        SCA + NMI       DPSZ            
+   1x100        SCA + NMI       DPSZ
    1x101        SCA + SHL       DPIC            must be combined with MQA!MQL
    1x110        SCA + ASR       DCM             must be combined with MQA!MQL
    1x111        SCA + LSR       SAM
@@ -1472,8 +1478,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
 /* --------------------------------------------------------------------------------------------------------- */
 // the IOT ION, IOF do not light pause, anything else does:
-if (device>02)
-	ledstatus[6] |= 1<<8; // set pause led
 /* --------------------------------------------------------------------------------------------------------- */
 
         pulse = IR & 07;                                /* pulse = IR<9:11> */
@@ -1600,7 +1604,7 @@ if (device>02)
                     break;
                     }                                   /* end switch device */
                 break;
-            
+
             default:
                 reason = stop_inst;
                 break;
@@ -1633,9 +1637,8 @@ if (device>02)
 
 /* --------------------------------------------------------------------------------------------------------- */
 // Any other device will trigger IOP --> light pause:
-ledstatus[6] |= 1<<8; // set pause led
 /* --------------------------------------------------------------------------------------------------------- */
-
+		setleds(PC, MA, MB, IR, LAC, MQ, IF, DF, 2); // State 2:Pause
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
                 if (iot_data & IOT_SKP)
@@ -1643,7 +1646,7 @@ ledstatus[6] |= 1<<8; // set pause led
 /* --------------------------------------------------------------------------------------------------------- */
 		else
 		{
-// simh does not distinguish between the various Data Break types. 
+// simh does not distinguish between the various Data Break types.
 // WC, CA and Break are lit up jointly on the PiDP. Although this can be improved upon.
 
 //ledstatus[5] |= 1<<0; // set WC led
@@ -1659,14 +1662,20 @@ ledstatus[6] |= 1<<8; // set pause led
             break;
             }                                           /* end switch device */
 /* --------------------------------------------------------------------------------------------------------- */
-ledstatus[6] &= ~(1<<8); // clear pause led
-
-ledstatus[5] &= ~(1<<0); // clear WC led
-ledstatus[6] &= ~(1<<11); // clear CA led
-ledstatus[6] &= ~(1<<10); // clear Break led
+//ledstatus[5] &= ~(1<<0); // clear WC led
+//ledstatus[6] &= ~(1<<11); // clear CA led
+//ledstatus[6] &= ~(1<<10); // clear Break led
 /* --------------------------------------------------------------------------------------------------------- */
         break;                                          /* end case IOT */
         }                                               /* end switch opcode */
+
+/* ------------------------------------------------------------------------- */
+
+	if (IR<05000)
+		setleds(PC, MA, MB, IR, LAC, MQ, IF, DF, 1); // State 1:Execute
+
+/* ------------------------------------------------------------------------- */
+
 
 /* ------------------------------------------------------------------------- */
 skip:	;	// goto label
@@ -1915,8 +1924,15 @@ return SCPE_OK;
 
 /* ------------------------------------------------------------------------------------ */
 uint32 tempLeds=0;
-void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF)
+void setleds(uint32 sPC, uint32 sMA, uint16 sMB, uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sTT)
 {
+int row,col,msk,m;
+float *p;
+
+	if (++lctr<1049)
+	 return;
+	lctr=0;
+	//printf("%o,%d\r\n",sPC,sTT);
 
 	ledstatus[0] = (uint32) sPC;
 	ledstatus[1] = (uint32) sMA;
@@ -1925,12 +1941,15 @@ void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sI
 	ledstatus[4] = (uint32) sMQ;
 
 	// instruction leds: decode instruction in memory (could also be found in IR)
-//this *should* be found in IR, methinks. Just from memory is possibly problematic
+	//this *should* be found in IR, methinks. Just from memory is possibly problematic
 
 //	tempLeds = ledstatus[5] & 12; // preserve value of fetch/execute handled in main loop
-	tempLeds = ledstatus[5] & 13; // preserve value of fetch/execute/WC handled in main loop
+//	tempLeds = ledstatus[5] & 13; // preserve value of fetch/execute/WC handled in main loop
+	tempLeds = 0;		      // Clear all lights
+	if (sTT==0) tempLeds |= 1<<3; // set fetch
+	if (sTT==1) tempLeds |= 1<<2; // set execute
 
-	switch((M[sMA] & 0xE00) >> 9)
+	switch((sIR & 0xE00) >> 9)
 	{
 		case 0:	tempLeds+=(1<<11); break;		// 000 AND
 		case 1:	tempLeds+=(1<<10); break;		// 001 TAD
@@ -1943,14 +1962,15 @@ void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sI
 		default: printf("instruction error in multiplexer");	// debug only, remove
 	}
 
-	if ( ((M[sMA] & 0xE00) >> 9) <= 5)	// <=5: all memory reference instructions
-		if ((M[sMA] & 0x100) != 0)	// if fourth bit is set, this is indirect addressing, so...
+	if ( ((sIR & 0xE00) >> 9) <= 5)	// <=5: all memory reference instructions
+		if ((sIR & 0x100) != 0)	// if fourth bit is set, this is indirect addressing, so...
 		tempLeds += (1<<1);		// ...light defer
-		
+
 	ledstatus[5]=tempLeds;
 
-//	tempLeds = 0; //ledstatus[6]; // want to preserve value of some leds set in main loop
-	tempLeds = ledstatus[6] & 0xd00; // want to preserve value of CA/break/pause set in main loop
+	tempLeds = 0; //ledstatus[6]; // want to preserve value of some leds set in main loop
+//	tempLeds = ledstatus[6] & 0xd00; // want to preserve value of CA/break/pause set in main loop
+	if (sTT==2) tempLeds |= 1<<8; // set pause led
 
 							// CAddr led - handled in main loop
 							// Break led - handled in main loop
@@ -1966,6 +1986,12 @@ void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sI
 	tempLeds += (uint32) ((sLAC & 010000)>>7); // shift down from bit 12 to bit 8
 
 	ledstatus[7]=tempLeds;
+
+	for (row=m=0,p=brtval;row<8;row++)
+		for (col=0,msk=1;col<12;col++,p++,m++,msk=msk<<1) {
+			if (ledstatus[row]&msk) (*p)+=(32.0-*p)*DECAY;
+				else (*p)-=*p*DECAY;
+		}
 
 }
 /* ------------------------------------------------------------------------------------ */
@@ -2031,7 +2057,7 @@ int mountUSBStickFile(int devNo, char *devCode, char *sPath)
 	{	printf("\r\nNo unmounted %s file found\r\n", devCode);	return 1;	}
 
 	fp = fopen(sFoundFile, "r");			// check file is OK
-	if (fp==NULL) 
+	if (fp==NULL)
 	{	printf("\r\nError opening file %s\r\n", sFoundFile);	return 1;	}
 	fclose (fp);
 

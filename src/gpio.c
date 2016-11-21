@@ -20,9 +20,9 @@
 #include <stdint.h>
 #include "gpio.h"
 
-typedef unsigned int    uint32; 
-typedef signed int      int32; 
-typedef unsigned short    uint16; 
+typedef unsigned int    uint32;
+typedef signed int      int32;
+typedef unsigned short    uint16;
 
 void short_wait(void);		// used as pause between clocked GPIO changes
 unsigned bcm_host_get_peripheral_address(void);		// find Pi 2 or Pi's gpio base address
@@ -30,7 +30,7 @@ static unsigned get_dt_ranges(const char *filename, unsigned offset); // Pi 2 de
 
 struct bcm2835_peripheral gpio;	// needs initialisation
 
-long intervl = 300000;		// light each row of leds this long
+long intervl = 5000;		// light each row of leds this long
 
 uint32 switchstatus[3] = { 0 }; // bitfields: 3 rows of up to 12 switches
 uint32 ledstatus[8] = { 0 };	// bitfields: 8 ledrows of up to 12 LEDs
@@ -41,20 +41,20 @@ uint32 ledstatus[8] = { 0 };	// bitfields: 8 ledrows of up to 12 LEDs
 #define INP_GPIO(g)   *(gpio.addr + ((g)/10)) &= ~(7<<(((g)%10)*3))
 #define OUT_GPIO(g)   *(gpio.addr + ((g)/10)) |=  (1<<(((g)%10)*3))
 #define SET_GPIO_ALT(g,a) *(gpio.addr + (((g)/10))) |= (((a)<=3?(a) + 4:(a)==4?3:2)<<(((g)%10)*3))
- 
+
 #define GPIO_SET  *(gpio.addr + 7)  // sets   bits which are 1 ignores bits which are 0
 #define GPIO_CLR  *(gpio.addr + 10) // clears bits which are 1 ignores bits which are 0
- 
+
 #define GPIO_READ(g)  *(gpio.addr + 13) &= (1<<(g))
 
 #define GPIO_PULL *(gpio.addr + 37) // pull up/pull down
 #define GPIO_PULLCLK0 *(gpio.addr + 38) // pull up/pull down clock
 
- 
+
 // Exposes the physical address defined in the passed structure using mmap on /dev/mem
 int map_peripheral(struct bcm2835_peripheral *p)
 {
-   if ((p->mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
+   if ((p->mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
       printf("Failed to open /dev/mem, try checking permissions.\n");
       return -1;
    }
@@ -69,22 +69,25 @@ int map_peripheral(struct bcm2835_peripheral *p)
    p->addr = (volatile unsigned int *)p->map;
    return 0;
 }
- 
-void unmap_peripheral(struct bcm2835_peripheral *p) 
+
+void unmap_peripheral(struct bcm2835_peripheral *p)
 {	munmap(p->map, BLOCK_SIZE);
 	close(p->mem_fd);
 }
 
- 
+
 // PART 2 - the multiplexing logic driving the front panel -------------
 
 uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
 uint8_t rows[] = {16, 17, 18};
+float brtval[96];
+uint32 brctr[96],bctr,ndx;
+
 
 #ifdef SERIALSETUP
-uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};  
+uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
-uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};  
+uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
 #endif
 
 
@@ -99,7 +102,7 @@ void *blink(int *terminate)
 #ifdef SERIALSETUP
 	printf(" Serial mod version\n");
 #else
-	printf(" Default version\n");
+	printf(" Default version using gpiomem\n");
 #endif
 
 	// set thread to real time priority -----------------
@@ -108,7 +111,7 @@ void *blink(int *terminate)
 	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
 	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
 	// --------------------------------------------------
-	if(map_peripheral(&gpio) == -1) 
+	if(map_peripheral(&gpio) == -1)
 	{	printf("Failed to map the physical GPIO registers into the virtual memory space.\n");
 		return (void *)-1;
 	}
@@ -163,9 +166,12 @@ void *blink(int *terminate)
 	short_wait();
 	GPIO_PULLCLK0 = 0; // remove clock
 	short_wait(); // probably unnecessary
+	bctr=0;
+	for (ndx=0;i<96;i++)
+ 	 brtval[ndx]=0;
 	// --------------------------------------------------
 
-	//printf("\nFP on\n");
+	printf("\nFP on\n");
 
 	while(*terminate==0)
 	{
@@ -174,41 +180,46 @@ void *blink(int *terminate)
 		{	INP_GPIO(cols[i]);			//
 			OUT_GPIO(cols[i]);			// Define cols as output
 		}
-		
+		if (bctr==0) {
+		for (i=0;i<96;i++)
+		 brctr[i]=0;
+		bctr=32;
+		}
 		// light up 8 rows of 12 LEDs each
-		for (i=0;i<8;i++)
+		for (i=ndx=0;i<8;i++)
 		{
-
 			// Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-			for (k=0;k<12;k++)
-			{	if ((ledstatus[i]&(1<<k))==0)
-					GPIO_SET = 1 << cols[k];
-				else 
+			for (k=0;k<12;k++,ndx++)
+			{
+				if (++brctr[ndx]<brtval[ndx])
 					GPIO_CLR = 1 << cols[k];
-			}	
+				else
+					GPIO_SET = 1 << cols[k];
+			}
 
 			// Toggle this ledrow on
-			INP_GPIO(ledrows[i]);	
+			INP_GPIO(ledrows[i]);
 			GPIO_SET = 1 << ledrows[i]; // test for flash problem
 			OUT_GPIO(ledrows[i]);
 //test			GPIO_SET = 1 << ledrows[i];
 
 
+			clock_nanosleep (CLOCK_REALTIME,0,(struct timespec[]){{0, intervl}}, NULL);
 
-			nanosleep ((struct timespec[]){{0, intervl}}, NULL);
-			
 			// Toggle ledrow off
 			GPIO_CLR = 1 << ledrows[i]; // superstition
 			INP_GPIO(ledrows[i]);
-usleep(10);  // waste of cpu cycles but may help against udn2981 ghosting, not flashes though
+
+			clock_nanosleep (CLOCK_REALTIME,0,(struct timespec[]){{0, intervl}}, NULL);
+
 		}
 
 //nanosleep ((struct timespec[]){{0, intervl}}, NULL); // test
 
-		// prepare for reading switches		
+		// prepare for reading switches
 		for (i=0;i<12;i++)
 			INP_GPIO(cols[i]);			// flip columns to input. Need internal pull-ups enabled.
-			
+
 		// read three rows of switches
 		for (i=0;i<3;i++)
 		{
@@ -228,12 +239,14 @@ usleep(10);  // waste of cpu cycles but may help against udn2981 ghosting, not f
 
 			switchstatus[i] = switchscan;
 		}
+lx:
+	    bctr--;
 	}
 
 	//printf("\nFP off\n");
 	// at this stage, all cols, rows, ledrows are set to input, so elegant way of closing down.
 
-	return 0; 
+	return 0;
 }
 
 

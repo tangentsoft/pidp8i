@@ -17,6 +17,7 @@ LIBS =  -lm -ldl -lpthread -lrt
 pidp8: $(OBJ)
 	mkdir -p ../bin
 	$(CC) -o ../bin/$@ $^ $(CFLAGS) $(LIBS)
+	sudo setcap 'cap_sys_nice=eip' ../bin/$@
 
 # next two lines force make to always recompile gpio.c
 # reason: needed when switching between serial and default version
