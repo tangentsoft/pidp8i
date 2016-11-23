@@ -10,15 +10,11 @@
  * 
 */
 
-
-// TO DO: define SERIALSETUP to use PiDPs wired for serial port
-// no longer used - now a Makefile option #define SERIALSETUP
-
+#include "gpio.h"
 
 #include <time.h>
 #include <pthread.h>
 #include <stdint.h>
-#include "gpio.h"
 
 typedef unsigned int    uint32;
 typedef signed int      int32;
