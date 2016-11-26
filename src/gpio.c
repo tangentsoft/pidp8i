@@ -12,6 +12,8 @@
 
 #include "gpio.h"
 
+#include "config.h"
+
 #include <time.h>
 #include <pthread.h>
 #include <stdint.h>

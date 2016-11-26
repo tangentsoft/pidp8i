@@ -1,0 +1,20 @@
+########################################################################
+# auto.def - Configure file for the PiDP-8/I software build system,
+#            based on autosetup.
+########################################################################
+
+use cc
+
+options {
+	serial-mod => "build simulator to expect the PCB serial mods"
+}
+
+if {[opt-bool serial-mod]} {
+	msg-result "The simulator will expect the serial mods to the Pi and PiDP-8/I PCBs."
+	define SERIALSETUP
+}
+
+make-config-header src/config.h \
+	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
+	-bare {SERIALSETUP}
+make-template Makefile.in

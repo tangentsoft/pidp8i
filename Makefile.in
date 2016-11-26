@@ -1,0 +1,83 @@
+CFLAGS=-std=c99 -Wno-unused-result \
+	-D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8 -U__STRICT_ANSI__ \
+	-I src -I src/PDP8
+
+BINS = bin/pidp8 bin/scanswitch
+
+DIRS = bin obj/PDP8
+
+OBJS = \
+	obj/gpio.o \
+	obj/PDP8/pdp8_cpu.o \
+	obj/PDP8/pdp8_clk.o \
+	obj/PDP8/pdp8_ct.o \
+	obj/PDP8/pdp8_df.o \
+	obj/PDP8/pdp8_dt.o \
+	obj/PDP8/pdp8_fpp.o \
+	obj/PDP8/pdp8_lp.o \
+	obj/PDP8/pdp8_mt.o \
+	obj/PDP8/pdp8_pt.o \
+	obj/PDP8/pdp8_rf.o \
+	obj/PDP8/pdp8_rk.o \
+	obj/PDP8/pdp8_rl.o \
+	obj/PDP8/pdp8_rx.o \
+	obj/PDP8/pdp8_sys.o \
+	obj/PDP8/pdp8_td.o \
+	obj/PDP8/pdp8_tsc.o \
+	obj/PDP8/pdp8_tt.o \
+	obj/PDP8/pdp8_ttx.o \
+	obj/scp.o \
+	obj/sim_console.o \
+	obj/sim_disk.o \
+	obj/sim_ether.o \
+	obj/sim_fio.o \
+	obj/sim_serial.o \
+	obj/sim_sock.o \
+	obj/sim_tape.o \
+	obj/sim_timer.o \
+	obj/sim_tmxr.o
+
+LIBS = -lm -ldl -lpthread -lrt
+
+
+all: $(DIRS) $(BINS)
+
+clean:
+	rm -f $(BINS) $(OBJS) $(OBJS:.o=.d)
+	-rmdir -p $(DIRS) 2> /dev/null || true
+
+distclean: clean
+	rm -f config.log Makefile autosetup/jimsh0 src/config.h
+
+reconfig:
+	@AUTOREMAKE@
+
+
+# Rule for compiling *.c to *.o and autogenerating dependency info.
+# Explained at http://scottmcpeak.com/autodepend/autodepend.html
+obj/%.o: src/%.c
+	$(CC) -c $(CFLAGS) src/$*.c -o obj/$*.o
+	$(CC) -MM $(CFLAGS) src/$*.c > obj/$*.d
+	@mv -f obj/$*.d obj/$*.d.tmp
+	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
+		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
+	@rm -f obj/$*.d.tmp
+
+
+$(DIRS):
+	mkdir -p $@
+
+bin/pidp8: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	sudo setcap 'cap_sys_nice=eip' $@
+
+bin/scanswitch: src/scanswitch/scanswitch.c src/scanswitch/gpio.h
+	$(CC) -Isrc/scanswitch -o $@ $<
+
+ifeq ($(findstring clean,$(MAKECMDGOALS)),)
+Makefile: @AUTODEPS@ @srcdir@/Makefile.in
+	@@AUTOREMAKE@
+endif
+
+-include $(OBJS:.o=.d)
