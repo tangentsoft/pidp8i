@@ -24,16 +24,16 @@
     The `configure` script accepts most traditional flags for such
     a script, the most important of which is `--prefix`, which means
     that you can now install to any directory you like; you are no
-	longer required to install to a fixed location in order for
-	the scripts to work properly.  You can also run these scripts
-	from arbitrary working directories, since the relative paths
-	in the scripts are replaced by absolute paths during the
-	build and installation process.
+    longer required to install to a fixed location in order for
+    the scripts to work properly.  You can also run these scripts
+    from arbitrary working directories, since the relative paths
+    in the scripts are replaced by absolute paths during the
+    build and installation process.
 
     The `configure` script defines only one custom option for the
     PiDP-8/I project: `--serial-mod`, which replaces the old method
     of modifying `src/Makefile` to add `-DSERIALSETUP` if you have
-	done the "serial mod" to your Raspberry Pi and PiDP-8/I PCBs.
+    done the "serial mod" to your Raspberry Pi and PiDP-8/I PCBs.
 
 *   Changed all of the various "PDP," "PDP-8", and "PiDP-8" strings to
     variants on "PiDP-8/I", partly for consistency and partly because
@@ -51,9 +51,9 @@
 *   Merged Ian Schofield's [Display update for the
     PiDP8](https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA)
     patch.  Currently it is not optional, but there is [a
-	plan](https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936)
-	to allow this feature to be disabled via a `configure`
-	script option.
+    plan](https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936)
+    to allow this feature to be disabled via a `configure`
+    script option.
 
 *   The scripts that control the startup sequence of the PiDP-8/I
     simulator now include helpful header comments and emit useful
@@ -62,18 +62,23 @@
 
 *   Added a bunch of ancillary material: [wiki articles][1], [USB
     stick label artwork][2], etc. Also filed a bunch of [tickets][3]
-	detailing feature proposals, known bugs and weaknesses, etc. If
-	you were looking for ways to contribute to the development
-	effort, these new resoruces provide a bunch of ideas.
+    detailing feature proposals, known bugs and weaknesses, etc. If
+    you were looking for ways to contribute to the development
+    effort, these new resoruces provide a bunch of ideas.
 
-*   Made some efforts toward portability.  While this project will
-    always center around Raspbian and the PiDP-8/I add-on board,
-    the intent is that you should be able to unpack the project on
-    any other Unix type system and at least get the simulator up and
-    running with the normal SimH manual control over execution instead
-    of the nice front panel controls provided by the PDP-8/I board.
+*   Made some efforts toward portability.
 
-    In particular, the software now builds and runs under Mac OS X.
+    While this project will always center around Raspbian and the
+    PiDP-8/I add-on board, the intent is that you should be able to
+    unpack the project on any other Unix type system and at least get
+    the simulator up and running with the normal SimH manual control
+    over execution instead of the nice front panel controls provided by
+    the PDP-8/I board.
+
+    In particular, the software now builds under Mac OS X, though it
+    does not yet run properly.  (The modified SimH PDP-8 simulator
+    currently misbehaves if the PiDP-8/I panel is not present.  Fixing
+    this is on the radar.)
 
 *   Fixed a bunch of bugs!
 
