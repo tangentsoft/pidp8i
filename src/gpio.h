@@ -1,4 +1,5 @@
-#ifdef PIDP8
+#if !defined(PIDP8I_GPIO_H)
+#define PIDP8I_GPIO_H
 
 #include <unistd.h>
 #include <sys/mman.h>
@@ -17,4 +18,4 @@ struct bcm2835_peripheral {
     volatile unsigned int *addr;
 };
  
-#endif
+#endif // !defined(PIDP8I_GPIO_H)

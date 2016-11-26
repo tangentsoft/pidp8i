@@ -1,4 +1,3 @@
-#ifdef PIDP8
 /*
  * gpio.c: the real-time process that handles multiplexing
  * 
@@ -294,4 +293,3 @@ static unsigned get_dt_ranges(const char *filename, unsigned offset)
    }
    return address;
 }
-#endif

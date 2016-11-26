@@ -213,7 +213,7 @@
 
 /* Macros and data structures */
 
-#ifdef PIDP8
+#ifdef PIDP8I
 #include <pthread.h>
 #include <time.h>
 #include <stdint.h>
@@ -325,7 +325,7 @@ extern void *blink(void *ptr);	// the real-time multiplexing process to start up
     else if (sim_switches & SWMASK ('H')) val = 16; \
     else val = dft;
 
-#ifdef PIDP8
+#ifdef PIDP8I
 extern int awfulHackFlag;
 #endif
 
@@ -1884,8 +1884,8 @@ int32 i, sw;
 t_bool lookswitch;
 t_stat stat;
 
-#ifdef PIDP8
-// PiDP8 hack here
+#ifdef PIDP8I
+// PiDP-8/I hack here
  pthread_t thread1;
  const char *message="Thread 1";
  int terminate=0, iret1;
@@ -2034,7 +2034,7 @@ sim_cleanup_sock ();                                    /* cleanup sockets */
 fclose (stdnul);                                        /* close bit bucket file handle */
 free (targv);                                           /* release any argv copy that was made */
 
-#ifdef PIDP8
+#ifdef PIDP8I
  terminate=1;
  if (pthread_join(thread1, NULL))
    printf("\r\nError joining multiplex thread\r\n");
@@ -2051,7 +2051,7 @@ CTAB *cmdp;
 
 stat = SCPE_BARE_STATUS(stat);                          /* remove possible flag */
 while (stat != SCPE_EXIT) {                             /* in case exit */
-#ifdef PIDP8
+#ifdef PIDP8I
 if (awfulHackFlag!=0) {
   if (awfulHackFlag==8)
     sprintf(cbuf, "exit");	// inject command into command line processor.

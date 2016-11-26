@@ -1,5 +1,5 @@
 CFLAGS=-std=c99 -Wno-unused-result \
-	-D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8 -U__STRICT_ANSI__ \
+	-D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @builddir@/src -I @srcdir@/src/PDP8
 
 SIM = bin/pidp8i-sim

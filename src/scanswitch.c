@@ -147,7 +147,7 @@ int main()
 	if ( ((switchscan[1] >> 6) & 1) == 1 )	// STOP switch enabled,
 		return 8;				// 8: STOP enabled, no bootscript
 	else
-		return (switchscan[0] >> 6) & 07;	// 0-7: x.script to be used in pidp8
+		return (switchscan[0] >> 6) & 07;	// 0-7: x.script to be used in PiDP-8/I
 }
 
 
