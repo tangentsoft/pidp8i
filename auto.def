@@ -37,7 +37,29 @@ if {[cc-check-progs ginstall]} {
 	user-error "No install(1) type program found; install GNU Coreutils."
 }
 
+# Also find GNU readlink in the same way
+if {[cc-check-progs greadlink]} {
+	set rlprg greadlink
+} elseif {[cc-check-progs readlink]} {
+	if {[catch {exec readlink -f . >& /dev/null} result] == 0} {
+		set rlprg readlink
+	} else {
+		user-error "readlink(1) does not support -D; install GNU Coreutils."
+	}
+} else {
+	user-error "No readlink(1) type program found; install GNU Coreutils."
+}
+
+# Absolutize the prefix, for generated scripts
+define ABSPREFIX [exec $rlprg -f [get-define prefix]]
+
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}
 make-template Makefile.in
+make-template bootscripts/0.script.in
+make-template bootscripts/2.script.in
+make-template bootscripts/3.script.in
+make-template bootscripts/4.script.in
+make-template bootscripts/6.script.in
+make-template bootscripts/7.script.in

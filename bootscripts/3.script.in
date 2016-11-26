@@ -4,5 +4,5 @@
 echo Loading OS/8 from DECtape...
 set dt disabled
 set td enabled
-attach td0 ../imagefiles/os8/os8.tu56
+attach td0 @ABSPREFIX@/imagefiles/os8/os8.tu56
 boot td0
