@@ -1,3 +1,8 @@
+; This script initializes a populated TSS/8 environment on an
+; RS08 fixed-head hard disk drive (384 kB!) controlled by the
+; RF08 disk controller.
+;
+echo Loading TSS/8 from the RS08 fixed-head disk...
 load ../imagefiles/tss8/tss8_init.bin
 set rf enabled
 set df disabled

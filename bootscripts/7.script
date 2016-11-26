@@ -1,5 +1,2 @@
-reset
-set cpu 32k
-set cpu noidle
-att rk0 ../imagefiles/os8/os8.rk05
-boot rk0
+echo Restarting the PiDP-8/I into its default operating environment...
+do ../bootscripts/0.script

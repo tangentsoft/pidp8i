@@ -1,3 +1,6 @@
+; This script loads ETOS V5B from the RK05 cartridge disk drive.
+;
+echo Loading ETOS from the RK05 cartridge disk drive...
 reset
 set cpu 32k
 set cpu noidle

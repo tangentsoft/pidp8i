@@ -4,6 +4,7 @@
 ; is built into a Teletype Model 33 ASR.  See asr33-rim-loader.script
 ; for details about the alternative.
 ;
+echo Installing the RIM loader for the DEC high-speed tape reader...
 d 7756 6014
 d 7757 6011
 d 7760 5357
@@ -21,4 +22,5 @@ d 7773 3776
 d 7774 3376
 d 7775 5357
 d 7776 0000
+echo Ready.
 g

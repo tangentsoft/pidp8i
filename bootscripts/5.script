@@ -1,3 +1,16 @@
+; This script loads the AC/MQ register test script from
+;
+;   http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/
+;
+; It is useful because many other demos do not fully exercise the MQ
+; register, so you cannot tell whether the lights are all working
+; after having soldered up your PiDP-8/I.  You may have to single-
+; step through the code or slow the emulator down in order to tell
+; that the right-most lights are in fact blinking, as they change so
+; rapidly under the standard emulation speed that they appear to be
+; on solid.
+;
+echo Running the AC/MQ register light blinking test...
 d 0000 2020 
 d 0001 5000 
 d 0002 7200 
