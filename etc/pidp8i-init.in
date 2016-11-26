@@ -36,7 +36,7 @@ is_running() {
 
 do_start() {
 	if is_running ; then
-	    echo "PiDP-8 is already running, not starting again." >&2
+	    echo "PiDP-8/I is already running, not starting again." >&2
 	    exit 0
 	fi
 
@@ -47,11 +47,11 @@ do_start() {
 	    pidpscript="$prefix/bootscripts/""$script"".script"
 	    echo "$pidpscript"
 	else
-	    echo "PiDP-8 STOP switch detected, aborting." >&2
+	    echo "PiDP-8/I STOP switch detected, aborting." >&2
 	    exit 0
 	fi
 
-	log_daemon_msg "Starting PiDP-8" "pidp"
+	log_daemon_msg "Starting PiDP-8/I" "pidp"
 	screen -dmS pidp "$sim" $pidpscript
 	status=$?
 	log_end_msg $status
@@ -60,10 +60,10 @@ do_start() {
 
 do_stop() {
 	if ! is_running ; then
-	    echo "PiDP-8 is already stopped." >&2
+	    echo "PiDP-8/I is already stopped." >&2
 	    status=1
 	else
-	    log_daemon_msg "Stopping PiDP-8" "pidp"
+	    log_daemon_msg "Stopping PiDP-8/I" "pidp"
 	    screen -S pidp -X quit
 	    status=$?
 	    log_end_msg $status
