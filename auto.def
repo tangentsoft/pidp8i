@@ -26,7 +26,7 @@ cc-check-functions clock_nanosleep nanosleep usleep
 # ginstall name is typical on non-Linux systems where GNU Coreutils was
 # installed alongside the core OS utilities.
 if {[cc-check-progs ginstall]} {
-	define INSTALL ginstall		# assume it's GNU install(1)
+	define INSTALL ginstall
 } elseif {[cc-check-progs install]} {
 	if {[catch {exec install -D -d . >& /dev/null} result] == 0} {
 		define INSTALL install
@@ -36,6 +36,7 @@ if {[cc-check-progs ginstall]} {
 } else {
 	user-error "No install(1) type program found; install GNU Coreutils."
 }
+msg-result "Found GNU install(1) program as [get-define INSTALL]."
 
 # Also find GNU readlink in the same way
 if {[cc-check-progs greadlink]} {
@@ -49,6 +50,7 @@ if {[cc-check-progs greadlink]} {
 } else {
 	user-error "No readlink(1) type program found; install GNU Coreutils."
 }
+msg-result "Found GNU readlink(1) as $rlprg."
 
 # Absolutize the prefix, for generated scripts
 define ABSPREFIX [exec $rlprg -f [get-define prefix]]
