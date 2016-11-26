@@ -2,11 +2,12 @@ CFLAGS=-std=c99 -Wno-unused-result \
 	-D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8 -U__STRICT_ANSI__ \
 	-I src -I src/PDP8
 
-BINS = bin/pidp8 bin/scanswitch
+SIM = bin/pidp8i-sim
+BINS = $(SIM) bin/scanswitch
 
 BUILDDIRS = bin obj/PDP8
 
-INSTDIRS = bootscripts bin imagefiles
+INSTDIRS = bootscripts bin etc imagefiles
 
 OBJS = \
 	obj/gpio.o \
@@ -41,7 +42,7 @@ OBJS = \
 
 LIBS = -lm -ldl -lpthread
 
-.PHONY: install
+CLTXT = /boot/cmdline.txt
 
 
 all: $(BUILDDIRS) $(BINS)
@@ -55,8 +56,13 @@ distclean: clean
 
 install:
 	@echo Installing to @prefix@...
+
+	@# Create any missing install tree directories
 	for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
+
+	@# Install files into those dirs and set their perms
 	@INSTALL@ -m 750 -s $(BINS) @prefix@/bin
+	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
 	find ./imagefiles \( \
 		-name \*.bin  -o \
 		-name \*.dsk  -o \
@@ -64,7 +70,37 @@ install:
 		-name \*.tu56 \) \
 		-exec @INSTALL@ -D -m 640 {} @prefix@/{} \;
 	@INSTALL@ -m 640 @srcdir@/bootscripts/*.script @prefix@/bootscripts
-	-setcap 'cap_sys_nice=eip' @prefix@/bin/pidp8 || true
+
+	@# If this is a Debian-type system, install needed helper programs
+	@test -x /usr/bin/apt-get && ( \
+		test ! -f /etc/usbmount/usbmount.conf && apt-get install usbmount \
+		test ! -x /usr/bin/screen && apt-get install screen \
+	) || true
+
+	@# Install the init script if this system is SysVinit based.
+	@# Raspbian's systemd setup is close enough.
+	@INSTALL@ -m 750 @srcdir@/etc/pidp8i-init @prefix@/etc
+	@(  test -w /etc/init.d && \
+		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
+		update-rc.d pidp8i defaults \
+	) || true
+
+	@# Add installation bin dir to the non-root user's PATH unless it's
+	@# already in there or we aren't running under sudo.
+	@(for p in .profile .bash_profile ; do \
+		test -n "$$SUDO_USER" -a -w "/home/$$SUDO_USER/$$p" && \
+			! grep -qF "@ABSPREFIX@" "/home/$$SUDO_USER/$$p" && \
+			echo "export PATH=\$$PATH:@ABSPREFIX@/bin" >> "/home/$$SUDO_USER/$$p" ; \
+	done) || true
+
+	@# If serial mod is enabled, turn off serial console and kgdb stuff
+	@# in case they were enabled previously, else they will fight with
+	@# our use of GPIO.
+	@(  test -z "@SERIALSETUP@" -a -r $CLTXT && ! -w $CLTXT && \
+		cp -p $CLTXT "$CLTXT"_orig && \
+		sed -e 's/console\=[a-zA-Z0-9]+,[0-9]+ //' \
+		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $CLTXT \
+	) || true
 
 reconfig:
 	@AUTOREMAKE@
@@ -85,7 +121,7 @@ obj/%.o: src/%.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-bin/pidp8: $(OBJS)
+$(SIM): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 bin/scanswitch: src/scanswitch/scanswitch.c src/scanswitch/gpio.h
