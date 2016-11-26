@@ -61,7 +61,8 @@ install:
 	for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
 
 	@# Install files into those dirs and set their perms
-	@INSTALL@ -m 750 -s $(BINS) @prefix@/bin
+	@INSTALL@ -m 755 -s $(BINS) @prefix@/bin
+	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
 	find ./imagefiles \( \
 		-name \*.bin  -o \
