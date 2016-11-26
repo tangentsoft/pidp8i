@@ -1,20 +1,15 @@
 #ifdef PIDP8
-#include <stdio.h>
- 
+
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
  
-#include <unistd.h>
-#include <fcntl.h> // extra
+#include <fcntl.h>
+#include <stdio.h>
 
+#define BLOCK_SIZE (4*1024)
  
-//#define BCM2708_PERI_BASE       0x3f000000
-//#define GPIO_BASE               (BCM2708_PERI_BASE + 0x200000)	// GPIO controller 
- 
-#define BLOCK_SIZE 		(4*1024)
- 
-// IO Acces
 struct bcm2835_peripheral {
     unsigned long addr_p;
     int mem_fd;
@@ -22,5 +17,4 @@ struct bcm2835_peripheral {
     volatile unsigned int *addr;
 };
  
-//struct bcm2835_peripheral gpio = {GPIO_BASE};
 #endif
