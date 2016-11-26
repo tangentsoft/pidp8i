@@ -17,7 +17,7 @@ umask 022
 . /lib/lsb/init-functions
 
 prefix="@ABSPREFIX@"
-sim="$prefix/bin/pidp8"
+sim="$prefix/bin/pidp8i-sim"
 scanswitch="$prefix/bin/scanswitch"
 
 # Requires screen utility for detached pidp console functionality.
@@ -31,7 +31,7 @@ test -x $sim || ( echo "$sim not found" && exit 0 )
 #
 is_running() {
 	procs=`screen -ls pidp | egrep '[0-9]+\.pidp' | wc -l`
-	return [ $procs -gt 0 ]
+	test $procs -gt 0 && return 0 || return 1
 }
 
 do_start() {
