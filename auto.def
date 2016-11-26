@@ -3,7 +3,7 @@
 #            based on autosetup.
 ########################################################################
 
-define defaultprefix /opt/pidp8
+define defaultprefix /opt/pidp8i
 
 use cc
 
