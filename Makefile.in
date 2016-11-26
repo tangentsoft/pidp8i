@@ -37,7 +37,7 @@ OBJS = \
 	obj/sim_timer.o \
 	obj/sim_tmxr.o
 
-LIBS = -lm -ldl -lpthread -lrt
+LIBS = -lm -ldl -lpthread
 
 
 all: $(DIRS) $(BINS)
