@@ -14,6 +14,9 @@ if {[opt-bool serial-mod]} {
 	define SERIALSETUP
 }
 
+cc-check-includes time.h
+cc-check-functions clock_nanosleep nanosleep usleep
+
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}

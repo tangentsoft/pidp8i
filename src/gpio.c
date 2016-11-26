@@ -14,7 +14,10 @@
 
 #include "config.h"
 
-#include <time.h>
+#ifdef HAVE_TIME_H
+#	include <time.h>
+#endif
+
 #include <pthread.h>
 #include <stdint.h>
 
@@ -87,6 +90,21 @@ uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
 uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
 #endif
+
+
+static void sleep_ns(long ns)
+{
+	struct timespec ts = { 0, ns };
+#if defined(HAVE_CLOCK_NANOSLEEP)
+	clock_nanosleep(CLOCK_REALTIME, 0, &ts, NULL);
+#elif defined(HAVE_NANOSLEEP)
+	nanosleep(&ts, NULL);
+#elif defined(HAVE_USLEEP)
+	usleep(ns / 1000);
+#else
+#	error Cannot build GPIO controller without high-res "sleep" function!
+#endif
+}
 
 
 void *blink(int *terminate)
@@ -202,17 +220,15 @@ void *blink(int *terminate)
 //test			GPIO_SET = 1 << ledrows[i];
 
 
-			clock_nanosleep (CLOCK_REALTIME,0,(struct timespec[]){{0, intervl}}, NULL);
+			sleep_ns(intervl);
 
 			// Toggle ledrow off
 			GPIO_CLR = 1 << ledrows[i]; // superstition
 			INP_GPIO(ledrows[i]);
 
-			clock_nanosleep (CLOCK_REALTIME,0,(struct timespec[]){{0, intervl}}, NULL);
+			sleep_ns(intervl);
 
 		}
-
-//nanosleep ((struct timespec[]){{0, intervl}}, NULL); // test
 
 		// prepare for reading switches
 		for (i=0;i<12;i++)
@@ -225,7 +241,7 @@ void *blink(int *terminate)
 			OUT_GPIO(rows[i]);			// turn on one switch row
 			GPIO_CLR = 1 << rows[i];	// and output 0V to overrule built-in pull-up from column input pin
 
-			nanosleep ((struct timespec[]){{0, intervl/100}}, NULL); // probably unnecessary long wait, maybe put above this loop also
+			sleep_ns(intervl / 100);
 
 			switchscan=0;
 			for (j=0;j<12;j++)			// 12 switches in each row
