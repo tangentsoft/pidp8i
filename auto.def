@@ -63,3 +63,4 @@ make-template bootscripts/3.script.in
 make-template bootscripts/4.script.in
 make-template bootscripts/6.script.in
 make-template bootscripts/7.script.in
+make-template etc/pidp8i-init.in
