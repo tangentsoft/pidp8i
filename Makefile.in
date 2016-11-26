@@ -126,8 +126,8 @@ $(BUILDDIRS):
 $(SIM): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
-bin/scanswitch: @srcdir@/src/scanswitch/scanswitch.c @srcdir@/src/scanswitch/gpio.h
-	$(CC) -I@srcdir@/src/scanswitch -o $@ $<
+bin/scanswitch: obj/scanswitch.o
+	$(CC) -o $@ $<
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 Makefile: @AUTODEPS@ @srcdir@/Makefile.in
