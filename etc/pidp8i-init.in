@@ -42,13 +42,15 @@ do_start() {
 
 	$scanswitch >/dev/null 2>&1
 	script=$?
-	# FIXME: -gt 8 case not handled!  Can be 127 for no bin.
-	if [ $script -ne 8 ]; then
+	if [ $script -eq 8 ]; then
+	    echo "PiDP-8/I STOP switch detected, aborting." >&2
+	    exit 0
+	elif [ $script -lt 8 ]; then
 	    pidpscript="$prefix/bootscripts/""$script"".script"
 	    echo "$pidpscript"
 	else
-	    echo "PiDP-8/I STOP switch detected, aborting." >&2
-	    exit 0
+		echo "Bad return value $script from $scanswitch!"
+		exit 1
 	fi
 
 	log_daemon_msg "Starting PiDP-8/I" "pidp"
