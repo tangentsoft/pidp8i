@@ -1,12 +1,15 @@
-Release 2016.11.26 (UNRELEASED)
+# PiDP-8/I Changes
+
+
+# Release 2016.11.26 (UNRELEASED)
 
 *   Added an intelligent, powerful build system, replacing the
-    bare-bones `Makefile` build system in the upstream version.
+    bare-bones `Makefile` based build system in the upstream version.
 
     This means you don't unpack the zip file or tarball into
     `/opt/pidp8` and build it in place, as with the upstream version.
     Instead, you unpack it somewhere you normally build software
-    (e.g. $HOME/src) then say
+    (e.g. `$HOME/src`) then say
 
         $ ./configure && make && sudo make install
 
@@ -20,15 +23,17 @@ Release 2016.11.26 (UNRELEASED)
 
     The `configure` script accepts most traditional flags for such
     a script, the most important of which is `--prefix`, which means
-    that you can now install to any directory you like.  The software
-    is now fully-relocatable and can be started from arbitrary
-    working directories, whereas the upstream version could only be
-    installed into `/opt/pidp8` and must be started from within its
-    `bin` subdirectory.
+    that you can now install to any directory you like; you are no
+	longer required to install to a fixed location in order for
+	the scripts to work properly.  You can also run these scripts
+	from arbitrary working directories, since the relative paths
+	in the scripts are replaced by absolute paths during the
+	build and installation process.
 
     The `configure` script defines only one custom option for the
     PiDP-8/I project: `--serial-mod`, which replaces the old method
-    of modifying `src/Makefile` to add `-DSERIALSETUP`.
+    of modifying `src/Makefile` to add `-DSERIALSETUP` if you have
+	done the "serial mod" to your Raspberry Pi and PiDP-8/I PCBs.
 
 *   Changed all of the various "PDP," "PDP-8", and "PiDP-8" strings to
     variants on "PiDP-8/I", partly for consistency and partly because
@@ -43,22 +48,23 @@ Release 2016.11.26 (UNRELEASED)
     Another aspect of it is that the old `pdp.sh` script to [re]enter
     the simulator is now called `pidp8i`.
 
-*   Merged Ian Schofield's "Display update for the PiDP8" patch.
-    Currently it is not optional, but it is planned to be disableable
-    with a `configure` script option.
+*   Merged Ian Schofield's [Display update for the
+    PiDP8](https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA)
+    patch.  Currently it is not optional, but there is [a
+	plan](https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936)
+	to allow this feature to be disabled via a `configure`
+	script option.
 
 *   The scripts that control the startup sequence of the PiDP-8/I
     simulator now include helpful header comments and emit useful
     status messages to the console.  Stare no more at opaque lists
-    of SimH commands.
+    of SimH commands, wondering what each script does!
 
-*   Added a bunch of ancillary material: wiki articles, design
-    documents for proposed features, vector USB stick label artwork,
-    etc.  Also filed a bunch of tickets.  If you were looking for
-    ways to contribute to the development effort, see [the project's
-    ticket tracker](https://tangentsoft.com/pidp8i/ticket) and its
-    [wiki](https://tangentsoft.com/pidp8i/wcontent).  There's plenty
-    of work to go around!
+*   Added a bunch of ancillary material: [wiki articles][1], [USB
+    stick label artwork][2], etc. Also filed a bunch of [tickets][3]
+	detailing feature proposals, known bugs and weaknesses, etc. If
+	you were looking for ways to contribute to the development
+	effort, these new resoruces provide a bunch of ideas.
 
 *   Made some efforts toward portability.  While this project will
     always center around Raspbian and the PiDP-8/I add-on board,
@@ -70,3 +76,14 @@ Release 2016.11.26 (UNRELEASED)
     In particular, the software now builds and runs under Mac OS X.
 
 *   Fixed a bunch of bugs!
+
+
+[1]: https://tangentsoft.com/pidp8i/wcontent
+[2]: https://tangentsoft.com/pidp8i/dir?c=trunk&name=labels
+[3]: https://tangentsoft.com/pidp8i/tickets
+
+
+# Release 2015.12.15
+
+*   The official upstream release of the software, still current as of
+    late 2016, at least.
