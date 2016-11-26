@@ -1,3 +1,9 @@
+; This RIM loader differs from the one printed on the front panel of
+; the PDP-8/I because it is for DEC's high-speed paper tape reader,
+; whereas the one on the front panel is for the paper tape reader that
+; is built into a Teletype Model 33 ASR.  See asr33-rim-loader.script
+; for details about the alternative.
+;
 d 7756 6014
 d 7757 6011
 d 7760 5357
