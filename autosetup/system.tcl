@@ -25,7 +25,7 @@ module-options {
 	build:build-alias =>	{a complete or partial cpu-vendor-opsys for the system
 							where the application will be built (defaults to the
 							result of running config.guess)}
-	prefix:dir =>			{the target directory for the build (defaults to /usr/local)}
+	prefix:dir =>			{the target directory for the build (defaults to /opt/pidp8)}
 
 	# These (hidden) options are supported for autoconf/automake compatibility
 	exec-prefix:

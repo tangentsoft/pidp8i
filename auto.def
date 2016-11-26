@@ -3,6 +3,8 @@
 #            based on autosetup.
 ########################################################################
 
+define defaultprefix /opt/pidp8
+
 use cc
 
 options {
@@ -16,6 +18,24 @@ if {[opt-bool serial-mod]} {
 
 cc-check-includes time.h
 cc-check-functions clock_nanosleep nanosleep usleep
+
+# We need to find an install(1) type program that supports -D.  The
+# Raspberry Pi OSes typically used with the PiDB-8/I board do have this,
+# but this package also runs on non-Linux OSes (e.g. for testing on a
+# desktop Mac) so make sure we've got a suitable implementation.  The
+# ginstall name is typical on non-Linux systems where GNU Coreutils was
+# installed alongside the core OS utilities.
+if {[cc-check-progs ginstall]} {
+	define INSTALL ginstall		# assume it's GNU install(1)
+} elseif {[cc-check-progs install]} {
+	if {[catch {exec install -D -d . >& /dev/null} result] == 0} {
+		define INSTALL install
+	} else {
+		user-error "install(1) does not support -D; install GNU Coreutils."
+	}
+} else {
+	user-error "No install(1) type program found; install GNU Coreutils."
+}
 
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
