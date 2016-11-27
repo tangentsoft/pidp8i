@@ -64,13 +64,7 @@ install: all
 	@INSTALL@ -m 755 -s $(BINS) @prefix@/bin
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
-	(cd @srcdir@ ; find imagefiles \( \
-		-name \*.bin  -o \
-		-name \*.dsk  -o \
-		-name \*.rk05 -o \
-		-name \*.tu56 \) \
-		-exec @INSTALL@ -D -m 640 {} @ABSPREFIX@/{} \; \
-	)
+	test -e @ABSPREFIX@/imagefiles/os8/os8.rk05 || $(MAKE) mediainstall
 	@INSTALL@ -m 640 @srcdir@/bootscripts/*.script @prefix@/bootscripts
 
 	@# If this is a Debian-type system, install needed helper programs
@@ -103,6 +97,16 @@ install: all
 		sed -e 's/console\=[a-zA-Z0-9]+,[0-9]+ //' \
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $CLTXT \
 	) || true
+
+mediainstall:
+	@echo "[Re]installing OS and program media..."
+	@cd @srcdir@ ; \
+	find imagefiles \( \
+		-name \*.bin  -o \
+		-name \*.dsk  -o \
+		-name \*.rk05 -o \
+		-name \*.tu56 \
+	\) -exec @INSTALL@ -D -m 640 {} @ABSPREFIX@/{} \;
 
 reconfig:
 	@AUTOREMAKE@
