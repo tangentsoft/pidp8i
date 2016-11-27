@@ -7,7 +7,7 @@ BINS = $(SIM) libexec/scanswitch
 
 BUILDDIRS = bin libexec obj/PDP8
 
-INSTDIRS = boot bin etc libexec share/media
+INSTDIRS = bin etc libexec share/boot share/media
 
 OBJS = \
 	obj/gpio.o \
