@@ -54,7 +54,7 @@ clean:
 distclean: clean
 	@rm -f config.log Makefile autosetup/jimsh0 @builddir@/src/config.h
 
-install:
+install: all
 	@echo Installing to @prefix@...
 
 	@# Create any missing install tree directories
