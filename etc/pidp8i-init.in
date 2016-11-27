@@ -46,15 +46,15 @@ do_start() {
 	    echo "PiDP-8/I STOP switch detected, aborting." >&2
 	    exit 0
 	elif [ $script -lt 8 ]; then
-	    pidpscript="$prefix/bootscripts/""$script"".script"
-	    echo "$pidpscript"
+	    bscript="$prefix/share/boot/""$script"".script"
+	    echo "Booting from $bscript..."
 	else
 		echo "Bad return value $script from $scanswitch!"
 		exit 1
 	fi
 
 	log_daemon_msg "Starting PiDP-8/I simulator" "pidp8i"
-	screen -dmS pidp8i "$sim" $pidpscript
+	screen -dmS pidp8i "$sim" $bscript
 	status=$?
 	log_end_msg $status
 	return $status

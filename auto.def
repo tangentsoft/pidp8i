@@ -54,16 +54,17 @@ msg-result "Found GNU readlink(1) as $rlprg."
 
 # Absolutize the prefix, for generated scripts
 define ABSPREFIX [exec $rlprg -f [get-define prefix]]
+define BOOTDIR "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}
 make-template Makefile.in
-make-template bootscripts/0.script.in
-make-template bootscripts/2.script.in
-make-template bootscripts/3.script.in
-make-template bootscripts/4.script.in
-make-template bootscripts/6.script.in
-make-template bootscripts/7.script.in
+make-template boot/0.script.in
+make-template boot/2.script.in
+make-template boot/3.script.in
+make-template boot/4.script.in
+make-template boot/6.script.in
+make-template boot/7.script.in
 make-template etc/pidp8i-init.in

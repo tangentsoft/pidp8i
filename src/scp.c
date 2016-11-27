@@ -2056,7 +2056,7 @@ if (awfulHackFlag!=0) {
   if (awfulHackFlag==8)
     sprintf(cbuf, "exit");	// inject command into command line processor.
   else
-    sprintf(cbuf, "do ../bootscripts/%d.script", awfulHackFlag);
+    sprintf(cbuf, "do ../share/boot/%d.script", awfulHackFlag);
   cptr = cbuf;
  }
  else if ((cptr = sim_brk_getact (cbuf, sizeof(cbuf))))   /* pending action? */

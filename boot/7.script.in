@@ -1,2 +1,2 @@
 echo Restarting the PiDP-8/I into its default operating environment...
-do @ABSPREFIX@/bootscripts/0.script
+do @BOOTDIR@/0.script

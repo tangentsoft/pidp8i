@@ -7,7 +7,7 @@ BINS = $(SIM) bin/scanswitch
 
 BUILDDIRS = bin obj/PDP8
 
-INSTDIRS = bootscripts bin etc share/media
+INSTDIRS = boot bin etc share/media
 
 OBJS = \
 	obj/gpio.o \
@@ -65,7 +65,7 @@ install: all
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
-	@INSTALL@ -m 640 @srcdir@/bootscripts/*.script @prefix@/bootscripts
+	@INSTALL@ -m 640 @srcdir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
 	@test -x /usr/bin/apt-get && ( \

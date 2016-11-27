@@ -434,7 +434,7 @@ if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 
 		if (swDevice!=0)
 		{
-			sprintf(sScript,"../bootscripts/%d.script", swDevice);	// make filename
+			sprintf(sScript,"../share/boot/%d.script", swDevice);	// make filename
 			printf("\r\n\nRebooting %s\r\n\n", sScript);
 			reason = STOP_HALT;
 			awfulHackFlag = swDevice;	// this triggers a do command after leaving the simulator run.
