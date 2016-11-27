@@ -20,17 +20,17 @@ prefix="@ABSPREFIX@"
 sim="$prefix/bin/pidp8i-sim"
 scanswitch="$prefix/bin/scanswitch"
 
-# Requires screen utility for detached pidp console functionality.
+# Requires screen utility for detached pidp8i console functionality.
 test -x /usr/bin/screen || ( echo "screen not found" && exit 0 )
 
 # Also check for other needed binaries
 test -x $scanswitch || ( echo "$scanswitch not found" && exit 0 )
 test -x $sim || ( echo "$sim not found" && exit 0 )
 
-# Check if pidp is already runnning under screen.
+# Check if pidp8i is already runnning under screen.
 #
 is_running() {
-	procs=`screen -ls pidp | egrep '[0-9]+\.pidp' | wc -l`
+	procs=`screen -ls pidp8i | egrep '[0-9]+\.pidp8i' | wc -l`
 	test $procs -gt 0 && return 0 || return 1
 }
 
@@ -53,8 +53,8 @@ do_start() {
 		exit 1
 	fi
 
-	log_daemon_msg "Starting PiDP-8/I" "pidp"
-	screen -dmS pidp "$sim" $pidpscript
+	log_daemon_msg "Starting PiDP-8/I simulator" "pidp8i"
+	screen -dmS pidp8i "$sim" $pidpscript
 	status=$?
 	log_end_msg $status
 	return $status
@@ -65,8 +65,8 @@ do_stop() {
 	    echo "PiDP-8/I is already stopped." >&2
 	    status=1
 	else
-	    log_daemon_msg "Stopping PiDP-8/I" "pidp"
-	    screen -S pidp -X quit
+	    log_daemon_msg "Stopping PiDP-8/I simulator" "pidp8i"
+	    screen -S pidp8i -X quit
 	    status=$?
 	    log_end_msg $status
 	fi
@@ -88,11 +88,11 @@ case "$1" in
 	;;
 
   status)
-	screen -ls pidp | egrep '[0-9]+\.pidp'
+	screen -ls pidp8i | egrep '[0-9]+\.pidp8i'
 	;;
 
   *)
-	log_action_msg "Usage: /etc/init.d/pidp {start|stop|restart|status}" || true
+	log_action_msg "Usage: /etc/init.d/pidp8i {start|stop|restart|status}" || true
 	exit 1
 esac
 
