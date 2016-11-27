@@ -3,11 +3,11 @@ CFLAGS=-std=c99 -Wno-unused-result \
 	-I @srcdir@/src -I @builddir@/src -I @srcdir@/src/PDP8
 
 SIM = bin/pidp8i-sim
-BINS = $(SIM) bin/scanswitch
+BINS = $(SIM) libexec/scanswitch
 
-BUILDDIRS = bin obj/PDP8
+BUILDDIRS = bin libexec obj/PDP8
 
-INSTDIRS = boot bin etc share/media
+INSTDIRS = boot bin etc libexec share/media
 
 OBJS = \
 	obj/gpio.o \
@@ -61,7 +61,7 @@ install: all
 	for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
 
 	@# Install files into those dirs and set their perms
-	@INSTALL@ -m 755 -s $(BINS) @prefix@/bin
+	for f in $(BINS) ; do @INSTALL@ -m 755 -D -s $$f @prefix@/$$f ; done
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
@@ -130,7 +130,7 @@ $(BUILDDIRS):
 $(SIM): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
-bin/scanswitch: obj/scanswitch.o
+libexec/scanswitch: obj/scanswitch.o
 	$(CC) -o $@ $<
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)

@@ -18,7 +18,7 @@ umask 022
 
 prefix="@ABSPREFIX@"
 sim="$prefix/bin/pidp8i-sim"
-scanswitch="$prefix/bin/scanswitch"
+scanswitch="$prefix/libexec/scanswitch"
 
 # Requires screen utility for detached pidp8i console functionality.
 test -x /usr/bin/screen || ( echo "screen not found" && exit 0 )
