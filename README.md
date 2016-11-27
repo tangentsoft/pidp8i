@@ -86,11 +86,11 @@ commands for starting, stopping, and re-entering the simulator use
 
         $ sudo systemctl start pidp8i
 
-2.  (This normally happens automatically on reboot after `sudo make install`
+    (This normally happens automatically on reboot after `sudo make install`
     above, but you may have the service stopped or disabled, such as
     in order to run one of the various [forks of Deeper Thought][3].)
 
-3.  To enter the simulator:
+2.  To enter the simulator:
 
         $ pidp8i
 
@@ -98,17 +98,17 @@ commands for starting, stopping, and re-entering the simulator use
     `PATH` on `make install`.  This script does the same thing as
     `pdp.sh` in the upstream distribution.
 
-4.  To return to the Raspbian command prompt without shutting the
+3.  To return to the Raspbian command prompt without shutting the
     simulator down, type <kbd>Ctrl-A d</kbd>. Then you can re-enter
     with a `pidp8i` command.
 
-5.  To shut the simulator down from within, type <kbd>Ctrl-E</kbd>
+4.  To shut the simulator down from within, type <kbd>Ctrl-E</kbd>
     to pause the simulator, then at the `simh>` prompt type
     `quit`. Type `help` at that prompt to get some idea of what
     else you can do with the simulator command language, or read the
     [SimH Users' Guide][4].
 
-6.  To shut the simulator down from the Raspbian command line:
+5.  To shut the simulator down from the Raspbian command line:
 
         $ sudo systemctl stop pidp8i
 
