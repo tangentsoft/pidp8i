@@ -82,34 +82,35 @@ For the most part, this software distribution works like the upstream
 commands for starting, stopping, and re-entering the simulator use
 `pidp8i` in their name.
 
-To start the simulator:
+1.  To start the simulator:
 
-     $ sudo systemctl start pidp8i
+        $ sudo systemctl start pidp8i
 
-(This normally happens automatically on reboot after `sudo make install`
-above, but you may have the service stopped or disabled, such as in
-order to run one of the various [forks of Deeper Thought][3].)
+2.  (This normally happens automatically on reboot after `sudo make install`
+    above, but you may have the service stopped or disabled, such as
+    in order to run one of the various [forks of Deeper Thought][3].)
 
-To enter the simulator:
+3.  To enter the simulator:
 
-     $ pidp8i
+        $ pidp8i
 
-This works because `$prefix/bin` is added to the installing user's
-`PATH` on `make install`.  This script does the same thing as `pdp.sh`
-in the upstream distribution.
+    This works because `$prefix/bin` is added to the installing user's
+    `PATH` on `make install`.  This script does the same thing as
+    `pdp.sh` in the upstream distribution.
 
-To return to the Raspbian command prompt without shutting the simulator
-down, type <kbd>Ctrl-A d</kbd>. Then you can re-enter with a `pidp8i`
-command.
+4.  To return to the Raspbian command prompt without shutting the
+    simulator down, type <kbd>Ctrl-A d</kbd>. Then you can re-enter
+    with a `pidp8i` command.
 
-To shut the simulator down from within, type <kbd>Ctrl-E</kbd> to pause
-the simulator, then at the `simh>` prompt type `quit`. Type `help` at
-that prompt to get some idea of what else you can do with the simulator
-command language, or read the [SimH Users' Guide][4].
+5.  To shut the simulator down from within, type <kbd>Ctrl-E</kbd>
+    to pause the simulator, then at the `simh>` prompt type
+    `quit`. Type `help` at that prompt to get some idea of what
+    else you can do with the simulator command language, or read the
+    [SimH Users' Guide][4].
 
-To shut the simulator down from the Raspbian command line:
+6.  To shut the simulator down from the Raspbian command line:
 
-     $ sudo systemctl stop pidp8i
+        $ sudo systemctl stop pidp8i
 
 See the project's [official documentation][5] for more details.
 
