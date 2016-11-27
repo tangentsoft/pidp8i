@@ -7,7 +7,7 @@ BINS = $(SIM) bin/scanswitch
 
 BUILDDIRS = bin obj/PDP8
 
-INSTDIRS = bootscripts bin etc imagefiles
+INSTDIRS = bootscripts bin etc share/media
 
 OBJS = \
 	obj/gpio.o \
@@ -64,7 +64,7 @@ install: all
 	@INSTALL@ -m 755 -s $(BINS) @prefix@/bin
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
-	test -e @ABSPREFIX@/imagefiles/os8/os8.rk05 || $(MAKE) mediainstall
+	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
 	@INSTALL@ -m 640 @srcdir@/bootscripts/*.script @prefix@/bootscripts
 
 	@# If this is a Debian-type system, install needed helper programs
@@ -101,12 +101,12 @@ install: all
 mediainstall:
 	@echo "[Re]installing OS and program media..."
 	@cd @srcdir@ ; \
-	find imagefiles \( \
+	find media \( \
 		-name \*.bin  -o \
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
-	\) -exec @INSTALL@ -D -m 640 {} @ABSPREFIX@/{} \;
+	\) -exec @INSTALL@ -D -m 640 {} @ABSPREFIX@/share/{} \;
 
 reconfig:
 	@AUTOREMAKE@

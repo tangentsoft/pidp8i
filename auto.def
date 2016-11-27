@@ -54,6 +54,7 @@ msg-result "Found GNU readlink(1) as $rlprg."
 
 # Absolutize the prefix, for generated scripts
 define ABSPREFIX [exec $rlprg -f [get-define prefix]]
+define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
