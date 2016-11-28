@@ -8,12 +8,21 @@ define defaultprefix /opt/pidp8i
 use cc
 
 options {
+	debug-mode => "create a debug build (default is release)",
 	serial-mod => "build simulator to expect the PCB serial mods"
 }
 
 if {[opt-bool serial-mod]} {
 	msg-result "The simulator will expect the serial mods to the Pi and PiDP-8/I PCBs."
 	define SERIALSETUP
+}
+
+if {[opt-bool debug-mode]} {
+	msg-result "Creating a debuggable build."
+	define BUILDMODE {-O0 -g}
+} else {
+	msg-result "Creating a release build."
+	define BUILDMODE {-O2}
 }
 
 cc-check-includes time.h
