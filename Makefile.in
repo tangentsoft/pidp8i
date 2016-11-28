@@ -48,7 +48,8 @@ CLTXT = /boot/cmdline.txt
 all: $(BUILDDIRS) examples $(BINS) @EXAMPLES@
 
 clean:
-	@rm -f $(BINS) examples \
+	@test -h examples && rm examples || true
+	@rm -f $(BINS) \
 		@builddir@/obj/{.,PDP8}/*.{o,d} \
 		@builddir@/examples/*.{lst,pt}
 	-rmdir -p $(BUILDDIRS) 2> /dev/null || true
