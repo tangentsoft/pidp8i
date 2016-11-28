@@ -2057,7 +2057,7 @@ if (awfulHackFlag!=0) {
     sprintf(cbuf, "exit");	// inject command into command line processor.
   else {
     char path[256];
-    snprintf(path, sizeof(path), "../share/boot/%d.script", awfulHackFlag);
+    snprintf(path, sizeof(path), "@BOOTDIR@/%d.script", awfulHackFlag);
     if (access(path, R_OK) == 0) {
       sprintf(cbuf, "do %s", path);
     }
