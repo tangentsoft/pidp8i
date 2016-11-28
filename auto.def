@@ -52,10 +52,15 @@ if {[cc-check-progs greadlink]} {
 }
 msg-result "Found GNU readlink(1) as $rlprg."
 
-# Absolutize the prefix, for generated scripts
+# Absolutize the prefix, for generated scripts, then build variants
 define ABSPREFIX [exec $rlprg -f [get-define prefix]]
 define BOOTDIR "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
+
+# If we have a PAL-III type assembler here, build the examples, too
+if {[cc-check-progs palbart]} {
+	define EXAMPLES {examples/add.pt}
+}
 
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
