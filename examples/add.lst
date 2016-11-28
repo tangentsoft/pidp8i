@@ -1,0 +1,32 @@
+
+
+
+      / add.pal                                                           Page 1
+
+
+    1             / add.pal
+    2             /
+    3             / A more space-efficient alternative to the program for adding two
+    4             / numbers as presented here:
+    5             /
+    6             / http://mrhowson.edublogs.org/2016/11/27/pidp-8i-second-toggle-some-assembly-code/
+    7             
+    8             / Main program
+    9       0200  *0200                   / code starts at core page 1; must avoid page 0
+   10 00200 7300  MAIN,   CLA CLL         / clear AC and Link; two OPRs, one instruction!
+   11 00201 1206          TAD A           / add A to AC, which is zero, so "load A"
+   12 00202 1207          TAD B           / add B to AC
+   13 00203 3210          DCA C           / store sum in AC at C 
+   14 00204 7402          HLT             / halt program 
+   15 00205 5200          JMP MAIN        / to continue - goto Main
+   16             
+   17 00206 0002  A,      2               / set "A" variable to 2
+   18 00207 0003  B,      3               / and "B" to 3
+   19             C,                      / "C" result variable lives immediately past B,
+   20                                     / and has no initial value because it is always
+   21                                     / overwritten with the answer
+   22             
+   23             / Declare program entry point
+   24             $MAIN
+
+      No detected errors
