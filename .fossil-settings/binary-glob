@@ -1,4 +1,5 @@
 examples/*.pt
+labels/*.pdf
 media/*/*.bin
 media/*/*.dsk
 media/*/*.pt

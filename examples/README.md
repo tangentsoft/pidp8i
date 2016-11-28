@@ -176,7 +176,8 @@ documentation:
 
 There is an SVG template for USB stick labels in the distribution under
 the [`labels/`][label] directory, for use if you find yourself creating
-long-lived USB sticks.
+long-lived USB sticks. See [`labels/README.md`][lread] for more
+information.
 
 
 [lst]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.lst
