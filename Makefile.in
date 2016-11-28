@@ -48,11 +48,19 @@ CLTXT = /boot/cmdline.txt
 all: $(BUILDDIRS) $(BINS) @EXAMPLES@
 
 clean:
-	@rm -f $(BINS) $(OBJS) $(OBJS:.o=.d)
+	@rm -f $(BINS) @builddir@/obj/{.,PDP8}/*.{o,d}
 	-rmdir -p $(BUILDDIRS) @EXAMPLES@ 2> /dev/null || true
 
 distclean: clean
-	@rm -f config.log Makefile autosetup/jimsh0 @builddir@/src/config.h
+	@rm -f \
+		@builddir@/config.log \
+		@builddir@/Makefile \
+		@builddir@/autosetup/jimsh0 \
+		@builddir@/boot/{0,2,3,4,6,7}.script \
+		@builddir@/etc/pidp8i-init \
+		@builddir@/src/config.h \
+		@builddir@/src/PDP8/pdp8_cpu.c \
+		@builddir@/src/scp.c
 
 install: all
 	@echo Installing to @prefix@...
