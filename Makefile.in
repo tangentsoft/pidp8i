@@ -45,11 +45,13 @@ LIBS = -lm -ldl -lpthread
 CLTXT = /boot/cmdline.txt
 
 
-all: $(BUILDDIRS) $(BINS) @EXAMPLES@
+all: $(BUILDDIRS) examples $(BINS) @EXAMPLES@
 
 clean:
-	@rm -f $(BINS) @builddir@/obj/{.,PDP8}/*.{o,d}
-	-rmdir -p $(BUILDDIRS) @EXAMPLES@ 2> /dev/null || true
+	@rm -f $(BINS) examples \
+		@builddir@/obj/{.,PDP8}/*.{o,d} \
+		@builddir@/examples/*.{lst,pt}
+	-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
 	@rm -f \
@@ -145,12 +147,21 @@ obj/%.o: @builddir@/src/%.c
 	@rm -f obj/$*.d.tmp
 
 # Rule for building example PAL assembly language programs
-examples/%.pt examples/%.lst: examples/%.pal
-	palbart -r $<
+examples/%.pt examples/%.lst: @srcdir@/examples/%.pal
+	palbart -r examples/$*.pal
 	mv examples/$*.rim examples/$*.pt
 
 $(BUILDDIRS):
 	mkdir -p $@
+
+# If the examples directory doesn't exist, it's probably because we're
+# building out-of-tree. Since palbart can't be told where to write its
+# output files, we're going to have to symlink the whole tree from the
+# srcdir to the builddir.  This means these outputs get written back to
+# the source tree, but since we check changed *.pt and *.lst files back
+# into source control anyway, this is mostly harmless.
+examples:
+	ln -s @srcdir@/examples @builddir@/examples
 
 $(SIM): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)
