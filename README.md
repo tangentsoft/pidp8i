@@ -27,6 +27,13 @@
     or similar, but it really doesn't matter where you put it, as
     long as your user has full write access to that directory.
 
+*   A working C compiler.  A full installation of Raspbian includes
+    this, but the "Lite" version does not.  If you get a complaint
+    about, "No working C compiler found" from the `configure` step
+    below, you can install the necessary build tools with:
+
+        $ sudo apt install build-essential
+
 
 ## Configuring, Building and Installing
 
