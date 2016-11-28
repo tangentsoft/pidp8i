@@ -132,23 +132,25 @@ program's starting address (0200) first into the switch register (SR)
 and then into the PDP-8's program counter (PC) via `Load Add`. Then
 toggle `Start` to run the program. If you then:
 
-If you then toggle 000 010 001 000 into SR, press `Load Add` followed by
-`Exam`, you should see 000 000 000 010 in the third row of lights, the
-bit pattern for five, that being the correct answer for "2 + 3", which
-is what `add.pal` computes. You could load that address back up again
-and `Dep` a different value into that location, then start the program
-over again at 0200 to observe that this memory location does, indeed,
-get overwritten with 0005.
+If you then toggle 000 010 000 111 into SR, press `Load Add` followed by
+`Exam`, you should see 000 000 000 101 in the third row of lights, the
+bit pattern for five at memory location 0207, that being the correct
+answer for "2 + 3" in the expected location, which is what we expected
+`add.pal` to do. You could load that address back up again and `Dep` a
+different value into that location, then start the program over again at
+0200 to observe that this memory location does, indeed, get overwritten
+with 0005.
 
 We only need one `Load Add` operation in the table above because all of
 the memory addresses in this program are sequential; there are no jumps
 in the values in the second column. Not all programs are that way, so
 pay attention!
 
-Incidentally, the above program also modifies octal location 0207, the
-next memory location after the last one explicitly defined, 0206. That
-is the source of the "07" in the lower two digits of the fourth
-instruction.
+Beware that this program does not contain an explicit value for memory
+location 0207 at the start, but it does overwrite this location with the
+answer, since location `C` is defined as having the address just after
+the last value you entered via SR above, 0206. That is the source of the
+"07" in the lower two digits of the fourth instruction, 3207.
 
 
 ## Option 3: Loading Programs from Paper Tape
