@@ -10,24 +10,25 @@ For each program there are 3 files:
 -----------------------------
 | `*.pal`   | the PAL-III assembly source code for the program
 | `*.lst`   | the human-readable assembler output
-| `*.pt`    | the machine-readable assembler output
+| `*.pt`    | the machine-readable assembler output (RIM format)
 
 There are three ways to run these on your PiDP-8/I, each starting with
 one of the above three files:
 
 1.  Transcribe the assembly program text to a file within a PDP-8
-    operating system and assemble it inside the simulator as described
-    in the first section below.
+    operating system and assemble it inside the simulator.
 
-2.  Toggle the program in from the front panel as described in the
-    second section below. I can recommend this method only for very
-    short programs.
+2.  Toggle the program in from the front panel. I can recommend this
+    method only for very short programs.
 
 3.  Copy the `*.pt` file to a USB stick and use the PiDP-8/I's
-    [automatic media mounting feature][mount]. This is the fastest method.
+    [automatic media mounting feature][howto]. This is the fastest method.
+
+I cover each of these options below, in the same order as the list
+above.
 
 
-## Transcribing the Examples into an OS/8 Session
+## Option 1: Transcribing the Examples into an OS/8 Session
 
 To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
 PiDP-8/I:
@@ -90,7 +91,7 @@ in the day. The tools may differ — the user may prefer `TECO` over
 `EDIT` or MACRO-8 over PAL8 — but the idea is the same regardless.
 
 
-## Toggling Programs in Via the Front Panel
+## Option 2: Toggling Programs in Via the Front Panel
 
 Take [`add.lst`][lst] as an example, in which you will find three
 columns of numbers on the code-bearing lines:
@@ -145,6 +146,41 @@ is the source of the "07" in the lower two digits of the fourth
 instruction.
 
 
+## Option 3: Loading Programs from Paper Tape
+
+The `example/*.pt` files shipped with the software distribution are in
+RIM format, so the simple way to load them into your PiDP-8/I is to copy
+them to USB sticks, one file per stick. The following is distilled from
+the [How to Use the PiDP-8/I][howto] section of the PiDP-8/I
+documentation:
+
+1.  Set the IF switches (first white group) to 001, and toggle `Sing
+    Step` to reboot the simulator into the high-speed RIM loader. If the
+    simulator wasn't already running, restarting the simulator with IF=1
+    will achieve the same end as toggling `Sing Step` while it's
+    running. Reset the IF switches to 0.
+
+2.  Insert the USB stick containing the `*.pt` file you want to load
+    into the Pi.
+
+3.  Set the DF switches (first brown group) to 001, then toggle `Sing
+    Step` again. This attaches the tape to the high-speed paper tape
+    reader peripheral within the PDP-8 simulator. Set DF back to 0.
+
+4.  Set the switch register (SR) to 7756 (111 111 101 110) then press
+    `Load Add`, then `Start`.
+
+5.  Hit `Stop`, then reset SR to 0200 (000 010 000 000), that being the
+    starting location of these example programs. Press `Load Add`, then
+    `Start` to run the program.
+
+There is an SVG template for USB stick labels in the distribution under
+the [`labels/`][label] directory, for use if you find yourself creating
+long-lived USB sticks.
+
+
 [lst]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.lst
 [pal]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.pal
-[mount]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
+[label]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=labels
+[lread]: https://tangentsoft.com/pidp8i/doc/trunk/labels/README.md
+[howto]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
