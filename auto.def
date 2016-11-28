@@ -8,7 +8,7 @@ define defaultprefix /opt/pidp8i
 use cc
 
 options {
-	debug-mode => "create a debug build (default is release)",
+	debug-mode => "create a debug build (default is release)"
 	serial-mod => "build simulator to expect the PCB serial mods"
 }
 
