@@ -1,8 +1,8 @@
 examples/*.pt
-imagefiles/*/*.bin
-imagefiles/*/*.dsk
-imagefiles/*/*.pt
-imagefiles/*/*.rk05
-imagefiles/*/*.tu56
+media/*/*.bin
+media/*/*.dsk
+media/*/*.pt
+media/*/*.rk05
+media/*/*.tu56
 pics/*/*.jpg
 pics/*/*.png
