@@ -1,3 +1,4 @@
+examples/*.pt
 imagefiles/*/*.bin
 imagefiles/*/*.dsk
 imagefiles/*/*.pt
