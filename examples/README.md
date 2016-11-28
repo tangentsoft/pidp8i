@@ -1,4 +1,7 @@
-# How to Use the Examples
+# Example Programs
+
+
+## How to Use the Examples
 
 The `examples` directory holds short example programs for your PiDP-8/I.
 For each program there are 3 files:
