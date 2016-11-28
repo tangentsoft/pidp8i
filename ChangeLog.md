@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
 
-# Release 2016.11.27 (UNRELEASED)
+## Version 2016.11.27
 
 *   Added an intelligent, powerful build system, replacing the
     bare-bones `Makefile` based build system in the upstream version.
@@ -86,7 +86,7 @@
 [tix]:     https://tangentsoft.com/pidp8i/tickets
 
 
-# Release 2015.12.15
+## Version 2015.12.15
 
 *   The official upstream release of the software, still current as of
     late 2016, at least.
