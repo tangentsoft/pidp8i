@@ -58,7 +58,7 @@
     for you to toggle in, etc. Also filed a bunch of [tickets][tix]
     detailing feature proposals, known bugs and weaknesses, etc. If you
     were looking for ways to contribute to the development effort, these
-    new resoruces provide a bunch of ideas.
+    new resources provide a bunch of ideas.
 
 *   Made some efforts toward portability.
 
