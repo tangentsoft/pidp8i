@@ -65,7 +65,7 @@ install: all
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
-	@INSTALL@ -m 640 @srcdir@/boot/*.script @BOOTDIR@
+	@INSTALL@ -m 644 @srcdir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
 	@test -x /usr/bin/apt-get && ( \
@@ -106,7 +106,7 @@ mediainstall:
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
-	\) -exec @INSTALL@ -D -m 640 {} @ABSPREFIX@/share/{} \;
+	\) -exec @INSTALL@ -D -m 644 {} @ABSPREFIX@/share/{} \;
 
 reconfig:
 	@AUTOREMAKE@
