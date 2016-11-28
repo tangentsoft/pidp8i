@@ -12,13 +12,24 @@ For each program there are 3 files:
 There are three ways to run these on your PiDP-8/I, each starting with
 one of the above three files:
 
-1.  Transcribe the assembly program text into the Pi with a text editor
-    such as TECO or EDIT under OS/8, saving the file as *.PA. Then, run
-    the PAL8, PAL-III, or MACRO-8 assembler on it, which will produce
-    the same set of files you find here, except that `*.pt` will be
-    called `*.BN` and `*.lst` will be called `*.LS`. This method is
-	educational, giving much the same working experience as working
-	programmers had on real PDP-8s.
+1.  Transcribe the assembly program text to a file within a PDP-8
+    operating system and assemble it inside the simulator. For example,
+	in OS/8:
+
+	    .EDIT         then input the program, saving as RKB0:EXAMPLE.PA
+		.R PAL8
+		*RKB0:,RKB0:<RKB0:EXAMPLE
+
+    That ugly final line loads `EXAMPLE.PA` from the second half of the
+    first RK05 hard disk, then writes out the machine-readable and
+    human-readable output files to the same disk as `EXAMPLE.BN` and
+    `EXAMPLE.LS`, respectively. (Are you missing your `make` program
+    yet?)
+
+    This method is the most educational, as it matches the working
+    experience of PDP-8 assembly language programmers back in the day.
+    The tools may differ — the user may prefer `TECO` over `EDIT` and
+    MACRO-8 over PAL8 — but the idea is the same regardless.
 
 2.  Toggle the program in from the front panel as described in the
     following section. I can recommend this method only for very short
