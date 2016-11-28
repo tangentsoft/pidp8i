@@ -122,9 +122,22 @@ reconfig:
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
 # Explained at http://scottmcpeak.com/autodepend/autodepend.html
+#
+# Reflect any changes here into near-duplicate below!
 obj/%.o: @srcdir@/src/%.c
 	$(CC) -c $(CFLAGS) @srcdir@/src/$*.c -o obj/$*.o
 	$(CC) -MM $(CFLAGS) @srcdir@/src/$*.c > obj/$*.d
+	@mv -f obj/$*.d obj/$*.d.tmp
+	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
+		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
+	@rm -f obj/$*.d.tmp
+
+# Near-duplicate of above rule for those *.c files generated from *.c.in
+# files in the srcdir.  Needed when building out-of-tree.
+obj/%.o: @builddir@/src/%.c
+	$(CC) -c $(CFLAGS) @builddir@/src/$*.c -o obj/$*.o
+	$(CC) -MM $(CFLAGS) @builddir@/src/$*.c > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
 	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
