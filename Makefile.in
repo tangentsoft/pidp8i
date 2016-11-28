@@ -1,4 +1,4 @@
-CFLAGS=-std=c99 -Wno-unused-result @BUILDMODE@ \
+CFLAGS=-std=c99 -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
