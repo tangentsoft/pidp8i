@@ -5,7 +5,7 @@
 
 *   Added an intelligent, powerful build system, replacing the
     bare-bones `Makefile` based build system in the upstream version.
-	See [`README.md`][readme] for more info on this.
+    See [`README.md`][readme] for more info on this.
 
 *   The installation is now completely relocatable via `./configure
     --prefix=/some/other/place`. The upstream version would not work if
@@ -43,8 +43,8 @@
 
 *   Installing multiple times no longer overwrites the binary OS/program
     media, since the disk images in particular may contain local
-	changes.  If you want your media images overwritten, you can insist
-	on it via `make mediainstall`.
+    changes.  If you want your media images overwritten, you can insist
+    on it via `make mediainstall`.
 
 *   The installation tree follows the Linux Filesystem Hierarchy
     Standard, so that files are in locations an experienced Linux user
