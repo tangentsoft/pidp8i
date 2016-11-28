@@ -5,35 +5,7 @@
 
 *   Added an intelligent, powerful build system, replacing the
     bare-bones `Makefile` based build system in the upstream version.
-
-    This means you don't unpack the zip file or tarball into
-    `/opt/pidp8` and build it in place, as with the upstream version.
-    Instead, you unpack it somewhere you normally build software
-    (e.g. `$HOME/src`) then say
-
-        $ ./configure && make && sudo make install
-
-    ...just as with other typical Linux/Unix software.
-    
-    This feature subsumes the complicated build and installation
-    steps from the upstream version: you don't have to `cd src`
-    before building, you don't have to remember to build `scanswitch`
-    separately, and you don't have to run the (now-removed) separate
-    installation scripts.
-
-    The `configure` script accepts most traditional flags for such
-    a script, the most important of which is `--prefix`, which means
-    that you can now install to any directory you like; you are no
-    longer required to install to a fixed location in order for
-    the scripts to work properly.  You can also run these scripts
-    from arbitrary working directories, since the relative paths
-    in the scripts are replaced by absolute paths during the
-    build and installation process.
-
-    The `configure` script defines only one custom option for the
-    PiDP-8/I project: `--serial-mod`, which replaces the old method
-    of modifying `src/Makefile` to add `-DSERIALSETUP` if you have
-    done the "serial mod" to your Raspberry Pi and PiDP-8/I PCBs.
+	See [`README.md`][1] for more info on this.
 
 *   Changed all of the various "PDP," "PDP-8", and "PiDP-8" strings to
     variants on "PiDP-8/I", partly for consistency and partly because
@@ -60,8 +32,8 @@
     status messages to the console.  Stare no more at opaque lists
     of SimH commands, wondering what each script does!
 
-*   Added a bunch of ancillary material: [wiki articles][1], [USB
-    stick label artwork][2], etc. Also filed a bunch of [tickets][3]
+*   Added a bunch of ancillary material: [wiki articles][2], [USB
+    stick label artwork][3], etc. Also filed a bunch of [tickets][4]
     detailing feature proposals, known bugs and weaknesses, etc. If
     you were looking for ways to contribute to the development
     effort, these new resoruces provide a bunch of ideas.
@@ -83,9 +55,10 @@
 *   Fixed a bunch of bugs!
 
 
-[1]: https://tangentsoft.com/pidp8i/wcontent
-[2]: https://tangentsoft.com/pidp8i/dir?c=trunk&name=labels
-[3]: https://tangentsoft.com/pidp8i/tickets
+[1]: https://tangentsoft.com/pidp8i/doc/trunk/README.md
+[2]: https://tangentsoft.com/pidp8i/wcontent
+[3]: https://tangentsoft.com/pidp8i/dir?c=trunk&name=labels
+[4]: https://tangentsoft.com/pidp8i/tickets
 
 
 # Release 2015.12.15
