@@ -36,13 +36,13 @@ one of the above three files:
     programs.
 
 3.  Copy the `*.pt` file to a USB stick and use the PiDP-8/I's
-    [automatic media mounting feature][1]. This is the fastest method.
+    [automatic media mounting feature][mount]. This is the fastest method.
 
 
 ## Toggling Programs in Via the Front Panel
 
-Take `add.lst` as an example, in which you will find three columns of
-numbers on the code-bearing lines:
+Take [`add.lst`][lst] as an example, in which you will find three
+columns of numbers on the code-bearing lines:
 
     10 00200 7300
     11 00201 1206
@@ -53,9 +53,9 @@ numbers on the code-bearing lines:
     17 00206 0002
     18 00207 0003
 
-The first number refers to the corresponding line number in `add.pal`,
-the second is a PDP-8 memory address, and the third is the value stored
-at that address.
+The first number refers to the corresponding line number in
+[`add.pal`][pal], the second is a PDP-8 memory address, and the third is
+the value stored at that address.
 
 To toggle the `add` program in, press `Stop` to halt the processor, then
 twiddle the switches like so:
@@ -95,4 +95,6 @@ is the source of the "07" in the lower two digits of the fourth
 instruction.
 
 
-[1]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
+[lst]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.lst
+[pal]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.pal
+[mount]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
