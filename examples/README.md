@@ -47,33 +47,40 @@ the second is a PDP-8 memory address, and the third is the value stored
 at that address.
 
 Therefore, to toggle the `add` program into memory, first toggle `Stop`
-to halt the processor, then twiddle the switches like so:
+to halt the processor, then twiddle the switch register (SR) like so:
 
 | Set SR Switches To... | Then Toggle...
 |------------------------------------------------
 | 000 010 000 000       | `Load Add`
 | 111 011 000 000       | `Dep`
+| 001 010 000 101       | `Dep`
 | 001 010 000 110       | `Dep`
 | 011 010 000 111       | `Dep`
-| 011 010 001 000       | `Dep`
 | 111 100 000 010       | `Dep`
-| 101 010 000 000       | `Dep`
 | 000 000 000 010       | `Dep`
 | 000 000 000 011       | `Dep`
 
 To run it, repeat the first step in the table above, loading the
 program's starting address (0200) first into the switch register and
 then into the PDP-8's program counter (PC) via `Load Add`. Then toggle
-`Start` to run the program.
+`Start` to run the program. If you then:
+
+If you then toggle 000 010 001 000 into SR, press `Load Add` followed by
+`Exam`, you should see 000 000 000 010 in the third row of lights, the
+bit pattern for five, that being the correct answer for "2 + 3", which
+is what `add.pal` computes. You could load that address back up again
+and `Dep` a different value into that location, then start the program
+over again at 0200 to observe that this memory location does, indeed,
+get overwritten with 0005.
 
 We only need one `Load Add` operation in the table above because all of
 the memory addresses in this program are sequential; there are no jumps
 in the values in the second column. Not all programs are that way, so
 pay attention!
 
-Incidentally, the above program also modifies octal location 0210, the
-next memory location after the last one explicitly defined, 0207. That
-is the source of the "10" in the lower two digits of the fourth
+Incidentally, the above program also modifies octal location 0207, the
+next memory location after the last one explicitly defined, 0206. That
+is the source of the "07" in the lower two digits of the fourth
 instruction.
 
 

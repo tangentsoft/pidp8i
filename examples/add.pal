@@ -12,7 +12,6 @@ MAIN,	CLA CLL		/ clear AC and Link; two OPRs, one instruction!
 	TAD B		/ add B to AC
 	DCA C		/ store sum in AC at C 
 	HLT		/ halt program 
-	JMP MAIN	/ to continue - goto Main
 
 A,      2		/ set "A" variable to 2
 B,      3		/ and "B" to 3
