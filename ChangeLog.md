@@ -16,7 +16,7 @@
 *   Changed all of the various "PDP," "PDP-8", and "PiDP-8" strings to
     variants on "PiDP-8/I", partly for consistency and partly because it
     seems unlikely that this software will ever be used with anything
-    other than the PDP-8/I project.
+    other than the PiDP-8/I project.
 
     Part of this renaming means that the default installation location
     is now `/opt/pidp8i`, which has the nice side benefit that
@@ -67,7 +67,7 @@
     unpack the project on any other Unix type system and at least get
     the simulator up and running with the normal SimH manual control
     over execution instead of the nice front panel controls provided by
-    the PDP-8/I board.
+    the PiDP-8/I board.
 
     In particular, the software now builds under Mac OS X, though it
     does not yet run properly.  (The modified SimH PDP-8 simulator
