@@ -1,6 +1,6 @@
 CFLAGS=-std=c99 -Wno-unused-result @BUILDMODE@ \
 	-D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -U__STRICT_ANSI__ \
-	-I @srcdir@/src -I @builddir@/src -I @srcdir@/src/PDP8
+	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
 SIM = bin/pidp8i-sim
 BINS = $(SIM) libexec/scanswitch
@@ -11,10 +11,11 @@ INSTDIRS = bin etc libexec share/boot share/media
 
 OBJS = \
 	obj/gpio.o \
+	obj/sim_console.o \
+	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_cpu.o \
 	obj/PDP8/pdp8_clk.o \
 	obj/PDP8/pdp8_ct.o \
-	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_dt.o \
 	obj/PDP8/pdp8_fpp.o \
 	obj/PDP8/pdp8_lp.o \
@@ -30,7 +31,6 @@ OBJS = \
 	obj/PDP8/pdp8_tt.o \
 	obj/PDP8/pdp8_ttx.o \
 	obj/scp.o \
-	obj/sim_console.o \
 	obj/sim_disk.o \
 	obj/sim_ether.o \
 	obj/sim_fio.o \
@@ -140,10 +140,10 @@ $(BUILDDIRS):
 	mkdir -p $@
 
 $(SIM): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o
-	$(CC) -o $@ $<
+	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 Makefile: @AUTODEPS@ @srcdir@/Makefile.in
