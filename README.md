@@ -27,12 +27,8 @@
     or similar, but it really doesn't matter where you put it, as
     long as your user has full write access to that directory.
 
-*   A working C compiler.  A full installation of Raspbian includes
-    this, but the "Lite" version does not.  If you get a complaint
-    about, "No working C compiler found" from the `configure` step
-    below, you can install the necessary build tools with:
-
-        $ sudo apt install build-essential
+*   A working C compiler and other standard Linux build tools, such as
+     make(1).
 
 
 ## Configuring, Building and Installing
@@ -41,6 +37,11 @@ This software distribution builds and installs in the same way as most
 other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
+
+If you get a complaint like "No working C compiler found," you can install
+the necessary build tools with:
+
+    $ sudo apt install build-essential
 
 The `configure` script accepts most of the common flags for such
 scripts.  Perhaps the most important such flag is `--prefix`, which
