@@ -63,13 +63,18 @@ of the `ERRORS DETECTED: 0` bit, an error has occurred. Table 3-3 in
 my copy the OS/8 Handbook explains these. You will also have an `ADD.ER`
 file explaining what happened.
 
-You can instead say `EXE ADD` to assemble *and execute* that program,
-but beware that because the program halts the processor so that you can
-examine the memory location we've called `C` — 0207 — your OS/8 session
-also halts. It won't resume correctly if you press the `Start` switch on
-the front panel, because the processor then tries executing the next
-line past the `HLT` instruction, being the memory location we've called
-`A`. The solution is the following:
+You can instead say `EXE ADD` to assemble and execute that program in a
+single step, but beware that because the program halts the processor,
+your OS/8 session also halts. If you take the opportunity as intended to
+examine memory location `C` — 0207 — pressing `Start` to resume will
+cause the processor to try executing the instruction at 0210, and who
+knows what that will do? Even if you pass up the opportunity to examine
+`C`, pressing `Start` immediately after the halt will do the same,
+except that we know what it will do: it will try to execute the 0002
+value stored at `A` as an instruction! (I believe it means `AND` the
+accumulator with memory location 2.)
+
+The solution to these problems is simple:
 
     .EDIT ADD                   ← don't need "R" because file exists
     #R                          ← read first page in; isn't automatic!
