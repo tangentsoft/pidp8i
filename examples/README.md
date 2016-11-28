@@ -26,7 +26,8 @@ one of the above three files:
 
 ## Transcribing the Examples into an OS/8 Session
 
-To transcribe `examples/add.pal` into the OS/8 simulation on a PiDP-8/I:
+To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
+PiDP-8/I:
 
     .R EDIT
     *RKB0:ADD.PA<
