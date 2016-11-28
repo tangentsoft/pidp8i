@@ -2055,8 +2055,23 @@ while (stat != SCPE_EXIT) {                             /* in case exit */
 if (awfulHackFlag!=0) {
   if (awfulHackFlag==8)
     sprintf(cbuf, "exit");	// inject command into command line processor.
-  else
-    sprintf(cbuf, "do ../share/boot/%d.script", awfulHackFlag);
+  else {
+    char path[256];
+    snprintf(path, sizeof(path), "../share/boot/%d.script", awfulHackFlag);
+    if (access(path, R_OK) == 0) {
+      sprintf(cbuf, "do %s", path);
+    }
+		else {
+			// Give up; can't find that boot script.  Have to exit, or we'll
+			// spam the console with errors, since we can write errors faster
+			// than the user can flip the offending switch back, particularly
+			// with a slow serial console.
+			char cwd[256];
+			getcwd(cwd, sizeof(cwd));
+			printf("Cannot read %s from %s: %s!\n", path, cwd, strerror(errno));
+			sprintf(cbuf, "exit");
+    }
+  }
   cptr = cbuf;
  }
  else if ((cptr = sim_brk_getact (cbuf, sizeof(cbuf))))   /* pending action? */
