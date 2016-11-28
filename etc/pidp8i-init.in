@@ -46,7 +46,7 @@ do_start() {
 	    echo "PiDP-8/I STOP switch detected, aborting." >&2
 	    exit 0
 	elif [ $script -lt 8 ]; then
-	    bscript="$prefix/share/boot/""$script"".script"
+	    bscript="@BOOTDIR@/""$script"".script"
 	    echo "Booting from $bscript..."
 	else
 		echo "Bad return value $script from $scanswitch!"
