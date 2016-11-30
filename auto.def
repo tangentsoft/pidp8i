@@ -69,8 +69,8 @@ define MEDIADIR "[get-define ABSPREFIX]/share/media"
 # If we have a PAL-III type assembler here, build the examples, too
 if {[cc-check-progs palbart]} {
 	define EXAMPLES [join {
-		examples/add.pt
-		examples/pep001.pt
+		examples/add.pt    examples/add.lst
+		examples/pep001.pt examples/pep001.lst
 	}]
 } else {
 	define EXAMPLES {}
