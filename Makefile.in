@@ -3,7 +3,7 @@ CFLAGS=-std=c99 -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
 SIM = bin/pidp8i-sim
-BINS = $(SIM) libexec/scanswitch
+BINS = $(SIM) bin/pidp8i-testswitch libexec/scanswitch
 
 BUILDDIRS = bin libexec obj/PDP8
 
@@ -167,6 +167,9 @@ examples:
 	ln -s @srcdir@/examples @builddir@/examples
 
 $(SIM): $(OBJS)
+	$(CC) -o $@ $^ $(LIBS)
+
+bin/pidp8i-testswitch: obj/test.o obj/gpio.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o

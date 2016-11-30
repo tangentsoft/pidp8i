@@ -83,6 +83,19 @@ hardware will work correctly, but several lights and switches will
 not work correctly.
 
 
+## Testing
+
+You can test your PiDP-8/I LED and switch functions with the
+`pidp8i-test` program. It will be in the `PATH` after installing the
+software.
+
+(You may have to log out and back in for this to work, since the
+installation script modifies your normal user's `PATH` since the normal
+installation prefix is not in the stock Raspbian user `PATH`.)
+
+See `README-test.md` for more details.
+
+
 ## Using the Software
 
 For the most part, this software distribution works like the upstream
