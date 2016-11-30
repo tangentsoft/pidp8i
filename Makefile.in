@@ -151,7 +151,7 @@ obj/%.o: @builddir@/src/%.c
 
 # Rule for building example PAL assembly language programs
 examples/%.pt examples/%.lst: @srcdir@/examples/%.pal
-	palbart -r examples/$*.pal
+	palbart -lr examples/$*.pal
 	mv examples/$*.rim examples/$*.pt
 
 $(BUILDDIRS):
