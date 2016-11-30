@@ -70,7 +70,7 @@ want to return to the pristine versions as distributed.
 
 ## The Serial Mod
 
-If you have done the [serial mod][1] to your PiDP-8/I PCB and the
+If you have done the [serial mod][smod] to your PiDP-8/I PCB and the
 Raspberry Pi you have connected to it, add `--serial-mod` to the
 `configure` command above.
 
@@ -93,13 +93,13 @@ software.
 installation script modifies your normal user's `PATH` since the normal
 installation prefix is not in the stock Raspbian user `PATH`.)
 
-See `README-test.md` for more details.
+See [`README-test.md`][rmt] for more details.
 
 
 ## Using the Software
 
 For the most part, this software distribution works like the upstream
-[2015.12.15 distribution][2]. The major differences are that all of the
+[2015.12.15 distribution][usd]. The major differences are that all of the
 commands for starting, stopping, and re-entering the simulator use
 `pidp8i` in their name.
 
@@ -109,7 +109,7 @@ commands for starting, stopping, and re-entering the simulator use
 
     (This normally happens automatically on reboot after `sudo make install`
     above, but you may have the service stopped or disabled, such as
-    in order to run one of the various [forks of Deeper Thought][3].)
+    in order to run one of the various [forks of Deeper Thought][dt2].)
 
 2.  To enter the simulator:
 
@@ -127,17 +127,18 @@ commands for starting, stopping, and re-entering the simulator use
     to pause the simulator, then at the `simh>` prompt type
     `quit`. Type `help` at that prompt to get some idea of what
     else you can do with the simulator command language, or read the
-    [SimH Users' Guide][4].
+    [SimH Users' Guide][sdoc].
 
 5.  To shut the simulator down from the Raspbian command line:
 
         $ sudo systemctl stop pidp8i
 
-See the project's [official documentation][5] for more details.
+See the project's [official documentation][prj] for more details.
 
 
-[1]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
-[2]: http://obsolescence.wixsite.com/obsolescence/pidp-8-details
-[3]: https://github.com/VentureKing/Deeper-Thought-2
-[4]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
-[5]: http://obsolescence.wixsite.com/obsolescence/pidp-8
+[smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
+[usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
+[dt2]:  https://github.com/VentureKing/Deeper-Thought-2
+[sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
+[prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
+[rmt]:  /doc/trunk/README-test.md
