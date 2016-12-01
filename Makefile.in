@@ -61,11 +61,11 @@ distclean: clean
 		@builddir@/config.log \
 		@builddir@/Makefile \
 		@builddir@/autosetup/jimsh0 \
-		@builddir@/boot/{0,2,3,4,6,7}.script \
 		@builddir@/etc/pidp8i-init \
 		@builddir@/src/config.h \
 		@builddir@/src/PDP8/pdp8_cpu.c \
 		@builddir@/src/scp.c
+	@for n in 0 2 3 4 6 7 ; do rm -f @builddir@/boot/$d.script ; done
 
 install: all
 	@echo Installing to @prefix@...
