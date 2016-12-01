@@ -36,144 +36,193 @@
    30             PAGE 1
    31 00200 7300  MAIN,   CLR
    32 00201 1377          TAD (3)
-   33 00202 3205          DCA CURR        / start with 3, because we know 1 & 2 can't work
-   34 00203 3206          DCA TOTAL       / reset total to 0
-   35 00204 5210          JMP MLCORE
-   36 00205 0000  CURR,   0               / current number we're checking
-   37 00206 0000  TOTAL,  0               / the answer so far; at the end, printed out
-   38             
-   39             / Constants
-   40                     DECIMAL
-   41 00207 0011  MAX,    9               / check natural numbers CURR to MAX; must be < 2048!
-   42                     OCTAL
-   43             
-   44             
+   33 00202 3206          DCA CURR        / start with 3, because we know 1 & 2 can't work
+   34 00203 3207          DCA TOTAL       / reset total to 0
+   35 00204 6046          TLS             / send null to terminal to get flags set right
+   36 00205 5215          JMP MLCORE
+   37 00206 0000  CURR,   0               / current number we're checking
+   38 00207 0000  TOTAL,  0               / the answer so far; at the end, printed out
+   39             
+   40             / Constants
+   41                     DECIMAL
+   42 00210 0011  MAX,    9               / check natural numbers CURR to MAX; must be < 2048!
+   43 00211 0015  CR,     13              / ASCII character values
+   44 00212 0012  LF,     10
+   45                     OCTAL
+   46 00213 7600  OS8ENT, 7600            / OS/8 entry point
+   47 00214 4207  OS8INS1,4207            / first instruction at that entry point
+   48             
+   49             
 
 
 
       / Project Euler Problem #1, Multiples of 3 and 5:                   Page 2
 
 
-   45             EJECT
-   46             //// MLCORE ////////////////////////////////////////////////////////////
-   47             / The core of the main loop.  MAIN just inits the globals and calls us.
-   48             
-   49                     / Try dividing 3 into CURR first
-   50 00210 7300  MLCORE, CLR             / redundant first time thru, but not later
-   51 00211 1377          TAD (3)
-   52 00212 4237          JMS ISMOD0
-   53 00213 7450          SNA             / if ISMOD0 left AC = 0, CURR divided evenly by
-   54 00214 5220          JMP NXITER      / 3, so skip 5 lest we count multiples of 15 2x
-   55             
-   56                     / That didn't work out, so try dividing 5 into it
-   57 00215 7200          CLA
-   58 00216 1376          TAD (5)
-   59 00217 4237          JMS ISMOD0
+   50             EJECT
+   51             //// MLCORE ////////////////////////////////////////////////////////////
+   52             / The core of the main loop.  MAIN just inits the globals and calls us.
+   53             
+   54                     / Try dividing 3 into CURR first
+   55 00215 7300  MLCORE, CLR             / redundant first time thru, but not later
+   56 00216 1377          TAD (3)
+   57 00217 4242          JMS ISMOD0
+   58 00220 7450          SNA             / if ISMOD0 left AC = 0, CURR divided evenly by
+   59 00221 5225          JMP NXITER      / 3, so skip 5 lest we count multiples of 15 2x
    60             
-   61                     / Loop cleanup
-   62 00220 7200  NXITER, CLA             
-   63 00221 1205          TAD CURR
-   64 00222 7041          TCA
-   65 00223 1207          TAD MAX         / = 0 if CURR == MAX
-   66 00224 7450          SNA             / if so, leave calculation loop
-   67 00225 5233          JMP MLDONE
-   68 00226 7200          CLA
-   69 00227 1205          TAD CURR        / CURR still < MAX, so increment CURR
-   70 00230 7001          IAC
-   71 00231 3205          DCA CURR
-   72 00232 5210          JMP MLCORE
-   73             
-   74                     / Finished. Write answer to terminal in octal.
-   75 00233 7300  MLDONE, CLR
-   76 00234 1206          TAD TOTAL
-   77 00235 4252          JMS DECPRT      / print on console in decimal (ASCII)
-   78 00236 5775@         JMP 7600        / re-enter OS/8
-   79             
-   80             
-   81             
+   61                     / That didn't work out, so try dividing 5 into it
+   62 00222 7200          CLA
+   63 00223 1376          TAD (5)
+   64 00224 4242          JMS ISMOD0
+   65             
+   66                     / Loop cleanup
+   67 00225 7200  NXITER, CLA             
+   68 00226 1206          TAD CURR
+   69 00227 7041          TCA
+   70 00230 1210          TAD MAX         / = 0 if CURR == MAX
+   71 00231 7450          SNA             / if so, leave calculation loop
+   72 00232 5240          JMP MLDONE
+   73 00233 7200          CLA
+   74 00234 1206          TAD CURR        / CURR still < MAX, so increment CURR
+   75 00235 7001          IAC
+   76 00236 3206          DCA CURR
+   77 00237 5215          JMP MLCORE
+   78             
+   79                     / Calculation complete.  Show answer and exit gracefully.
+   80 00240 4255  MLDONE, JMS SHOWANS
+   81 00241 5274          JMP ENDG
+   82             
+   83             
 
 
 
       / Project Euler Problem #1, Multiples of 3 and 5:                   Page 3
 
 
-   82             EJECT
-   83             //// ISMOD0 ////////////////////////////////////////////////////////////
-   84             / If passed AC divides evenly into CURR (in C-speak, CURR % AC == 0)
-   85             / add CURR to TOTAL and return 0 in AC.  Else, return nonzero in AC and
-   86             / leave TOTAL untouched.
-   87             
-   88 00237 0000  ISMOD0, 0
-   89                     / Divide CURR by DIVISOR, passed as AC
-   90 00240 3243          DCA DIVISOR
-   91 00241 1205          TAD CURR        / load CURR into just-cleared AC
-   92 00242 7427          MQL DVI         / move CURR to MQ, divide by DIVISOR...
-   93 00243 0000  DIVISOR,0               / ...quotient in MQ, remainder in AC
-   94 00244 7440          SZA
-   95 00245 5637          JMP I ISMOD0    / remainder nonzero, so leave early
-   96             
-   97                     / Division left AC empty, so CURR divides evenly by DIVISOR!
-   98 00246 1205          TAD CURR        / don't need to clear AC; prior test says AC == 0
-   99 00247 1206          TAD TOTAL
-  100 00250 3206          DCA TOTAL
-  101 00251 5637          JMP I ISMOD0
-  102             
-  103             
+   84             EJECT
+   85             //// ISMOD0 ////////////////////////////////////////////////////////////
+   86             / If passed AC divides evenly into CURR (in C-speak, CURR % AC == 0)
+   87             / add CURR to TOTAL and return 0 in AC.  Else, return nonzero in AC and
+   88             / leave TOTAL untouched.
+   89             
+   90 00242 0000  ISMOD0, 0
+   91                     / Divide CURR by DIVISOR, passed as AC
+   92 00243 3246          DCA DIVISOR
+   93 00244 1206          TAD CURR        / load CURR into just-cleared AC
+   94 00245 7427          MQL DVI         / move CURR to MQ, divide by DIVISOR...
+   95 00246 0000  DIVISOR,0               / ...quotient in MQ, remainder in AC
+   96 00247 7440          SZA
+   97 00250 5642          JMP I ISMOD0    / remainder nonzero, so leave early
+   98             
+   99                     / Division left AC empty, so CURR divides evenly by DIVISOR!
+  100 00251 1206          TAD CURR        / don't need to clear AC; prior test says AC == 0
+  101 00252 1207          TAD TOTAL
+  102 00253 3207          DCA TOTAL
+  103 00254 5642          JMP I ISMOD0
+  104             
+  105             
+  106             //// SHOWANS ///////////////////////////////////////////////////////////
+  107             / Write answer to terminal in decimal, with CRLF
+  108             
+  109 00255 0000  SHOWANS,0
+  110 00256 7300          CLR
+  111 00257 1207          TAD TOTAL
+  112 00260 4305          JMS DECPRT      / print answer on console, in decimal
+  113             
+  114 00261 6041          TSF             / wait for terminal to be ready again
+  115 00262 5261          JMP .-1
+  116             
+  117 00263 7200          CLA             / write CR to terminal
+  118 00264 1211          TAD CR          
+  119 00265 6046          TLS
+  120             
+  121 00266 6041          TSF             / wait again
+  122 00267 5266          JMP .-1
+  123             
+  124 00270 7200          CLA             / then LF
+  125 00271 1212          TAD LF
+  126 00272 6046          TLS
+  127             
+  128 00273 5655          JMP I SHOWANS   / and done
+  129             
+  130             
+  131             //// ENDG //////////////////////////////////////////////////////////////
+  132             // End program gracefully, either re-entering OS/8 if we can see that
+  133             // its entry point looks sane, or halting with the answer in AC so the
 
 
 
       / Project Euler Problem #1, Multiples of 3 and 5:                   Page 4
 
 
-  104             EJECT
-  105             //// DECPRT ////////////////////////////////////////////////////////////
-  106             // Decimal number printer; see examples/routines/decprt.pal
-  107             
-  108 00252 0000  DECPRT, 0
-  109 00253 3315          DCA VALUE       /SAVE INPUT
-  110 00254 3316          DCA DIGIT       /CLEAR
-  111 00255 1307          TAD CNTRZA
-  112 00256 3317          DCA CNTRZB      /SET COUNTER TO FOUR
-  113 00257 1306          TAD ADDRZA
-  114 00260 3265          DCA ARROW       /SET TABLE POINTER
-  115 00261 7410          SKP
-  116 00262 3315          DCA VALUE       /SAVE
-  117 00263 7100          CLL
-  118 00264 1315          TAD VALUE
-  119 00265 1310  ARROW,  TAD TENPWR      /SUBTRACT POWER OF TEN
-  120 00266 7430          SZL
-  121 00267 2316          ISZ DIGIT       /DEVELOP BCD DIGIT
-  122 00270 7430          SZL
-  123 00271 5262          JMP ARROW-3     /LOOP
-  124 00272 7200          CLA             /HAVE BCD DIGIT
-  125 00273 1316          TAD DIGIT       /GET DIGIT
-  126 00274 1314          TAD K260        /MAKE IT ASCII
-  127 00275 6041          TSF             /OR TAD DIGIT
-  128 00276 5275          JMP .-1         /JMS TDIGIT(SEE 8-19-U)
-  129 00277 6046          TLS             /TYPE DIGIT
-  130 00300 7200          CLA
-  131 00301 3316          DCA DIGIT       /CLEAR
-  132 00302 2265          ISZ ARROW       /UPDATE POINTER
-  133 00303 2317          ISZ CNTRZB      /DONE ALL FOUR?
-  134 00304 5264          JMP ARROW-1     /NO: CONTINUE
-  135 00305 5652          JMP I DECPRT    /YES: EXIT
-  136 00306 1310  ADDRZA, TAD TENPWR
-  137 00307 7774  CNTRZA, -4
-  138 00310 6030  TENPWR, -1750           /ONE THOUSAND
-  139 00311 7634          -0144           /ONE HUNDRED
-  140 00312 7766          -0012           /TEN
-  141 00313 7777          -0001           /ONE
-  142 00314 0260  K260,   260
-  143 00315 0000  VALUE,  0
-  144 00316 0000  DIGIT,  0
-  145 00317 0000  CNTRZB, 0
+  134             // user can see the answer on the front panel.
+  135             
+  136 00274 7200  ENDG,   CLA
+  137 00275 1213          TAD OS8ENT
+  138 00276 7041          TCA
+  139 00277 1214          TAD OS8INS1
+  140 00300 7450          SNA
+  141 00301 5775@         JMP 7600        / re-enter OS/8
+  142 00302 7300          CLR
+  143 00303 1207          TAD TOTAL
+  144 00304 7402          HLT             / not running under OS/8, so halt
+  145             
   146             
-  147             
-  148             //// END ///////////////////////////////////////////////////////////////
-  149             / Assembler-generated constants will appear below this in the list file
+
+
+
+      / Project Euler Problem #1, Multiples of 3 and 5:                   Page 5
+
+
+  147             EJECT
+  148             //// DECPRT ////////////////////////////////////////////////////////////
+  149             // Decimal number printer; see examples/routines/decprt.pal
+  150             
+  151 00305 0000  DECPRT, 0
+  152 00306 3350          DCA VALUE       /SAVE INPUT
+  153 00307 3351          DCA DIGIT       /CLEAR
+  154 00310 1342          TAD CNTRZA
+  155 00311 3352          DCA CNTRZB      /SET COUNTER TO FOUR
+  156 00312 1341          TAD ADDRZA
+  157 00313 3320          DCA ARROW       /SET TABLE POINTER
+  158 00314 7410          SKP
+  159 00315 3350          DCA VALUE       /SAVE
+  160 00316 7100          CLL
+  161 00317 1350          TAD VALUE
+  162 00320 1343  ARROW,  TAD TENPWR      /SUBTRACT POWER OF TEN
+  163 00321 7430          SZL
+  164 00322 2351          ISZ DIGIT       /DEVELOP BCD DIGIT
+  165 00323 7430          SZL
+  166 00324 5315          JMP ARROW-3     /LOOP
+  167 00325 7200          CLA             /HAVE BCD DIGIT
+  168 00326 1351          TAD DIGIT       /GET DIGIT
+  169 00327 1347          TAD K260        /MAKE IT ASCII
+  170 00330 6041          TSF             /OR TAD DIGIT
+  171 00331 5330          JMP .-1         /JMS TDIGIT(SEE 8-19-U)
+  172 00332 6046          TLS             /TYPE DIGIT
+  173 00333 7200          CLA
+  174 00334 3351          DCA DIGIT       /CLEAR
+  175 00335 2320          ISZ ARROW       /UPDATE POINTER
+  176 00336 2352          ISZ CNTRZB      /DONE ALL FOUR?
+  177 00337 5317          JMP ARROW-1     /NO: CONTINUE
+  178 00340 5705          JMP I DECPRT    /YES: EXIT
+  179 00341 1343  ADDRZA, TAD TENPWR
+  180 00342 7774  CNTRZA, -4
+  181 00343 6030  TENPWR, -1750           /ONE THOUSAND
+  182 00344 7634          -0144           /ONE HUNDRED
+  183 00345 7766          -0012           /TEN
+  184 00346 7777          -0001           /ONE
+  185 00347 0260  K260,   260
+  186 00350 0000  VALUE,  0
+  187 00351 0000  DIGIT,  0
+  188 00352 0000  CNTRZB, 0
+  189             
+  190             
+  191             //// END ///////////////////////////////////////////////////////////////
+  192             / Assembler-generated constants will appear below this in the list file
       00375 7600
       00376 0005
       00377 0003
-  150             $
+  193             $
 
       No detected errors

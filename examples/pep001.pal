@@ -4,7 +4,7 @@
 /   3 or 5, we get 3, 5, 6 and 9. The sum of these multiples is 23.
 /   Find the sum of all the multiples of 3 or 5 below 1000.
 / 
-/ Solution by Warren Young of tangentsoft.com, 2016.11.29
+/ Solution by Warren Young of tangentsoft.com, 2016.11.30
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -32,6 +32,7 @@ MAIN,	CLR
 	TAD (3)
 	DCA CURR	/ start with 3, because we know 1 & 2 can't work
 	DCA TOTAL	/ reset total to 0
+	TLS		/ send null to terminal to get flags set right
 	JMP MLCORE
 CURR,	0		/ current number we're checking
 TOTAL,	0		/ the answer so far; at the end, printed out
@@ -39,7 +40,11 @@ TOTAL,	0		/ the answer so far; at the end, printed out
 / Constants
 	DECIMAL
 MAX,	9		/ check natural numbers CURR to MAX; must be < 2048!
+CR,	13		/ ASCII character values
+LF,	10
 	OCTAL
+OS8ENT,	7600		/ OS/8 entry point
+OS8INS1,4207		/ first instruction at that entry point
 
 
 EJECT
@@ -71,12 +76,9 @@ NXITER,	CLA
 	DCA CURR
 	JMP MLCORE
 
-	/ Finished. Write answer to terminal in octal.
-MLDONE,	CLR
-	TAD TOTAL
-	JMS DECPRT	/ print on console in decimal (ASCII)
-	JMP 7600	/ re-enter OS/8
-
+	/ Calculation complete.  Show answer and exit gracefully.
+MLDONE,	JMS SHOWANS
+	JMP ENDG
 
 
 EJECT
@@ -99,6 +101,47 @@ DIVISOR,0		/ ...quotient in MQ, remainder in AC
 	TAD TOTAL
 	DCA TOTAL
 	JMP I ISMOD0
+
+
+//// SHOWANS ///////////////////////////////////////////////////////////
+/ Write answer to terminal in decimal, with CRLF
+
+SHOWANS,0
+	CLR
+	TAD TOTAL
+	JMS DECPRT	/ print answer on console, in decimal
+
+	TSF		/ wait for terminal to be ready again
+	JMP .-1
+
+	CLA		/ write CR to terminal
+	TAD CR		
+	TLS
+
+	TSF		/ wait again
+	JMP .-1
+
+	CLA		/ then LF
+	TAD LF
+	TLS
+
+	JMP I SHOWANS	/ and done
+
+
+//// ENDG //////////////////////////////////////////////////////////////
+// End program gracefully, either re-entering OS/8 if we can see that
+// its entry point looks sane, or halting with the answer in AC so the
+// user can see the answer on the front panel.
+
+ENDG,	CLA
+	TAD OS8ENT
+	TCA
+	TAD OS8INS1
+	SNA
+	JMP 7600	/ re-enter OS/8
+	CLR
+	TAD TOTAL
+	HLT		/ not running under OS/8, so halt
 
 
 EJECT
