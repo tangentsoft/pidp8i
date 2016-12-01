@@ -32,7 +32,7 @@ MAIN,	CLR
 	TAD (3)
 	DCA CURR	/ start with 3, because we know 1 & 2 can't work
 	DCA TOTAL	/ reset total to 0
-	JMP NEXT
+	JMP MLCORE
 CURR,	0		/ current number we're checking
 TOTAL,	0		/ the answer so far; at the end, printed out
 
@@ -43,40 +43,37 @@ MAX,	9		/ check natural numbers CURR to MAX; must be < 2048!
 
 
 EJECT
-//// NEXT //////////////////////////////////////////////////////////////
+//// MLCORE ////////////////////////////////////////////////////////////
 / The core of the main loop.  MAIN just inits the globals and calls us.
 
 	/ Try dividing 3 into CURR first
-NEXT,	CLR		/ redundant first time thru, but not later
-	TAD TOTAL	/ TEMPORARY: load TOTAL into AC so we can see progress on front panel
-	CLA		/ TEMPORARY: reset AC again
+MLCORE,	CLR		/ redundant first time thru, but not later
 	TAD (3)
 	JMS ISMOD0
 	SNA		/ if ISMOD0 left AC = 0, CURR divided evenly by
-	JMP SKIP5	/ 3, so skip 5 lest we count multiples of 15 2x
+	JMP NXITER	/ 3, so skip 5 lest we count multiples of 15 2x
 
 	/ That didn't work out, so try dividing 5 into it
 	CLA
 	TAD (5)
 	JMS ISMOD0
 
-	/ increment CURR
-SKIP5,	CLA		
-	TAD CURR
-	IAC
-	DCA CURR
-
-	/ iterate unless CURR == MAX
+	/ Loop cleanup
+NXITER,	CLA		
 	TAD CURR
 	TCA
-	TAD MAX
-	SZA
-	JMP NEXT
+	TAD MAX		/ = 0 if CURR == MAX
+	SNA		/ if so, leave calculation loop
+	JMP MLDONE
+	CLA
+	TAD CURR	/ CURR still < MAX, so increment CURR
+	IAC
+	DCA CURR
+	JMP MLCORE
 
 	/ Finished. Write answer to terminal in octal.
-DONE,	CLA
+MLDONE,	CLR
 	TAD TOTAL
-	HLT		/ wait for user to verify answer in binary
 	JMS DECPRT	/ print on console in decimal (ASCII)
 	JMP 7600	/ re-enter OS/8
 
@@ -89,28 +86,16 @@ EJECT
 / leave TOTAL untouched.
 
 ISMOD0,	0
-	/ Use AC as both divisor and multiplicand
+	/ Divide CURR by DIVISOR, passed as AC
 	DCA DIVISOR
-	TAD DIVISOR
-	DCA MCAND
-
-	/ Divide CURR by DIVISOR
 	TAD CURR	/ load CURR into just-cleared AC
-	MQL DVI		/ divide DIVISOR into {AC:MQ}, quotient into MQ
-DIVISOR,0		/ copy of divisor which ISMOD0 got as AC
+	MQL DVI		/ move CURR to MQ, divide by DIVISOR...
+DIVISOR,0		/ ...quotient in MQ, remainder in AC
+	SZA
+	JMP I ISMOD0	/ remainder nonzero, so leave early
 
-	/ Now multiply it back out
-	MUY		/ which we multiply by MQ, still holding quotient
-MCAND,	0
-
-	/ Moment of truth: did that pair of operations yield CURR?
-	MCM		/ could do MQA because AC must be 0 with CURR <
-			/ 2^12, but it costs nothing to be safe here
-	TCA		/ flip AC's sign
-	TAD CURR	/ and add to CURR, subtracting product from it
-	SZA		/ if AC != 0, product != CURR, so leave early
-	JMP I ISMOD0
-	TAD CURR	/ AC is 0, so we can load CURR directly
+	/ Division left AC empty, so CURR divides evenly by DIVISOR!
+	TAD CURR	/ don't need to clear AC; prior test says AC == 0
 	TAD TOTAL
 	DCA TOTAL
 	JMP I ISMOD0
