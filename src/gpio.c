@@ -30,7 +30,7 @@ static unsigned get_dt_ranges(const char *filename, unsigned offset); // Pi 2 de
 
 struct bcm2835_peripheral gpio;	// needs initialisation
 
-long intervl = 5000;		// light each row of leds this long
+long intervl = 300000;		// light each row of leds this long
 
 uint32 switchstatus[3] = { 0 }; // bitfields: 3 rows of up to 12 switches
 uint32 ledstatus[8] = { 0 };	// bitfields: 8 ledrows of up to 12 LEDs
@@ -54,7 +54,7 @@ uint32 ledstatus[8] = { 0 };	// bitfields: 8 ledrows of up to 12 LEDs
 // Exposes the physical address defined in the passed structure using mmap on /dev/mem
 int map_peripheral(struct bcm2835_peripheral *p)
 {
-   if ((p->mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
+   if ((p->mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
       printf("Failed to open /dev/mem, try checking permissions.\n");
       return -1;
    }
@@ -80,9 +80,6 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 
 uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
 uint8_t rows[] = {16, 17, 18};
-float brtval[96];
-uint32 brctr[96],bctr,ndx;
-
 
 #ifdef SERIALSETUP
 uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
@@ -117,7 +114,7 @@ void *blink(int *terminate)
 #ifdef SERIALSETUP
 	printf(" Serial mod version\n");
 #else
-	printf(" Default version using gpiomem\n");
+	printf(" Default version\n");
 #endif
 
 	// set thread to real time priority -----------------
@@ -181,12 +178,9 @@ void *blink(int *terminate)
 	short_wait();
 	GPIO_PULLCLK0 = 0; // remove clock
 	short_wait(); // probably unnecessary
-	bctr=0;
-	for (ndx=0;i<96;i++)
- 	 brtval[ndx]=0;
 	// --------------------------------------------------
 
-	printf("\nFP on\n");
+	//printf("\nFP on\n");
 
 	while(*terminate==0)
 	{
@@ -195,21 +189,17 @@ void *blink(int *terminate)
 		{	INP_GPIO(cols[i]);			//
 			OUT_GPIO(cols[i]);			// Define cols as output
 		}
-		if (bctr==0) {
-		for (i=0;i<96;i++)
-		 brctr[i]=0;
-		bctr=32;
-		}
+		
 		// light up 8 rows of 12 LEDs each
-		for (i=ndx=0;i<8;i++)
+		for (i=0;i<8;i++)
 		{
+
 			// Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-			for (k=0;k<12;k++,ndx++)
-			{
-				if (++brctr[ndx]<brtval[ndx])
-					GPIO_CLR = 1 << cols[k];
-				else
+			for (k=0;k<12;k++)
+			{	if ((ledstatus[i]&(1<<k))==0)
 					GPIO_SET = 1 << cols[k];
+				else 
+					GPIO_CLR = 1 << cols[k];
 			}
 
 			// Toggle this ledrow on
@@ -224,8 +214,7 @@ void *blink(int *terminate)
 			// Toggle ledrow off
 			GPIO_CLR = 1 << ledrows[i]; // superstition
 			INP_GPIO(ledrows[i]);
-
-			sleep_ns(intervl);
+			sleep_ns(10000); // waste of cpu cycles but may help against udn2981 ghosting, not flashes though
 
 		}
 
@@ -252,8 +241,6 @@ void *blink(int *terminate)
 
 			switchstatus[i] = switchscan;
 		}
-lx:
-	    bctr--;
 	}
 
 	//printf("\nFP off\n");
