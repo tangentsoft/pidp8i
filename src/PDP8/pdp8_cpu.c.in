@@ -476,7 +476,7 @@ if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 		if ((switchstatus[2] & 0x0410)==0)
 		{
 			printf("\r\nMount\r\n\r\n");
-			if(spawn_cmd ((int32) 0, " /opt/pidp8/bin/automount")!=SCPE_OK) {// no sudo in buildroot env
+			if(spawn_cmd ((int32) 0, "@ABSPREFIX@/bin/automount")!=SCPE_OK) {// no sudo in buildroot env
 				printf("\r\n\n\nmount USB drive failed\r\n\n");
 			}
 		}
@@ -486,7 +486,7 @@ if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 		if ((switchstatus[2] & 0x0210)==0)
 		{
 			printf("\r\nUnmount\r\n\r\n");
-			if(spawn_cmd ((int32) 0, " /opt/pidp8/bin/unmount")!=SCPE_OK) {// no sudo in buildroot env
+			if(spawn_cmd ((int32) 0, "@ABSPREFIX@/bin/unmount")!=SCPE_OK) {// no sudo in buildroot env
 				printf("\r\n\n\nunmount failed\r\n\n");
 			}
 		}
