@@ -70,6 +70,7 @@ define MEDIADIR "[get-define ABSPREFIX]/share/media"
 if {[cc-check-progs palbart]} {
 	define EXAMPLES [join {
 		examples/add.pt    examples/add.lst
+		examples/hello.pt  examples/hello.lst
 		examples/pep001.pt examples/pep001.lst
 	}]
 } else {

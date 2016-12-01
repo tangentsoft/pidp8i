@@ -1,0 +1,24 @@
+/ PRINTS - Print an ASCIIZ string pointed at by AC to the terminal
+/
+/ Created by Warren Young of tangentsoft.com, 2016.11.30
+////////////////////////////////////////////////////////////////////////
+
+//// PRINTS ////////////////////////////////////////////////////////////
+
+PRINTS,0
+	DCA SADDR	/ save AC as string address
+PSNEXT,	TAD I SADDR	/ load next character
+	SNA
+	JMP I PRINTS	/ found the null terminator; leave
+
+	TSF		/ wait for terminal to be ready
+	JMP .-1
+	TLS		/ write character to the terminal
+
+	CLA		/ increment string address pointer
+	TAD SADDR
+	IAC
+	DCA SADDR
+		
+	JMP PSNEXT	/ look at next character
+SADDR,	0

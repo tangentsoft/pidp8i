@@ -1,0 +1,49 @@
+/ HELLO - "Hello, World!" program for PAL-III assembly, which also
+/         happens to test the PRINTS routine, included inline below.
+/
+/ Created by Warren Young of tangentsoft.com, 2016.11.30
+////////////////////////////////////////////////////////////////////////
+
+
+//// MAIN /////////////////////////////////////////////////////////////
+
+PAGE 1
+	CLA
+	TLS		/ send null character to terminal to prepare it
+	TAD (HWSTR)
+	JMS PRINTS
+	HLT
+
+// "HELLO, WORLD!\r\n" in octal ASCIIZ
+HWSTR,	110; 105; 114; 114; 117;	/ HELLO
+	54;				/ comma
+	40;				/ space
+	127; 117; 122; 114; 104;	/ WORLD
+	41;				/ bang
+	15; 12;				/ CRLF
+	0				/ null string terminator
+
+
+//// PRINTS ////////////////////////////////////////////////////////////
+
+PRINTS,0
+	DCA SADDR	/ save AC as string address
+PSNEXT,	TAD I SADDR	/ load next character
+	SNA
+	JMP I PRINTS	/ found the null terminator; leave
+
+	TSF		/ wait for terminal to be ready
+	JMP .-1
+	TLS		/ write character to the terminal
+
+	CLA		/ increment string address pointer
+	TAD SADDR
+	IAC
+	DCA SADDR
+		
+	JMP PSNEXT	/ look at next character
+SADDR,	0
+
+
+//// END ///////////////////////////////////////////////////////////////
+$
