@@ -48,9 +48,8 @@ EJECT
 
 	/ Try dividing 3 into CURR first
 NEXT,	CLR		/ redundant first time thru, but not later
-	TAD TOTAL
-	JMS DECPRT
-	CLR
+	TAD TOTAL	/ TEMPORARY: load TOTAL into AC so we can see progress on front panel
+	CLA		/ TEMPORARY: reset AC again
 	TAD (3)
 	JMS ISMOD0
 	SNA		/ if ISMOD0 left AC = 0, CURR divided evenly by
@@ -90,18 +89,17 @@ EJECT
 / leave TOTAL untouched.
 
 ISMOD0,	0
-	/ Move AC to operand word after DVI instruction that uses it
+	/ Use AC as both divisor and multiplicand
 	DCA DIVISOR
+	TAD DIVISOR
+	DCA MCAND
 
-	/ Divide CURR by it
+	/ Divide CURR by DIVISOR
 	TAD CURR	/ load CURR into just-cleared AC
-	MQL		/ move it to MQ, clearing AC
-	DVI		/ divide DIVISOR into {AC:MQ}, quotient into MQ
+	MQL DVI		/ divide DIVISOR into {AC:MQ}, quotient into MQ
 DIVISOR,0		/ copy of divisor which ISMOD0 got as AC
 
 	/ Now multiply it back out
-	TAD DIVISOR	/ AC should still be zero here
-	DCA MCAND	/ save copy of DIVISOR as multiplicand
 	MUY		/ which we multiply by MQ, still holding quotient
 MCAND,	0
 
