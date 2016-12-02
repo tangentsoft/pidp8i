@@ -81,8 +81,8 @@ install: all
 	@INSTALL@ -m 644 @srcdir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
-	test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get install usbmount || true
-	test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get install screen || true
+	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get install usbmount || true
+	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get install screen || true
 
 	@# Install the init script if this system is SysVinit based.
 	@# Raspbian's systemd setup is close enough.
@@ -100,13 +100,13 @@ install: all
 			echo "export PATH=\$$PATH:@ABSPREFIX@/bin" >> "/home/$$SUDO_USER/$$p" ; \
 	done) || true
 
-	@# If serial mod is enabled, turn off serial console and kgdb stuff
+	@# If serial mod is disabled, turn off serial console and kgdb stuff
 	@# in case they were enabled previously, else they will fight with
 	@# our use of GPIO.
-	@(  test -z "@SERIALSETUP@" -a -r $CLTXT && ! -w $CLTXT && \
-		cp -p $CLTXT "$CLTXT"_orig && \
+	@(  test -z "@SERIALSETUP@" -a -r $(CLTXT) && ! -w $(CLTXT) && \
+		cp -p $(CLTXT) "$(CLTXT)"_orig && \
 		sed -e 's/console\=[a-zA-Z0-9]+,[0-9]+ //' \
-		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $CLTXT \
+		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
 	) || true
 
 mediainstall:
