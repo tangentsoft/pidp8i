@@ -38,10 +38,18 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
 
-If you get a complaint like "No working C compiler found," you can install
-the necessary build tools with:
+If you get a complaint like "No working C compiler found," there are two
+likely causes. One is that the error message is literally correct: you
+don't have a C compiler installed. You can install one along with all
+the other necessary build tools with:
 
     $ sudo apt install build-essential
+
+The other possibility is that you have somehow managed to unpack the
+software into a directory that you don't have write access to, such as
+by unpacking it via `sudo`. The solution is to either take ownership of
+that directory or to unpack it again, this time somewhere your user is
+allowed to write to.
 
 The `configure` script accepts most of the common flags for such
 scripts.  Perhaps the most important such flag is `--prefix`, which
