@@ -2,11 +2,12 @@
 
 ## Prerequisites
 
-*   A Raspberry Pi with the 40-pin GPIO connector. (i.e., Not one of the
-    original RPis with the 26-pin connector.)
-    
-    As this code presently stands, you may need one of the more modern
-    multicore variants, being the Raspberry Pi 2 model B or newer.
+*   A Raspberry Pi with the 40-pin GPIO connector. That rules out the
+    first series of Raspberry Pi boards with the 26-pin connector.
+
+    In order to use the standard version of this software, you need one
+    of the multicore variants of the Pi. See
+    [`README-single-core.md`][rmsc] if you have a single-core Pi.
 
 *   An SD card containing Raspbian or something sufficiently close.
     PipaOS may also work, for example.  This software is currently
