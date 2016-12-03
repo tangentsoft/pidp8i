@@ -112,9 +112,12 @@ See [`README-test.md`][rmt] for more details.
 ## Using the Software
 
 For the most part, this software distribution works like the upstream
-[2015.12.15 distribution][usd]. One major difference from the user's
-point of view is that all of the commands for starting, stopping, and
-re-entering the simulator use `pidp8i` in their name:
+[2015.12.15 distribution][usd]. Its [documentation][prj] therefore
+describes this software too, for the most part.
+
+The largest user-visible difference between the two software
+distributions is that all of the shell commands affecting the software
+were renamed to include `pidp8i` in their name:
 
 1.  To start the simulator:
 
@@ -150,8 +153,6 @@ The other major difference between the upstream distribution and this
 one is that there is no separate install script. The `make install`
 command you ran above did everything for you.
 
-Those differences aside, the project's [official documentation][prj]
-cover this version of the software as well.
 
 
 [smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
