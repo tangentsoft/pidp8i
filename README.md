@@ -162,3 +162,4 @@ command you ran above did everything for you.
 [sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
 [rmt]:  /doc/trunk/README-test.md
+[rmsc]: /doc/trunk/README-single-core.md
