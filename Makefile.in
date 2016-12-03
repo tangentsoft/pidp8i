@@ -165,7 +165,7 @@ obj/%.o: @builddir@/src/%.c
 	@rm -f obj/$*.d.tmp
 
 # Rule for building example PAL assembly language programs.
-obj/%.lst bin/%.pt: @srcdir@/examples/%.pal
+obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
 	@builddir@/bin/palbart -lr $<
 	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
 	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
