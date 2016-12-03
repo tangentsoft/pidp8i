@@ -97,9 +97,14 @@ You can test your PiDP-8/I LED and switch functions with the
 `pidp8i-test` program. It will be in the `PATH` after installing the
 software.
 
-(You may have to log out and back in for this to work, since the
+This program cannot run while the PiDP-8/I simulator is running in the
+background. Therefore, before running it, say:
+
+        $ sudo systemctl stop pidp8i
+
+You may have to log out and back in for this to work, since the
 installation script modifies your normal user's `PATH` since the normal
-installation prefix is not in the stock Raspbian user `PATH`.)
+installation prefix is not in the stock Raspbian user `PATH`.
 
 See [`README-test.md`][rmt] for more details.
 
