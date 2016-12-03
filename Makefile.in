@@ -123,8 +123,8 @@ install: all
 	) || true
 
 	@# Install palbart stuff
-	@INSTALL@ -m 755 @bindir@/palbart @prefix@/bin
-	@INSTALL@ -m 755 @srcdir@/palbart/palbart.1 @prefix@/share/man/man1
+	@INSTALL@ -m 755 @builddir@/bin/palbart @prefix@/bin
+	@INSTALL@ -m 644 @srcdir@/palbart/palbart.1 @prefix@/share/man/man1
 
 mediainstall:
 	@echo "[Re]installing OS and program media..."
@@ -171,7 +171,7 @@ obj/%.lst bin/%.pt: @srcdir@/examples/%.pal
 	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
 
 bin/palbart: @srcdir@/palbart/palbart.c
-	$(CC) -Wall -Wstrict-prototypes @BUILDMODE@ $< -o $@
+	$(CC) -Wall -Wno-strict-prototypes @BUILDMODE@ $< -o $@
 	$(CC) -MM $< -o obj/$*.d
 
 $(BUILDDIRS):
