@@ -3,11 +3,11 @@ CFLAGS=-std=c99 -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
 SIM = bin/pidp8i-sim
-BINS = $(SIM) bin/pidp8i-test libexec/scanswitch
+BINS = bin/palbart $(SIM) bin/pidp8i-test libexec/scanswitch
 
 BUILDDIRS = bin libexec obj/PDP8
 
-INSTDIRS = bin etc libexec share/boot share/media
+INSTDIRS = bin etc libexec share/boot share/media share/man/man1
 
 OBJS = \
 	obj/gpio.o \
@@ -42,15 +42,21 @@ OBJS = \
 
 LIBS = -lm -ldl -lpthread
 
+EXAMPLES = \
+		bin/add.pt    obj/add.lst \
+		bin/hello.pt  obj/hello.lst \
+		bin/pep001.pt obj/pep001.lst
+
 CLTXT = /boot/cmdline.txt
 
 
-all: $(BUILDDIRS) examples $(BINS) @EXAMPLES@
+all: $(BUILDDIRS) $(BINS) $(EXAMPLES)
 
 clean:
-	@test -h examples && rm examples || true
 	@rm -f $(BINS) \
+		@builddir@/bin/*.pt \
 		@builddir@/obj/*.d \
+		@builddir@/obj/*.lst \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
 		@builddir@/obj/PDP8/*.o
@@ -96,8 +102,15 @@ install: all
 	@# already in there or we aren't running under sudo.
 	@(for p in .profile .bash_profile ; do \
 		test -n "$$SUDO_USER" -a -w "/home/$$SUDO_USER/$$p" && \
-			! grep -qF "@ABSPREFIX@" "/home/$$SUDO_USER/$$p" && \
+			! grep -qF "@ABSPREFIX@/bin" "/home/$$SUDO_USER/$$p" && \
 			echo "export PATH=\$$PATH:@ABSPREFIX@/bin" >> "/home/$$SUDO_USER/$$p" ; \
+	done) || true
+
+	@# Ditto for MANPATH
+	@(for p in .profile .bash_profile ; do \
+		test -n "$$SUDO_USER" -a -w "/home/$$SUDO_USER/$$p" && \
+			! grep -qF "@ABSPREFIX@/share/man" "/home/$$SUDO_USER/$$p" && \
+			echo "export MANPATH=\$$MANPATH:@ABSPREFIX@/share/man" >> "/home/$$SUDO_USER/$$p" ; \
 	done) || true
 
 	@# If serial mod is disabled, turn off serial console and kgdb stuff
@@ -108,6 +121,10 @@ install: all
 		sed -e 's/console\=[a-zA-Z0-9]+,[0-9]+ //' \
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
 	) || true
+
+	@# Install palbart stuff
+	@INSTALL@ -m 755 @bindir@/palbart @prefix@/bin
+	@INSTALL@ -m 755 @srcdir@/palbart/palbart.1 @prefix@/share/man/man1
 
 mediainstall:
 	@echo "[Re]installing OS and program media..."
@@ -128,7 +145,7 @@ reconfig:
 #
 # Reflect any changes here into near-duplicate below!
 obj/%.o: @srcdir@/src/%.c
-	$(CC) -c $(CFLAGS) @srcdir@/src/$*.c -o obj/$*.o
+	$(CC)  -c $(CFLAGS) @srcdir@/src/$*.c -o obj/$*.o
 	$(CC) -MM $(CFLAGS) @srcdir@/src/$*.c > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
@@ -139,7 +156,7 @@ obj/%.o: @srcdir@/src/%.c
 # Near-duplicate of above rule for those *.c files generated from *.c.in
 # files in the srcdir.  Needed when building out-of-tree.
 obj/%.o: @builddir@/src/%.c
-	$(CC) -c $(CFLAGS) @builddir@/src/$*.c -o obj/$*.o
+	$(CC)  -c $(CFLAGS) @builddir@/src/$*.c -o obj/$*.o
 	$(CC) -MM $(CFLAGS) @builddir@/src/$*.c > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
@@ -147,22 +164,18 @@ obj/%.o: @builddir@/src/%.c
 		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
 	@rm -f obj/$*.d.tmp
 
-# Rule for building example PAL assembly language programs
-examples/%.pt examples/%.lst: @srcdir@/examples/%.pal
-	palbart -lr examples/$*.pal
-	mv examples/$*.rim examples/$*.pt
+# Rule for building example PAL assembly language programs.
+obj/%.lst bin/%.pt: @srcdir@/examples/%.pal
+	@builddir@/bin/palbart -lr $<
+	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
+	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
+
+bin/palbart: @srcdir@/palbart/palbart.c
+	$(CC) -Wall -Wstrict-prototypes @BUILDMODE@ $< -o $@
+	$(CC) -MM $< -o obj/$*.d
 
 $(BUILDDIRS):
 	mkdir -p $@
-
-# If the examples directory doesn't exist, it's probably because we're
-# building out-of-tree. Since palbart can't be told where to write its
-# output files, we're going to have to symlink the whole tree from the
-# srcdir to the builddir.  This means these outputs get written back to
-# the source tree, but since we check changed *.pt and *.lst files back
-# into source control anyway, this is mostly harmless.
-examples:
-	ln -s @srcdir@/examples @builddir@/examples
 
 $(SIM): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)
