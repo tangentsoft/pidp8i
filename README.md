@@ -100,7 +100,7 @@ software.
 This program cannot run while the PiDP-8/I simulator is running in the
 background. Therefore, before running it, say:
 
-        $ sudo systemctl stop pidp8i
+    $ sudo systemctl stop pidp8i
 
 You may have to log out and back in for this to work, since the
 installation script modifies your normal user's `PATH` since the normal
