@@ -18,11 +18,6 @@
 #endif
 
 #include <pthread.h>
-#include <stdint.h>
-
-typedef unsigned int    uint32;
-typedef signed int      int32;
-typedef unsigned short    uint16;
 
 void short_wait(void);		// used as pause between clocked GPIO changes
 unsigned bcm_host_get_peripheral_address(void);		// find Pi 2 or Pi's gpio base address
@@ -32,8 +27,8 @@ struct bcm2835_peripheral gpio;	// needs initialisation
 
 long intervl = 5000;		// light each row of leds this long
 
-uint32 switchstatus[3] = { 0 }; // bitfields: 3 rows of up to 12 switches
-uint32 ledstatus[8] = { 0 };	// bitfields: 8 ledrows of up to 12 LEDs
+uint16_t switchstatus[3];	// bitfields: 3 rows of up to 12 switches
+uint16_t ledstatus[8];		// bitfields: 8 ledrows of up to 12 LEDs
 
 // PART 1 - GPIO and RT process stuff ----------------------------------
 
@@ -81,7 +76,7 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
 uint8_t rows[] = {16, 17, 18};
 float brtval[96];
-uint32 brctr[96],bctr,ndx;
+uint32_t brctr[96],bctr,ndx;
 
 
 #ifdef SERIALSETUP
@@ -106,9 +101,9 @@ static void sleep_ns(long ns)
 }
 
 
-void *blink(int *terminate)
+void *blink(void *terminate)
 {
-	int i,j,k,switchscan, tmp;
+	int i,j,k, tmp;
 
 	// Find gpio address (different for Pi 2) ----------
 	gpio.addr_p = bcm_host_get_peripheral_address() +  + 0x200000;
@@ -188,7 +183,7 @@ void *blink(int *terminate)
 
 	printf("\nFP on\n");
 
-	while(*terminate==0)
+	while (*((int*)terminate) == 0)
 	{
 		// prepare for lighting LEDs by setting col pins to output
 		for (i=0;i<12;i++)
@@ -236,23 +231,24 @@ void *blink(int *terminate)
 		// read three rows of switches
 		for (i=0;i<3;i++)
 		{
+			uint16_t switchscan = 0;
+
 			INP_GPIO(rows[i]);//			GPIO_CLR = 1 << rows[i];	// and output 0V to overrule built-in pull-up from column input pin
 			OUT_GPIO(rows[i]);			// turn on one switch row
 			GPIO_CLR = 1 << rows[i];	// and output 0V to overrule built-in pull-up from column input pin
 
 			sleep_ns(intervl / 100);
 
-			switchscan=0;
 			for (j=0;j<12;j++)			// 12 switches in each row
 			{	tmp = GPIO_READ(cols[j]);
-			if (tmp!=0)
+				if (tmp!=0)
 					switchscan += 1<<j;
 			}
 			INP_GPIO(rows[i]);			// stop sinking current from this row of switches
 
 			switchstatus[i] = switchscan;
 		}
-lx:
+
 	    bctr--;
 	}
 

@@ -1,22 +1,16 @@
+#include "gpio.h"
+
+#include <ctype.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>
 
 typedef unsigned int    uint32; 
 typedef unsigned char   uint8;
 
-extern void *blink(void *ptr);	// the real-time multiplexing process to start up
-extern uint32 ledstatus[8];   // bitfields: 8 ledrows of up to 12 LEDs
-extern uint32 switchstatus[3]; // bitfields: 3 rows of up to 12 switches
-
-uint32 lastswitchstatus[3];    // to watch for switch changes
-
-#include <signal.h>
-#include <ctype.h>
+uint16_t lastswitchstatus[3];    // to watch for switch changes
 
 uint8 path[] = { 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x11, 0x12, 0x13, 0x14, 0x15,
 		 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x2c, 0x2b, 0x2a, 0x29,
