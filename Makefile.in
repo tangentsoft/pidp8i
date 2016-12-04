@@ -189,7 +189,7 @@ $(SIM): $(OBJS)
 bin/pidp8i-test: obj/test.o obj/gpio.o
 	$(CC) -o $@ $^ $(LIBS)
 
-libexec/scanswitch: obj/scanswitch.o
+libexec/scanswitch: obj/scanswitch.o obj/gpio.o
 	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
