@@ -49,6 +49,8 @@ EXAMPLES = \
 
 CLTXT = /boot/cmdline.txt
 
+.PHONY: tags
+
 
 all: $(BUILDDIRS) $(BINS) $(EXAMPLES)
 
