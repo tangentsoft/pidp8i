@@ -40,3 +40,7 @@
 
 *   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
     `ChangeLog.md` that is not atttributed to anyone else.
+
+*   **Paul R. Bernard <prb@downspout.ca>** wrote `src/test.c`, which
+    builds and installs as `pidp8i-test`. He also wrote the core of what
+    now appears in `README-test.md`.

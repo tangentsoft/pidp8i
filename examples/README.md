@@ -1,9 +1,26 @@
 # Example Programs
 
+## What's Provided
+
+The `examples` directory holds short example programs for your PiDP-8/I,
+plus a number of subroutines you may find helpful in writing your own
+programs:
+
+| Example           | What It Does
+-----------------------------
+| `add`             | 2 + 3 = 5  The simplest program here; used below as a meta-example
+| `hello`           | writes "HELLO, WORLD!" to the console; tests PRINTS subroutine
+| `pep001`          | Project Euler Problem #1 solution (close cousin of "FizzBuzz") 
+| `routines/decprt` | prints an unsigned 12-bit decimal integer to the console
+| `routines/prints` | prints an ASCIIZ string stored as a series of 8-bit bytes to the console
+
+`PEP001` has its [own writeup][saga] in the wiki, as it makes a good
+case study of PDP-8 assembly language software development as compared
+to other types of software development.
+
 
 ## How to Use the Examples
 
-The `examples` directory holds short example programs for your PiDP-8/I.
 For each program there are 3 files:
 
 | Extension | Meaning
@@ -192,3 +209,4 @@ information.
 [label]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=labels
 [lread]: https://tangentsoft.com/pidp8i/doc/trunk/labels/README.md
 [howto]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
+[saga]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA

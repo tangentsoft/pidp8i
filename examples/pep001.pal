@@ -13,14 +13,10 @@
 
 / Our assembler doesn't know the EAE instructions, so teach it
 DVI=7407		/ integer divide .+1 into {AC:MQ}, answer in MQ
-MUY=7405		/ integer multiply MQ by .+1, answer in {AC:MQ}
 
 / Combined microcoded instruction aliases
 CLR=CLA CLL		/ clear both AC and L
-MCM=CLA MQA		/ move MQ to AC
 TCA=CMA IAC		/ two's complement the accumulator
-XMA=MQA MQL		/ exchange MQ and AC
-AC1=CLA IAC		/ set AC to 1
 
 
 //// MAIN //////////////////////////////////////////////////////////////
