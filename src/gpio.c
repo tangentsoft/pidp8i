@@ -106,7 +106,7 @@ void sleep_ns(ns_time_t ns)
 void *blink(void *terminate)
 {
 	int i,j,k, tmp;
-	const ms_time_t intervl = 5;	// light each row of leds 5 µs
+	const us_time_t intervl = 5;	// light each row of leds 5 µs
 
 	// Find gpio address (different for Pi 2) ----------
 	gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
