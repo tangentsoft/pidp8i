@@ -1,5 +1,6 @@
 #include "gpio.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <pthread.h>
 #include <signal.h>
@@ -10,7 +11,7 @@
 typedef unsigned int    uint32; 
 typedef unsigned char   uint8;
 
-uint16_t lastswitchstatus[3];    // to watch for switch changes
+static uint16_t lastswitchstatus[3];    // to watch for switch changes
 
 uint8 path[] = { 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x11, 0x12, 0x13, 0x14, 0x15,
 		 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x2c, 0x2b, 0x2a, 0x29,
@@ -41,6 +42,8 @@ int main( int argc, char *argv[] )
   int iret1, row, col, i, chr;
   int path_idx = 0, led_row = 0, delay = 0;
 
+  assert(sizeof(lastswitchstatus == switchstatus));
+
   // install handler to terminate future thread
   if( signal(SIGINT, sig_handler) == SIG_ERR )
     {
@@ -60,17 +63,17 @@ int main( int argc, char *argv[] )
   sleep( 2 );			// allow 2 sec for multiplex to start
 
   fprintf( stdout, "turn on ALL LEDs\n" );
-  for( row=0; row<8; ++row )
+  for( row=0; row<nledrows; ++row )
     ledstatus[row] = 07777;
   CHECK( !terminate, TERMINATE )
   sleep( 5 );
-  for( row=0; row<8; ++row )
+  for( row=0; row<nledrows; ++row )
     ledstatus[row] = 0;
   fprintf( stdout, "turn off ALL LEDs\n" );
   CHECK( !terminate, TERMINATE )
   sleep( 5 );
 
-  for( row=0; row<8; ++row )
+  for( row=0; row<nledrows; ++row )
     {
       CHECK( !terminate, TERMINATE )
       fprintf( stdout, "turning on LED row %d\n", row );
@@ -79,21 +82,21 @@ int main( int argc, char *argv[] )
       ledstatus[row] = 0;
     }
 
-  for( col=0; col<12; ++col )
+  for( col=0; col<ncols; ++col )
     {
       CHECK( !terminate, TERMINATE )
       fprintf( stdout, "turning on LED col %d\n", col );
 
-      for( row=0; row<8; ++row )
+      for( row=0; row<nledrows; ++row )
 	ledstatus[row] |= 1<<col;
       sleep( 5 );
-      for( row=0; row<8; ++row )
+      for( row=0; row<nledrows; ++row )
 	ledstatus[row] = 0;
     }
 	
   fprintf( stdout, "Reading the switches.  Toggle any pattern desired.  CTRL-C to quit.\n" );
   
-  for( i=0; i<3; ++i )
+  for( i=0; i<nrows; ++i )
     lastswitchstatus[i] = switchstatus[i];
   
   for( ;; )
@@ -113,7 +116,7 @@ int main( int argc, char *argv[] )
 	  lastswitchstatus[1]!=switchstatus[1] ||
 	  lastswitchstatus[2]!=switchstatus[2] )
 	{
-	  for( i=0; i<3; ++i )
+	  for( i=0; i<nrows; ++i )
 	    {
 	      fprintf( stdout, "%04o ", ~switchstatus[i] & 07777 );
 	      lastswitchstatus[i] = switchstatus[i];

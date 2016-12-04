@@ -28,11 +28,11 @@ int main()
 	}
 
 	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
-	for (i=0;i<8;i++)			// Define ledrows as input
+	for (i=0;i<nledrows;i++)	// Define ledrows as input
 		INP_GPIO(ledrows[i]);
-	for (i=0;i<12;i++)			// Define cols as input
+	for (i=0;i<ncols;i++)		// Define cols as input
 		INP_GPIO(cols[i]);
-	for (i=0;i<3;i++)			// Define rows as input
+	for (i=0;i<nrows;i++)		// Define rows as input
 		INP_GPIO(rows[i]);
 
 	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
@@ -78,7 +78,7 @@ int main()
 		sleep_us(10);                   // unnecessarily long?
 		switchscan[row-1]=0;
 
-		for (j=0;j<12;j++)		// 12 switches in each row
+		for (j=0;j<ncols;j++)			// 12 switches in each row
 		{	tmp = GPIO_READ(cols[j]);
 			if (tmp==0)
 				switchscan[row-1] += 1<<j;
