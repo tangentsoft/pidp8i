@@ -18,14 +18,65 @@
 #endif
 
 #include <pthread.h>
+#include <sys/time.h>
 
 #define BLOCK_SIZE (4*1024)
 
 
 struct bcm2835_peripheral gpio;	// needs initialisation
 
-uint16_t switchstatus[3];	// bitfields: 3 rows of up to 12 switches
-uint16_t ledstatus[8];		// bitfields: 8 ledrows of up to 12 LEDs
+
+// A constant meaning "indeterminate milliseconds", used for error
+// returns from ms_time() and for the case where the switch is in the
+// stable state in the switch_state array.
+static const ms_time_t na_ms = (ms_time_t)-1;
+
+
+// Adjust columns to scan based on whether the serial mod was done, as
+// that affects the free GPIOs for our use, and how the PCB connects
+// them to the LED matrix.
+#ifdef SERIALSETUP
+uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
+#else
+uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
+#endif
+
+uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
+
+uint8_t rows[] = {16, 17, 18};
+
+// Array sizes.  Must be declared twice because we need to export them,
+// and C doesn't have true const, as C++ does.
+#define NCOLS    (sizeof(cols)    / sizeof(cols[0]))
+#define NLEDROWS (sizeof(ledrows) / sizeof(ledrows[0]))
+#define NROWS    (sizeof(rows)    / sizeof(rows[0]))
+const size_t ncols    = NCOLS;
+const size_t nledrows = NLEDROWS;
+const size_t nrows    = NROWS;
+
+// The public switch and LED API: other threads poke values into
+// ledstatus to affect our GPIO LED pin driving loop and read values
+// from switchstatus to discover our current published value of the
+// switch states.  The latter may differ from the *actual* switch
+// states due to the debouncing procedure.
+uint16_t switchstatus[NROWS];	// bitfield: sparse nrows x ncols switch matrix
+uint16_t ledstatus[NLEDROWS];	// bitfield: sparse nledrows x ncols LED matrix
+
+// Time-delayed reaction to switch changes to debounce the contacts.
+// This is especially important with the incandescent lamp simulation
+// feature enabled since that speeds up the GPIO scanning loop, making
+// it more susceptible to contact bounce.
+struct switch_state {
+	// switch state currently reported via switchstatus[]
+	int stable_state;
+
+	// ms the switch state has been != stable_state, or na_ms
+	// if it is currently in that same state
+	ms_time_t last_change;		
+};
+static struct switch_state gss[NROWS][NCOLS];
+static int gss_initted = 0;
+static const ms_time_t debounce_ms = 50;	// time switch state must remain stable
 
 
 // Exposes the physical address defined in the passed structure using mmap on /dev/mem
@@ -70,22 +121,6 @@ unsigned bcm_host_get_peripheral_address(void)		// find Pi's GPIO base address
 }
 
 
-// PART 2 - the multiplexing logic driving the front panel -------------
-
-// Adjust columns to scan based on whether the serial mod was done, as
-// that affects the free GPIOs for our use, and how the PCB connects
-// them to the LED matrix.
-
-#ifdef SERIALSETUP
-uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
-#else
-uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
-#endif
-
-uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
-uint8_t rows[] = {16, 17, 18};
-
-
 void sleep_ns(ns_time_t ns)
 {
 	struct timespec ts = { 0, ns };
@@ -101,10 +136,82 @@ void sleep_ns(ns_time_t ns)
 }
 
 
+// Like time(2) except that it returns milliseconds since the Unix epoch
+static ms_time_t ms_time(ms_time_t* pt)
+{
+	struct timeval tv;
+	if (gettimeofday(&tv, 0) == 0) {
+		ms_time_t t = (ms_time_t)(tv.tv_sec / 1000.0 + tv.tv_usec * 1000.0);
+		if (pt) *pt = t;
+		return t;
+	}
+	else {
+		return na_ms;
+	}
+}
+
+
+// The multiplexing logic driving the front panel -------------
+
+// Save given switch state ss into the exported switchstatus bitfield
+// so the simulator core will see it.  (Constrast the gss matrix,
+// which holds our internal view of the unstable truth.)
+static void report_ss(int row, int col, int ss,
+		struct switch_state* pss)
+{
+	pss->stable_state = ss;
+	pss->last_change = na_ms;
+
+	int mask = 1 << col;
+	if (ss) switchstatus[row] |=  mask;
+	else    switchstatus[row] &= ~mask;
+
+	//printf("%cSS[%d][%02d] = %d  ", gss_initted ? 'N' : 'I',
+	//		row, col, ss);
+}
+
+
+// Given the state of the switch at (row,col), work out if this requires
+// a change in our exported switch state.
+static void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
+{
+	struct switch_state* pss = &gss[row][col];
+
+	if (!gss_initted) {
+		// First time thru, so set this switch's module-global and
+		// exported state to its defaults now that we know the switch's
+		// initial state.
+		report_ss(row, col, ss, pss);
+	}
+	else if (ss == pss->stable_state) {
+		// This switch is still/again in the state we consider "stable",
+		// which we are reporting in our switchstatus bitfield.  Reset
+		// the debounce timer in case it is returning to its stable
+		// state from a brief blip into the other state.
+		pss->last_change = na_ms;
+	}
+	else if (pss->last_change == na_ms) {
+		// This switch just left what we consider the "stable" state, so
+		// start the debounce timer.
+		pss->last_change = now_ms;
+	}
+	else if ((now_ms - pss->last_change) > debounce_ms) {
+		// Switch has been in the new state long enough for the contacts
+		// to have stopped bouncing: report its state change to outsiders.
+		report_ss(row, col, ss, pss);
+	}
+	// else, switch was in the new state both this time and the one prior,
+	// but it hasn't been there long enough to report it
+}
+
+
+// The GPIO module's main loop, and its thread entry point
+
 void *blink(void *terminate)
 {
-	int i,j,k, tmp;
+	int i,j,k;
 	const us_time_t intervl = 300;	// light each row of leds 300 µs
+	ms_time_t now_ms;
 
 	// Find gpio address (different for Pi 2) ----------
 	gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
@@ -131,14 +238,14 @@ void *blink(void *terminate)
 	//	INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
 	//	AT THE MOMENT, USE "sudo ./gpio mode 14 in" and "sudo ./gpio mode 15 in". "sudo ./gpio readall" to verify.
 
-	for (i=0;i<8;i++)					// Define ledrows as input
+	for (i=0;i<nledrows;i++)			// Define ledrows as input
 	{	INP_GPIO(ledrows[i]);
 		GPIO_CLR = 1 << ledrows[i];		// so go to Low when switched to output
 	}
-	for (i=0;i<12;i++)					// Define cols as input
+	for (i=0;i<ncols;i++)				// Define cols as input
 	{	INP_GPIO(cols[i]);
 	}
-	for (i=0;i<3;i++)					// Define rows as input
+	for (i=0;i<nrows;i++)				// Define rows as input
 	{	INP_GPIO(rows[i]);
 	}
 
@@ -184,17 +291,17 @@ void *blink(void *terminate)
 	while (*((int*)terminate) == 0)
 	{
 		// prepare for lighting LEDs by setting col pins to output
-		for (i=0;i<12;i++)
+		for (i=0;i<ncols;i++)
 		{	INP_GPIO(cols[i]);			//
 			OUT_GPIO(cols[i]);			// Define cols as output
 		}
 		
-		// light up 8 rows of 12 LEDs each
-		for (i=0;i<8;i++)
+		// light up LEDs
+		for (i=0;i<nledrows;i++)
 		{
 
 			// Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-			for (k=0;k<12;k++)
+			for (k=0;k<ncols;k++)
 			{	if ((ledstatus[i]&(1<<k))==0)
 					GPIO_SET = 1 << cols[k];
 				else 
@@ -216,29 +323,28 @@ void *blink(void *terminate)
 		}
 
 		// prepare for reading switches
-		for (i=0;i<12;i++)
+		ms_time(&now_ms);
+		for (i=0;i<ncols;i++)
 			INP_GPIO(cols[i]);			// flip columns to input. Need internal pull-ups enabled.
 
 		// read three rows of switches
-		for (i=0;i<3;i++)
-		{
-			uint16_t switchscan = 0;
-
-			INP_GPIO(rows[i]);//			GPIO_CLR = 1 << rows[i];	// and output 0V to overrule built-in pull-up from column input pin
+		for (i=0;i<nrows;i++)
+		{	INP_GPIO(rows[i]);			
 			OUT_GPIO(rows[i]);			// turn on one switch row
 			GPIO_CLR = 1 << rows[i];	// and output 0V to overrule built-in pull-up from column input pin
 
 			sleep_us(intervl / 100);
 
-			for (j=0;j<12;j++)			// 12 switches in each row
-			{	tmp = GPIO_READ(cols[j]);
-				if (tmp!=0)
-					switchscan += 1<<j;
+			for (j=0;j<ncols;j++)		// ncols switches in each row
+			{	int ss = GPIO_READ(cols[j]);
+				debounce_switch(i, j, !!ss, now_ms);
 			}
-			INP_GPIO(rows[i]);			// stop sinking current from this row of switches
 
-			switchstatus[i] = switchscan;
+			INP_GPIO(rows[i]);			// stop sinking current from this row of switches
 		}
+
+		fflush(stdout);
+		gss_initted = 1;
 	}
 
 	//printf("\nFP off\n");
