@@ -2,11 +2,12 @@
 
 ## Prerequisites
 
-*   A Raspberry Pi with the 40-pin GPIO connector. (i.e., Not one of the
-    original RPis with the 26-pin connector.)
-    
-    As this code presently stands, you may need one of the more modern
-    multicore variants, being the Raspberry Pi 2 model B or newer.
+*   A Raspberry Pi with the 40-pin GPIO connector. That rules out the
+    first series of Raspberry Pi boards with the 26-pin connector.
+
+    In order to use the standard version of this software, you need one
+    of the multicore variants of the Pi. See
+    [`README-single-core.md`][rmsc] if you have a single-core Pi.
 
 *   An SD card containing Raspbian or something sufficiently close.
     PipaOS may also work, for example.  This software is currently
@@ -38,10 +39,18 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
 
-If you get a complaint like "No working C compiler found," you can install
-the necessary build tools with:
+If you get a complaint like "No working C compiler found," there are two
+likely causes. One is that the error message is literally correct: you
+don't have a C compiler installed. You can install one along with all
+the other necessary build tools with:
 
     $ sudo apt install build-essential
+
+The other possibility is that you have somehow managed to unpack the
+software into a directory that you don't have write access to, such as
+by unpacking it via `sudo`. The solution is to either take ownership of
+that directory or to unpack it again, this time somewhere your user is
+allowed to write to.
 
 The `configure` script accepts most of the common flags for such
 scripts.  Perhaps the most important such flag is `--prefix`, which
@@ -89,9 +98,14 @@ You can test your PiDP-8/I LED and switch functions with the
 `pidp8i-test` program. It will be in the `PATH` after installing the
 software.
 
-(You may have to log out and back in for this to work, since the
+This program cannot run while the PiDP-8/I simulator is running in the
+background. Therefore, before running it, say:
+
+    $ sudo systemctl stop pidp8i
+
+You may have to log out and back in for this to work, since the
 installation script modifies your normal user's `PATH` since the normal
-installation prefix is not in the stock Raspbian user `PATH`.)
+installation prefix is not in the stock Raspbian user `PATH`.
 
 See [`README-test.md`][rmt] for more details.
 
@@ -99,9 +113,12 @@ See [`README-test.md`][rmt] for more details.
 ## Using the Software
 
 For the most part, this software distribution works like the upstream
-[2015.12.15 distribution][usd]. The major differences are that all of the
-commands for starting, stopping, and re-entering the simulator use
-`pidp8i` in their name.
+[2015.12.15 distribution][usd]. Its [documentation][prj] therefore
+describes this software too, for the most part.
+
+The largest user-visible difference between the two software
+distributions is that all of the shell commands affecting the software
+were renamed to include `pidp8i` in their name:
 
 1.  To start the simulator:
 
@@ -133,7 +150,10 @@ commands for starting, stopping, and re-entering the simulator use
 
         $ sudo systemctl stop pidp8i
 
-See the project's [official documentation][prj] for more details.
+The other major difference between the upstream distribution and this
+one is that there is no separate install script. The `make install`
+command you ran above did everything for you.
+
 
 
 [smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
@@ -142,3 +162,4 @@ See the project's [official documentation][prj] for more details.
 [sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
 [rmt]:  /doc/trunk/README-test.md
+[rmsc]: /doc/trunk/README-single-core.md

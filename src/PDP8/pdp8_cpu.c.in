@@ -187,8 +187,8 @@
         pdp8_sys.c      add sim_devices table entry
 */
 
+#include "gpio.h"
 #include "pdp8_defs.h"
-#include <unistd.h>
 
 #define PCQ_SIZE        64                              /* must be 2**n */
 #define PCQ_MASK        (PCQ_SIZE - 1)
@@ -249,10 +249,7 @@ extern FILE *sim_log;
 extern t_bool sim_idle_enab;
 
 /* ------------------------------------------------------------------------------------------------- */
-extern uint32 switchstatus[3]; // bitfields: 3 rows of up to 12 switches
-extern uint32 ledstatus[8];	// bitfields: 8 ledrows of up to 12 LEDs
 void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF);
-/* ------------------------------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------------------------------------- */
 int swStop = 0, swExam = 0, swDep = 0, swCont2 = 0, swStart = 0, swSingStep = 0, swAttach = 0;
 char mountedFiles[8][CBUFSIZE];

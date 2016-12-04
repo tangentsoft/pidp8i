@@ -66,13 +66,6 @@ define ABSPREFIX [exec $rlprg -f [get-define prefix]]
 define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
-# If we have a PAL-III type assembler here, build the examples, too
-if {[cc-check-progs palbart]} {
-	define EXAMPLES {examples/add.pt}
-} else {
-	define EXAMPLES {}
-}
-
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}
