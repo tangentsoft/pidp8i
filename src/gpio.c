@@ -28,7 +28,7 @@ uint16_t switchstatus[3];	// bitfields: 3 rows of up to 12 switches
 uint16_t ledstatus[8];		// bitfields: 8 ledrows of up to 12 LEDs
 
 
-// Exposes the physical address defined in the passed structure using mmap on /dev/mem
+// Exposes the physical address defined in the passed structure using mmap on /dev/gpiomem
 int map_peripheral(struct bcm2835_peripheral *p)
 {
    if ((p->mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
@@ -37,7 +37,7 @@ int map_peripheral(struct bcm2835_peripheral *p)
    }
    p->map = mmap(
       NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
-      p->mem_fd,      	// File descriptor to physical memory virtual file '/dev/mem'
+      p->mem_fd,      	// File descriptor to physical memory virtual file '/dev/gpiomem'
       p->addr_p);       // Address in physical map that we want this memory block to expose
    if (p->map == MAP_FAILED) {
         perror("mmap");
