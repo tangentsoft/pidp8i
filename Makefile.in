@@ -56,6 +56,7 @@ all: $(BUILDDIRS) $(BINS) $(EXAMPLES)
 
 clean:
 	@rm -f $(BINS) \
+		@builddir@/tags \
 		@builddir@/bin/*.pt \
 		@builddir@/obj/*.d \
 		@builddir@/obj/*.lst \
