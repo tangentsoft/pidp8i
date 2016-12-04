@@ -193,8 +193,13 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio.o
 	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-Makefile: @AUTODEPS@ @srcdir@/Makefile.in
-	@@AUTOREMAKE@
+Makefile: @AUTODEPS@ \
+		@srcdir@/Makefile.in \
+		@srcdir@/boot/*.in \
+		@srcdir@/etc/*.in \
+		@srcdir@/src/*.in \
+		@srcdir@/src/PDP8/*.in
+	@AUTOREMAKE@
 endif
 
 -include $(OBJS:.o=.d) obj/scanswitch.d
