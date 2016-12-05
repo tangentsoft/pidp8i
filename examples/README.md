@@ -40,7 +40,7 @@ For each program there are 3 files:
 
 | Extension | Meaning
 -----------------------------
-| `*.pal`   | the PAL-III assembly source code for the program
+| `*.pal`   | the PAL8 assembly source code for the program
 | `*.lst`   | the human-readable assembler output
 | `*.pt`    | the machine-readable assembler output (RIM format)
 

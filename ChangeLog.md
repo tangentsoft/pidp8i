@@ -122,7 +122,7 @@
     be in `imagefiles` are now in `$prefix/share/media`.
 
 *   Added a bunch of ancillary material: [wiki articles][wiki],
-    [USB stick label artwork][art], a PAL-III assembly [example program][ex]
+    [USB stick label artwork][art], a PAL8 assembly [example program][ex]
     for you to toggle in, etc. Also filed a bunch of [tickets][tix]
     detailing feature proposals, known bugs and weaknesses, etc. If you
     were looking for ways to contribute to the development effort, these
