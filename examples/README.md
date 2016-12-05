@@ -30,11 +30,6 @@ these:
 *   [**`pep001.pal`**][pal] — PAL8 Assembly Language
 *   [**`pep001.bas`**][bas] — OS/8 BASIC
 
-
-`PEP001` has its [own writeup][saga] in the wiki, as it makes a good
-case study of PDP-8 assembly language software development as compared
-to other types of software development.
-
 [pal]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
 [bas]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.BA
 
