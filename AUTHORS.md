@@ -44,3 +44,6 @@
 *   **Paul R. Bernard <prb@downspout.ca>** wrote `src/test.c`, which
     builds and installs as `pidp8i-test`. He also wrote the core of what
     now appears in `README-test.md`.
+
+*   **Rick Murphy <k1mu.nospam@gmail.com>** optimized `examples/pep001.pal`
+    so that it fits into a single page of PDP-8 core.

@@ -18,7 +18,9 @@ timeline only.
 
 Each release version needs two Fossil tags applied to it: one for the
 particular release date — formatted as vYYYYMMDD — and "release" to
-indicate that the tag is the latest release.
+indicate that the tag is the latest release:
+
+    $ fossil ci --tag release --tag v$(date +%Y%m%d)
 
 These tags should be applied to the checkin that adds the `ChangeLog.md`
 updates, but may be applied on later checkins if necessary.

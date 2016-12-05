@@ -1,6 +1,32 @@
 # PiDP-8/I Changes
 
 
+## Version 2016.12.05
+
+*   This release marks the first binary SD card image released under my
+    maintainership of the software.  As such, the major user-visible
+    features in this release of the Fossil tree simply support that:
+
+    *   The `pidp8i-init` script now understands that the OS's SSH host
+        keys may be missing, and re-generates them.  Without this
+        security measure, anyone who downloads that binary OS image
+        could impersonate the SSH server on *your* PiDP-8/I.
+
+    *   Added a `RELEASE-PROCESS.md` document.  This is primarily for my
+        own benefit, to ensure that I don't miss a step, particularly
+        given the complexity of producing the binary OS image.  However,
+        you may care to look into it to see what goes on over here on
+        the other side of the Internet. :)
+
+*   Added an OS/8 BASIC solution to Project Euler Problem #1, so you can
+    see how much simpler it is compared to the PAL8 assembly language
+    version added in the prior release.
+
+*   Updated the PAL8 assembly version with several clever optimizations
+    by Rick Murphy, the primary effect of which is that it now fits into
+    a single page of PDP-8 core memory.
+
+
 ## Version 2016.12.03
 
 *   Debounced the switches.  See [the mailing list post][cdb] announcing
