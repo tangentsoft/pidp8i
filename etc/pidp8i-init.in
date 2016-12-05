@@ -42,6 +42,13 @@ do_start() {
 	    exit 0
 	fi
 
+    # Regenerate SSH host keys if this is the first run on a fresh image
+    if [ ! -f /etc/ssh/ssh_host_ecdsa_key -a -x /usr/sbin/dpkg-reconfigure ]
+    then
+        log_daemon_msg "Regenerating SSH host keys..." "pidp8i"
+        /usr/sbin/dpkg-reconfigure openssh-server
+    fi
+
 	$scanswitch >/dev/null 2>&1
 	script=$?
 	if [ $script -eq 8 ]; then
