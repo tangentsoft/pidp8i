@@ -14,13 +14,6 @@ programs:
 | `routines/decprt` | prints an unsigned 12-bit decimal integer to the console
 | `routines/prints` | prints an ASCIIZ string stored as a series of 8-bit bytes to the console
 
-The `*.pal` files are PAL8 assembly language files that you could copy
-into the simulator to assemble inside the PDP-8, but which are also
-already assembled on your PC into paper tape format in `bin/*.pt` as
-part of the top-level `make` process. You can then load those paper
-tapes into your PiDP-8/I the same way you'd load any other paper tape;
-see the upstream docs.
-
 The `pep001.*` files are a case study series in solving a simple
 problem, which lets you compare the solutions along several axes. Some
 are much longer than others, but some will run faster and/or take less
@@ -34,9 +27,10 @@ these:
 [bas]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.BA
 
 
-## How to Use the Examples
+## How to Use the Assembly Language Examples
 
-For each program there are 3 files:
+For each PAL8 assembly program in `examples/*.pal`, there are two
+additional files:
 
 | Extension | Meaning
 -----------------------------
@@ -60,7 +54,7 @@ I cover each of these options below, in the same order as the list
 above.
 
 
-## Option 1: Transcribing the Examples into an OS/8 Session
+## Option 1: Transcribing the Assembly Code into an OS/8 Session
 
 To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
 PiDP-8/I:
@@ -128,9 +122,13 @@ in the day. The tools may differ — the user may prefer `TECO` over
 `EDIT` or MACRO-8 over PAL8 — but the idea is the same regardless.
 
 
-## Option 2: Toggling Programs in Via the Front Panel
+## Option 2: Toggling a Programs in Via the Front Panel
 
-Take [`add.lst`][lst] as an example, in which you will find three
+After building the PiDP-8/I software, each of the `examples/*.pal` files
+is assembled by `palbart` which writes out a human-readable listing file
+to `obj/*.lst`, named after the source file.
+
+Take [`obj/add.lst`][lst] as an example, in which you will find three
 columns of numbers on the code-bearing lines:
 
     10 00200 7300
@@ -185,13 +183,17 @@ the last value you entered via SR above, 0206. That is the source of the
 "07" in the lower two digits of the fourth instruction, 3207.
 
 
-## Option 3: Loading Programs from Paper Tape
+## Option 3: Loading a Program from Paper Tape
 
-The `example/*.pt` files shipped with the software distribution are in
-RIM format, so the simple way to load them into your PiDP-8/I is to copy
-them to USB sticks, one file per stick. The following is distilled from
-the [How to Use the PiDP-8/I][howto] section of the PiDP-8/I
-documentation:
+The `palbart` assembly process described above also produces paper tape
+output files in RIM format in `bin/*.pt`.
+
+The simplest way to load these assembly examples into your PiDP-8/I is
+to copy each such file to a USB stick, one file per stick.  Then, load
+the paper tape into the simulated PDP-8/I's core memory.
+
+The following is distilled from the [How to Use the PiDP-8/I][howto]
+section of the PiDP-8/I documentation:
 
 1.  Set the IF switches (first white group) to 001, and toggle `Sing
     Step` to reboot the simulator into the high-speed RIM loader. If the
