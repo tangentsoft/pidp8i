@@ -14,10 +14,12 @@ programs:
 | `routines/decprt` | prints an unsigned 12-bit decimal integer to the console
 | `routines/prints` | prints an ASCIIZ string stored as a series of 8-bit bytes to the console
 
-The `*.pal` files are PAL8 assembly language files, are also assembled
-on your PC into paper tape format in `bin/*.pt` as part of the top-level
-`make` process. You can then load those paper tapes into your PiDP-8/I
-the same way you'd load any other paper tape; see the upstream docs.
+The `*.pal` files are PAL8 assembly language files that you could copy
+into the simulator to assemble inside the PDP-8, but which are also
+already assembled on your PC into paper tape format in `bin/*.pt` as
+part of the top-level `make` process. You can then load those paper
+tapes into your PiDP-8/I the same way you'd load any other paper tape;
+see the upstream docs.
 
 The `pep001.*` files are a case study series in solving a simple
 problem, which lets you compare the solutions along several axes. Some
