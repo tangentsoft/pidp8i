@@ -25,8 +25,8 @@ are much longer than others, but some will run faster and/or take less
 memory. It is interesting to compare them. There are writeups on each of
 these:
 
-    * [**`pep001.pal`**][pal] — PAL8 Assembly Language
-    * [**`pep001.bas`**][bas] — OS/8 BASIC
+*   [**`pep001.pal`**][pal] — PAL8 Assembly Language
+*   [**`pep001.bas`**][bas] — OS/8 BASIC
 
 
 `PEP001` has its [own writeup][saga] in the wiki, as it makes a good
