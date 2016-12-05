@@ -8,15 +8,33 @@ programs:
 
 | Example           | What It Does
 -----------------------------
-| `add`             | 2 + 3 = 5  The simplest program here; used below as a meta-example
-| `hello`           | writes "HELLO, WORLD!" to the console; tests PRINTS subroutine
-| `pep001`          | Project Euler Problem #1 solution (close cousin of "FizzBuzz") 
+| `add.pal`         | 2 + 3 = 5  The simplest program here; used below as a meta-example
+| `hello.pal`       | writes "HELLO, WORLD!" to the console; tests PRINTS subroutine
+| `pep001.*`        | Project Euler Problem #1 solution (close cousin of "FizzBuzz") 
 | `routines/decprt` | prints an unsigned 12-bit decimal integer to the console
 | `routines/prints` | prints an ASCIIZ string stored as a series of 8-bit bytes to the console
+
+The `*.pal` files are PAL8 assembly language files, are also assembled
+on your PC into paper tape format in `bin/*.pt` as part of the top-level
+`make` process. You can then load those paper tapes into your PiDP-8/I
+the same way you'd load any other paper tape; see the upstream docs.
+
+The `pep001.*` files are a case study series in solving a simple
+problem, which lets you compare the solutions along several axes. Some
+are much longer than others, but some will run faster and/or take less
+memory. It is interesting to compare them. There are writeups on each of
+these:
+
+    * [**`pep001.pal`**][pal] — PAL8 Assembly Language
+    * [**`pep001.bas`**][bas] — OS/8 BASIC
+
 
 `PEP001` has its [own writeup][saga] in the wiki, as it makes a good
 case study of PDP-8 assembly language software development as compared
 to other types of software development.
+
+[pal]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
+[bas]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.BA
 
 
 ## How to Use the Examples
@@ -209,4 +227,3 @@ information.
 [label]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=labels
 [lread]: https://tangentsoft.com/pidp8i/doc/trunk/labels/README.md
 [howto]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
-[saga]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
