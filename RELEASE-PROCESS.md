@@ -36,9 +36,9 @@ they begin shipping the new release immediately after tagging it.
 
 ## Produce the Binary OS Image
 
-Start with the latest Raspbian Lite OS image:
+Start with the latest [Raspbian Lite OS image][os]:
 
-    https://www.raspberrypi.org/downloads/raspbian/
+[os]: https://www.raspberrypi.org/downloads/raspbian/
 
 If the OS version has changed since the last release, use the following
 steps to bootstrap the installation:
