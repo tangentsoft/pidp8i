@@ -50,7 +50,8 @@ NXITER, CLA		/ loop cleanup
 	SNA CLA		/ if so, leave calculation loop
 	JMP MLDONE
 
-	ISZ CURR	/ CURR still < MAX, so increment CURR
+	ISZ CURR	/ CURR still < MAX, so increment CURR; never skips
+
 	TAD STOTAL	/ if STOTAL is getting too big, print...
 	CIA		/ a subtotal and zero STOTAL so we don't...
 	TAD STMAX	/ overflow the 12-bit limit
@@ -59,7 +60,7 @@ NXITER, CLA		/ loop cleanup
 	JMS SHOWST	/ exceeded threshold, so display subtotal and " + "
 	CLA
 	DCA STOTAL	/ take advantage of free zero
-	TAD (PLUS-1
+	TAD (PLUS-1)
 	JMS PRINTS
 	JMP MLCORE
 
