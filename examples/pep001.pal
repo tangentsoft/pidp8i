@@ -198,7 +198,7 @@ STMAX,  1024		/ subtotal max; avoids overflow of 12-bit signed int
 	OCTAL
 CRLF,   15;12;0		/ ASCII character values, zero-terminated
 PLUS,   40;53;40;0
-ANSWER, 101;116;123;127;105;122;72;0
+ANSWER, 101;116;123;127;105;122;72;40;0
 
 
 //// END ///////////////////////////////////////////////////////////////
