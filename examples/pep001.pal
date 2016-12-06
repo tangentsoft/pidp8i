@@ -54,7 +54,7 @@ NXITER, CLA		/ loop cleanup
 	TAD STOTAL	/ if STOTAL is getting too big, print...
 	CIA		/ a subtotal and zero STOTAL so we don't...
 	TAD STMAX	/ overflow the 12-bit limit
-	SZL
+	SNL
 	JMP MLCORE	/ STMAX - STOTAL > 0 so re-enter loop core
 	JMS SHOWST	/ exceeded threshold, so display subtotal and " + "
 	CLA
