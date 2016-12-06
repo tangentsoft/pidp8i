@@ -36,7 +36,7 @@ they begin shipping the new release immediately after tagging it.
 
 ## Produce the Binary OS Image
 
-Start with the latest [Raspbian Lite OS image][os]:
+Start with the latest [Raspbian Lite OS image][os].
 
 [os]: https://www.raspberrypi.org/downloads/raspbian/
 
@@ -50,7 +50,7 @@ steps to bootstrap the installation:
         $ sudo apt update && sudo apt upgrade
         $ sudo apt install fossil
         $ mkdir museum pidp8i
-        $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
+        $ fossil clone https://tangentsoft.com/pidp8i museum/pidp8i.fossil
         $ cd pidp8i
         $ fossil open ~/museum/pidp8i.fossil release
         $ ./configure
@@ -64,8 +64,8 @@ steps to bootstrap the installation:
 
 3.  Reboot and test that the software starts up as it should.
 
-4.  Revert the automatic setup steps to force them to be done again on
-    the end-user's Pi:
+4.  Revert Raspbian's automatic setup steps to force them to be done
+    again on the end-user's Pi:
 
         $ sudo shred -u /etc/ssh/*key*
         $ sudo dphys-swapfile uninstall
@@ -123,6 +123,7 @@ since the last release, and reduce the command sequence in step 2 to:
 
     $ sudo apt update && sudo apt upgrade
     $ cd pidp8i
+	$ fossil update
     $ make
     $ sudo make install
     $ make clean
