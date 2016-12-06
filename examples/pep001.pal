@@ -28,7 +28,7 @@ MAIN,   AC3		/ start with 3, because we know 1 & 2 can't work
 	DCA CURR		
 	DCA STOTAL	/ reset total to 0
 	TAD (ANSWER-1)	/ write "ANSWER: " to the terminal
-	JMS PRINTS
+	JMS SAPRT
 
 
 //// MLCORE ////////////////////////////////////////////////////////////
@@ -60,12 +60,14 @@ NXITER, CLA		/ loop cleanup
 	JMS SHOWST	/ exceeded threshold, so display subtotal and " + "
 	DCA STOTAL	/ take advantage of free zero left by SHOWST
 	TAD (PLUS-1)
-	JMS PRINTS
+	JMS SAPRT
 	JMP MLCORE
 
 MLDONE, JMS SHOWST	/ done; show answer
-	TAD (CRLF-1)	/ don't need CLA; SHOWST left AC = 0
-	JMS PRINTS
+	TAD (15)	/ send CR; don't need CLA: SHOWST left AC = 0
+	JMS TYPE
+	TAD (12)	/ send LF: don't need CLA: TYPE left AC = 0
+	JMS TYPE
 
 	/ End program gracefully, either re-entering OS/8 if we can see
 	/ that its entry point looks sane, or halting with the answer in
@@ -114,8 +116,8 @@ SHOWST, 0
 
 
 //// TYPE //////////////////////////////////////////////////////////////
-/ Send a character out to the terminal.  Shared core of PRINTS and
-/ DECPRT.
+/ Send an ASCII character in AC out to the terminal.  Shared core of
+/ SAPRT and DECPRT.
 
 TYPE,   0
 	TSF
@@ -125,26 +127,66 @@ TYPE,   0
 	JMP I TYPE
 
 
-//// PRINTS ////////////////////////////////////////////////////////////
-/ Write an ASCIIZ string to the terminal.  Expects to receive the
-/ address of the string - 1 in AC.  (The -1 hassle saves an instruction
-/ or two in our use of an autoincrement register.)  Uses the autoinc
-/ register at location 10.
+//// SATYPE ////////////////////////////////////////////////////////////
+/ Front end to TYPE for SAPRT: accepts the stripped ASCII character in
+/ AC and interprets the character value, sending the actual ASCII value
+/ to TYPE.
+
+SATYPE,	0
+	SNA
+	JMP I SAPRT	/ NUL character, so return to SAPRT's caller (!)
+
+	DCA SATCHR	/ save a copy of char; we'll be manipulating it
+	TAD SATCHR
+
+SATNZ,	AND (40)	/ test bit 5
+	SNA CLA
+	TAD (100)	/ bit 5 unset, so add 64 first (c = 0-31 -> 64-95)
+	TAD SATCHR	/ either reload c=32-63 or add it to 64 offet
+	JMS TYPE
+	JMP I SATYPE
+SATCHR,	0
+
+
+//// SAPRT /////////////////////////////////////////////////////////////
+/ Write a "stripped ASCII" string to the terminal.
+/
+/ Expects to receive the address of the string - 1 in AC.  (The -1 saves
+/ an instruction or two in our use of an autoincrement register.)
+/
+/ Does not handle % = CRLF because we only need that once in this
+/ program, and it would take more code than just sending the two raw
+/ characters directly.
+/
+/ Does not handle ^ = swap case because we can't afford it if we're to
+/ keep this program to a single page of core.  The only use would be
+/ "ANSWER: " -> "Answer: " and we can live without that.
 
 SADDR=10		/ autoinc register for walking the string
-PRINTS, 0
+SAPRT,	0
 	DCA SADDR	/ save AC as string address
-PSNEXT, TAD I SADDR	/ load next character
-	SNA
-	JMP I PRINTS	/ found the null terminator; leave
-	JMS TYPE	/ Print that character
-	JMP PSNEXT	/ look at next character
+SANEXT,	TAD I SADDR	/ load next two characters
+	DCA SACHR	/ save it
+	
+	CLL		/ extract first character
+	TAD SACHR	
+	RTR
+	RTR
+	JMS SATYPE	/ print first character
+
+	TAD SACHR	/ extract second character; AC already 0
+	AND (7700)
+	JMS SATYPE	/ print second character
+
+	JMP SANEXT	/ look at next character pair
+SACHR,	0
 
 
 //// DECPRT ////////////////////////////////////////////////////////////
 / Decimal number printer; variant of examples/routines/decprt.pal
 / Leaves AC = 0.
 
+PAGE 2
 DECPRT, 0
 	DCA VALUE	/SAVE INPUT
 	DCA DIGIT	/CLEAR
@@ -194,11 +236,10 @@ STOTAL, 0		/ subtotal, printed and reset occasionally
 	DECIMAL
 MAX,    999		/ check natural numbers CURR to MAX; must be < 2048!
 STMAX,  1024		/ subtotal max; avoids overflow of 12-bit signed int
-
 	OCTAL
-CRLF,   15;12;0		/ ASCII character values, zero-terminated
-PLUS,   40;53;40;0
-ANSWER, 101;116;123;127;105;122;72;40;0
+
+PLUS,   TEXT " + "
+ANSWER, TEXT "ANSWER: "
 
 
 //// END ///////////////////////////////////////////////////////////////
