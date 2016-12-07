@@ -2,6 +2,13 @@
 
 ## Version 2016.12.06
 
+*   The `pidp8i-test` program's LED test routines did not work correctly
+    when built against the incandescent lamp simulator version of the
+    GPIO module.  Reworked the build so that this test program builds
+    against the no-lamp-simulator version instead so that you don't have
+    to choose between having the lamp simulator or having a working
+    `pidp8i-test` program.
+
 *   More improvements to `examples/pep001.pal`.
 
 *   Extracted improved `PRINTS` routine from that example as

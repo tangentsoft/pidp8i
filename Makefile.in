@@ -186,7 +186,7 @@ $(BUILDDIRS):
 $(SIM): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)
 
-bin/pidp8i-test: obj/test.o obj/gpio.o
+bin/pidp8i-test: obj/test.o obj/gpio-nls.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio.o
