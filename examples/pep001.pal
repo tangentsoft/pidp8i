@@ -3,20 +3,20 @@
 /   If we list all the natural numbers below 10 that are multiples of
 /   3 or 5, we get 3, 5, 6 and 9. The sum of these multiples is 23.
 /   Find the sum of all the multiples of 3 or 5 below 1000.
-/ 
-/ Solution by Warren Young of tangentsoft.com, 2016.11.30
+/
+/ Initial solution by Warren Young of tangentsoft.com, 2016.11.30
+/ Optimized by Rick Murphy of the mailing list, 2016.12.04
 ////////////////////////////////////////////////////////////////////////
 
 
-////////////////////////////////////////////////////////////////////////
-/ DIY ASSEMBLER INSTRUCTIONS
+//// DIY Assembler Instructions ////////////////////////////////////////
 
 / Our assembler doesn't know the EAE instructions, so teach it
 DVI=7407		/ integer divide .+1 into {AC:MQ}, answer in MQ
 
 / Combined microcoded instruction aliases
 CLR=CLA CLL		/ clear both AC and L
-TCA=CMA IAC		/ two's complement the accumulator
+AC3=CLA CLL CML IAC RAL	/ set AC to 3
 
 
 //// MAIN //////////////////////////////////////////////////////////////
@@ -24,84 +24,70 @@ TCA=CMA IAC		/ two's complement the accumulator
 / processor state in case we're restarting this program in-core.
 
 PAGE 1
-MAIN,	CLR
-	TAD (3)
-	DCA CURR	/ start with 3, because we know 1 & 2 can't work
-	DCA TOTAL	/ reset total to 0
-	TLS		/ send null to terminal to get flags set right
-	TAD (ANSWER)	/ write "ANSWER: " to the terminal
+MAIN,   AC3		/ start with 3, because we know 1 & 2 can't work
+	DCA CURR		
+	DCA STOTAL	/ reset total to 0
+	TAD (ANSWER-1)	/ write "ANSWER: " to the terminal
 	JMS PRINTS
-	JMP MLCORE
-CURR,	0		/ current number we're checking
-TOTAL,	0		/ the answer so far; at the end, printed out
-
-/ Constants
-	DECIMAL
-MAX,	999		/ check natural numbers CURR to MAX; must be < 2048!
-STMAX,	1024		/ subtotal max; avoids overflow of 12-bit signed int
-
-	OCTAL
-CRLF,	15;12;0		/ ASCII character values; don't forget trailing 0!
-PLUS,	40;53;40;0
-ANSWER,	101;116;123;127;105;122;72;40;0
 
 
 //// MLCORE ////////////////////////////////////////////////////////////
-/ The core of the main loop.  MAIN just inits the globals and calls us.
-
-	/ Try dividing 3 into CURR first
-MLCORE,	CLR
-	TAD (3)
+/ The core of the main loop.  MAIN just inits the globals and falls
+/ through to us.
+ 
+MLCORE, AC3		/ try dividing 3 into CURR first
 	JMS ISMOD0
-	SNA		/ if ISMOD0 left AC = 0, CURR divided evenly by
+	SNA CLA		/ if ISMOD0 left AC = 0, CURR divided evenly by
 	JMP NXITER	/ 3, so skip 5 lest we count multiples of 15 2x
 
-	/ That didn't work out, so try dividing 5 into it
-	CLA
-	TAD (5)
+	TAD (5)		/ no good; try dividing 5 into CURR instead
 	JMS ISMOD0
 
-	/ Loop cleanup
-NXITER,	CLA		
+NXITER, CLA		/ loop cleanup
 	TAD CURR
-	TCA
+	CIA
 	TAD MAX		/ = 0 if CURR == MAX
-	SNA		/ if so, leave calculation loop
+	SNA CLA		/ if so, leave calculation loop
 	JMP MLDONE
 
-	CLR		/ CURR still < MAX, so increment CURR
-	TAD CURR	
-	IAC
-	DCA CURR
+	ISZ CURR	/ CURR still < MAX, so increment CURR; never skips
 
-	TAD TOTAL	/ if TOTAL is getting too big, print...
-	TCA		/ a subtotal and zero TOTAL so we don't...
+	TAD STOTAL	/ if STOTAL is getting too big, print...
+	CIA		/ a subtotal and zero STOTAL so we don't...
 	TAD STMAX	/ overflow the 12-bit limit
-	SZL
-	JMP MLCORE	/ STMAX - TOTAL > 0 so re-enter loop core
-	JMS SHOTOT	/ exceeded threshold, so display subtotal and " + "
-	CLA
-	DCA TOTAL	/ take advantage of free zero
-	TAD (PLUS)
+	SNL
+	JMP MLCORE	/ STMAX - STOTAL > 0 so re-enter loop core
+	JMS SHOWST	/ exceeded threshold, so display subtotal and " + "
+	DCA STOTAL	/ take advantage of free zero left by SHOWST
+	TAD (PLUS-1)
 	JMS PRINTS
-	JMP MLCORE	
+	JMP MLCORE
 
-	/ Calculation complete.  Show answer and exit gracefully.
-MLDONE,	JMS SHOTOT
-	CLA
-	TAD (CRLF)
+MLDONE, JMS SHOWST	/ done; show answer
+	TAD (CRLF-1)	/ don't need CLA; SHOWST left AC = 0
 	JMS PRINTS
-	JMP ENDG
+
+	/ End program gracefully, either re-entering OS/8 if we can see
+	/ that its entry point looks sane, or halting with the answer in
+	/ AC so the user can see the answer on the front panel.
+OS8ENT,			/ 7600, OS/8's entry point, happens to also be...
+ENDG,   7600		/ ...the group 2 variant of CLA; yes, we know, yuck!
+	TAD I OS8ENT
+	TAD OS8INS1	/ add its negative
+	SNA CLA		/ if it's zero'd out, then...
+	JMP I OS8ENT	/ re-enter OS/8
+	TAD STOTAL	/ else not running under OS/8...
+	HLT		/ so halt with STOTAL displayed in AC lights
+OS8INS1,-4207		/ first OS/8 instruction at entry point, negated
 
 
 //// ISMOD0 ////////////////////////////////////////////////////////////
 / If passed AC divides evenly into CURR (in C-speak, CURR % AC == 0)
-/ add CURR to TOTAL and return 0 in AC.  Else, return nonzero in AC and
-/ leave TOTAL untouched.
+/ add CURR to STOTAL and return 0 in AC.  Else, return nonzero in AC and
+/ leave STOTAL untouched.
 
-ISMOD0,	0
-	/ Divide CURR by DIVISOR, passed as AC
-	DCA DIVISOR
+ISMOD0, 0
+	DCA DIVISOR	/ Divide CURR by DIVISOR, passed as AC
 	TAD CURR	/ load CURR into just-cleared AC
 	MQL DVI		/ move CURR to MQ, divide by DIVISOR...
 DIVISOR,0		/ ...quotient in MQ, remainder in AC
@@ -110,69 +96,56 @@ DIVISOR,0		/ ...quotient in MQ, remainder in AC
 
 	/ Division left AC empty, so CURR divides evenly by DIVISOR!
 	TAD CURR	/ don't need to clear AC; prior test says AC == 0
-	TAD TOTAL
-	DCA TOTAL
+	TAD STOTAL
+	DCA STOTAL
 	JMP I ISMOD0
 
 
-//// SHOTOT ////////////////////////////////////////////////////////////
-/ Write TOTAL to terminal in decimal, nothing following.
+//// SHOWST ////////////////////////////////////////////////////////////
+/ Write STOTAL value to terminal in decimal.  We purposely do not follow
+/ it with anything, as our callers variously follow it with " + " or a
+/ CRLF pair.  Leaves AC = 0 because DECRPT does.
 
-SHOTOT,0
+SHOWST, 0
 	CLR
-	TAD TOTAL
+	TAD STOTAL
 	JMS DECPRT	/ print answer on console, in decimal
-	TSF		/ wait for terminal to be ready again
+	JMP I SHOWST	/ and done
+
+
+//// TYPE //////////////////////////////////////////////////////////////
+/ Send a character out to the terminal.  Shared core of PRINTS and
+/ DECPRT.
+
+TYPE,   0
+	TSF
 	JMP .-1
-
-	JMP I SHOTOT	/ and done
-
+	TLS
+	CLA
+	JMP I TYPE
 
 
 //// PRINTS ////////////////////////////////////////////////////////////
+/ Write an ASCIIZ string to the terminal.  Expects to receive the
+/ address of the string - 1 in AC.  (The -1 hassle saves an instruction
+/ or two in our use of an autoincrement register.)  Uses the autoinc
+/ register at location 10.
 
-PRINTS,0
+SADDR=10		/ autoinc register for walking the string
+PRINTS, 0
 	DCA SADDR	/ save AC as string address
-PSNEXT,	TAD I SADDR	/ load next character
+PSNEXT, TAD I SADDR	/ load next character
 	SNA
 	JMP I PRINTS	/ found the null terminator; leave
-
-	TSF		/ wait for terminal to be ready
-	JMP .-1
-	TLS		/ write character to the terminal
-
-	CLA		/ increment string address pointer
-	TAD SADDR
-	IAC
-	DCA SADDR
-		
+	JMS TYPE	/ Print that character
 	JMP PSNEXT	/ look at next character
-SADDR,	0
-
-
-//// ENDG //////////////////////////////////////////////////////////////
-// End program gracefully, either re-entering OS/8 if we can see that
-// its entry point looks sane, or halting with the answer in AC so the
-// user can see the answer on the front panel.
-
-ENDG,	CLA
-	TAD OS8ENT
-	TCA
-	TAD OS8INS1
-	SNA
-	JMP 7600	/ re-enter OS/8
-	CLR
-	TAD TOTAL
-	HLT		/ not running under OS/8, so halt
-OS8ENT,	7600		/ OS/8 entry point
-OS8INS1,4207		/ first instruction at that entry point
 
 
 //// DECPRT ////////////////////////////////////////////////////////////
-// Decimal number printer; see examples/routines/decprt.pal
+/ Decimal number printer; variant of examples/routines/decprt.pal
+/ Leaves AC = 0.
 
-PAGE 2
-DECPRT,	0
+DECPRT, 0
 	DCA VALUE	/SAVE INPUT
 	DCA DIGIT	/CLEAR
 	TAD CNTRZA
@@ -183,7 +156,7 @@ DECPRT,	0
 	DCA VALUE	/SAVE
 	CLL
 	TAD VALUE
-ARROW,	TAD TENPWR	/SUBTRACT POWER OF TEN
+ARROW,  TAD TENPWR	/SUBTRACT POWER OF TEN
 	SZL
 	ISZ DIGIT	/DEVELOP BCD DIGIT
 	SZL
@@ -191,25 +164,41 @@ ARROW,	TAD TENPWR	/SUBTRACT POWER OF TEN
 	CLA		/HAVE BCD DIGIT
 	TAD DIGIT	/GET DIGIT
 	TAD K260	/MAKE IT ASCII
-	TSF		/OR TAD DIGIT
-	JMP .-1		/JMS TDIGIT(SEE 8-19-U)
-	TLS		/TYPE DIGIT
-	CLA
+	JMS TYPE
 	DCA DIGIT	/CLEAR
 	ISZ ARROW	/UPDATE POINTER
 	ISZ CNTRZB	/DONE ALL FOUR?
 	JMP ARROW-1	/NO: CONTINUE
 	JMP I DECPRT	/YES: EXIT
-ADDRZA,	TAD TENPWR
-CNTRZA,	-4
-TENPWR,	-1750		/ONE THOUSAND
+
+ADDRZA, TAD TENPWR
+CNTRZA, -4
+TENPWR, -1750		/ONE THOUSAND
 	-0144		/ONE HUNDRED
 	-0012		/TEN
 	-0001		/ONE
-K260,	260
-VALUE,	0
-DIGIT,	0
-CNTRZB,	0
+K260,   260
+VALUE,  0
+DIGIT,  0
+CNTRZB, 0
+
+
+//// Global Variables //////////////////////////////////////////////////
+
+CURR,   0		/ current number we're checking
+STOTAL, 0		/ subtotal, printed and reset occasionally
+
+
+//// Constants /////////////////////////////////////////////////////////
+
+	DECIMAL
+MAX,    999		/ check natural numbers CURR to MAX; must be < 2048!
+STMAX,  1024		/ subtotal max; avoids overflow of 12-bit signed int
+
+	OCTAL
+CRLF,   15;12;0		/ ASCII character values, zero-terminated
+PLUS,   40;53;40;0
+ANSWER, 101;116;123;127;105;122;72;40;0
 
 
 //// END ///////////////////////////////////////////////////////////////

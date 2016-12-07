@@ -1,4 +1,4 @@
-/ HELLO - "Hello, World!" program for PAL-III assembly, which also
+/ HELLO - "Hello, World!" program for PAL8 assembly, which also
 /         happens to test the PRINTS routine, included inline below.
 /
 / Created by Warren Young of tangentsoft.com, 2016.11.30
