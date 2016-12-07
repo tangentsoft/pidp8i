@@ -233,8 +233,8 @@ STOTAL, 0		/ subtotal, printed and reset occasionally
 //// Constants /////////////////////////////////////////////////////////
 
 	DECIMAL
-MAX,    999		/ check natural numbers CURR to MAX; must be < 2048!
-STMAX,  1024		/ subtotal max; avoids overflow of 12-bit signed int
+STMAX,			/ roll over subtotal at <= 2*MAX to avoid overflow
+MAX,    999		/ check natural numbers CURR to MAX; must be < 1024!
 	OCTAL
 
 PLUS,   TEXT " + "
