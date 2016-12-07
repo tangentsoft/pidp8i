@@ -1,5 +1,12 @@
 # PiDP-8/I Changes
 
+## Version 2016.12.06
+
+*   More improvements to `examples/pep001.pal`.
+
+*   Extracted improved `PRINTS` routine from that example as
+    `examples/routines/prints.pal`.
+
 
 ## Version 2016.12.05
 
