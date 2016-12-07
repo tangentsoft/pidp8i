@@ -172,7 +172,7 @@ obj/%.o: @builddir@/src/%.c
 
 # Rule for building example PAL assembly language programs.
 obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
-	@builddir@/bin/palbart -lr $<
+	@builddir@/bin/palbart -lr $< || cat @srcdir@/examples/$*.err
 	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
 	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
 
