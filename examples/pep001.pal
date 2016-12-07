@@ -12,6 +12,7 @@
 //// DIY Assembler Instructions ////////////////////////////////////////
 
 / Our assembler doesn't know the EAE instructions, so teach it
+CAM=7621		/ clear AC and MQ
 DVI=7407		/ integer divide .+1 into {AC:MQ}, answer in MQ
 
 / Combined microcoded instruction aliases
@@ -165,21 +166,19 @@ SATCHR,	0
 SADDR=10		/ autoinc register for walking the string
 SAPRT,	0
 	DCA SADDR	/ save AC as string address
-SANEXT,	TAD I SADDR	/ load next two characters
-	DCA SACHR	/ save it
+SANEXT,	CAM		/ clear MQ (also AC, but it already was clear)
+	TAD I SADDR	/ load next two characters into AC
+	MQA		/ ...and send a copy to MQ for safekeeping
 	
-	CLL		/ extract first character
-	TAD SACHR	
-	RTR
-	RTR
+	CLL BSW		/ extract first character (high byte)
+	AND (0077)
 	JMS SATYPE	/ print first character
 
-	TAD SACHR	/ extract second character; AC already 0
-	AND (7700)
+	SWP		/ extract second character from MQ copy
+	AND (0077)
 	JMS SATYPE	/ print second character
 
 	JMP SANEXT	/ look at next character pair
-SACHR,	0
 
 
 //// DECPRT ////////////////////////////////////////////////////////////
