@@ -166,8 +166,8 @@ SATCHR,	0
 SADDR=10		/ autoinc register for walking the string
 SAPRT,	0
 	DCA SADDR	/ save AC as string address
-SANEXT,	CAM		/ clear MQ (also AC, but it already was clear)
-	TAD I SADDR	/ load next two characters into AC
+	CAM		/ clear MQ (also AC, but it already was clear)
+SANEXT,	TAD I SADDR	/ load next two characters into AC
 	MQA		/ ...and send a copy to MQ for safekeeping
 	
 	CLL BSW		/ extract first character (high byte)
