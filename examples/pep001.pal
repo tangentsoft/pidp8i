@@ -170,7 +170,7 @@ SAPRT,	0
 SANEXT,	TAD I SADDR	/ load next two characters into AC
 	MQA		/ ...and send a copy to MQ for safekeeping
 	
-	CLL BSW		/ extract first character (high byte)
+	BSW		/ extract first character (high byte)
 	AND (0077)
 	JMS SATYPE	/ print first character
 
