@@ -36,9 +36,9 @@ they begin shipping the new release immediately after tagging it.
 
 ## Produce the Binary OS Image
 
-Start with the latest Raspbian Lite OS image:
+Start with the latest [Raspbian Lite OS image][os].
 
-    https://www.raspberrypi.org/downloads/raspbian/
+[os]: https://www.raspberrypi.org/downloads/raspbian/
 
 If the OS version has changed since the last release, use the following
 steps to bootstrap the installation:
@@ -50,7 +50,7 @@ steps to bootstrap the installation:
         $ sudo apt update && sudo apt upgrade
         $ sudo apt install fossil
         $ mkdir museum pidp8i
-        $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
+        $ fossil clone https://tangentsoft.com/pidp8i museum/pidp8i.fossil
         $ cd pidp8i
         $ fossil open ~/museum/pidp8i.fossil release
         $ ./configure
@@ -64,8 +64,8 @@ steps to bootstrap the installation:
 
 3.  Reboot and test that the software starts up as it should.
 
-4.  Revert the automatic setup steps to force them to be done again on
-    the end-user's Pi:
+4.  Revert Raspbian's automatic setup steps to force them to be done
+    again on the end-user's Pi:
 
         $ sudo shred -u /etc/ssh/*key*
         $ sudo dphys-swapfile uninstall
@@ -96,8 +96,10 @@ steps to bootstrap the installation:
 7.  Move the USB reader to the Mac,¹ then produce the updated image:
 
         $ sudo diskutil unmountDisk /dev/disk9    # it auto-mounted
-        $ sudo dd if=/dev/disk9 bs=4k count=YYYY | gzip -9c > \
-          DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img.gz
+        $ sudo dd if=/dev/disk9 bs=4k count=YYYY >
+          DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img
+        $ zip -9 DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img.zip \
+          DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img
 
     YYYY is output from the *second* `resize2fs` command above, and
     gives the end position of the second partition on the SD card, and
@@ -108,12 +110,19 @@ steps to bootstrap the installation:
     The "jessie-lite" tag is at the end on purpose so that a directory
     full of these images will sort properly as new OS versions come out.
 
+    If this is the `no-lamp-simulator` version, add an `-nls` tag after
+    the date.
+
 8.  Blast image back onto SD card and test that it still works:
 
-        $ gzip -dc < DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img.gz |
-          sudo dd of=/dev/rdisk9 bs=1m
+        $ sudo dd if=DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img \
+                  of=/dev/rdisk9 bs=1m
 
-Finally, upload the new image and announce its availability.
+9.  Remove `*.img` files and upload the new `*.zip` files left behind.
+
+10. Start the images uploading, compose the announcement message, and
+    modify the front page to point to the new images. Post the
+    announcement message and new front page once the uploads complete.
 
 
 ## Shortcut Path
@@ -123,6 +132,7 @@ since the last release, and reduce the command sequence in step 2 to:
 
     $ sudo apt update && sudo apt upgrade
     $ cd pidp8i
+    $ fossil update
     $ make
     $ sudo make install
     $ make clean

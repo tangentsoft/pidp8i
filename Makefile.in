@@ -62,7 +62,8 @@ clean:
 		@builddir@/obj/*.lst \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
-		@builddir@/obj/PDP8/*.o
+		@builddir@/obj/PDP8/*.o \
+		@srcdir@/examples/*.err \
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
@@ -172,7 +173,7 @@ obj/%.o: @builddir@/src/%.c
 
 # Rule for building example PAL assembly language programs.
 obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
-	@builddir@/bin/palbart -lr $<
+	@builddir@/bin/palbart -lr $< || cat @srcdir@/examples/$*.err
 	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
 	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
 
@@ -186,7 +187,7 @@ $(BUILDDIRS):
 $(SIM): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)
 
-bin/pidp8i-test: obj/test.o obj/gpio.o
+bin/pidp8i-test: obj/test.o obj/gpio-nls.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio.o
