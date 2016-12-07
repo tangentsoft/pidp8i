@@ -62,7 +62,8 @@ clean:
 		@builddir@/obj/*.lst \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
-		@builddir@/obj/PDP8/*.o
+		@builddir@/obj/PDP8/*.o \
+		@srcdir@/examples/*.err \
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
