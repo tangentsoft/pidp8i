@@ -79,16 +79,16 @@ static int gss_initted = 0;
 static const ms_time_t debounce_ms = 50;	// time switch state must remain stable
 
 
-// Exposes the physical address defined in the passed structure using mmap on /dev/mem
+// Exposes the physical address defined in the passed structure using mmap on /dev/gpiomem
 int map_peripheral(struct bcm2835_peripheral *p)
 {
-   if ((p->mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
-      printf("Failed to open /dev/mem, try checking permissions.\n");
+   if ((p->mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
+      printf("Failed to open /dev/gpiomem, try checking permissions.\n");
       return -1;
    }
    p->map = mmap(
       NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
-      p->mem_fd,      	// File descriptor to physical memory virtual file '/dev/mem'
+      p->mem_fd,      	// File descriptor to physical memory virtual file '/dev/gpiomem'
       p->addr_p);       // Address in physical map that we want this memory block to expose
    if (p->map == MAP_FAILED) {
         perror("mmap");
