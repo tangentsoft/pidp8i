@@ -89,7 +89,7 @@ install: all
 	@# Install files into those dirs and set their perms
 	for f in $(BINS) ; do @INSTALL@ -m 755 -D -s $$f @prefix@/$$f ; done
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
-	-setcap 'cap_sys_nice=eip' @prefix@/bin/pidp8i-* || true
+	-for f in @prefix@/bin/pidp8i-* ; do setcap 'cap_sys_nice=eip' $$f ; done || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
 	@INSTALL@ -m 644 @srcdir@/boot/*.script @BOOTDIR@
 
