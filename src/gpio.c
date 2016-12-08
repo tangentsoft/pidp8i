@@ -13,15 +13,22 @@
 
 #include "config.h"
 
+#include <pthread.h>
+#include <sys/time.h>
+
+#include <errno.h>
+#include <string.h>
 #ifdef HAVE_TIME_H
 #	include <time.h>
 #endif
 
-#include <pthread.h>
-#include <sys/time.h>
-
 #define BLOCK_SIZE (4*1024)
 
+
+// Flag set after we successfully init the GPIO mechanism.  While this
+// is false, the rest of the code knows not to expect useful values for
+// LED and switch states.
+uint8_t pidp8i_gpio_present;
 
 struct bcm2835_peripheral gpio;	// needs initialisation
 
@@ -86,7 +93,8 @@ static const ms_time_t debounce_ms = 50;	// time switch state must remain stable
 int map_peripheral(struct bcm2835_peripheral *p)
 {
    if ((p->mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
-      printf("Failed to open /dev/gpiomem, try checking permissions.\n");
+      printf("Failed to open /dev/gpiomem: %s\n", strerror(errno));
+	  puts("Disabling PiDP-8/I front panel functionality.");
       return -1;
    }
    p->map = mmap(
@@ -98,6 +106,7 @@ int map_peripheral(struct bcm2835_peripheral *p)
         return -1;
    }
    p->addr = (volatile unsigned int *)p->map;
+   pidp8i_gpio_present = 1;
    return 0;
 }
 
@@ -105,6 +114,7 @@ int map_peripheral(struct bcm2835_peripheral *p)
 void unmap_peripheral(struct bcm2835_peripheral *p)
 {	munmap(p->map, BLOCK_SIZE);
 	close(p->mem_fd);
+	pidp8i_gpio_present = 0;
 }
 
 
@@ -232,10 +242,7 @@ void *blink(void *terminate)
 	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
 	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
 	// --------------------------------------------------
-	if(map_peripheral(&gpio) == -1)
-	{	printf("Failed to map the physical GPIO registers into the virtual memory space.\n");
-		return (void *)-1;
-	}
+	if(map_peripheral(&gpio) == -1) return (void *)-1;
 
 	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
 	//	INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
