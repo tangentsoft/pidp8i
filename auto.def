@@ -66,6 +66,12 @@ define ABSPREFIX [exec $rlprg -f [get-define prefix]]
 define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
+# Remember the group of the user who installed this, since we want to
+# give that group write privileges to some files when they're installed.
+set instgrp [exec id -grn]
+define INSTGRP $instgrp
+msg-result "Install group for user-writeable files will be $instgrp."
+
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}
