@@ -53,6 +53,7 @@ CLTXT = /boot/cmdline.txt
 
 
 all: $(BUILDDIRS) $(BINS) $(EXAMPLES)
+	@chmod 755 @builddir@/bin/pidp8i
 
 clean:
 	@rm -f $(BINS) \
@@ -196,6 +197,7 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio.o
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 Makefile: @AUTODEPS@ \
 		@srcdir@/Makefile.in \
+		@srcdir@/bin/*.in \
 		@srcdir@/boot/*.in \
 		@srcdir@/etc/*.in \
 		@srcdir@/src/*.in \

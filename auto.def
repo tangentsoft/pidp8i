@@ -66,16 +66,21 @@ define ABSPREFIX [exec $rlprg -f [get-define prefix]]
 define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
-# Remember the group of the user who installed this, since we want to
-# give that group write privileges to some files when they're installed.
+# Remember the name and primary group of the user who installed this, since
+# we want to give that group write privileges to some files when they're
+# installed, and we want them to own the screen(1) session.
 set instgrp [exec id -grn]
+set instusr [exec id -urn]
 define INSTGRP $instgrp
+define INSTUSR $instusr
 msg-result "Install group for user-writeable files will be $instgrp."
+msg-result "Owner of screen(1) session will be $instusr."
 
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}
 make-template Makefile.in
+make-template bin/pidp8i.in
 make-template boot/0.script.in
 make-template boot/2.script.in
 make-template boot/3.script.in
