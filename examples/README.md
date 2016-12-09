@@ -121,6 +121,20 @@ the working experience of PDP-8 assembly language programmers back
 in the day. The tools may differ — the user may prefer `TECO` over
 `EDIT` or MACRO-8 over PAL8 — but the idea is the same regardless.
 
+If you have the finished assembly code already on your computer and are
+SSH'd into the PiDP-8/I machine, there is a shortcut for all of the
+above. At the OS/8 command line, say:
+
+    .R PIP
+	*ADD.PA<TTY:
+
+Now you can simply copy the assembly language text in your desktop PC's
+text editor, paste it into the SSH window, and then hit Ctrl-Z to tell
+`PIP` that the text input from the terminal (`TTY:`) is finished. This
+is not only a smidge simpler than doing the same thing via `EDIT`, it
+also avoids a certain limitation of `EDIT` that starts to bite you once
+your program text exceeds about 5,600 characters.
+
 
 ## Option 2: Toggling a Programs in Via the Front Panel
 
