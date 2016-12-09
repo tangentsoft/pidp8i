@@ -53,12 +53,16 @@ int main( int argc, char *argv[] )
 	
   // create thread
   iret1 = pthread_create( &thread1, NULL, blink, &terminate );
-
   if( iret1 )
     {
       fprintf( stderr, "Error creating thread, return code %d\n", iret1 );
       exit( EXIT_FAILURE );
     }
+  if( !pidp8i_gpio_present )
+    {
+      fprintf( stderr, "Cannot run the test while another PiDP-8/I program runs.\n");
+      exit( EXIT_FAILURE );
+	}
 
   sleep( 2 );			// allow 2 sec for multiplex to start
 

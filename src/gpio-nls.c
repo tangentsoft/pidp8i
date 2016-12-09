@@ -13,15 +13,25 @@
 
 #include "config.h"
 
+#include <pthread.h>
+#include <sys/file.h>
+#include <sys/time.h>
+
+#include <errno.h>
+#include <string.h>
 #ifdef HAVE_TIME_H
 #	include <time.h>
 #endif
 
-#include <pthread.h>
-#include <sys/time.h>
-
 #define BLOCK_SIZE (4*1024)
 
+
+// Flag set after we successfully init the GPIO mechanism.  While this
+// is false, the rest of the code knows not to expect useful values for
+// LED and switch states.  It is also useful as a cross-thread signal,
+// since merely starting the blink() thread doesn't tell you whether it
+// managed to lock the GPIO device.
+uint8_t pidp8i_gpio_present;
 
 struct bcm2835_peripheral gpio;	// needs initialisation
 
@@ -78,30 +88,62 @@ static struct switch_state gss[NROWS][NCOLS];
 static int gss_initted = 0;
 static const ms_time_t debounce_ms = 50;	// time switch state must remain stable
 
+// Name of GPIO memory-mapped device
+static const char* gpio_mem_dev = "/dev/gpiomem";
 
-// Exposes the physical address defined in the passed structure using mmap on /dev/gpiomem
+
+// Exposes the physical address defined in the passed structure
 int map_peripheral(struct bcm2835_peripheral *p)
 {
-   if ((p->mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
-      printf("Failed to open /dev/gpiomem, try checking permissions.\n");
-      return -1;
-   }
-   p->map = mmap(
-      NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
-      p->mem_fd,      	// File descriptor to physical memory virtual file '/dev/gpiomem'
-      p->addr_p);       // Address in physical map that we want this memory block to expose
-   if (p->map == MAP_FAILED) {
-        perror("mmap");
-        return -1;
-   }
-   p->addr = (volatile unsigned int *)p->map;
-   return 0;
+	// Open the GPIO device
+	if ((p->mem_fd = open(gpio_mem_dev, O_RDWR|O_SYNC) ) < 0) {
+		printf("Failed to open %s: %s\n", gpio_mem_dev, strerror(errno));
+		puts("Disabling PiDP-8/I front panel functionality.");
+		return -1;
+	}
+
+	// Attempt to lock it.  If we can't, another program has it locked,
+	// so we shouldn't keep running; it'll just end in tears.
+	if (flock(p->mem_fd, LOCK_EX | LOCK_NB) < 0) {
+		if (errno == EWOULDBLOCK) {
+			printf("Failed to lock %s.  Only one PiDP-8/I\n", gpio_mem_dev);
+			puts("program can be running at a given time.");
+		}
+		else {
+			printf("Failed to lock %s: %s\n", gpio_mem_dev, strerror(errno));
+			puts("Only one PiDP-8/I program can be running at a given time.");
+		}
+		return -1;
+	}
+	puts("Lock acquired!");
+
+	// Map the GPIO peripheral into our address space
+	if ((p->map = mmap(
+			NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
+			p->mem_fd,
+			p->addr_p)) == MAP_FAILED) {
+		perror("mmap");
+		return -1;
+	}
+
+	// Success!
+	p->addr = (volatile unsigned int *)p->map;
+	pidp8i_gpio_present = 1;
+	return 0;
 }
 
 
 void unmap_peripheral(struct bcm2835_peripheral *p)
-{	munmap(p->map, BLOCK_SIZE);
-	close(p->mem_fd);
+{
+	// Unwind the map_peripheral() steps in reverse order
+	if (pidp8i_gpio_present) {
+		if (p->mem_fd > 0) {
+			if (p->map) munmap(p->map, BLOCK_SIZE);
+			flock(p->mem_fd, LOCK_UN);
+			close(p->mem_fd);
+		}
+		pidp8i_gpio_present = 0;
+	}
 }
 
 
