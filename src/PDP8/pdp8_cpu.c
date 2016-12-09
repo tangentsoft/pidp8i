@@ -467,26 +467,19 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 			}
 		}
 
-
-		// 5. Scan for mount command (Sing_Step + Sing_Inst + Load Add)
+#if 0
+		// 5. Sing_Step + Sing_Inst + Load Add
 
 		if ((switchstatus[2] & 0x0410)==0)
 		{
-			printf("\r\nMount\r\n\r\n");
-			if(spawn_cmd ((int32) 0, "@ABSPREFIX@/bin/automount")!=SCPE_OK) {// no sudo in buildroot env
-				printf("\r\n\n\nmount USB drive failed\r\n\n");
-			}
 		}
 
-		// 6. Scan for unmount command (Sing_Step + Sing_Inst + Deposit)
+		// 6. Sing_Step + Sing_Inst + Deposit
 
 		if ((switchstatus[2] & 0x0210)==0)
 		{
-			printf("\r\nUnmount\r\n\r\n");
-			if(spawn_cmd ((int32) 0, "@ABSPREFIX@/bin/unmount")!=SCPE_OK) {// no sudo in buildroot env
-				printf("\r\n\n\nunmount failed\r\n\n");
-			}
 		}
+#endif
 	}
 }
 if (swAttach==1)		// Sing_Step switch is back to off again
