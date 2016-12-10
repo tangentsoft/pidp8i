@@ -78,15 +78,19 @@ msg-result "Install group for user-writeable files will be $instgrp."
 msg-result "Owner of screen(1) session will be $instusr."
 
 # Can we use any nonstandard flags here?  We don't bother including
-# flags that both GCC and Clang support.
+# flags that both GCC and Clang support.  The ones inside the "if"
+# block are those that Clang will accept in an autosetup test but
+# then will yell about if you try to use them.  The test checks for
+# an -f sub-option that Clang doesn't currently support even enough
+# to fool autosetup.
 cc-check-standards c99
-cc-check-flags -fgcse-after-reload
-cc-check-flags -finline-functions
 cc-check-flags -fipa-cp-clone
 cc-check-flags -fno-strict-overflow
-cc-check-flags -fno-unsafe-loop-optimizations
 cc-check-flags -fpredictive-commoning
-if ([get-define HAVE_CFLAG_FGCSE_AFTER_RELOAD]) {
+if ([get-define HAVE_CFLAG_IPA_CP_CLONE]) {
+	cc-check-flags -fgcse-after-reload
+	cc-check-flags -finline-functions
+	cc-check-flags -fno-unsafe-loop-optimizations
 	define-append CFLAGS "-D_GNU_SOURCE"
 }
 
