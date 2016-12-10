@@ -6,6 +6,7 @@
 define defaultprefix /opt/pidp8i
 
 use cc
+use cc-lib
 
 options {
 	debug-mode => "create a debug build (default is release)"
@@ -66,10 +67,39 @@ define ABSPREFIX [exec $rlprg -f [get-define prefix]]
 define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
+# Remember the name and primary group of the user who installed this, since
+# we want to give that group write privileges to some files when they're
+# installed, and we want them to own the screen(1) session.
+set instgrp [exec id -grn]
+set instusr [exec id -urn]
+define INSTGRP $instgrp
+define INSTUSR $instusr
+msg-result "Install group for user-writeable files will be $instgrp."
+msg-result "Owner of screen(1) session will be $instusr."
+
+# Can we use any nonstandard flags here?  We don't bother including
+# flags that both GCC and Clang support.  The ones inside the "if"
+# block are those that Clang will accept in an autosetup test but
+# then will yell about if you try to use them.  The test checks for
+# an -f sub-option that Clang doesn't currently support even enough
+# to fool autosetup.
+cc-check-standards c99
+cc-check-flags -fipa-cp-clone
+cc-check-flags -fno-strict-overflow
+cc-check-flags -fpredictive-commoning
+if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
+	cc-check-flags -fgcse-after-reload
+	cc-check-flags -finline-functions
+	cc-check-flags -fno-unsafe-loop-optimizations
+	define-append CFLAGS "-D_GNU_SOURCE"
+}
+
+# Write outputs
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}
 make-template Makefile.in
+make-template bin/pidp8i.in
 make-template boot/0.script.in
 make-template boot/2.script.in
 make-template boot/3.script.in
@@ -77,5 +107,4 @@ make-template boot/4.script.in
 make-template boot/6.script.in
 make-template boot/7.script.in
 make-template etc/pidp8i-init.in
-make-template src/PDP8/pdp8_cpu.c.in
 make-template src/scp.c.in

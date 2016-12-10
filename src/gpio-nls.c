@@ -115,6 +115,7 @@ int map_peripheral(struct bcm2835_peripheral *p)
 		}
 		return -1;
 	}
+	puts("Lock acquired!");
 
 	// Map the GPIO peripheral into our address space
 	if ((p->map = mmap(
@@ -270,7 +271,10 @@ void *blink(void *terminate)
 	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
 	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
 	// --------------------------------------------------
-	if(map_peripheral(&gpio) == -1) return (void *)-1;
+	if(map_peripheral(&gpio) == -1)
+	{	printf("Failed to map the physical GPIO registers into the virtual memory space.\n");
+		return (void *)-1;
+	}
 
 	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
 	//	INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.

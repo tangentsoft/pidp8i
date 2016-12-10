@@ -42,7 +42,6 @@ extern uint8_t cols[];
 extern uint8_t ledrows[];
 extern uint8_t rows[];
 extern const size_t ncols, nledrows, nrows;
-extern uint8_t pidp8i_gpio_present;
 
 extern void *blink(void *ptr);	// thread entry point to the gpio module
 extern unsigned bcm_host_get_peripheral_address(void);

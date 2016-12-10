@@ -1,0 +1,16 @@
+/ From: http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html
+/ This program is loaded by the simulator at startup when IF=5.  In
+/ other words, an assembled octal version of it is in boot/5.script.
+
+loop,  isz   delay  / create a delay
+       jmp   loop
+       cla          / clear AC so we can load it
+       tad   value  / get value
+       mql          / stash AC into MQ
+       tad   value  / fetch value again
+       cma          / complement AC
+       isz   value  / get to next value
+       nop          / ignore possible "skip" from ISZ
+       jmp   loop   / and do it all again
+delay, 0
+value, 0

@@ -394,7 +394,7 @@ ledstatus[5] &= ~(1<<2); // clear execute
 // when DF switches are set, that raises a hacked-in-to-simh signal to ATTACH PTR <filename>
 // when IF switches are set, that raises a hacked-in-to-simh signal to DO <filename> (boot script)
 
-if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
+if (pidp8i_gpio_present && (switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 {
 	if (swAttach==0)		// if this is the first time we detect it,
 	{
@@ -459,26 +459,19 @@ if ((switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 			}
 		}
 
-
-		// 5. Scan for mount command (Sing_Step + Sing_Inst + Load Add)
+#if 0
+		// 5. Sing_Step + Sing_Inst + Load Add
 
 		if ((switchstatus[2] & 0x0410)==0)
 		{
-			printf("\r\nMount\r\n\r\n");
-			if(spawn_cmd ((int32) 0, "@ABSPREFIX@/bin/automount")!=SCPE_OK) {// no sudo in buildroot env
-				printf("\r\n\n\nmount USB drive failed\r\n\n");
-			}
 		}
 
-		// 6. Scan for unmount command (Sing_Step + Sing_Inst + Deposit)
+		// 6. Sing_Step + Sing_Inst + Deposit
 
 		if ((switchstatus[2] & 0x0210)==0)
 		{
-			printf("\r\nUnmount\r\n\r\n");
-			if(spawn_cmd ((int32) 0, "@ABSPREFIX@/bin/unmount")!=SCPE_OK) {// no sudo in buildroot env
-				printf("\r\n\n\nunmount failed\r\n\n");
-			}
 		}
+#endif
 	}
 }
 if (swAttach==1)		// Sing_Step switch is back to off again
@@ -490,7 +483,7 @@ if (swAttach==1)		// Sing_Step switch is back to off again
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-if ((switchstatus[2] & 0x0800)==0)	// START switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & 0x0800)==0)	// START switch activated
 	if (swStart==0)
 	{
 	        int_req = int_req & ~INT_ION;		// disable ION. says so in handbook, true?
@@ -506,7 +499,7 @@ if (swStart==1)
 		swStart=0;				// reset 'avoid repeat' indicator
 
 
-if ((switchstatus[2] & 0x0080)==0)			// CONT switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & 0x0080)==0)			// CONT switch activated
 	if (swCont2==0)
 	{	swStop = 0;				// meaning resume execution
 			// ? is this done: MB contains instruction to be executed after CONT is pressed
@@ -518,7 +511,7 @@ if (swCont2==1)
 		swCont2=0;				// reset 'avoid repeat' indicator
 
 
-if ((switchstatus[2] & 0x0400)==0)			// LOAD_ADD switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & 0x0400)==0)			// LOAD_ADD switch activated
 {
 	PC = switchstatus[0] ^ 07777;			// copy SR into PC
 							// copy DF and IF too
@@ -533,7 +526,7 @@ if ((switchstatus[2] & 0x0400)==0)			// LOAD_ADD switch activated
 	IF = IF<<12;					// DF is saved in oct digit 5, so it's easy to add to PC
 }
 
-if ((switchstatus[2] & 0x0200)==0)			// DEP switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & 0x0200)==0)			// DEP switch activated
 {	if (swDep==0)
 	{	M[PC] = switchstatus[0] ^ 07777;
 		/* ??? in 66 handbook: strictly speaking, SR goes into AC, then AC into MB. Does it clear AC afterwards? If not, needs fix */
@@ -547,7 +540,7 @@ if (swDep==1)
 	if ((switchstatus[2] & 0x0200)!=0)		// DEP switch deactivated
 		swDep=0;				// reset 'avoid repeat' indicator
 
-if ((switchstatus[2] & 0x0100)==0)			// EXAM switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & 0x0100)==0)			// EXAM switch activated
 {	if (swExam==0)
 	{	MB = M[PC];
 		MA = PC & 07777;			// 20150315: MA trails PC on FP
@@ -600,7 +593,7 @@ if (swStop==1)
 
 setleds(PC, MA, M[MA], LAC, MQ, IF, DF); // note M[MA] used not MB
 
-if  ((switchstatus[2] & 0x040)==0)  		// STOP switch activated
+if  (pidp8i_gpio_present && (switchstatus[2] & 0x040)==0)  		// STOP switch activated
 {	swStop = 1;
 	goto skip;
 }
@@ -618,7 +611,7 @@ contPoint:	;	// goto here if CONT has been pressed to finish current instruction
 
 // SING_STEP: swStop=0 if we're here. If SingStep then this time, let it go but trigger a stop on the next pass
 
-if ((switchstatus[2] & 0x0010)==0)		// SING_INST switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & 0x0010)==0)		// SING_INST switch activated
 {	if (swSingStep==0)		// allow it this time,
 		swSingStep=1;		// but note to block it next time!
 	else				// else: this is the next time...
