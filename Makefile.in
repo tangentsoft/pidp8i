@@ -76,6 +76,7 @@ distclean: clean
 		@builddir@/bin/pidp8i \
 		@builddir@/etc/pidp8i-init \
 		@builddir@/src/config.h \
+		@builddir@/src/PDP8/pdp8_cpu.c
 		@builddir@/src/scp.c
 	@for n in 0 2 3 4 6 7 ; do rm -f @builddir@/boot/$$n.script ; done
 
