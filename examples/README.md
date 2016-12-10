@@ -102,7 +102,7 @@ To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
 PiDP-8/I:
 
     .R EDIT
-    *RKB0:ADD.PA<
+    *ADD.PA<
 
     #A                          ← append to ADD.PA
     *0200   CLA CLL
