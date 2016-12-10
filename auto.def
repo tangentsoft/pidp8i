@@ -107,4 +107,5 @@ make-template boot/4.script.in
 make-template boot/6.script.in
 make-template boot/7.script.in
 make-template etc/pidp8i-init.in
+make-template src/PDP8/pdp8_cpu.c.in
 make-template src/scp.c.in
