@@ -10,7 +10,7 @@ programs:
 -----------------------------
 | `add.pal`         | 2 + 3 = 5  The simplest program here; used below as a meta-example
 | `hello.pal`       | writes "HELLO, WORLD!" to the console; tests PRINTS subroutine
-| `pep001.*`        | Project Euler Problem #1 solution (close cousin of "FizzBuzz") 
+| `pep001.*`        | Project Euler Problem #1 solutions, various languages
 | `routines/decprt` | prints an unsigned 12-bit decimal integer to the console
 | `routines/prints` | prints an ASCIIZ string stored as a series of 8-bit bytes to the console
 
@@ -25,6 +25,48 @@ these:
 
 [pal]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
 [bas]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.BA
+
+
+## How to Use the BASIC Examples
+
+To use the example BASIC program, simply transcribe it into OS/8 BASIC:
+
+    .R BASIC
+	NEW OR OLD--NEW
+	FILE NAME--PAL001.BA
+
+	READY
+	10 FOR I = 1 TO 999
+	10 FOR I = 1 TO 999
+	20 A = I / 3 \ B = I / 5
+	30 IF INT(A) = A GOTO 60
+	40 IF INT(B) = B GOTO 60
+	50 GOTO 70
+	60 T = T + I
+	70 NEXT I
+	80 PRINT "TOTAL: "; T
+	90 END
+	SAVE
+
+	READY
+	RUN
+
+	PAL001  BA    4A    
+
+	TOTAL:  xxxxxxx
+
+	READY
+	BYE
+
+If you're SSH'd into the PiDP-8/I, "transcribing" is simply a matter of
+cut-and-paste into the terminal window.
+
+I've obscured the output on purpose, since I don't want this page to be
+a spoiler for the Project Euler site.
+
+If you get a 2-letter code from BASIC in response to your `RUN` command,
+it means you have an error in the program. See the BASIC section of the
+OS/8 Handbook for a decoding guide.
 
 
 ## How to Use the Assembly Language Examples
