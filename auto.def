@@ -87,7 +87,7 @@ cc-check-standards c99
 cc-check-flags -fipa-cp-clone
 cc-check-flags -fno-strict-overflow
 cc-check-flags -fpredictive-commoning
-if ([get-define HAVE_CFLAG_IPA_CP_CLONE]) {
+if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
 	cc-check-flags -fgcse-after-reload
 	cc-check-flags -finline-functions
 	cc-check-flags -fno-unsafe-loop-optimizations
