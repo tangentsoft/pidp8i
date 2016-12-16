@@ -58,13 +58,12 @@ int main( int argc, char *argv[] )
       fprintf( stderr, "Error creating thread, return code %d\n", iret1 );
       exit( EXIT_FAILURE );
     }
+  sleep( 2 );			// allow 2 sec for multiplex to start
   if( !pidp8i_gpio_present )
     {
       fprintf( stderr, "Cannot run the test while another PiDP-8/I program runs.\n");
       exit( EXIT_FAILURE );
 	}
-
-  sleep( 2 );			// allow 2 sec for multiplex to start
 
   fprintf( stdout, "turn on ALL LEDs\n" );
   for( row=0; row<nledrows; ++row )
