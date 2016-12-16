@@ -10,16 +10,16 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="632.94098"
-   height="569.08057"
-   viewBox="0 0 632.94099 569.08058"
+   width="673.51404"
+   height="613.08057"
+   viewBox="0 0 673.51405 613.08058"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="vtedit-keypad.svg"
    inkscape:export-filename="/usr/local/src/pidp8i/trunk/doc/vtedit-keypad.png"
-   inkscape:export-xdpi="91.239998"
-   inkscape:export-ydpi="91.239998">
+   inkscape:export-xdpi="88.599998"
+   inkscape:export-ydpi="88.599998">
   <defs
      id="defs4">
     <linearGradient
@@ -217,14 +217,14 @@
   </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#ffffff"
+     pagecolor="#fcfaf0"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="388.91487"
-     inkscape:cy="323.95659"
+     inkscape:cx="406.19766"
+     inkscape:cy="345.9566"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -236,10 +236,10 @@
      showguides="true"
      inkscape:guide-bbox="true"
      units="px"
-     fit-margin-top="10"
-     fit-margin-left="10"
-     fit-margin-right="10"
-     fit-margin-bottom="10" />
+     fit-margin-top="32"
+     fit-margin-left="32"
+     fit-margin-right="32"
+     fit-margin-bottom="32" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -256,7 +256,8 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="key caps"
-     style="display:inline">
+     style="display:inline"
+     transform="translate(17.282791,22)">
     <rect
        transform="translate(-14.897034,-18.012959)"
        style="opacity:1;fill:url(#linearGradient4144);fill-opacity:1;fill-rule:nonzero;stroke:#eee0ca;stroke-width:3;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
@@ -442,7 +443,8 @@
      inkscape:groupmode="layer"
      id="layer6"
      inkscape:label="key labels"
-     style="display:inline">
+     style="display:inline"
+     transform="translate(17.282791,22)">
     <flowRoot
        xml:space="preserve"
        id="flowRoot4217"
@@ -748,7 +750,7 @@
      inkscape:label="KEY"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-14.897034,-18.012959)"
+     transform="translate(2.3857574,3.9870415)"
      style="display:inline">
     <text
        xml:space="preserve"
