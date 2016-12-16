@@ -443,47 +443,47 @@ if (pidp8i_gpio_present && (switchstatus[2] & SS2_S_STEP)==0)
             int_req = 0;
 
 		}
-
-		// 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Start)
-
-		if ((switchstatus[2] & (SS2_S_INST | SS2_START))==0)
-		{
-			printf("\r\nShutdown\r\n\r\n");
-			reason = STOP_HALT;
-			awfulHackFlag = 8;	// this triggers an exit command after leaving the simulator run.
-			if(spawn_cmd (0, "/bin/systemctl poweroff")!=SCPE_OK)
-				printf("\r\n\r\npoweroff failed\r\n\r\n");
-		}
-
-		// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Cont)
-
-		if ((switchstatus[2] & (SS2_S_INST | SS2_CONT))==0)
-		{
-			printf("\r\nReboot\r\n\r\n");
-			reason = STOP_HALT;
-			awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
-			if(spawn_cmd (0, "/bin/systemctl reboot")!=SCPE_OK)
-				printf("\r\n\r\nreboot failed\r\n\r\n");
-		}
-
-#if 0
-		// 5. Sing_Step + Sing_Inst + Load Add
-
-		if ((switchstatus[2] & (SS2_S_INST | SS2_L_ADD))==0)
-		{
-		}
-
-		// 6. Sing_Step + Sing_Inst + Deposit
-
-		if ((switchstatus[2] & (SS2_S_INST | SS2_DEP))==0)
-		{
-		}
-#endif
 	}
 }
 if (swAttach==1)		// Sing_Step switch is back to off again
 	if ((switchstatus[2] & SS2_S_STEP)!=0)		// switch deactivated
 		swAttach=0;				// reset 'avoid repeat' indicator
+
+// 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Start)
+
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_START))==0)
+{
+	printf("\r\nShutdown\r\n\r\n");
+	reason = STOP_HALT;
+	awfulHackFlag = 8;	// this triggers an exit command after leaving the simulator run.
+	if(spawn_cmd (0, "sudo /bin/systemctl poweroff")!=SCPE_OK)
+		printf("\r\n\r\npoweroff failed\r\n\r\n");
+}
+
+// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Cont)
+
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_CONT))==0)
+{
+	printf("\r\nReboot\r\n\r\n");
+	reason = STOP_HALT;
+	awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
+	if(spawn_cmd (0, "sudo /bin/systemctl reboot")!=SCPE_OK)
+		printf("\r\n\r\nreboot failed\r\n\r\n");
+}
+
+#if 0
+// 5. Sing_Step + Sing_Inst + Load Add
+
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_L_ADD))==0)
+{
+}
+
+// 6. Sing_Step + Sing_Inst + Deposit
+
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_DEP))==0)
+{
+}
+#endif
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
