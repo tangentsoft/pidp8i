@@ -18,8 +18,8 @@
    inkscape:version="0.91 r13725"
    sodipodi:docname="vtedit-keypad.svg"
    inkscape:export-filename="/usr/local/src/pidp8i/trunk/doc/vtedit-keypad.png"
-   inkscape:export-xdpi="88.599998"
-   inkscape:export-ydpi="88.599998">
+   inkscape:export-xdpi="80.18"
+   inkscape:export-ydpi="80.18">
   <defs
      id="defs4">
     <linearGradient
@@ -220,7 +220,7 @@
      pagecolor="#fcfaf0"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0"
+     inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
      inkscape:cx="406.19766"
@@ -249,7 +249,24 @@
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
         <dc:title></dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/3.0/" />
       </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
     </rdf:RDF>
   </metadata>
   <g
