@@ -449,9 +449,9 @@ if (swAttach==1)		// Sing_Step switch is back to off again
 	if ((switchstatus[2] & SS2_S_STEP)!=0)		// switch deactivated
 		swAttach=0;				// reset 'avoid repeat' indicator
 
-// 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Start)
+// 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Stop)
 
-if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_START))==0)
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_STOP))==0)
 {
 	printf("\r\nShutdown\r\n\r\n");
 	reason = STOP_HALT;
@@ -460,9 +460,9 @@ if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_START))==0)
 		printf("\r\n\r\npoweroff failed\r\n\r\n");
 }
 
-// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Cont)
+// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Start)
 
-if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_CONT))==0)
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_START))==0)
 {
 	printf("\r\nReboot\r\n\r\n");
 	reason = STOP_HALT;
