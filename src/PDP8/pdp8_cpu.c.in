@@ -451,8 +451,8 @@ if (swAttach==1)		// Sing_Step switch is back to off again
 
 // 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Stop)
 
-if ((pidp8i_gpio_present &&
-		switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_STOP))==0)
+if (pidp8i_gpio_present &&
+		(switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_STOP)==0))
 {
 	printf("\r\nShutdown\r\n\r\n");
 	reason = STOP_HALT;
@@ -464,7 +464,7 @@ if ((pidp8i_gpio_present &&
 // 4. Scan for host reboot command (Sing_Step + Sing_Inst + Start)
 
 if (pidp8i_gpio_present &&
-		(switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_START))==0)
+		(switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_START)==0))
 {
 	printf("\r\nReboot\r\n\r\n");
 	reason = STOP_HALT;
