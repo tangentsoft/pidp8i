@@ -444,15 +444,15 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 
 		}
 
-		// 3. Scan for shutdown command (Sing_Step + Sing_inst + Start)
+		// 3. Scan for poweroff command (Sing_Step + Sing_inst + Start)
 
 		if (((switchstatus[2] & 0x0800)==0) && ((switchstatus[2] & 0x0010)==0))
 		{
 			printf("\r\nShutdown\r\n\r\n");
 			reason = STOP_HALT;
 			awfulHackFlag = 8;	// this triggers an exit command after leaving the simulator run.
-			if(spawn_cmd ((int32) 0, " shutdown -h -t 1 now")!=SCPE_OK)		// issue simh attach command (no sudo in buildroot)
-				printf("\r\n\n\nshutdown failed\r\n\n");
+			if(spawn_cmd (0, "/bin/systemctl poweroff")!=SCPE_OK)
+				printf("\r\n\r\npoweroff failed\r\n\r\n");
 		}
 
 		// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Cont)
@@ -462,9 +462,8 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 			printf("\r\nReboot\r\n\r\n");
 			reason = STOP_HALT;
 			awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
-			if(spawn_cmd ((int32) 0, " reboot")!=SCPE_OK) {// no sudo in buildroot env
-				printf("\r\n\n\nreboot failed\r\n\n");
-			}
+			if(spawn_cmd (0, "/bin/systemctl reboot")!=SCPE_OK)
+				printf("\r\n\r\nreboot failed\r\n\r\n");
 		}
 
 #if 0

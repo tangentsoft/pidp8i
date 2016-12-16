@@ -108,6 +108,13 @@ install: all
 		update-rc.d pidp8i defaults \
 	) || true
 
+	@# Give the install user permission to shut down and reboot the Pi
+	@# if this is a systemd/sudo based system.
+	@(	test -d /etc/sudoers.d -a -w /etc/sudoers.d -a -x /bin/systemctl && \
+		@INSTALL@ -m 440 -o root -g root @srcdir@/etc/sudoers \
+		    /etc/sudoers.d/099_pidp8i \
+	) || true
+
 	@# Add installation bin dir to the non-root user's PATH unless it's
 	@# already in there or we aren't running under sudo.
 	@(for p in .profile .bash_profile ; do \
