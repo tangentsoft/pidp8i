@@ -48,22 +48,7 @@ Start with the latest [Raspbian Lite OS image][os].
 5.  Move the SD card to a USB reader plugged into the Pi, and boot the
     Pi from its prior SD card.
 
-6.  Shrink the image in preparation for copying:
-
-        $ sudo umount /dev/sda2         # if it auto-mounted
-        $ sudo e2fsck -f /dev/sda2      # resize2fs demands it
-        $ sudo resize2fs -M /dev/sda2
-        $ sudo parted /dev/sda resizepart 2 $((XXXX * 4096 + 10**8))b
-        $ sudo resize2fs /dev/sda2      # take any slack back up
-
-    XXXX in the `parted` command comes from the output of the *first*
-    resize2fs command.  A plausible value is 323485, meaning ~1.3 GiB.
-
-    The extra 100 megs accounts for the `/boot` partition, since the
-    `resizepart` command takes a partition end value, not a size value.
-    It's a bit over, which is just as well since it means an end user
-    who fails to expand the FS to fill their SD card won't run out of
-    space too soon.
+6.  Shrink the image with `pidp8i/tools/bosi3`.
 
 7.  Move the USB reader to the Mac,¹ then produce the updated image:
 

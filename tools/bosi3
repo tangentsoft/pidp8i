@@ -1,0 +1,23 @@
+#!/bin/bash
+# bosi2 - The Binary OS Image creation/update scripts, #2
+#
+# This script resets the OS's configuration to a clean first boot state.
+
+set -e
+
+sudo umount /dev/sda2 || true		# might auto-mount, might not
+sudo e2fsck -f /dev/sda2			# resize2fs demands it
+blocks=$(sudo resize2fs -M /dev/sda2 | tail -1 | grep -o '[0-9]\+')
+if [ "$blocks" -gt 0 ]
+then
+    # The extra 100 megs accounts for the `/boot` partition, since the
+    # `resizepart` command takes a partition end value, not a size value.
+    # It's a bit over, which buys time for a user who neglexts to expand
+	# the FS to fill their SD card.
+	sudo parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
+	sudo resize2fs /dev/sda2		# take any slack back up
+else
+	echo "Failed to extract new filesystem size from resize2fs!"
+	echo
+	exit 1
+fi
