@@ -36,7 +36,7 @@ Start with the latest [Raspbian Lite OS image][os].
 
 2.  After logging in, run the first BOSI script:
 
-        $ curl https://tangentsoft.com/pidp8i/doc/trunk/tools/bosi1 | bash
+        $ curl -L https://tangentsoft.com/bosi | bash
  
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
