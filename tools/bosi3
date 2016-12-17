@@ -1,7 +1,18 @@
 #!/bin/bash
-# bosi2 - The Binary OS Image creation/update scripts, #2
+# bosi3 - The Binary OS Image creation/update scripts, #3
 #
-# This script resets the OS's configuration to a clean first boot state.
+# This script shrinks the filesystem on the SD card we're about to
+# image to just a bit bigger than required to hold its present
+# contents.
+#
+# The extra 100 megs in the arithmetic below accounts for the /boot
+# partition, since the `resizepart` command takes a partition end value,
+# not a size value.
+#
+# We don't calculate the actual end of the /boot partition and use that
+# value because we want a bit of slack space to buy time for an end user
+# who neglects to expand the card image into the free space available on
+# their SD card after first boot.
 
 set -e
 
@@ -10,10 +21,6 @@ sudo e2fsck -f /dev/sda2			# resize2fs demands it
 blocks=$(sudo resize2fs -M /dev/sda2 | tail -1 | grep -o '[0-9]\+')
 if [ "$blocks" -gt 0 ]
 then
-    # The extra 100 megs accounts for the `/boot` partition, since the
-    # `resizepart` command takes a partition end value, not a size value.
-    # It's a bit over, which buys time for a user who neglexts to expand
-	# the FS to fill their SD card.
 	sudo parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
 	sudo resize2fs /dev/sda2		# take any slack back up
 else
