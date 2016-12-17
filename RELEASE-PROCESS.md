@@ -31,8 +31,8 @@ after tagging it.
 Start with the latest [Raspbian Lite OS image][os].
 
 1.  If the version of the base OS has changed since the last binary OS
-     image was created, download the new one and blast it onto an SD card
-     used for no other purpose. Boot it up.
+    image was created, download the new one and blast it onto an SD card
+    used for no other purpose. Boot it up.
 
 2.  After logging in, run the first BOSI script:
 
@@ -43,17 +43,10 @@ Start with the latest [Raspbian Lite OS image][os].
 
 3.  Test that the software starts up as it should.
 
-4.  Revert Raspbian's automatic setup steps to force them to be done
-    again on the end-user's Pi:
+4.  Reset the OS configuration with `pidp8i/tools/bosi2`.
 
-        $ sudo shred -u /etc/ssh/*key*
-        $ sudo dphys-swapfile uninstall
-        $ sudo dd if=/dev/zero of=/junk bs=1M
-        $ sudo rm /junk
-        $ history -c ; rm ~/.bash_history
-
-5.  Shut it down, move the SD card to a USB reader plugged into the Pi,
-    and boot the Pi from its prior SD card.
+5.  Move the SD card to a USB reader plugged into the Pi, and boot the
+    Pi from its prior SD card.
 
 6.  Shrink the image in preparation for copying:
 

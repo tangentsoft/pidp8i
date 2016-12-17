@@ -1,0 +1,13 @@
+#!/bin/bash
+# bosi2 - The Binary OS Image creation/update scripts, #2
+#
+# This script resets the OS's configuration to a clean first boot state.
+
+set -e
+sudo shred -u /etc/ssh/*key*
+sudo dphys-swapfile uninstall
+sudo dd if=/dev/zero of=/junk bs=1M || true		# it *will* error-out!
+sudo rm /junk
+sudo passwd -e pidp8i
+history -c ; rm ~/.bash_history
+( sleep 1 ; sudo poweroff ) & exit
