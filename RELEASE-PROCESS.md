@@ -13,17 +13,7 @@ file. If a regular user of the software cannot see a given change, it
 shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
-
-## Tag the Release
-
-Each release version needs two Fossil tags applied to it: one for the
-particular release date — formatted as vYYYYMMDD — and "release" to
-indicate that the tag is the latest release:
-
-    $ fossil ci --tag release --tag v$(date +%Y%m%d)
-
-These tags should be applied to the checkin that adds the `ChangeLog.md`
-updates, but may be applied on later checkins if necessary.
+Run `make release` to tag the release and check the `ChangeLog.md` file changes in.
 
 
 ## Update the Home Page Links

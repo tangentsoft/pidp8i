@@ -156,6 +156,9 @@ mediainstall:
 reconfig:
 	@AUTOREMAKE@
 
+release: all
+	@srcdir@/tools/mkrel
+
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
 # Explained at http://scottmcpeak.com/autodepend/autodepend.html
