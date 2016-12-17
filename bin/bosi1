@@ -1,0 +1,48 @@
+#!/bin/bash
+# bosi1 - The Binary OS Image creation/update scripts, #1
+#
+# This script initiates the creation/update of the binary OS images
+# the SD card.
+
+nu=pidp8i
+nh=/home/$nu
+repo=pidp8i
+branch=release
+test -n "$1" && branch="$1"
+
+set -e
+
+if [ "$USER" = "$nu" ]
+then
+	cd $HOME
+else
+	sudo usermod -d $nh -l $nu -m
+	echo edsonDeCastro1968 | sudo passwd $nu
+	cd $nh
+fi
+
+sudo apt update && sudo apt upgrade
+
+test -n "$(type -p fossil)" || sudo apt install fossil
+
+if [ ! -d museum ]
+then
+	mkdir -p museum $repo
+	fossil clone https://tangentsoft.com/$repo museum/$repo.fossil
+fi
+
+cd $repo
+
+if [ -r ChangeLog.md ]
+then
+	fossil revert			# just in case
+	fossil update $branch
+else
+	fossil open ~/museum/$repo.fossil $branch
+	./configure
+fi
+
+make
+sudo make install
+make clean
+sudo reboot

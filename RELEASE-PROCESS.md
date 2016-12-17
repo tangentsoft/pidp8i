@@ -13,46 +13,35 @@ file. If a regular user of the software cannot see a given change, it
 shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
-Run `make release` to tag the release and check the `ChangeLog.md` file changes in.
+Run `make release` to tag the release and check the `ChangeLog.md` file
+changes in.
 
 
 ## Update the Home Page Links
 
 The zip and tarball links on the front page produce files named after
 the date of the release. Those dates need to be updated immediately
-after tagging the release, since they point at the "release" tag, so
-they begin shipping the new release immediately after tagging it.
+after tagging the release, since they point at the "release" tag applied
+by the previous step, so they begin shipping the new release immediately
+after tagging it.
 
 
-## Produce the Binary OS Image
+## Produce the Normal Binary OS Image
 
 Start with the latest [Raspbian Lite OS image][os].
 
-[os]: https://www.raspberrypi.org/downloads/raspbian/
+1.  If the version of the base OS has changed since the last binary OS
+     image was created, download the new one and blast it onto an SD card
+     used for no other purpose. Boot it up.
 
-If the OS version has changed since the last release, use the following
-steps to bootstrap the installation:
+2.  After logging in, run the first BOSI script:
 
-1.  Blast the OS image onto an SD card used for no other purpose. Boot it up.
+        $ curl https://tangentsoft.com/pidp8i/doc/trunk/tools/bosi1 | bash
+ 
+    It will either reboot the system after completing its tasks
+    successfully or exit early, giving the reason it failed.
 
-2.  After logging in as `pi` for the first time:
-
-        $ sudo apt update && sudo apt upgrade
-        $ sudo apt install fossil
-        $ mkdir museum pidp8i
-        $ fossil clone https://tangentsoft.com/pidp8i museum/pidp8i.fossil
-        $ cd pidp8i
-        $ fossil open ~/museum/pidp8i.fossil release
-        $ ./configure
-        $ make
-        $ sudo make install
-        $ make clean
-
-    The final set of commands are separate because you must carefully
-    inspect each one's output to ensure that it doesn't say anything
-    surprising.
-
-3.  Reboot and test that the software starts up as it should.
+3.  Test that the software starts up as it should.
 
 4.  Revert Raspbian's automatic setup steps to force them to be done
     again on the end-user's Pi:
@@ -114,20 +103,14 @@ steps to bootstrap the installation:
     modify the front page to point to the new images. Post the
     announcement message and new front page once the uploads complete.
 
+[os]: https://www.raspberrypi.org/downloads/raspbian/
 
-## Shortcut Path
 
-Skip step 1 above if the latest Raspbian Lite OS image is unchanged
-since the last release, and reduce the command sequence in step 2 to:
+## Produce the "No Lamp Simulator" Binary OS Image
 
-    $ sudo apt update && sudo apt upgrade
-    $ cd pidp8i
-    $ fossil update
-    $ make
-    $ sudo make install
-    $ make clean
-
-Proceed from there with step 3.  There are no more shortcuts, alas.
+Log into the SD card from which you made the regular image above, then
+say `pidp8i/tools/bosi1 no-lamp-simulator` and continue from step 3
+above.
 
 
 ----------------------
