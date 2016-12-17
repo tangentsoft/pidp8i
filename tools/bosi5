@@ -1,0 +1,13 @@
+#!/bin/bash
+# bosi5 - The Binary OS Image creation/update scripts, #5
+#
+# This script re-images the source SD card with the image we just made,
+# so that it can be tested for proper function.
+
+set -e
+. $(dirname "$0")/../etc/bosi-vals "$@"
+sudo dd if=$img of=$rdisk bs=1m
+sudo diskutil unmountDisk $rdisk || true	# Paragon ExtFS might be installed
+rmtrash $img
+cd $dldir/..
+make synch

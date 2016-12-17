@@ -1,0 +1,6 @@
+#!/bin/bash
+test -n "$1" && tag="$1" || tag="all"
+dldir="$HOME/tangentsoft.com/dl"
+os=jessie-lite
+img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
+rdisk=/dev/rdisk9

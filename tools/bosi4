@@ -8,14 +8,11 @@ set -e
 if [ -n "$1" ]
 then
 	blocks="$1"
-	dldir="$HOME/tangentsoft.com/dl"
-	tag=all
-	test -n "$2" && tag="$2"
-	os=jessie-lite
-	img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
+	shift
+	. $(dirname "$0")/../etc/bosi-vals "$@"
 
-	sudo diskutil unmountDisk /dev/disk9 || true	# it auto-mounted
-	sudo dd if=/dev/disk9 bs=4k count=$blocks of=$img
+	sudo diskutil unmountDisk $rdisk		# it auto-mounted
+	sudo dd if=$rdisk bs=4k count=$blocks of=$img
 	zip -9j $img.zip $img
 	# rm $img happens in bosi5
 else

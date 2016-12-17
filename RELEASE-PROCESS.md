@@ -60,14 +60,11 @@ Start with the latest [Raspbian Lite OS image][os].
 
 8.  Blast image back onto SD card and test that it still works:
 
-        $ sudo dd if=DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img \
-                  of=/dev/rdisk9 bs=1m
+         $ ~/src/pidp8i/trunk/tools/bosi5 TAG
 
-9.  Remove `*.img` files and upload the new `*.zip` files left behind.
-
-10. Start the images uploading, compose the announcement message, and
-    modify the front page to point to the new images. Post the
-    announcement message and new front page once the uploads complete.
+9.  While image uploads, compose the announcement message, and modify
+    the front page to point to the new images. Post the announcement
+    message and new front page once the uploads complete.
 
 [os]: https://www.raspberrypi.org/downloads/raspbian/
 
