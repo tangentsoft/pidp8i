@@ -22,7 +22,11 @@ blocks=$(sudo resize2fs -M /dev/sda2 | tail -1 | grep -o '[0-9]\+')
 if [ "$blocks" -gt 0 ]
 then
 	sudo parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
-	sudo resize2fs /dev/sda2		# take any slack back up
+	blocks=$(sudo resize2fs /dev/sda2 | tail -1 | grep -o '[0-9]\+')
+
+	echo
+	echo "Run the next script as 'bosi4 $blocks'."
+	echo
 else
 	echo "Failed to extract new filesystem size from resize2fs!"
 	echo

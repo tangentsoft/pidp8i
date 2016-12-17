@@ -50,25 +50,13 @@ Start with the latest [Raspbian Lite OS image][os].
 
 6.  Shrink the image with `pidp8i/tools/bosi3`.
 
-7.  Move the USB reader to the Mac,¹ then produce the updated image:
+7.  Move the USB reader to the Mac,¹ then say:
 
-        $ sudo diskutil unmountDisk /dev/disk9    # it auto-mounted
-        $ sudo dd if=/dev/disk9 bs=4k count=YYYY >
-          DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img
-        $ zip -9 DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img.zip \
-          DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img
+         $ ~/src/pidp8i/trunk/tools/bosi4 BLOCKS TAG
 
-    YYYY is output from the *second* `resize2fs` command above, and
-    gives the end position of the second partition on the SD card, and
-    thus the size of the raw image.
-
-    DLDIR is the directory exposed by the web server as `/dl`.
-
-    The "jessie-lite" tag is at the end on purpose so that a directory
-    full of these images will sort properly as new OS versions come out.
-
-    If this is the `no-lamp-simulator` version, add an `-nls` tag after
-    the date.
+    where `BLOCKS` is the blocks value output at the end of `bosi3` and
+    `TAG`, if given at all, should be `nls` if this is the second pass
+    through this list for the `no-lamp-simulator` image.
 
 8.  Blast image back onto SD card and test that it still works:
 
