@@ -78,6 +78,9 @@ Start with the latest [Raspbian Lite OS image][os].
 Log into the SD card from which you made the regular image above, then
 say `./bosi init no-lamp-simulator`, and continue from step 3 above.
 
+When you get down to the `image` and `test` steps, give `image-nls` and
+`test-nls` instead.
+
 
 ----------------------
 

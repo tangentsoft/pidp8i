@@ -1,15 +1,11 @@
-#!/bin/bash
+#!/bin/bash -x
 # bosi - The Binary OS Image creation/update script
 
 verb="$1"
 object="$2"
 
-if [ -r ~/pidp8i/.fslckout ]
-then
-	pushd ~/pidp8i
-	fossil status | grep -q '^tags.*trunk$' && tag=all || tag=nls
-	popd
-fi
+tag=$(echo $verb | cut -f2 -d- -s)
+test -z "$tag" && tag=all
 
 nu=pidp8i
 nh=/home/$nu
@@ -137,10 +133,10 @@ NEXT
 
 # This script images the SD card in a USB reader on a Mac OS X box.
 function do_image() {
-	if [ -n "$blocks" ]
+	if [ -n "$object" ]
 	then
 		sudo diskutil unmountDisk $rdisk		# it auto-mounted
-		sudo dd if=$rdisk bs=4k count=$blocks of=$img
+		sudo dd if=$rdisk bs=4k count=$object of=$img
 		zip -9j $img.zip $img
 	else
 		usage
@@ -162,9 +158,12 @@ function do_test() {
 # Display the usage message
 function usage() {
 	cat <<USAGE
-usage: $0 <verb> [object]
+usage: $0 <verb[-tag]> [object]
 
     The available verbs are init, fossil, shrink, image, and test.
+
+    You may append a tag to the image and test verbs (e.g. image-nls) to
+    override the default tag used in image and zip file outputs, 'all'.
 
     The object depends on the verb.  See RELEASE-PROCESS.md.
 
