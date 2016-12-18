@@ -177,9 +177,10 @@ USAGE
 set -e
 case "$verb" in
 	in*) do_init ;;
-    fo*) do_fossil ;;
-    re*) do_reset ;;
-    sh*) do_shrink ;;
-    im*) do_image ;;
+	fo*) do_fossil ;;
+	re*) do_reset ;;
+	sh*) do_shrink ;;
+	im*) do_image ;;
+	fi*) do_finish ;;
 	*)   usage ;;
 esac
