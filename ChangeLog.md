@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2016.12.17
+## Version 2016.12.18
 
 *   The entire software stack now runs without explicit root privileges.
     It now runs under the user and group of the one who built the
