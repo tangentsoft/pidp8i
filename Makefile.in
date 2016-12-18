@@ -97,8 +97,8 @@ install: all
 	@INSTALL@ -m 664 -g @INSTGRP@ @srcdir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
-	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get install usbmount || true
-	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get install screen || true
+	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
+	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
 
 	@# Install the init script if this system is SysVinit based.
 	@# Raspbian's systemd setup is close enough.
