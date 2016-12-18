@@ -25,7 +25,14 @@ this=$($greadlink -f $0)
 function do_init() {
 	if ! getent passwd $nu > /dev/null
 	then
-		test "$USER" = "root" || exec sudo $this init
+		if [ "$USER" != "root" ]
+		then
+			echo "The init step has to be run as root."
+			echo "See RELEASE-PROCESS.md."
+			echo
+			exit 1
+		fi
+
 		usermod \
 			-d $nh \
 			-l $nu \

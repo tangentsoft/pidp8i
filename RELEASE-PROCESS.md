@@ -38,7 +38,7 @@ Start with the latest [Raspbian Lite OS image][os].
 
         $ wget https://tangentsoft.com/bosi
 		$ chmod +x bosi
-		$ ./bosi init
+		$ exec sudo ./bosi init
  
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
