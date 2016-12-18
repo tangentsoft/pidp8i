@@ -12,18 +12,18 @@ test -n "$1" && branch="$1"
 
 set -e
 
-if [ "$USER" != "root" ]
-then
-	echo "You need to be root for this script to work."
-	echo "Really root, I mean, not sudo'd up."
-	echo
-	exit 1
-fi
-
 if getent passwd $nu > /dev/null
 then
 	cd $HOME
 else
+	if [ "$USER" != "root" ]
+	then
+		echo "You need to be root for this script to work."
+		echo "Really root, I mean, not sudo'd up."
+		echo
+		exit 1
+	fi
+
 	sudo usermod \
 		-d $nh \
 		-l $nu \
@@ -32,8 +32,7 @@ else
 	cd $nh
 fi
 
-sudo apt update && sudo apt upgrade
-
+sudo apt update && sudo apt upgrade || true
 test -n "$(type -p fossil)" || sudo apt install fossil
 
 if [ ! -d museum ]
@@ -50,10 +49,9 @@ then
 	fossil update $branch
 else
 	fossil open ~/museum/$repo.fossil $branch
-	./configure
+	sudo -u $nu ./configure
 fi
 
-make
-sudo make install
-make clean
+sudo -u $nu make
+sudo make install || true
 sudo reboot
