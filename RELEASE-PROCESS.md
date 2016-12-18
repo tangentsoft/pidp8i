@@ -34,10 +34,10 @@ Start with the latest [Raspbian Lite OS image][os].
     image was created, download the new one and blast it onto an SD card
     used for no other purpose. Boot it up.
 
-2.  After logging in, run the first BOSI script:
+2.  After logging in, retreive and initialize the BOSI process:
 
-		$ exec sudo -i
-        # curl -L https://tangentsoft.com/bosi | bash
+        $ wget https://tangentsoft.com/bosi
+		$ ./bosi init
  
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
@@ -46,30 +46,26 @@ Start with the latest [Raspbian Lite OS image][os].
 
 4.  Reset the OS configuration:
 
-        $ pidp8i/tools/bosi2
+        $ ./bosi reset
 
-5.  Move the SD card to a USB reader plugged into the Pi, and boot the
-    Pi from its prior SD card.
+5.  Move the SD card to a USB reader plugged into the Pi, boot the Pi
+    from its prior SD card, and shrink the OS image:
 
-6.  Shrink the OS image:
+        $ ./bosi shrink
 
-        $ pidp8i/tools/bosi3
+6.  Move the USB reader to the Mac,¹ then say:
 
-7.  Move the USB reader to the Mac,¹ then say:
+        $ bosi image BLOCKS
 
-        $ ~/src/pidp8i/trunk/tools/bosi4 BLOCKS TAG
+    `BLOCKS` is the value output at the end of the `shrink` step.
 
-    where `BLOCKS` is the blocks value output at the end of `bosi3` and
-    `TAG`, if given at all, should be `nls` if this is the second pass
-    through this list for the `no-lamp-simulator` image.
+7.  Blast image back onto SD card and test that it still works:
 
-8.  Blast image back onto SD card and test that it still works:
+        $ bosi test
 
-        $ ~/src/pidp8i/trunk/tools/bosi5 TAG
-
-9.  While image uploads, compose the announcement message, and modify
-    the front page to point to the new images. Post the announcement
-    message and new front page once the uploads complete.
+8.  While the OS image uploads, compose the announcement message, and
+    modify the front page to point to the new images.  Post the
+    announcement message and new front page once the uploads complete.
 
 [os]: https://www.raspberrypi.org/downloads/raspbian/
 
@@ -77,8 +73,7 @@ Start with the latest [Raspbian Lite OS image][os].
 ## Produce the "No Lamp Simulator" Binary OS Image
 
 Log into the SD card from which you made the regular image above, then
-say `pidp8i/tools/bosi1 no-lamp-simulator` and continue from step 3
-above.
+say `./bosi init no-lamp-simulator`, and continue from step 3 above.
 
 
 ----------------------
