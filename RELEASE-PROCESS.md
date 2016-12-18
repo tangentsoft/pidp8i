@@ -58,13 +58,14 @@ Start with the latest [Raspbian Lite OS image][os].
 
 6.  Move the USB reader to the Mac,¹ then say:
 
-        $ bosi image BLOCKS
+        $ bosi image[-nls] BLOCKS
 
     `BLOCKS` is the value output at the end of the `shrink` step.
 
-7.  Blast image back onto SD card and test that it still works:
+7.  The prior step rewrote the SD card with the image file it created.
+    Boot it up and make sure it still works.  If you're happy with it:
 
-        $ bosi test
+        $ bosi finish[-nls]
 
 8.  While the OS image uploads, compose the announcement message, and
     modify the front page to point to the new images.  Post the

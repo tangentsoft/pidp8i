@@ -138,17 +138,17 @@ function do_image() {
 		sudo diskutil unmountDisk $rdisk		# it auto-mounted
 		sudo dd if=$rdisk bs=4k count=$object of=$img
 		zip -9j $img.zip $img
+
+		sudo dd if=$img of=$rdisk bs=1m
+		sudo diskutil unmountDisk $rdisk || true	# Paragon ExtFS might be installed
 	else
 		usage
 	fi
 }
 
 
-# This script re-images the source SD card with the image we just made,
-# so that it can be tested for proper function.
-function do_test() {
-	sudo dd if=$img of=$rdisk bs=1m
-	sudo diskutil unmountDisk $rdisk || true	# Paragon ExtFS might be installed
+# Clean up after the above
+function do_finish() {
 	rmtrash $img
 	cd $dldir/..
 	make synch
@@ -160,10 +160,11 @@ function usage() {
 	cat <<USAGE
 usage: $0 <verb[-tag]> [object]
 
-    The available verbs are init, fossil, shrink, image, and test.
+    The available verbs are init, fossil, shrink, image, and finish.
 
-    You may append a tag to the image and test verbs (e.g. image-nls) to
-    override the default tag used in image and zip file outputs, 'all'.
+    You may append a tag to the image and finish verbs (e.g. image-nls)
+    to override the default tag ('all') used in image and zip file
+    outputs.
 
     The object depends on the verb.  See RELEASE-PROCESS.md.
 
@@ -180,6 +181,5 @@ case "$verb" in
     re*) do_reset ;;
     sh*) do_shrink ;;
     im*) do_image ;;
-    te*) do_test ;;
 	*)   usage ;;
 esac
