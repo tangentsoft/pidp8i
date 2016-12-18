@@ -1,0 +1,2 @@
+#!/bin/bash
+fossil ci --tag release --tag v$(date +%Y%m%d)

@@ -76,7 +76,7 @@ distclean: clean
 		@builddir@/bin/pidp8i \
 		@builddir@/etc/pidp8i-init \
 		@builddir@/src/config.h \
-		@builddir@/src/PDP8/pdp8_cpu.c
+		@builddir@/src/PDP8/pdp8_cpu.c \
 		@builddir@/src/scp.c
 	@for n in 0 2 3 4 6 7 ; do rm -f @builddir@/boot/$$n.script ; done
 
@@ -97,8 +97,8 @@ install: all
 	@INSTALL@ -m 664 -g @INSTGRP@ @srcdir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
-	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get install usbmount || true
-	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get install screen || true
+	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
+	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
 
 	@# Install the init script if this system is SysVinit based.
 	@# Raspbian's systemd setup is close enough.
@@ -106,6 +106,13 @@ install: all
 	@(  test -w /etc/init.d && \
 		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
 		update-rc.d pidp8i defaults \
+	) || true
+
+	@# Give the install user permission to shut down and reboot the Pi
+	@# if this is a systemd/sudo based system.
+	@(	test -d /etc/sudoers.d -a -w /etc/sudoers.d -a -x /bin/systemctl && \
+		@INSTALL@ -m 440 -o root -g root @srcdir@/etc/sudoers \
+		    /etc/sudoers.d/099_pidp8i \
 	) || true
 
 	@# Add installation bin dir to the non-root user's PATH unless it's
@@ -148,6 +155,9 @@ mediainstall:
 
 reconfig:
 	@AUTOREMAKE@
+
+release: all
+	@srcdir@/tools/mkrel
 
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
@@ -202,6 +212,7 @@ Makefile: @AUTODEPS@ \
 		@srcdir@/bin/*.in \
 		@srcdir@/boot/*.in \
 		@srcdir@/etc/*.in \
+		@srcdir@/src/PDP8/*.in \
 		@srcdir@/src/*.in
 	@AUTOREMAKE@
 endif

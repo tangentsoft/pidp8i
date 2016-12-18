@@ -13,131 +13,74 @@ file. If a regular user of the software cannot see a given change, it
 shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
-
-## Tag the Release
-
-Each release version needs two Fossil tags applied to it: one for the
-particular release date — formatted as vYYYYMMDD — and "release" to
-indicate that the tag is the latest release:
-
-    $ fossil ci --tag release --tag v$(date +%Y%m%d)
-
-These tags should be applied to the checkin that adds the `ChangeLog.md`
-updates, but may be applied on later checkins if necessary.
+Run `make release` to tag the release and check the `ChangeLog.md` file
+changes in.
 
 
 ## Update the Home Page Links
 
 The zip and tarball links on the front page produce files named after
 the date of the release. Those dates need to be updated immediately
-after tagging the release, since they point at the "release" tag, so
-they begin shipping the new release immediately after tagging it.
+after tagging the release, since they point at the "release" tag applied
+by the previous step, so they begin shipping the new release immediately
+after tagging it.
 
 
-## Produce the Binary OS Image
+## Produce the Normal Binary OS Image
 
 Start with the latest [Raspbian Lite OS image][os].
 
-[os]: https://www.raspberrypi.org/downloads/raspbian/
+1.  If the version of the base OS has changed since the last binary OS
+    image was created, download the new one and blast it onto an SD card
+    used for no other purpose. Boot it up.
 
-If the OS version has changed since the last release, use the following
-steps to bootstrap the installation:
+2.  After logging in, retreive and initialize the BOSI process:
 
-1.  Blast the OS image onto an SD card used for no other purpose. Boot it up.
+        $ wget https://tangentsoft.com/bosi
+		$ chmod +x bosi
+		$ exec sudo ./bosi init
+ 
+    It will either reboot the system after completing its tasks
+    successfully or exit early, giving the reason it failed.
 
-2.  After logging in as `pi` for the first time:
+3.  Test that the software starts up as it should.
 
-        $ sudo apt update && sudo apt upgrade
-        $ sudo apt install fossil
-        $ mkdir museum pidp8i
-        $ fossil clone https://tangentsoft.com/pidp8i museum/pidp8i.fossil
-        $ cd pidp8i
-        $ fossil open ~/museum/pidp8i.fossil release
-        $ ./configure
-        $ make
-        $ sudo make install
-        $ make clean
+4.  Reset the OS configuration:
 
-    The final set of commands are separate because you must carefully
-    inspect each one's output to ensure that it doesn't say anything
-    surprising.
+        $ ./bosi reset
 
-3.  Reboot and test that the software starts up as it should.
+5.  Move the SD card to a USB reader plugged into the Pi, boot the Pi
+    from its prior SD card, and shrink the OS image:
 
-4.  Revert Raspbian's automatic setup steps to force them to be done
-    again on the end-user's Pi:
+        $ wget https://tangentsoft.com/bosi
+		$ chmod +x bosi
+        $ ./bosi shrink
 
-        $ sudo shred -u /etc/ssh/*key*
-        $ sudo dphys-swapfile uninstall
-        $ sudo dd if=/dev/zero of=/junk bs=1M
-        $ sudo rm /junk
-        $ history -c ; rm ~/.bash_history
+6.  Move the USB reader to the Mac,¹ then say:
 
-5.  Shut it down, move the SD card to a USB reader plugged into the Pi,
-    and boot the Pi from its prior SD card.
+        $ bosi image[-nls] BLOCKS
 
-6.  Shrink the image in preparation for copying:
+    `BLOCKS` is the value output at the end of the `shrink` step.
 
-        $ sudo umount /dev/sda2         # if it auto-mounted
-        $ sudo e2fsck -f /dev/sda2      # resize2fs demands it
-        $ sudo resize2fs -M /dev/sda2
-        $ sudo parted /dev/sda resizepart 2 $((XXXX * 4096 + 10**8))b
-        $ sudo resize2fs /dev/sda2      # take any slack back up
+7.  The prior step rewrote the SD card with the image file it created.
+    Boot it up and make sure it still works.  If you're happy with it:
 
-    XXXX in the `parted` command comes from the output of the *first*
-    resize2fs command.  A plausible value is 323485, meaning ~1.3 GiB.
+        $ bosi finish[-nls]
 
-    The extra 100 megs accounts for the `/boot` partition, since the
-    `resizepart` command takes a partition end value, not a size value.
-    It's a bit over, which is just as well since it means an end user
-    who fails to expand the FS to fill their SD card won't run out of
-    space too soon.
-
-7.  Move the USB reader to the Mac,¹ then produce the updated image:
-
-        $ sudo diskutil unmountDisk /dev/disk9    # it auto-mounted
-        $ sudo dd if=/dev/disk9 bs=4k count=YYYY >
-          DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img
-        $ zip -9 DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img.zip \
-          DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img
-
-    YYYY is output from the *second* `resize2fs` command above, and
-    gives the end position of the second partition on the SD card, and
-    thus the size of the raw image.
-
-    DLDIR is the directory exposed by the web server as `/dl`.
-
-    The "jessie-lite" tag is at the end on purpose so that a directory
-    full of these images will sort properly as new OS versions come out.
-
-    If this is the `no-lamp-simulator` version, add an `-nls` tag after
-    the date.
-
-8.  Blast image back onto SD card and test that it still works:
-
-        $ sudo dd if=DLDIR/pidp8i-$(date +%Y.%m.%d)-jessie-lite.img \
-                  of=/dev/rdisk9 bs=1m
-
-9.  Remove `*.img` files and upload the new `*.zip` files left behind.
-
-10. Start the images uploading, compose the announcement message, and
-    modify the front page to point to the new images. Post the
+8.  While the OS image uploads, compose the announcement message, and
+    modify the front page to point to the new images.  Post the
     announcement message and new front page once the uploads complete.
 
+[os]: https://www.raspberrypi.org/downloads/raspbian/
 
-## Shortcut Path
 
-Skip step 1 above if the latest Raspbian Lite OS image is unchanged
-since the last release, and reduce the command sequence in step 2 to:
+## Produce the "No Lamp Simulator" Binary OS Image
 
-    $ sudo apt update && sudo apt upgrade
-    $ cd pidp8i
-    $ fossil update
-    $ make
-    $ sudo make install
-    $ make clean
+Log into the SD card from which you made the regular image above, then
+say `./bosi init no-lamp-simulator`, and continue from step 3 above.
 
-Proceed from there with step 3.  There are no more shortcuts, alas.
+When you get down to the `image` and `test` steps, give `image-nls` and
+`test-nls` instead.
 
 
 ----------------------

@@ -394,7 +394,7 @@ ledstatus[5] &= ~(1<<2); // clear execute
 // when DF switches are set, that raises a hacked-in-to-simh signal to ATTACH PTR <filename>
 // when IF switches are set, that raises a hacked-in-to-simh signal to DO <filename> (boot script)
 
-if (pidp8i_gpio_present && (switchstatus[2] & 0x0020)==0) //SING_STEP toggled
+if (pidp8i_gpio_present && (switchstatus[2] & SS2_S_STEP)==0)
 {
 	if (swAttach==0)		// if this is the first time we detect it,
 	{
@@ -435,55 +435,56 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0020)==0) //SING_STEP toggled
 			reason = STOP_HALT;
 			awfulHackFlag = swDevice;	// this triggers a do command after leaving the simulator run.
 		}
-
-		// 3. Scan for shutdown command (Sing_Step + Sing_inst + Start)
-
-		if (((switchstatus[2] & 0x0800)==0) && ((switchstatus[2] & 0x0010)==0))
-		{
-			printf("\r\nShutdown\r\n\r\n");
-			reason = STOP_HALT;
-			awfulHackFlag = 8;	// this triggers an exit command after leaving the simulator run.
-			if(spawn_cmd ((int32) 0, " shutdown -h -t 1 now")!=SCPE_OK)		// issue simh attach command (no sudo in buildroot)
-				printf("\r\n\n\nshutdown failed\r\n\n");
-		}
-
-		// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Cont)
-
-		if (((switchstatus[2] & 0x0080)==0) && ((switchstatus[2] & 0x0010)==0))
-		{
-			printf("\r\nReboot\r\n\r\n");
-			reason = STOP_HALT;
-			awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
-			if(spawn_cmd ((int32) 0, " reboot")!=SCPE_OK) {// no sudo in buildroot env
-				printf("\r\n\n\nreboot failed\r\n\n");
-			}
-		}
-
-#if 0
-		// 5. Sing_Step + Sing_Inst + Load Add
-
-		if ((switchstatus[2] & 0x0410)==0)
-		{
-		}
-
-		// 6. Sing_Step + Sing_Inst + Deposit
-
-		if ((switchstatus[2] & 0x0210)==0)
-		{
-		}
-#endif
 	}
 }
 if (swAttach==1)		// Sing_Step switch is back to off again
-	if ((switchstatus[2] & 0x0020)!=0)		// switch deactivated
+	if ((switchstatus[2] & SS2_S_STEP)!=0)		// switch deactivated
 		swAttach=0;				// reset 'avoid repeat' indicator
+
+// 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Stop)
+
+if (pidp8i_gpio_present &&
+		(switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_STOP)==0))
+{
+	printf("\r\nShutdown\r\n\r\n");
+	reason = STOP_HALT;
+	awfulHackFlag = 8;	// this triggers an exit command after leaving the simulator run.
+	if(spawn_cmd (0, "sudo /bin/systemctl poweroff")!=SCPE_OK)
+		printf("\r\n\r\npoweroff failed\r\n\r\n");
+}
+
+// 4. Scan for host reboot command (Sing_Step + Sing_Inst + Start)
+
+if (pidp8i_gpio_present &&
+		(switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_START)==0))
+{
+	printf("\r\nReboot\r\n\r\n");
+	reason = STOP_HALT;
+	awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
+	if(spawn_cmd (0, "sudo /bin/systemctl reboot")!=SCPE_OK)
+		printf("\r\n\r\nreboot failed\r\n\r\n");
+}
+
+#if 0
+// 5. Sing_Step + Sing_Inst + Load Add
+
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_L_ADD))==0)
+{
+}
+
+// 6. Sing_Step + Sing_Inst + Deposit
+
+if ((switchstatus[2] & (SS2_S_STEP | SS2_S_INST | SS2_DEP))==0)
+{
+}
+#endif
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-if (pidp8i_gpio_present && (switchstatus[2] & 0x0800)==0)	// START switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & SS2_START)==0)	// START switch activated
 	if (swStart==0)
 	{
 	        int_req = int_req & ~INT_ION;		// disable ION. says so in handbook, true?
@@ -495,11 +496,11 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0800)==0)	// START switch activa
 		swStart = 1;				// single shot
 	}
 if (swStart==1)
-	if ((switchstatus[2] & 0x0800)!=0)		// START switch deactivated
+	if ((switchstatus[2] & SS2_START)!=0)		// START switch deactivated
 		swStart=0;				// reset 'avoid repeat' indicator
 
 
-if (pidp8i_gpio_present && (switchstatus[2] & 0x0080)==0)			// CONT switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & SS2_CONT)==0)			// CONT switch activated
 	if (swCont2==0)
 	{	swStop = 0;				// meaning resume execution
 			// ? is this done: MB contains instruction to be executed after CONT is pressed
@@ -507,11 +508,11 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0080)==0)			// CONT switch activ
 		goto contPoint;				// note: only for cont not for start
 	}
 if (swCont2==1)
-	if ((switchstatus[2] & 0x0080)!=0)		// CONT switch deactivated
+	if ((switchstatus[2] & SS2_CONT)!=0)		// CONT switch deactivated
 		swCont2=0;				// reset 'avoid repeat' indicator
 
 
-if (pidp8i_gpio_present && (switchstatus[2] & 0x0400)==0)			// LOAD_ADD switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & SS2_L_ADD)==0)			// LOAD_ADD switch activated
 {
 	PC = switchstatus[0] ^ 07777;			// copy SR into PC
 							// copy DF and IF too
@@ -526,7 +527,7 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0400)==0)			// LOAD_ADD switch a
 	IF = IF<<12;					// DF is saved in oct digit 5, so it's easy to add to PC
 }
 
-if (pidp8i_gpio_present && (switchstatus[2] & 0x0200)==0)			// DEP switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & SS2_DEP)==0)			// DEP switch activated
 {	if (swDep==0)
 	{	M[PC] = switchstatus[0] ^ 07777;
 		/* ??? in 66 handbook: strictly speaking, SR goes into AC, then AC into MB. Does it clear AC afterwards? If not, needs fix */
@@ -537,10 +538,10 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0200)==0)			// DEP switch activa
 	}
 }
 if (swDep==1)
-	if ((switchstatus[2] & 0x0200)!=0)		// DEP switch deactivated
+	if ((switchstatus[2] & SS2_DEP)!=0)		// DEP switch deactivated
 		swDep=0;				// reset 'avoid repeat' indicator
 
-if (pidp8i_gpio_present && (switchstatus[2] & 0x0100)==0)			// EXAM switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & SS2_EXAM)==0)			// EXAM switch activated
 {	if (swExam==0)
 	{	MB = M[PC];
 		MA = PC & 07777;			// 20150315: MA trails PC on FP
@@ -549,7 +550,7 @@ if (pidp8i_gpio_present && (switchstatus[2] & 0x0100)==0)			// EXAM switch activ
 	}
 }
 if (swExam==1)
-	if ((switchstatus[2] & 0x0100)!=0)		// EXAM switch deactivated
+	if ((switchstatus[2] & SS2_EXAM)!=0)		// EXAM switch deactivated
 		swExam=0;				// reset 'avoid repeat' indicator
 
 
@@ -593,7 +594,7 @@ if (swStop==1)
 
 setleds(PC, MA, M[MA], LAC, MQ, IF, DF); // note M[MA] used not MB
 
-if  (pidp8i_gpio_present && (switchstatus[2] & 0x040)==0)  		// STOP switch activated
+if  (pidp8i_gpio_present && (switchstatus[2] & SS2_STOP)==0)  		// STOP switch activated
 {	swStop = 1;
 	goto skip;
 }
@@ -611,7 +612,7 @@ contPoint:	;	// goto here if CONT has been pressed to finish current instruction
 
 // SING_STEP: swStop=0 if we're here. If SingStep then this time, let it go but trigger a stop on the next pass
 
-if (pidp8i_gpio_present && (switchstatus[2] & 0x0010)==0)		// SING_INST switch activated
+if (pidp8i_gpio_present && (switchstatus[2] & SS2_S_INST)==0)		// SING_INST switch activated
 {	if (swSingStep==0)		// allow it this time,
 		swSingStep=1;		// but note to block it next time!
 	else				// else: this is the next time...

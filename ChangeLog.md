@@ -1,5 +1,67 @@
 # PiDP-8/I Changes
 
+## Version 2016.12.18
+
+*   The entire software stack now runs without explicit root privileges.
+    It now runs under the user and group of the one who built the
+    software.
+
+    For the few instances where it does need elevated privileges, a
+    limited-scope set of sudo rules are installed that permit the
+    simulator to run the necessary helper programs.
+
+*   The power down and reboot front panel switch combinations are no
+    longer sensitive to the order you flip the switches.
+
+*   Changed the powerdown front panel switch combination to the more
+    mnemonically sensible `Sing_Step` + `Sing_Inst` + `Stop`.
+
+    Its prior switch combo — `Sing_Step` + `Sing_Inst` + `Start` — is
+    now the reboot sequence, with the mnemomic "restart."
+
+*   Removed the USB stick mount/unmount front panel switch combos.  The
+    automount feature precludes a need for a manual mount command, and
+    unmount isn't necessary for paper tape images on FAT sticks.
+
+*   The simulator now runs correctly on systems where the GPIO setup
+    process fails.  (Basically, anything that isn't a Raspberry Pi.)
+    Prior to this, this failure was just blithely ignored, causing
+    subsequent code to behave as though all switches were being pressed
+    at the same time, causing utter havoc.
+
+    The practical benefit of this is that you can now work with the
+    software on your non-Pi desktop machine, losing out only on the
+    front panel LEDs and switches.  Everything else works just as on the
+    Pi.  You no longer need a separate vanilla SimH setup.
+
+*   Added a locking mechanism that prevents `pidpi8-test` and
+    `pidp8i-sim` from fighting over the front panel LEDs.  While
+    one of the two is running, the other refuses to run.
+
+*   Added `examples/ac-mq-blinker.pal`, the PAL8 assembly code for the
+    `boot/5.script` demo.
+
+*   Fixed two unrelated Fortran compiler problems, which as far as I'm
+    aware managed to take out both Fortran compilers shipped with OS/8.
+    Thanks go to Rick Murphy for providing the working OS/8 images from
+    which the files needed to fix these two problems were extracted.
+
+*   Added the VT100-patched `VTEDIT` TECO macro from Rick Murphy's OS/8
+    images, and made it automatically run when you run TECO from the
+    OS/8 disk pack.  Also added documentation for it in `VTEDIT.DC` on
+    the disk pack as well as [in the wiki][vteditdoc].
+
+*   The default user name on the binary OS images is now `pidp8i`
+    instead of `pi`, its password has changed to `edsonDeCastro1968`,
+    and it demands a password change on first login.  I realize it's a
+    hassle, but I decided I didn't want to contribute to the plague of
+    open-to-the-world IoT boxes.
+
+*   Many build system and documentation improvements.
+
+[vteditdoc][https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT]
+
+
 ## Version 2016.12.06
 
 *   The `pidp8i-test` program's LED test routines did not work correctly

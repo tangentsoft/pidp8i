@@ -1,0 +1,186 @@
+#!/bin/bash -x
+# bosi - The Binary OS Image creation/update script
+
+verb="$1"
+object="$2"
+
+tag=$(echo $verb | cut -f2 -d- -s)
+test -z "$tag" && tag=all
+
+nu=pidp8i
+nh=/home/$nu
+repo=pidp8i
+dldir="$HOME/tangentsoft.com/dl"
+os=jessie-lite
+img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
+rdisk=/dev/rdisk10
+greadlink=$(type -p greadlink || type -p readlink)
+this=$($greadlink -f $0)
+
+
+# Initial steps
+function do_init() {
+	if ! getent passwd $nu > /dev/null
+	then
+		if [ "$USER" != "root" ]
+		then
+			echo "The init step has to be run as root."
+			echo "See RELEASE-PROCESS.md."
+			echo
+			exit 1
+		fi
+
+		usermod \
+			-d $nh \
+			-l $nu \
+			-p $(openssl passwd -1 edsonDeCastro1968) \
+			-m pi 
+	fi
+
+	sudo apt-get update && sudo apt-get -y upgrade || true
+	do_fossil
+}
+
+
+# Fossil clone, build and install
+function do_fossil() {
+	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi fossil $object
+	cd $HOME
+
+	test -n "$(type -p fossil)" || sudo apt-get -y install fossil
+
+	if [ ! -d museum ]
+	then
+		mkdir -p museum $repo
+		fossil clone https://tangentsoft.com/$repo museum/$repo.fossil
+	fi
+
+	cd $repo
+
+	if [ -r ChangeLog.md ]
+	then
+		fossil revert			# just in case
+		fossil update $object
+	else
+		fossil open ~/museum/$repo.fossil $object
+		./configure
+	fi
+
+	make -j4
+	sudo make install || true
+	sudo reboot
+}
+
+
+# This script resets the OS's configuration to a clean first boot state.
+function do_reset() {
+	history -c ; rm -f ~/.bash_history
+	test "$USER" = "root" || exec sudo $this reset
+
+	shred -u /etc/ssh/*key*
+	dphys-swapfile uninstall
+	dd if=/dev/zero of=/junk bs=1M || true		# it *will* error-out!
+	rm /junk
+	passwd -e pidp8i
+	( sleep 1 ; poweroff ) & exit
+}
+
+
+# Shrink the filesystem on the SD card we're about to image to just a
+# bit bigger than required to hold its present contents.
+#
+# The extra 100 megs in the arithmetic below accounts for the /boot
+# partition, since the `resizepart` command takes a partition end value,
+# not a size value.
+#
+# We don't calculate the actual end of the /boot partition and use that
+# value because we want a bit of slack space to buy time for an end user
+# who neglects to expand the card image into the free space available on
+# their SD card after first boot.
+function do_shrink() {
+	test "$USER" = "root" || exec sudo $this shrink $object
+
+	umount /dev/sda2 || true	# might auto-mount, might not
+	e2fsck -f /dev/sda2			# resize2fs demands it
+	blocks=$(
+		resize2fs -M /dev/sda2 2>&1 |
+		grep 'blocks long' | 
+		grep -wo '[0-9]\+'
+	)
+	if [ "$blocks" -gt 0 ]
+	then
+		parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
+		blocks=$(
+			resize2fs /dev/sda2 2>&1 |
+			grep 'blocks long' | 
+			grep -wo '[0-9]\+'
+		)
+
+		cat <<NEXT
+Move the USB SD card reader to the desktop machine and resume the
+process with
+
+    bosi image $blocks
+
+NEXT
+	else
+		echo "Failed to extract new filesystem size from resize2fs!"
+		echo
+		exit 1
+	fi
+}
+
+
+# This script images the SD card in a USB reader on a Mac OS X box.
+function do_image() {
+	if [ -n "$object" ]
+	then
+		sudo diskutil unmountDisk $rdisk		# it auto-mounted
+		sudo dd if=$rdisk bs=4k count=$object of=$img
+		zip -9j $img.zip $img
+
+		sudo dd if=$img of=$rdisk bs=1m
+		sudo diskutil unmountDisk $rdisk || true	# Paragon ExtFS might be installed
+	else
+		usage
+	fi
+}
+
+
+# Clean up after the above
+function do_finish() {
+	rmtrash $img
+	cd $dldir/..
+	make synch
+}
+
+
+# Display the usage message
+function usage() {
+	cat <<USAGE
+usage: $0 <verb[-tag]> [object]
+
+    The available verbs are init, fossil, shrink, image, and finish.
+
+    You may append a tag to the image and finish verbs (e.g. image-nls)
+    to override the default tag ('all') used in image and zip file
+    outputs.
+
+    The object depends on the verb.  See RELEASE-PROCESS.md.
+
+USAGE
+	exit 1
+}
+
+
+# Main routine
+set -e
+case "$verb" in
+	in*) do_init ;;
+	fo*) do_fossil ;;
+	re*) do_reset ;;
+	sh*) do_shrink ;;
+	im*) do_image ;;
+	fi*) do_finish ;;
+	*)   usage ;;
+esac

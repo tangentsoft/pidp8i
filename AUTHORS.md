@@ -41,8 +41,10 @@
     builds and installs as `pidp8i-test`. He also wrote the core of what
     now appears in `README-test.md`.
 
-*   **Rick Murphy <k1mu.nospam@gmail.com>** optimized `examples/pep001.pal`
-    so that it fits into a single page of PDP-8 core.
+*   **Rick Murphy <k1mu.nospam@gmail.com>** optimized the `pep001.pal` *
+    example so that it fits into a single page of PDP-8 core, and
+    provided several useful files in his OS/8 disk images that have
+    managed to land in this software distribution's OS/8 disk image.
 
 *   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
     `ChangeLog.md` that is not attributed to anyone else.
