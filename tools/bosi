@@ -106,7 +106,12 @@ function do_shrink() {
 
 	umount /dev/sda2 || true	# might auto-mount, might not
 	e2fsck -f /dev/sda2			# resize2fs demands it
-	blocks=$(resize2fs -M /dev/sda2 | tail -1 | grep -o '[0-9]\+')
+	blocks=$(
+		resize2fs -M /dev/sda2 |
+		grep 'blocks long' | 
+		grep -o '[0-9]\+' |
+		tail -1
+	)
 	if [ "$blocks" -gt 0 ]
 	then
 		parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b

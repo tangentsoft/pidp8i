@@ -52,6 +52,8 @@ Start with the latest [Raspbian Lite OS image][os].
 5.  Move the SD card to a USB reader plugged into the Pi, boot the Pi
     from its prior SD card, and shrink the OS image:
 
+        $ wget https://tangentsoft.com/bosi
+		$ chmod +x bosi
         $ ./bosi shrink
 
 6.  Move the USB reader to the Mac,¹ then say:
