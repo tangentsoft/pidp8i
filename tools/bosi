@@ -109,8 +109,7 @@ function do_shrink() {
 	blocks=$(
 		resize2fs -M /dev/sda2 2>&1 |
 		grep 'blocks long' | 
-		grep -o '[0-9]\+' |
-		head -1
+		grep -wo '[0-9]\+'
 	)
 	if [ "$blocks" -gt 0 ]
 	then
@@ -118,8 +117,7 @@ function do_shrink() {
 		blocks=$(
 			resize2fs /dev/sda2 2>&1 |
 			grep 'blocks long' | 
-			grep -o '[0-9]\+' |
-			head -1
+			grep -wo '[0-9]\+'
 		)
 
 		cat <<NEXT
