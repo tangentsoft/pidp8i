@@ -16,7 +16,7 @@ if [ "$USER" = "$nu" ]
 then
 	cd $HOME
 else
-	sudo usermod -d $nh -l $nu -m
+	sudo usermod -d $nh -l $nu -m pi
 	echo edsonDeCastro1968 | sudo passwd $nu
 	cd $nh
 fi
