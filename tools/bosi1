@@ -12,12 +12,23 @@ test -n "$1" && branch="$1"
 
 set -e
 
-if [ "$USER" = "$nu" ]
+if [ "$USER" != "root" ]
+then
+	echo "You need to be root for this script to work."
+	echo "Really root, I mean, not sudo'd up."
+	echo
+	exit 1
+fi
+
+if getent passwd $nu > /dev/null
 then
 	cd $HOME
 else
-	sudo usermod -d $nh -l $nu -m pi
-	echo edsonDeCastro1968 | sudo passwd $nu
+	sudo usermod \
+		-d $nh \
+		-l $nu \
+		-p $(openssl passwd -1 edsonDeCastro1968) \
+		-m pi 
 	cd $nh
 fi
 
