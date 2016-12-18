@@ -37,6 +37,7 @@ Start with the latest [Raspbian Lite OS image][os].
 2.  After logging in, retreive and initialize the BOSI process:
 
         $ wget https://tangentsoft.com/bosi
+		$ chmod +x bosi
 		$ ./bosi init
  
     It will either reboot the system after completing its tasks

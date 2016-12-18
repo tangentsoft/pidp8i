@@ -6,6 +6,7 @@ object="$2"
 
 if [ -r ~/pidp8i/.fslckout ]
 then
+	cd ~/pidp8i
 	fossil status | grep -q '^tags.*trunk$' && tag=all || tag=nls
 fi
 
