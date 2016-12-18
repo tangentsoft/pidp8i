@@ -40,14 +40,14 @@ function do_init() {
 			-m pi 
 	fi
 
-	sudo apt update && sudo apt upgrade || true
+	sudo apt-get update && sudo apt-get -y upgrade || true
 	do_fossil
 }
 
 
 # Fossil clone, build and install
 function do_fossil() {
-	test "$USER" = "root" && exec sudo -i -u $nu $this fossil $object
+	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi fossil $object
 	cd $HOME
 
 	test -n "$(type -p fossil)" || sudo apt install fossil
