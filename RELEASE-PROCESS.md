@@ -44,16 +44,20 @@ Start with the latest [Raspbian Lite OS image][os].
 
 3.  Test that the software starts up as it should.
 
-4.  Reset the OS configuration with `pidp8i/tools/bosi2`.
+4.  Reset the OS configuration:
+
+        $ pidp8i/tools/bosi2
 
 5.  Move the SD card to a USB reader plugged into the Pi, and boot the
     Pi from its prior SD card.
 
-6.  Shrink the image with `pidp8i/tools/bosi3`.
+6.  Shrink the OS image:
+
+        $ pidp8i/tools/bosi3
 
 7.  Move the USB reader to the Mac,¹ then say:
 
-         $ ~/src/pidp8i/trunk/tools/bosi4 BLOCKS TAG
+        $ ~/src/pidp8i/trunk/tools/bosi4 BLOCKS TAG
 
     where `BLOCKS` is the blocks value output at the end of `bosi3` and
     `TAG`, if given at all, should be `nls` if this is the second pass
@@ -61,7 +65,7 @@ Start with the latest [Raspbian Lite OS image][os].
 
 8.  Blast image back onto SD card and test that it still works:
 
-         $ ~/src/pidp8i/trunk/tools/bosi5 TAG
+        $ ~/src/pidp8i/trunk/tools/bosi5 TAG
 
 9.  While image uploads, compose the announcement message, and modify
     the front page to point to the new images. Post the announcement
