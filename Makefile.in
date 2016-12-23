@@ -108,6 +108,9 @@ install: all
 		update-rc.d pidp8i defaults \
 	) || true
 
+	@# Give the install user permission to use GPIO if done on a Pi
+	@grep -q '^gpio:' /etc/group && usermod -a -G gpio @INSTUSR@ || true
+
 	@# Give the install user permission to shut down and reboot the Pi
 	@# if this is a systemd/sudo based system.
 	@(	test -d /etc/sudoers.d -a -w /etc/sudoers.d -a -x /bin/systemctl && \
