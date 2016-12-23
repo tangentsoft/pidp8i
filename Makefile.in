@@ -118,6 +118,10 @@ install: all
 		    /etc/sudoers.d/099_pidp8i \
 	) || true
 
+	@# Disable competing services if this is a Raspberry Pi
+	@(test -x /bin/systemctl && /bin/systemctl disable deeper || true)
+	@(test -x /bin/systemctl && /bin/systemctl disable pidp8  || true)
+
 	@# Add installation bin dir to the non-root user's PATH unless it's
 	@# already in there or we aren't running under sudo.
 	@(for p in .profile .bash_profile ; do \
