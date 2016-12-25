@@ -1,5 +1,6 @@
-CFLAGS=-std=c99 -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
-	-D_GNU_SOURCE -DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -U__STRICT_ANSI__ \
+CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
+	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
+	-DHAVE_REGEX_H -DHAVE_GLOB -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
 SIM = bin/pidp8i-sim
@@ -53,6 +54,7 @@ CLTXT = /boot/cmdline.txt
 
 
 all: $(BUILDDIRS) $(BINS) $(EXAMPLES)
+	@chmod 755 @builddir@/bin/pidp8i
 
 clean:
 	@rm -f $(BINS) \
@@ -62,7 +64,8 @@ clean:
 		@builddir@/obj/*.lst \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
-		@builddir@/obj/PDP8/*.o
+		@builddir@/obj/PDP8/*.o \
+		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
@@ -70,6 +73,7 @@ distclean: clean
 		@builddir@/config.log \
 		@builddir@/Makefile \
 		@builddir@/autosetup/jimsh0 \
+		@builddir@/bin/pidp8i \
 		@builddir@/etc/pidp8i-init \
 		@builddir@/src/config.h \
 		@builddir@/src/PDP8/pdp8_cpu.c \
@@ -88,13 +92,13 @@ install: all
 	@# Install files into those dirs and set their perms
 	for f in $(BINS) ; do @INSTALL@ -m 755 -D -s $$f @prefix@/$$f ; done
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
-	-setcap 'cap_sys_nice=eip' @prefix@/$(SIM) || true
+	-for f in @prefix@/bin/pidp8i-* ; do setcap 'cap_sys_nice=eip' $$f ; done || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
-	@INSTALL@ -m 644 @srcdir@/boot/*.script @BOOTDIR@
+	@INSTALL@ -m 664 -g @INSTGRP@ @srcdir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
-	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get install usbmount || true
-	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get install screen || true
+	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
+	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
 
 	@# Install the init script if this system is SysVinit based.
 	@# Raspbian's systemd setup is close enough.
@@ -102,6 +106,13 @@ install: all
 	@(  test -w /etc/init.d && \
 		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
 		update-rc.d pidp8i defaults \
+	) || true
+
+	@# Give the install user permission to shut down and reboot the Pi
+	@# if this is a systemd/sudo based system.
+	@(	test -d /etc/sudoers.d -a -w /etc/sudoers.d -a -x /bin/systemctl && \
+		@INSTALL@ -m 440 -o root -g root @srcdir@/etc/sudoers \
+		    /etc/sudoers.d/099_pidp8i \
 	) || true
 
 	@# Add installation bin dir to the non-root user's PATH unless it's
@@ -140,10 +151,13 @@ mediainstall:
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
-	\) -exec @INSTALL@ -D -m 644 {} @ABSPREFIX@/share/{} \;
+	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
 
 reconfig:
 	@AUTOREMAKE@
+
+release: all
+	@srcdir@/tools/mkrel
 
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
@@ -172,7 +186,7 @@ obj/%.o: @builddir@/src/%.c
 
 # Rule for building example PAL assembly language programs.
 obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
-	@builddir@/bin/palbart -lr $<
+	@builddir@/bin/palbart -lr $< || cat @srcdir@/examples/$*.err
 	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
 	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
 
@@ -186,15 +200,21 @@ $(BUILDDIRS):
 $(SIM): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)
 
-bin/pidp8i-test: obj/test.o obj/gpio.o
+bin/pidp8i-test: obj/test.o obj/gpio-nls.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio.o
 	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-Makefile: @AUTODEPS@ @srcdir@/Makefile.in
-	@@AUTOREMAKE@
+Makefile: @AUTODEPS@ \
+		@srcdir@/Makefile.in \
+		@srcdir@/bin/*.in \
+		@srcdir@/boot/*.in \
+		@srcdir@/etc/*.in \
+		@srcdir@/src/PDP8/*.in \
+		@srcdir@/src/*.in
+	@AUTOREMAKE@
 endif
 
 -include $(OBJS:.o=.d) obj/scanswitch.d

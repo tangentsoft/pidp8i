@@ -1,5 +1,149 @@
 # PiDP-8/I Changes
 
+## Version 2016.12.18
+
+*   The entire software stack now runs without explicit root privileges.
+    It now runs under the user and group of the one who built the
+    software.
+
+    For the few instances where it does need elevated privileges, a
+    limited-scope set of sudo rules are installed that permit the
+    simulator to run the necessary helper programs.
+
+*   The power down and reboot front panel switch combinations are no
+    longer sensitive to the order you flip the switches.
+
+*   Changed the powerdown front panel switch combination to the more
+    mnemonically sensible `Sing_Step` + `Sing_Inst` + `Stop`.
+
+    Its prior switch combo — `Sing_Step` + `Sing_Inst` + `Start` — is
+    now the reboot sequence, with the mnemomic "restart."
+
+*   Removed the USB stick mount/unmount front panel switch combos.  The
+    automount feature precludes a need for a manual mount command, and
+    unmount isn't necessary for paper tape images on FAT sticks.
+
+*   The simulator now runs correctly on systems where the GPIO setup
+    process fails.  (Basically, anything that isn't a Raspberry Pi.)
+    Prior to this, this failure was just blithely ignored, causing
+    subsequent code to behave as though all switches were being pressed
+    at the same time, causing utter havoc.
+
+    The practical benefit of this is that you can now work with the
+    software on your non-Pi desktop machine, losing out only on the
+    front panel LEDs and switches.  Everything else works just as on the
+    Pi.  You no longer need a separate vanilla SimH setup.
+
+*   Added a locking mechanism that prevents `pidpi8-test` and
+    `pidp8i-sim` from fighting over the front panel LEDs.  While
+    one of the two is running, the other refuses to run.
+
+*   Added `examples/ac-mq-blinker.pal`, the PAL8 assembly code for the
+    `boot/5.script` demo.
+
+*   Fixed two unrelated Fortran compiler problems, which as far as I'm
+    aware managed to take out both Fortran compilers shipped with OS/8.
+    Thanks go to Rick Murphy for providing the working OS/8 images from
+    which the files needed to fix these two problems were extracted.
+
+*   Added the VT100-patched `VTEDIT` TECO macro from Rick Murphy's OS/8
+    images, and made it automatically run when you run TECO from the
+    OS/8 disk pack.  Also added documentation for it in `VTEDIT.DC` on
+    the disk pack as well as [in the wiki][vteditdoc].
+
+*   The default user name on the binary OS images is now `pidp8i`
+    instead of `pi`, its password has changed to `edsonDeCastro1968`,
+    and it demands a password change on first login.  I realize it's a
+    hassle, but I decided I didn't want to contribute to the plague of
+    open-to-the-world IoT boxes.
+
+*   Many build system and documentation improvements.
+
+[vteditdoc][https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT]
+
+
+## Version 2016.12.06
+
+*   The `pidp8i-test` program's LED test routines did not work correctly
+    when built against the incandescent lamp simulator version of the
+    GPIO module.  Reworked the build so that this test program builds
+    against the no-lamp-simulator version instead so that you don't have
+    to choose between having the lamp simulator or having a working
+    `pidp8i-test` program.
+
+*   More improvements to `examples/pep001.pal`.
+
+*   Extracted improved `PRINTS` routine from that example as
+    `examples/routines/prints.pal`.
+
+
+## Version 2016.12.05
+
+*   This release marks the first binary SD card image released under my
+    maintainership of the software.  As such, the major user-visible
+    features in this release of the Fossil tree simply support that:
+
+    *   The `pidp8i-init` script now understands that the OS's SSH host
+        keys may be missing, and re-generates them.  Without this
+        security measure, anyone who downloads that binary OS image
+        could impersonate the SSH server on *your* PiDP-8/I.
+
+    *   Added a `RELEASE-PROCESS.md` document.  This is primarily for my
+        own benefit, to ensure that I don't miss a step, particularly
+        given the complexity of producing the binary OS image.  However,
+        you may care to look into it to see what goes on over here on
+        the other side of the Internet. :)
+
+*   Added an OS/8 BASIC solution to Project Euler Problem #1, so you can
+    see how much simpler it is compared to the PAL8 assembly language
+    version added in the prior release.
+
+*   Updated the PAL8 assembly version with several clever optimizations
+    by Rick Murphy, the primary effect of which is that it now fits into
+    a single page of PDP-8 core memory.
+
+
+## Version 2016.12.03
+
+*   Debounced the switches.  See [the mailing list post][cdb] announcing
+    this fix for details.
+
+*   Merged the [`pidp8i-test` program][testpg] from the mailing list.
+    The LED testing portion of this program [currently][gpiols] only works
+    correctly without the incandescent lamp simulation patch applied.
+
+*   Added a solution to [Project Euler Problem #1][pep001] in PAL8
+    assembly language and wrote the [saga of my battle][p1saga] with
+    this problem into the wiki.  This also adds a couple of useful PAL8
+    routines in `examples/routines`.
+
+*   Integrated David Gesswein's latest `palbart` program (v2.13) into
+    the source distribution so that we don't have to:
+    
+    1.  ship pre-built RIM format paper tapes for the examples; and
+
+    2.  put up with the old versions that OS package repos tend to have
+        (Ubuntu is still shipping v2.4, from 6 years ago!)
+
+*   Fixed a bug in the `make install` script that caused it to skip
+    installing `screen` and `usbmount` from the OS's package repo when
+    they are found to be missing.
+
+*   Fixed a related bug that prevented it from disabling the serial
+    console if you configure the software without `--serial-mod` and
+    then install it, causing the serial console and the GPIO code in the
+    PiDP-8/I simulator to fight over GPIO pins 14 and 15.
+
+*   Removed the last of the duplicate binary media entries.  This makes
+    the zip files for this version well under half the size of those for
+    the 2015.12.15 upstream release despite having more features.
+
+[cdb]:    https://groups.google.com/d/msg/pidp-8/Fg9I8OFTXHU/VjamSoFxDAAJ
+[testpg]: https://groups.google.com/d/msg/pidp-8/UmIaBv2L9Ts/wB1CVeGDAwAJ
+[gpiols]: https://tangentsoft.com/pidp8i/tktview?name=9843cab968
+[pep001]: https://projecteuler.net/problem=1
+[p1saga]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
+
 
 ## Version 2016.11.28
 
@@ -53,8 +197,8 @@
     `$prefix/share/boot`, and the OS/program media images which used to
     be in `imagefiles` are now in `$prefix/share/media`.
 
-*   Added a bunch of ancillary material: [wiki articles][wiki], [USB
-    stick label artwork][art], a PAL-III assembly [example program][ex]
+*   Added a bunch of ancillary material: [wiki articles][wiki],
+    [USB stick label artwork][art], a PAL8 assembly [example program][ex]
     for you to toggle in, etc. Also filed a bunch of [tickets][tix]
     detailing feature proposals, known bugs and weaknesses, etc. If you
     were looking for ways to contribute to the development effort, these
@@ -75,7 +219,6 @@
     this is on the radar.)
 
 *   Fixed a bunch of bugs!
-
 
 [readme]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
 [dupatch]: https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA

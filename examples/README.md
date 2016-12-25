@@ -8,24 +8,75 @@ programs:
 
 | Example           | What It Does
 -----------------------------
-| `add`             | 2 + 3 = 5  The simplest program here; used below as a meta-example
-| `hello`           | writes "HELLO, WORLD!" to the console; tests PRINTS subroutine
-| `pep001`          | Project Euler Problem #1 solution (close cousin of "FizzBuzz") 
+| `add.pal`         | 2 + 3 = 5  The simplest program here; used below as a meta-example
+| `hello.pal`       | writes "HELLO, WORLD!" to the console; tests PRINTS subroutine
+| `pep001.*`        | Project Euler Problem #1 solutions, various languages
 | `routines/decprt` | prints an unsigned 12-bit decimal integer to the console
 | `routines/prints` | prints an ASCIIZ string stored as a series of 8-bit bytes to the console
 
-`PEP001` has its [own writeup][saga] in the wiki, as it makes a good
-case study of PDP-8 assembly language software development as compared
-to other types of software development.
+The `pep001.*` files are a case study series in solving a simple
+problem, which lets you compare the solutions along several axes. Some
+are much longer than others, but some will run faster and/or take less
+memory. It is interesting to compare them. There are writeups on each of
+these:
+
+*   [**`pep001.pal`**][pal] — PAL8 Assembly Language
+*   [**`pep001.bas`**][bas] — OS/8 BASIC
+
+[pal]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
+[bas]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.BA
 
 
-## How to Use the Examples
+## How to Use the BASIC Examples
 
-For each program there are 3 files:
+To use the example BASIC program, simply transcribe it into OS/8 BASIC:
+
+    .R BASIC
+	NEW OR OLD--NEW
+	FILE NAME--PAL001.BA
+
+	READY
+	10 FOR I = 1 TO 999
+	10 FOR I = 1 TO 999
+	20 A = I / 3 \ B = I / 5
+	30 IF INT(A) = A GOTO 60
+	40 IF INT(B) = B GOTO 60
+	50 GOTO 70
+	60 T = T + I
+	70 NEXT I
+	80 PRINT "TOTAL: "; T
+	90 END
+	SAVE
+
+	READY
+	RUN
+
+	PAL001  BA    4A    
+
+	TOTAL:  xxxxxxx
+
+	READY
+	BYE
+
+If you're SSH'd into the PiDP-8/I, "transcribing" is simply a matter of
+cut-and-paste into the terminal window.
+
+I've obscured the output on purpose, since I don't want this page to be
+a spoiler for the Project Euler site.
+
+If you get a 2-letter code from BASIC in response to your `RUN` command,
+it means you have an error in the program. See the BASIC section of the
+OS/8 Handbook for a decoding guide.
+
+
+## How to Use the Assembly Language Examples
+
+For each PAL8 assembly program in `examples/*.pal`, there are two
+additional files:
 
 | Extension | Meaning
 -----------------------------
-| `*.pal`   | the PAL-III assembly source code for the program
+| `*.pal`   | the PAL8 assembly source code for the program
 | `*.lst`   | the human-readable assembler output
 | `*.pt`    | the machine-readable assembler output (RIM format)
 
@@ -45,13 +96,13 @@ I cover each of these options below, in the same order as the list
 above.
 
 
-## Option 1: Transcribing the Examples into an OS/8 Session
+## Option 1: Transcribing the Assembly Code into an OS/8 Session
 
 To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
 PiDP-8/I:
 
     .R EDIT
-    *RKB0:ADD.PA<
+    *ADD.PA<
 
     #A                          ← append to ADD.PA
     *0200   CLA CLL
@@ -112,10 +163,28 @@ the working experience of PDP-8 assembly language programmers back
 in the day. The tools may differ — the user may prefer `TECO` over
 `EDIT` or MACRO-8 over PAL8 — but the idea is the same regardless.
 
+If you have the finished assembly code already on your computer and are
+SSH'd into the PiDP-8/I machine, there is a shortcut for all of the
+above. At the OS/8 command line, say:
 
-## Option 2: Toggling Programs in Via the Front Panel
+    .R PIP
+	*ADD.PA<TTY:
 
-Take [`add.lst`][lst] as an example, in which you will find three
+Now you can simply copy the assembly language text in your desktop PC's
+text editor, paste it into the SSH window, and then hit Ctrl-Z to tell
+`PIP` that the text input from the terminal (`TTY:`) is finished. This
+is not only a smidge simpler than doing the same thing via `EDIT`, it
+also avoids a certain limitation of `EDIT` that starts to bite you once
+your program text exceeds about 5,600 characters.
+
+
+## Option 2: Toggling a Programs in Via the Front Panel
+
+After building the PiDP-8/I software, each of the `examples/*.pal` files
+is assembled by `palbart` which writes out a human-readable listing file
+to `obj/*.lst`, named after the source file.
+
+Take [`obj/add.lst`][lst] as an example, in which you will find three
 columns of numbers on the code-bearing lines:
 
     10 00200 7300
@@ -170,13 +239,17 @@ the last value you entered via SR above, 0206. That is the source of the
 "07" in the lower two digits of the fourth instruction, 3207.
 
 
-## Option 3: Loading Programs from Paper Tape
+## Option 3: Loading a Program from Paper Tape
 
-The `example/*.pt` files shipped with the software distribution are in
-RIM format, so the simple way to load them into your PiDP-8/I is to copy
-them to USB sticks, one file per stick. The following is distilled from
-the [How to Use the PiDP-8/I][howto] section of the PiDP-8/I
-documentation:
+The `palbart` assembly process described above also produces paper tape
+output files in RIM format in `bin/*.pt`.
+
+The simplest way to load these assembly examples into your PiDP-8/I is
+to copy each such file to a USB stick, one file per stick.  Then, load
+the paper tape into the simulated PDP-8/I's core memory.
+
+The following is distilled from the [How to Use the PiDP-8/I][howto]
+section of the PiDP-8/I documentation:
 
 1.  Set the IF switches (first white group) to 001, and toggle `Sing
     Step` to reboot the simulator into the high-speed RIM loader. If the
@@ -209,4 +282,3 @@ information.
 [label]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=labels
 [lread]: https://tangentsoft.com/pidp8i/doc/trunk/labels/README.md
 [howto]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
-[saga]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA

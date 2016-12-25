@@ -30,17 +30,21 @@
     creation of the official 2015.12.15 release versions.
 
 *   **Mark G. Thomas** Creator of the installation scripts for the
-    2015.12.15 release. Though those scripts proper are no longer
-    present, the bulk of their function was folded into the 1make
-    install1 target in the present `Makefile.in` file.
+    2015.12.15 release, which were folded into the `make install`
+    handler within `Makefile.in`.
 
 *   **Ian Schofield <isysxp@gmail.com>** Modified the LED lamp driving
     code in the simulator to better simulate the incandescent lamps in
     the original PDP-8/I hardware.
 
-*   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
-    `ChangeLog.md` that is not atttributed to anyone else.
-
 *   **Paul R. Bernard <prb@downspout.ca>** wrote `src/test.c`, which
     builds and installs as `pidp8i-test`. He also wrote the core of what
     now appears in `README-test.md`.
+
+*   **Rick Murphy <k1mu.nospam@gmail.com>** optimized the `pep001.pal` *
+    example so that it fits into a single page of PDP-8 core, and
+    provided several useful files in his OS/8 disk images that have
+    managed to land in this software distribution's OS/8 disk image.
+
+*   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
+    `ChangeLog.md` that is not attributed to anyone else.

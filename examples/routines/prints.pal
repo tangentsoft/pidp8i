@@ -1,24 +1,27 @@
-/ PRINTS - Print an ASCIIZ string pointed at by AC to the terminal
+/ PRINTS - Print an ASCIIZ string to the terminal
+/
+/ It expects to receive the address of the string - 1 in AC.  (The -1
+/ hassle saves an instruction or two in our use of an autoincrement
+/ register.)
+/
+/ This routine uses the autoinc register at location 10.
 /
 / Created by Warren Young of tangentsoft.com, 2016.11.30
+/ Improved by Rick Murphy of the PiDP-8/I mailing list, 2016.12.03
 ////////////////////////////////////////////////////////////////////////
 
-//// PRINTS ////////////////////////////////////////////////////////////
+TYPE,   0		/ helper routine for sending a single character
+	TSF
+	JMP .-1
+	TLS
+	CLA
+	JMP I TYPE
 
-PRINTS,0
+SADDR=10		/ autoinc register for walking the string
+PRINTS, 0
 	DCA SADDR	/ save AC as string address
-PSNEXT,	TAD I SADDR	/ load next character
+PSNEXT, TAD I SADDR	/ load next character
 	SNA
 	JMP I PRINTS	/ found the null terminator; leave
-
-	TSF		/ wait for terminal to be ready
-	JMP .-1
-	TLS		/ write character to the terminal
-
-	CLA		/ increment string address pointer
-	TAD SADDR
-	IAC
-	DCA SADDR
-		
+	JMS TYPE	/ print that character
 	JMP PSNEXT	/ look at next character
-SADDR,	0

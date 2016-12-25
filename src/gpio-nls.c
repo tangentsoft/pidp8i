@@ -55,9 +55,6 @@ uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
 
 uint8_t rows[] = {16, 17, 18};
 
-float brtval[96];
-uint32_t brctr[96],bctr,ndx;
-
 // Array sizes.  Must be declared twice because we need to export them,
 // and C doesn't have true const, as C++ does.
 #define NCOLS    (sizeof(cols)    / sizeof(cols[0]))
@@ -118,6 +115,7 @@ int map_peripheral(struct bcm2835_peripheral *p)
 		}
 		return -1;
 	}
+	puts("Lock acquired!");
 
 	// Map the GPIO peripheral into our address space
 	if ((p->map = mmap(
@@ -254,7 +252,7 @@ static void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
 void *blink(void *terminate)
 {
 	int i,j,k;
-	const us_time_t intervl = 5;	// light each row of leds 5 µs
+	const us_time_t intervl = 300;	// light each row of leds 300 µs
 	ms_time_t now_ms;
 
 	// Find gpio address (different for Pi 2) ----------
@@ -264,7 +262,7 @@ void *blink(void *terminate)
 #ifdef SERIALSETUP
 	printf(" Serial mod version\n");
 #else
-	printf(" Default version using gpiomem\n");
+	printf(" Default version\n");
 #endif
 
 	// set thread to real time priority -----------------
@@ -273,7 +271,10 @@ void *blink(void *terminate)
 	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
 	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
 	// --------------------------------------------------
-	if(map_peripheral(&gpio) == -1) return (void *)-1;
+	if(map_peripheral(&gpio) == -1)
+	{	printf("Failed to map the physical GPIO registers into the virtual memory space.\n");
+		return (void *)-1;
+	}
 
 	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
 	//	INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
@@ -325,12 +326,9 @@ void *blink(void *terminate)
 	usleep(1);
 	GPIO_PULLCLK0 = 0; // remove clock
 	usleep(1); // probably unnecessary
-	bctr=0;
-	for (ndx=0;i<96;i++)
- 	 brtval[ndx]=0;
 	// --------------------------------------------------
 
-	printf("\nFP on\n");
+	//printf("\nFP on\n");
 
 	while (*((int*)terminate) == 0)
 	{
@@ -339,21 +337,17 @@ void *blink(void *terminate)
 		{	INP_GPIO(cols[i]);			//
 			OUT_GPIO(cols[i]);			// Define cols as output
 		}
-		if (bctr==0) {
-		for (i=0;i<96;i++)
-		 brctr[i]=0;
-		bctr=32;
-		}
+		
 		// light up LEDs
-		for (i=ndx=0;i<nledrows;i++)
+		for (i=0;i<nledrows;i++)
 		{
+
 			// Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-			for (k=0;k<ncols;k++,ndx++)
-			{
-				if (++brctr[ndx]<brtval[ndx])
-					GPIO_CLR = 1 << cols[k];
-				else
+			for (k=0;k<ncols;k++)
+			{	if ((ledstatus[i]&(1<<k))==0)
 					GPIO_SET = 1 << cols[k];
+				else 
+					GPIO_CLR = 1 << cols[k];
 			}
 
 			// Toggle this ledrow on
@@ -366,8 +360,7 @@ void *blink(void *terminate)
 			// Toggle ledrow off
 			GPIO_CLR = 1 << ledrows[i]; // superstition
 			INP_GPIO(ledrows[i]);
-
-			sleep_us(intervl);
+			sleep_ns(10000); // waste of cpu cycles but may help against udn2981 ghosting, not flashes though
 
 		}
 
@@ -382,7 +375,7 @@ void *blink(void *terminate)
 			OUT_GPIO(rows[i]);			// turn on one switch row
 			GPIO_CLR = 1 << rows[i];	// and output 0V to overrule built-in pull-up from column input pin
 
-			sleep_ns(intervl * 1000 / 100);
+			sleep_us(intervl / 100);
 
 			for (j=0;j<ncols;j++)		// ncols switches in each row
 			{	int ss = GPIO_READ(cols[j]);
@@ -394,7 +387,6 @@ void *blink(void *terminate)
 
 		fflush(stdout);
 		gss_initted = 1;
-	    bctr--;
 	}
 
 	//printf("\nFP off\n");

@@ -1,6 +1,0 @@
-#!/bin/sh
-procs=`sudo screen -ls pidp8i | egrep '[0-9]+\.pidp8i' | wc -l`
-echo $procs
-if [ $procs -ne 0 ]; then
-	sudo screen -r
-fi
