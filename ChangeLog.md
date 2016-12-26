@@ -1,5 +1,58 @@
 # PiDP-8/I Changes
 
+## Version 2016.12.26 (The Boxing Day release)
+
+*   Updated SIMH to the latest upstream version. This represents about
+    15 months worth of work in the [upstream project][simh], so I will
+    only summarize the improvements affecting the PDP-8 simulator here:
+
+    *   Many improvements to the internal handling of timers.
+    
+        The most user-visible improvement is that you can now clock your
+        emulated PDP-8 down to well below the performance of a real
+        PDP-8 via `SET THROTTLE`, which can be useful for making
+        blinkenlights demos run at human speeds without adding huge
+        delay loops to the PDP-8 code implementing that demo.
+
+    *   Increased the number of supported terminals from four to either
+        twelve or sixteen, depending on how you look at it.  Eight of
+        the additional supported terminal devices are conflict-free,
+        while the final four variously conflict with one or more of the
+        other features of the simulated PDP-8.  If you want to use all
+        16, you will be unable to use the FPP, CT, MT and TSC features
+        of the system.
+
+        This limitation reflects the way the PDP-8 worked.  It is not an
+        arbitrary limitation of SIMH.
+
+    *   Added support for the LS8E printer interface option used by the
+        WPS8 word processing system.
+
+    *   The simulator's command console now shows the FPP register
+        descriptions when using it as a PDP-8 debugger.
+
+    *   Added the `SHOW TTIX/TTOX DEVNO` SIMH command to display the
+        device numbers used for TTIX and TTOX.
+
+    *   The `SHOW TTIX SUMMARY` SIMH command is now case-insensitive.
+
+    *   Upstream improvements to host OS/compiler compatibility.  This
+        increases the chances that this software will build out of the
+        box on random non-Raspbian systems such as your development
+        laptop running some uncommon operating system.
+
+*   When you `make install`, we now disable Deeper Thought 2 and the
+    legacy `pidp8` service if we find them, since they conflict with our
+    `pidp8i` service.
+
+*   Added the install user to the `gpio` group if you `make install` if
+    that group is present at install time.  This is useful when building
+    and installing the software on an existing Raspbian SD card while
+    logged in as a user other than `pi` or `pidp8i`.
+
+[simh]: https://github.com/simh/simh/
+
+
 ## Version 2016.12.18
 
 *   The entire software stack now runs without explicit root privileges.
@@ -41,10 +94,11 @@
 *   Added `examples/ac-mq-blinker.pal`, the PAL8 assembly code for the
     `boot/5.script` demo.
 
-*   Fixed two unrelated Fortran compiler problems, which as far as I'm
-    aware managed to take out both Fortran compilers shipped with OS/8.
-    Thanks go to Rick Murphy for providing the working OS/8 images from
-    which the files needed to fix these two problems were extracted.
+*   Fixed two unrelated problems with OS/8's FORTRAN IV implementation
+    which prevented it from a) building new software; and b) running
+    already-built binaries.  Thanks go to Rick Murphy for providing the
+    working OS/8 images from which the files needed to fix these two
+    problems were extracted.
 
 *   Added the VT100-patched `VTEDIT` TECO macro from Rick Murphy's OS/8
     images, and made it automatically run when you run TECO from the
