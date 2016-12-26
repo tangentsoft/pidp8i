@@ -2,9 +2,12 @@
 
 ## Version 2016.12.26 (The Boxing Day release)
 
-*   Updated SIMH to the latest upstream version. This represents about
-    15 months worth of work in the [upstream project][simh], so I will
-    only summarize the improvements affecting the PDP-8 simulator here:
+*   Tony Hill updated SIMH to the latest upstream version.
+
+    This change represents about 15 months worth of work in the
+    [upstream project][simh] — plus a fair bit of work by Tony to merge
+    it all — so I will only summarize the improvements affecting the
+    PDP-8 simulator here:
 
     *   Many improvements to the internal handling of timers.
     

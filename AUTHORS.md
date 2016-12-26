@@ -46,5 +46,9 @@
     provided several useful files in his OS/8 disk images that have
     managed to land in this software distribution's OS/8 disk image.
 
+*   **Tony Hill <hill.anthony@gmail.com>** Merged all the upstream SIMH
+    changes between late September 2015 and late December 2016 into the
+    PiDP-8/I simulator.
+
 *   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
     `ChangeLog.md` that is not attributed to anyone else.
