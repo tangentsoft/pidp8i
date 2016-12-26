@@ -41,10 +41,11 @@
 *   Added `examples/ac-mq-blinker.pal`, the PAL8 assembly code for the
     `boot/5.script` demo.
 
-*   Fixed two unrelated Fortran compiler problems, which as far as I'm
-    aware managed to take out both Fortran compilers shipped with OS/8.
-    Thanks go to Rick Murphy for providing the working OS/8 images from
-    which the files needed to fix these two problems were extracted.
+*   Fixed two unrelated problems with OS/8's FORTRAN IV implementation
+    which prevented it from a) building new software; and b) running
+    already-built binaries.  Thanks go to Rick Murphy for providing the
+    working OS/8 images from which the files needed to fix these two
+    problems were extracted.
 
 *   Added the VT100-patched `VTEDIT` TECO macro from Rick Murphy's OS/8
     images, and made it automatically run when you run TECO from the

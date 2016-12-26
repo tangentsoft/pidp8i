@@ -100,13 +100,19 @@ install: all
 	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
 	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
 
-	@# Install the init script if this system is SysVinit based.
-	@# Raspbian's systemd setup is close enough.
+	@# Disable competing services if this is a Raspberry Pi
+	@(test -x /bin/systemctl && /bin/systemctl disable deeper || true)
+	@(test -x /bin/systemctl && /bin/systemctl disable pidp8  || true)
+
+	@# Install the init script if this system is systemd based.
 	@INSTALL@ -m 750 @srcdir@/etc/pidp8i-init @prefix@/etc
-	@(  test -w /etc/init.d && \
+	@(  test -w /etc/init.d -a -x /bin/systemctl && \
 		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
-		update-rc.d pidp8i defaults \
+		/bin/systemctl enable pidp8i \
 	) || true
+
+	@# Give the install user permission to use GPIO if done on a Pi
+	@grep -q '^gpio:' /etc/group && usermod -a -G gpio @INSTUSR@ || true
 
 	@# Give the install user permission to shut down and reboot the Pi
 	@# if this is a systemd/sudo based system.
