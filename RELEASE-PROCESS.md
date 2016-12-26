@@ -21,7 +21,8 @@ that checkin with a release version tag of the form vYYYYMMDD.  This
 process also attempts to automatically merge those changes into the
 `release` branch.
 
-
+Now switch to the `no-lamp-simulator` branch and manually merge the
+`release` branch changes in.
 
 
 ## Update the Home Page Links
