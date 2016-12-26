@@ -210,8 +210,9 @@ static void report_ss(int row, int col, int ss,
 	if (ss) switchstatus[row] |=  mask;
 	else    switchstatus[row] &= ~mask;
 
-	//printf("%cSS[%d][%02d] = %d  ", gss_initted ? 'N' : 'I',
-	//		row, col, ss);
+	#ifdef DEBUG
+		printf("%cSS[%d][%02d] = %d  ", gss_initted ? 'N' : 'I',row, col, ss);
+	#endif
 }
 
 
@@ -260,7 +261,7 @@ void *blink(void *terminate)
 	// Find gpio address (different for Pi 2) ----------
 	gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
 	if (gpio.addr_p== 0x20200000) printf("RPi Plus detected - ");
-	else printf("RPi 2 detected - ");
+	else printf("RPi 2/3 detected - ");
 #ifdef SERIALSETUP
 	printf(" Serial mod version\n");
 #else
