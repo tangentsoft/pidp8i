@@ -231,7 +231,9 @@ extern void *blink(void *ptr);	// the real-time multiplexing process to start up
 #include "sim_tape.h"
 #include "sim_ether.h"
 #include "sim_serial.h"
+#if defined (USE_SIM_VIDEO)
 #include "sim_video.h"
+#endif
 #include "sim_sock.h"
 #include "sim_frontpanel.h"
 #include <signal.h>
