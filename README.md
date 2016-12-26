@@ -150,9 +150,8 @@ were renamed to include `pidp8i` in their name:
 
         $ sudo systemctl stop pidp8i
 
-The other major difference between the upstream distribution and this
-one is that there is no separate install script. The `make install`
-command you ran above did everything for you.
+There are [other major differences][mdif] between the upstream
+distribution and this one. See that linked wiki article for details.
 
 
 
@@ -161,5 +160,6 @@ command you ran above did everything for you.
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
 [sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
-[rmt]:  /doc/trunk/README-test.md
-[rmsc]: /doc/trunk/README-single-core.md
+[rmt]:  https://tangentsoft.com/pidp8i/doc/trunk/README-test.md
+[rmsc]: https://tangentsoft.com/pidp8i/doc/trunk/README-single-core.md
+[mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
