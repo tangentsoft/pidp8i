@@ -174,11 +174,17 @@ mediainstall:
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
 
+os8test:
+	@builddir@/$(SIM) @srcdir@/boot/0.script
+
 reconfig:
 	@AUTOREMAKE@
 
 release: all
 	@srcdir@/tools/mkrel
+
+simh-update simh-update-f:
+	@@builddir@/tools/simh-update $(subst simh-update,,$@)
 
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
@@ -234,7 +240,8 @@ Makefile: @AUTODEPS@ \
 		@srcdir@/boot/*.in \
 		@srcdir@/etc/*.in \
 		@srcdir@/src/PDP8/*.in \
-		@srcdir@/src/*.in
+		@srcdir@/src/*.in \
+		@srcdir@/tools/*.in
 	@AUTOREMAKE@
 endif
 
