@@ -13,8 +13,16 @@ file. If a regular user of the software cannot see a given change, it
 shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
-Run `make release` to tag the release and check the `ChangeLog.md` file
-changes in.
+
+## Update the Release Branches
+
+Run `make release` to check the `ChangeLog.md` file changes in, tagging
+that checkin with a release version tag of the form vYYYYMMDD.  This
+process also attempts to automatically merge those changes into the
+`release` branch.
+
+Now switch to the `no-lamp-simulator` branch and manually merge the
+`release` branch changes in.
 
 
 ## Update the Home Page Links

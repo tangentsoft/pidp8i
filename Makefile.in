@@ -1,6 +1,21 @@
+########################################################################
+# Makefile.in - Processed by autosetup's configure script to generate
+#    the GNU make(1) file for building the PiDP-8/I software.
+#
+# If you are seeing this at the top of a file called Makefile and you
+# intend to make edits, do that in Makefile.in.  Saying "make" will then
+# re-build Makefile from that modified Makefile.in before proceeding to
+# do the "make" operation.
+########################################################################
+
+# Git commit ID of the latest version of the SIMH 4 project on GitHub 
+# that has been merged into this source base.
+SGCID=0db0236bedee9841bbf146598e9ff08ad468b54b
+
 CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
-	-DHAVE_REGEX_H -DHAVE_GLOB -U__STRICT_ANSI__ \
+	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
+	-U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
 SIM = bin/pidp8i-sim
@@ -159,11 +174,17 @@ mediainstall:
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
 
+os8test:
+	@builddir@/$(SIM) @srcdir@/boot/0.script
+
 reconfig:
 	@AUTOREMAKE@
 
 release: all
 	@srcdir@/tools/mkrel
+
+simh-update simh-update-f:
+	@@builddir@/tools/simh-update $(subst simh-update,,$@)
 
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
@@ -219,7 +240,8 @@ Makefile: @AUTODEPS@ \
 		@srcdir@/boot/*.in \
 		@srcdir@/etc/*.in \
 		@srcdir@/src/PDP8/*.in \
-		@srcdir@/src/*.in
+		@srcdir@/src/*.in \
+		@srcdir@/tools/*.in
 	@AUTOREMAKE@
 endif
 
