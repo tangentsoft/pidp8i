@@ -7,9 +7,9 @@
     and it will do its best to merge in the latest upstream changes.
 
     This process is more for the PiDP-8/I software maintainers than for
-    end users of that software, but if you wish to update your SIMH
+    the end users of that software, but if you wish to update your SIMH
     software without waiting for a new release of *this* software, you
-    now a nice automated system for doing that.
+    now have a nice automated system for doing that.
 
 *   Updated SIMH using that new process.  The changes relevant to the
     PiDP-8/I since the prior update in release v20161226 are:
