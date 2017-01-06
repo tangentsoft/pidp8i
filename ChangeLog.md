@@ -1,10 +1,40 @@
 # PiDP-8/I Changes
 
+## Version 2017.01.05
+
+*   Automated the process for merging in new SIMH updates.  From within
+    the PiDP-8/I software build directory, simply say "make simh-update"
+    and it will do its best to merge in the latest upstream changes.
+
+    This process is more for the PiDP-8/I software maintainers than for
+    end users of that software, but if you wish to update your SIMH
+    software without waiting for a new release of *this* software, you
+    now a nice automated system for doing that.
+
+*   Updated SIMH using that new process.  The changes releveant to the
+    PiDP-8/I since the prior update in release v2016.12.26 are:
+
+    *   Many more improvements to the simulator's internal timer system.
+        This should make deliberate underclocking more accurate.
+
+    *   It is now possible to get hex debug logs for the simulator console
+        port by cranking up the simulator's debug level.
+
+*   The simulator now reports the upstream Git commit ID it is based on
+    in its version string, so that if you report bugs upstream to the
+    SIMH project, you can give them a version number that will be
+    meaningful to them.  (They don't care about our YYYY.MM.DD release
+    numbers or our Fossil checkin IDs.)
+
+
 ## Version 2016.12.26 (The Boxing Day release)
 
-*   Updated SIMH to the latest upstream version. This represents about
-    15 months worth of work in the [upstream project][simh], so I will
-    only summarize the improvements affecting the PDP-8 simulator here:
+*   Tony Hill updated SIMH to the latest upstream version.
+
+    This change represents about 15 months worth of work in the
+    [upstream project][simh] — plus a fair bit of work by Tony to merge
+    it all — so I will only summarize the improvements affecting the
+    PDP-8 simulator here:
 
     *   Many improvements to the internal handling of timers.
     

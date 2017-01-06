@@ -110,3 +110,5 @@ make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
 make-template src/PDP8/pdp8_cpu.c.in
 make-template src/scp.c.in
+make-template tools/simh-update.in
+file attributes "[get-define builddir]/tools/simh-update" -permissions "u+x"

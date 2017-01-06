@@ -267,10 +267,13 @@ typedef uint32          t_addr;
 
 #if defined(_MSC_VER)
 #define SIM_INLINE _inline
+#define SIM_NOINLINE _declspec (noinline)
 #elif defined(__GNUC__)
 #define SIM_INLINE inline
+#define SIM_NOINLINE  __attribute__ ((noinline))
 #else
 #define SIM_INLINE 
+#define SIM_NOINLINE
 #endif
 
 /* Storage class modifier for weak link definition for sim_vm_init() */
@@ -541,7 +544,8 @@ struct UNIT {
     void                *up7;                           /* device specific */
     void                *up8;                           /* device specific */
     void                *tmxr;                          /* TMXR linkage */
-    void                (*cancel)(UNIT *);
+    t_bool              (*cancel)(UNIT *);
+    double              usecs_remaining;                /* time balance for long delays */
 #ifdef SIM_ASYNCH_IO
     void                (*a_check_completion)(UNIT *);
     t_bool              (*a_is_active)(UNIT *);
@@ -556,7 +560,7 @@ struct UNIT {
     /* Asynchronous Timer control */
     double              a_due_time;                     /* due time for timer event */
     double              a_due_gtime;                    /* due time (in instructions) for timer event */
-    int32               a_usec_delay;                   /* time delay for timer event */
+    double              a_usec_delay;                   /* time delay for timer event */
 #endif
     };
 
@@ -984,22 +988,16 @@ extern int32 sim_asynch_inst_latency;
     pthread_mutex_unlock(&sim_asynch_lock)
 #define AIO_IS_ACTIVE(uptr) (((uptr)->a_is_active ? (uptr)->a_is_active (uptr) : FALSE) || ((uptr)->a_next))
 #if defined(SIM_ASYNCH_MUX)
-#define AIO_CANCEL(uptr)                                          \
-    if ((uptr)->cancel)                                           \
-        (uptr)->cancel (uptr);                                    \
-    else {                                                        \
-        if (((uptr)->dynflags & UNIT_TM_POLL) &&                  \
-            !((uptr)->next) && !((uptr)->a_next)) {               \
-            (uptr)->a_polling_now = FALSE;                        \
-            sim_tmxr_poll_count -= (uptr)->a_poll_waiter_count;   \
-            (uptr)->a_poll_waiter_count = 0;                      \
-            }                                                     \
+#define AIO_CANCEL(uptr)                                      \
+    if (((uptr)->dynflags & UNIT_TM_POLL) &&                  \
+        !((uptr)->next) && !((uptr)->a_next)) {               \
+        (uptr)->a_polling_now = FALSE;                        \
+        sim_tmxr_poll_count -= (uptr)->a_poll_waiter_count;   \
+        (uptr)->a_poll_waiter_count = 0;                      \
         }
 #endif /* defined(SIM_ASYNCH_MUX) */
 #if !defined(AIO_CANCEL)
-#define AIO_CANCEL(uptr)                                          \
-    if ((uptr)->cancel)                                           \
-        (uptr)->cancel (uptr)
+#define AIO_CANCEL(uptr)
 #endif /* !defined(AIO_CANCEL) */
 #define AIO_EVENT_BEGIN(uptr)                                     \
     do {                                                          \
@@ -1179,9 +1177,7 @@ extern int32 sim_asynch_inst_latency;
 #define AIO_EVENT_BEGIN(uptr)
 #define AIO_EVENT_COMPLETE(uptr, reason)
 #define AIO_IS_ACTIVE(uptr) FALSE
-#define AIO_CANCEL(uptr)                                        \
-    if ((uptr)->cancel)                                         \
-        (uptr)->cancel (uptr)
+#define AIO_CANCEL(uptr)
 #define AIO_SET_INTERRUPT_LATENCY(instpersec)
 #define AIO_TLS
 #endif /* SIM_ASYNCH_IO */

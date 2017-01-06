@@ -117,7 +117,7 @@ int32 sim_rtc_calb (int32 ticksper);
 t_stat sim_set_timers (int32 arg, CONST char *cptr);
 t_stat sim_show_timers (FILE* st, DEVICE *dptr, UNIT* uptr, int32 val, CONST char* desc);
 t_stat sim_show_clock_queues (FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, CONST char *cptr);
-t_bool sim_idle (uint32 tmr, t_bool sin_cyc);
+t_bool sim_idle (uint32 tmr, int sin_cyc);
 t_stat sim_set_throt (int32 arg, CONST char *cptr);
 t_stat sim_show_throt (FILE *st, DEVICE *dnotused, UNIT *unotused, int32 flag, CONST char *cptr);
 t_stat sim_set_idle (UNIT *uptr, int32 val, CONST char *cptr, void *desc);
@@ -133,9 +133,11 @@ void sim_start_timer_services (void);
 void sim_stop_timer_services (void);
 t_stat sim_timer_change_asynch (void);
 t_stat sim_timer_activate (UNIT *uptr, int32 interval);
-t_stat sim_timer_activate_after (UNIT *uptr, uint32 usec_delay);
+t_stat sim_timer_activate_after (UNIT *uptr, double usec_delay);
 int32 sim_timer_activate_time (UNIT *uptr);
+double sim_timer_activate_time_usecs (UNIT *uptr);
 t_bool sim_timer_is_active (UNIT *uptr);
+t_bool sim_timer_cancel (UNIT *uptr);
 t_stat sim_register_clock_unit (UNIT *uptr);
 t_stat sim_register_clock_unit_tmr (UNIT *uptr, int32 tmr);
 t_stat sim_clock_coschedule (UNIT *uptr, int32 interval);
@@ -149,6 +151,9 @@ t_bool sim_timer_idle_capable (uint32 *host_ms_sleep_1, uint32 *host_tick_ms);
 #define PRIORITY_NORMAL         0
 #define PRIORITY_ABOVE_NORMAL   1
 t_stat sim_os_set_thread_priority (int below_normal_above);
+uint32 sim_get_rom_delay_factor (void);
+void sim_set_rom_delay_factor (uint32 delay);
+int32 sim_rom_read_with_delay (int32 val);
 
 extern t_bool sim_idle_enab;                        /* idle enabled flag */
 extern volatile t_bool sim_idle_wait;               /* idle waiting flag */
