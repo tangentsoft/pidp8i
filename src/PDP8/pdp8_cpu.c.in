@@ -584,7 +584,7 @@ if (swStop==1)
     setleds(PC, MA, M[MA] , IR, LAC, MQ, IF, DF, SC, 0);    // note M[MA] used in this call, not MB
     sim_interval = sim_interval - 1;                        // otherwise, CTRL-E will never be acted upon in stop mode
                                                             // WARNING: THIS MAY LEAD TO TROUBLE. MAYBE?
-    goto skip;                  // a goto is period correct methinks
+    continue;                                               // next instruction
 }
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -619,7 +619,7 @@ if (swStop==1)
 
 if  (pidp8i_gpio_present && (switchstatus[2] & SS2_STOP)==0)        // STOP switch activated
 {   swStop = 1;
-    goto skip;
+    continue;                                               // next instruction
 }
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -640,7 +640,7 @@ if (pidp8i_gpio_present && (switchstatus[2] & SS2_S_INST)==0)       // SING_INST
     else                // else: this is the next time...
     {   swSingStep=0;       // reset flipflop
         swStop=1;       // and do what you do when STOP is pressed.
-        goto skip;
+        continue;
     }
 }
 
@@ -1677,10 +1677,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
 /* ------------------------------------------------------------------------- */
 
-
-/* ------------------------------------------------------------------------- */
-skip:   ;   // goto label
-/* ------------------------------------------------------------------------- */
 
     }                                                   /* end while */
 
