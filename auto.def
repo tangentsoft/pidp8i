@@ -39,8 +39,8 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	# README-throttle.md for the justification of these values.
 	if {$tv == "single-core" || $tvsl == 0} {
 		# value for ~50% CPU usage of a Pi Model B+; also conveniently
-		# 10x the speed of a real PDP-8/I
-		set tv "3.3M"
+		# 5x the speed of a real PDP-8/I
+		set tv "1600k"
 	} elseif {$tv == "pdp8e"} {
 		set tv "416k"
 	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
