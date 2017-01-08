@@ -13,6 +13,8 @@
 / amounts.
 /
 / From: http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html
+/
+/ SIMH: SET THROTTLE 333k
 
 	PAGE 0
 loop,	ISZ delay	/ create a delay
