@@ -275,7 +275,7 @@ InstHistory *hst = NULL;                                /* instruction history *
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 extern float brtval[96];
-void setleds(uint32 sPC, uint32 sMA, uint16 sMB, uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sTT);
+void setleds(uint32 sPC, uint32 sMA, uint16 sMB, uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sSC, int32 sTT);
 uint16 lctr=0;
 int swStop = 0, swExam = 0, swDep = 0, swCont2 = 0, swStart = 0, swSingStep = 0, swAttach = 0;
 char mountedFiles[8][CBUFSIZE];
@@ -384,7 +384,7 @@ reason = 0;
 int swDevice;
 char sScript[256];
 MA = MB = IR = 0;   // have to add this to avoid crash when stop switch is set at start - MA would be undefined in setleds
-setleds(PC, MA, MB, MB, LAC, MQ, IF, DF, 0); // note MB used // light up leds for 1st time, only needed when stop switch set at start
+setleds(PC, MA, MB, MB, LAC, MQ, IF, DF, SC, 0); // note MB used // light up leds for 1st time, only needed when stop switch set at start
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -581,7 +581,7 @@ if (swExam==1)
 // do what needs to be done in STOP mode:
 if (swStop==1)
 {
-    setleds(PC, MA, M[MA] , IR, LAC, MQ, IF, DF, 0);        // note M[MA] used in this call, not MB
+    setleds(PC, MA, M[MA] , IR, LAC, MQ, IF, DF, SC, 0);    // note M[MA] used in this call, not MB
     sim_interval = sim_interval - 1;                        // otherwise, CTRL-E will never be acted upon in stop mode
                                                             // WARNING: THIS MAY LEAD TO TROUBLE. MAYBE?
     goto skip;                  // a goto is period correct methinks
@@ -609,7 +609,7 @@ if (swStop==1)
     IR = M[MA];                                         /* fetch instruction */
 
 //PC increment was moved down before, bad idea? now is where it originally was.
-    setleds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, 0); // State=0:Fetch
+    setleds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC, 0); // State=0:Fetch
 
     int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
     sim_interval = sim_interval - 1;
@@ -1639,7 +1639,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 /* --------------------------------------------------------------------------------------------------------- */
 // Any other device will trigger IOP --> light pause:
 /* --------------------------------------------------------------------------------------------------------- */
-        setleds(PC, MA, MB, IR, LAC, MQ, IF, DF, 2); // State 2:Pause
+        setleds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, 2); // State 2:Pause
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
                 if (iot_data & IOT_SKP)
@@ -1673,7 +1673,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 /* ------------------------------------------------------------------------- */
 
     if (IR<05000)
-        setleds(PC, MA, MB, IR, LAC, MQ, IF, DF, 1); // State 1:Execute
+        setleds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, 1); // State 1:Execute
 
 /* ------------------------------------------------------------------------- */
 
@@ -1937,7 +1937,7 @@ return SCPE_OK;
 
 /* ------------------------------------------------------------------------------------ */
 uint32 tempLeds=0;
-void setleds(uint32 sPC, uint32 sMA, uint16 sMB, uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sTT)
+void setleds(uint32 sPC, uint32 sMA, uint16 sMB, uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sSC, int32 sTT)
 {
 int row,col,msk,m;
 float *p;
@@ -1990,6 +1990,7 @@ float *p;
     tempLeds |= ((int_req & INT_ION)==0?0:1)<<9;    // ION led
                             // Pause led - handled in main loop
     if (swStop==0)  tempLeds |= (1<<7);     // RUN led
+    tempLeds |= ((uint32)(sSC)&0x1f) << 2;  // Step Count 
     ledstatus[6]=tempLeds;
 
     // DF & IF in simh live in the 3 bits of octal digit #5...

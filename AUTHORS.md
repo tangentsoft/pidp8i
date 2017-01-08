@@ -37,9 +37,15 @@
     code in the simulator to better simulate the incandescent lamps in
     the original PDP-8/I hardware.
 
-*   **Paul R. Bernard <prb@downspout.ca>** wrote `src/test.c`, which
-    builds and installs as `pidp8i-test`. He also wrote the core of what
-    now appears in `README-test.md`.
+*   **Henk Gooijen <henk.gooijen@boschrexroth.nl>** Pushed the PDP-8
+    simulator's internal EAE step counter value down into the PiDP-8/I's
+    LED manipulation code, without which the step counter LEDs remain
+    dark even when using the EAE.
+
+*   **Paul R. Bernard <prb@downspout.ca>** wrote `src/test.c` and the
+    core of what now appears as `README-test.md`. (The program builds
+    and installs `pidp8i-test`.) He also provided a one-line fix that
+    completes the work of Henk Gooijen's step counter patch.
 
 *   **Rick Murphy <k1mu.nospam@gmail.com>** optimized the `pep001.pal` *
     example so that it fits into a single page of PDP-8 core, and
