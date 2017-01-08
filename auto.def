@@ -11,6 +11,7 @@ use cc-lib
 options {
 	debug-mode => "create a debug build (default is release)"
 	serial-mod => "build simulator to expect the PCB serial mods"
+	throttle:  => "override the SET THROTTLE values in the boot scripts"
 }
 
 if {[opt-bool serial-mod]} {
@@ -26,6 +27,48 @@ if {[opt-bool debug-mode]} {
 	define BUILDMODE {-O2}
 }
 
+# Translate --throttle value to a SIMH command
+set cores [exec tools/corecount]
+set tv [opt-val throttle]
+set tvsl [string length $tv]
+if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
+	define SET_THROTTLE {SET NOTHROTTLE}
+	set tv "unlimited"
+} else {
+	# Rewrite symbolic values with values SIMH can understand.  See
+	# README-throttle.md for the justification of these values.
+	if {$tv == "single-core" || $tvsl == 0} {
+		# value for ~50% CPU usage of a Pi Model B+; also conveniently
+		# 10x the speed of a real PDP-8/I
+		set tv "3.3M"
+	} elseif {$tv == "pdp8e"} {
+		set tv "416k"
+	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
+		set tv "333k"
+	} elseif {$tv == "pdp8l" || $tv == "pdp8"} {
+		set tv "313k"
+	} elseif {$tv == "ha6120"} {
+		set tv "182k"
+	} elseif {$tv == "im6100a"} {
+		set tv "200k"
+	} elseif {$tv == "im6100"} {
+		set tv "100k"
+	} elseif {$tv == "im6100c"} {
+		set tv "83k"
+	} elseif {$tv == "pdp8s"} {
+		set tv "63k"
+	} elseif {$tv == "human"} {
+		set tv "10"
+	} elseif {$tv == "trace"} {
+		set tv "1"
+	}
+	# else, assume --throttle was given a legal SIMH throttle value
+
+	define SET_THROTTLE "SET THROTTLE $tv"
+}
+msg-result "Simulator CPU throttle set to $tv IPS"
+
+# Compiler and header checks
 cc-check-includes time.h
 cc-check-functions clock_nanosleep nanosleep usleep
 

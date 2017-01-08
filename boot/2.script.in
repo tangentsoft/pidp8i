@@ -6,6 +6,7 @@ echo Loading TSS/8 from the RS08 fixed-head disk...
 load @MEDIADIR@/tss8/tss8_init.bin
 set rf enabled
 set df disabled
+@SET_THROTTLE@
 attach rf @MEDIADIR@/tss8/tss8_rf.dsk
 attach ttix 4000
 run 24200

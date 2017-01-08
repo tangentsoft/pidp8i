@@ -5,10 +5,6 @@
 *   A Raspberry Pi with the 40-pin GPIO connector. That rules out the
     first series of Raspberry Pi boards with the 26-pin connector.
 
-    In order to use the standard version of this software, you need one
-    of the multicore variants of the Pi. See
-    [`README-single-core.md`][rmsc] if you have a single-core Pi.
-
 *   An SD card containing Raspbian or something sufficiently close.
     PipaOS may also work, for example.  This software is currently
     tested with the Jessie Lite distribution.
@@ -30,7 +26,7 @@
 
 *   A working C compiler and other standard Linux build tools, such as
     `make(1)`.
-	
+    
     On Raspbian, you can install such tools with `sudo apt install
     build-essential`
 
@@ -61,6 +57,12 @@ directory on the Pi with this command:
 Although this is installing to a directory your user has write access
 to, you still need to install via `sudo` because the installation
 process does other things that do require `root` access.
+
+
+#### --throttle
+
+See `README-throttle.md` for the values this option takes.  If you don't
+give this option, the simulator runs as fast as possible, more or less.
 
 
 #### --help
@@ -165,5 +167,4 @@ distribution and this one. See that linked wiki article for details.
 [sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
 [rmt]:  https://tangentsoft.com/pidp8i/doc/trunk/README-test.md
-[rmsc]: https://tangentsoft.com/pidp8i/doc/trunk/README-single-core.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
