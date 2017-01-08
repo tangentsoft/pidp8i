@@ -1,6 +1,14 @@
+/ ac-mq-blinker.pal - Rapidly modifies AC and MQ
+/
+/ This program also modifies PC, of course, but since it spends so much
+/ of its time in the delay loop at the top, it appears to be stuck at
+/ PC=1 to a human watching it.
+/
+/ It also modifies MB rapidly, but the pattern we use means it looks
+/ like the lamps aren't changing, but are all on, dimmed by varying
+/ amounts.
+/
 / From: http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html
-/ This program is loaded by the simulator at startup when IF=5.  In
-/ other words, an assembled octal version of it is in boot/5.script.
 
 loop,  isz   delay  / create a delay
        jmp   loop
