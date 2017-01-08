@@ -1,0 +1,2 @@
+#!/bin/bash
+make -j$(($("$(dirname "$0")"/corecount) * 15 / 10))

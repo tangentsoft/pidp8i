@@ -1,0 +1,13 @@
+#!/bin/bash
+if [ -r /proc/cpuinfo ]
+then
+	# It's a Linux box
+	grep -Ec '^processor\s+:' /proc/cpuinfo
+elif [ "$(uname -s)" = "Darwin" ]
+then
+	# It's a macOS box
+	/usr/sbin/sysctl -n hw.ncpu
+else
+	# No known way to find out, so report only 1 core
+	echo 1
+fi

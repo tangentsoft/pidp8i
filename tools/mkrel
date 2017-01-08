@@ -3,5 +3,5 @@ tag=v$(date +%Y%m%d)
 fossil ci --tag $tag &&
 	cd ../release &&
 	fossil merge $tag &&
-	make -j11 &&
+	tools/mmake &&
 	fossil ci

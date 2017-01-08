@@ -120,7 +120,7 @@ patch -p0 < "$PATCHFILE"
 # No error, so save the new tip-of-master Git commit ID and rebuild
 say "Patch appears to have applied cleanly.  Attempting a rebuild..."
 sed -e "s/^SGCID=.*/SGCID=$NEW_SGCID/" -i tmp @srcdir@/Makefile.in
-make -j11
+tools/mmake
 
 # Restore stdout and let the human test it
 say "Build completed without error.  Starting OS/8 in the simulator..."
