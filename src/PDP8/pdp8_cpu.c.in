@@ -1276,7 +1276,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
    1x001        SCA + SCL       DAD
    1x010        SCA + MUY       DST
    1x011        SCA + DVI       SWBA            NOP if not detected earlier
-   1x100        SCA + NMI       DPSZ
+   1x100        SCA + NMI       DPSZ            
    1x101        SCA + SHL       DPIC            must be combined with MQA!MQL
    1x110        SCA + ASR       DCM             must be combined with MQA!MQL
    1x111        SCA + LSR       SAM
