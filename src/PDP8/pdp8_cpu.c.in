@@ -40,14 +40,15 @@
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-   ROBERT M SUPNIK BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-   IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
 
-   Except as contained in this notice, the names of the authors above
-   shall not be used in advertising or otherwise to promote the sale,
-   use or other dealings in this Software without prior written
-   authorization from those authors.
+   Except as contained in this notice, the names of the authors above shall
+   not be used in advertising or otherwise to promote the sale, use or other
+   dealings in this Software without prior written authorization from those
+   authors.
 
    ----------------------------------------------------------------------------
 
@@ -1201,11 +1202,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                     LAC = LAC | OSR;
                     }
                 if (IR & 02)                            /* HLT */
-//--- PiDP change--------------------------------------------------------------------------
-//                  reason = STOP_HALT;
-//-----------------------------------------------------------------------------------------
-                    swStop=1;   // don't step out of simulation, just do STOP
-//--- end of PiDP change--------------------------------------------------------------------------
+                    reason = STOP_HALT;
                 }
             break;
             }                                           /* end if group 2 */
