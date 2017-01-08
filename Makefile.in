@@ -120,10 +120,7 @@ install: all
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-for f in @prefix@/bin/pidp8i-* ; do setcap 'cap_sys_nice=eip' $$f ; done || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
-	@INSTALL@ -m 664 -g @INSTGRP@ \
-		@srcdir@/boot/*.script \
-		@builddir@/boot/*.script \
-		@BOOTDIR@
+	@INSTALL@ -m 664 -g @INSTGRP@ @builddir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
 	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
