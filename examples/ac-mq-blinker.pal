@@ -1,8 +1,12 @@
-/ ac-mq-blinker.pal - Rapidly modifies AC and MQ
+/ ac-mq-blinker.pal - Rapidly modify AC and MQ
 /
-/ This program also modifies PC, of course, but since it spends so much
-/ of its time in the delay loop at the top, it appears to be stuck at
-/ PC=1 to a human watching it.
+/ This program twiddles AC and MQ rapidly, with a small amount of delay
+/ between each update so the lights aren't just a solid blur.
+/
+/ While this program runs at full speed, only AC and MQ appear to a
+/ human to really change.  PC also changes, of course, but since the
+/ program spends so much of its time in the delay loop at the top, it
+/ appears to be stuck at PC=1.
 /
 / It also modifies MB rapidly, but the pattern we use means it looks
 / like the lamps aren't changing, but are all on, dimmed by varying
@@ -10,15 +14,19 @@
 /
 / From: http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html
 
-loop,  isz   delay  / create a delay
-       jmp   loop
-       cla          / clear AC so we can load it
-       tad   value  / get value
-       mql          / stash AC into MQ
-       tad   value  / fetch value again
-       cma          / complement AC
-       isz   value  / get to next value
-       nop          / ignore possible "skip" from ISZ
-       jmp   loop   / and do it all again
-delay, 0
-value, 0
+	PAGE 0
+loop,	ISZ delay	/ create a delay
+	JMP loop
+	CLA		/ clear AC so we can load it
+	TAD value	/ get value
+	MQL		/ stash AC into MQ
+	TAD value	/ fetch value again
+	CMA		/ complement AC
+	ISZ value	/ get to next value
+	NOP		/ ignore possible "skip" from ISZ
+	JMP loop	/ and do it all again
+
+	*20		/ skip over the autoincrement registers
+delay,	0
+value,	0
+$
