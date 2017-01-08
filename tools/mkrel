@@ -1,7 +1,11 @@
 #!/bin/bash
 tag=v$(date +%Y%m%d)
-fossil ci --tag $tag &&
+fossil ci --tag $tag -m "Tagged release $tag" &&
 	cd ../release &&
 	fossil merge $tag &&
 	tools/mmake &&
-	fossil ci
+	fossil ci -m "Merged trunk changes for $tag into release branch" &&
+	cd ../no-lamp-simulator &&
+	fossil merge release &&
+	tools/mmake &&
+	fossil ci -m "Merged release $tag changes in"

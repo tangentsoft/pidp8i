@@ -19,10 +19,10 @@ timeline only.
 Run `make release` to check the `ChangeLog.md` file changes in, tagging
 that checkin with a release version tag of the form vYYYYMMDD.  This
 process also attempts to automatically merge those changes into the
-`release` branch.
+`release` and `no-lamp-simulator` branches.
 
-Now switch to the `no-lamp-simulator` branch and manually merge the
-`release` branch changes in.
+It runs entirely automatically unless an error occurs, in which case it
+stops immediately, so check its output for errors before continuing.
 
 
 ## Update the Home Page Links
