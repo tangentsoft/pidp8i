@@ -86,11 +86,13 @@ clean:
 		@builddir@/tags \
 		@builddir@/bin/*.pt \
 		@builddir@/boot/*.script \
+		@builddir@/etc/sudoers \
 		@builddir@/obj/*.d \
 		@builddir@/obj/*.lst \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
 		@builddir@/obj/PDP8/*.o \
+		@builddir@/tools/simh-update \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
