@@ -1,4 +1,4 @@
-/ add.pal - Add two numbers and halt, with sum in location 0206
+/ add.pal - Add two numbers and halt, with sum in location 0207
 /
 / This is a more space-efficient alternative to the program given at:
 /
