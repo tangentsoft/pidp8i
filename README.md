@@ -29,7 +29,10 @@
     long as your user has full write access to that directory.
 
 *   A working C compiler and other standard Linux build tools, such as
-     make(1).
+    `make(1)`.
+	
+    On Raspbian, you can install such tools with `sudo apt install
+    build-essential`
 
 
 ## Configuring, Building and Installing
@@ -39,32 +42,33 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
 
-If you get a complaint like "No working C compiler found," there are two
-likely causes. One is that the error message is literally correct: you
-don't have a C compiler installed. You can install one along with all
-the other necessary build tools with:
 
-    $ sudo apt install build-essential
-
-The other possibility is that you have somehow managed to unpack the
-software into a directory that you don't have write access to, such as
-by unpacking it via `sudo`. The solution is to either take ownership of
-that directory or to unpack it again, this time somewhere your user is
-allowed to write to.
+### Configure Script Options
 
 The `configure` script accepts most of the common flags for such
-scripts.  Perhaps the most important such flag is `--prefix`, which
-lets you override the default installation directory, `/opt/pidp8i`.
-You could make it install the software under your home directory on
-the Pi with this command:
+scripts:
+
+
+#### --prefix
+
+Perhaps the most widely useful `configure` script option is `--prefix`,
+which lets you override the default installation directory,
+`/opt/pidp8i`.  You could make it install the software under your home
+directory on the Pi with this command:
 
     $ ./configure --prefix=$HOME/pidp8i && sudo make install
 
-You still need the `sudo` in this case, even though the installation
-prefix is a directory your user has write access to, because the
-installation process does other things that do require `root` access.
+Although this is installing to a directory your user has write access
+to, you still need to install via `sudo` because the installation
+process does other things that do require `root` access.
+
+
+#### --help
 
 Run `./configure --help` for more information on your options here.
+
+
+### Installing
 
 The installer normally will not overwrite the operating system and
 program media (e.g. the OS/8 RK05 disk cartridge image) when installing
