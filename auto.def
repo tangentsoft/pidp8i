@@ -11,7 +11,7 @@ use cc-lib
 options {
 	debug-mode => "create a debug build (default is release)"
 	serial-mod => "build simulator to expect the PCB serial mods"
-	throttle:  => "override the SET THROTTLE values in the boot scripts"
+	throttle:  => "override the throttle values in the boot scripts"
 }
 
 if {[opt-bool serial-mod]} {
@@ -32,7 +32,7 @@ set cores [exec tools/corecount]
 set tv [opt-val throttle]
 set tvsl [string length $tv]
 if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
-	define SET_THROTTLE {SET NOTHROTTLE}
+	define SET_THROTTLE {set nothrottle}
 	set tv "unlimited"
 } else {
 	# Rewrite symbolic values with values SIMH can understand.  See
@@ -64,7 +64,7 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	}
 	# else, assume --throttle was given a legal SIMH throttle value
 
-	define SET_THROTTLE "SET THROTTLE $tv"
+	define SET_THROTTLE "set throttle $tv"
 }
 msg-result "Simulator CPU throttle set to $tv IPS"
 
