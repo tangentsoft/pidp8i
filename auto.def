@@ -58,9 +58,9 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	} elseif {$tv == "pdp8s"} {
 		set tv "63k"
 	} elseif {$tv == "human"} {
-		set tv "10"
+		set tv "10/1000"
 	} elseif {$tv == "trace"} {
-		set tv "1"
+		set tv "1/1000"
 	}
 	# else, assume --throttle was given a legal SIMH throttle value
 
