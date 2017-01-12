@@ -31,10 +31,10 @@ The OS/8 media images included with this software distribution are
 released under the Digital License Agreement presented in
 [`media/os8/LICENSE.md`][dla].
 
-Most of the rest of the binary PDP-8 software included with this
-distribution — most especially that included in the [`media`
-directory][md] — is believed to fall under the same so-called ["hobbyist"
-license][dhl] that OpenVMS was released under.
+The other files in the [`media` directory][md] that originate from
+Digital Equipment Corporation are believed to fall under the "[hobbyist
+license][dhl]" that OpenVMS was released under.  Documentation proving
+this is still wanted, however.
 
 [md]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=media
 [dla]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/LICENSE.md
