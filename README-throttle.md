@@ -135,6 +135,7 @@ hardware.
 
 ## License
 
-This document is licensed under the terms of [the SIMH license][sl].
+Copyright © 2017 by Warren Young. This document is licensed under
+the terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

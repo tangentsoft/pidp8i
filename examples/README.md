@@ -279,7 +279,8 @@ information.
 
 ## License
 
-This document is licensed under the terms of [the SIMH license][sl].
+Copyright © 2016-2017 by Warren Young. This document is licensed under
+the terms of [the SIMH license][sl].
 
 
 [lst]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.lst

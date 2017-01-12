@@ -162,7 +162,8 @@ distribution and this one. See that linked wiki article for details.
 
 ## License
 
-This document is licensed under the terms of [the SIMH license][sl].
+Copyright © 2016-2017 by Warren Young. This document is licensed under
+the terms of [the SIMH license][sl].
 
 
 [smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
