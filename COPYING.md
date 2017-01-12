@@ -46,4 +46,4 @@ license][dhl] that OpenVMS was released under.
 The `palbart` program and its manual page are released under the terms
 of the license given in [`palbart/LICENSE.md`][pb].
 
-[sl]: https://tangentsoft.com/pidp8i/doc/trunk/palbart/LICENSE.md
+[pl]: https://tangentsoft.com/pidp8i/doc/trunk/palbart/LICENSE.md
