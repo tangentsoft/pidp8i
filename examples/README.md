@@ -277,8 +277,14 @@ long-lived USB sticks. See [`labels/README.md`][lread] for more
 information.
 
 
+## License
+
+This document is licensed under the terms of [the SIMH license][sl].
+
+
 [lst]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.lst
 [pal]:   https://tangentsoft.com/pidp8i/doc/trunk/examples/add.pal
 [label]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=labels
 [lread]: https://tangentsoft.com/pidp8i/doc/trunk/labels/README.md
 [howto]: http://obsolescence.wixsite.com/obsolescence/how-to-use-the-pidp-8
+[sl]:    https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
