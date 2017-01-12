@@ -44,6 +44,6 @@ this is still wanted, however.
 ## palbart License
 
 The `palbart` program and its manual page are released under the terms
-of the license given in [`palbart/LICENSE.md`][pb].
+of the license given in [`palbart/LICENSE.md`][pl].
 
 [pl]: https://tangentsoft.com/pidp8i/doc/trunk/palbart/LICENSE.md
