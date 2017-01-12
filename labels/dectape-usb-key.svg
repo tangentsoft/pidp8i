@@ -16,10 +16,12 @@
    width="765"
    height="990"
    viewBox="0 0 765 990"
-   sodipodi:docname="dectape-usb-key.svg"><metadata
+   sodipodi:docname="dectape-usb-key.svg"><title
+     id="title4244">PiDP-8/I USB key labels</title><metadata
      id="metadata8"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title>PiDP-8/I USB key labels</dc:title><dc:date>December 2016</dc:date><dc:creator><cc:Agent><dc:title>Warren Young</dc:title></cc:Agent></dc:creator><dc:rights><cc:Agent><dc:title>see license</dc:title></cc:Agent></dc:rights><dc:language>English</dc:language><dc:subject><rdf:Bag><rdf:li>label</rdf:li><rdf:li>USB</rdf:li><rdf:li>DEC</rdf:li><rdf:li>PDP-8</rdf:li><rdf:li>dot matrix</rdf:li><rdf:li>DECtape</rdf:li></rdf:Bag></dc:subject><dc:description>Graphical labels for use on USB sticks containing binary media images suitable for use with the PiDP-8/I's USB stick auto-attaching feature.</dc:description><cc:license
+           rdf:resource="https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md" /></cc:Work></rdf:RDF></metadata><defs
      id="defs6"><clipPath
        clipPathUnits="userSpaceOnUse"
        id="clipPath18"><path
@@ -50,7 +52,7 @@
      id="namedview4"
      showgrid="false"
      inkscape:zoom="3.17"
-     inkscape:cx="192.46439"
+     inkscape:cx="117.85871"
      inkscape:cy="792.26542"
      inkscape:window-x="0"
      inkscape:window-y="1"

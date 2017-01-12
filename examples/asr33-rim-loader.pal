@@ -18,7 +18,9 @@
 / conditionally load tapes from an emulated ASR-33.
 /
 / Raw disassembly done from the octal values by Bernhard Baehr's PDP-8/E
-/ Simulator. Comments and labels by Warren Young.
+/ Simulator.  Comments and labels by Warren Young.  Original copyright
+/ by Digital Equipment Corporation: this program appeared in DEC manuals
+/ and was printed on the front panel of every PDP-8/I.
 /
 / SIMH: echo Installing the RIM loader for the ASR 33 paper tape reader...
 

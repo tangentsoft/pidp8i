@@ -14,7 +14,10 @@
 / including more information about it.
 /
 / Raw disassembly done from the octal values by Bernhard Baehr's PDP-8/E
-/ Simulator. Comments and labels by Warren Young.
+/ Simulator.  Comments and labels by Warren Young.  Original copyright
+/ by Digital Equipment Corporation: this program appeared in many DEC
+/ manuals printed throughout the PDP-8 era variants of which were made
+/ (and thus documented) from 1965 to 1979.
 /
 / SIMH: echo Installing the RIM loader for the DEC high-speed tape reader...
 

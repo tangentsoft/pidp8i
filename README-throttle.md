@@ -131,3 +131,10 @@ bps. Then things got really fancy with the VT52, which screamed along at
 I'm not aware of a way to make SIMH slow the other I/O operations, such
 as disk access speeds, in order to emulate the speed of the actual
 hardware.
+
+
+## License
+
+This document is licensed under the terms of [the SIMH license][sl].
+
+[sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

@@ -1,5 +1,8 @@
 /*
  * gpio.c: the real-time process that handles multiplexing
+ *
+ * This file differs from gpio-nls.c in that it includes the incandescent
+ * lamp simulator feature by Ian Schofield.
  * 
  * Copyright (c) 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
  *

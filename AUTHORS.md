@@ -31,7 +31,9 @@
 
 *   **Mark G. Thomas** Creator of the installation scripts for the
     2015.12.15 release, which were folded into the `make install`
-    handler within `Makefile.in`.
+    handler within `Makefile.in`. Also wrote the version of the SysV
+    init script that came with that release as `rc.pidp8`, shipped here
+    as `pidp8i-init`.
 
 *   **Ian Schofield <isysxp@gmail.com>** Modified the LED lamp driving
     code in the simulator to better simulate the incandescent lamps in

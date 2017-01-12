@@ -160,6 +160,10 @@ There are [other major differences][mdif] between the upstream
 distribution and this one. See that linked wiki article for details.
 
 
+## License
+
+This document is licensed under the terms of [the SIMH license][sl].
+
 
 [smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
 [usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
@@ -168,3 +172,4 @@ distribution and this one. See that linked wiki article for details.
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
 [rmt]:  https://tangentsoft.com/pidp8i/doc/trunk/README-test.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
+[sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
