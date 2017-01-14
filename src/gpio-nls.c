@@ -296,7 +296,7 @@ void *blink(void *terminate)
 
 	// set thread to real time priority -----------------
 	struct sched_param sp;
-	sp.sched_priority = 98; // maybe 99, 32, 31?
+	sp.sched_priority = 4;	// not high, just above the minimum of 1
 	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
 	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
 	// --------------------------------------------------
