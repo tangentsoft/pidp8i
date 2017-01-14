@@ -97,6 +97,7 @@ msg-result "Simulator CPU throttle set to $tv IPS"
 # Compiler and header checks
 cc-check-includes time.h
 cc-check-functions clock_nanosleep nanosleep usleep
+cc-check-functions sched_yield
 
 # We need to find an install(1) type program that supports -D.  The
 # Raspberry Pi OSes typically used with the PiDB-8/I board do have this,

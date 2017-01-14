@@ -424,6 +424,10 @@ void *blink(void *terminate)
 		fflush(stdout);
 		gss_initted = 1;
 	    bctr--;
+
+#if defined(HAVE_SCHED_YIELD)
+		sched_yield();
+#endif
 	}
 
 	//printf("\nFP off\n");
