@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 ########################################################################
 # mkrel - Automatically tage and merge the trunk for a new public
 #	release of the software.
@@ -31,13 +31,16 @@
 ########################################################################
 
 tag=v$(date +%Y%m%d)
-fossil ci --tag $tag -m "Tagged release $tag" &&
+fossil update &&
+	fossil ci --tag $tag -m "Tagged release $tag" &&
 	cd ../release &&
+	fossil update &&
 	fossil merge $tag &&
 	! fossil status | grep -q '^CONFLICT' &&
 	tools/mmake &&
 	fossil ci -m "Merged trunk changes for $tag into release branch" &&
 	cd ../no-lamp-simulator &&
+	fossil update &&
 	fossil merge release &&
 	! fossil status | grep -q '^CONFLICT' &&
 	tools/mmake &&
