@@ -88,5 +88,12 @@ The test proceeds as follows:
     starting at "START" and ending at "SING INST".  Again Left to right.
 
 
+## License
+
+This document is licensed under the same terms as the associated
+[`src/test.c` program][program].
+
+
 [project]: http://obsolescence.wix.com/obsolescence#!pidp-8
 [dt2]:     https://github.com/VentureKing/Deeper-Thought-2
+[program]: https://tangentsoft.com/pidp8i/doc/trunk/src/test.c

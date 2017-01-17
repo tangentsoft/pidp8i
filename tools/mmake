@@ -1,9 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 ########################################################################
-# pidp8i.in - Attach the current terminal to the screen(1) session
-#	started by the SysV init script in etc/pidp8i-ini.
+# mmake - Runs make -jN where N is 1.5x the number of CPU cores
 #
-# Copyright © 2015-2017 Oscar Vermeulen and Warren Young
+# Copyright © 2017 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -30,16 +29,4 @@
 # authorization from those authors.
 ########################################################################
 
-if [ "$USER" != "@INSTUSR@" ] ; then exec su -c "$0" @INSTUSR@ ; fi
-
-procs=`screen -ls pidp8i | egrep '[0-9]+\.pidp8i' | wc -l`
-if [ $procs -ne 0 ]; then
-	echo Joining simulator session already in progress...
-	screen -r
-else
-	cat <<ERROR
-Either the simulator isn't running, or it isn't running under a screen(1)
-session owned by @INSTUSR@.  Did you start it via the init script?
-
-ERROR
-fi
+make -j$(($("$(dirname "$0")"/corecount) * 15 / 10))

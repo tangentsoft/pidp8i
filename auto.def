@@ -1,6 +1,32 @@
 ########################################################################
 # auto.def - Configure file for the PiDP-8/I software build system,
 #            based on autosetup.
+#
+# Copyright © 2016-2017 Warren Young
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
 ########################################################################
 
 define defaultprefix /opt/pidp8i
@@ -11,6 +37,7 @@ use cc-lib
 options {
 	debug-mode => "create a debug build (default is release)"
 	serial-mod => "build simulator to expect the PCB serial mods"
+	throttle:  => "override the throttle values in the boot scripts"
 }
 
 if {[opt-bool serial-mod]} {
@@ -26,8 +53,57 @@ if {[opt-bool debug-mode]} {
 	define BUILDMODE {-O2}
 }
 
+# Fail the build if this is a single-core Pi and we're on the trunk
+# branch of the code, which takes too much CPU power to run here.
+set cores [exec tools/corecount]
+if {($cores < 2) && [exec grep -qw brtval src/PDP8/pdp8_cpu.c.in] != 0} {
+    user-error "Cannot build lamp simulator on a single-core Pi!  See README.md."
+}
+
+# Translate --throttle value to a SIMH command
+set tv [opt-val throttle]
+set tvsl [string length $tv]
+if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
+	define SET_THROTTLE {set nothrottle}
+	set tv "unlimited"
+} else {
+	# Rewrite symbolic values with values SIMH can understand.  See
+	# README-throttle.md for the justification of these values.
+	if {$tv == "single-core" || $tvsl == 0} {
+		# value for ~75% CPU usage on a Pi Model B+ with the simple
+        # LED driving code; conveniently, 4x the speed of a real PDP-8/I
+		set tv "1332k"
+	} elseif {$tv == "pdp8e"} {
+		set tv "416k"
+	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
+		set tv "333k"
+	} elseif {$tv == "pdp8l" || $tv == "pdp8"} {
+		set tv "313k"
+	} elseif {$tv == "ha6120"} {
+		set tv "182k"
+	} elseif {$tv == "im6100a"} {
+		set tv "200k"
+	} elseif {$tv == "im6100"} {
+		set tv "100k"
+	} elseif {$tv == "im6100c"} {
+		set tv "83k"
+	} elseif {$tv == "pdp8s"} {
+		set tv "63k"
+	} elseif {$tv == "human"} {
+		set tv "10/1000"
+	} elseif {$tv == "trace"} {
+		set tv "1/1000"
+	}
+	# else, assume --throttle was given a legal SIMH throttle value
+
+	define SET_THROTTLE "set throttle $tv"
+}
+msg-result "Simulator CPU throttle set to $tv IPS"
+
+# Compiler and header checks
 cc-check-includes time.h
 cc-check-functions clock_nanosleep nanosleep usleep
+cc-check-functions sched_yield
 
 # We need to find an install(1) type program that supports -D.  The
 # Raspberry Pi OSes typically used with the PiDB-8/I board do have this,

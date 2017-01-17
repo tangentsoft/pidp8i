@@ -1,6 +1,35 @@
 /*
  * gpio.c: the real-time process that handles multiplexing
  * 
+ * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
+ *
+ * This file differs from gpio-nls.c in that it does not include the
+ # incandescent lamp simulator feature by Ian Schofield.  It is
+ * more directly descended from the original gpio.h by Oscar Vermeulen.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the names of the authors above shall
+ * not be used in advertising or otherwise to promote the sale, use or other
+ * dealings in this Software without prior written authorization from those
+ * authors.
+ *
  * www.obsolescenceguaranteed.blogspot.com
  * 
  * The only communication with the main program (simh):
@@ -267,7 +296,7 @@ void *blink(void *terminate)
 
 	// set thread to real time priority -----------------
 	struct sched_param sp;
-	sp.sched_priority = 98; // maybe 99, 32, 31?
+	sp.sched_priority = 4;	// not high, just above the minimum of 1
 	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
 	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
 	// --------------------------------------------------
@@ -387,6 +416,10 @@ void *blink(void *terminate)
 
 		fflush(stdout);
 		gss_initted = 1;
+
+#if defined(HAVE_SCHED_YIELD)
+		sched_yield();
+#endif
 	}
 
 	//printf("\nFP off\n");

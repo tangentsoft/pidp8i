@@ -23,6 +23,36 @@
    used in advertising or otherwise to promote the sale, use or other dealings
    in this Software without prior written authorization from Robert M Supnik.
 
+   ----------------------------------------------------------------------------
+
+   Portions copyright (c) 2015-2017, Oscar Vermeulen, Ian Schofield, and
+   Warren Young
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+   THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+   Except as contained in this notice, the names of the authors above shall
+   not be used in advertising or otherwise to promote the sale, use or other
+   dealings in this Software without prior written authorization from those
+   authors.
+
+   ----------------------------------------------------------------------------
+
    cpu          central processor
 
    18-Sep-16    RMS     Added alternate dispatch table for non-contiguous devices
@@ -245,7 +275,7 @@ int32 hst_lnt = 0;                                      /* history length */
 InstHistory *hst = NULL;                                /* instruction history */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF);
+void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sSC);
 int swStop = 0, swExam = 0, swDep = 0, swCont2 = 0, swStart = 0, swSingStep = 0, swAttach = 0;
 char mountedFiles[8][CBUFSIZE];
 char    swDevCode[4];
@@ -353,7 +383,7 @@ reason = 0;
 int swDevice;
 char sScript[256];
 MA = 0;	// have to add this to avoid crash when stop switch is set at start - MA would be undefined in setleds
-setleds(PC, MA, MB, LAC, MQ, IF, DF); // note MB used // light up leds for 1st time, only needed when stop switch set at start
+setleds(PC, MA, MB, LAC, MQ, IF, DF, SC); // note MB used // light up leds for 1st time, only needed when stop switch set at start
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -545,10 +575,10 @@ if (swExam==1)
 
 // do what needs to be done in STOP mode:
 if (swStop==1)
-{	setleds(PC, MA, MB, LAC, MQ, IF, DF); 		// note MB used in this call, not M[MA]
+{	setleds(PC, MA, MB, LAC, MQ, IF, DF, SC); 		// note MB used in this call, not M[MA]
     sim_interval = sim_interval - 1;                        // otherwise, CTRL-E will never be acted upon in stop mode
                                                             // WARNING: THIS MAY LEAD TO TROUBLE. MAYBE?
-    goto skip;                  // a goto is period correct methinks
+    continue;                                               // next instruction
 }
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -573,7 +603,6 @@ if (swStop==1)
     IR = M[MA];                                         /* fetch instruction */
 
 //PC increment was moved down before, bad idea? now is where it originally was.
-
     PC = (PC + 1) & 07777;                              /* increment PC */
 
     int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
@@ -586,7 +615,7 @@ setleds(PC, MA, M[MA], LAC, MQ, IF, DF); // note M[MA] used not MB
 
 if  (pidp8i_gpio_present && (switchstatus[2] & SS2_STOP)==0)        // STOP switch activated
 {   swStop = 1;
-    goto skip;
+    continue;                                               // next instruction
 }
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -607,7 +636,7 @@ if (pidp8i_gpio_present && (switchstatus[2] & SS2_S_INST)==0)       // SING_INST
     else                // else: this is the next time...
     {   swSingStep=0;       // reset flipflop
         swStop=1;       // and do what you do when STOP is pressed.
-        goto skip;
+        continue;
     }
 }
 
@@ -1243,7 +1272,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
    1x001        SCA + SCL       DAD
    1x010        SCA + MUY       DST
    1x011        SCA + DVI       SWBA            NOP if not detected earlier
-   1x100        SCA + NMI       DPSZ
+   1x100        SCA + NMI       DPSZ            
    1x101        SCA + SHL       DPIC            must be combined with MQA!MQL
    1x110        SCA + ASR       DCM             must be combined with MQA!MQL
    1x111        SCA + LSR       SAM
@@ -1641,11 +1670,6 @@ ledstatus[6] &= ~(1<<10); // clear Break led
         break;                                          /* end case IOT */
         }                                               /* end switch opcode */
 
-
-/* ------------------------------------------------------------------------- */
-skip:   ;   // goto label
-/* ------------------------------------------------------------------------- */
-
     }                                                   /* end while */
 
 /* Simulation halted */
@@ -1901,7 +1925,7 @@ return SCPE_OK;
 
 /* ------------------------------------------------------------------------------------ */
 uint32 tempLeds=0;
-void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF)
+void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sSC)
 {
 
     ledstatus[0] = (uint32) sPC;
@@ -1943,6 +1967,7 @@ void setleds(uint32 sPC, uint32 sMA, uint16 sMB, int32 sLAC, int32 sMQ, int32 sI
     tempLeds |= ((int_req & INT_ION)==0?0:1)<<9;    // ION led
                             // Pause led - handled in main loop
     if (swStop==0)  tempLeds |= (1<<7);     // RUN led
+    tempLeds |= ((uint32)(sSC)&0x1f) << 2;  // Step Count 
     ledstatus[6]=tempLeds;
 
     // DF & IF in simh live in the 3 bits of octal digit #5...

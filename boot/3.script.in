@@ -4,5 +4,6 @@
 echo Loading OS/8 from DECtape...
 set dt disabled
 set td enabled
+@SET_THROTTLE@
 attach td0 @MEDIADIR@/os8/os8.tu56
 boot td0

@@ -1,13 +1,11 @@
-/ add.pal
+/ add.pal - Add two numbers and halt, with sum in location 0207
 /
-/ A more space-efficient alternative to the program for adding two
-/ numbers as presented here:
+/ This is a more space-efficient alternative to the program given at:
 /
 / http://mrhowson.edublogs.org/2016/11/27/pidp-8i-second-toggle-some-assembly-code/
 
-/ Main program
-*0200			/ code starts at core page 1; must avoid page 0
-MAIN,	CLA CLL		/ clear AC and Link; two OPRs, one instruction!
+	PAGE 1		/ code starts at core page 1; must avoid page 0
+	CLA CLL		/ clear AC and Link; two OPRs, one instruction!
 	TAD A		/ add A to AC, which is zero, so "load A"
 	TAD B		/ add B to AC
 	DCA C		/ store sum in AC at C 
@@ -18,6 +16,4 @@ B,      3		/ and "B" to 3
 C,	   		/ "C" result variable lives immediately past B,
 			/ and has no initial value because it is always
 			/ overwritten with the answer
-
-/ Declare program entry point
-$MAIN
+$
