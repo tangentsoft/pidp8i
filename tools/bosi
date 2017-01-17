@@ -55,12 +55,6 @@ function do_init() {
 			echo
 			exit 1
 		fi
-
-		usermod \
-			-d $nh \
-			-l $nu \
-			-p $(openssl passwd -1 edsonDeCastro1968) \
-			-m pi 
 	fi
 
 	sudo apt-get update && sudo apt-get -y upgrade || true
@@ -107,6 +101,11 @@ function do_reset() {
 	dphys-swapfile uninstall
 	dd if=/dev/zero of=/junk bs=1M || true		# it *will* error-out!
 	rm /junk
+	usermod \
+		-d $nh \
+		-l $nu \
+		-p $(openssl passwd -1 edsonDeCastro1968) \
+		-m pi 
 	passwd -e pidp8i
 	( sleep 1 ; poweroff ) & exit
 }
