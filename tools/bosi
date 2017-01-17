@@ -39,7 +39,6 @@ repo=pidp8i
 dldir="$HOME/tangentsoft.com/dl"
 os=jessie-lite
 img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
-rdisk=/dev/rdisk10
 greadlink=$(type -p greadlink || type -p readlink)
 this=$($greadlink -f $0)
 
@@ -111,7 +110,7 @@ function do_reset() {
 }
 
 
-# Shrink the filesystem on the SD card we're about to image to just a
+# Shrink the filesystem on the OS SD card we're about to image to just a
 # bit bigger than required to hold its present contents.
 #
 # The extra 100 megs in the arithmetic below accounts for the /boot
@@ -156,16 +155,66 @@ NEXT
 }
 
 
-# This script images the SD card in a USB reader on a Mac OS X box.
+# This script images the OS SD card in a USB reader on a Mac OS X box.
 function do_image() {
+	set +x
 	if [ -n "$object" ]
 	then
-		sudo diskutil unmountDisk $rdisk		# it auto-mounted
-		sudo dd if=$rdisk bs=4k count=$object of=$img
+		while read line
+		do
+			case $line in
+				/dev/*)
+					dev=$(echo $line | cut -f1 -d' ')
+					;;
+
+				0:*)
+					case $line in
+						*FDisk_partition_scheme*) ;;
+						*) dev= ;;		# can't be the OS SD card
+					esac
+					;;
+
+				1:*)
+					case $line in
+						*Windows_FAT_32\ boot*) ;;
+						*) dev= ;;		# can't be the OS SD card
+					esac
+					;;
+
+				2:*)
+					case $line in
+						*Linux\ Untitled*) break ;;	# found it!
+						*) dev= ;;		# can't be the OS SD card
+					esac
+					;;
+			esac
+		done < <(diskutil list)
+
+		if [ -z "$dev" ]
+		then
+			echo "Failed to find OS SD card!"
+			echo
+			exit 1
+		fi
+
+		echo
+		echo "-------------------------------------------------------"
+		diskutil info "$dev"
+		echo "-------------------------------------------------------"
+		echo
+		read -p "Is that the OS SD card? [y/N]: " answer
+		case $answer in
+			[Yy]*) ;;
+			*) exit 1
+		esac
+
+		set -x
+		sudo diskutil unmountDisk $dev			# it auto-mounted
+		sudo dd if=$dev bs=4k count=$object of=$img
 		zip -9j $img.zip $img
 
-		sudo dd if=$img of=$rdisk bs=1m
-		sudo diskutil unmountDisk $rdisk || true	# Paragon ExtFS might be installed
+		sudo dd if=$img of=$dev bs=1m
+		sudo diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
 	else
 		usage
 	fi
