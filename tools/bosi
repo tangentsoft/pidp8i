@@ -85,7 +85,7 @@ function do_fossil() {
 		./configure
 	fi
 
-	make -j4
+	tools/mmake
 	sudo make install || true
 	sudo reboot
 }
