@@ -29,20 +29,30 @@ You can force this behavior with `--throttle=none`.
 
 If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
-it takes about 50% of a single core's worth of power on the slowest
+it takes about 75% of a single core's worth of power on the slowest
 Raspberry Pi supported by this software. This leaves enough CPU power
-for the front-panel LED driving thread and some background tasks on a
-single-core Pi.
+for some background tasks on a single-core Pi.
 
-You can force this behavior with `--throttle=single-core`.
+This default assumes you are building without the incandescent lamp
+simulator feature enabled, as that currently takes so much CPU power to
+run that the simulator runs slower than even a PDP-8/S!  (We're working
+on ways to improve the speed of that lamp simulator to let it run on
+single-core raspberry Pis.)  Indeed, the build system will actively try
+to prevent you from building the incandescent lamp simulator feature on
+a single-core Pi.
 
-You will get this single-core behavior if you run the `configure` script
-on a system where `tools/corecount` mistakenly returns 1.  That script
-currently only returns the correct value on Linux and macOS systems.  To
-fix it, you can either say `--throttle=none` or you can patch
-`tools/corecount` to properly report the number of cores on your system.
-If you choose the latter path, please send the patch to the mailing list
-so it can be integrated into the next release of the software.
+You can force the build system to select this throttle value even on a
+multi-core Pi with `--throttle=single-core`.
+
+You will erroneously get this single-core behavior if you run the
+`configure` script on a system where `tools/corecount` has no built-in
+way to count the CPU cores in your system correctly, so it returns 1,
+forcing a single-core build. That script currently only returns the
+correct value on Linux, BSD, and macOS systems.  To fix it, you can
+either say `--throttle=none` or you can patch `tools/corecount` to
+properly report the number of cores on your system.  If you choose the
+latter path, please send the patch to the mailing list so it can be
+integrated into the next release of the software.
 
 
 ## Underclocking

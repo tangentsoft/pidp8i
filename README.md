@@ -2,8 +2,17 @@
 
 ## Prerequisites
 
-*   A Raspberry Pi with the 40-pin GPIO connector. That rules out the
-    first series of Raspberry Pi boards with the 26-pin connector.
+*   A Raspberry Pi with the 40-pin GPIO connector.  That rules out the
+    first-generation Raspberry Pi model A and B boards which had a
+    26-pin GPIO connector.
+
+*   In order to use the incandescent lamp simulator feature, you will
+    need to use a multi-core Pi such as the Pi 2 or Pi 3.  This rules
+    out the model A+, the model B+, and the Pi Zero.
+    
+    (There is a [special branch of the source code][nls] for Fossil
+    users.  Those building this software from a tarball or who are using
+    a binary OS image should use the "no lamp simulator" version.)
 
 *   An SD card containing Raspbian or something sufficiently close.
     PipaOS may also work, for example.  This software is currently
@@ -166,6 +175,7 @@ Copyright © 2016-2017 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
+[prj]:  https://tangentsoft.com/pidp8i/
 [smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
 [usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
@@ -174,3 +184,4 @@ the terms of [the SIMH license][sl].
 [rmt]:  https://tangentsoft.com/pidp8i/doc/trunk/README-test.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
 [sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[nls]:  https://tangentsoft.com/pidp8i/timeline?n=100&r=no-lamp-simulator

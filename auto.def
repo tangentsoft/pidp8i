@@ -53,8 +53,14 @@ if {[opt-bool debug-mode]} {
 	define BUILDMODE {-O2}
 }
 
-# Translate --throttle value to a SIMH command
+# Fail the build if this is a single-core Pi and we're on the trunk
+# branch of the code, which takes too much CPU power to run here.
 set cores [exec tools/corecount]
+if {($cores < 2) && [exec grep -qw brtval src/PDP8/pdp8_cpu.c.in] != 0} {
+    user-error "Cannot build lamp simulator on a single-core Pi!  See README.md."
+}
+
+# Translate --throttle value to a SIMH command
 set tv [opt-val throttle]
 set tvsl [string length $tv]
 if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
@@ -64,9 +70,9 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	# Rewrite symbolic values with values SIMH can understand.  See
 	# README-throttle.md for the justification of these values.
 	if {$tv == "single-core" || $tvsl == 0} {
-		# value for ~50% CPU usage of a Pi Model B+; also conveniently
-		# 5x the speed of a real PDP-8/I
-		set tv "1600k"
+		# value for ~75% CPU usage on a Pi Model B+ with the simple
+        # LED driving code; conveniently, 4x the speed of a real PDP-8/I
+		set tv "1332k"
 	} elseif {$tv == "pdp8e"} {
 		set tv "416k"
 	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
