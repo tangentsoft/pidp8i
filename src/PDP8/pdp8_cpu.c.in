@@ -25,8 +25,7 @@
 
    ----------------------------------------------------------------------------
 
-   Portions copyright (c) 2015-2017, Oscar Vermeulen, Ian Schofield, and
-   Warren Young
+   Portions copyright (c) 2015-2017, Oscar Vermeulen and Warren Young
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -611,7 +610,7 @@ if (swStop==1)
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-setleds(PC, MA, M[MA], LAC, MQ, IF, DF); // note M[MA] used not MB
+setleds(PC, MA, M[MA], LAC, MQ, IF, DF, SC); // note M[MA] used not MB
 
 if  (pidp8i_gpio_present && (switchstatus[2] & SS2_STOP)==0)        // STOP switch activated
 {   swStop = 1;

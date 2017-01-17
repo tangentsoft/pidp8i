@@ -1,10 +1,10 @@
 /*
  * gpio.h: public interface for the PiDP-8/I's GPIO module
  *
- * This file differs from gpio-nls.h in that it includes the incandescent
- * lamp simulator feature by Ian Schofield.
+ * Here in the no-lamp-simulator branch, there is no difference between
+ * this module and the one in gpio-nls.c.
  * 
- * Copyright (c) 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
+ * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
