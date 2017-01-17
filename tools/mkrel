@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 ########################################################################
 # mkrel - Automatically tage and merge the trunk for a new public
 #	release of the software.
@@ -29,6 +29,8 @@
 # use or other dealings in this Software without prior written
 # authorization from those authors.
 ########################################################################
+
+set -e
 
 tag=v$(date +%Y%m%d)
 fossil update &&
