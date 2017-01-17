@@ -1,11 +1,11 @@
 /*
  * gpio.c: the real-time process that handles multiplexing
- * 
- * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
  *
  * This file differs from gpio-nls.c in that it does not include the
- # incandescent lamp simulator feature by Ian Schofield.  It is
+ * incandescent lamp simulator feature by Ian Schofield.  It is
  * more directly descended from the original gpio.h by Oscar Vermeulen.
+ * 
+ * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -144,7 +144,6 @@ int map_peripheral(struct bcm2835_peripheral *p)
 		}
 		return -1;
 	}
-	puts("Lock acquired!");
 
 	// Map the GPIO peripheral into our address space
 	if ((p->map = mmap(
@@ -237,8 +236,9 @@ static void report_ss(int row, int col, int ss,
 	if (ss) switchstatus[row] |=  mask;
 	else    switchstatus[row] &= ~mask;
 
-	//printf("%cSS[%d][%02d] = %d  ", gss_initted ? 'N' : 'I',
-	//		row, col, ss);
+	#ifdef DEBUG
+		printf("%cSS[%d][%02d] = %d  ", gss_initted ? 'N' : 'I',row, col, ss);
+	#endif
 }
 
 
@@ -287,7 +287,7 @@ void *blink(void *terminate)
 	// Find gpio address (different for Pi 2) ----------
 	gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
 	if (gpio.addr_p== 0x20200000) printf("RPi Plus detected - ");
-	else printf("RPi 2 detected - ");
+	else printf("RPi 2/3 detected - ");
 #ifdef SERIALSETUP
 	printf(" Serial mod version\n");
 #else
@@ -300,10 +300,7 @@ void *blink(void *terminate)
 	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
 	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
 	// --------------------------------------------------
-	if(map_peripheral(&gpio) == -1)
-	{	printf("Failed to map the physical GPIO registers into the virtual memory space.\n");
-		return (void *)-1;
-	}
+	if(map_peripheral(&gpio) == -1) return (void *)-1;
 
 	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
 	//	INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
