@@ -100,11 +100,17 @@ function do_reset() {
 	dphys-swapfile uninstall
 	dd if=/dev/zero of=/junk bs=1M || true		# it *will* error-out!
 	rm /junk
-	usermod \
-		-d $nh \
-		-l $nu \
-		-p $(openssl passwd -1 edsonDeCastro1968) \
-		-m pi 
+	encpass=$(openssl passwd -1 edsonDeCastro1968)
+	if [ -e "$nh" ]
+	then
+		# A prior pass already renamed the default user and moved its
+		# home directory, so just change the password.
+		usermod -p $encpass pi
+	else
+		# First pass on a clean SD card: rename 'pi' user to 'pidp8i',
+		# move its home directory
+		usermod -d $nh -l $nu -p $encpass -m pi 
+	fi
 	passwd -e pidp8i
 	( sleep 1 ; poweroff ) & exit
 }
