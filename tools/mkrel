@@ -34,9 +34,11 @@ tag=v$(date +%Y%m%d)
 fossil ci --tag $tag -m "Tagged release $tag" &&
 	cd ../release &&
 	fossil merge $tag &&
+	! fossil status | grep -q '^CONFLICT' &&
 	tools/mmake &&
 	fossil ci -m "Merged trunk changes for $tag into release branch" &&
 	cd ../no-lamp-simulator &&
 	fossil merge release &&
+	! fossil status | grep -q '^CONFLICT' &&
 	tools/mmake &&
 	fossil ci -m "Merged release $tag changes in"
