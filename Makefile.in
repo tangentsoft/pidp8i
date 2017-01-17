@@ -6,6 +6,32 @@
 # intend to make edits, do that in Makefile.in.  Saying "make" will then
 # re-build Makefile from that modified Makefile.in before proceeding to
 # do the "make" operation.
+#
+# Copyright © 2015-2017 Oscar Vermeulen, Warren Young
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
 ########################################################################
 
 # Git commit ID of the latest version of the SIMH 4 project on GitHub 
@@ -58,28 +84,41 @@ OBJS = \
 
 LIBS = -lm -ldl -lpthread
 
-EXAMPLES = \
-		bin/add.pt    obj/add.lst \
-		bin/hello.pt  obj/hello.lst \
-		bin/pep001.pt obj/pep001.lst
+EXAMPLES := \
+	bin/ac-mq-blinker.pt \
+	bin/add.pt \
+	bin/asr33-rim-loader.pt \
+	bin/bit-rotate.pt \
+	bin/hello.pt \
+	bin/hs-rim-loader.pt \
+	bin/pep001.pt
+LISTINGS := $(EXAMPLES:.pt=.lst)
+LISTINGS := $(subst bin/,obj/,$(LISTINGS))
+BOOTSCRIPTS := $(LISTINGS:.lst=.script)
+BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
+	boot/1.script \
+	boot/5.script
 
 CLTXT = /boot/cmdline.txt
 
 .PHONY: tags
 
 
-all: $(BUILDDIRS) $(BINS) $(EXAMPLES)
+all: $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 	@chmod 755 @builddir@/bin/pidp8i
 
 clean:
 	@rm -f $(BINS) \
 		@builddir@/tags \
 		@builddir@/bin/*.pt \
+		@builddir@/boot/*.script \
+		@builddir@/etc/sudoers \
 		@builddir@/obj/*.d \
 		@builddir@/obj/*.lst \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
 		@builddir@/obj/PDP8/*.o \
+		@builddir@/tools/simh-update \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
@@ -109,7 +148,6 @@ install: all
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-for f in @prefix@/bin/pidp8i-* ; do setcap 'cap_sys_nice=eip' $$f ; done || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
-	@INSTALL@ -m 664 -g @INSTGRP@ @srcdir@/boot/*.script @BOOTDIR@
 
 	@# If this is a Debian-type system, install needed helper programs
 	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
@@ -173,6 +211,7 @@ mediainstall:
 		-name \*.rk05 -o \
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
+	@INSTALL@ -m 664 -g @INSTGRP@ @builddir@/boot/*.script @BOOTDIR@
 
 os8test:
 	@builddir@/$(SIM) @srcdir@/boot/0.script
@@ -216,6 +255,18 @@ obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
 	@builddir@/bin/palbart -lr $< || cat @srcdir@/examples/$*.err
 	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
 	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
+
+# Rule for translating PAL assembly language program listings to SIMH
+# boot scripts.
+boot/%.script: obj/%.lst
+	@builddir@/tools/mkbootscript $<
+
+# Rules for making aliases of named example programs translated to boot
+# scripts as special numbered boot scripts
+boot/1.script: boot/hs-rim-loader.script
+	ln -f $< $@
+boot/5.script: boot/ac-mq-blinker.script
+	ln -f $< $@
 
 bin/palbart: @srcdir@/palbart/palbart.c
 	$(CC) -Wall -Wno-strict-prototypes @BUILDMODE@ $< -o $@

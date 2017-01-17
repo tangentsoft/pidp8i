@@ -50,3 +50,9 @@ N 38500 59300 38500 59800 4
 N 40200 59300 38500 59300 4
 N 38400 60800 38500 60800 4
 N 38500 60800 38500 60600 4
+T 37800 56300 9 10 1 0 0 0 5
+Copyright © 2016 by Warren Young
+
+This file is licensed under the terms of
+the SIMH license, a copy of which is in
+../SIMH-LICENSE.md.

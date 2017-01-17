@@ -25,5 +25,6 @@ reset
 echo Loading OS/8 from the RK05 cartridge disk...
 set cpu 32k
 set cpu noidle
+@SET_THROTTLE@
 att rk0 @MEDIADIR@/os8/os8.rk05
 boot rk0

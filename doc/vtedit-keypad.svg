@@ -20,6 +20,8 @@
    inkscape:export-filename="/usr/local/src/pidp8i/trunk/doc/vtedit-keypad.png"
    inkscape:export-xdpi="80.18"
    inkscape:export-ydpi="80.18">
+  <title
+     id="title4295">VTEDIT Keypad Diagram</title>
   <defs
      id="defs4">
     <linearGradient
@@ -223,7 +225,7 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="406.19766"
+     inkscape:cx="237.26909"
      inkscape:cy="345.9566"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -248,25 +250,36 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title>VTEDIT Keypad Diagram</dc:title>
         <cc:license
-           rdf:resource="http://creativecommons.org/licenses/by-sa/3.0/" />
+           rdf:resource="https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md" />
+        <dc:date>December 2016</dc:date>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Warren Young</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>This graphical diagram was created based on an ASCII diagram that came with the version of VTEDIT patched for VT100/ANSI terminals.</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>see ../SIMH-LICENSE.md</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:language>Englis</dc:language>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>VTEDIT</rdf:li>
+            <rdf:li>PDP-8</rdf:li>
+            <rdf:li>diagram</rdf:li>
+            <rdf:li>keypad</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:description>Diagram showing the function of the keypad keys when pressed in the version of VTEDIT patched for VT100/ANSI terminals.</dc:description>
       </cc:Work>
-      <cc:License
-         rdf:about="http://creativecommons.org/licenses/by-sa/3.0/">
-        <cc:permits
-           rdf:resource="http://creativecommons.org/ns#Reproduction" />
-        <cc:permits
-           rdf:resource="http://creativecommons.org/ns#Distribution" />
-        <cc:requires
-           rdf:resource="http://creativecommons.org/ns#Notice" />
-        <cc:requires
-           rdf:resource="http://creativecommons.org/ns#Attribution" />
-        <cc:permits
-           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
-        <cc:requires
-           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
-      </cc:License>
     </rdf:RDF>
   </metadata>
   <g
@@ -779,7 +792,7 @@
          sodipodi:role="line"
          id="tspan4215"
          x="153.57143"
-         y="180.93362"></tspan></text>
+         y="180.93362" /></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:125%;font-family:Verdana;-inkscape-font-specification:Verdana;letter-spacing:0px;word-spacing:0px;opacity:1;fill:#422b00;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
