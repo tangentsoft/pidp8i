@@ -1,5 +1,117 @@
 # PiDP-8/I Changes
 
+## Version 2017.01.16
+
+*   Prior releases did not include proper licensing for many of the
+    included files.  This project was, therefore, not a proper Open
+    Source Software project.  This problem has been fixed.
+
+    In this release, many files that were previously technically only
+    under standard copyright due to having no grant of license now have
+    an explicit license, typically the same as SIMH itself.  (Thank you
+    to all of the authors who allowed me to apply this license to their
+    contributions!)
+
+    For several other files, I was able to trace down some prior license
+    and include its text here for the first time.
+
+    There remain a few "gray" items: the TSS/8 and ETOS disk images.
+    See the [`COPYING.md` file][copying] for more on the current status
+    of these OS images.  If the legal status of these files clarifies in
+    the future, this software distribution will react accordingly, even
+    if that means removing these files from the distribution if we learn
+    that these files are not freely-redistributable, as we currently
+    believe them to be today.
+
+*   The Step Counter LEDs on the front panel weren't being lit properly
+    when EAE instructions were being used.  Thanks for this patch go to
+    Henk Gooijen and Paul R. Bernard.
+
+*   The prior `boot/1.script` and `boot/5.script` files are no longer
+    simply opaque lists of octal addresses and machine code.  They are
+    generated from PAL assembly files provided in the `examples`
+    directory, so that you can now modify the assembly code and type
+    `make` to rebuild these boot scripts.
+
+*   The mechanism behind the prior item is fully general-purpose, not
+    something that only works with `1.script` and `5.script`.  Any
+    `examples/*.pal` file found at `make` time is transformed into a
+    SIMH boot script named after the PAL file and placed in the `boot`
+    directory.  This gives you an easier way to run PDP-8 assembly code
+    inside the simulator.  After saying `make` to transform `*.pal` into
+    `*.script` files, you can run the program with `bin/pidp8i-sim
+    boot/my-program.script` to poke your program's octal values into
+    core and run it.  This round-trip edit-and-run process is far faster
+    than any of the options given in the [examples' `README.md`
+    file][ex].
+
+*   Disassembled both versions of the RIM loader to commented, labeled
+    PAL assembly language files.  If you ever wanted to know what those
+    16 mysterious instructions printed on the front panel of your
+    PiDP-8/I did, you can now read my pidgin interpretation of these
+    programs in `examples/*-rim.loader.pal` and become just as confused
+    as I am now. :)
+
+*   The two RIM loader implementations now start with a nonstandard
+    `HLT` instruction so that when you fire up the simulator with IF=1 to
+    start the high-speed RIM loader, it automatically halts for you, so
+    you don't have to remember to STOP the processor manually.
+
+    There is currently [a bug][hltbug] in the way the simulator handles
+    `HLT` instructions which prevents you from simply pressing START or
+    CONT to enter the RIM loader after you've attached your paper tape,
+    so you still have to manually toggle in the 7756 starting address
+    and press START to load the tape into core.  (I hope to fix this
+    before the next release, but no promises.)
+
+*   Added the `configure --throttle` feature for making the simulator
+    run at a different speed than it normally does.  See
+    [`README-throttle.md`][rmth] for details.
+
+*   The build system now reacts differently when building the PiDP-8/I
+    software on a single-core Raspberry Pi:
+
+    *   If you're building the trunk or release branch, you'll get a
+        configure error because it knows you can't run the current
+        implementation of the incandescent lamp simulator on a
+        single-core Pi.  (Not enough spare CPU power, even with heavy
+        amounts of throttling.)
+
+    *   If you're building the no-lamp-simulator branch, it inserts a
+        throttle value into the generated `boot/*.script` files that do
+        not already contain a throttle value so that the simulator
+        doesn't hog 100% of the lone core, leaving some spare cycles for
+        background tasks.  The above `--throttle` feature overrides
+        this.
+
+    These features effectively replace the manual instructions in the
+    old `README-single-core.md` file, which is no longer included with
+    this software distribution, starting with this release.
+
+*   Lowered the real-time priority of the GPIO thread from 98 to 4.
+    This should not result in a user-visible change in behavior, but it
+    is called out here in case it does.  (In our testing, such high
+    values simply aren't necessary to get the necessary performance,
+    even on the trunk branch with the incandescent lamp simulator.)
+
+*   Since v20161128, you `make install` on a system with an existing
+    PiDP-8/I software installation, the binary OS media images were not
+    being overwritten, on purpose, since you may have modified them
+    locally, so the installer chose not to overwrite your versions.
+
+    With this release, the same principle applies to the SIMH boot
+    scripts (e.g. `$prefix/share/boot/0.script`) since those are also
+    things the user might want to modify.
+
+    This release and prior ones do have important changes to some of
+    these files, so if you do not wish to overwrite your local changes
+    with a `make mediainstall` command, you might want to diff the two
+    versions and decide which changes to copy over or merge into your
+    local files.
+
+[copying]: https://tangentsoft.com/pidp8i/doc/trunk/COPYING.md
+
+
 ## Version 2017.01.05
 
 *   Automated the process for merging in new SIMH updates.  From within
@@ -305,12 +417,14 @@
 *   Fixed a bunch of bugs!
 
 [readme]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+[rmth]:    https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [dupatch]: https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA
 [dudis]:   https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936
 [wiki]:    https://tangentsoft.com/pidp8i/wcontent
 [ex]:      https://tangentsoft.com/pidp8i/doc/trunk/examples/README.md
 [art]:     https://tangentsoft.com/pidp8i/dir?c=trunk&name=labels
 [tix]:     https://tangentsoft.com/pidp8i/tickets
+[hltbug]:  https://tangentsoft.com/pidp8i/info/f961906a5c24f5de
 
 
 ## Version 2015.12.15
