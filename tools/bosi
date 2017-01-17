@@ -105,7 +105,7 @@ function do_reset() {
 	then
 		# A prior pass already renamed the default user and moved its
 		# home directory, so just change the password.
-		usermod -p $encpass pi
+		usermod -p $encpass pidp8i
 	else
 		# First pass on a clean SD card: rename 'pi' user to 'pidp8i',
 		# move its home directory
