@@ -72,6 +72,7 @@ OBJS = \
 	obj/PDP8/pdp8_tsc.o \
 	obj/PDP8/pdp8_tt.o \
 	obj/PDP8/pdp8_ttx.o \
+	obj/PDP8/pidp8i.o \
 	obj/scp.o \
 	obj/sim_disk.o \
 	obj/sim_ether.o \
@@ -130,7 +131,7 @@ distclean: clean
 		@builddir@/bin/pidp8i \
 		@builddir@/etc/pidp8i-init \
 		@builddir@/src/config.h \
-		@builddir@/src/PDP8/pdp8_cpu.c \
+		@builddir@/src/PDP8/pidp8i.c \
 		@builddir@/src/scp.c
 	@for n in 0 2 3 4 6 7 ; do rm -f @builddir@/boot/$$n.script ; done
 
