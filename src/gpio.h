@@ -74,9 +74,12 @@
 #define SS1_DF_B2  04000
 #define SS1_DF_B1  02000
 #define SS1_DF_B0  01000
+#define SS1_DF_ALL (SS1_DF_B2 | SS1_DF_B1 | SS1_DF_B0)
+
 #define SS1_IF_B2  00400
 #define SS1_IF_B1  00200
 #define SS1_IF_B0  00100
+#define SS1_IF_ALL (SS1_IF_B2 | SS1_IF_B1 | SS1_IF_B0)
 
 #define SS2_START  04000
 #define SS2_L_ADD  02000
