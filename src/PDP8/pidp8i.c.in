@@ -425,11 +425,12 @@ if ((switchstatus[2] & SS2_L_ADD) == 0) {
     //
     // We complement the bits here for the same reason we XOR'd the PC
     // value above.
-    *pDF = ~(switchstatus[1] & SS1_DF_ALL) << 3;
+	uint16_t css1 = ~switchstatus[1]; 
+    *pDF = (css1 & SS1_DF_ALL) << 3;
 
     // Do the same for IF.  The only difference comes from the fact that
     // IF is the next 3 bits down in switchstatus[1].
-    *pIF = ~(switchstatus[1] & SS1_IF_ALL) << 6;
+    *pIF = (css1 & SS1_IF_ALL) << 6;
     }
 
 // Check for DEP switch press...
