@@ -45,24 +45,8 @@ this=$($greadlink -f $0)
 
 # Initial steps
 function do_init() {
-	if ! getent passwd $nu > /dev/null
-	then
-		if [ "$USER" != "root" ]
-		then
-			echo "The init step has to be run as root."
-			echo "See RELEASE-PROCESS.md."
-			echo
-			exit 1
-		fi
-	fi
-
 	sudo apt-get update && sudo apt-get -y upgrade || true
-	do_fossil
-}
 
-
-# Fossil clone, build and install
-function do_fossil() {
 	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi fossil $object
 	cd $HOME
 
@@ -93,6 +77,14 @@ function do_fossil() {
 
 # This script resets the OS's configuration to a clean first boot state.
 function do_reset() {
+	if [ "$USER" != "root" ]
+	then
+		echo "The reset step has to be run as root.  The explanation is"
+		echo "given in the section for 'reset' in RELEASE-PROCESS.md."
+		echo
+		exit 1
+	fi
+
 	history -c ; rm -f ~/.bash_history
 	test "$USER" = "root" || exec sudo $this reset
 
@@ -257,7 +249,6 @@ USAGE
 set -e
 case "$verb" in
 	in*) do_init ;;
-	fo*) do_fossil ;;
 	re*) do_reset ;;
 	sh*) do_shrink ;;
 	im*) do_image ;;
