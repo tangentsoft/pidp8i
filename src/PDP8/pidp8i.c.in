@@ -266,7 +266,8 @@ if (single_shot == 0) {
     // The bit complement is because closed DF switches show
     // as 0, because they're dragging the pull-up down, but
     // we want those treated as 1s, and vice versa.
-    int swDevice = ~(switchstatus[1] & SS1_DF_ALL) >> 9;
+	uint16_t css1 = ~switchstatus[1]; 
+    int swDevice = (css1 & SS1_DF_ALL) >> 9;
     if (swDevice) {
         char swDevCode[4] = { '\0' };
         switch (swDevice) {
@@ -287,7 +288,7 @@ if (single_shot == 0) {
     //
     // The shift value of 6 is because the IF switches are 3
     // down from the DF switches above.
-    int swScript = ~(switchstatus[1] & SS1_IF_ALL) >> 6;
+    int swScript = (css1 & SS1_IF_ALL) >> 6;
     if (swScript) {
         // build filename from IF value
         char sScript[256];
