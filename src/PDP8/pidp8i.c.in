@@ -268,7 +268,7 @@ if (single_shot == 0) {
     // we want those treated as 1s, and vice versa.
     int swDevice = ~(switchstatus[1] & SS1_DF_ALL) >> 9;
     if (swDevice) {
-        char swDevCode[4];
+        char swDevCode[4] = { '\0' };
         switch (swDevice) {
             case 1: strcpy(swDevCode, "ptr"); break; // PTR paper tape reader
             case 2: strcpy(swDevCode, "ptp"); break; // High speed paper tape punch
@@ -278,7 +278,7 @@ if (single_shot == 0) {
             case 6: strcpy(swDevCode, "rx1"); break;
             case 7: strcpy(swDevCode, "rl0"); break; // RL8A
             }
-        mount_usb_stick_file(swDevice, swDevCode);
+        if (swDevCode[0]) mount_usb_stick_file(swDevice, swDevCode);
         }
 
     // 2. Do the same with IF, except that the switch value
