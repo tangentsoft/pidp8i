@@ -142,7 +142,7 @@ for (int row = 0; row < 8; ++row) {
 // Search for a PDP-8 media image in one of the Pi's USB auto-mount
 // directories and attempt to ATTACH it to the simulator.
 
-static int mount_usb_stick_file (int devNo, char *devCode)
+static void mount_usb_stick_file (int devNo, char *devCode)
 {
 char    sFoundFile[CBUFSIZE] = { '\0' };
 char    sUSBPath[CBUFSIZE];     // will be "/media/usb0" etc
@@ -196,30 +196,28 @@ for (i = 0; i < 8 && sFoundFile[0] == '\0'; ++i) {
     else {
         // Not a Pi or the USB auto-mounting software isn't installed
         printf ("\r\nCannot open %s: %s\r\n", sUSBPath, strerror (errno));
-        return 1;
+        return;
         }
     }
 
-if (sFoundFile[0] == '\0') {            // no file found, exit
-    printf ("\r\nNo unmounted %s file found\r\n", devCode);
-    return 1;
-    }
-
-if (access (sFoundFile, R_OK) < 0) {
-    printf ("\r\nCannot read medium image %s from USB: %s\r\n",
-            sFoundFile, strerror (errno));
-    return 1;
-    }
-
-if (attach_cmd ((int32) 0, sFoundFile) == SCPE_OK) {   // issue ATTACH command
-    // add file to mount list
-    strncpy (mountedFiles[devNo], sFoundFile, CBUFSIZE);
-    printf ("\r\nMounted %s %s\r\n", devCode, mountedFiles[devNo]);
-    return 0;
-    }
+if (sFoundFile[0]) {            // no file found, exit
+	if (access (sFoundFile, R_OK) == 0) {
+		if (attach_cmd ((int32) 0, sFoundFile) == SCPE_OK) {   // issue ATTACH command
+			// add file to mount list
+			strncpy (mountedFiles[devNo], sFoundFile, CBUFSIZE);
+			printf ("\r\nMounted %s %s\r\n", devCode, mountedFiles[devNo]);
+			}
+		else {
+			printf ("\r\nSIMH error mounting %s\r\n", devCode);
+			}
+		}
+	else {
+		printf ("\r\nCannot read medium image %s from USB: %s\r\n",
+				sFoundFile, strerror (errno));
+		}
+	}
 else {
-    printf ("\r\nSIMH error mounting %s\r\n", devCode);
-    return 1;
+    printf ("\r\nNo unmounted %s file found\r\n", devCode);
     }
 }
 
