@@ -5,13 +5,13 @@ If you are going to make any changes to the PiDP-8/I software, here are
 some rules and hints to keep in mind while you work.
 
 
-About Fossil
+Getting Started with Fossil
 ----
 
-The PiDP-8/I software is hosted using the [Fossil][fossil] [distributed
-version control system][dvcs]. I like to summarize it as having most of
-the features of GitHub while offering the freedom and day-to-day
-simplicity of operation of Subversion.
+The PiDP-8/I software project is hosted using the [Fossil][fossil]
+[distributed version control system][dvcs].  Fossil provides most of the
+features of GitHub under a simpler operating model than Subversion
+without tying you to a proprietary web service.
 
 This guide will introduce you to some of the basics, but you should also
 at least read the [Fossil Quick Start Guide][fqsd]. For a more thorough
@@ -20,6 +20,14 @@ questions, it is best to ask them on [its low-volumn mailing list][fml],
 though you may also ask me, either on [the PiDP-8/I mailing list][ggml]
 or via private email.
 
+Most Raspberry Pi OS distributions include Fossil in their package
+repository, and it is also available for all common desktop platforms.
+If you started with one of the binary OS images downloaded from
+tangentsoft.com, Fossil is already installed.  If you don't like any of
+those options, you can also use [the official binaries][fbin].
+
+
+[fbin]:   http://fossil-scm.org/index.html/uv/download.html
 [dvcs]:   http://en.wikipedia.org/wiki/Distributed_revision_control
 [fbook]:  http://www.fossil-scm.org/schimpf-book/home
 [fml]:    http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/fossil-users
