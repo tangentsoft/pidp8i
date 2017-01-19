@@ -186,9 +186,9 @@ While developers with login rights to the PiDP-8/I Fossil instance are
 allowed to check in on the trunk at any time, we recommend using
 branches whenever you're working on something experimental, or where you
 can't make the necessary changes in a single coherent checkin.
-Basically, trunk should always build without error, and it should always
-function correctly.  Branches are for isolating work until it is ready
-to merge into the trunk.
+Basically, `trunk` should always build without error, and it should
+always function correctly.  Branches are for isolating work until it is
+ready to merge into the trunk.
 
 Here again we have a difference with Git: because Fossil normally syncs
 your work back to the central repository, this means we get to see the
@@ -210,7 +210,7 @@ presentation on YouTube that touches on this topic at a couple of
 points:
 
 * [Don't go dark](https://www.youtube.com/watch?v=9OJ9hplU8XA)
-* [Beware of a guy in a * room](https://www.youtube.com/watch?v=oY6BCHqEbyc)
+* [Beware of a guy in a room](https://www.youtube.com/watch?v=oY6BCHqEbyc)
 
 Fossil's sync-by-default behavior fights these negative tendencies.
 
@@ -248,7 +248,8 @@ down into the local copy when it lands upstream.
 
 The bulk of the customization to the build system is in `auto.def`,
 which is a Tcl script run by `autosetup` via the `configure` script.
-Some knowledge of Tcl syntax will therefore be helpful in modifying it.
+Some knowledge of [Tcl syntax][tcldoc] will therefore be helpful in
+modifying it.
 
 If you do not have Tcl installed on your system, `configure` builds a
 minimal Tcl interpreter called `jimsh0`, based on the [Jim Tcl][jim]
@@ -261,17 +262,31 @@ consider uninstalling it to force `autosetup` to build and use `jimsh0`.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
 excepting only that it has variables substituted into it by
-[`autosetup`][as] using the `@VARIABLE@` syntax.  At this time, we do
+[`autosetup`][asbs] using its `@VARIABLE@` syntax.  At this time, we do
 not attempt to achieve compatibility with other `make` programs, though
 in the future we may need it to work with [BSD `make`][bmake] as well,
 so if you are adding features, you might want to stick to the common
-subset of features implemented by both flavors of `make`.  We do not
-anticpate any need to support any other `make` flavors.
+subset of features implemented by both the GNU and BSD flavors of
+`make`.  We do not anticpate any need to support any other `make`
+flavors.
 
-[asbs]:  http://msteveb.github.io/autosetup/
-[bmake]: https://www.freebsd.org/doc/en/books/developers-handbook/tools-make.html
-[gmake]: https://www.gnu.org/software/make/
-[jim]:   http://jim.tcl.tk/
+(This, by the way, is why we're not using some heavy-weight build system
+such as the GNU Autotools, CMake, etc.  The primary advantage of GNU
+Autotools is that you can generate source packages that will configure
+and build on weird and ancient flavors of Unix; we don't need that.
+Cross-platform build systems such as CMake ease building the same
+software on multiple disparate platforms straightforward, but the
+PiDP-8/I software is built primarily on and for a single operating
+system, Rasbpian Linux.  It also happens to build and run on other
+modern Unix and Linux systems, for which we also do not need the full
+power of something like CMake.  `autosetup` and GNU `make` suffice for
+our purposes here.)
+
+[asbs]:   http://msteveb.github.io/autosetup/
+[bmake]:  https://www.freebsd.org/doc/en/books/developers-handbook/tools-make.html
+[gmake]:  https://www.gnu.org/software/make/
+[jim]:    http://jim.tcl.tk/
+[tcldoc]: http://wiki.tcl.tk/11485
 
 
 Submitting Patches
@@ -329,7 +344,7 @@ otherwise.
 [viral]: https://en.wikipedia.org/wiki/Viral_license
 
 
-The PiDP-8/I Code Style
+The PiDP-8/I Software Project Code Style Rules
 ----
 
 Every code base should have a common code style.  Love it or
@@ -339,8 +354,8 @@ hate it, here are PiDP-8/I's current code style rules:
 
 File types: `c`, `h`, `c.in`
 
-Because the PiDP-8/I software project is so heavily based on SIMH, we
-follow its pre-existing code style:
+We follow the SIMH project's pre-existing code style when modifying one
+of its source files:
 
 *   Spaces for indents, size 4
 
@@ -395,43 +410,43 @@ follow its pre-existing code style:
     -   Multiple variables declared together don't have their types and
         variable names aligned in columns.
 
-    Unfortunately, I'm not aware of any automated code formatting tool
-    that can produce code using this style.  I find the indented closing
-    curly braces confusing, and I find that the loss of the first indent
-    level for the statements inside a function makes functions all
-    visually run together in a screenful of code.  Nevertheless, we want
-    you to use this style when modifying pre-existing SIMH code files,
-    so the style doesn't jump back and forth within a single file.
+Unfortunately, I'm not aware of any automated code formatting tool that
+can produce code using this style.  I find the indented closing curly
+braces confusing, and I find that the loss of the first indent level for
+the statements inside a function makes functions all visually run
+together in a screenful of code.  Nevertheless, we want you to use this
+style when modifying pre-existing SIMH code files, so the style doesn't
+jump back and forth within a single file.
 
-    When we have the luxury of creating a new C code file, I prefer the
-    code style produced by the following [GNU `indent`][indent] command,
-    which makes as few changes to the SIMH style as possible while
-    solving all of its problems:
+When we have the luxury of creating a new C code file, I prefer the code
+style produced by the following [GNU `indent`][indent] command, which
+makes as few changes to the SIMH style as possible while solving all of
+its problems:
 
-        $ indent -kr -nce -cli4 -nlp -pcs -di1 -i4 -l100 \
-            -ncs -ss -nbbo FILES...
+    $ indent -kr -nce -cli4 -nlp -pcs -di1 -i4 -l100 \
+        -ncs -ss -nbbo FILES...
 
-    That is, start with K&R, then:
-    
-    -   nce:  don't cuddle else
-    -   cli4: indent case statement labels 4 spaces
-    -   nlp:  don't align continued statements at the opening parenthesis
-    -   pcs:  put a space before the opening parenthesis of a function call
-    -   di1:  don't line up variable types and names in separate columns
-    -   i4:   use 4-space indents
-    -   l100: allow lines up to 100 columns before forcibly breaking them
-    -   ncs:  don't put a space between a cast and its operand
-    -   ss:   add a space before semicolon with empty loop body
-    -   nbbo: don't break long lines before || and && operators
+That is, start with K&R, then:
 
-    SIMH occasionally exceeds 100-column lines.  I recommend breaking
-    long lines at 72 columns.  Call me an 80-column traditionalist.
+-   nce:  don't cuddle else
+-   cli4: indent case statement labels 4 spaces
+-   nlp:  don't align continued statements at the opening parenthesis
+-   pcs:  put a space before the opening parenthesis of a function call
+-   di1:  don't line up variable types and names in separate columns
+-   i4:   use 4-space indents
+-   l100: allow lines up to 100 columns before forcibly breaking them
+-   ncs:  don't put a space between a cast and its operand
+-   ss:   add a space before semicolon with empty loop body
+-   nbbo: don't break long lines before || and && operators
 
-    BSD `indent` does't understand the `-kr` option, so you can use this
-    alternative on BSD and macOS systems:
+SIMH occasionally exceeds 100-column lines.  I recommend breaking
+long lines at 72 columns.  Call me an 80-column traditionalist.
 
-        $ indent -nce -cli4 -nlp -pcs -di1 -i4 -l100 \
-                -bap -ncdb -nfc1 -npsl -nsc FILES...
+BSD `indent` does't understand the `-kr` option, so you can use this
+alternative on BSD and macOS systems:
+
+    $ indent -nce -cli4 -nlp -pcs -di1 -i4 -l100 \
+            -bap -ncdb -nfc1 -npsl -nsc FILES...
 
 When in doubt, mimic what you see in the current code.  When still in
 doubt, ask on the mailing list.
