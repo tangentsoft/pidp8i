@@ -160,6 +160,14 @@ only when you are truly going to be offline, and don't want Fossil
 attempting to sync when you know it will fail.
 
 
+Getting Developer Access
+----
+
+The administrator of this repository is Warren Young, whose email you
+can find on the [official PiDP-8/I project mailing list][ggml].
+Developer access is available to anyone who makes a reasonable request.
+
+
 Creating Branches
 ----
 
