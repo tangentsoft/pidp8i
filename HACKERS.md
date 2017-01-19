@@ -368,8 +368,8 @@ of its source files:
 *   Macro names are in `ALL_UPPERCASE_WITH_UNDERSCORES`
 
 *   Whitespace in the SIMH C files is of a style I have never seen
-    anywhere else in my decades of software development.  This example shows
-    the important features:
+    anywhere else in my decades of software development.  This example
+    shows the important features:
 
         int some_function (char some_parameter)
         {
@@ -380,10 +380,10 @@ of its source files:
             char *buffer = malloc (4 * nbytes);
 
             switch (some_parameter) {
-                    case 'a':
-                        do_something_with_buffer ((char *)buffer); 
-                    default:
-                        do_something_else ();
+				case 'a':
+					do_something_with_buffer ((char *)buffer); 
+				default:
+					do_something_else ();
                 }
             }
         else {
@@ -410,18 +410,13 @@ of its source files:
     -   Multiple variables declared together don't have their types and
         variable names aligned in columns.
 
-Unfortunately, I'm not aware of any automated code formatting tool that
-can produce code using this style.  I find the indented closing curly
-braces confusing, and I find that the loss of the first indent level for
-the statements inside a function makes functions all visually run
-together in a screenful of code.  Nevertheless, we want you to use this
-style when modifying pre-existing SIMH code files, so the style doesn't
-jump back and forth within a single file.
-
-When we have the luxury of creating a new C code file, I prefer the code
-style produced by the following [GNU `indent`][indent] command, which
-makes as few changes to the SIMH style as possible while solving all of
-its problems:
+I find that this style is mostly sensible, but with two serious problems:
+I find the indented closing curly braces confusing, and I find that the
+loss of the first indent level for the statements inside a function makes
+functions all visually run together in a screenful of code.  Therefore,
+when we have the luxury to be working on a file separate from SIMH,
+we use a variant of its style with these two changes, which you can
+produce with this command:
 
     $ indent -kr -nce -cli4 -nlp -pcs -di1 -i4 -l100 \
         -ncs -ss -nbbo FILES...
@@ -438,6 +433,34 @@ That is, start with K&R, then:
 -   ncs:  don't put a space between a cast and its operand
 -   ss:   add a space before semicolon with empty loop body
 -   nbbo: don't break long lines before || and && operators
+
+That gives the following, when applied to the above example:
+
+        int some_function (char some_parameter)
+        {
+			int some_variable = 0;
+
+			if (some_parameter != '\0') {
+				int nbytes = sizeof (some_parameter);
+				char *buffer = malloc (4 * nbytes);
+
+				switch (some_parameter) {
+					case 'a':
+						do_something_with_buffer ((char *)buffer); 
+					default:
+						do_something_else ();
+				}
+			}
+			else {
+				some_other_function (with_a_large, "number of parameters",
+					wraps_with_a_single, "indent level");
+				printf (stderr, "Failed to allocate buffer.\n");
+			}
+        }
+    
+If that looks greatly different, realize that it is just two indenting
+level differences: add one indent at function level, except for the
+closing braces, which we leave at their previous position.
 
 SIMH occasionally exceeds 100-column lines.  I recommend breaking
 long lines at 72 columns.  Call me an 80-column traditionalist.
