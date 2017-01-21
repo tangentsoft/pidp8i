@@ -100,26 +100,37 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 	boot/1.script \
 	boot/5.script
 
+# List of *.in files from auto.def file.  If the first file changes,
+# change the AUTOREBUILD rule near the end of the file!
+INFILES = \
+	@srcdir@/bin/pidp8i.in \
+	@srcdir@/boot/0.script.in \
+	@srcdir@/boot/2.script.in \
+	@srcdir@/boot/3.script.in \
+	@srcdir@/boot/4.script.in \
+	@srcdir@/boot/6.script.in \
+	@srcdir@/boot/7.script.in \
+	@srcdir@/etc/pidp8i-init.in \
+	@srcdir@/etc/sudoers.in \
+	@srcdir@/src/PDP8/pidp8i.c.in \
+	@srcdir@/src/scp.c.in \
+	@srcdir@/tools/simh-update.in
+OUTFILES := $(subst @srcdir@/,,$(INFILES))
+OUTFILES := $(subst .in,,$(OUTFILES))
+
 CLTXT = /boot/cmdline.txt
 
 .PHONY: tags
 
-
-all: $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
+all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 	@chmod 755 @builddir@/bin/pidp8i
 
 clean:
-	@rm -f $(BINS) \
+	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) $(OUTFILES) \
 		@builddir@/tags \
-		@builddir@/bin/*.pt \
-		@builddir@/boot/*.script \
-		@builddir@/etc/sudoers \
-		@builddir@/obj/*.d \
-		@builddir@/obj/*.lst \
+			@builddir@/obj/*.d \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
-		@builddir@/obj/PDP8/*.o \
-		@builddir@/tools/simh-update \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
@@ -128,12 +139,7 @@ distclean: clean
 		@builddir@/config.log \
 		@builddir@/Makefile \
 		@builddir@/autosetup/jimsh0 \
-		@builddir@/bin/pidp8i \
-		@builddir@/etc/pidp8i-init \
-		@builddir@/src/config.h \
-		@builddir@/src/PDP8/pidp8i.c \
-		@builddir@/src/scp.c
-	@for n in 0 2 3 4 6 7 ; do rm -f @builddir@/boot/$$n.script ; done
+		@builddir@/src/config.h
 
 ctags tags:
 	ctags -R @srcdir@
@@ -286,15 +292,18 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio.o
 	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-Makefile: @AUTODEPS@ \
-		@srcdir@/Makefile.in \
-		@srcdir@/bin/*.in \
-		@srcdir@/boot/*.in \
-		@srcdir@/etc/*.in \
-		@srcdir@/src/PDP8/*.in \
-		@srcdir@/src/*.in \
-		@srcdir@/tools/*.in
-	@AUTOREMAKE@
+Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) @AUTODEPS@
+	@AUTOREMAKE@ && $(MAKE)
+
+# If you simply make $(OUTFILES) depend on $(INFILES), make(1) thinks it
+# can build all of $(OUTFILES) in parallel if given -jN, which causes
+# ./configure --args to run N times in parallel, which blows shit up
+# right good and proper.  We purposely list only the first file in
+# $(INFILES) here to prevent that.  The other files in $(INFILES) will
+# also be built, which confuses make(1) somewhat, but it figures things
+# out on the subsequent $(MAKE) call.
+bin/pidp8i: @srcdir@/bin/pidp8i.in
+	@AUTOREMAKE@ && $(MAKE)
 endif
 
 -include $(OBJS:.o=.d) obj/scanswitch.d
