@@ -161,14 +161,16 @@ msg-result "Owner of screen(1) session will be $instusr."
 # an -f sub-option that Clang doesn't currently support even enough
 # to fool autosetup.
 cc-check-standards c99
-cc-check-flags -fipa-cp-clone
-cc-check-flags -fno-strict-overflow
-cc-check-flags -fpredictive-commoning
-if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
-	cc-check-flags -fgcse-after-reload
-	cc-check-flags -finline-functions
-	cc-check-flags -fno-unsafe-loop-optimizations
-	define-append CFLAGS "-D_GNU_SOURCE"
+if {![opt-bool debug-mode]} {
+	cc-check-flags -fipa-cp-clone
+	cc-check-flags -fno-strict-overflow
+	cc-check-flags -fpredictive-commoning
+	if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
+		cc-check-flags -fgcse-after-reload
+		cc-check-flags -finline-functions
+		cc-check-flags -fno-unsafe-loop-optimizations
+		define-append CFLAGS "-D_GNU_SOURCE"
+	}
 }
 
 # Write outputs
