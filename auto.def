@@ -56,7 +56,7 @@ if {[opt-bool debug-mode]} {
 # Fail the build if this is a single-core Pi and we're on the trunk
 # branch of the code, which takes too much CPU power to run here.
 set cores [exec tools/corecount]
-set lampsim [catch {exec grep -qw brtval src/PDP8/pdp8_cpu.c.in} result]
+set lampsim [catch {exec grep -qw brtval src/gpio.c} result]
 if {($cores < 2) && ($lampsim == 0)} {
     user-error "Cannot build lamp simulator on a single-core Pi!  See README.md."
 }
