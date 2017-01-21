@@ -149,6 +149,10 @@ define MEDIADIR "[get-define ABSPREFIX]/share/media"
 # installed, and we want them to own the screen(1) session.
 set instgrp [exec id -grn]
 set instusr [exec id -urn]
+if {$instusr == "root"} {
+	msg-result "Error: This software will not install and run as root."
+	user-error "Reconfigure without sudo!"
+}
 define INSTGRP $instgrp
 define INSTUSR $instusr
 msg-result "Install group for user-writeable files will be $instgrp."
