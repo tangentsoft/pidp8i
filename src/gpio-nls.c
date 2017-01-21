@@ -1,8 +1,8 @@
 /*
- * gpio.c: the real-time process that handles multiplexing
+ * gpio-nls.c: the real-time process that handles multiplexing
  *
  * Here in the no-lamp-simulator branch, there is no difference between
- * this module and the one in gpio-nls.c.
+ * this module and the one in gpio.c.
  * 
  * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
  *
