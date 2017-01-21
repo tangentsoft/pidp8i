@@ -385,7 +385,7 @@ set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, 0);
 while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-	awfulHackFlag = 0; // no do script pending. Did I mention awful?
+    awfulHackFlag = 0; // no do script pending. Did I mention awful?
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (sim_interval <= 0) {                            /* check clock queue */
@@ -395,42 +395,38 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-	switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
-			&DF, &int_req)) {
-		case pft_continuation:
-			// skip next instruction fetch in CONT mode
-			goto continuation_point;			
+    switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
+            &DF, &int_req)) {
+        case pft_stop:
+            // Don't choke off the SIMH event queue handler.
+            sim_interval = sim_interval - 1;
 
-		case pft_stop:
-			// Don't choke off the SIMH event queue handler.
-			sim_interval = sim_interval - 1;
+            // Update LEDs even in STOP mode.
+            //
+            // Note M[MA] used in this call, not MB.  If we pass MB, the
+            // simulator never processes Ctrl-E in STOP mode.  FIXME?
+            set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
+                    int_req, 0); 
 
-			// Update LEDs even in STOP mode.
-			//
-			// Note M[MA] used in this call, not MB.  If we pass MB, the
-			// simulator never processes Ctrl-E in STOP mode.  FIXME?
-			set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
-					int_req, 0); 
+            // Go no further in STOP mode.  In particular, fetch no more
+            // instructions, and do not touch PC!
+            continue;
 
-			// Go no further in STOP mode.  In particular, fetch no more
-			// instructions, and do not touch PC!
-			continue;
-
-		case pft_halt:
-			// Clear all registers and halt simulator
-			PC  = saved_PC  = 0;
-			IF  = saved_PC  = 0;
-			DF  = saved_DF  = 0;
-			LAC = saved_LAC = 0;
-			MQ  = saved_MQ  = 0;
-			int_req = 0;
+        case pft_halt:
+            // Clear all registers and halt simulator
+            PC  = saved_PC  = 0;
+            IF  = saved_PC  = 0;
+            DF  = saved_DF  = 0;
+            LAC = saved_LAC = 0;
+            MQ  = saved_MQ  = 0;
+            int_req = 0;
             reason = STOP_HALT;
-			continue;
+            continue;
 
-		case pft_normal:
-			// execute normally
-			break;
-	}
+        case pft_normal:
+            // execute normally
+            break;
+    }
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -461,16 +457,10 @@ while (reason == 0) {                                   /* loop until halted */
     // fetch.  This is above the goto label below because while in
     // single instruction mode, there is no point updating the LEDs
     // until we fetch another instruction, as above.  Until we get
-	// another CONT press and fetch another instruction, the LEDs are
-	// already set correctly.
+    // another CONT press and fetch another instruction, the LEDs are
+    // already set correctly.
     set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
-			int_req, 0); // State=0:Fetch
-
-// goto label used when CONT is pressed, bypassing instruction fetch
-// above, because we need to finish the prior instruction first.
-continuation_point:
-
-	if (handle_sing_inst_switch() == pft_stop) continue;
+            int_req, 0); // State=0:Fetch
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -1021,7 +1011,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             else {
                 if (IR & 04) {                          /* OSR */
 //--- PiDP add--------------------------------------------------------------------------
-                    OSR = get_switch_register();		/* FIXME: [fad3ad73ea] */
+                    OSR = get_switch_register();        /* FIXME: [fad3ad73ea] */
 //--- PiDP end--------------------------------------------------------------------------
                     LAC = LAC | OSR;
                     }
@@ -1463,7 +1453,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
                 // Any other device will trigger IOP, so light pause
                 set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-						int_req, 2); // State 2:Pause
+                        int_req, 2); // State 2:Pause
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
@@ -1481,7 +1471,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     if (IR < 05000)
         set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-				int_req, 1); // State 1:Execute
+                int_req, 1); // State 1:Execute
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     }                                                   /* end while */

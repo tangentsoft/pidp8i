@@ -371,8 +371,28 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
     // as free of PiDP-8/I details as is practical.
     if (!pidp8i_gpio_present) return pft_normal;
 
+    // Handle the nonstandard SING_STEP + X combos, some of which halt
+    // the processor.
     if (handle_sing_step ((switchstatus[2] & SS2_S_STEP) == 0) == pft_halt) {
         return pft_halt;
+    }
+
+    // Check for SING_INST switch close...
+    static int swSingInst = 0;
+    if (((switchstatus[2] & SS2_S_INST) == 0) && (swSingInst == 0)) {
+        // Put the processor in stop mode until we get a CONT or START
+        // switch closure.  Technically this is wrong according to DEC's
+        // docs: we're supposed to finish executing the next instruction
+        // before we "clear the RUN flip-flop" in DEC terms, whereas
+        // we're testing these switches before we fetch the next
+        // instruction.  Show me how it matters, and I'll fix it. :)
+        swSingInst = 1;
+        swStop = 1;
+    }
+
+    // ...and SING_INST switch open
+    if (swSingInst && (switchstatus[2] & SS2_S_INST)) {
+        swSingInst = 0;
     }
 
     // Check for START switch press...
@@ -382,7 +402,8 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
         *pLAC = 0;                        // clear L and AC;
         *pMB = 0;                         // clear MB.
         *pMA = *pPC & 07777;              // transfer PC into MA (FIXME: does IR make this unnecessary?)
-        swStop = 0;
+        swStop = 0;                       // START cancels STOP mode
+        swSingInst = 0;                   // allow SING INST mode re-entry
         swStart = 1;                      // make it single-shot
     }
 
@@ -393,16 +414,30 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
 
     // Check for CONT switch press...
     static int swCont = 0;
-    if (((switchstatus[2] & SS2_CONT) == 0) && (swCont == 0)) {
-        // FIXME: [973271ae36]
-        swStop = 0;                     
-        swCont = 1;                     // make it single-shot
-        return pft_continuation;        // continue executing current inst
+    if (((switchstatus[2] & SS2_CONT) == 0) && (swCont < 2)) {
+        if (swCont == 0) {
+            // On the initial CONT press, release stop mode regardless
+            // of how it was enabled to execute the next instruction.
+            //
+            // FIXME: Are we handling MB correctly? [973271ae36]
+            swStop = 0;
+            swCont = 1;                 // make it single-shot
+        }
+        else if (swCont == 1) {
+            // The second time we come back in here while the CONT
+            // switch is still down -- the human is too slow to
+            // release it between iterations -- we stop paying attention
+            // to it until the switch opens; check below.  Re-enter stop
+            // mode if SING_INST is still closed, else leave stop mode
+            // because we must have stopped via STOP or HLT.
+            swStop = !!swSingInst;
+            swCont = 2;
+        }
     }
 
     // ...and CONT switch release
     if (swCont && (switchstatus[2] & SS2_CONT)) {
-        swCont=0;
+        swCont = 0;
     }
 
     // Check for LOAD_ADD switch press.  (No "and release" beacuse it's
@@ -473,38 +508,6 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
     // If any of the above put us into STOP mode, go no further.  In
     // particular, fetch no more instructions, and do not touch PC!
     if (swStop == 1) return pft_stop;
-
-    return pft_normal;
-}
-
-
-//// handle_sing_inst_switch ///////////////////////////////////////////
-// Check for SING_INST press; called immediately before we try to handle
-// the current instruction.  Can't be in handle_flow_control_switches()
-// because that is called before instruction fetch, and this must be
-// called after.
-//
-// This before-and-after stuff is how we achieve the lock-step behavior
-// of single-instruction mode: the first time we come through here with
-// SING_INST closed, we just remember it and continue processing the
-// instruction, but the second time we enter STOP mode immediately after
-// processing the instruction, requiring a CONT instruction to resume
-// processing this instruction.  (This is also why there is a
-// "continuation" mode return from handle_flow_control_switches().)
-
-pidp8i_flow_t handle_sing_inst_switch()
-{
-    if (pidp8i_gpio_present && ((switchstatus[2] & SS2_S_INST) == 0)) {
-        static int swSingStep = 0;
-        if (swSingStep == 0) {
-            swSingStep = 1;    // first time thru
-        }
-        else {
-            swSingStep = 0;    // second time thru
-            swStop = 1;
-            return pft_stop;
-        }
-    }
 
     return pft_normal;
 }

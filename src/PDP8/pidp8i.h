@@ -1,8 +1,7 @@
 /* pidp8i.h: Interface between PiDP-8/I additions and the stock SIMH PDP-8
    simulator
 
-   Copyright © 2015-2017 by Oscar Vermeulen, Ian Schofield, and
-   Warren Young
+   Copyright © 2015-2017 by Oscar Vermeulen and Warren Young
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -35,7 +34,6 @@
 
 typedef enum {
     pft_normal,
-    pft_continuation,
     pft_halt,
     pft_stop,
 } pidp8i_flow_t;
@@ -47,7 +45,6 @@ extern int32 get_switch_register(void);
 extern pidp8i_flow_t handle_flow_control_switches(uint16* pM,
         uint32 *pPC, uint32 *pMA, int32 *pMB, int32 *pLAC, int32 *pIF,
         int32 *pDF, int32* pint_req);
-extern pidp8i_flow_t handle_sing_inst_switch(void);
 
 extern void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
         uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
