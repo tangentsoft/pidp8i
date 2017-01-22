@@ -14,7 +14,7 @@
 /
 / From: http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html
 /
-/ SIMH: SET THROTTLE 333k
+/ SIMH: SET THROTTLE 30k
 /
 / Copyright © 2000 Robert Krten
 /
