@@ -139,7 +139,7 @@ for my $d (@directives) {
 	$foundEcho = 1 if $d =~ m{^echo };
 }
 print $scr "echo Running $oneLiner...\n" unless $foundEcho;
-for my $a (sort keys %core) {
+for my $a (sort { $a <=> $b } keys %core) {
 	printf $scr "dep %05o %04o\n", $a, $core{$a};
 }
 printf $scr "go  %05o\n", $firstAddr;
