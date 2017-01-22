@@ -35,9 +35,16 @@ use cc
 use cc-lib
 
 options {
-	debug-mode => "create a debug build (default is release)"
-	serial-mod => "build simulator to expect the PCB serial mods"
-	throttle:  => "override the throttle values in the boot scripts"
+	debug-mode =>        "create a debug build (default is release)"
+	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
+	serial-mod =>        "build simulator to expect the PCB serial mods"
+	throttle:  =>        "override the throttle values in the boot scripts"
+}
+
+if {[opt-bool no-lamp-simulator]} {
+	define LED_DRIVER gpio-nls
+} else {
+	define LED_DRIVER gpio-ils
 }
 
 if {[opt-bool serial-mod]} {
@@ -177,12 +184,12 @@ if {![opt-bool debug-mode]} {
 	}
 }
 
-# Save this software's Fossil-based version string to config.h
+# Embed this software's Fossil-based version string into gpio-common.c
 define VERSION [exec "[get-define srcdir]/tools/version"]
 
 # Write outputs
 make-config-header src/config.h \
-	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_* VERSION} \
+	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {SERIALSETUP}
 make-template Makefile.in
 make-template bin/pidp8i.in
@@ -194,6 +201,7 @@ make-template boot/6.script.in
 make-template boot/7.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
+make-template src/gpio-common.c.in
 make-template src/PDP8/pidp8i.c.in
 make-template src/scp.c.in
 make-template tools/simh-update.in

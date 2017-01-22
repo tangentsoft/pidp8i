@@ -112,6 +112,7 @@ INFILES = \
 	@srcdir@/boot/7.script.in \
 	@srcdir@/etc/pidp8i-init.in \
 	@srcdir@/etc/sudoers.in \
+	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
 	@srcdir@/src/scp.c.in \
 	@srcdir@/tools/simh-update.in
@@ -282,7 +283,7 @@ bin/palbart: @srcdir@/palbart/palbart.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(SIM): $(OBJS) obj/gpio-ils.o
+$(SIM): $(OBJS) obj/@LED_DRIVER@.o
 	$(CC) -o $@ $^ $(LIBS)
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
