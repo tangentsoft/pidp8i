@@ -321,13 +321,12 @@ void *blink(void *terminate)
 	// Tell the user about our configuration, succinctly
 	const char* pt = pi_type(mapped ? gpio.addr_p : 0);
 	printf(
-		"PiDP-8/I version @VERSION@ [%s] [%cls] [%spcb]%s"
+		"PiDP-8/I version @VERSION@ [%s] [@LED_DRIVER_MODULE@ls] [%spcb]%s"
 #ifdef DEBUG
 		" [debug]"
 #endif
 		" [fp]%s",
 		pt ? pt : "cake",		// pt == 0 == not a Pi
-		(strstr("@LED_DRIVER@", "-nls") ? 'n' : 'i'),
 		pt ? 
 #ifdef PCB_SERIAL_MOD
 			"ser" : 

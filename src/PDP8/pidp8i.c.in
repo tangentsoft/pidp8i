@@ -122,6 +122,7 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     tempLeds |= (uint32) ((sLAC & 010000) >> 7);
     ledstatus[7] = tempLeds;
 
+#if '@LED_DRIVER_MODULE@' == 'i'
     // Increase or decrease each LED's brightness based on whether it is
     // currently enabled.  These values affect the duty cycle of the signal
     // put out by the GPIO thread to each LED, thus controlling brightness.
@@ -135,6 +136,7 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
                 *p -= *p * DECAY;
         }
     }
+#endif
 }
 
 

@@ -283,7 +283,7 @@ bin/palbart: @srcdir@/palbart/palbart.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(SIM): $(OBJS) obj/@LED_DRIVER@.o
+$(SIM): $(OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ $^ $(LIBS)
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o

@@ -60,10 +60,10 @@ if {[opt-bool debug-mode]} {
 set cores [exec tools/corecount]
 if {($cores < 2) || [opt-bool no-lamp-simulator]} {
 	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
-	define LED_DRIVER gpio-nls
+	define LED_DRIVER_MODULE n
 } else {
 	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
-	define LED_DRIVER gpio-ils
+	define LED_DRIVER_MODULE i
 }
 
 # Translate --throttle value to a SIMH command
