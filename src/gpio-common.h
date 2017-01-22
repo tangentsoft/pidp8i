@@ -1,10 +1,7 @@
 /*
- * gpio.h: public interface for the PiDP-8/I's GPIO module
+ * gpio-common.h: public interface for the PiDP-8/I's GPIO module
  *
- * This file differs from gpio-nls.h in that it includes the incandescent
- * lamp simulator feature by Ian Schofield.
- * 
- * Copyright (c) 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
+ * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -44,17 +41,17 @@
 
 
 // GPIO setup macros. Always use INP_GPIO(x) before using OUT_GPIO(x)
-#define INP_GPIO(g)   *(gpio.addr + ((g)/10)) &= ~(7<<(((g)%10)*3))
-#define OUT_GPIO(g)   *(gpio.addr + ((g)/10)) |=  (1<<(((g)%10)*3))
-#define SET_GPIO_ALT(g,a) *(gpio.addr + (((g)/10))) |= (((a)<=3?(a) + 4:(a)==4?3:2)<<(((g)%10)*3))
+#define INP_GPIO(g)   *(pgpio->addr + ((g)/10)) &= ~(7<<(((g)%10)*3))
+#define OUT_GPIO(g)   *(pgpio->addr + ((g)/10)) |=  (1<<(((g)%10)*3))
+#define SET_GPIO_ALT(g,a) *(pgpio->addr + (((g)/10))) |= (((a)<=3?(a) + 4:(a)==4?3:2)<<(((g)%10)*3))
 
-#define GPIO_SET  *(gpio.addr + 7)  // sets   bits which are 1 ignores bits which are 0
-#define GPIO_CLR  *(gpio.addr + 10) // clears bits which are 1 ignores bits which are 0
+#define GPIO_SET  *(pgpio->addr + 7)  // sets   bits which are 1 ignores bits which are 0
+#define GPIO_CLR  *(pgpio->addr + 10) // clears bits which are 1 ignores bits which are 0
 
-#define GPIO_READ(g)  *(gpio.addr + 13) &= (1<<(g))
+#define GPIO_READ(g)  *(pgpio->addr + 13) &= (1<<(g))
 
-#define GPIO_PULL *(gpio.addr + 37) // pull up/pull down
-#define GPIO_PULLCLK0 *(gpio.addr + 38) // pull up/pull down clock
+#define GPIO_PULL *(pgpio->addr + 37) // pull up/pull down
+#define GPIO_PULLCLK0 *(pgpio->addr + 38) // pull up/pull down clock
 
 
 // Switch masks, SSn, used against switchstatus[n]
@@ -110,9 +107,13 @@ extern uint8_t rows[];
 extern const size_t ncols, nledrows, nrows;
 extern uint8_t pidp8i_gpio_present;
 
+extern int gss_initted;
+
 extern void *blink(void *ptr);	// thread entry point to the gpio module
 extern unsigned bcm_host_get_peripheral_address(void);
+extern void debounce_switch(int row, int col, int ss, ms_time_t now_ms);
 extern int map_peripheral(struct bcm2835_peripheral *p);
+extern ms_time_t ms_time(ms_time_t* pt);
 extern void sleep_ns(ns_time_t ns);
 #define sleep_us(us) usleep(us)
 #define sleep_ms(ms) usleep(ms * 1000)

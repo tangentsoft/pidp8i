@@ -3,7 +3,7 @@
  * 
  * www.obsolescenceguaranteed.blogspot.com
  *
- * Copyright (c) 2015-2016 Oscar Vermeulen
+ * Copyright © 2015-2016 Oscar Vermeulen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,9 +30,10 @@
  * 
 */
 
-#include "gpio.h"
+#include "gpio-common.h"
 
 #define short_wait() sleep_ms(100)
+#define pgpio (&gpio)
 
 
 int main()
