@@ -52,7 +52,7 @@ BUILDDIRS = bin libexec obj/PDP8
 INSTDIRS = bin etc libexec share/boot share/media share/man/man1
 
 OBJS = \
-	obj/gpio.o \
+	obj/gpio-common.o \
 	obj/sim_console.o \
 	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_cpu.o \
@@ -282,13 +282,13 @@ bin/palbart: @srcdir@/palbart/palbart.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(SIM): $(OBJS)
+$(SIM): $(OBJS) obj/gpio-ils.o
 	$(CC) -o $@ $^ $(LIBS)
 
-bin/pidp8i-test: obj/test.o obj/gpio-nls.o
+bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
-libexec/scanswitch: obj/scanswitch.o obj/gpio.o
+libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)

@@ -29,7 +29,7 @@
 
 #include "pidp8i.h"
 
-#include "../gpio.h"
+#include "../gpio-common.h"
 
 #include <dirent.h> // for USB stick searching
 

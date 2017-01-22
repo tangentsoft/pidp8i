@@ -1,10 +1,7 @@
 /*
- * gpio.c: the real-time process that handles multiplexing
+ * gpio-common.c: functions common to both gpio.c and gpio-nls.c
  *
- * This file differs from gpio-nls.c in that it includes the incandescent
- * lamp simulator feature by Ian Schofield.
- * 
- * Copyright (c) 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
+ * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -34,10 +31,9 @@
  * The only communication with the main program (simh):
  * - external variable ledstatus is read to determine which leds to light.
  * - external variable switchstatus is updated with current switch settings.
- * 
 */
 
-#include "gpio.h"
+#include "gpio-common.h"
 
 #include "config.h"
 
@@ -45,7 +41,9 @@
 #include <sys/file.h>
 #include <sys/time.h>
 
+#include <ctype.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_TIME_H
 #	include <time.h>
@@ -83,9 +81,6 @@ uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
 
 uint8_t rows[] = {16, 17, 18};
 
-float brtval[96];
-uint32_t brctr[96],bctr,ndx;
-
 // Array sizes.  Must be declared twice because we need to export them,
 // and C doesn't have true const, as C++ does.
 #define NCOLS    (sizeof(cols)    / sizeof(cols[0]))
@@ -116,7 +111,7 @@ struct switch_state {
 	ms_time_t last_change;		
 };
 static struct switch_state gss[NROWS][NCOLS];
-static int gss_initted = 0;
+int gss_initted = 0;
 static const ms_time_t debounce_ms = 50;	// time switch state must remain stable
 
 // Name of GPIO memory-mapped device
@@ -128,8 +123,10 @@ int map_peripheral(struct bcm2835_peripheral *p)
 {
 	// Open the GPIO device
 	if ((p->mem_fd = open(gpio_mem_dev, O_RDWR|O_SYNC) ) < 0) {
+#ifdef DEBUG
 		printf("Failed to open %s: %s\n", gpio_mem_dev, strerror(errno));
 		puts("Disabling PiDP-8/I front panel functionality.");
+#endif
 		return -1;
 	}
 
@@ -209,7 +206,7 @@ void sleep_ns(ns_time_t ns)
 
 
 // Like time(2) except that it returns milliseconds since the Unix epoch
-static ms_time_t ms_time(ms_time_t* pt)
+ms_time_t ms_time(ms_time_t* pt)
 {
 	struct timeval tv;
 	if (gettimeofday(&tv, 0) == 0) {
@@ -222,8 +219,6 @@ static ms_time_t ms_time(ms_time_t* pt)
 	}
 }
 
-
-// The multiplexing logic driving the front panel -------------
 
 // Save given switch state ss into the exported switchstatus bitfield
 // so the simulator core will see it.  (Constrast the gss matrix,
@@ -239,14 +234,14 @@ static void report_ss(int row, int col, int ss,
 	else    switchstatus[row] &= ~mask;
 
 	#ifdef DEBUG
-		printf("%cSS[%d][%02d] = %d  ", gss_initted ? 'N' : 'I',row, col, ss);
+		printf("%cSS[%d][%02d] = %d  ", gss_initted ? 'N' : 'I', row, col, ss);
 	#endif
 }
 
 
 // Given the state of the switch at (row,col), work out if this requires
 // a change in our exported switch state.
-static void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
+void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
 {
 	struct switch_state* pss = &gss[row][col];
 
@@ -278,160 +273,84 @@ static void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
 }
 
 
-// The GPIO module's main loop, and its thread entry point
+// The GPIO thread entry point: initializes GPIO and then calls
+// the blink_core() implementation linked to this program.
 
 void *blink(void *terminate)
 {
-	int i,j,k;
-	const us_time_t intervl = 5;	// light each row of leds 5 µs
-	ms_time_t now_ms;
-
-	// Find gpio address (different for Pi 2) ----------
+	// Find GPIO address (it varies by Pi model)
 	gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
-	if (gpio.addr_p== 0x20200000) printf("RPi Plus detected - ");
-	else printf("RPi 2/3 detected - ");
-#ifdef SERIALSETUP
-	printf(" Serial mod version\n");
-#else
-	printf(" Default version using gpiomem\n");
-#endif
 
-	// set thread to real time priority -----------------
+	// Set thread to real time priority
 	struct sched_param sp;
 	sp.sched_priority = 4;	// not high, just above the minimum of 1
-	if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp))
-	{ fprintf(stderr, "warning: failed to set RT priority\n"); }
-	// --------------------------------------------------
-	if(map_peripheral(&gpio) == -1) return (void *)-1;
+	int rt = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp) == 0;
 
-	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
-	//	INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
-	//	AT THE MOMENT, USE "sudo ./gpio mode 14 in" and "sudo ./gpio mode 15 in". "sudo ./gpio readall" to verify.
+	// Map the GPIO peripheral, but hold off exiting if it fails, until
+	// we report its absence in the config line.
+	int mapped = map_peripheral(&gpio) == 0;
 
-	for (i=0;i<nledrows;i++)			// Define ledrows as input
-	{	INP_GPIO(ledrows[i]);
-		GPIO_CLR = 1 << ledrows[i];		// so go to Low when switched to output
-	}
-	for (i=0;i<ncols;i++)				// Define cols as input
-	{	INP_GPIO(cols[i]);
-	}
-	for (i=0;i<nrows;i++)				// Define rows as input
-	{	INP_GPIO(rows[i]);
-	}
+	// Hand off control to the blink_core() variant linked to this
+	// program: either the new incandescent lamp simulator or the old
+	// stock version.
+	if (mapped) {
+		// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
+		//  INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
+		//  AT THE MOMENT, USE "sudo ./gpio mode 14 in" and "sudo ./gpio mode 15 in". "sudo ./gpio readall" to verify.
+		#define pgpio (&gpio)
+		int i;
+		for (i = 0; i <nledrows; i++) {     // Define ledrows as input
+			INP_GPIO(ledrows[i]);
+			GPIO_CLR = 1 << ledrows[i];     // so go to Low when switched to output
+		}
+		for (i = 0; i < ncols; i++) {       // Define cols as input
+			INP_GPIO(cols[i]);
+		}
+		for (i = 0; i < nrows; i++) {       // Define rows as input
+			INP_GPIO(rows[i]);
+		}
 
-	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-	GPIO_PULL = 2;	// pull-up
-	usleep(1);	// must wait 150 cycles
+		// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
+		GPIO_PULL = 2;  // pull-up
+		usleep(1);  // must wait 150 cycles
 #ifdef SERIALSETUP
-	GPIO_PULLCLK0 = 0x03ffc; // selects GPIO pins 2..13 (frees up serial port on 14 & 15)
+		GPIO_PULLCLK0 = 0x03ffc; // selects GPIO pins 2..13 (frees up serial port on 14 & 15)
 #else
-	GPIO_PULLCLK0 = 0x0fff0; // selects GPIO pins 4..15 (assumes we avoid pins 2 and 3!)
+		GPIO_PULLCLK0 = 0x0fff0; // selects GPIO pins 4..15 (assumes we avoid pins 2 and 3!)
 #endif
-	usleep(1);
-	GPIO_PULL = 0; // reset GPPUD register
-	usleep(1);
-	GPIO_PULLCLK0 = 0; // remove clock
-	usleep(1); // probably unnecessary
+		usleep(1);
+		GPIO_PULL = 0; // reset GPPUD register
+		usleep(1);
+		GPIO_PULLCLK0 = 0; // remove clock
+		usleep(1); // probably unnecessary
 
-	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-	GPIO_PULL = 1;	// pull-down to avoid ghosting (dec2015)
-	usleep(1);	// must wait 150 cycles
-	GPIO_PULLCLK0 = 0x0ff00000; // selects GPIO pins 20..27
-	usleep(1);
-	GPIO_PULL = 0; // reset GPPUD register
-	usleep(1);
-	GPIO_PULLCLK0 = 0; // remove clock
-	usleep(1); // probably unnecessary
+		// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
+		GPIO_PULL = 1;  // pull-down to avoid ghosting (dec2015)
+		usleep(1);  // must wait 150 cycles
+		GPIO_PULLCLK0 = 0x0ff00000; // selects GPIO pins 20..27
+		usleep(1);
+		GPIO_PULL = 0; // reset GPPUD register
+		usleep(1);
+		GPIO_PULLCLK0 = 0; // remove clock
+		usleep(1); // probably unnecessary
 
-	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-	GPIO_PULL = 0;	// no pull-up no pull down just float
-// not the reason for flashes it seems:
-//GPIO_PULL = 2;	// pull-up - letf in but does not the reason for flashes
-	usleep(1);	// must wait 150 cycles
-	GPIO_PULLCLK0 = 0x070000; // selects GPIO pins 16..18
-	usleep(1);
-	GPIO_PULL = 0; // reset GPPUD register
-	usleep(1);
-	GPIO_PULLCLK0 = 0; // remove clock
-	usleep(1); // probably unnecessary
-	bctr=0;
-	for (ndx=0;i<96;i++)
- 	 brtval[ndx]=0;
-	// --------------------------------------------------
+		// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
+		GPIO_PULL = 0;  // no pull-up no pull down just float
+		usleep(1);  // must wait 150 cycles
+		GPIO_PULLCLK0 = 0x070000; // selects GPIO pins 16..18
+		usleep(1);
+		GPIO_PULL = 0; // reset GPPUD register
+		usleep(1);
+		GPIO_PULLCLK0 = 0; // remove clock
+		usleep(1); // probably unnecessary
 
-	printf("\nFP on\n");
-
-	while (*((int*)terminate) == 0)
-	{
-		// prepare for lighting LEDs by setting col pins to output
-		for (i=0;i<ncols;i++)
-		{	INP_GPIO(cols[i]);			//
-			OUT_GPIO(cols[i]);			// Define cols as output
-		}
-		if (bctr==0) {
-		for (i=0;i<96;i++)
-		 brctr[i]=0;
-		bctr=32;
-		}
-		// light up LEDs
-		for (i=ndx=0;i<nledrows;i++)
-		{
-			// Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-			for (k=0;k<ncols;k++,ndx++)
-			{
-				if (++brctr[ndx]<brtval[ndx])
-					GPIO_CLR = 1 << cols[k];
-				else
-					GPIO_SET = 1 << cols[k];
-			}
-
-			// Toggle this ledrow on
-			INP_GPIO(ledrows[i]);
-			GPIO_SET = 1 << ledrows[i]; // test for flash problem
-			OUT_GPIO(ledrows[i]);
-
-			sleep_us(intervl);
-
-			// Toggle ledrow off
-			GPIO_CLR = 1 << ledrows[i]; // superstition
-			INP_GPIO(ledrows[i]);
-
-			sleep_us(intervl);
-
-		}
-
-		// prepare for reading switches
-		ms_time(&now_ms);
-		for (i=0;i<ncols;i++)
-			INP_GPIO(cols[i]);			// flip columns to input. Need internal pull-ups enabled.
-
-		// read three rows of switches
-		for (i=0;i<nrows;i++)
-		{	INP_GPIO(rows[i]);			
-			OUT_GPIO(rows[i]);			// turn on one switch row
-			GPIO_CLR = 1 << rows[i];	// and output 0V to overrule built-in pull-up from column input pin
-
-			sleep_ns(intervl * 1000 / 100);
-
-			for (j=0;j<ncols;j++)		// ncols switches in each row
-			{	int ss = GPIO_READ(cols[j]);
-				debounce_switch(i, j, !!ss, now_ms);
-			}
-
-			INP_GPIO(rows[i]);			// stop sinking current from this row of switches
-		}
-
-		fflush(stdout);
-		gss_initted = 1;
-	    bctr--;
-
-#if defined(HAVE_SCHED_YIELD)
-		sched_yield();
-#endif
+		extern void blink_core(struct bcm2835_peripheral*, int* terminate);
+		blink_core(&gpio, (int*)terminate);
 	}
 
-	//printf("\nFP off\n");
-	// at this stage, all cols, rows, ledrows are set to input, so elegant way of closing down.
+    // blink_core() leaves all cols, rows, ledrows are set to input, and
+	// it's safe to leave them in that state.  No need to de-init GPIO.
 
-	return 0;
+	gss_initted = 0;
+	return mapped ? 0 : (void*)-1;
 }

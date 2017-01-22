@@ -26,7 +26,7 @@
    authors.
 */
 
-#include "gpio.h"
+#include "gpio-common.h"
 
 #include <assert.h>
 #include <ctype.h>
