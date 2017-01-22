@@ -61,7 +61,7 @@ static int swStop = 0;
 
 void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
-    int32 sSC, int32 int_req, int32 sTT)
+    int32 sSC, int32 int_req, pidp8i_led_state_t eTT)
 {
     // No point updating the display every single time thru.  Human PoV
     // limit makes faster updates unnecessary.  FIXME: [28d33e9046]
@@ -95,8 +95,8 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
             ((sIR & 0x100) != 0)) {     // is it indirect addressing?
         tempLeds += (1 << 1);           // then set Defer LED
     }
-    if (sTT == 1) tempLeds |= (1 << 2); // set Execute LED
-    if (sTT == 0) tempLeds |= (1 << 3); // set Fetch LED
+    if (eTT == pls_execute) tempLeds |= (1 << 2); // set Execute LED
+    if (eTT == pls_fetch)   tempLeds |= (1 << 3); // set Fetch LED
 
     // Group 5 is done: set LEDs all at once
     ledstatus[5] = tempLeds;
@@ -104,7 +104,7 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // Group 6: remaining LEDs in upper right block plus step count LEDs.
     // Some of these are handled in the main instruction decoding loop.
     tempLeds = 0;
-    if (sTT == 2)          tempLeds |= (1 << 8); // set Pause LED
+    if (eTT == pls_pause)  tempLeds |= (1 << 8); // set Pause LED
     if (int_req & INT_ION) tempLeds |= (1 << 9); // set ION LED
     if (swStop == 0)       tempLeds |= (1 << 7); // set Run LED
     tempLeds |= ((uint32)(sSC) & 0x1f) << 2;     // set Step Count LEDs

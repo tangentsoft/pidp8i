@@ -376,7 +376,8 @@ reason = 0;
 MA = MB = IR = 0;
 
 // Light up LEDs for 1st time.  Only needed when STOP switch set at start.
-set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, 0);
+set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req,
+				pls_fetch);
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -406,7 +407,7 @@ while (reason == 0) {                                   /* loop until halted */
             // Note M[MA] used in this call, not MB.  If we pass MB, the
             // simulator never processes Ctrl-E in STOP mode.  FIXME?
             set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
-                    int_req, 0); 
+				int_req, pls_fetch);
 
             // Go no further in STOP mode.  In particular, fetch no more
             // instructions, and do not touch PC!
@@ -460,7 +461,7 @@ while (reason == 0) {                                   /* loop until halted */
     // another CONT press and fetch another instruction, the LEDs are
     // already set correctly.
     set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
-            int_req, 0); // State=0:Fetch
+            int_req, pls_fetch);
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -1453,7 +1454,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
                 // Any other device will trigger IOP, so light pause
                 set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-                        int_req, 2); // State 2:Pause
+                        int_req, pls_pause);
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
@@ -1471,7 +1472,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     if (IR < 05000)
         set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-                int_req, 1); // State 1:Execute
+                int_req, pls_execute);
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     }                                                   /* end while */

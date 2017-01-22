@@ -38,6 +38,12 @@ typedef enum {
     pft_stop,
 } pidp8i_flow_t;
 
+typedef enum {
+	pls_fetch,
+	pls_execute,
+	pls_pause,
+} pidp8i_led_state_t;
+
 extern int awfulHackFlag;
 
 extern int32 get_switch_register(void);
@@ -48,7 +54,7 @@ extern pidp8i_flow_t handle_flow_control_switches(uint16* pM,
 
 extern void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
         uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
-        int32 sSC, int32 int_req, int32 sTT);
+        int32 sSC, int32 int_req, pidp8i_led_state_t eTT);
 extern void set_stop_mode(void);
 
 #endif // !defined(PIDP8I_H)
