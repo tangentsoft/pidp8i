@@ -52,6 +52,12 @@ static int swStop = 0;
 // call to set_pidp8i_leds() where we don't bail early.
 #define DECAY 0.01
 
+// Some things we do below change based on whether we're linked to the
+// ILS GPIO module or the NLS one.
+#if '@LED_DRIVER_MODULE@' == 'i'
+#	define ILS_MODE
+#endif
+
 
 //// set_pidp8i_leds ///////////////////////////////////////////////////
 // Given all of the PDP-8's internal registers that affect the front
@@ -64,28 +70,48 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     int32 sSC, int32 int_req, pidp8i_led_state_t eTT)
 {
     // The human PoV means we don't need to update the values driving
-	// the GPIO thread more than about once a millisecond.  The trick
-	// is figuring out how often to update them without making a lot of
-	// calls to relatively expensive system timers.  Although time
-	// syscalls are fast (http://stackoverflow.com/a/13096917/142454)
-	// these days, we really don't want to be taking dozens of cycles
-	// per instruction just to keep our update estimate current in the
+	// the GPIO thread more than about once every 10ms.  The ILS code
+	// requires faster updates, more like a few times a milliseconds.
+	// This function gets called once per simulated instruction,
+	// however, which is *way* too fast.  So, we skip out without
+	// doing anything unless it's been long enough that we need to send
+	// new LED values to the GPIO thread.
+	//
+	// The trick is figuring out how often to update them without making
+	// a lot of calls to relatively expensive system timers.  Time calls
+	// are fast these days (http://stackoverflow.com/a/13096917/142454)
+	// but we really don't want to be taking dozens of cycles per
+	// instruction just to keep our update estimate current in the
 	// face of system load changes and SET THROTTLE updates.
 	//
 	// Instead, we use a very fast timer (time(3)) to update our
-	// estimate once a second based on the IPS value the simulator
-	// already maintains.  This involves FP math, but when paid only
-	// once a second, it amortizes much nicer than calling
-	// clock_gettime() or gettimeofday() on every instruction.
+	// estimate of the number of calls to skip once a second based on
+	// the IPS value the simulator already maintains.  This involves
+	// FP math, but when paid only once a second, it amortizes much
+	// nicer than estimating the skip count directly based on a more
+	// accurate time source which is more expensive to call.
+	//
+	// A further refinement is that we do the test for skipping out
+	// early before calling time(3), as that's super-fast.
+	//
+	// We can't usefully give an estimated max_skips value here because
+	// the worst case is the slowest-clocked example (boot/5.script) on
+	// a Pi 1, which would require a value of about 5-7 here, not high
+	// enough to bother hard-coding.
 	static size_t skip_counter = 0, max_skips = 0;
 	static time_t now, last_estimate = 0;
+	if (++skip_counter < max_skips) return;
+	skip_counter = 0;
 	if (time(&now) != last_estimate) {
-		static const size_t updates_per_sec = 100;
+#if defined(ILS_MODE)
+		static const size_t updates_per_sec = 7500;	// ILS needs it
+#else
+		static const size_t updates_per_sec = 100;	// human PoV limit
+#endif
 		max_skips = sim_timer_inst_per_sec() / updates_per_sec;
 		//printf("Instructions per panel update: %zu\r\n", max_skips);
 		last_estimate = now;
 	}
-	if (++skip_counter < max_skips) return;
 
     // Groups 0-4, easy cases: single-register LED strings
     ledstatus[0] = (uint32) sPC;
@@ -140,7 +166,7 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     tempLeds |= (uint32) ((sLAC & 010000) >> 7);
     ledstatus[7] = tempLeds;
 
-#if '@LED_DRIVER_MODULE@' == 'i'
+#if defined(ILS_MODE)
     // Increase or decrease each LED's brightness based on whether it is
     // currently enabled.  These values affect the duty cycle of the signal
     // put out by the GPIO thread to each LED, thus controlling brightness.
