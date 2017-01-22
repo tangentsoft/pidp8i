@@ -13,37 +13,14 @@ repo=pidp8i
 dldir="$HOME/tangentsoft.com/dl"
 os=jessie-lite
 img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
-rdisk=/dev/rdisk10
 greadlink=$(type -p greadlink || type -p readlink)
 this=$($greadlink -f $0)
 
 
 # Initial steps
 function do_init() {
-	if ! getent passwd $nu > /dev/null
-	then
-		if [ "$USER" != "root" ]
-		then
-			echo "The init step has to be run as root."
-			echo "See RELEASE-PROCESS.md."
-			echo
-			exit 1
-		fi
-
-		usermod \
-			-d $nh \
-			-l $nu \
-			-p $(openssl passwd -1 edsonDeCastro1968) \
-			-m pi 
-	fi
-
 	sudo apt-get update && sudo apt-get -y upgrade || true
-	do_fossil
-}
 
-
-# Fossil clone, build and install
-function do_fossil() {
 	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi fossil $object
 	cd $HOME
 
@@ -66,7 +43,7 @@ function do_fossil() {
 		./configure
 	fi
 
-	make -j4
+	tools/mmake
 	sudo make install || true
 	sudo reboot
 }
@@ -74,6 +51,14 @@ function do_fossil() {
 
 # This script resets the OS's configuration to a clean first boot state.
 function do_reset() {
+	if [ "$USER" != "root" ]
+	then
+		echo "The reset step has to be run as root.  The explanation is"
+		echo "given in the section for 'reset' in RELEASE-PROCESS.md."
+		echo
+		exit 1
+	fi
+
 	history -c ; rm -f ~/.bash_history
 	test "$USER" = "root" || exec sudo $this reset
 
@@ -81,12 +66,23 @@ function do_reset() {
 	dphys-swapfile uninstall
 	dd if=/dev/zero of=/junk bs=1M || true		# it *will* error-out!
 	rm /junk
+	encpass=$(openssl passwd -1 edsonDeCastro1968)
+	if [ -e "$nh" ]
+	then
+		# A prior pass already renamed the default user and moved its
+		# home directory, so just change the password.
+		usermod -p $encpass pidp8i
+	else
+		# First pass on a clean SD card: rename 'pi' user to 'pidp8i',
+		# move its home directory
+		usermod -d $nh -l $nu -p $encpass -m pi 
+	fi
 	passwd -e pidp8i
 	( sleep 1 ; poweroff ) & exit
 }
 
 
-# Shrink the filesystem on the SD card we're about to image to just a
+# Shrink the filesystem on the OS SD card we're about to image to just a
 # bit bigger than required to hold its present contents.
 #
 # The extra 100 megs in the arithmetic below accounts for the /boot
@@ -131,16 +127,66 @@ NEXT
 }
 
 
-# This script images the SD card in a USB reader on a Mac OS X box.
+# This script images the OS SD card in a USB reader on a Mac OS X box.
 function do_image() {
+	set +x
 	if [ -n "$object" ]
 	then
-		sudo diskutil unmountDisk $rdisk		# it auto-mounted
-		sudo dd if=$rdisk bs=4k count=$object of=$img
+		while read line
+		do
+			case $line in
+				/dev/*)
+					dev=$(echo $line | cut -f1 -d' ')
+					;;
+
+				0:*)
+					case $line in
+						*FDisk_partition_scheme*) ;;
+						*) dev= ;;		# can't be the OS SD card
+					esac
+					;;
+
+				1:*)
+					case $line in
+						*Windows_FAT_32\ boot*) ;;
+						*) dev= ;;		# can't be the OS SD card
+					esac
+					;;
+
+				2:*)
+					case $line in
+						*Linux\ Untitled*) break ;;	# found it!
+						*) dev= ;;		# can't be the OS SD card
+					esac
+					;;
+			esac
+		done < <(diskutil list)
+
+		if [ -z "$dev" ]
+		then
+			echo "Failed to find OS SD card!"
+			echo
+			exit 1
+		fi
+
+		echo
+		echo "-------------------------------------------------------"
+		diskutil info "$dev"
+		echo "-------------------------------------------------------"
+		echo
+		read -p "Is that the OS SD card? [y/N]: " answer
+		case $answer in
+			[Yy]*) ;;
+			*) exit 1
+		esac
+
+		set -x
+		sudo diskutil unmountDisk $dev			# it auto-mounted
+		sudo dd if=$dev bs=4k count=$object of=$img
 		zip -9j $img.zip $img
 
-		sudo dd if=$img of=$rdisk bs=1m
-		sudo diskutil unmountDisk $rdisk || true	# Paragon ExtFS might be installed
+		sudo dd if=$img of=$dev bs=1m
+		sudo diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
 	else
 		usage
 	fi
@@ -177,7 +223,6 @@ USAGE
 set -e
 case "$verb" in
 	in*) do_init ;;
-	fo*) do_fossil ;;
 	re*) do_reset ;;
 	sh*) do_shrink ;;
 	im*) do_image ;;

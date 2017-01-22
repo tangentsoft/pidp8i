@@ -56,7 +56,7 @@ if {[opt-bool debug-mode]} {
 # Fail the build if this is a single-core Pi and we're on the trunk
 # branch of the code, which takes too much CPU power to run here.
 set cores [exec tools/corecount]
-set lampsim [catch {exec grep -qw brtval src/PDP8/pdp8_cpu.c.in} result]
+set lampsim [catch {exec grep -qw brtval src/gpio.c} result]
 if {($cores < 2) && ($lampsim == 0)} {
     user-error "Cannot build lamp simulator on a single-core Pi!  See README.md."
 }
@@ -149,6 +149,10 @@ define MEDIADIR "[get-define ABSPREFIX]/share/media"
 # installed, and we want them to own the screen(1) session.
 set instgrp [exec id -grn]
 set instusr [exec id -urn]
+if {$instusr == "root"} {
+	msg-result "Error: This software will not install and run as root."
+	user-error "Reconfigure without sudo!"
+}
 define INSTGRP $instgrp
 define INSTUSR $instusr
 msg-result "Install group for user-writeable files will be $instgrp."
@@ -161,14 +165,16 @@ msg-result "Owner of screen(1) session will be $instusr."
 # an -f sub-option that Clang doesn't currently support even enough
 # to fool autosetup.
 cc-check-standards c99
-cc-check-flags -fipa-cp-clone
-cc-check-flags -fno-strict-overflow
-cc-check-flags -fpredictive-commoning
-if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
-	cc-check-flags -fgcse-after-reload
-	cc-check-flags -finline-functions
-	cc-check-flags -fno-unsafe-loop-optimizations
-	define-append CFLAGS "-D_GNU_SOURCE"
+if {![opt-bool debug-mode]} {
+	cc-check-flags -fipa-cp-clone
+	cc-check-flags -fno-strict-overflow
+	cc-check-flags -fpredictive-commoning
+	if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
+		cc-check-flags -fgcse-after-reload
+		cc-check-flags -finline-functions
+		cc-check-flags -fno-unsafe-loop-optimizations
+		define-append CFLAGS "-D_GNU_SOURCE"
+	}
 }
 
 # Write outputs
@@ -185,7 +191,7 @@ make-template boot/6.script.in
 make-template boot/7.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
-make-template src/PDP8/pdp8_cpu.c.in
+make-template src/PDP8/pidp8i.c.in
 make-template src/scp.c.in
 make-template tools/simh-update.in
 exec chmod +x "[get-define builddir]/tools/simh-update"

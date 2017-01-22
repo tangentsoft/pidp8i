@@ -46,7 +46,7 @@ Start with the latest [Raspbian Lite OS image][os].
 
         $ wget https://tangentsoft.com/bosi
 		$ chmod +x bosi
-		$ exec sudo ./bosi init
+		$ ./bosi init
  
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
@@ -55,7 +55,13 @@ Start with the latest [Raspbian Lite OS image][os].
 
 4.  Reset the OS configuration:
 
-        $ ./bosi reset
+        $ exec sudo ./bosi reset
+
+    The `exec` bit is required so that the `bosi` invocation is run as
+    root without any processes running as `pi` in case the `init` step
+    sees that user `pi` hasn't been changed to `pidp8i` here: the
+    `usermod` command we give to make that change will refuse to do what
+    we ask if there are any running processes owned by user `pi`.
 
 5.  Move the SD card to a USB reader plugged into the Pi, boot the Pi
     from its prior SD card, and shrink the OS image:

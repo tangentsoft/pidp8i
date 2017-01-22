@@ -9,6 +9,7 @@
 	PAGE 1
 	CLA CLL IAC     / clear link and AC, then bump AC: AC=1
 	HLT		/ let user see initial AC=1 value
-LOOP,	RAL HLT         / rotate AC left and halt again
-	JMP LOOP        / ...and around it goes...
+LOOP,	RAL		/ rotate AC left
+	HLT             / and halt again
+	JMP LOOP        / on CONT, around it goes...
 $

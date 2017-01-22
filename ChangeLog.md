@@ -94,10 +94,10 @@
     values simply aren't necessary to get the necessary performance,
     even on the trunk branch with the incandescent lamp simulator.)
 
-*   Since v20161128, you `make install` on a system with an existing
-    PiDP-8/I software installation, the binary OS media images were not
-    being overwritten, on purpose, since you may have modified them
-    locally, so the installer chose not to overwrite your versions.
+*   Since v20161128, when you `make install` on a system with an
+    existing PiDP-8/I software installation, the binary OS media images
+    were not being overwritten, on purpose, since you may have modified
+    them locally, so the installer chose not to overwrite your versions.
 
     With this release, the same principle applies to the SIMH boot
     scripts (e.g. `$prefix/share/boot/0.script`) since those are also
@@ -109,7 +109,9 @@
     versions and decide which changes to copy over or merge into your
     local files.
 
+[hltbug]:  https://tangentsoft.com/pidp8i/info/f961906a5c24f5de
 [copying]: https://tangentsoft.com/pidp8i/doc/trunk/COPYING.md
+[rmth]:    https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 
 
 ## Version 2017.01.05
@@ -417,14 +419,12 @@
 *   Fixed a bunch of bugs!
 
 [readme]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
-[rmth]:    https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [dupatch]: https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA
 [dudis]:   https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936
 [wiki]:    https://tangentsoft.com/pidp8i/wcontent
 [ex]:      https://tangentsoft.com/pidp8i/doc/trunk/examples/README.md
 [art]:     https://tangentsoft.com/pidp8i/dir?c=trunk&name=labels
 [tix]:     https://tangentsoft.com/pidp8i/tickets
-[hltbug]:  https://tangentsoft.com/pidp8i/info/f961906a5c24f5de
 
 
 ## Version 2015.12.15
