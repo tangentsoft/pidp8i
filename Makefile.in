@@ -85,14 +85,9 @@ OBJS = \
 
 LIBS = -lm -ldl -lpthread
 
-EXAMPLES := \
-	bin/ac-mq-blinker.pt \
-	bin/add.pt \
-	bin/asr33-rim-loader.pt \
-	bin/bit-rotate.pt \
-	bin/hello.pt \
-	bin/hs-rim-loader.pt \
-	bin/pep001.pt
+EXAMPLES := $(wildcard @srcdir@/examples/*.pal)
+EXAMPLES := $(subst @srcdir@/examples,bin,$(EXAMPLES))
+EXAMPLES := $(EXAMPLES:.pal=.pt)
 LISTINGS := $(EXAMPLES:.pt=.lst)
 LISTINGS := $(subst bin/,obj/,$(LISTINGS))
 BOOTSCRIPTS := $(LISTINGS:.lst=.script)
@@ -267,7 +262,7 @@ obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
 # Rule for translating PAL assembly language program listings to SIMH
 # boot scripts.
 boot/%.script: obj/%.lst
-	@builddir@/tools/mkbootscript $<
+	@srcdir@/tools/mkbootscript $<
 
 # Rules for making aliases of named example programs translated to boot
 # scripts as special numbered boot scripts
