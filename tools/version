@@ -46,20 +46,20 @@ if (not -e "$topdir/.fslckout") {
 }
 
 # Get version info from Fossil
-my ($branch, $checkout, $version);
+my ($branch, $checkout, $version, $comment);
 open my $s, '-|', 'fossil status';
 while (<$s>) {
 	chomp;
 	my ($attr, $value) = split /:\s+/;
 
-	if ($attr =~ m{^checkout}) {
+	if ($attr eq 'checkout') {
 		my @elems = split ' ', $value;
 		$checkout = substr($elems[0], 0, 8);
 	}
-	elsif ($attr =~ m{tags}) {
+	elsif ($attr eq 'tags') {
 		my @tags = split /, /, $value;
 		for my $t (@tags) {
-			if ($t =~ m{^v}) {
+			if ($t =~ m{^v\d+}) {
 				$version = $t;
 			}
 			else {
@@ -67,6 +67,11 @@ while (<$s>) {
 			}
 		}
 	}
+	elsif ($attr eq 'comment') {
+		$comment = $value;
+	}
 }
 close $s;
+
+($version) = $comment =~ m{(v\d+)} if $branch eq 'release';
 print $branch, ':', ($version || "r$checkout");
