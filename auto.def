@@ -41,12 +41,6 @@ options {
 	throttle:  =>        "override the throttle values in the boot scripts"
 }
 
-if {[opt-bool no-lamp-simulator]} {
-	define LED_DRIVER gpio-nls
-} else {
-	define LED_DRIVER gpio-ils
-}
-
 if {[opt-bool serial-mod]} {
 	msg-result "The simulator will expect the serial mods to the Pi and PiDP-8/I PCBs."
 	define SERIALSETUP
@@ -60,12 +54,14 @@ if {[opt-bool debug-mode]} {
 	define BUILDMODE {-O2}
 }
 
-# Fail the build if this is a single-core Pi and we're on the trunk
-# branch of the code, which takes too much CPU power to run here.
+# Swap the incandescent lamp simulator feature out for the original LED
+# driving method on single-core hosts.  The user can force this on
+# multi-core hosts via --no-lamp-simulator.
 set cores [exec tools/corecount]
-set lampsim [catch {exec grep -qw brtval src/gpio.c} result]
-if {($cores < 2) && ($lampsim == 0)} {
-    user-error "Cannot build lamp simulator on a single-core Pi!  See README.md."
+if {($cores < 2) || [opt-bool no-lamp-simulator]} {
+	define LED_DRIVER gpio-nls
+} else {
+	define LED_DRIVER gpio-ils
 }
 
 # Translate --throttle value to a SIMH command
