@@ -6,15 +6,6 @@
     first-generation Raspberry Pi model A and B boards which had a
     26-pin GPIO connector.
 
-*   In order to use the incandescent lamp simulator feature, you will
-    need to use a multi-core Pi such as the Pi 2 or Pi 3.  This rules
-    out the model A+, the model B+, and the Pi Zero.
-
-    Those running on a single-core Pi can use the "no lamp simulator"
-    version of the software, which has this feature removed.  Versions
-    are available in Zip, tarball, USB SD card image, and Fossil forms.
-    See the [front page of the PiDP-8/I software project site][prj].
-
 *   An SD card containing Raspbian or something sufficiently close.
     This software is currently tested with the Jessie Lite distribution.
 
@@ -63,6 +54,23 @@ directory on the Pi with this command:
 Although this is installing to a directory your user has write access
 to, you still need to install via `sudo` because the installation
 process does other things that do require `root` access.
+
+
+#### --no-lamp-simulator
+
+If you build the software on a multi-core host, the PDP-8/I simulator is
+normally built with Ian Schofield's incandescent lamp simulator feature,
+which drives the LEDs in a way that mimics the incandescent lamps used
+in the original PDP-8/I.  This feature currently takes too much CPU
+power to run on anything but a multi-core Raspberry Pi, currently
+limited to the Pi 2 and Pi 3 series.
+
+If you configure the software on a single-core Pi — models A+, B+, and
+Zero — the simulator uses the original low-CPU-usage LED driving method
+instead.
+
+Those on a multi-core host who want this low-CPU-usage LED driving
+method can give the `--no-lamp-simulator` option to `configure`.
 
 
 #### --serial-mod
@@ -188,4 +196,3 @@ the terms of [the SIMH license][sl].
 [thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
 [sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
-[nls]:  https://tangentsoft.com/pidp8i/timeline?n=100&r=no-lamp-simulator

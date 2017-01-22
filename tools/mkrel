@@ -1,9 +1,8 @@
 #!/bin/bash
 ########################################################################
-# mkrel - Automatically merge trunk changes into the no-lamp-simulator
-#   and release branches for a new public release of the software.  Also
-#   tags the trunk with the date of release, so old releases can be
-#   easily checked out.
+# mkrel - Automatically merge trunk changes into the release branch
+#   for a new public release of the software.  Also tags the trunk with
+#   the date of release, so old releases can be easily checked out.
 #
 # Copyright © 2016-2017 Warren Young
 #
@@ -43,11 +42,4 @@ fossil update &&
 	! fossil status | grep -q '^CONFLICT' &&
 	tools/mmake &&
 	fossil diff -w | less &&
-	fossil ci -m "Merged trunk changes for $tag into release branch" &&
-	cd ../no-lamp-simulator &&
-	fossil update &&
-	fossil merge release &&
-	! fossil status | grep -q '^CONFLICT' &&
-	tools/mmake &&
-	fossil diff -w | less &&
-	fossil ci -m "Merged release $tag changes in"
+	fossil ci -m "Merged trunk changes for $tag into release branch"

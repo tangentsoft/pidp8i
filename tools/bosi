@@ -31,7 +31,7 @@ verb="$1"
 object="$2"
 
 tag=$(echo $verb | cut -f2 -d- -s)
-test -z "$tag" && tag=all
+test -z "$tag" && tag=ils
 
 nu=pidp8i
 nh=/home/$nu
@@ -47,7 +47,7 @@ this=$($greadlink -f $0)
 function do_init() {
 	sudo apt-get update && sudo apt-get -y upgrade || true
 
-	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi fossil $object
+	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi init $object
 	cd $HOME
 
 	test -n "$(type -p fossil)" || sudo apt-get -y install fossil
@@ -63,10 +63,10 @@ function do_init() {
 	if [ -r ChangeLog.md ]
 	then
 		fossil revert			# just in case
-		fossil update $object
+		fossil update release
 	else
-		fossil open ~/museum/$repo.fossil $object
-		./configure
+		fossil open ~/museum/$repo.fossil release
+		./configure $object
 	fi
 
 	tools/mmake

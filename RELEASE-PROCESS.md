@@ -14,12 +14,11 @@ shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
 
-## Update the Release Branches
+## Update the Release Branch
 
 Run `make release` to check the `ChangeLog.md` file changes in, tagging
-that checkin with a release version tag of the form vYYYYMMDD.  This
-process also attempts to automatically merge those changes into the
-`release` and `no-lamp-simulator` branches.
+that checkin with a release version tag of the form vYYYYMMDD and merge
+those changes into the `release` branch.
 
 It runs entirely automatically unless an error occurs, in which case it
 stops immediately, so check its output for errors before continuing.
@@ -91,7 +90,7 @@ Start with the latest [Raspbian Lite OS image][os].
 ## Produce the "No Lamp Simulator" Binary OS Image
 
 Log into the SD card from which you made the regular image above, then
-say `./bosi init no-lamp-simulator`, and continue from step 3 above.
+say `./bosi init --no-lamp-simulator`, and continue from step 3 above.
 
 When you get down to the `image` and `test` steps, give `image-nls` and
 `test-nls` instead.
