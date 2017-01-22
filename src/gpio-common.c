@@ -273,6 +273,36 @@ void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
 }
 
 
+// Write a configuration string tag.
+static const char* pi_type(int p)
+{
+	if (p == 0x20200000) {
+		return "pi1+";
+	}
+	else if (p != 0) {
+		FILE* fp = fopen("/proc/device-tree/model", "r");
+		if (fp) {
+			static char ac[60];
+			if (fgets(ac, sizeof(ac), fp) != ac) {
+				if (strstr(ac, "Raspberry Pi ") == ac) {
+					int series = atoi(ac + 13);
+					char model = 'x';
+					char* pm = strstr(ac, " Model ");
+					if (pm && strlen(pm) > 7) {
+						model = tolower(pm[7]);
+					}
+					snprintf(ac, sizeof(ac), "pi%d%c", series, model);
+					return ac;
+				}
+			}
+		}
+		return "pi2+";
+	}
+
+	return 0;		// not a Pi
+}
+
+
 // The GPIO thread entry point: initializes GPIO and then calls
 // the blink_core() implementation linked to this program.
 
@@ -289,6 +319,26 @@ void *blink(void *terminate)
 	// Map the GPIO peripheral, but hold off exiting if it fails, until
 	// we report its absence in the config line.
 	int mapped = map_peripheral(&gpio) == 0;
+
+	// Tell the user about our configuration, succinctly
+	const char* pt = pi_type(mapped ? gpio.addr_p : 0);
+	printf(
+		"PiDP-8/I version "VERSION" [%s] [%spcb]%s"
+#ifdef DEBUG
+		" [debug]"
+#endif
+		" [fp]%s",
+			pt ? pt : "cake",		// pt == 0 == not a Pi
+			pt ? 
+#ifdef SERIALSETUP
+				"std" : 
+#else
+				"ser" : 
+#endif
+				"no",
+		mapped ? " [gpio]" : "",
+		rt     ? " [rt]" : ""
+	);
 
 	// Hand off control to the blink_core() variant linked to this
 	// program: either the new incandescent lamp simulator or the old

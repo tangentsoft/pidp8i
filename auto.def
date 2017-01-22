@@ -177,9 +177,12 @@ if {![opt-bool debug-mode]} {
 	}
 }
 
+# Save this software's Fossil-based version string to config.h
+define VERSION [exec "[get-define srcdir]/tools/version"]
+
 # Write outputs
 make-config-header src/config.h \
-	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
+	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_* VERSION} \
 	-bare {SERIALSETUP}
 make-template Makefile.in
 make-template bin/pidp8i.in
