@@ -279,24 +279,22 @@ static const char* pi_type(int p)
 	if (p == 0x20200000) {
 		return "pi1+";
 	}
-	else if (p != 0) {
+	else {
 		FILE* fp = fopen("/proc/device-tree/model", "r");
 		if (fp) {
 			static char ac[60];
-			if (fgets(ac, sizeof(ac), fp) != ac) {
+			if (fgets(ac, sizeof(ac), fp) && (strlen(ac) > 20)) {
 				if (strstr(ac, "Raspberry Pi ") == ac) {
 					int series = atoi(ac + 13);
 					char model = 'x';
 					char* pm = strstr(ac, " Model ");
-					if (pm && strlen(pm) > 7) {
-						model = tolower(pm[7]);
-					}
+					if (pm) model = tolower(pm[7]);
 					snprintf(ac, sizeof(ac), "pi%d%c", series, model);
 					return ac;
 				}
 			}
+			return "pi2+";
 		}
-		return "pi2+";
 	}
 
 	return 0;		// not a Pi
@@ -332,9 +330,9 @@ void *blink(void *terminate)
 		(strstr("@LED_DRIVER@", "-nls") ? 'n' : 'i'),
 		pt ? 
 #ifdef SERIALSETUP
-			"std" : 
-#else
 			"ser" : 
+#else
+			"std" : 
 #endif
 			"no",
 		mapped ? " [gpio]" : "",
