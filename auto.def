@@ -43,7 +43,7 @@ options {
 
 if {[opt-bool serial-mod]} {
 	msg-result "The simulator will expect the serial mods to the Pi and PiDP-8/I PCBs."
-	define SERIALSETUP
+	define PCB_SERIAL_MOD
 }
 
 if {[opt-bool debug-mode]} {
@@ -186,7 +186,7 @@ define VERSION [exec "[get-define srcdir]/tools/version"]
 # Write outputs
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {SERIALSETUP}
+	-bare {PCB_SERIAL_MOD}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in

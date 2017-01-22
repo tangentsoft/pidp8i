@@ -71,7 +71,7 @@ static const ms_time_t na_ms = (ms_time_t)-1;
 // Adjust columns to scan based on whether the serial mod was done, as
 // that affects the free GPIOs for our use, and how the PCB connects
 // them to the LED matrix.
-#ifdef SERIALSETUP
+#ifdef PCB_SERIAL_MOD
 uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
 uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
@@ -329,7 +329,7 @@ void *blink(void *terminate)
 		pt ? pt : "cake",		// pt == 0 == not a Pi
 		(strstr("@LED_DRIVER@", "-nls") ? 'n' : 'i'),
 		pt ? 
-#ifdef SERIALSETUP
+#ifdef PCB_SERIAL_MOD
 			"ser" : 
 #else
 			"std" : 
@@ -362,7 +362,7 @@ void *blink(void *terminate)
 		// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
 		GPIO_PULL = 2;  // pull-up
 		usleep(1);  // must wait 150 cycles
-#ifdef SERIALSETUP
+#ifdef PCB_SERIAL_MOD
 		GPIO_PULLCLK0 = 0x03ffc; // selects GPIO pins 2..13 (frees up serial port on 14 & 15)
 #else
 		GPIO_PULLCLK0 = 0x0fff0; // selects GPIO pins 4..15 (assumes we avoid pins 2 and 3!)
