@@ -32,21 +32,32 @@
 
 #include "gpio-common.h"
 
-//#include "config.h"
+#include "sim_defs.h"
 
-//#include <pthread.h>
-//#include <sys/file.h>
-//#include <sys/time.h>
 
-//#include <errno.h>
-//#include <string.h>
-//#ifdef HAVE_TIME_H
-//# include <time.h>
-//#endif
+//// CONSTANTS /////////////////////////////////////////////////////////
 
-float brtval[96];
-uint32_t brctr[96], bctr, ndx;
+// We calculate the brightness values for the ILS version of the GPIO
+// module here using an integer approximation, where the [0.0, 32.0)
+// FP range used in the original ILS patch is remapped to 0-65535 for
+// a 16-bit integer calculation.  The ILS code shifts it down 11
+// positions to get the top 5 bits, giving is 0-31, the same range
+// the FP-based original ILS code used, after integer truncation.  This
+// runs faster than the original ILS code at the expense of some
+// precision, but the eye can't tell the difference.
+#define ILS_INT_MATH_MAX 65535
 
+// On each iteration, we add or subtract a proportion of the current LED
+// value back to it as its new brightness, based on the LED's current
+// internal state.  The value below means we take the current value and
+// shift it right by 9 positions (i.e. divide by 512, roughly 1% of the
+// ILS_INT_MATH_MAX value above, since DECAY was 0.01 in the original
+// ILS patch) and add or subtract that to the current LED brightness
+// value, which ranges from 0 to ILS_INT_MATH_MAX.
+#define DECAY 9
+
+
+//// blink_core ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
@@ -56,29 +67,41 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
     const us_time_t intervl = 5;    // light each row of leds 5 µs
     ms_time_t now_ms;
 
-    bctr = 0;
-    for (ndx = 0; i < 96; i++) {
-        brtval[ndx] = 0;
-    }
+	uint16 brtval[96];
+	uint8 brctr[96], bctr = 0, ndx;
+	memset(brtval, 0, sizeof (brtval));
 
     while (*terminate == 0) {
         // prepare for lighting LEDs by setting col pins to output
         for (i = 0; i < ncols; i++) {
-            INP_GPIO(cols[i]);          //
+            INP_GPIO(cols[i]);
             OUT_GPIO(cols[i]);          // Define cols as output
         }
         if (bctr == 0) {
-            for (i = 0; i < 96; i++) {
-                brctr[i] = 0;
-            }
+			memset(brctr, 0, sizeof (brctr));
             bctr = 32;
         }
+
+		// Increase or decrease each LED's brightness based on whether
+		// it is currently enabled.  These values affect the duty cycle
+		// of the signal put out by the GPIO thread to each LED, thus
+		// controlling brightness.
+		uint16 *p = brtval;
+		for (int row = 0; row < nledrows; ++row) {
+			for (int col = 0, msk = 1; col < ncols; ++col, ++p, msk <<= 1) {
+				if (ledstatus[row] & msk)
+					*p += (ILS_INT_MATH_MAX - *p) >> DECAY;
+				else
+					*p -= *p >> DECAY;
+			}
+		}
 
         // light up LEDs
         for (i = ndx = 0; i < nledrows; i++) {
             // Toggle columns for this ledrow (which LEDs should be on (CLR = on))
             for (k = 0; k < ncols; k++, ndx++) {
-                if (++brctr[ndx] < brtval[ndx])
+				// Shift by 11 converts 16-bit brtval to 0-31 brightness
+                if (++brctr[ndx] < (brtval[ndx] >> 11))
                     GPIO_CLR = 1 << cols[k];
                 else
                     GPIO_SET = 1 << cols[k];

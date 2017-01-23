@@ -61,9 +61,11 @@ set cores [exec tools/corecount]
 if {($cores < 2) || [opt-bool no-lamp-simulator]} {
 	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
 	define LED_DRIVER_MODULE n
+	define ILS_MODE 0
 } else {
 	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
 	define LED_DRIVER_MODULE i
+	define ILS_MODE 1
 }
 
 # Translate --throttle value to a SIMH command
@@ -188,7 +190,7 @@ define VERSION [exec "[get-define srcdir]/tools/version"]
 # Write outputs
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {PCB_SERIAL_MOD}
+	-bare {ILS_MODE PCB_SERIAL_MOD}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in
