@@ -45,7 +45,12 @@
 // internal state.  This gives a nonlinear increase/decrease behavior,
 // where rising from "off" or dropping from "full-on" is fast to start
 // and slows down as it approaches its destination.
-#define DECAY 0.01
+//
+// We use an asymmetric function depending on whether the LED is turning
+// on or off to better mimic the behavior of an incandescent lamp, which
+// reaches full brightness faster than it turns fully off.
+#define RISING_FACTOR 0.02
+#define FALLING_FACTOR 0.008
 
 
 //// blink_core ////////////////////////////////////////////////////////
@@ -81,9 +86,9 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 		for (int row = 0; row < nledrows; ++row) {
 			for (int col = 0, msk = 1; col < ncols; ++col, ++p, msk <<= 1) {
 				if (ledstatus[row] & msk)
-					*p += (MAX_BRIGHTNESS - *p) * DECAY;
+					*p += (MAX_BRIGHTNESS - *p) * RISING_FACTOR;
 				else
-					*p -= *p * DECAY;
+					*p -= *p * FALLING_FACTOR;
 			}
 		}
 
