@@ -321,7 +321,7 @@ void *blink(void *terminate)
 	// Tell the user about our configuration, succinctly
 	const char* pt = pi_type(mapped ? gpio.addr_p : 0);
 	printf(
-		"PiDP-8/I version @VERSION@ [%s] [@LED_DRIVER_MODULE@ls] [%spcb]%s"
+		"PiDP-8/I @VERSION@ [%s] [@LED_DRIVER_MODULE@ls] [%spcb]%s"
 #ifdef DEBUG
 		" [debug]"
 #endif
