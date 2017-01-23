@@ -32,21 +32,23 @@
 
 #include "gpio-common.h"
 
-//#include "config.h"
+#include "sim_defs.h"
 
-//#include <pthread.h>
-//#include <sys/file.h>
-//#include <sys/time.h>
 
-//#include <errno.h>
-//#include <string.h>
-//#ifdef HAVE_TIME_H
-//# include <time.h>
-//#endif
+//// CONSTANTS /////////////////////////////////////////////////////////
 
-float brtval[96];
-uint32_t brctr[96], bctr, ndx;
+// Brightness range is [0, MAX_BRIGHTNESS) truncated.
+#define MAX_BRIGHTNESS 32
 
+// On each iteration, we add or subtract a proportion of the current LED
+// value back to it as its new brightness, based on the LED's current
+// internal state.  This gives a nonlinear increase/decrease behavior,
+// where rising from "off" or dropping from "full-on" is fast to start
+// and slows down as it approaches its destination.
+#define DECAY 0.01
+
+
+//// blink_core ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
@@ -56,23 +58,34 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
     const us_time_t intervl = 5;    // light each row of leds 5 µs
     ms_time_t now_ms;
 
-    bctr = 0;
-    for (ndx = 0; i < 96; i++) {
-        brtval[ndx] = 0;
-    }
+	float brtval[96];
+	uint8 brctr[96], bctr = 0, ndx;
+	memset(brtval, 0, sizeof (brtval));
 
     while (*terminate == 0) {
         // prepare for lighting LEDs by setting col pins to output
         for (i = 0; i < ncols; i++) {
-            INP_GPIO(cols[i]);          //
+            INP_GPIO(cols[i]);
             OUT_GPIO(cols[i]);          // Define cols as output
         }
         if (bctr == 0) {
-            for (i = 0; i < 96; i++) {
-                brctr[i] = 0;
-            }
-            bctr = 32;
+			memset(brctr, 0, sizeof (brctr));
+            bctr = MAX_BRIGHTNESS;
         }
+
+		// Increase or decrease each LED's brightness based on whether
+		// it is currently enabled.  These values affect the duty cycle
+		// of the signal put out by the GPIO thread to each LED, thus
+		// controlling brightness.
+		float *p = brtval;
+		for (int row = 0; row < nledrows; ++row) {
+			for (int col = 0, msk = 1; col < ncols; ++col, ++p, msk <<= 1) {
+				if (ledstatus[row] & msk)
+					*p += (MAX_BRIGHTNESS - *p) * DECAY;
+				else
+					*p -= *p * DECAY;
+			}
+		}
 
         // light up LEDs
         for (i = ndx = 0; i < nledrows; i++) {
