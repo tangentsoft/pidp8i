@@ -114,7 +114,7 @@ popd
 # unversioned area.  We simplify the upstream naming scheme in the
 # transfer, dropping unnecessary prefixes and suffixes.
 pushd "$SRCDIR"
-for fs in pdp8_doc simh_breakpoints simh_faq simh_magtape simh_doc
+for fs in pdp8_doc simh_breakpoints simh_faq simh_doc
 do
 	ft=$(echo $fs | sed -e 's/simh_//' -e 's/_doc//')
 	test "$ft" = "doc" && ft=main
