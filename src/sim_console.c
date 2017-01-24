@@ -178,7 +178,7 @@ static t_stat sim_con_reset (DEVICE *dptr);                 /* console reset rou
 static t_stat sim_con_attach (UNIT *uptr, CONST char *ptr); /* console attach routine (save,restore) */
 static t_stat sim_con_detach (UNIT *uptr);                  /* console detach routine (save,restore) */
 
-UNIT sim_con_units[2] = { UDATA (&sim_con_poll_svc, UNIT_ATTABLE, 0) };  /* console connection unit */
+UNIT sim_con_units[2] = {{ UDATA (&sim_con_poll_svc, UNIT_ATTABLE, 0)}}; /* console connection unit */
 #define sim_con_unit sim_con_units[0]
 
 /* debugging bitmaps */
@@ -1860,6 +1860,7 @@ else {
         *pref = NULL;
         return SCPE_OPENERR;
         }
+    setvbuf (*pf, NULL, _IOFBF, 65536);
     (*pref)->file = *pf;
     (*pref)->refcount = 1;                               /* need close */
     }
