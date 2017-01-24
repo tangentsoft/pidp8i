@@ -1,5 +1,149 @@
 # PiDP-8/I Changes
 
+## Version 2017.01.23
+
+*   When any program that talks to the PiDP-8/I front panel starts up,
+    it now prints out a banner modeled on the [Erlang configuration
+    line][ecl].  For example, when I run the software in the development
+    tree on my PiDP-8/I, I get the following:
+
+        PiDP-8/I trunk:i49cd065c [pi3b] [ils] [serpcb] [gpio]
+
+    It tells me that:
+    
+    *   I'm running code built from Fossil checkin ID 49cd065c on the
+        trunk branch, as opposed to a release version, which would be
+        marked `release:v20170123` or similar.  (The `i` here is a tag
+        standing for "ID", as in Fossil checkin ID.  Contrast `v` used
+        to tag release version numbers.)
+
+    *   I'm running it on a Raspberry Pi 3 Model B with Ian Schofield's
+        incandescent lamp simulator (ILS) feature enabled.
+
+    *   The software is built to expect that the PiDP-8/I PCB and the Pi
+        board attached to it have had the serial mods made to them.
+
+    *   The GPIO module found the GPIO hardware and was able to attach
+        to it.
+
+*   I get a very different result when running it on my desktop machine:
+
+        PiDP-8/I trunk:id8536d91 [cake] [nls] [nopcb] [rt]
+
+    This tells me:
+
+    *   I'm running a different version of the development branch (i.e.
+        the "trunk") of the code than what's running on the Pi.
+
+    *   It's not running on a Pi at all.  (Cake ≠ pi.)
+
+    *   I've disabled the ILS feature, so it's running with the "no lamp
+        simulator" (NLS) GPIO module.
+    
+    *   Which is all to the good, because there's no point burning CPU
+        power running the ILS code on a host machine that doesn't have a
+        PiDP-8/I PCB attached.
+
+    *   The GPIO thread is running with real-time privileges.
+
+*   The ILS feature can now be disabled at `configure` time via the new
+    `--no-lamp-simulator` flag.  This option is automatically set when
+    building on a single-core Raspberry Pi.  (The flag is there only to
+    allow someone building the software on a multi-core host machine to
+    disable the ILS.)
+
+*   Tweaked the ILS decay constants to be asymmetric, better mimicking
+    the way real incandescent lamps work: they heat up to full
+    brightness faster than they fade to perceptively "off."
+
+*   The LED values used by the GPIO thread were being recalculated way
+    too often.
+
+    In the ILS case, it was updating the values approximately at the
+    same rate as the ILS's PWM core frequency, roughly 7,500 times per
+    second, which is far higher than the human persistence of vision
+    limit.  While the PWM rate does need to be that fast to do its job,
+    the underlying LED state values do not need to change nearly that
+    often to fool the human into seeing instantaneous updates.
+
+    The NLS case was actually worse, recalculating the LED values on
+    every instruction executed by the PDP-8 CPU simulator, which even on
+    a Pi 1 is likely to be a few MHz.
+
+    In both the ILS and NLS cases, we now update the LED values about
+    100 times a second, maintaining that rate dynamically based on the
+    current execution speed of the simulator.
+
+*   In prior versions, the ILS was only updating at its intended rate
+    when the PDP-8 simulator was running flat-out on a current
+    multi-core Raspberry Pi.  If you throttled the SIMH simulator to a
+    slower execution rate, the display quality would start to degrade
+    noticeably below about 1 MIPS.
+
+*   With the prior fix, we now ship 5.script (i.e. the handler for
+    starting the simulator with IF=5, or restarting it with IF=5 +
+    `SING_STEP`) set to a throttle value of 30 kIPS, which allows the
+    human to see each AC/MQ modification.  The built-in delay loops are
+    still there, else we'd have to drop this to well under 1 kIPS.
+
+*   The `SING_INST` switch now immediately puts the processor into
+    single instruction mode, not requiring a separate press of the
+    `STOP` key, as in prior versions.  This is the correct behavior
+    according to the 1967-1968 edition of DEC's Small Computer Handbook
+    for the PDP-8/I.
+
+*   Greatly simplified the way single-instruction mode, processor
+    stoppage, and the `CONT` key work.  The prior implementation was
+    error-prone and difficult to understand.  This fixes a particularly
+    bad interaction between the way `HLT` instructions and `CONT` key
+    presses were handled, causing the processor to not resume correctly
+    from `HLT` state.
+
+*   Consolidated and cleaned up the bulk of the PiDP-8/I switch handling
+    code so that it is not so intimately tied into the guts of the PDP-8
+    CPU emulator.  This will greatly increase the chance that future
+    updates to the upstream SIMH code will apply cleanly to our version.
+
+*   Fixed a bug in `examples/bit-rotate.pal` which caused it to skip the
+    actual bit rotation step.  We were trying to microcode two
+    instructions into one that the PDP-8 won't accept together, and we
+    didn't catch it until now because the HLT bug masked it, and the
+    `palbart` assembler we ship isn't smart enough to notice the bug.
+
+*   Fully generalized the mechanism for generating `obj/*.lst`,
+    `bin/*.pt`, and `boot/*.script` from `examples/*.pal`.  You can now
+    drop any PAL assembly language program into the `examples` directory
+    and type `make` to build these various output forms automatically
+    using the shipped version of `palbart`.  This effectively turns this
+    PiDP-8/I software distribution into a PDP-8 assembly language
+    development environment: rapidly build, test, and debug your PAL
+    programs on your PC before you deploy them to real hardware.  Or,
+    write PAL programs to debug the hardware or simulator, as we did
+    with `examples/bit-rotate.pal`.
+
+*   Fixed a sorting bug in the tool that generates `boot/*.script` from
+    `obj/*.lst`, resulting in `dep` instructions that weren't sorted by
+    core address.  This didn't cause any real problem, but it made
+    tracing the execution of a PAL assembly program difficult if you
+    were trying to refer to the `boot/*.script` file to check that the
+    PiDP-8/I's front panel is showing the correct register values.
+
+*   Updated SIMH to the latest upstream version and shipping a subset of
+    the SIMH docs as unversioned files from tangentsoft.com.
+
+*   The `configure` script now aborts the build if it sees that you're
+    trying to build the software as root, since that means it generates
+    the init script and the pidp8i script expecting to run the installed
+    software as root, not as your normal user.  The most common way this
+    happens is that you have a configured source tree, then change one
+    of the `*.in` files and say `sudo make install`, thinking to build
+    and install the change in one step.  This fixes that.
+
+*   Several improvements to the build system.
+
+[ecl]: http://stackoverflow.com/q/1182025/142454
+
+
 ## Version 2017.01.16
 
 *   Prior releases did not include proper licensing for many of the
