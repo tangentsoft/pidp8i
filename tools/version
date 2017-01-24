@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env perl
 ########################################################################
-# mmake - Runs make -jN where N is 1.5x the number of CPU cores
+# tools/version - Print a string summarizing the software version
 #
 # Copyright © 2017 Warren Young
 #
@@ -29,4 +29,49 @@
 # authorization from those authors.
 ########################################################################
 
-make -j$(($("$(dirname "$0")"/corecount) * 15 / 10)) "$@"
+use strict;
+use warnings;
+
+use Cwd 'abs_path';
+use File::Basename;
+
+my $topdir = dirname($0) . '/..';
+if (not -e "$topdir/.fslckout") {
+	# We're not within a Fossil checkout, so try to get the version
+	# number from the top directory name.
+	$topdir = basename(abs_path($topdir));
+	my ($v) = $topdir =~ m{v\d+};
+	print 'pkg:', ($v ? $v : 'vUNKNOWN'), "\n";
+	exit 0;
+}
+
+# Get version info from Fossil
+my ($branch, $checkout, $version, $comment);
+open my $s, '-|', 'fossil status';
+while (<$s>) {
+	chomp;
+	my ($attr, $value) = split /:\s+/;
+
+	if ($attr eq 'checkout') {
+		my @elems = split ' ', $value;
+		$checkout = substr($elems[0], 0, 8);
+	}
+	elsif ($attr eq 'tags') {
+		my @tags = split /, /, $value;
+		for my $t (@tags) {
+			if ($t =~ m{^v\d+}) {
+				$version = $t;
+			}
+			else {
+				$branch = $t;
+			}
+		}
+	}
+	elsif ($attr eq 'comment') {
+		$comment = $value;
+	}
+}
+close $s;
+
+($version) = $comment =~ m{(v\d+)} if $branch eq 'release';
+print $branch, ':', ($version || "i$checkout");

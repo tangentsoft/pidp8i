@@ -36,7 +36,7 @@
 
 # Git commit ID of the latest version of the SIMH 4 project on GitHub 
 # that has been merged into this source base.
-SGCID=0db0236bedee9841bbf146598e9ff08ad468b54b
+SGCID=0046905f72e2372a8bf5dfc90425fd5214b0ba8a
 
 CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
@@ -52,7 +52,7 @@ BUILDDIRS = bin libexec obj/PDP8
 INSTDIRS = bin etc libexec share/boot share/media share/man/man1
 
 OBJS = \
-	obj/gpio.o \
+	obj/gpio-common.o \
 	obj/sim_console.o \
 	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_cpu.o \
@@ -72,6 +72,7 @@ OBJS = \
 	obj/PDP8/pdp8_tsc.o \
 	obj/PDP8/pdp8_tt.o \
 	obj/PDP8/pdp8_ttx.o \
+	obj/PDP8/pidp8i.o \
 	obj/scp.o \
 	obj/sim_disk.o \
 	obj/sim_ether.o \
@@ -84,14 +85,9 @@ OBJS = \
 
 LIBS = -lm -ldl -lpthread
 
-EXAMPLES := \
-	bin/ac-mq-blinker.pt \
-	bin/add.pt \
-	bin/asr33-rim-loader.pt \
-	bin/bit-rotate.pt \
-	bin/hello.pt \
-	bin/hs-rim-loader.pt \
-	bin/pep001.pt
+EXAMPLES := $(wildcard @srcdir@/examples/*.pal)
+EXAMPLES := $(subst @srcdir@/examples,bin,$(EXAMPLES))
+EXAMPLES := $(EXAMPLES:.pal=.pt)
 LISTINGS := $(EXAMPLES:.pt=.lst)
 LISTINGS := $(subst bin/,obj/,$(LISTINGS))
 BOOTSCRIPTS := $(LISTINGS:.lst=.script)
@@ -99,26 +95,38 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 	boot/1.script \
 	boot/5.script
 
+# List of *.in files from auto.def file.  If the first file changes,
+# change the AUTOREBUILD rule near the end of the file!
+INFILES = \
+	@srcdir@/bin/pidp8i.in \
+	@srcdir@/boot/0.script.in \
+	@srcdir@/boot/2.script.in \
+	@srcdir@/boot/3.script.in \
+	@srcdir@/boot/4.script.in \
+	@srcdir@/boot/6.script.in \
+	@srcdir@/boot/7.script.in \
+	@srcdir@/etc/pidp8i-init.in \
+	@srcdir@/etc/sudoers.in \
+	@srcdir@/src/gpio-common.c.in \
+	@srcdir@/src/PDP8/pidp8i.c.in \
+	@srcdir@/src/scp.c.in \
+	@srcdir@/tools/simh-update.in
+OUTFILES := $(subst @srcdir@/,,$(INFILES))
+OUTFILES := $(subst .in,,$(OUTFILES))
+
 CLTXT = /boot/cmdline.txt
 
 .PHONY: tags
 
-
-all: $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
+all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 	@chmod 755 @builddir@/bin/pidp8i
 
 clean:
-	@rm -f $(BINS) \
+	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) $(OUTFILES) \
 		@builddir@/tags \
-		@builddir@/bin/*.pt \
-		@builddir@/boot/*.script \
-		@builddir@/etc/sudoers \
-		@builddir@/obj/*.d \
-		@builddir@/obj/*.lst \
+			@builddir@/obj/*.d \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
-		@builddir@/obj/PDP8/*.o \
-		@builddir@/tools/simh-update \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
@@ -127,12 +135,7 @@ distclean: clean
 		@builddir@/config.log \
 		@builddir@/Makefile \
 		@builddir@/autosetup/jimsh0 \
-		@builddir@/bin/pidp8i \
-		@builddir@/etc/pidp8i-init \
-		@builddir@/src/config.h \
-		@builddir@/src/PDP8/pdp8_cpu.c \
-		@builddir@/src/scp.c
-	@for n in 0 2 3 4 6 7 ; do rm -f @builddir@/boot/$$n.script ; done
+		@builddir@/src/config.h
 
 ctags tags:
 	ctags -R @srcdir@
@@ -192,7 +195,7 @@ install: all
 	@# If serial mod is disabled, turn off serial console and kgdb stuff
 	@# in case they were enabled previously, else they will fight with
 	@# our use of GPIO.
-	@(  test -z "@SERIALSETUP@" -a -r $(CLTXT) && ! -w $(CLTXT) && \
+	@(  test -z "@PCB_SERIAL_MOD@" -a -r $(CLTXT) && ! -w $(CLTXT) && \
 		cp -p $(CLTXT) "$(CLTXT)"_orig && \
 		sed -e 's/console\=[a-zA-Z0-9]+,[0-9]+ //' \
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
@@ -259,7 +262,7 @@ obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
 # Rule for translating PAL assembly language program listings to SIMH
 # boot scripts.
 boot/%.script: obj/%.lst
-	@builddir@/tools/mkbootscript $<
+	@srcdir@/tools/mkbootscript $<
 
 # Rules for making aliases of named example programs translated to boot
 # scripts as special numbered boot scripts
@@ -275,25 +278,28 @@ bin/palbart: @srcdir@/palbart/palbart.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(SIM): $(OBJS)
+$(SIM): $(OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ $^ $(LIBS)
 
-bin/pidp8i-test: obj/test.o obj/gpio-nls.o
+bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
-libexec/scanswitch: obj/scanswitch.o obj/gpio.o
+libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-Makefile: @AUTODEPS@ \
-		@srcdir@/Makefile.in \
-		@srcdir@/bin/*.in \
-		@srcdir@/boot/*.in \
-		@srcdir@/etc/*.in \
-		@srcdir@/src/PDP8/*.in \
-		@srcdir@/src/*.in \
-		@srcdir@/tools/*.in
-	@AUTOREMAKE@
+Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) @AUTODEPS@
+	@AUTOREMAKE@ && $(MAKE)
+
+# If you simply make $(OUTFILES) depend on $(INFILES), make(1) thinks it
+# can build all of $(OUTFILES) in parallel if given -jN, which causes
+# ./configure --args to run N times in parallel, which blows shit up
+# right good and proper.  We purposely list only the first file in
+# $(INFILES) here to prevent that.  The other files in $(INFILES) will
+# also be built, which confuses make(1) somewhat, but it figures things
+# out on the subsequent $(MAKE) call.
+bin/pidp8i: @srcdir@/bin/pidp8i.in
+	@AUTOREMAKE@ && $(MAKE)
 endif
 
 -include $(OBJS:.o=.d) obj/scanswitch.d

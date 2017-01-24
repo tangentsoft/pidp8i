@@ -30,7 +30,8 @@
 # authorization from those authors.
 ########################################################################
 
-SRCSUBDIR="@srcdir@/src"
+SRCDIR="@srcdir@"
+SRCSUBDIR="$SRCDIR/src"
 PRGNAME="$(basename "$0")"
 WORKDIR="@builddir@/$PRGNAME-temp"
 OUR_SIMH_DIR="$WORKDIR/simh/ours"
@@ -107,6 +108,21 @@ git clone https://github.com/simh/simh "$CURR_SIMH_DIR"
 pushd "$CURR_SIMH_DIR"
 NEW_SGCID=$(git rev-parse HEAD)
 git worktree add "$OUR_SIMH_DIR" $OLD_SGCID
+popd
+
+# Copy over updated versions of the docs and replace them in the Fossil
+# unversioned area.  We simplify the upstream naming scheme in the
+# transfer, dropping unnecessary prefixes and suffixes.
+pushd "$SRCDIR"
+for fs in pdp8_doc simh_breakpoints simh_faq simh_magtape simh_doc
+do
+	ft=$(echo $fs | sed -e 's/simh_//' -e 's/_doc//')
+	test "$ft" = "doc" && ft=main
+	doc="doc/simh/$ft.doc"
+	cp "$CURR_SIMH_DIR/doc/$fs.doc" "$doc"
+	fossil uv add "$doc"
+done
+fossil uv sync
 popd
 
 # Rename upstream Git paths to match our *.in files so that our produced

@@ -14,12 +14,11 @@ shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
 
-## Update the Release Branches
+## Update the Release Branch
 
 Run `make release` to check the `ChangeLog.md` file changes in, tagging
-that checkin with a release version tag of the form vYYYYMMDD.  This
-process also attempts to automatically merge those changes into the
-`release` and `no-lamp-simulator` branches.
+that checkin with a release version tag of the form vYYYYMMDD and merge
+those changes into the `release` branch.
 
 It runs entirely automatically unless an error occurs, in which case it
 stops immediately, so check its output for errors before continuing.
@@ -46,7 +45,7 @@ Start with the latest [Raspbian Lite OS image][os].
 
         $ wget https://tangentsoft.com/bosi
 		$ chmod +x bosi
-		$ exec sudo ./bosi init
+		$ ./bosi init
  
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
@@ -55,7 +54,13 @@ Start with the latest [Raspbian Lite OS image][os].
 
 4.  Reset the OS configuration:
 
-        $ ./bosi reset
+        $ exec sudo ./bosi reset
+
+    The `exec` bit is required so that the `bosi` invocation is run as
+    root without any processes running as `pi` in case the `init` step
+    sees that user `pi` hasn't been changed to `pidp8i` here: the
+    `usermod` command we give to make that change will refuse to do what
+    we ask if there are any running processes owned by user `pi`.
 
 5.  Move the SD card to a USB reader plugged into the Pi, boot the Pi
     from its prior SD card, and shrink the OS image:
@@ -85,7 +90,7 @@ Start with the latest [Raspbian Lite OS image][os].
 ## Produce the "No Lamp Simulator" Binary OS Image
 
 Log into the SD card from which you made the regular image above, then
-say `./bosi init no-lamp-simulator`, and continue from step 3 above.
+say `./bosi init --no-lamp-simulator`, and continue from step 3 above.
 
 When you get down to the `image` and `test` steps, give `image-nls` and
 `test-nls` instead.

@@ -30,9 +30,11 @@
  * 
 */
 
-#include "gpio.h"
+#include "gpio-common.h"
 
 #define short_wait() sleep_ms(100)
+
+#define pgpio (&gpio)
 
 
 int main()

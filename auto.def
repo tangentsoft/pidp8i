@@ -35,14 +35,15 @@ use cc
 use cc-lib
 
 options {
-	debug-mode => "create a debug build (default is release)"
-	serial-mod => "build simulator to expect the PCB serial mods"
-	throttle:  => "override the throttle values in the boot scripts"
+	debug-mode =>        "create a debug build (default is release)"
+	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
+	serial-mod =>        "build simulator to expect the PCB serial mods"
+	throttle:  =>        "override the throttle values in the boot scripts"
 }
 
 if {[opt-bool serial-mod]} {
 	msg-result "The simulator will expect the serial mods to the Pi and PiDP-8/I PCBs."
-	define SERIALSETUP
+	define PCB_SERIAL_MOD
 }
 
 if {[opt-bool debug-mode]} {
@@ -53,12 +54,18 @@ if {[opt-bool debug-mode]} {
 	define BUILDMODE {-O2}
 }
 
-# Fail the build if this is a single-core Pi and we're on the trunk
-# branch of the code, which takes too much CPU power to run here.
+# Swap the incandescent lamp simulator feature out for the original LED
+# driving method on single-core hosts.  The user can force this on
+# multi-core hosts via --no-lamp-simulator.
 set cores [exec tools/corecount]
-set lampsim [catch {exec grep -qw brtval src/PDP8/pdp8_cpu.c.in} result]
-if {($cores < 2) && ($lampsim == 0)} {
-    user-error "Cannot build lamp simulator on a single-core Pi!  See README.md."
+if {($cores < 2) || [opt-bool no-lamp-simulator]} {
+	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
+	define LED_DRIVER_MODULE n
+	define ILS_MODE 0
+} else {
+	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
+	define LED_DRIVER_MODULE i
+	define ILS_MODE 1
 }
 
 # Translate --throttle value to a SIMH command
@@ -149,6 +156,10 @@ define MEDIADIR "[get-define ABSPREFIX]/share/media"
 # installed, and we want them to own the screen(1) session.
 set instgrp [exec id -grn]
 set instusr [exec id -urn]
+if {$instusr == "root"} {
+	msg-result "Error: This software will not install and run as root."
+	user-error "Reconfigure without sudo!"
+}
 define INSTGRP $instgrp
 define INSTUSR $instusr
 msg-result "Install group for user-writeable files will be $instgrp."
@@ -161,20 +172,25 @@ msg-result "Owner of screen(1) session will be $instusr."
 # an -f sub-option that Clang doesn't currently support even enough
 # to fool autosetup.
 cc-check-standards c99
-cc-check-flags -fipa-cp-clone
-cc-check-flags -fno-strict-overflow
-cc-check-flags -fpredictive-commoning
-if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
-	cc-check-flags -fgcse-after-reload
-	cc-check-flags -finline-functions
-	cc-check-flags -fno-unsafe-loop-optimizations
-	define-append CFLAGS "-D_GNU_SOURCE"
+if {![opt-bool debug-mode]} {
+	cc-check-flags -fipa-cp-clone
+	cc-check-flags -fno-strict-overflow
+	cc-check-flags -fpredictive-commoning
+	if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
+		cc-check-flags -fgcse-after-reload
+		cc-check-flags -finline-functions
+		cc-check-flags -fno-unsafe-loop-optimizations
+		define-append CFLAGS "-D_GNU_SOURCE"
+	}
 }
+
+# Embed this software's Fossil-based version string into gpio-common.c
+define VERSION [exec "[get-define srcdir]/tools/version"]
 
 # Write outputs
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {SERIALSETUP}
+	-bare {ILS_MODE PCB_SERIAL_MOD}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in
@@ -185,7 +201,8 @@ make-template boot/6.script.in
 make-template boot/7.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
-make-template src/PDP8/pdp8_cpu.c.in
+make-template src/gpio-common.c.in
+make-template src/PDP8/pidp8i.c.in
 make-template src/scp.c.in
 make-template tools/simh-update.in
 exec chmod +x "[get-define builddir]/tools/simh-update"

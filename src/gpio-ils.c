@@ -1,11 +1,8 @@
 /*
- * gpio-nls.c: implements blink_core() with the original simple LED driver
- *
- * This file differs from gpio.c in that it does not include the
- * incandescent lamp simulator feature by Ian Schofield.  It is
- * more directly descended from the original gpio.c by Oscar Vermeulen.
+ * gpio-ils.c: implements blink_core() for Ian Schofield's incandescent
+ *             lamp simulator
  * 
- * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
+ * Copyright © 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,26 +32,40 @@
 
 #include "gpio-common.h"
 
-//#include "config.h"
+#include "sim_defs.h"
 
-//#include <pthread.h>
-//#include <sys/file.h>
-//#include <sys/time.h>
 
-//#include <errno.h>
-//#include <string.h>
-//#ifdef HAVE_TIME_H
-//# include <time.h>
-//#endif
+//// CONSTANTS /////////////////////////////////////////////////////////
 
+// Brightness range is [0, MAX_BRIGHTNESS) truncated.
+#define MAX_BRIGHTNESS 32
+
+// On each iteration, we add or subtract a proportion of the current LED
+// value back to it as its new brightness, based on the LED's current
+// internal state.  This gives a nonlinear increase/decrease behavior,
+// where rising from "off" or dropping from "full-on" is fast to start
+// and slows down as it approaches its destination.
+//
+// We use an asymmetric function depending on whether the LED is turning
+// on or off to better mimic the behavior of an incandescent lamp, which
+// reaches full brightness faster than it turns fully off.
+#define RISING_FACTOR 0.02
+#define FALLING_FACTOR 0.008
+
+
+//// blink_core ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
 void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 {
     int i, j, k;
-    const us_time_t intervl = 300;  // light each row of leds 300 µs
+    const us_time_t intervl = 5;    // light each row of leds 5 µs
     ms_time_t now_ms;
+
+	float brtval[96];
+	uint8 brctr[96], bctr = 0, ndx;
+	memset(brtval, 0, sizeof (brtval));
 
     while (*terminate == 0) {
         // prepare for lighting LEDs by setting col pins to output
@@ -62,15 +73,33 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             INP_GPIO(cols[i]);
             OUT_GPIO(cols[i]);          // Define cols as output
         }
-        
+        if (bctr == 0) {
+			memset(brctr, 0, sizeof (brctr));
+            bctr = MAX_BRIGHTNESS;
+        }
+
+		// Increase or decrease each LED's brightness based on whether
+		// it is currently enabled.  These values affect the duty cycle
+		// of the signal put out by the GPIO thread to each LED, thus
+		// controlling brightness.
+		float *p = brtval;
+		for (int row = 0; row < nledrows; ++row) {
+			for (int col = 0, msk = 1; col < ncols; ++col, ++p, msk <<= 1) {
+				if (ledstatus[row] & msk)
+					*p += (MAX_BRIGHTNESS - *p) * RISING_FACTOR;
+				else
+					*p -= *p * FALLING_FACTOR;
+			}
+		}
+
         // light up LEDs
-        for (i = 0; i < nledrows; i++) {
+        for (i = ndx = 0; i < nledrows; i++) {
             // Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-            for (k = 0; k <ncols; k++) {
-                if ((ledstatus[i] & (1 << k)) == 0)
-                    GPIO_SET = 1 << cols[k];
-                else 
+            for (k = 0; k < ncols; k++, ndx++) {
+                if (++brctr[ndx] < brtval[ndx])
                     GPIO_CLR = 1 << cols[k];
+                else
+                    GPIO_SET = 1 << cols[k];
             }
 
             // Toggle this ledrow on
@@ -83,13 +112,15 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             // Toggle ledrow off
             GPIO_CLR = 1 << ledrows[i]; // superstition
             INP_GPIO(ledrows[i]);
-            sleep_ns(10000); // waste of cpu cycles but may help against udn2981 ghosting, not flashes though
+
+            sleep_us(intervl);
         }
 
         // prepare for reading switches
         ms_time(&now_ms);
-        for (i = 0; i < ncols; i++)
+        for (i = 0; i < ncols; i++) {
             INP_GPIO(cols[i]);          // flip columns to input. Need internal pull-ups enabled.
+        }
 
         // read three rows of switches
         for (i = 0; i < nrows; i++) {
@@ -97,9 +128,9 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             OUT_GPIO(rows[i]);          // turn on one switch row
             GPIO_CLR = 1 << rows[i];    // and output 0V to overrule built-in pull-up from column input pin
 
-            sleep_us(intervl / 100);
+            sleep_ns(intervl * 1000 / 100);
 
-            for (j = 0; j < ncols; j++) {      // ncols switches in each row
+            for (j = 0; j < ncols; j++) {   // ncols switches in each row
                 int ss = GPIO_READ(cols[j]);
                 debounce_switch(i, j, !!ss, now_ms);
             }
@@ -109,6 +140,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 
         fflush(stdout);
         gss_initted = 1;
+        bctr--;
 
 #if defined(HAVE_SCHED_YIELD)
         sched_yield();

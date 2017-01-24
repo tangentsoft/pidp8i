@@ -2047,8 +2047,14 @@ if ((lp->txbfd && !lp->notelnet) || (TXBUF_AVAIL(lp) > 1)) {/* room for char (+ 
     TXBUF_CHAR (lp, chr);                               /* buffer char & adv pointer */
     if ((!lp->txbfd) && (TXBUF_AVAIL (lp) <= TMXR_GUARD))/* near full? */
         lp->xmte = 0;                                   /* disable line */
-    if (lp->txlog)                                      /* log if available */
-        fputc (chr, lp->txlog);
+    if (lp->txlog) {                                    /* log if available */
+        extern TMLN *sim_oline;                         /* Make sure to avoid recursion */
+        TMLN *save_oline = sim_oline;                   /* when logging to a socket */
+
+        sim_oline = NULL;                               /* save output socket */
+        fputc (chr, lp->txlog);                         /* log to actual file */
+        sim_oline = save_oline;                         /* resture output socket */
+        }
     sim_exp_check (&lp->expect, chr);                   /* process expect rules as needed */
     return SCPE_OK;                                     /* char sent */
     }
@@ -2383,6 +2389,7 @@ CONST char *tptr = cptr;
 t_bool nolog, notelnet, listennotelnet, modem_control, loopback, datagram, packet;
 TMLN *lp;
 t_stat r = SCPE_OK;
+t_bool not_quiet = (!sim_quiet) && (0 == (sim_switches & SWMASK ('Q')));
 
 if (*tptr == '\0')
     return SCPE_ARG;
@@ -2598,9 +2605,7 @@ while (*tptr) {
                 else
                     strcpy (lp->txlogname, mp->logfiletmpl);
                 r = sim_open_logfile (lp->txlogname, TRUE, &lp->txlog, &lp->txlogref);
-                if (r == SCPE_OK)
-                    setvbuf (lp->txlog, NULL, _IOFBF, 65536);
-                else {
+                if (r != SCPE_OK) {
                     free (lp->txlogname);
                     lp->txlogname = NULL;
                     break;
@@ -2649,7 +2654,8 @@ while (*tptr) {
                 free (mp->port);
                 mp->port = NULL;
                 }
-            sim_printf ("Listening on port %s\n", listen);
+            if (not_quiet)
+                sim_printf ("Listening on port %s\n", listen);
             mp->port = (char *)realloc (mp->port, 1 + strlen (listen));
             strcpy (mp->port, listen);                      /* save port */
             mp->master = sock;                              /* save master socket */
@@ -2682,7 +2688,8 @@ while (*tptr) {
         if (loopback) {
             if (mp->lines > 1)
                 return sim_messagef (SCPE_ARG, "Ambiguous Loopback specification\n");
-            sim_printf ("Operating in loopback mode\n");
+            if (not_quiet)
+                sim_printf ("Operating in loopback mode\n");
             for (i = 0; i < mp->lines; i++) {
                 lp = mp->ldsc + i;
                 tmxr_set_line_loopback (lp, loopback);
@@ -2800,7 +2807,8 @@ while (*tptr) {
             if (sock == INVALID_SOCKET)                     /* open error */
                 return sim_messagef (SCPE_OPENERR, "Can't listen on port: %s\n", listen);
             _mux_detach_line (lp, TRUE, FALSE);
-            sim_printf ("Line %d Listening on port %s\n", line, listen);
+            if (not_quiet)
+                sim_printf ("Line %d Listening on port %s\n", line, listen);
             lp->port = (char *)realloc (lp->port, 1 + strlen (listen));
             strcpy (lp->port, listen);                       /* save port */
             lp->master = sock;                              /* save master socket */
@@ -2858,7 +2866,8 @@ while (*tptr) {
             }
         if (loopback) {
             tmxr_set_line_loopback (lp, loopback);
-            sim_printf ("Line %d operating in loopback mode\n", line);
+            if (not_quiet)
+                sim_printf ("Line %d operating in loopback mode\n", line);
             }
         lp->modem_control = modem_control;
         if (speed[0] && (!datagram) && (!lp->serport))
@@ -3891,17 +3900,16 @@ return _sim_activate_after_abs (uptr, (double)usecs_walltime);
 
 t_stat tmxr_clock_coschedule (UNIT *uptr, int32 interval)
 {
-int32 ticks = (interval + (sim_rtcn_tick_size (0)/2))/sim_rtcn_tick_size (0);/* Convert to ticks */
+int32 tmr = sim_rtcn_calibrated_tmr ();
+int32 ticks = (interval + (sim_rtcn_tick_size (tmr)/2))/sim_rtcn_tick_size (tmr);/* Convert to ticks */
 
-return tmxr_clock_coschedule_tmr (uptr, 0, ticks);
+return tmxr_clock_coschedule_tmr (uptr, tmr, ticks);
 }
 
 t_stat tmxr_clock_coschedule_abs (UNIT *uptr, int32 interval)
 {
-int32 ticks = (interval + (sim_rtcn_tick_size (0)/2))/sim_rtcn_tick_size (0);/* Convert to ticks */
-
 sim_cancel (uptr);
-return tmxr_clock_coschedule_tmr (uptr, 0, ticks);
+return tmxr_clock_coschedule (uptr, interval);
 }
 
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
