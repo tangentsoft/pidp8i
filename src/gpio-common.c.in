@@ -325,7 +325,7 @@ void *blink(void *terminate)
 #ifdef DEBUG
 		" [debug]"
 #endif
-		" [fp]%s",
+		" %s",
 		pt ? pt : "cake",		// pt == 0 == not a Pi
 		pt ? 
 #ifdef PCB_SERIAL_MOD
