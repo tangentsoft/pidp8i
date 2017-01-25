@@ -95,8 +95,12 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 	boot/1.script \
 	boot/5.script
 
-# List of *.in files from auto.def file.  If the first file changes,
-# change the AUTOREBUILD rule near the end of the file!
+# List of *.in files from auto.def file, except for this present file
+# (Makefile.in) which is handled separately.  This list should only
+# change when the list of "make-template" calls in auto.def changes.
+#
+# If the first file listed below changes, change the AUTOREBUILD rule
+# near the end of this file to match!
 INFILES = \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
@@ -107,7 +111,10 @@ INFILES = \
 	@srcdir@/boot/7.script.in \
 	@srcdir@/etc/pidp8i-init.in \
 	@srcdir@/etc/sudoers.in \
+	@srcdir@/examples/Makefile.in \
+	@srcdir@/src/Makefile.in \
 	@srcdir@/src/gpio-common.c.in \
+	@srcdir@/src/PDP8/Makefile.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
 	@srcdir@/src/scp.c.in \
 	@srcdir@/tools/simh-update.in
@@ -122,7 +129,8 @@ all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 	@chmod 755 @builddir@/bin/pidp8i
 
 clean:
-	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) $(OUTFILES) \
+	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) \
+		$(subst Makefile ,,$(OUTFILES)) \
 		@builddir@/tags \
 			@builddir@/obj/*.d \
 		@builddir@/obj/*.o \
