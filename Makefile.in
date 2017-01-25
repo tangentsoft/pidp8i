@@ -130,12 +130,12 @@ all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) \
-		$(subst Makefile ,,$(OUTFILES)) \
 		@builddir@/tags \
 			@builddir@/obj/*.d \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
 		@srcdir@/examples/*.err
+	@for f in $(OUTFILES) ; do test "$$f" = "$${f/Makefile//}" && rm $$f ; done
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
