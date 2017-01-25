@@ -143,7 +143,10 @@ distclean: clean
 		@builddir@/config.log \
 		@builddir@/Makefile \
 		@builddir@/autosetup/jimsh0 \
-		@builddir@/src/config.h
+		@builddir@/examples/Makefile \
+		@builddir@/src/Makefile \
+		@builddir@/src/config.h \
+		@builddir@/src/PDP8/Makefile
 
 ctags tags:
 	ctags -R @srcdir@
