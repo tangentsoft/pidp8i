@@ -35,18 +35,8 @@
 
 #include "gpio-common.h"
 
-//#include "config.h"
 
-//#include <pthread.h>
-//#include <sys/file.h>
-//#include <sys/time.h>
-
-//#include <errno.h>
-//#include <string.h>
-//#ifdef HAVE_TIME_H
-//# include <time.h>
-//#endif
-
+//// blink_core ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
