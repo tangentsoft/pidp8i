@@ -374,10 +374,6 @@ reason = 0;
 // Set some register values we care about which may not get values
 // before we need them, and which weren't set above.
 MA = MB = IR = 0;
-
-// Light up LEDs for 1st time.  Only needed when STOP switch set at start.
-set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req,
-				pls_fetch);
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -387,6 +383,12 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     awfulHackFlag = 0; // no do script pending. Did I mention awful?
+
+	// First time thru this turns on all the LEDs for the first time,
+	// showing the machine's initial state.  Thereafter, this basically
+	// just switches execute or pause state to fetch state.
+	set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req,
+					pls_fetch);
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (sim_interval <= 0) {                            /* check clock queue */
@@ -401,13 +403,6 @@ while (reason == 0) {                                   /* loop until halted */
         case pft_stop:
             // Don't choke off the SIMH event queue handler.
             sim_interval = sim_interval - 1;
-
-            // Update LEDs even in STOP mode.
-            //
-            // Note M[MA] used in this call, not MB.  If we pass MB, the
-            // simulator never processes Ctrl-E in STOP mode.  FIXME?
-            set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
-				int_req, pls_fetch);
 
             // Go no further in STOP mode.  In particular, fetch no more
             // instructions, and do not touch PC!
@@ -454,14 +449,11 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-    // Update the front panel LEDs with the results of our instruction
-    // fetch.  This is above the goto label below because while in
-    // single instruction mode, there is no point updating the LEDs
-    // until we fetch another instruction, as above.  Until we get
-    // another CONT press and fetch another instruction, the LEDs are
-    // already set correctly.
+    // Show fetched instruction info and report that we're entering the
+	// execute stage, having gotten past the flow control switch tests
+	// and the actual fetch above.
     set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
-            int_req, pls_fetch);
+            int_req, pls_execute);
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -1468,13 +1460,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             }                                           /* end switch device */
         break;                                          /* end case IOT */
         }                                               /* end switch opcode */
-
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-    if (IR < 05000)
-        set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-                int_req, pls_execute);
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
-
     }                                                   /* end while */
 
 /* Simulation halted */
