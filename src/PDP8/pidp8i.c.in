@@ -396,7 +396,7 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
         // we're testing these switches before we fetch the next
         // instruction.  Show me how it matters, and I'll fix it. :)
         swSingInst = 1;
-        swStop = 1;
+        set_stop_mode();
     }
 
     // ...and SING_INST switch open
@@ -511,7 +511,7 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.
     if ((switchstatus[2] & SS2_STOP) == 0) {
-        swStop = 1;
+        set_stop_mode();
     }
 
     // If any of the above put us into STOP mode, go no further.  In
@@ -538,4 +538,5 @@ int32 get_switch_register(void)
 void set_stop_mode(void)
 {
     swStop = 1;
+    ledstatus[6] &= ~(1 << 7); // clear Run LED
 }
