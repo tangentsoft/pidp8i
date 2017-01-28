@@ -98,7 +98,6 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     uint32 tempLeds = 0;
     uint16 inst_type = sIR & 07000;
     switch (inst_type) {
-    switch (inst_type) {
         case 00000: tempLeds |= (1 << 11); break; // 000 AND
         case 01000: tempLeds |= (1 << 10); break; // 001 TAD
         case 02000: tempLeds |= (1 <<  9); break; // 010 DCA
