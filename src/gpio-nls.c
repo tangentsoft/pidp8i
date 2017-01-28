@@ -35,6 +35,8 @@
 
 #include "gpio-common.h"
 
+#include "PDP8/pidp8i.h"
+
 
 //// blink_core ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
@@ -42,64 +44,61 @@
 
 void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 {
-    int i, j, k;
     const us_time_t intervl = 300;  // light each row of leds 300 µs
     ms_time_t now_ms;
 
     while (*terminate == 0) {
-        // prepare for lighting LEDs by setting col pins to output
-        for (i = 0; i < NCOLS; i++) {
-            INP_GPIO(cols[i]);
-            OUT_GPIO(cols[i]);          // Define cols as output
-        }
+        // Prepare for lighting LEDs by setting col pins to output
+        for (size_t i = 0; i < NCOLS; ++i) OUT_GPIO(cols[i]);
+  
+        // Go get the current LED "on" times, and give the SIMH CPU
+        // thread a blank copy to begin updating.
+        const size_t inst_count = swap_displays();
+
+        // Here in the NLS version, the "on" threshold is half the
+        // instruction count, meaning we turn the LED on if the bit
+        // controlling that LED was set at least half the time since the
+        // last display update.  Don't do it if inst_count == 1 because
+        // that mans there was only one display update since the last
+        // iteration of this loop.  That can happen at low simulator
+        // throttle values or when called from pidp8i-test.
+        const int on_threshold = inst_count > 1 ? inst_count >> 1 : 0;
+
+        // Halve the Execute and Fetch values, because they're only on
+        // for half of the instruction fetch-and-execute cycle.  Skip
+        // halving for == 1 case for same reason as above.
+        if (*pdis_paint[5][2] > 1) *pdis_paint[5][2] >>= 1;
+        if (*pdis_paint[5][3] > 1) *pdis_paint[5][3] >>= 1;
         
-        // light up LEDs
-        for (i = 0; i < NLEDROWS; i++) {
-            // Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-            for (k = 0; k < NCOLS; k++) {
-                if ((ledstatus[i] & (1 << k)) == 0)
-                    GPIO_SET = 1 << cols[k];
-                else 
-                    GPIO_CLR = 1 << cols[k];
+        // Light up LEDs
+        for (size_t row = 0; row < NLEDROWS; ++row) {
+            // Output 0 (CLR) for LEDs in this row which should be on
+            size_t *prow = *pdis_paint[row];
+            for (size_t col = 0; col < NCOLS; ++col) {
+                if (prow[col] >= on_threshold) {
+                    GPIO_CLR = 1 << cols[col];
+                }
+                else {
+                    GPIO_SET = 1 << cols[col];
+                }
             }
 
-            // Toggle this ledrow on
-            INP_GPIO(ledrows[i]);
-            GPIO_SET = 1 << ledrows[i]; // test for flash problem
-            OUT_GPIO(ledrows[i]);
+            // Toggle this LED row on
+            INP_GPIO(ledrows[row]);
+            GPIO_SET = 1 << ledrows[row];
+            OUT_GPIO(ledrows[row]);
 
             sleep_us(intervl);
 
-            // Toggle ledrow off
-            GPIO_CLR = 1 << ledrows[i]; // superstition
-            INP_GPIO(ledrows[i]);
-            sleep_ns(10000); // waste of cpu cycles but may help against udn2981 ghosting, not flashes though
+            // Toggle this LED row off
+            GPIO_CLR = 1 << ledrows[row]; // superstition
+            INP_GPIO(ledrows[row]);
+
+            // Small delay to reduce UDN2981 ghosting
+            sleep_ns(10000);
         }
 
-        // prepare for reading switches
-        ms_time(&now_ms);
-        for (i = 0; i < NCOLS; i++)
-            INP_GPIO(cols[i]);          // flip columns to input. Need internal pull-ups enabled.
-
-        // read three rows of switches
-        for (i = 0; i < NROWS; i++) {
-            INP_GPIO(rows[i]);          
-            OUT_GPIO(rows[i]);          // turn on one switch row
-            GPIO_CLR = 1 << rows[i];    // and output 0V to overrule built-in pull-up from column input pin
-
-            sleep_us(intervl / 100);
-
-            for (j = 0; j < NCOLS; j++) {      // NCOLS switches in each row
-                int ss = GPIO_READ(cols[j]);
-                debounce_switch(i, j, !!ss, now_ms);
-            }
-
-            INP_GPIO(rows[i]);          // stop sinking current from this row of switches
-        }
-
-        fflush(stdout);
-        gss_initted = 1;
-
+        read_switches(intervl);
 #if defined(HAVE_SCHED_YIELD)
         sched_yield();
 #endif

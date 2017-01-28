@@ -28,14 +28,17 @@
  *
  * www.obsolescenceguaranteed.blogspot.com
  * 
- * The only communication with the main program (simh):
- * - external variable ledstatus is read to determine which leds to light.
- * - external variable switchstatus is updated with current switch settings.
+ * This is part of the GPIO thread, which communicates with the
+ * simulator's main thread via *pdis_update and switchstatus[].
+ * All of this module's other external interfaces are only called
+ * by the other gpio-* modules, from the GPIO thread.
 */
 
 #include "gpio-common.h"
 
 #include "config.h"
+
+#include "PDP8/pidp8i.h"
 
 #include <pthread.h>
 #include <sys/file.h>
@@ -52,6 +55,8 @@
 #define BLOCK_SIZE (4*1024)
 
 
+//// GLOBALS ///////////////////////////////////////////////////////////
+
 // Flag set after we successfully init the GPIO mechanism.  While this
 // is false, the rest of the code knows not to expect useful values for
 // LED and switch states.  It is also useful as a cross-thread signal,
@@ -60,6 +65,7 @@
 uint8_t pidp8i_gpio_present;
 
 struct bcm2835_peripheral gpio;	// needs initialisation
+#define pgpio (&gpio)
 
 
 // A constant meaning "indeterminate milliseconds", used for error
@@ -81,13 +87,22 @@ uint8_t ledrows[NLEDROWS] = {20, 21, 22, 23, 24, 25, 26, 27};
 
 uint8_t rows[NROWS] = {16, 17, 18};
 
-// The public switch and LED API: other threads poke values into
-// ledstatus to affect our GPIO LED pin driving loop and read values
-// from switchstatus to discover our current published value of the
-// switch states.  The latter may differ from the *actual* switch
-// states due to the debouncing procedure.
-uint16_t switchstatus[NROWS];	// bitfield: sparse NROWS x NCOLS switch matrix
-uint16_t ledstatus[NLEDROWS];	// bitfield: sparse NLEDROWS x NCOLS LED matrix
+
+// Current switch states, as reported by the debouncing algorithm.  Set
+// from the GPIO thread to control the SIMH CPU thread.
+uint16_t switchstatus[NROWS];
+
+// Double-buffered LED display brightness values.  The update-to copy is
+// modified by the SIMH CPU thread as it executes instructions, and the
+// paint-from copy is read by the gpio-*.c module in its "set LEDs"
+// loop.  When the GPIO thread is finished with the paint-from copy, it
+// zeroes it and swaps it for the current "update-to" copy, giving the
+// CPU thread a blank slate, and giving the GPIO thread a stable set of
+// LED "on" time values to work with.
+static display display_bufs[2];
+display* pdis_update = display_bufs + 0;	// exported to SIMH CPU thread
+display* pdis_paint  = display_bufs + 1;	// exported to gpio-*.c
+
 
 // Time-delayed reaction to switch changes to debounce the contacts.
 // This is especially important with the incandescent lamp simulation
@@ -102,14 +117,18 @@ struct switch_state {
 	ms_time_t last_change;		
 };
 static struct switch_state gss[NROWS][NCOLS];
-int gss_initted = 0;
+static int gss_initted = 0;
 static const ms_time_t debounce_ms = 50;	// time switch state must remain stable
 
 // Name of GPIO memory-mapped device
 static const char* gpio_mem_dev = "/dev/gpiomem";
 
 
+//// MEMORY MAPPED GPIO FUNCTIONS //////////////////////////////////////
+
+//// map_peripheral ////////////////////////////////////////////////////
 // Exposes the physical address defined in the passed structure
+
 int map_peripheral(struct bcm2835_peripheral *p)
 {
 	// Open the GPIO device
@@ -151,9 +170,11 @@ int map_peripheral(struct bcm2835_peripheral *p)
 }
 
 
+//// unmap_peripheral //////////////////////////////////////////////////
+// Unwind the map_peripheral() steps in reverse order
+
 void unmap_peripheral(struct bcm2835_peripheral *p)
 {
-	// Unwind the map_peripheral() steps in reverse order
 	if (pidp8i_gpio_present) {
 		if (p->mem_fd > 0) {
 			if (p->map) munmap(p->map, BLOCK_SIZE);
@@ -165,7 +186,10 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 }
 
 
-unsigned bcm_host_get_peripheral_address(void)		// find Pi's GPIO base address
+//// bcm_host_get_peripheral_address ///////////////////////////////////
+// Find Pi's GPIO base address
+
+unsigned bcm_host_get_peripheral_address(void)
 {
 	unsigned address = ~0;
 	FILE *fp = fopen("/proc/device-tree/soc/ranges", "rb");
@@ -180,6 +204,41 @@ unsigned bcm_host_get_peripheral_address(void)		// find Pi's GPIO base address
 	return address == ~0 ? 0x20000000 : address;
 }
 
+
+//// DOUBLE BUFFERED DISPLAY MANIPULATION FUNCTIONS ////////////////////
+
+//// swap_displays ////////////////////////////////////////////////////
+// Clear the current "paint-from" display, then exchange the double-
+// buffered display pointers atomically, saving the current update-to
+// display pointer as our paint-from display pointer and re-pointing
+// the update-to pointer at the now-zeroed paint-from values.  This
+// gives the CPU thread a blank slate to begin modifying while the GPIO
+// thread consumes the values provided by the CPU thread.
+
+#define SWAP(DIR) \
+	__atomic_exchange_n (&pdis_update, display_bufs + DIR, ATOMIC_MM)
+
+size_t swap_displays ()
+{
+	// Clear old paint-from display
+	memset (pdis_paint, 0, sizeof(display));
+
+	// Send old paint-from display to CPU as new update-to display,
+	// and overwrite paint-from pointer with prior update-to pointer.
+	pdis_paint = pdis_update == display_bufs + 0 ? SWAP(1) : SWAP(0);
+
+	// The CPU core doesn't bother to keep a separate count of CPU
+	// instructions because the Fetch and Execute LEDs get toggled
+	// once each on every instruction cycle, so just return one of 
+	// them as the instructions-executed count.
+	return *pdis_paint[5][2];
+}
+
+
+//// FINE GRAINED SLEEP FUNCTIONS //////////////////////////////////////
+
+//// sleep_ns //////////////////////////////////////////////////////////
+// Like sleep(2) except that it takes nanoseconds instead of seconds
 
 void sleep_ns(ns_time_t ns)
 {
@@ -196,7 +255,9 @@ void sleep_ns(ns_time_t ns)
 }
 
 
+//// ms_time ///////////////////////////////////////////////////////////
 // Like time(2) except that it returns milliseconds since the Unix epoch
+
 ms_time_t ms_time(ms_time_t* pt)
 {
 	struct timeval tv;
@@ -211,9 +272,13 @@ ms_time_t ms_time(ms_time_t* pt)
 }
 
 
+//// SWITCH DEBOUNCING and READING FUNCTIONS ///////////////////////////
+
+//// report_ss /////////////////////////////////////////////////////////
 // Save given switch state ss into the exported switchstatus bitfield
 // so the simulator core will see it.  (Constrast the gss matrix,
 // which holds our internal view of the unstable truth.)
+
 static void report_ss(int row, int col, int ss,
 		struct switch_state* pss)
 {
@@ -230,9 +295,11 @@ static void report_ss(int row, int col, int ss,
 }
 
 
+//// debounce_switch ///////////////////////////////////////////////////
 // Given the state of the switch at (row,col), work out if this requires
 // a change in our exported switch state.
-void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
+
+static void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
 {
 	struct switch_state* pss = &gss[row][col];
 
@@ -264,7 +331,52 @@ void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
 }
 
 
+//// read_switches /////////////////////////////////////////////////////
+// Iterate through the switch GPIO pins, passing them to the debouncing
+// mechanism above for eventual reporting to the PDP-8 CPU thread.
+
+void read_switches (us_time_t intervl)
+{
+	// Save current ms-since-epoch for debouncer.  No point making it
+	// retrieve this value for each switch.
+    ms_time_t now_ms;
+	ms_time(&now_ms);
+
+	// Flip columns to input.  Since the internal pull-ups are enabled,
+	// this pulls all switch GPIO pins high that aren't shorted to the
+	// row line by the switch.
+	for (size_t i = 0; i < NCOLS; ++i) {
+		INP_GPIO(cols[i]);
+	}
+
+	// Read the switch rows
+	for (size_t i = 0; i < NROWS; ++i) {
+		// Put 0V out on the switch row so that closed switches will
+		// drag its column line down; give it time to settle.
+		OUT_GPIO(rows[i]);
+		GPIO_CLR = 1 << rows[i];
+		sleep_ns (intervl * 1000 / 100);
+
+		// Read all the switches in this row
+		for (size_t j = 0; j < NCOLS; ++j) {
+			int ss = GPIO_READ(cols[j]);
+			debounce_switch(i, j, !!ss, now_ms);
+		}
+
+		// Stop sinking current from this row of switches
+		INP_GPIO(rows[i]);
+	}
+
+	fflush(stdout);
+	gss_initted = 1;
+}
+
+
+//// UNGROUPED FUNCTIONS ///////////////////////////////////////////////
+
+//// pi_type ///////////////////////////////////////////////////////////
 // Write a configuration string tag.
+
 static const char* pi_type(int p)
 {
 	if (p == 0x20200000) {
@@ -292,6 +404,7 @@ static const char* pi_type(int p)
 }
 
 
+//// blink /////////////////////////////////////////////////////////////
 // The GPIO thread entry point: initializes GPIO and then calls
 // the blink_core() implementation linked to this program.
 

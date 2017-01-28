@@ -48,25 +48,93 @@ int awfulHackFlag = 0;
 static int swStop = 0;
 
 
+//// bump_pidp8i_led ///////////////////////////////////////////////////
+// Atomically increments the LED on-count value for a single LED at the
+// given row and column on the PiDP-8/I PCB.  The assembly output at
+// https://godbolt.org/g/0Qt0Ap shows why we can't just use C's normal
+// postincrement operator.  Executive summary: ARM doesn't do ++ in a
+// single assembly instruction, so you have to protect it when other
+// CPU cores may be trying to read this as we modify it.
+
+static inline void bump_pidp8i_led (size_t row, size_t col)
+{
+    __atomic_add_fetch (*pdis_update[row] + col, 1, ATOMIC_MM);
+}
+
+
+//// bump_pidp8i_row_leds //////////////////////////////////////////////
+// Like bump_pidp8i_led, except that it takes a 12-bit state value for
+// setting all LEDs on the given row.
+
+static inline void bump_pidp8i_row_leds (size_t row, uint16 state)
+{
+    size_t *prow = *pdis_update[row];
+    for (size_t col = 0, mask = 1; col < NCOLS; ++col, mask <<= 1) {
+        if (state & mask) {
+            __atomic_add_fetch (prow + col, 1, ATOMIC_MM);
+        }
+    }
+}
+
+
+//// bump_3_pidp8i_leds ////////////////////////////////////////////////
+// Special case of bump_pidp8i_row_leds for the DF and IF LEDs: we only
+// pay attention to bits 12, 13, and 14 of the given state value,
+// because SIMH's PDP-8 simulator shifts those 3 bits up there so it can
+// simply OR these 3-bit registers with PC to produce a 15-bit extended
+// address.
+//
+// We don't take a row parameter because we know which row they're on,
+// but we do take a column parameter so we can generalize for IF & DF.
+
+static inline void bump_3_pidp8i_leds (size_t col, uint16 state)
+{
+    size_t *prow = *pdis_update[7];
+    size_t last_col = col + 3;
+    for (size_t mask = 1 << 12; col < last_col; ++col, mask <<= 1) {
+        if (state & mask) {
+            __atomic_add_fetch (prow + col, 1, ATOMIC_MM);
+        }
+    }
+}
+
+
+//// bump_5_pidp8i_leds ////////////////////////////////////////////////
+// Like bump_3... but for the 5-bit SC register.  Because it's only used
+// for that purpose, we don't need the col parameter.
+
+static inline void bump_5_pidp8i_leds (uint16 state)
+{
+    size_t *prow = *pdis_update[6];
+    size_t last_col = 7;
+    for (size_t col = 2, mask = 1; col < last_col; ++col, mask <<= 1) {
+        if (state & mask) {
+            __atomic_add_fetch (prow + col, 1, ATOMIC_MM);
+        }
+    }
+}
+
+
 //// set_pidp8i_*_led //////////////////////////////////////////////////
-// Set individual LEDs that have to change at odd places within the SIMH
-// CPU thread.
+// Wrappers for bump_pidp8i_led to let the CPU core thread set these
+// LEDs directly at the point they change.  These are called set_*()
+// instead of bump_*() because our caller thinks it's just turning
+// these LEDs on and turning the conflicting LEDs off.  It is purely
+// an implementation detail that we do this instead.
 
 void set_pidp8i_execute_led ()
 {
-    ledstatus[5] |=  (1 << 2); // set Execute LED
-    ledstatus[5] &= ~(1 << 3); // clear Fetch LED
+    bump_pidp8i_led (5, 2);
 }
 
 void set_pidp8i_fetch_led ()
 {
-    ledstatus[5] |=  (1 << 3); // set Fetch LED
-    ledstatus[5] &= ~(1 << 2); // clear Execute LED
+    bump_pidp8i_led (5, 3);
 }
 
 void set_pidp8i_pause_led ()
 {
-    ledstatus[6] |= (1 << 8);
+    bump_pidp8i_led (6, 8);
 }
 
 
@@ -80,71 +148,47 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
     int32 sSC, int32 int_req)
 {
-    // First time thru, allocate temp working space so we can flash the
-    // LED values over instantaneously, avoiding the need for cross-
-    // thread locking to get a coherent display update.
-    #define LS_BYTES (NLEDROWS * sizeof (uint16))
-    static uint16 temp_led_status[LS_BYTES];
-
     // Rows 0-4, easy cases: single-register LED strings
-    temp_led_status[0] = (uint32) sPC;
-    temp_led_status[1] = (uint32) sMA;
-    temp_led_status[2] = (uint32) sMB;
-    temp_led_status[3] = (uint32) sLAC;
-    temp_led_status[4] = (uint32) sMQ;
+    bump_pidp8i_row_leds (0, sPC);
+    bump_pidp8i_row_leds (1, sMA);
+    bump_pidp8i_row_leds (2, sMB);
+    bump_pidp8i_row_leds (3, sLAC & 07777);
+    bump_pidp8i_row_leds (4, sMQ);
 
     // Row 5a: instruction type column, decoded from high octal
     // digit of IR value
-    uint32 tempLeds = 0;
     uint16 inst_type = sIR & 07000;
     switch (inst_type) {
-        case 00000: tempLeds |= (1 << 11); break; // 000 AND
-        case 01000: tempLeds |= (1 << 10); break; // 001 TAD
-        case 02000: tempLeds |= (1 <<  9); break; // 010 DCA
-        case 03000: tempLeds |= (1 <<  8); break; // 011 ISZ
-        case 04000: tempLeds |= (1 <<  7); break; // 100 JMS
-        case 05000: tempLeds |= (1 <<  6); break; // 101 JMP
-        case 06000: tempLeds |= (1 <<  5); break; // 110 IOT
-        case 07000: tempLeds |= (1 <<  4); break; // 111-0 and 111-1 OPR group 1 & 2
+        case 00000: bump_pidp8i_led (5, 11); break; // 000 AND
+        case 01000: bump_pidp8i_led (5, 10); break; // 001 TAD
+        case 02000: bump_pidp8i_led (5,  9); break; // 010 DCA
+        case 03000: bump_pidp8i_led (5,  8); break; // 011 ISZ
+        case 04000: bump_pidp8i_led (5,  7); break; // 100 JMS
+        case 05000: bump_pidp8i_led (5,  6); break; // 101 JMP
+        case 06000: bump_pidp8i_led (5,  5); break; // 110 IOT
+        case 07000: bump_pidp8i_led (5,  4); break; // 111-0 and 111-1 OPR group 1 & 2
     }
 
     // Row 5b: set the Defer LED if...
     if ((inst_type <= 05000) &&  // it's a memory reference instruction
             (sIR & 00400)) {     // and indirect addressing flag is set
-        tempLeds += (1 << 1);
+        bump_pidp8i_led (5, 1);
     }
 
     // Row 5c: the execute and fetch LEDs are also in this LED row on
     // the PCB, but they're set via set_pidp8i_*_led calls.
 
-    // Row 5 is done: set LEDs all at once
-    temp_led_status[5] = tempLeds;
-
     // Row 6: remaining LEDs in upper right block plus step count LEDs.
     // The pause LED is also in this row, but it's set separately via a
     // set_pidp8i_pause_led call from the CPU decoding loop.
-    tempLeds = 0;
-    if (int_req & INT_ION) tempLeds |= (1 << 9); // set ION LED
-    if (swStop == 0)       tempLeds |= (1 << 7); // set Run LED
-    tempLeds |= ((uint32)(sSC) & 0x1f) << 2;     // set Step Count LEDs
-    temp_led_status[6] = tempLeds;
+    if (int_req & INT_ION) bump_pidp8i_led (6, 9); // bump ION LED
+    if (swStop == 0)       bump_pidp8i_led (6, 7); // bump Run LED
+    bump_5_pidp8i_leds (sSC);                      // bump Step Count LEDs
 
     // Row 7: DF, IF, and Link.
-    //
-    // DF and IF are shifted up 12 bits for the simulator's convenience so
-    // they can simply be OR'd with PC to construct 15-bit addresses, so
-    // shift these values down to their positions in the LED string.
-    //
-    // Then OR in the Link bit, which SIMH keeps in bit 12 (0-based) of
-    // the 13-bit LAC register.
-    tempLeds  = (uint32) (sDF >> 3) | (sIF >> 6);
-    tempLeds |= (uint32) ((sLAC & 010000) >> 7);
-    temp_led_status[7] = tempLeds;
-
-    // Set all the LED values instantaneously.  (If the compiler here
-    // doesn't implement this atomically, it's near-to; it may actually
-    // be a single CPU instruction.)
-    memcpy (ledstatus, temp_led_status, LS_BYTES);
+    bump_3_pidp8i_leds (9, sDF);
+    bump_3_pidp8i_leds (6, sIF);
+    if (sLAC & 010000) bump_pidp8i_led (7, 5);
 }
 
 
@@ -539,5 +583,4 @@ int32 get_switch_register (void)
 void set_stop_mode (void)
 {
     swStop = 1;
-    ledstatus[6] &= ~(1 << 7); // clear Run LED
 }

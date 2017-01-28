@@ -94,6 +94,7 @@ int main( int argc, char *argv[] )
 	}
 
   fprintf( stdout, "turn on ALL LEDs\n" );
+#if 0
   for( row=0; row<NLEDROWS; ++row )
     ledstatus[row] = 07777;
   CHECK( !terminate, TERMINATE )
@@ -124,6 +125,7 @@ int main( int argc, char *argv[] )
       for( row=0; row<NLEDROWS; ++row )
 	ledstatus[row] = 0;
     }
+#endif
 	
   fprintf( stdout, "Reading the switches.  Toggle any pattern desired.  CTRL-C to quit.\n" );
   
@@ -138,8 +140,10 @@ int main( int argc, char *argv[] )
 	{
 	  delay = 0;
 	  
+#if 0
 	  ledstatus[led_row] = 0;
 	  ledstatus[led_row=(path[path_idx]>>4) - 1] = 04000 >> ((path[path_idx]&0x0F) - 1);
+#endif
 	  if( ++path_idx >= sizeof(path)/sizeof(path[0]) ) path_idx = 0;
 	}
 
