@@ -48,6 +48,28 @@ int awfulHackFlag = 0;
 static int swStop = 0;
 
 
+//// set_pidp8i_*_led //////////////////////////////////////////////////
+// Set individual LEDs that have to change at odd places within the SIMH
+// CPU thread.
+
+void set_pidp8i_execute_led ()
+{
+    ledstatus[5] |=  (1 << 2); // set Execute LED
+    ledstatus[5] &= ~(1 << 3); // clear Fetch LED
+}
+
+void set_pidp8i_fetch_led ()
+{
+    ledstatus[5] |=  (1 << 3); // set Fetch LED
+    ledstatus[5] &= ~(1 << 2); // clear Execute LED
+}
+
+void set_pidp8i_pause_led ()
+{
+    ledstatus[6] |= (1 << 8);
+}
+
+
 //// set_pidp8i_leds ///////////////////////////////////////////////////
 // Given all of the PDP-8's internal registers that affect the front
 // panel display, modify the GPIO thread's LED state values accordingly.
@@ -56,28 +78,23 @@ static int swStop = 0;
 
 void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
-    int32 sSC, int32 int_req, pidp8i_led_state_t eTT)
+    int32 sSC, int32 int_req)
 {
     // First time thru, allocate temp working space so we can flash the
 	// LED values over instantaneously, avoiding the need for cross-
 	// thread locking to get a coherent display update.
-	//
-	// Allocated dynamically only because C doesn't let us say
-	// temp_led_status[nledrows] on the stack, because nledrows
-	// isn't const-enough for C.  (It is for C++; grrr.)
-    #define LS_BYTES (nledrows * sizeof(uint16))
-	static uint16* temp_led_status = 0;
-	if (temp_led_status == 0) temp_led_status = malloc(LS_BYTES);
+    #define LS_BYTES (NLEDROWS * sizeof(uint16))
+	static uint16 temp_led_status[LS_BYTES];
 
-    // Groups 0-4, easy cases: single-register LED strings
+    // Rows 0-4, easy cases: single-register LED strings
     temp_led_status[0] = (uint32) sPC;
     temp_led_status[1] = (uint32) sMA;
     temp_led_status[2] = (uint32) sMB;
     temp_led_status[3] = (uint32) sLAC;
     temp_led_status[4] = (uint32) sMQ;
 
-    // Group 5a: instruction type column, decoded from current instruction
-    // in the IR register
+    // Row 5a: instruction type column, decoded from high octal
+    // digit of IR value
     uint32 tempLeds = 0;
     switch ((sIR & 0xE00) >> 9) {
         case 0: tempLeds |= (1 << 11); break;       // 000 AND
@@ -90,27 +107,28 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
         case 7: tempLeds |= (1 <<  4); break;       // 111-0 and 111-1 OPR group 1 & 2
     }
 
-    // Group 5b: first three LEDs at the top of the next column over
+    // Row 5b: first three LEDs at the top of the next column over
     if ((((sIR & 0xE00) >> 9) <= 5) &&  // is it a memory reference instruction?
             ((sIR & 0x100) != 0)) {     // is it indirect addressing?
         tempLeds += (1 << 1);           // then set Defer LED
     }
-    if (eTT == pls_execute) tempLeds |= (1 << 2); // set Execute LED
-    if (eTT == pls_fetch)   tempLeds |= (1 << 3); // set Fetch LED
 
-    // Group 5 is done: set LEDs all at once
+    // Row 5c: the execute and fetch LEDs are also in this LED row on
+    // the PCB, but they're set via set_pidp8i_*_led calls.
+
+    // Row 5 is done: set LEDs all at once
     temp_led_status[5] = tempLeds;
 
-    // Group 6: remaining LEDs in upper right block plus step count LEDs.
-    // Some of these are handled in the main instruction decoding loop.
+    // Row 6: remaining LEDs in upper right block plus step count LEDs.
+    // The pause LED is also in this row, but it's set separately via a
+    // set_pidp8i_pause_led call from the CPU decoding loop.
     tempLeds = 0;
-    if (eTT == pls_pause)  tempLeds |= (1 << 8); // set Pause LED
     if (int_req & INT_ION) tempLeds |= (1 << 9); // set ION LED
     if (swStop == 0)       tempLeds |= (1 << 7); // set Run LED
     tempLeds |= ((uint32)(sSC) & 0x1f) << 2;     // set Step Count LEDs
     temp_led_status[6] = tempLeds;
 
-    // Group 7: DF, IF, and Link.
+    // Row 7: DF, IF, and Link.
     //
     // DF and IF are shifted up 12 bits for the simulator's convenience so
     // they can simply be OR'd with PC to construct 15-bit addresses, so
@@ -378,7 +396,7 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
         // we're testing these switches before we fetch the next
         // instruction.  Show me how it matters, and I'll fix it. :)
         swSingInst = 1;
-        swStop = 1;
+        set_stop_mode();
     }
 
     // ...and SING_INST switch open
@@ -493,7 +511,7 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.
     if ((switchstatus[2] & SS2_STOP) == 0) {
-        swStop = 1;
+        set_stop_mode();
     }
 
     // If any of the above put us into STOP mode, go no further.  In
@@ -520,4 +538,5 @@ int32 get_switch_register(void)
 void set_stop_mode(void)
 {
     swStop = 1;
+    ledstatus[6] &= ~(1 << 7); // clear Run LED
 }

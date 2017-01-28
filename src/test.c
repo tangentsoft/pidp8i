@@ -94,17 +94,17 @@ int main( int argc, char *argv[] )
 	}
 
   fprintf( stdout, "turn on ALL LEDs\n" );
-  for( row=0; row<nledrows; ++row )
+  for( row=0; row<NLEDROWS; ++row )
     ledstatus[row] = 07777;
   CHECK( !terminate, TERMINATE )
   sleep( 5 );
-  for( row=0; row<nledrows; ++row )
+  for( row=0; row<NLEDROWS; ++row )
     ledstatus[row] = 0;
   fprintf( stdout, "turn off ALL LEDs\n" );
   CHECK( !terminate, TERMINATE )
   sleep( 5 );
 
-  for( row=0; row<nledrows; ++row )
+  for( row=0; row<NLEDROWS; ++row )
     {
       CHECK( !terminate, TERMINATE )
       fprintf( stdout, "turning on LED row %d\n", row );
@@ -113,21 +113,21 @@ int main( int argc, char *argv[] )
       ledstatus[row] = 0;
     }
 
-  for( col=0; col<ncols; ++col )
+  for( col=0; col<NCOLS; ++col )
     {
       CHECK( !terminate, TERMINATE )
       fprintf( stdout, "turning on LED col %d\n", col );
 
-      for( row=0; row<nledrows; ++row )
+      for( row=0; row<NLEDROWS; ++row )
 	ledstatus[row] |= 1<<col;
       sleep( 5 );
-      for( row=0; row<nledrows; ++row )
+      for( row=0; row<NLEDROWS; ++row )
 	ledstatus[row] = 0;
     }
 	
   fprintf( stdout, "Reading the switches.  Toggle any pattern desired.  CTRL-C to quit.\n" );
   
-  for( i=0; i<nrows; ++i )
+  for( i=0; i<NROWS; ++i )
     lastswitchstatus[i] = switchstatus[i];
   
   for( ;; )
@@ -147,7 +147,7 @@ int main( int argc, char *argv[] )
 	  lastswitchstatus[1]!=switchstatus[1] ||
 	  lastswitchstatus[2]!=switchstatus[2] )
 	{
-	  for( i=0; i<nrows; ++i )
+	  for( i=0; i<NROWS; ++i )
 	    {
 	      fprintf( stdout, "%04o ", ~switchstatus[i] & 07777 );
 	      lastswitchstatus[i] = switchstatus[i];

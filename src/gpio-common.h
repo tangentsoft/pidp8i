@@ -86,6 +86,11 @@
 #define SS2_STOP   00100
 #define SS2_S_STEP 00040
 #define SS2_S_INST 00020
+
+// Number of LED and switch rows and columns on the PiDP-8/I PCB
+#define NCOLS    12
+#define NLEDROWS 8
+#define NROWS    3
  
 // Info for accessing the GPIO peripheral on the SoC
 struct bcm2835_peripheral {
@@ -104,7 +109,6 @@ extern uint16_t ledstatus[];
 extern uint8_t cols[];
 extern uint8_t ledrows[];
 extern uint8_t rows[];
-extern const size_t ncols, nledrows, nrows;
 extern uint8_t pidp8i_gpio_present;
 
 extern int gss_initted;

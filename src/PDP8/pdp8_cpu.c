@@ -374,6 +374,9 @@ reason = 0;
 // Set some register values we care about which may not get values
 // before we need them, and which weren't set above.
 MA = MB = IR = 0;
+
+// Turn LEDs on the first time thru in case we begin in STOP state
+set_pidp8i_leds(PC, 0, 0, 0, LAC, MQ, IF, DF, 0, int_req);
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -384,11 +387,8 @@ while (reason == 0) {                                   /* loop until halted */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     awfulHackFlag = 0; // no do script pending. Did I mention awful?
 
-	// First time thru this turns on all the LEDs for the first time,
-	// showing the machine's initial state.  Thereafter, this basically
-	// just switches execute or pause state to fetch state.
-	set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req,
-					pls_fetch);
+    // Start out in Fetch state
+    set_pidp8i_fetch_led ();
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (sim_interval <= 0) {                            /* check clock queue */
@@ -450,10 +450,9 @@ while (reason == 0) {                                   /* loop until halted */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
     // Show fetched instruction info and report that we're entering the
-	// execute stage, having gotten past the flow control switch tests
-	// and the actual fetch above.
-    set_pidp8i_leds(PC, MA, M[MA], IR, LAC, MQ, IF, DF, SC,
-            int_req, pls_execute);
+    // execute stage, having gotten past the flow control switch tests
+    // and the actual fetch above.
+    set_pidp8i_execute_led ();
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -1445,8 +1444,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             if (dev_tab[device]) {                      /* dev present? */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
                 // Any other device will trigger IOP, so light pause
-                set_pidp8i_leds(PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-                        int_req, pls_pause);
+                set_pidp8i_pause_led ();
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
@@ -1460,6 +1458,11 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             }                                           /* end switch device */
         break;                                          /* end case IOT */
         }                                               /* end switch opcode */
+
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+    // Update the front panel with this instruction's final state.
+    set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req);
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 
 /* Simulation halted */
