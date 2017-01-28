@@ -61,13 +61,8 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // First time thru, allocate temp working space so we can flash the
 	// LED values over instantaneously, avoiding the need for cross-
 	// thread locking to get a coherent display update.
-	//
-	// Allocated dynamically only because C doesn't let us say
-	// temp_led_status[nledrows] on the stack, because nledrows
-	// isn't const-enough for C.  (It is for C++; grrr.)
-    #define LS_BYTES (nledrows * sizeof(uint16))
-	static uint16* temp_led_status = 0;
-	if (temp_led_status == 0) temp_led_status = malloc(LS_BYTES);
+    #define LS_BYTES (NLEDROWS * sizeof(uint16))
+	static uint16 temp_led_status[LS_BYTES];
 
     // Groups 0-4, easy cases: single-register LED strings
     temp_led_status[0] = (uint32) sPC;

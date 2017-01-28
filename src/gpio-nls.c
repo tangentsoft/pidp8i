@@ -48,15 +48,15 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 
     while (*terminate == 0) {
         // prepare for lighting LEDs by setting col pins to output
-        for (i = 0; i < ncols; i++) {
+        for (i = 0; i < NCOLS; i++) {
             INP_GPIO(cols[i]);
             OUT_GPIO(cols[i]);          // Define cols as output
         }
         
         // light up LEDs
-        for (i = 0; i < nledrows; i++) {
+        for (i = 0; i < NLEDROWS; i++) {
             // Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-            for (k = 0; k <ncols; k++) {
+            for (k = 0; k < NCOLS; k++) {
                 if ((ledstatus[i] & (1 << k)) == 0)
                     GPIO_SET = 1 << cols[k];
                 else 
@@ -78,18 +78,18 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 
         // prepare for reading switches
         ms_time(&now_ms);
-        for (i = 0; i < ncols; i++)
+        for (i = 0; i < NCOLS; i++)
             INP_GPIO(cols[i]);          // flip columns to input. Need internal pull-ups enabled.
 
         // read three rows of switches
-        for (i = 0; i < nrows; i++) {
+        for (i = 0; i < NROWS; i++) {
             INP_GPIO(rows[i]);          
             OUT_GPIO(rows[i]);          // turn on one switch row
             GPIO_CLR = 1 << rows[i];    // and output 0V to overrule built-in pull-up from column input pin
 
             sleep_us(intervl / 100);
 
-            for (j = 0; j < ncols; j++) {      // ncols switches in each row
+            for (j = 0; j < NCOLS; j++) {      // NCOLS switches in each row
                 int ss = GPIO_READ(cols[j]);
                 debounce_switch(i, j, !!ss, now_ms);
             }

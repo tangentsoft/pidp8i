@@ -72,31 +72,22 @@ static const ms_time_t na_ms = (ms_time_t)-1;
 // that affects the free GPIOs for our use, and how the PCB connects
 // them to the LED matrix.
 #ifdef PCB_SERIAL_MOD
-uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
+uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
-uint8_t cols[] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
+uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
 #endif
 
-uint8_t ledrows[] = {20, 21, 22, 23, 24, 25, 26, 27};
+uint8_t ledrows[NLEDROWS] = {20, 21, 22, 23, 24, 25, 26, 27};
 
-uint8_t rows[] = {16, 17, 18};
-
-// Array sizes.  Must be declared twice because we need to export them,
-// and C doesn't have true const, as C++ does.
-#define NCOLS    (sizeof(cols)    / sizeof(cols[0]))
-#define NLEDROWS (sizeof(ledrows) / sizeof(ledrows[0]))
-#define NROWS    (sizeof(rows)    / sizeof(rows[0]))
-const size_t ncols    = NCOLS;
-const size_t nledrows = NLEDROWS;
-const size_t nrows    = NROWS;
+uint8_t rows[NROWS] = {16, 17, 18};
 
 // The public switch and LED API: other threads poke values into
 // ledstatus to affect our GPIO LED pin driving loop and read values
 // from switchstatus to discover our current published value of the
 // switch states.  The latter may differ from the *actual* switch
 // states due to the debouncing procedure.
-uint16_t switchstatus[NROWS];	// bitfield: sparse nrows x ncols switch matrix
-uint16_t ledstatus[NLEDROWS];	// bitfield: sparse nledrows x ncols LED matrix
+uint16_t switchstatus[NROWS];	// bitfield: sparse NROWS x NCOLS switch matrix
+uint16_t ledstatus[NLEDROWS];	// bitfield: sparse NLEDROWS x NCOLS LED matrix
 
 // Time-delayed reaction to switch changes to debounce the contacts.
 // This is especially important with the incandescent lamp simulation
@@ -347,14 +338,14 @@ void *blink(void *terminate)
 		//  AT THE MOMENT, USE "sudo ./gpio mode 14 in" and "sudo ./gpio mode 15 in". "sudo ./gpio readall" to verify.
 		#define pgpio (&gpio)
 		int i;
-		for (i = 0; i <nledrows; i++) {     // Define ledrows as input
+		for (i = 0; i < NLEDROWS; i++) {     // Define ledrows as input
 			INP_GPIO(ledrows[i]);
 			GPIO_CLR = 1 << ledrows[i];     // so go to Low when switched to output
 		}
-		for (i = 0; i < ncols; i++) {       // Define cols as input
+		for (i = 0; i < NCOLS; i++) {       // Define cols as input
 			INP_GPIO(cols[i]);
 		}
-		for (i = 0; i < nrows; i++) {       // Define rows as input
+		for (i = 0; i < NROWS; i++) {       // Define rows as input
 			INP_GPIO(rows[i]);
 		}
 
