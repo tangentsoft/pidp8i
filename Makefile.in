@@ -124,6 +124,7 @@ OUTFILES := $(subst .in,,$(OUTFILES))
 CLTXT = /boot/cmdline.txt
 
 .PHONY: tags
+.PRECIOUS: Makefile
 
 all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 	@chmod 755 @builddir@/bin/pidp8i
