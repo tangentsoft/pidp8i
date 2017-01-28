@@ -81,10 +81,10 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     int32 sSC, int32 int_req)
 {
     // First time thru, allocate temp working space so we can flash the
-	// LED values over instantaneously, avoiding the need for cross-
-	// thread locking to get a coherent display update.
+    // LED values over instantaneously, avoiding the need for cross-
+    // thread locking to get a coherent display update.
     #define LS_BYTES (NLEDROWS * sizeof(uint16))
-	static uint16 temp_led_status[LS_BYTES];
+    static uint16 temp_led_status[LS_BYTES];
 
     // Rows 0-4, easy cases: single-register LED strings
     temp_led_status[0] = (uint32) sPC;
@@ -96,8 +96,8 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // Row 5a: instruction type column, decoded from high octal
     // digit of IR value
     uint32 tempLeds = 0;
-	uint16 inst_type = sIR & 07000;
-	switch (inst_type) {
+    uint16 inst_type = sIR & 07000;
+    switch (inst_type) {
     switch (inst_type) {
         case 00000: tempLeds |= (1 << 11); break; // 000 AND
         case 01000: tempLeds |= (1 << 10); break; // 001 TAD
@@ -109,9 +109,9 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
         case 07000: tempLeds |= (1 <<  4); break; // 111-0 and 111-1 OPR group 1 & 2
     }
 
-	// Row 5b: set the Defer LED if...
-	if ((inst_type <= 05000) &&  // it's a memory reference instruction
-			(sIR & 00400)) {     // and indirect addressing flag is set
+    // Row 5b: set the Defer LED if...
+    if ((inst_type <= 05000) &&  // it's a memory reference instruction
+            (sIR & 00400)) {     // and indirect addressing flag is set
         tempLeds += (1 << 1);
     }
 
