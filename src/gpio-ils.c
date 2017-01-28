@@ -69,7 +69,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 
     while (*terminate == 0) {
         // prepare for lighting LEDs by setting col pins to output
-        for (i = 0; i < ncols; i++) {
+        for (i = 0; i < NCOLS; i++) {
             INP_GPIO(cols[i]);
             OUT_GPIO(cols[i]);          // Define cols as output
         }
@@ -83,8 +83,8 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 		// of the signal put out by the GPIO thread to each LED, thus
 		// controlling brightness.
 		float *p = brtval;
-		for (int row = 0; row < nledrows; ++row) {
-			for (int col = 0, msk = 1; col < ncols; ++col, ++p, msk <<= 1) {
+		for (int row = 0; row < NLEDROWS; ++row) {
+			for (int col = 0, msk = 1; col < NCOLS; ++col, ++p, msk <<= 1) {
 				if (ledstatus[row] & msk)
 					*p += (MAX_BRIGHTNESS - *p) * RISING_FACTOR;
 				else
@@ -93,9 +93,9 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 		}
 
         // light up LEDs
-        for (i = ndx = 0; i < nledrows; i++) {
+        for (i = ndx = 0; i < NLEDROWS; i++) {
             // Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-            for (k = 0; k < ncols; k++, ndx++) {
+            for (k = 0; k < NCOLS; k++, ndx++) {
                 if (++brctr[ndx] < brtval[ndx])
                     GPIO_CLR = 1 << cols[k];
                 else
@@ -118,19 +118,19 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 
         // prepare for reading switches
         ms_time(&now_ms);
-        for (i = 0; i < ncols; i++) {
+        for (i = 0; i < NCOLS; i++) {
             INP_GPIO(cols[i]);          // flip columns to input. Need internal pull-ups enabled.
         }
 
         // read three rows of switches
-        for (i = 0; i < nrows; i++) {
+        for (i = 0; i < NROWS; i++) {
             INP_GPIO(rows[i]);          
             OUT_GPIO(rows[i]);          // turn on one switch row
             GPIO_CLR = 1 << rows[i];    // and output 0V to overrule built-in pull-up from column input pin
 
             sleep_ns(intervl * 1000 / 100);
 
-            for (j = 0; j < ncols; j++) {   // ncols switches in each row
+            for (j = 0; j < NCOLS; j++) {   // NCOLS switches in each row
                 int ss = GPIO_READ(cols[j]);
                 debounce_switch(i, j, !!ss, now_ms);
             }
