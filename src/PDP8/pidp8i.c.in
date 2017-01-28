@@ -83,7 +83,7 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // First time thru, allocate temp working space so we can flash the
     // LED values over instantaneously, avoiding the need for cross-
     // thread locking to get a coherent display update.
-    #define LS_BYTES (NLEDROWS * sizeof(uint16))
+    #define LS_BYTES (NLEDROWS * sizeof (uint16))
     static uint16 temp_led_status[LS_BYTES];
 
     // Rows 0-4, easy cases: single-register LED strings
@@ -145,7 +145,7 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // Set all the LED values instantaneously.  (If the compiler here
     // doesn't implement this atomically, it's near-to; it may actually
     // be a single CPU instruction.)
-    memcpy(ledstatus, temp_led_status, LS_BYTES);
+    memcpy (ledstatus, temp_led_status, LS_BYTES);
 }
 
 
@@ -240,11 +240,11 @@ static void mount_usb_stick_file (int devNo, char *devCode)
 // mode, which SIMH *does* emulate — so the SING_STEP switch is free
 // for our nonstandard uses.
 //
-// This is separate from handle_flow_control_switches() only because
+// This is separate from handle_flow_control_switches only because
 // there are so many cases here that it would obscure the overall flow
 // of our calling function to do all this there.
 
-static pidp8i_flow_t handle_sing_step(int closed)
+static pidp8i_flow_t handle_sing_step (int closed)
 {
     // If SING_STEP is open, we do nothing here except reset the single-shot
     // flag if it was set.
@@ -282,15 +282,15 @@ static pidp8i_flow_t handle_sing_step(int closed)
         if (swDevice) {
             char swDevCode[4] = { '\0' };
             switch (swDevice) {
-                case 1: strcpy(swDevCode, "ptr"); break; // PTR paper tape reader
-                case 2: strcpy(swDevCode, "ptp"); break; // High speed paper tape punch
-                case 3: strcpy(swDevCode, "dt0"); break; // TC08 DECtape (#8 is first!)
-                case 4: strcpy(swDevCode, "dt1"); break;
-                case 5: strcpy(swDevCode, "rx0"); break; // RX8E (8/e peripheral!)
-                case 6: strcpy(swDevCode, "rx1"); break;
-                case 7: strcpy(swDevCode, "rl0"); break; // RL8A
+                case 1: strcpy (swDevCode, "ptr"); break; // PTR paper tape reader
+                case 2: strcpy (swDevCode, "ptp"); break; // High speed paper tape punch
+                case 3: strcpy (swDevCode, "dt0"); break; // TC08 DECtape (#8 is first!)
+                case 4: strcpy (swDevCode, "dt1"); break;
+                case 5: strcpy (swDevCode, "rx0"); break; // RX8E (8/e peripheral!)
+                case 6: strcpy (swDevCode, "rx1"); break;
+                case 7: strcpy (swDevCode, "rl0"); break; // RL8A
             }
-            if (swDevCode[0]) mount_usb_stick_file(swDevice, swDevCode);
+            if (swDevCode[0]) mount_usb_stick_file (swDevice, swDevCode);
         }
 
         // 2. Do the same with IF, except that the switch value
@@ -303,8 +303,8 @@ static pidp8i_flow_t handle_sing_step(int closed)
         if (swScript) {
             // build filename from IF value
             char sScript[256];
-            snprintf(sScript, sizeof(sScript), "@BOOTDIR@/%d.script", swScript);
-            printf("\r\n\nRebooting %s\r\n\r\n", sScript);
+            snprintf (sScript, sizeof (sScript), "@BOOTDIR@/%d.script", swScript);
+            printf ("\r\n\nRebooting %s\r\n\r\n", sScript);
             awfulHackFlag = swScript;   // this triggers a do command after leaving the simulator run.
             return pft_halt;
         }
@@ -320,20 +320,20 @@ static pidp8i_flow_t handle_sing_step(int closed)
 
         // 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Stop)
         if ((switchstatus[2] & (SS2_S_INST | SS2_STOP)) == 0) {
-            printf("\r\nShutdown\r\n\r\n");
+            printf ("\r\nShutdown\r\n\r\n");
             awfulHackFlag = 8;  // this triggers an exit command after leaving the simulator run.
             if (spawn_cmd (0, "sudo /bin/systemctl poweroff") != SCPE_OK) {
-                printf("\r\n\r\npoweroff failed\r\n\r\n");
+                printf ("\r\n\r\npoweroff failed\r\n\r\n");
             }
             return pft_halt;
         }
 
         // 4. Scan for host reboot command (Sing_Step + Sing_Inst + Start)
         if ((switchstatus[2] & (SS2_S_INST | SS2_START)) == 0) {
-            printf("\r\nReboot\r\n\r\n");
+            printf ("\r\nReboot\r\n\r\n");
             awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
             if (spawn_cmd (0, "sudo /bin/systemctl reboot") != SCPE_OK) {
-                printf("\r\n\r\nreboot failed\r\n\r\n");
+                printf ("\r\n\r\nreboot failed\r\n\r\n");
             }
             return pft_halt;
         }
@@ -366,11 +366,11 @@ static pidp8i_flow_t handle_sing_step(int closed)
 // The simulator passes in pointers to PDP-8 registers we may modify as
 // a side effect of handling these switches.
 
-pidp8i_flow_t handle_flow_control_switches(uint16* pM,
+pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     uint32 *pPC, uint32 *pMA, int32 *pMB, int32 *pLAC, int32 *pIF,
     int32 *pDF, int32* pint_req)
 {
-    // Exit early if the blink() thread has not attached itself to the GPIO
+    // Exit early if the blink thread has not attached itself to the GPIO
     // peripheral in the Pi, since that means we cannot safely interpret the
     // data in the switchstatus array.  This is especially important on
     // non-Pi hosts, since switchstatus will remain zeroed, which we would
@@ -398,7 +398,7 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
         // we're testing these switches before we fetch the next
         // instruction.  Show me how it matters, and I'll fix it. :)
         swSingInst = 1;
-        set_stop_mode();
+        set_stop_mode ();
     }
 
     // ...and SING_INST switch open
@@ -513,7 +513,7 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.
     if ((switchstatus[2] & SS2_STOP) == 0) {
-        set_stop_mode();
+        set_stop_mode ();
     }
 
     // If any of the above put us into STOP mode, go no further.  In
@@ -527,7 +527,7 @@ pidp8i_flow_t handle_flow_control_switches(uint16* pM,
 //// get_switch_register ///////////////////////////////////////////////
 // Return the current contents of the switch register
 
-int32 get_switch_register(void)
+int32 get_switch_register (void)
 {
     return switchstatus[0] ^ 07777;
 }
@@ -537,7 +537,7 @@ int32 get_switch_register(void)
 // Set the STOP mode flag.  This is a wrapper around a module-global
 // variable that the CPU simulator core currently needs to set.
 
-void set_stop_mode(void)
+void set_stop_mode (void)
 {
     swStop = 1;
     ledstatus[6] &= ~(1 << 7); // clear Run LED
