@@ -384,7 +384,7 @@ set_pidp8i_leds(PC, 0, 0, 0, LAC, MQ, IF, DF, 0, int_req, 0);
 int Pause = 0;
 
 // Set our initial IPS value from the throttle, if given.
-static time_t last_update;
+static time_t last_update = 0;
 static size_t max_skips = 0;
 static const size_t pidp8i_updates_per_sec = 3200;
 max_skips = get_pidp8i_initial_max_skips (pidp8i_updates_per_sec);
@@ -1503,26 +1503,26 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // and try to get GCC to inline it: that's good for a 1 MIPS speed
     // hit in my testing!  (GCC 4.9.2 on Raspbian Jessie on Pi 3B.)
 
-    static size_t skip_counter = 0, dither = 0;
-    if (++skip_counter >= (max_skips - dither)) {
+    static size_t skip_count = 0, dither = 0;
+    if (++skip_count >= (max_skips - dither)) {
         // Save skips to inst counter and reset
-        static size_t curr_ips = 0;
-        curr_ips += skip_counter;
-        skip_counter = 0;
+        static size_t inst_count = 0;
+        inst_count += skip_count;
+        skip_count = 0;
 
         // We need to update the LED data again
         set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
         Pause = 0;
 
         // Has it been ~1s since we updated our max_skips value?
-        static time_t now;
+        time_t now;
         if (time(&now) > last_update) {
             // Yep; simulator IPS may have changed, so freshen it.
             last_update = now;
-            max_skips = curr_ips / pidp8i_updates_per_sec;
+            max_skips = inst_count / pidp8i_updates_per_sec;
             //printf("Inst./repaint: %zu - %zu; %.2f MIPS\r\n",
-            //        max_skips, dither, curr_ips / 1e6);
-            curr_ips = 0;
+            //        max_skips, dither, inst_count / 1e6);
+            inst_count = 0;
             }
         dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
         }
