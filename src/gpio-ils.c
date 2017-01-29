@@ -80,9 +80,9 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
     // is about the same for both versions.
     const us_time_t intervl = 5;
 
-	float brtval[96];
-	uint8 bctr = MAX_BRIGHTNESS;
-	memset(brtval, 0, sizeof (brtval));
+    float brtval[96];
+    uint8 bctr = MAX_BRIGHTNESS;
+    memset(brtval, 0, sizeof (brtval));
 
     while (*terminate == 0) {
         // Prepare for lighting LEDs by setting col pins to output
