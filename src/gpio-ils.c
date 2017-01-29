@@ -51,8 +51,8 @@
 // We use an asymmetric function depending on whether the LED is turning
 // on or off to better mimic the behavior of an incandescent lamp, which
 // reaches full brightness faster than it turns fully off.
-#define RISING_FACTOR 0.05
-#define FALLING_FACTOR 0.02
+#define RISING_FACTOR 0.012
+#define FALLING_FACTOR 0.005
 
 
 //// blink_core ////////////////////////////////////////////////////////
