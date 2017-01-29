@@ -122,17 +122,17 @@ static inline void bump_5_pidp8i_leds (uint16 state)
 // these LEDs on and turning the conflicting LEDs off.  It is purely
 // an implementation detail that we do this instead.
 
-void set_pidp8i_execute_led ()
+inline void set_pidp8i_execute_led ()
 {
     bump_pidp8i_led (5, 2);
 }
 
-void set_pidp8i_fetch_led ()
+inline void set_pidp8i_fetch_led ()
 {
     bump_pidp8i_led (5, 3);
 }
 
-void set_pidp8i_pause_led ()
+inline void set_pidp8i_pause_led ()
 {
     bump_pidp8i_led (6, 8);
 }
