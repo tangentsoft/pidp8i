@@ -68,19 +68,19 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
     // is about the same for both versions.
     const us_time_t intervl = 5;
 
-	// Current brightness level for each LED.  It goes from 0 to
-	// MAX_BRIGHTNESS, but we keep it as a float because the decay
-	// function smoothly ramps from the current value to the ever-
-	// changing target value.
+    // Current brightness level for each LED.  It goes from 0 to
+    // MAX_BRIGHTNESS, but we keep it as a float because the decay
+    // function smoothly ramps from the current value to the ever-
+    // changing target value.
     float brightness[NLEDROWS][NCOLS];
     memset(brightness, 0, sizeof (brightness));
 
-	// Brightness target for each LED, updated at the start of each PWM
-	// cycle when we get fresh "on" counts from the CPU thread.
-	uint8 br_targets[NLEDROWS][NCOLS];
+    // Brightness target for each LED, updated at the start of each PWM
+    // cycle when we get fresh "on" counts from the CPU thread.
+    uint8 br_targets[NLEDROWS][NCOLS];
     memset(br_targets, 0, sizeof (br_targets));
 
-	// Current PWM brightness step
+    // Current PWM brightness step
     uint8 step = MAX_BRIGHTNESS;
 
     while (*terminate == 0) {
@@ -94,40 +94,41 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
       
             // Go get the current LED "on" times, and give the SIMH
             // CPU thread a blank copy to begin updating.
-            const size_t inst_count = swap_displays();
+            swap_displays();
 
             // Recalculate the brightness target values based on the
-			// "on" counts in *pdis_paint and the quantized brightness
-			// level, which is based on the number of instructions
-			// executed for this display update.
+            // "on" counts in *pdis_paint and the quantized brightness
+            // level, which is based on the number of instructions
+            // executed for this display update.
             //
             // Handle the cases where inst_count is <= 1 specially
             // because we don't want all LEDs to go out when the
             // simulator is heavily throttled.
-			size_t br_quant = inst_count > 1 ? (inst_count >> 5) : 1;
-			for (int row = 0; row < NLEDROWS; ++row) {
-				size_t *prow = pdis_paint->on[row];
-				for (int col = 0; col < NCOLS; ++col) {
-					br_targets[row][col] = prow[col] / br_quant;
-				}
-			}
+            const size_t inst_count = pdis_paint->inst_count;
+            size_t br_quant = inst_count > 1 ? (inst_count >> 5) : 1;
+            for (int row = 0; row < NLEDROWS; ++row) {
+                size_t *prow = pdis_paint->on[row];
+                for (int col = 0; col < NCOLS; ++col) {
+                    br_targets[row][col] = prow[col] / br_quant;
+                }
+            }
         }
         ++step;
 
-		// Update the brightness values.
-		for (int row = 0; row < NLEDROWS; ++row) {
-			size_t *prow = pdis_paint->on[row];
-			for (int col = 0; col < NCOLS; ++col) {
-				uint8 br_target = br_targets[row][col];
-				float *p = brightness[row] + col;
-				if (*p <= br_target) {
-					*p += (br_target - *p) * RISING_FACTOR;
-				}
-				else {
-					*p -= *p * FALLING_FACTOR;
-				}
-			}
-		}
+        // Update the brightness values.
+        for (int row = 0; row < NLEDROWS; ++row) {
+            size_t *prow = pdis_paint->on[row];
+            for (int col = 0; col < NCOLS; ++col) {
+                uint8 br_target = br_targets[row][col];
+                float *p = brightness[row] + col;
+                if (*p <= br_target) {
+                    *p += (br_target - *p) * RISING_FACTOR;
+                }
+                else {
+                    *p -= *p * FALLING_FACTOR;
+                }
+            }
+        }
 
         // Halve the Execute and Fetch values, because they're only on
         // for half of the instruction fetch-and-execute cycle.  We have

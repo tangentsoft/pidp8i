@@ -376,7 +376,12 @@ reason = 0;
 MA = MB = IR = 0;
 
 // Turn LEDs on the first time thru in case we begin in STOP state
-set_pidp8i_leds(PC, 0, 0, 0, LAC, MQ, IF, DF, 0, int_req);
+set_pidp8i_leds(PC, 0, 0, 0, LAC, MQ, IF, DF, 0, int_req, 0);
+
+// PiDP-8/I specific flag, set when the last instruction was an IOT
+// instruction to a real device.  SIMH doesn't track this, but the front
+// panel needs it.
+int Pause = 0;
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -386,9 +391,6 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     awfulHackFlag = 0; // no do script pending. Did I mention awful?
-
-    // Start out in Fetch state
-    set_pidp8i_fetch_led ();
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (sim_interval <= 0) {                            /* check clock queue */
@@ -446,15 +448,6 @@ while (reason == 0) {                                   /* loop until halted */
 
     int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
     sim_interval = sim_interval - 1;
-
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-
-    // Show fetched instruction info and report that we're entering the
-    // execute stage, having gotten past the flow control switch tests
-    // and the actual fetch above.
-    set_pidp8i_execute_led ();
-
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     PC = (PC + 1) & 07777;                              /* increment PC */
 
@@ -1444,7 +1437,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             if (dev_tab[device]) {                      /* dev present? */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
                 // Any other device will trigger IOP, so light pause
-                set_pidp8i_pause_led ();
+                Pause = 1;
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
@@ -1461,7 +1454,8 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     // Update the front panel with this instruction's final state.
-    set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req);
+    set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
+	Pause = 0;
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 

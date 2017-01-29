@@ -112,6 +112,9 @@ typedef struct display {
 	// Flag set when PDP-8 CPU is stopped, which tells swap_displays not
 	// to swap this one out, since the other display may still be blank.
 	int cpu_stopped;
+
+	// Number of instructions executed since this display was cleared
+	int inst_count;
 } display;
 extern display* pdis_update, *pdis_paint;
 
@@ -128,7 +131,7 @@ extern int map_peripheral(struct bcm2835_peripheral *p);
 
 extern void read_switches (us_time_t intervl);
 
-extern size_t swap_displays ();
+extern void swap_displays ();
 
 extern ms_time_t ms_time(ms_time_t* pt);
 extern void sleep_ns(ns_time_t ns);

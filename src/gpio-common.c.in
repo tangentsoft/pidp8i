@@ -218,7 +218,7 @@ unsigned bcm_host_get_peripheral_address(void)
 #define SWAP(dir) \
     __atomic_exchange_n (&pdis_update, display_bufs + dir, __ATOMIC_SEQ_CST)
 
-size_t swap_displays ()
+void swap_displays ()
 {
     if (!pdis_paint->cpu_stopped) {
         // Clear old paint-from display
@@ -230,12 +230,6 @@ size_t swap_displays ()
     }
     // else, leave current LED values as-is so we don't go to a black
     // screen while in STOP mode, either from front panel or HLT
-
-    // The CPU core doesn't bother to keep a separate count of CPU
-    // instructions because the Fetch and Execute LEDs get toggled
-    // once each on every instruction cycle, so just return one of 
-    // them as the instructions-executed count.
-    return pdis_paint->on[5][2];
 }
 
 

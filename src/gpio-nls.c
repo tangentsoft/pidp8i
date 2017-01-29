@@ -53,7 +53,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
   
         // Go get the current LED "on" times, and give the SIMH CPU
         // thread a blank copy to begin updating.
-        const size_t inst_count = swap_displays();
+        swap_displays();
 
         // Here in the NLS version, the "on" threshold is half the
         // instruction count, meaning we turn the LED on if the bit
@@ -62,6 +62,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
         // that mans there was only one display update since the last
         // iteration of this loop.  That can happen at low simulator
         // throttle values or when called from pidp8i-test.
+        const size_t inst_count = pdis_paint->inst_count;
         const int on_threshold = inst_count > 1 ? inst_count >> 1 : 1;
 
         // Halve the Execute and Fetch values, because they're only on
