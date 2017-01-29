@@ -154,7 +154,7 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
             }
             if (ips) {
                 printf("PiDP-8/I initial throttle = %zu IPS\r\n", ips);
-                return curr_ips / updates_per_sec;
+                return ips / updates_per_sec;
             }
         }
     }
