@@ -132,11 +132,11 @@ all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) \
 		@builddir@/tags \
-			@builddir@/obj/*.d \
+		@builddir@/obj/*.d \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
 		@srcdir@/examples/*.err
-	@for f in $(OUTFILES) ; do test "$$f" = "$${f/Makefile//}" && rm $$f ; done
+	@rm -f $$(echo $(OUTFILES) | sed -e 's/\<Makefile\>//')
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
