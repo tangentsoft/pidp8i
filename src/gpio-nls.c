@@ -62,7 +62,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
         // that mans there was only one display update since the last
         // iteration of this loop.  That can happen at low simulator
         // throttle values or when called from pidp8i-test.
-        const int on_threshold = inst_count > 1 ? inst_count >> 1 : 0;
+        const int on_threshold = inst_count > 1 ? inst_count >> 1 : 1;
 
         // Halve the Execute and Fetch values, because they're only on
         // for half of the instruction fetch-and-execute cycle.  Skip

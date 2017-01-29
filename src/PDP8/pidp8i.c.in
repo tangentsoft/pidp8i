@@ -401,6 +401,17 @@ static pidp8i_flow_t handle_sing_step (int closed)
 }
 
 
+//// set_stop_flag /////////////////////////////////////////////////////
+// Set or clear the STOP mode flags.
+
+inline void set_stop_flag (int f)
+{
+    // Also set the displays' stop flag, so swap_displays keeps the
+    // current display up until we resume processing.
+    pdis_paint->cpu_stopped = pdis_update->cpu_stopped = swStop = f;
+}
+
+
 //// handle_flow_control_switches //////////////////////////////////////
 // Process all of the PiDP-8/I front panel switches that can affect the
 // flow path of the PDP-8 simulator's instruction interpretation loop,
@@ -441,7 +452,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         // we're testing these switches before we fetch the next
         // instruction.  Show me how it matters, and I'll fix it. :)
         swSingInst = 1;
-        set_stop_mode ();
+        set_stop_flag (1);
     }
 
     // ...and SING_INST switch open
@@ -456,7 +467,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         *pLAC = 0;                        // clear L and AC;
         *pMB = 0;                         // clear MB.
         *pMA = *pPC & 07777;              // transfer PC into MA (FIXME: does IR make this unnecessary?)
-        swStop = 0;                       // START cancels STOP mode
+        set_stop_flag (0);                // START cancels STOP mode
         swSingInst = 0;                   // allow SING INST mode re-entry
         swStart = 1;                      // make it single-shot
     }
@@ -474,7 +485,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             // of how it was enabled to execute the next instruction.
             //
             // FIXME: Are we handling MB correctly? [973271ae36]
-            swStop = 0;
+            set_stop_flag (0);
             swCont = 1;                 // make it single-shot
         }
         else if (swCont == 1) {
@@ -556,7 +567,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.
     if ((switchstatus[2] & SS2_STOP) == 0) {
-        set_stop_mode ();
+        set_stop_flag (1);
     }
 
     // If any of the above put us into STOP mode, go no further.  In
@@ -576,11 +587,10 @@ int32 get_switch_register (void)
 }
 
 
-//// set_stop_mode /////////////////////////////////////////////////////
-// Set the STOP mode flag.  This is a wrapper around a module-global
-// variable that the CPU simulator core currently needs to set.
+//// pdp8_cpu_running //////////////////////////////////////////////////
+// Returns true if we're not in STOP mode.
 
-void set_stop_mode (void)
+int pdp8_cpu_running (void)
 {
-    swStop = 1;
+    return swStop == 0;
 }

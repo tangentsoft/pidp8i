@@ -215,17 +215,21 @@ unsigned bcm_host_get_peripheral_address(void)
 // gives the CPU thread a blank slate to begin modifying while the GPIO
 // thread consumes the values provided by the CPU thread.
 
-#define SWAP(DIR) \
-    __atomic_exchange_n (&pdis_update, display_bufs + DIR, ATOMIC_MM)
+#define SWAP(dir) \
+    __atomic_exchange_n (&pdis_update, display_bufs + dir, ATOMIC_MM)
 
 size_t swap_displays ()
 {
-    // Clear old paint-from display
-    memset (pdis_paint, 0, sizeof(display));
+	if (!pdis_paint->cpu_stopped) {
+		// Clear old paint-from display
+		memset (pdis_paint, 0, sizeof(display));
 
-    // Send old paint-from display to CPU as new update-to display,
-    // and overwrite paint-from pointer with prior update-to pointer.
-    pdis_paint = pdis_update == display_bufs + 0 ? SWAP(1) : SWAP(0);
+		// Send old paint-from display to CPU as new update-to display,
+		// and overwrite paint-from pointer with prior update-to pointer.
+		pdis_paint = pdis_update == display_bufs + 0 ? SWAP(1) : SWAP(0);
+	}
+	// else, leave current LED values as-is so we don't go to a black
+	// screen while in STOP mode, either from front panel or HLT
 
     // The CPU core doesn't bother to keep a separate count of CPU
     // instructions because the Fetch and Execute LEDs get toggled

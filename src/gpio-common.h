@@ -108,6 +108,10 @@ typedef struct display {
 	// Counters incremented each time the LED is known to be turned on,
 	// in instructions since the last display paint.
 	size_t on[NLEDROWS][NCOLS];
+
+	// Flag set when PDP-8 CPU is stopped, which tells swap_displays not
+	// to swap this one out, since the other display may still be blank.
+	int cpu_stopped;
 } display;
 extern display* pdis_update, *pdis_paint;
 
