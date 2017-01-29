@@ -4,30 +4,30 @@
 
     -   Creator of the project (both hardware and software)
     
-    -   Author of the modifications to the SimH PDP-8 simulator
-        necessary to make it use the PiDP-8/I front panel hardware
-        
+    -   Author of the initial modifications to the SIMH PDP-8 simulator
+	    necessary to make it use the PiDP-8/I front panel hardware
+
     -   Curator of the default set of binary demo media
-    
+
     -   Author of the simulator setup scripts
-    
+
     -   Initiator of much else in the project
-    
+
     -   Author of the bulk of the documentation
-    
+
     -   Host and major contributor to the PiDP-8/I support forum on
-        Google Groups
-        
+	    Google Groups
+
     -   Hardware kit assembler and distributor
 
-*   **Robert M Supnik** Primary author of the SimH PDP-8 simulator upon
+*   **Robert M Supnik** Primary author of the SIMH PDP-8 simulator upon
     which this project is based.
 
-*   **Mike Barnes** Ported Oscar Vermeulen's SimH 3.9 based PiDP-8/I
-    simulator to the new SimH 4.0 code base.
+*   **Mike Barnes** Ported Oscar Vermeulen's SIMH 3.9 based PiDP-8/I
+    simulator to the new SIMH 4.0 code base.  (September 2015.)
 
-*   **Dylan McNamee** Creator of the "buildroot" feature used in the
-    creation of the official 2015.12.15 release versions.
+*   **Dylan McNamee** Ported the software to Buildroot for the
+    official 2015.12.15 binary OS images.
 
 *   **Mark G. Thomas** Creator of the installation scripts for the
     2015.12.15 release, which were folded into the `make install`
@@ -46,17 +46,17 @@
 
 *   **Paul R. Bernard <prb@downspout.ca>** wrote `src/test.c` and the
     core of what now appears as `README-test.md`. (The program builds
-    and installs `pidp8i-test`.) He also provided a one-line fix that
-    completes the work of Henk Gooijen's step counter patch.
+    and installs as `pidp8i-test`.)  He also provided a one-line fix
+    that completes the work of Henk Gooijen's step counter patch.
 
-*   **Rick Murphy <k1mu.nospam@gmail.com>** optimized the `pep001.pal` *
+*   **Rick Murphy <k1mu.nospam@gmail.com>** optimized the `pep001.pal`
     example so that it fits into a single page of PDP-8 core, and
     provided several useful files in his OS/8 disk images that have
     managed to land in this software distribution's OS/8 disk image.
 
 *   **Tony Hill <hill.anthony@gmail.com>** Merged all the upstream SIMH
-    changes between late September 2015 and late December 2016 into the
-    PiDP-8/I simulator.
+    changes produced between late September 2015 and late December 2016
+    into the PiDP-8/I simulator.
 
 *   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
     `ChangeLog.md` that is not attributed to anyone else.
