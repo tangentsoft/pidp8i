@@ -216,7 +216,7 @@ unsigned bcm_host_get_peripheral_address(void)
 // thread consumes the values provided by the CPU thread.
 
 #define SWAP(dir) \
-    __atomic_exchange_n (&pdis_update, display_bufs + dir, ATOMIC_MM)
+    __atomic_exchange_n (&pdis_update, display_bufs + dir, __ATOMIC_SEQ_CST)
 
 size_t swap_displays ()
 {

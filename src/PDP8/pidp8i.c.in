@@ -49,30 +49,42 @@ static int swStop = 0;
 
 
 //// bump_pidp8i_led ///////////////////////////////////////////////////
-// Atomically increments the LED on-count value for a single LED at the
-// given row and column on the PiDP-8/I PCB.  The assembly output at
-// https://godbolt.org/g/0Qt0Ap shows why we can't just use C's normal
-// postincrement operator.  Executive summary: ARM doesn't do ++ in a
-// single assembly instruction, so you have to protect it when other
-// CPU cores may be trying to read this as we modify it.
+// Increments the LED on-count value for a single LED at the given row
+// and column on the PiDP-8/I PCB.
+//
+// You may say, "You can't just use the C postincrement operator here!
+// Look at the assembly output!  You must use an atomic increment for
+// this!"  And indeed, there is a big difference between the two
+// methods: https://godbolt.org/g/0Qt0Ap
+//
+// The thing is, both structures referred to by pdis_* are fixed in RAM,
+// and the two threads involved are arranged in a strict producer-and-
+// consumer fashion, so it doesn't actually matter if pdis_update gets
+// swapped for pdis_paint while we're halfway through an increment: we
+// dereference the pointer only once here, so we'll finish our increment
+// within the same structure we started with, even if pdis_update points
+// at the other display structure before we leave.
 
 static inline void bump_pidp8i_led (size_t row, size_t col)
 {
-    __atomic_add_fetch (pdis_update->on[row] + col, 1, ATOMIC_MM);
+    ++pdis_update->on[row][col];
 }
 
 
 //// bump_pidp8i_row_leds //////////////////////////////////////////////
 // Like bump_pidp8i_led, except that it takes a 12-bit state value for
-// setting all LEDs on the given row.
+// setting all LEDs on the given row.  As with that function, the only
+// thing we need to do here to have a safe cross-thread update is to
+// dereference pdis_update once only.  If the pdis pointers are swapped
+// while we're runnig, we'll finish updating the row in the paint-from
+// copy, which is what we actually want anyway; no sense painting from
+// an incomplete row.
 
 static inline void bump_pidp8i_row_leds (size_t row, uint16 state)
 {
     size_t *prow = pdis_update->on[row];
     for (size_t col = 0, mask = 1; col < NCOLS; ++col, mask <<= 1) {
-        if (state & mask) {
-            __atomic_add_fetch (prow + col, 1, ATOMIC_MM);
-        }
+        if (state & mask) ++prow[col];
     }
 }
 
@@ -92,9 +104,7 @@ static inline void bump_3_pidp8i_leds (size_t col, uint16 state)
     size_t *prow = pdis_update->on[7];
     size_t last_col = col + 3;
     for (size_t mask = 1 << 12; col < last_col; ++col, mask <<= 1) {
-        if (state & mask) {
-            __atomic_add_fetch (prow + col, 1, ATOMIC_MM);
-        }
+        if (state & mask) ++prow[col];
     }
 }
 
@@ -108,9 +118,7 @@ static inline void bump_5_pidp8i_leds (uint16 state)
     size_t *prow = pdis_update->on[6];
     size_t last_col = 7;
     for (size_t col = 2, mask = 1; col < last_col; ++col, mask <<= 1) {
-        if (state & mask) {
-            __atomic_add_fetch (prow + col, 1, ATOMIC_MM);
-        }
+        if (state & mask) ++prow[col];
     }
 }
 
@@ -122,17 +130,17 @@ static inline void bump_5_pidp8i_leds (uint16 state)
 // these LEDs on and turning the conflicting LEDs off.  It is purely
 // an implementation detail that we do this instead.
 
-inline void set_pidp8i_execute_led ()
+void set_pidp8i_execute_led ()
 {
     bump_pidp8i_led (5, 2);
 }
 
-inline void set_pidp8i_fetch_led ()
+void set_pidp8i_fetch_led ()
 {
     bump_pidp8i_led (5, 3);
 }
 
-inline void set_pidp8i_pause_led ()
+void set_pidp8i_pause_led ()
 {
     bump_pidp8i_led (6, 8);
 }

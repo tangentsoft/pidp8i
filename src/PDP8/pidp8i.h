@@ -32,10 +32,6 @@
 
 #include "pdp8_defs.h"
 
-// GCC memory model we use for atomic increments.  We're aliasing this
-// constant so we can change it in one place if needed.
-#define ATOMIC_MM __ATOMIC_SEQ_CST
-
 typedef enum {
     pft_normal,
     pft_halt,
