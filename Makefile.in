@@ -41,7 +41,7 @@ SGCID=0046905f72e2372a8bf5dfc90425fd5214b0ba8a
 CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
 	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
-	-U__STRICT_ANSI__ \
+	-D_GNU_SOURCE -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
 SIM = bin/pidp8i-sim
