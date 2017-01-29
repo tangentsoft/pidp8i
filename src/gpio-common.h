@@ -102,7 +102,7 @@ struct bcm2835_peripheral {
 
 typedef uint64_t   ns_time_t;
 typedef useconds_t us_time_t;
-typedef uint32_t   ms_time_t;
+typedef uint64_t   ms_time_t;
 
 typedef struct display {
 	// Counters incremented each time the LED is known to be turned on,
@@ -141,5 +141,6 @@ extern void swap_displays ();
 
 extern void sleep_ns(ns_time_t ns);
 #define sleep_us(us) usleep(us)
+extern ms_time_t ms_time(ms_time_t* pt);
  
 #endif // !defined(PIDP8I_GPIO_H)

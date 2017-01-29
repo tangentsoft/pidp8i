@@ -256,11 +256,13 @@ void sleep_ns(ns_time_t ns)
 //// ms_time ///////////////////////////////////////////////////////////
 // Like time(2) except that it returns milliseconds since the Unix epoch
 
-static ms_time_t ms_time(ms_time_t* pt)
+ms_time_t ms_time(ms_time_t* pt)
 {
     struct timeval tv;
     if (gettimeofday(&tv, 0) == 0) {
-        ms_time_t t = (ms_time_t)(tv.tv_sec / 1000.0 + tv.tv_usec * 1000.0);
+        ms_time_t t = (ms_time_t)(
+                 tv.tv_sec * 1000.0 +
+                tv.tv_usec / 1000.0);
         if (pt) *pt = t;
         return t;
     }
