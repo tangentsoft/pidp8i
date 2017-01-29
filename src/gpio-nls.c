@@ -1,5 +1,5 @@
 /*
- * gpio-nls.c: implements blink_core() with the original simple LED driver
+ * gpio-nls.c: implements gpio_core () with the original simple LED driver
  *
  * This file differs from gpio.c in that it does not include the
  * incandescent lamp simulator feature by Ian Schofield.  It is
@@ -38,11 +38,11 @@
 #include "PDP8/pidp8i.h"
 
 
-//// blink_core ////////////////////////////////////////////////////////
+//// gpio_core  ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
-void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
+void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
 {
     // Light each row of LEDs 1.2 ms.  With 8 rows, that's an update
     // rate of ~100x per second.  Not coincidentally, this is the human

@@ -438,11 +438,11 @@ void update_led_states (const us_time_t delay)
 }
 
 
-//// blink /////////////////////////////////////////////////////////////
+//// gpio_thread ///////////////////////////////////////////////////////
 // The GPIO thread entry point: initializes GPIO and then calls
-// the blink_core() implementation linked to this program.
+// the gpio_core () implementation linked to this program.
 
-void *blink(void *terminate)
+void *gpio_thread (void *terminate)
 {
     // Find GPIO address (it varies by Pi model)
     gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
@@ -479,7 +479,7 @@ void *blink(void *terminate)
     // If we didn't map the GPIO peripheral, we've done all we can here
     if (!mapped) return (void*)-1;
 
-    // Until blink_core() reads the switches for the first time, we need
+    // Until gpio_core () reads the switches for the first time, we need
     // to mark them as all-open, lest we have a race condition with the
     // simulator where it interprets the all-0 initial switchstatus[]
     // value as "all switches closed," which includes the shutdown seq!
@@ -535,13 +535,13 @@ void *blink(void *terminate)
     GPIO_PULLCLK0 = 0; // remove clock
     usleep(1); // probably unnecessary
 
-    // Hand off control to the blink_core() variant linked to this
+    // Hand off control to the gpio_core () variant linked to this
     // program: either the new incandescent lamp simulator or the old
     // stock version.
-    extern void blink_core(struct bcm2835_peripheral*, int* terminate);
-    blink_core(&gpio, (int*)terminate);
+    extern void gpio_core (struct bcm2835_peripheral*, int* terminate);
+    gpio_core (&gpio, (int*)terminate);
 
-    // blink_core() leaves all cols, rows, ledrows are set to input, and
+    // gpio_core () leaves all cols, rows, ledrows are set to input, and
     // it's safe to leave them in that state.  No need to de-init GPIO.
     gss_initted = 0;
     return 0;

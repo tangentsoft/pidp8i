@@ -1,5 +1,5 @@
 /*
- * gpio-ils.c: implements blink_core() for Ian Schofield's incandescent
+ * gpio-ils.c: implements gpio_core () for Ian Schofield's incandescent
  *             lamp simulator
  * 
  * Copyright © 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
@@ -55,11 +55,11 @@
 #define FALLING_FACTOR 0.005
 
 
-//// blink_core ////////////////////////////////////////////////////////
+//// gpio_core  ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
-void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
+void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
 {
     // The ILS version uses an iteration rate 60x faster than the NLS
     // version because we have to get through 32 PWM steps, each of

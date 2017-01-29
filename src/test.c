@@ -79,8 +79,8 @@ int main( int argc, char *argv[] )
       exit( EXIT_FAILURE );
     }
 	
-  // create thread
-  iret1 = pthread_create( &thread1, NULL, blink, &terminate );
+  // create GPIO thread
+  iret1 = pthread_create( &thread1, NULL, gpio_thread, &terminate );
   if( iret1 )
     {
       fprintf( stderr, "Error creating thread, return code %d\n", iret1 );
