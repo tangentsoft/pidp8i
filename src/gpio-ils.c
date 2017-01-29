@@ -66,7 +66,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
     // which takes roughly 2 * intervl µs.  There's a bit of extra delay
     // over intervl in the NLS version, so the while loop iteration time
     // is about the same for both versions.
-    const us_time_t intervl = 5;
+    const us_time_t intervl = 20;
 
     // Current brightness level for each LED.  It goes from 0 to
     // MAX_BRIGHTNESS, but we keep it as a float because the decay
@@ -155,7 +155,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             GPIO_SET = 1 << ledrows[row];
             OUT_GPIO(ledrows[row]);
 
-            sleep_us(intervl);
+            sleep_ns(intervl);
 
             // Toggle this LED row off
             GPIO_CLR = 1 << ledrows[row]; // superstition
@@ -164,7 +164,10 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             sleep_us(intervl);
         }
 
-        read_switches(intervl);
+        // 625 = * 1000 / (100 / 60) where 60 is the difference in
+        // iteration rate between ILS and NLS.  See the same call
+        // in gpio-nls.c.
+        read_switches(intervl * 625);      
 #if defined(HAVE_SCHED_YIELD)
         sched_yield();
 #endif

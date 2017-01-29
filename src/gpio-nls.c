@@ -44,7 +44,11 @@
 
 void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
 {
-    const us_time_t intervl = 300;  // light each row of leds 300 µs
+    // Light each row of LEDs 1.2 ms.  With 8 rows, that's an update
+    // rate of ~100x per second.  Not coincidentally, this is the human
+    // persistence of vision limit: changes faster than this are
+    // difficult for humans to perceive visually.
+    const us_time_t intervl = 1200;  
     ms_time_t now_ms;
 
     while (*terminate == 0) {
@@ -96,10 +100,10 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             INP_GPIO(ledrows[row]);
 
             // Small delay to reduce UDN2981 ghosting
-            sleep_ns(10000);
+            sleep_us(10);
         }
 
-        read_switches(intervl);
+        read_switches(intervl * 1000 / 100);
 #if defined(HAVE_SCHED_YIELD)
         sched_yield();
 #endif

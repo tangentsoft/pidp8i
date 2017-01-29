@@ -333,7 +333,7 @@ static void debounce_switch(int row, int col, int ss, ms_time_t now_ms)
 // Iterate through the switch GPIO pins, passing them to the debouncing
 // mechanism above for eventual reporting to the PDP-8 CPU thread.
 
-void read_switches (us_time_t intervl)
+void read_switches (ns_time_t delay)
 {
     // Save current ms-since-epoch for debouncer.  No point making it
     // retrieve this value for each switch.
@@ -353,7 +353,7 @@ void read_switches (us_time_t intervl)
         // drag its column line down; give it time to settle.
         OUT_GPIO(rows[i]);
         GPIO_CLR = 1 << rows[i];
-        sleep_ns (intervl * 1000 / 100);
+        sleep_ns (delay);
 
         // Read all the switches in this row
         for (size_t j = 0; j < NCOLS; ++j) {

@@ -129,7 +129,7 @@ extern void *blink(void *ptr);	// thread entry point to the gpio module
 extern unsigned bcm_host_get_peripheral_address(void);
 extern int map_peripheral(struct bcm2835_peripheral *p);
 
-extern void read_switches (us_time_t intervl);
+extern void read_switches (ns_time_t delay);
 
 extern void swap_displays ();
 
