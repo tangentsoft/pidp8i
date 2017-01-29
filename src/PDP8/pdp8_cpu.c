@@ -1454,8 +1454,72 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     // Update the front panel with this instruction's final state.
-    set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
-	Pause = 0;
+    //
+    // There's no point saving *every* LED "on" count.  We just need a
+    // suitable amount of oversampling.  We can skip this if we called
+    // set_pidp8i_leds recently enough, avoiding all the expensive bit
+    // shift and memory update work below.
+    //
+    // The trick here is figuring out what "recently enough" means
+    // without making expensive OS timer calls.  These timers aren't
+    // hopelessly slow (http://stackoverflow.com/a/13096917/142454) but
+    // we still don't want to be taking dozens of cycles per instruction
+    // just to keep our update estimate current in the face of system
+    // load changes and SET THROTTLE updates.
+    //
+    // Instead, we use the IPS value SIMH already keeps to figure out
+    // how many calls we can skip while still meeting our other goals.
+    // This involves FP math, but when paid only once a second, it
+    // amortizes much nicer than estimating the skip count directly
+    // based on a more accurate time source which is more expensive
+    // to call.
+    //
+    // A further refinement is that we do the test for skipping the call
+    // before doing that FP arithmetic, which is super-fast.
+    //
+    // Each LED panel repaint takes about 10 ms, so we do about 100
+    // full-panel updates per second.  We need a bare minimum of 32
+    // discernible brightness values per update for ILS, so if we don't
+    // update the LED status data at least 3,200 times per second, we
+    // don't have enough data for smooth panel updates.  Fortunately,
+    // computers are pretty quick, and our slowest script runs at 30
+    // kIPS.  (5.script.)
+    //
+    // We deliberately add some timing jitter here to get stochastic
+    // sampling of the incoming instructions to avoid beat frequencies
+    // between our update rate and the instruction pattern being
+    // executed by the front panel.  It's a form of dithering.
+    //
+    // The early-leave test is out here instead of at the top of that
+    // function because the function call itself is a nontrivial hit.
+    // In fact, you don't even want to move all of this to a function
+    // and try to get GCC to inline it: that's good for a 1 MIPS speed
+    // hit in my testing!  (GCC 4.9.2 on Raspbian Jessie on Pi 3B.)
+
+    static size_t skip_counter = 0, max_skips = 0, dither = 0;
+    if (++skip_counter >= (max_skips - dither)) {
+        // We need to update the LED data again
+        set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
+        Pause = 0;
+
+        // Update bookkeeping
+        static size_t inst_since_update = 0;
+        inst_since_update += skip_counter;
+        skip_counter = 0;
+        static double curr_ips = 0;
+
+        // Has it been ~1s since we updated our max_skips value?
+        if (inst_since_update >= curr_ips) {
+            // Yep; simulator IPS may have changed, so freshen it.
+            static const size_t updates_per_sec = 8000;
+            inst_since_update = 0;
+            curr_ips = sim_timer_inst_per_sec();
+            max_skips = curr_ips / updates_per_sec;
+            //printf("Inst./repaint: %zu - %zu; %.1f MIPS\r\n",
+            //        max_skips, dither, curr_ips / 1e6);
+            }
+        dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
+        }
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 

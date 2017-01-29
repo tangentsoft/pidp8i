@@ -141,51 +141,6 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
     int32 sSC, int32 int_req, int Pause)
 {
-    // There's no point saving *every* LED "on" count.  We just need a
-    // suitable amount of oversampling.  We can leave early if we
-    // updated our counters recently enough, avoiding all the expensive
-    // bit shift and memory update work below.
-    //
-    // The trick is figuring out how to define "recently enough" without
-    // using expensive system timers.  Time calls are fast these days
-    // (http://stackoverflow.com/a/13096917/142454) but we really don't
-    // want to be taking dozens of cycles per instruction just to keep
-    // our update estimate current in the face of system load changes
-    // and SET THROTTLE updates.
-    //
-    // Instead, we use a very fast timer (time(3)) to update our
-    // estimate of the number of calls to skip once a second based on
-    // the IPS value the simulator already maintains.  This involves
-    // FP math, but when paid only once a second, it amortizes much
-    // nicer than estimating the skip count directly based on a more
-    // accurate time source which is more expensive to call.
-    //
-    // A further refinement is that we do the test for skipping out
-    // early before calling time(3), as that's super-fast.
-    //
-    // Each LED panel repaint takes about 10 ms, so we do about 100
-    // full-panel updates per second.  We need a bare minimum of 32
-    // discernible brightness values per update, so if we're not in
-    // here at least 3,200 times per second, we don't have enough data
-    // for smooth panel updates.  Fortunately, computers are pretty
-    // quick, and our slowest script runs at 30 kIPS.  (5.script.)
-    //
-    // We deliberately add some timing jitter here to get stochastic
-    // sampling of the incoming instructions to avoid beat frequencies
-    // between our update rate and the instruction pattern being
-    // executed by the front panel.  It's a form of dithering.
-    static size_t skip_counter = 0, max_skips = 0, dither = 0;
-    static time_t now, last_estimate = 0;
-    if (++skip_counter < (max_skips - dither)) return;
-    skip_counter = 0;
-    if (time(&now) != last_estimate) {
-        static const size_t updates_per_sec = 8000;
-        max_skips = sim_timer_inst_per_sec() / updates_per_sec;
-        //printf("Inst./repaint: %zu - %zu\r\n", max_skips, dither);
-        last_estimate = now;
-    }
-    dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
-
     // Bump the instruction count.  This should always be equal to the
     // Fetch LED's value, but integers are too cheap to get cute here.
     //
