@@ -155,21 +155,28 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
 	// A further refinement is that we do the test for skipping out
 	// early before calling time(3), as that's super-fast.
 	//
-	// We can't usefully give an estimated max_skips value here because
-	// the worst case is the slowest-clocked example (boot/5.script) on
-	// a Pi 1, which would require a value of about 5-7 here, not high
-	// enough to bother hard-coding.
-	static size_t skip_counter = 0, max_skips = 0;
+    // Each LED panel repaint takes about 10 ms, so we do about 100
+    // full-panel updates per second.  We need a bare minimum of 32
+    // discernible brightness values per update, so if we're not in
+    // here at least 3,200 times per second, we don't have enough data
+    // for smooth panel updates.  Fortunately, computers are pretty
+    // quick, and our slowest script runs at 30 kIPS.  (5.script.)
+    //
+    // We deliberately add some timing jitter here to get stochastic
+    // sampling of the incoming instructions to avoid beat frequencies
+    // between our update rate and the instruction pattern being
+    // executed by the front panel.  It's a form of dithering.
+	static size_t skip_counter = 0, max_skips = 0, dither = 0;
 	static time_t now, last_estimate = 0;
-	if (++skip_counter < max_skips) return;
+	if (++skip_counter < (max_skips - dither)) return;
 	skip_counter = 0;
 	if (time(&now) != last_estimate) {
-        // 3200 = 100x oversampling per LED brightness value
-		static const size_t updates_per_sec = 3200;
+		static const size_t updates_per_sec = 8000;
 		max_skips = sim_timer_inst_per_sec() / updates_per_sec;
-		//printf("Instructions per panel update: %zu\r\n", max_skips);
+		//printf("Inst./repaint: %zu - %zu\r\n", max_skips, dither);
 		last_estimate = now;
 	}
+    dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
 
     // Bump the instruction count, even though we haven't recorded all
     // its bits yet.  If the displays are swapped between this and we
