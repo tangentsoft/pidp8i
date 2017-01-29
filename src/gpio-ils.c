@@ -120,13 +120,9 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
             // Hard-code the Fetch and Execute brightnesses; in running
             // mode, they're both on half the instruction time, so we
             // just set them to 50% brightness.  Execute differs in STOP
-            // mode because we get here either from a STOP switch check
-            // or a HLT instruction.  The switch checks happen between
-            // Fetch and Execute states, and HLT terminates Execute, so
-            // the indicator must turn off.
-            br_targets[5][2] = MAX_BRIGHTNESS / 2;          // Fetch
-            br_targets[5][3] = pdis_paint->cpu_stopped ? 0 :// Execute
-                    MAX_BRIGHTNESS / 2;
+            // mode, but that's handled in update_led_states () because
+            // we fall back to NLS in STOP mode.
+            br_targets[5][2] = br_targets[5][3] = MAX_BRIGHTNESS / 2;
         }
         ++step;
 
