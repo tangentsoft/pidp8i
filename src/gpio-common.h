@@ -133,15 +133,13 @@ extern void update_led_states (const us_time_t delay);
 
 extern unsigned bcm_host_get_peripheral_address(void);
 extern int map_peripheral(struct bcm2835_peripheral *p);
+void unmap_peripheral(struct bcm2835_peripheral *p);
 
 extern void read_switches (ns_time_t delay);
 
 extern void swap_displays ();
 
-extern ms_time_t ms_time(ms_time_t* pt);
 extern void sleep_ns(ns_time_t ns);
 #define sleep_us(us) usleep(us)
-#define sleep_ms(ms) usleep(ms * 1000)
-void unmap_peripheral(struct bcm2835_peripheral *p);
  
 #endif // !defined(PIDP8I_GPIO_H)

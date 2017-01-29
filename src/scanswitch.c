@@ -32,7 +32,7 @@
 
 #include "gpio-common.h"
 
-#define short_wait() sleep_ms(100)
+#define short_wait() sleep_us(100000)
 
 #define pgpio (&gpio)
 
