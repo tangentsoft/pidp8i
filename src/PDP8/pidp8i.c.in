@@ -184,8 +184,8 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // times, but they're twiddled so rapidly that they both just become
     // a 50% blur in normal operation, so we don't make the CPU core set
     // these "on-time."  It just doesn't matter.
-    set_pidp8i_led (pd, 5, 2);                 // Fetch
-    if (!swStop) set_pidp8i_led (pd, 5, 3);    // Execute
+    if (!swStop) set_pidp8i_led (pd, 5, 2);    // Execute
+    set_pidp8i_led (pd, 5, 3);                 // Fetch
 
     // Row 6a: Remaining LEDs in upper right block
     pd->curr[6] = 0;
