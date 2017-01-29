@@ -93,7 +93,10 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             step = 0;
       
             // Go get the current LED "on" times, and give the SIMH
-            // CPU thread a blank copy to begin updating.
+            // CPU thread a blank copy to begin updating.  Because we're
+            // in control of the swap timing, we don't need to copy the
+            // pdis_paint pointer: it points to the same thing between
+            // these swap_displays() calls.
             swap_displays();
 
             // Recalculate the brightness target values based on the
@@ -110,8 +113,20 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
                 size_t *prow = pdis_paint->on[row];
                 for (int col = 0; col < NCOLS; ++col) {
                     br_targets[row][col] = prow[col] / br_quant;
+
                 }
             }
+
+            // Hard-code the Fetch and Execute brightnesses; in running
+            // mode, they're both on half the instruction time, so we
+            // just set them to 50% brightness.  Execute differs in STOP
+            // mode because we get here either from a STOP switch check
+            // or a HLT instruction.  The switch checks happen between
+            // Fetch and Execute states, and HLT terminates Execute, so
+            // the indicator must turn off.
+            br_targets[5][2] = MAX_BRIGHTNESS / 2;          // Fetch
+            br_targets[5][3] = pdis_paint->cpu_stopped ? 0 :// Execute
+                    MAX_BRIGHTNESS / 2;
         }
         ++step;
 
@@ -129,13 +144,6 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
                 }
             }
         }
-
-        // Halve the Execute and Fetch values, because they're only on
-        // for half of the instruction fetch-and-execute cycle.  We have
-        // to do this in FP math in case inst_count == 1, because only
-        // one display update happened since the last iteration.
-        float execute = pdis_paint->on[5][2] / 2.0;
-        float fetch   = pdis_paint->on[5][3] / 2.0;
 
         // Light up LEDs
         for (size_t row = 0; row < NLEDROWS; ++row) {
