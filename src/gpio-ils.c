@@ -146,30 +146,38 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
         }
 
         // Light up LEDs
-        for (size_t row = 0; row < NLEDROWS; ++row) {
-            // Output 0 (CLR) for LEDs in this row which should be on
-            size_t *prow = pdis_paint->on[row];
-            for (size_t col = 0; col < NCOLS; ++col) {
-                if (brightness[row][col] >= step) {
-                    GPIO_CLR = 1 << cols[col];
+        if (pdis_paint->cpu_stopped) {
+            // The CPU is in STOP mode, so show the current LED states
+            // full-brightness using the same mechanism NLS uses.
+            update_led_states (intervl * 60);
+        }
+        else {
+            // Normal case: PWM display using the on-count values
+            for (size_t row = 0; row < NLEDROWS; ++row) {
+                // Output 0 (CLR) for LEDs in this row which should be on
+                size_t *prow = pdis_paint->on[row];
+                for (size_t col = 0; col < NCOLS; ++col) {
+                    if (brightness[row][col] >= step) {
+                        GPIO_CLR = 1 << cols[col];
+                    }
+                    else {
+                        GPIO_SET = 1 << cols[col];
+                    }
                 }
-                else {
-                    GPIO_SET = 1 << cols[col];
-                }
+
+                // Toggle this LED row on
+                INP_GPIO(ledrows[row]);
+                GPIO_SET = 1 << ledrows[row];
+                OUT_GPIO(ledrows[row]);
+
+                sleep_ns(intervl);
+
+                // Toggle this LED row off
+                GPIO_CLR = 1 << ledrows[row]; // superstition
+                INP_GPIO(ledrows[row]);
+
+                sleep_us(intervl);
             }
-
-            // Toggle this LED row on
-            INP_GPIO(ledrows[row]);
-            GPIO_SET = 1 << ledrows[row];
-            OUT_GPIO(ledrows[row]);
-
-            sleep_ns(intervl);
-
-            // Toggle this LED row off
-            GPIO_CLR = 1 << ledrows[row]; // superstition
-            INP_GPIO(ledrows[row]);
-
-            sleep_us(intervl);
         }
 
         // 625 = * 1000 / (100 / 60) where 60 is the difference in

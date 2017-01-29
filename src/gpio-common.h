@@ -109,6 +109,10 @@ typedef struct display {
 	// in instructions since the last display paint.
 	size_t on[NLEDROWS][NCOLS];
 
+	// Most recent state for each LED, for use by NLS full-time and by
+	// ILS in STOP mode.  (One bitfield per row.)
+	uint16_t curr[NLEDROWS];
+
 	// Flag set when PDP-8 CPU is stopped, which tells swap_displays not
 	// to swap this one out, since the other display may still be blank.
 	int cpu_stopped;
@@ -125,6 +129,7 @@ extern uint8_t rows[];
 extern uint8_t pidp8i_gpio_present;
 
 extern void *blink(void *ptr);	// thread entry point to the gpio module
+extern void update_led_states (const us_time_t delay);
 
 extern unsigned bcm_host_get_peripheral_address(void);
 extern int map_peripheral(struct bcm2835_peripheral *p);
