@@ -41,6 +41,7 @@ typedef enum {
 extern int awfulHackFlag;
 
 extern int32 get_switch_register (void);
+extern size_t get_pidp8i_initial_max_skips (size_t updates_per_sec);
 
 extern pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         uint32 *pPC, uint32 *pMA, int32 *pMB, int32 *pLAC, int32 *pIF,

@@ -131,6 +131,39 @@ static inline void set_5_pidp8i_leds (display *pd, uint16 state)
 }
 
 
+//// get_pidp8i_initial_max_skips //////////////////////////////////////
+// Return the number of times we should skip updating the front panel
+// LEDs the first time thru, to give the simulator time to settle.
+// If we don't do this, the front panel LEDs can start out dim and
+// slowly rise or they can overshoot and then take a while to recover
+// with the IPS.
+
+size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
+{
+    DEVICE *pthrot = find_dev ("INT-THROTTLE");
+    if (pthrot) {
+        REG *ptyper = find_reg ("THROT_TYPE", NULL, pthrot);
+        REG *pvalr  = find_reg ("THROT_VAL", NULL, pthrot);
+        if (ptyper && pvalr) {
+            uint32 *ptype = ptyper->loc;
+            uint32 *pval  =  pvalr->loc;
+            size_t ips = 0;
+            switch (*ptype) {
+                case SIM_THROT_MCYC: ips = *pval * 1e6; break;
+                case SIM_THROT_KCYC: ips = *pval * 1e3; break;
+            }
+            if (ips) {
+                printf("PiDP-8/I initial throttle = %zu IPS\r\n", ips);
+                return curr_ips / updates_per_sec;
+            }
+        }
+    }
+
+    // No better idea, so give a plausible value for an unthrottled Pi 1
+    return 200;
+}
+
+
 //// set_pidp8i_leds ///////////////////////////////////////////////////
 // Given all of the PDP-8's internal registers that affect the front
 // panel display, modify the GPIO thread's LED state values accordingly.
