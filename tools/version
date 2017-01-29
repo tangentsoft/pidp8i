@@ -74,4 +74,4 @@ while (<$s>) {
 close $s;
 
 ($version) = $comment =~ m{(v\d+)} if $branch eq 'release';
-print $branch, ':', ($version || "i$checkout");
+print $branch, ':', ($version || "id[$checkout]");
