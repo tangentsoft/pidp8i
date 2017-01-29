@@ -231,7 +231,7 @@ size_t swap_displays ()
 	// instructions because the Fetch and Execute LEDs get toggled
 	// once each on every instruction cycle, so just return one of 
 	// them as the instructions-executed count.
-	return *pdis_paint[5][2];
+	return pdis_paint->on[5][2];
 }
 
 

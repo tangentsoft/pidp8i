@@ -67,13 +67,13 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
         // Halve the Execute and Fetch values, because they're only on
         // for half of the instruction fetch-and-execute cycle.  Skip
         // halving for == 1 case for same reason as above.
-        if (*pdis_paint[5][2] > 1) *pdis_paint[5][2] >>= 1;
-        if (*pdis_paint[5][3] > 1) *pdis_paint[5][3] >>= 1;
+        if (pdis_paint->on[5][2] > 1) pdis_paint->on[5][2] >>= 1;
+        if (pdis_paint->on[5][3] > 1) pdis_paint->on[5][3] >>= 1;
         
         // Light up LEDs
         for (size_t row = 0; row < NLEDROWS; ++row) {
             // Output 0 (CLR) for LEDs in this row which should be on
-            size_t *prow = *pdis_paint[row];
+            size_t *prow = pdis_paint->on[row];
             for (size_t col = 0; col < NCOLS; ++col) {
                 if (prow[col] >= on_threshold) {
                     GPIO_CLR = 1 << cols[col];

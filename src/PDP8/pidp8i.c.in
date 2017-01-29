@@ -58,7 +58,7 @@ static int swStop = 0;
 
 static inline void bump_pidp8i_led (size_t row, size_t col)
 {
-    __atomic_add_fetch (*pdis_update[row] + col, 1, ATOMIC_MM);
+    __atomic_add_fetch (pdis_update->on[row] + col, 1, ATOMIC_MM);
 }
 
 
@@ -68,7 +68,7 @@ static inline void bump_pidp8i_led (size_t row, size_t col)
 
 static inline void bump_pidp8i_row_leds (size_t row, uint16 state)
 {
-    size_t *prow = *pdis_update[row];
+    size_t *prow = pdis_update->on[row];
     for (size_t col = 0, mask = 1; col < NCOLS; ++col, mask <<= 1) {
         if (state & mask) {
             __atomic_add_fetch (prow + col, 1, ATOMIC_MM);
@@ -89,7 +89,7 @@ static inline void bump_pidp8i_row_leds (size_t row, uint16 state)
 
 static inline void bump_3_pidp8i_leds (size_t col, uint16 state)
 {
-    size_t *prow = *pdis_update[7];
+    size_t *prow = pdis_update->on[7];
     size_t last_col = col + 3;
     for (size_t mask = 1 << 12; col < last_col; ++col, mask <<= 1) {
         if (state & mask) {
@@ -105,7 +105,7 @@ static inline void bump_3_pidp8i_leds (size_t col, uint16 state)
 
 static inline void bump_5_pidp8i_leds (uint16 state)
 {
-    size_t *prow = *pdis_update[6];
+    size_t *prow = pdis_update->on[6];
     size_t last_col = 7;
     for (size_t col = 2, mask = 1; col < last_col; ++col, mask <<= 1) {
         if (state & mask) {

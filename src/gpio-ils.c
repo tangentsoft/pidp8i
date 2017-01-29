@@ -36,6 +36,8 @@
 
 #include "PDP8/pidp8i.h"
 
+#include <math.h>
+
 
 //// CONSTANTS /////////////////////////////////////////////////////////
 
@@ -102,7 +104,7 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
             // is greater than the actual brightness, else decrease it.
             float *p = brtval;
             for (int row = 0; row < NLEDROWS; ++row) {
-                size_t *prow = *pdis_paint[row];
+                size_t *prow = pdis_paint->on[row];
                 for (int col = 0; col < NCOLS; ++col, ++p) {
                     float new_brtval = prow[col] / inst_count;
                     if (fabs(new_brtval - *p) > BRIGHTNESS_EPSILON) {
@@ -122,13 +124,13 @@ void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
         // for half of the instruction fetch-and-execute cycle.  We have
         // to do this in FP math in case inst_count == 1, because only
         // one display update happened since the last iteration.
-        float execute = *pdis_paint[5][2] / 2.0;
-        float fetch   = *pdis_paint[5][3] / 2.0;
+        float execute = pdis_paint->on[5][2] / 2.0;
+        float fetch   = pdis_paint->on[5][3] / 2.0;
 
         // Light up LEDs
         for (size_t row = 0, ndx = 0; row < NLEDROWS; ++row) {
             // Output 0 (CLR) for LEDs in this row which should be on
-            size_t *prow = *pdis_paint[row];
+            size_t *prow = pdis_paint->on[row];
             for (size_t col = 0; col < NCOLS; ++col, ++ndx) {
                 if (brtval[ndx] >= bctr) {
                     GPIO_CLR = 1 << cols[col];

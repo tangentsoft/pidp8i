@@ -104,7 +104,11 @@ typedef uint64_t   ns_time_t;
 typedef useconds_t us_time_t;
 typedef uint32_t   ms_time_t;
 
-typedef size_t display[NLEDROWS][NCOLS];
+typedef struct display {
+	// Counters incremented each time the LED is known to be turned on,
+	// in instructions since the last display paint.
+	size_t on[NLEDROWS][NCOLS];
+} display;
 extern display* pdis_update, *pdis_paint;
 
 extern uint16_t switchstatus[];
