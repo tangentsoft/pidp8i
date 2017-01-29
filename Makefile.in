@@ -150,7 +150,10 @@ distclean: clean
 		@builddir@/src/PDP8/Makefile
 
 ctags tags:
-	ctags -R @srcdir@
+	@ctags -R @srcdir@
+ifeq (@HAVE_PROG_CSCOPE@, 1)
+	@cscope -bR -s@srcdir@
+endif
 
 install: all
 	@echo Installing to @prefix@...
