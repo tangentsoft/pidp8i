@@ -183,7 +183,6 @@ if {![opt-bool debug-mode]} {
 		cc-check-flags -fgcse-after-reload
 		cc-check-flags -finline-functions
 		cc-check-flags -fno-unsafe-loop-optimizations
-		define-append CFLAGS "-D_GNU_SOURCE"
 	}
 }
 
