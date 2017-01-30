@@ -453,7 +453,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
 //// set_single_inst_flag //////////////////////////////////////////////
 // Set or clear the SING_INST mode flags.
 
-inline void set_single_inst_flag (int f)
+static inline void set_single_inst_flag (int f)
 {
     // Also set the displays' single-instruction mode flag, because if
     // we're running the ILS code here, we have to use NLS until we're
@@ -466,7 +466,7 @@ inline void set_single_inst_flag (int f)
 //// set_stop_flag /////////////////////////////////////////////////////
 // Set or clear the STOP mode flags.
 
-inline void set_stop_flag (int f)
+void set_stop_flag (int f)
 {
     // Also set the displays' stop flag, so swap_displays keeps the
     // current display up until we resume processing.
