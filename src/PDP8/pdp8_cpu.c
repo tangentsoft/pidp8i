@@ -1,6 +1,6 @@
 /* pdp8_cpu.c: PDP-8 CPU simulator
 
-   Copyright (c) 1993-2016, Robert M Supnik
+   Copyright (c) 1993-2017, Robert M Supnik
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -55,6 +55,7 @@
 
    cpu          central processor
 
+   28-Jan-17    RMS     Renamed switch register variable to SR, per request
    18-Sep-16    RMS     Added alternate dispatch table for non-contiguous devices
    17-Sep-13    RMS     Fixed boot in wrong field problem (Dave Gesswein)
    28-Apr-07    RMS     Removed clock initialization
@@ -257,7 +258,7 @@ int32 gtf = 0;                                          /* EAE gtf flag */
 int32 SC = 0;                                           /* EAE shift count */
 int32 UB = 0;                                           /* User mode Buffer */
 int32 UF = 0;                                           /* User mode Flag */
-int32 OSR = 0;                                          /* Switch Register */
+int32 SR = 0;                                           /* Switch Register */
 int32 tsc_ir = 0;                                       /* TSC8-75 IR */
 int32 tsc_pc = 0;                                       /* TSC8-75 PC */
 int32 tsc_cdf = 0;                                      /* TSC8-75 CDF flag */
@@ -298,7 +299,7 @@ REG cpu_reg[] = {
     { ORDATAD (AC, saved_LAC, 12, "accumulator") },
     { FLDATAD (L, saved_LAC, 12, "link") },
     { ORDATAD (MQ, saved_MQ, 12, "multiplier-quotient") },
-    { ORDATAD (SR, OSR, 12, "front panel switches") },
+    { ORDATAD (SR, SR, 12, "front panel switches") },
     { GRDATAD (IF, saved_PC, 8, 3, 12, "instruction field") },
     { GRDATAD (DF, saved_DF, 8, 3, 12, "data field") },
     { GRDATAD (IB, IB, 8, 3, 12, "instruction field buffter") },
@@ -348,7 +349,6 @@ DEVICE cpu_dev = {
     NULL, NULL, NULL,
     NULL, 0
     };
-
 
 t_stat sim_instr (void)
 {
@@ -410,7 +410,9 @@ while (reason == 0) {                                   /* loop until halted */
     switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
             &DF, &int_req)) {
         case pft_stop:
-            // Don't choke off the SIMH event queue handler.
+            // Tell the SIMH event queue to keep running even though
+            // we're stopped.  Without this, it will ignore Ctrl-E
+            // until the simulator is back in free-running mode.
             sim_interval = sim_interval - 1;
 
             // Go no further in STOP mode.  In particular, fetch no more
@@ -445,18 +447,21 @@ while (reason == 0) {                                   /* loop until halted */
         }
 
     MA = IF | PC;                                       /* form PC */
-    if (sim_brk_summ &&
+    if (sim_brk_summ && 
         sim_brk_test (MA, (1u << SIM_BKPT_V_SPC) | SWMASK ('E'))) { /* breakpoint? */
         reason = STOP_IBKPT;                            /* stop simulation */
         break;
         }
 
     IR = M[MA];                                         /* fetch instruction */
-
+    if (sim_brk_summ && 
+        sim_brk_test (IR, (2u << SIM_BKPT_V_SPC) | SWMASK ('I'))) { /* breakpoint? */
+        reason = STOP_OPBKPT;                            /* stop simulation */
+        break;
+        }
+    PC = (PC + 1) & 07777;                              /* increment PC */
     int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
     sim_interval = sim_interval - 1;
-
-    PC = (PC + 1) & 07777;                              /* increment PC */
 
 /* Instruction decoding.
 
@@ -1003,16 +1008,16 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             else {
                 if (IR & 04) {                          /* OSR */
 //--- PiDP add--------------------------------------------------------------------------
-                    OSR = get_switch_register();        /* FIXME: [fad3ad73ea] */
+                    SR = get_switch_register();         /* FIXME: [fad3ad73ea] */
 //--- PiDP end--------------------------------------------------------------------------
-                    LAC = LAC | OSR;
+                    LAC = LAC | SR;
                     }
                 if (IR & 02) {                          /* HLT */
-//--- PiDP change--------------------------------------------------------------------------
+//--- PiDP change-----------------------------------------------------------------------
                     // reason = STOP_HALT;
                     set_stop_flag (1);
-//--- end of PiDP change--------------------------------------------------------------------------
                     }
+//--- end of PiDP change----------------------------------------------------------------
                 }
             break;
             }                                           /* end if group 2 */

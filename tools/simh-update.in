@@ -133,8 +133,13 @@ find "$SRCSUBDIR" -name \*.in -print | while read f
 do
 	inf="${f#$SRCSUBDIR/}"	# make path fully relative
 	genf="${inf%.in}"		# remove .in from the end
-	mv  "$OUR_SIMH_DIR/$genf"  "$OUR_SIMH_DIR/$inf"
-	mv "$CURR_SIMH_DIR/$genf" "$CURR_SIMH_DIR/$inf"
+    if [ -f "$OUR_SIMH_DIR/$genf" ]
+    then
+        mv  "$OUR_SIMH_DIR/$genf"  "$OUR_SIMH_DIR/$inf"
+        mv "$CURR_SIMH_DIR/$genf" "$CURR_SIMH_DIR/$inf"
+    fi
+    # else, it's a *.in file specific to our code base, not a
+    # parameterized version of an upstream file
 done
 
 # Produce a patch file for modifying the upstream $OLD_SGCID version to

@@ -1,5 +1,11 @@
 # PiDP-8/I Changes
 
+## Version 2017.01.30?  INCOMPLETE
+
+*   Merged in the relevant SIMH updates.  This is all internal stuff
+    that doesn't affect current PiDP-8/I behavior.
+
+
 ## Version 2017.01.23
 
 *   When any program that talks to the PiDP-8/I front panel starts up,
