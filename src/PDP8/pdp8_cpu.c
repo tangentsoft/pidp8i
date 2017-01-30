@@ -349,7 +349,6 @@ DEVICE cpu_dev = {
     NULL, 0
     };
 
-
 t_stat sim_instr (void)
 {
 int32 IR, MB, IF, DF, LAC, MQ;
@@ -436,14 +435,19 @@ while (reason == 0) {                                   /* loop until halted */
         }
 
     MA = IF | PC;                                       /* form PC */
-    if (sim_brk_summ &&
+    if (sim_brk_summ && 
         sim_brk_test (MA, (1u << SIM_BKPT_V_SPC) | SWMASK ('E'))) { /* breakpoint? */
         reason = STOP_IBKPT;                            /* stop simulation */
         break;
         }
 
     IR = M[MA];                                         /* fetch instruction */
-
+    if (sim_brk_summ && 
+        sim_brk_test (IR, (2u << SIM_BKPT_V_SPC) | SWMASK ('I'))) { /* breakpoint? */
+        reason = STOP_OPBKPT;                            /* stop simulation */
+        break;
+        }
+    PC = (PC + 1) & 07777;                              /* increment PC */
     int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
     sim_interval = sim_interval - 1;
 
@@ -455,8 +459,6 @@ while (reason == 0) {                                   /* loop until halted */
     set_pidp8i_execute_led ();
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
-
-    PC = (PC + 1) & 07777;                              /* increment PC */
 
 /* Instruction decoding.
 
