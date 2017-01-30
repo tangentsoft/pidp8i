@@ -400,7 +400,9 @@ while (reason == 0) {                                   /* loop until halted */
     switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
             &DF, &int_req)) {
         case pft_stop:
-            // Don't choke off the SIMH event queue handler.
+            // Tell the SIMH event queue to keep running even though
+            // we're stopped.  Without this, it will ignore Ctrl-E
+            // until the simulator is back in free-running mode.
             sim_interval = sim_interval - 1;
 
             // Go no further in STOP mode.  In particular, fetch no more
