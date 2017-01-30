@@ -450,15 +450,15 @@ static pidp8i_flow_t handle_sing_step (int closed)
 }
 
 
-//// set_single_stepping_flag //////////////////////////////////////////
-// Set or clear the SING_STEP mode flags.
+//// set_single_inst_flag //////////////////////////////////////////////
+// Set or clear the SING_INST mode flags.
 
-inline void set_single_stepping_flag (int f)
+inline void set_single_inst_flag (int f)
 {
-    // Also set the displays' single_stepping flag, because if we're in
-    // ILS mode, we have to use NLS updating until we're back to full-
-    // speed, since ILS depends on updates at a particular rate.
-    pdis_paint->cpu_single_stepping = pdis_update->cpu_single_stepping =
+    // Also set the displays' single-instruction mode flag, because if
+    // we're running the ILS code here, we have to use NLS until we're
+    // back to full-speed, since ILS depends on rapid state updates.
+    pdis_paint->cpu_single_inst = pdis_update->cpu_single_inst =
             swSingInst = f;
 }
 
@@ -512,13 +512,13 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         // before we "clear the RUN flip-flop" in DEC terms, whereas
         // we're testing these switches before we fetch the next
         // instruction.  Show me how it matters, and I'll fix it. :)
-        set_single_stepping_flag (1);
+        set_single_inst_flag (1);
         set_stop_flag (1);
     }
 
     // ...and SING_INST switch open
     if (swSingInst && (switchstatus[2] & SS2_S_INST)) {
-        set_single_stepping_flag (0);
+        set_single_inst_flag (0);
     }
 
     // Check for START switch press...
@@ -529,7 +529,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         *pMB = 0;                         // clear MB.
         *pMA = *pPC & 07777;              // transfer PC into MA (FIXME: does IR make this unnecessary?)
         set_stop_flag (0);                // START cancels STOP mode
-        set_single_stepping_flag (0);     // allow SING INST mode re-entry
+        set_single_inst_flag (0);         // allow SING INST mode re-entry
         swStart = 1;                      // make it single-shot
     }
 
