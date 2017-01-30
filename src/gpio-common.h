@@ -105,20 +105,24 @@ typedef useconds_t us_time_t;
 typedef uint64_t   ms_time_t;
 
 typedef struct display {
-	// Counters incremented each time the LED is known to be turned on,
-	// in instructions since the last display paint.
-	size_t on[NLEDROWS][NCOLS];
+    // Counters incremented each time the LED is known to be turned on,
+    // in instructions since the last display paint.
+    size_t on[NLEDROWS][NCOLS];
 
-	// Most recent state for each LED, for use by NLS full-time and by
-	// ILS in STOP mode.  (One bitfield per row.)
-	uint16_t curr[NLEDROWS];
+    // Most recent state for each LED, for use by NLS full-time and by
+    // ILS in STOP mode.  (One bitfield per row.)
+    uint16_t curr[NLEDROWS];
 
-	// Flag set when PDP-8 CPU is stopped, which tells swap_displays not
-	// to swap this one out, since the other display may still be blank.
-	int cpu_stopped;
+    // Flag set when PDP-8 CPU is stopped, which tells swap_displays not
+    // to swap this one out, since the other display may still be blank.
+    int cpu_stopped;
 
-	// Number of instructions executed since this display was cleared
-	int inst_count;
+    // Flag set when the PDP-8 CPU in single-instruction mode, since
+    // that temporarily disables the ILS.
+    int cpu_single_inst;
+
+    // Number of instructions executed since this display was cleared
+    int inst_count;
 } display;
 extern display* pdis_update, *pdis_paint;
 

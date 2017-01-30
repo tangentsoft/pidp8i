@@ -47,6 +47,10 @@ int awfulHackFlag = 0;
 // just the STOP switch handler can put us into STOP mode.
 static int swStop = 0;
 
+// Single-shot flag for the SING_INST switch.  It's global only to be
+// parallel with swStop, which we modify in much the same way.
+static int swSingInst = 0;
+
 
 //// set_pidp8i_led ////////////////////////////////////////////////////
 // Sets the current state for a single LED at the given row and column
@@ -446,6 +450,19 @@ static pidp8i_flow_t handle_sing_step (int closed)
 }
 
 
+//// set_single_stepping_flag //////////////////////////////////////////
+// Set or clear the SING_STEP mode flags.
+
+inline void set_single_stepping_flag (int f)
+{
+    // Also set the displays' single_stepping flag, because if we're in
+    // ILS mode, we have to use NLS updating until we're back to full-
+    // speed, since ILS depends on updates at a particular rate.
+    pdis_paint->cpu_single_stepping = pdis_update->cpu_single_stepping =
+            swSingInst = f;
+}
+
+
 //// set_stop_flag /////////////////////////////////////////////////////
 // Set or clear the STOP mode flags.
 
@@ -488,7 +505,6 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     }
 
     // Check for SING_INST switch close...
-    static int swSingInst = 0;
     if (((switchstatus[2] & SS2_S_INST) == 0) && (swSingInst == 0)) {
         // Put the processor in stop mode until we get a CONT or START
         // switch closure.  Technically this is wrong according to DEC's
@@ -496,13 +512,13 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         // before we "clear the RUN flip-flop" in DEC terms, whereas
         // we're testing these switches before we fetch the next
         // instruction.  Show me how it matters, and I'll fix it. :)
-        swSingInst = 1;
+        set_single_stepping_flag (1);
         set_stop_flag (1);
     }
 
     // ...and SING_INST switch open
     if (swSingInst && (switchstatus[2] & SS2_S_INST)) {
-        swSingInst = 0;
+        set_single_stepping_flag (0);
     }
 
     // Check for START switch press...
@@ -513,7 +529,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         *pMB = 0;                         // clear MB.
         *pMA = *pPC & 07777;              // transfer PC into MA (FIXME: does IR make this unnecessary?)
         set_stop_flag (0);                // START cancels STOP mode
-        swSingInst = 0;                   // allow SING INST mode re-entry
+        set_single_stepping_flag (0);     // allow SING INST mode re-entry
         swStart = 1;                      // make it single-shot
     }
 
@@ -540,7 +556,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             // to it until the switch opens; check below.  Re-enter stop
             // mode if SING_INST is still closed, else leave stop mode
             // because we must have stopped via STOP or HLT.
-            swStop = !!swSingInst;
+            set_stop_flag (!!swSingInst);
             swCont = 2;
         }
     }
