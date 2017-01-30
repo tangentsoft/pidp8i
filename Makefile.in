@@ -231,14 +231,14 @@ mediainstall:
 	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
 	@INSTALL@ -m 664 -g @INSTGRP@ @builddir@/boot/*.script @BOOTDIR@
 
-run:
-	sudo @builddir@/$(SIM) @srcdir@/boot/0.script
-
 reconfig:
 	@AUTOREMAKE@
 
 release: all
 	@srcdir@/tools/mkrel
+
+run:
+	sudo @builddir@/$(SIM) @srcdir@/boot/0.script
 
 simh-update simh-update-f:
 	@@builddir@/tools/simh-update $(subst simh-update,,$@)
