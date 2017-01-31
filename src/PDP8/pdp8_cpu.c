@@ -396,6 +396,13 @@ srand48 (time (&last_update));
 
 while (reason == 0) {                                   /* loop until halted */
 
+    // Allow clean exit to SCP: https://github.com/simh/simh/issues/387
+    if (cpu_astop != 0) {
+        cpu_astop = 0;
+        reason = SCPE_STOP;
+        break;
+        }
+
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     awfulHackFlag = 0; // no do script pending. Did I mention awful?
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
