@@ -1015,7 +1015,8 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                 if (IR & 02) {                          /* HLT */
 //--- PiDP change-----------------------------------------------------------------------
                     // reason = STOP_HALT;
-                    set_stop_flag (1);
+                    extern int swStop;
+                    swStop = 1;
                     }
 //--- end of PiDP change----------------------------------------------------------------
                 }

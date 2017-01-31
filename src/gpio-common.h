@@ -113,14 +113,6 @@ typedef struct display {
     // ILS in STOP mode.  (One bitfield per row.)
     uint16_t curr[NLEDROWS];
 
-    // Flag set when PDP-8 CPU is stopped, which tells swap_displays not
-    // to swap this one out, since the other display may still be blank.
-    int cpu_stopped;
-
-    // Flag set when the PDP-8 CPU in single-instruction mode, since
-    // that temporarily disables the ILS.
-    int cpu_single_inst;
-
     // Number of instructions executed since this display was cleared
     int inst_count;
 } display;

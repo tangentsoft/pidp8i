@@ -40,18 +40,6 @@
 int awfulHackFlag = 0;
 
 
-//// INTERNAL GLOBALS AND CONSTANTS ////////////////////////////////////
-
-// Single-shot flag for the STOP switch.  It's global because several of
-// the functions below need to examine or modify it, since more than
-// just the STOP switch handler can put us into STOP mode.
-static int swStop = 0;
-
-// Single-shot flag for the SING_INST switch.  It's global only to be
-// parallel with swStop, which we modify in much the same way.
-static int swSingInst = 0;
-
-
 //// set_pidp8i_led ////////////////////////////////////////////////////
 // Sets the current state for a single LED at the given row and column
 // on the PiDP-8/I PCB.  Also increments the LED on-count value for 
@@ -221,6 +209,7 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // times, but they're twiddled so rapidly that they both just become
     // a 50% blur in normal operation, so we don't make the CPU core set
     // these "on-time."  It just doesn't matter.
+    extern int swStop;
     if (!swStop) set_pidp8i_led (pd, 5, 2);    // Execute
     set_pidp8i_led (pd, 5, 3);                 // Fetch
 
@@ -450,45 +439,6 @@ static pidp8i_flow_t handle_sing_step (int closed)
 }
 
 
-//// set_single_inst_flag //////////////////////////////////////////////
-// Set or clear the SING_INST mode flags.
-
-static inline void set_single_inst_flag (int f)
-{
-    // Also set the displays' single-instruction mode flag, because if
-    // we're running the ILS code here, we have to use NLS until we're
-    // back to full-speed, since ILS depends on rapid state updates.
-    //
-    //
-    // We do this through the raw structure array rather than the pdis
-    // pointers in case the display swap happens between these two
-    // assignments, causing a double assignment to one display and none
-    // to the other.
-    extern display display_bufs[2];     // semi-private
-    swSingInst =
-            display_bufs[0].cpu_single_inst =
-            display_bufs[1].cpu_single_inst =
-            f;
-}
-
-
-//// set_stop_flag /////////////////////////////////////////////////////
-// Set or clear the STOP mode flags.
-
-void set_stop_flag (int f)
-{
-    // Also set the displays' stop flag, so swap_displays keeps the
-    // current display up until we resume processing.
-    //
-    // See set_single_inst_flag for justification of method.
-    extern display display_bufs[2];     // semi-private
-    swStop =
-            display_bufs[0].cpu_stopped =
-            display_bufs[1].cpu_stopped =
-            f;
-}
-
-
 //// handle_flow_control_switches //////////////////////////////////////
 // Process all of the PiDP-8/I front panel switches that can affect the
 // flow path of the PDP-8 simulator's instruction interpretation loop,
@@ -520,6 +470,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     }
 
     // Check for SING_INST switch close...
+    extern int swSingInst, swStop;
     if (((switchstatus[2] & SS2_S_INST) == 0) && (swSingInst == 0)) {
         // Put the processor in stop mode until we get a CONT or START
         // switch closure.  Technically this is wrong according to DEC's
@@ -527,13 +478,13 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         // before we "clear the RUN flip-flop" in DEC terms, whereas
         // we're testing these switches before we fetch the next
         // instruction.  Show me how it matters, and I'll fix it. :)
-        set_single_inst_flag (1);
-        set_stop_flag (1);
+        swSingInst = 1;
+        swStop = 1;
     }
 
     // ...and SING_INST switch open
     if (swSingInst && (switchstatus[2] & SS2_S_INST)) {
-        set_single_inst_flag (0);
+        swSingInst = 0;
     }
 
     // Check for START switch press...
@@ -543,8 +494,8 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         *pLAC = 0;                        // clear L and AC;
         *pMB = 0;                         // clear MB.
         *pMA = *pPC & 07777;              // transfer PC into MA (FIXME: does IR make this unnecessary?)
-        set_stop_flag (0);                // START cancels STOP mode
-        set_single_inst_flag (0);         // allow SING INST mode re-entry
+        swStop = 0;                       // START cancels STOP mode
+        swSingInst = 0;                   // allow SING INST mode re-entry
         swStart = 1;                      // make it single-shot
     }
 
@@ -564,7 +515,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         if (!swSingInst && swStop) {
             // We were HLTed or STOPped, so CONT returns us to
             // free-running mode.
-            set_stop_flag (0);
+            swStop = 0;
         }
         // else, CONT has no effect in this state
     }
@@ -636,7 +587,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.
     if ((switchstatus[2] & SS2_STOP) == 0) {
-        set_stop_flag (1);
+        swStop = 1;
     }
 
     // If any of the above put us into STOP mode, go no further.  In
@@ -653,13 +604,4 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 int32 get_switch_register (void)
 {
     return switchstatus[0] ^ 07777;
-}
-
-
-//// pdp8_cpu_running //////////////////////////////////////////////////
-// Returns true if we're not in STOP mode.
-
-int pdp8_cpu_running (void)
-{
-    return swStop == 0;
 }

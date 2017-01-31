@@ -50,7 +50,5 @@ extern pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 extern void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
         uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
         int32 sSC, int32 int_req, int Pause);
-extern void set_stop_flag (int f);
-extern int pdp8_cpu_running (void);
 
 #endif // !defined(PIDP8I_H)
