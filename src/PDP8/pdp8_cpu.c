@@ -371,13 +371,6 @@ reason = 0;
 
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-// Set some register values we care about which may not get values
-// before we need them, and which weren't set above.
-MA = MB = IR = 0;
-
-// Turn LEDs on the first time thru in case we begin in STOP state
-set_pidp8i_leds(PC, 0, 0, 0, LAC, MQ, IF, DF, 0, int_req, 0);
-
 // PiDP-8/I specific flag, set when the last instruction was an IOT
 // instruction to a real device.  SIMH doesn't track this, but the front
 // panel needs it.
@@ -424,7 +417,11 @@ while (reason == 0) {                                   /* loop until halted */
             // until the simulator is back in free-running mode.
             sim_interval = sim_interval - 1;
 
-            // Have to keep display updated while stopped
+            // Have to keep display updated while stopped.  This does
+            // mean if the software starts with the STOP switch held
+            // down, we'll put garbage onto the display for MA, MB, and
+            // IR, but that's what the real hardware does, too.  See
+            // https://github.com/simh/simh/issues/386
             set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
 
