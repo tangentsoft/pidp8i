@@ -414,6 +414,8 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
+    SR = get_switch_register();                         /* might've changed */
+
     switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
             &DF, &int_req)) {
         case pft_stop:
@@ -1017,12 +1019,8 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                 tsc_cdf = 0;                            /* clear flag */
                 }
             else {
-                if (IR & 04) {                          /* OSR */
-//--- PiDP add--------------------------------------------------------------------------
-                    SR = get_switch_register();         /* FIXME: [fad3ad73ea] */
-//--- PiDP end--------------------------------------------------------------------------
+                if (IR & 04)                            /* OSR */
                     LAC = LAC | SR;
-                    }
                 if (IR & 02) {                          /* HLT */
 //--- PiDP change-----------------------------------------------------------------------
                     // reason = STOP_HALT;
