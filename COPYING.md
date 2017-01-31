@@ -20,6 +20,15 @@ included with the distribution][sl].
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
 
 
+## PiDP-8/I Design Files
+
+The PiDP-8/I KiCad design files were declared "open source" and "no
+copyright" [on the mailing list][pdp8il] by their author, Oscar
+Vermeulen.
+
+[pdp8il]: https://groups.google.com/d/msg/pidp-8/bcIH9uEB_kU/twnJbJqzDAAJ
+
+
 ## autosetup License
 
 The `configure` script and the contents of the `autosetup` directory are
