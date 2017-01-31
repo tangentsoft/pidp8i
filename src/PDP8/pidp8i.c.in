@@ -462,7 +462,7 @@ static inline void set_single_inst_flag (int f)
     //
     // We do this through the raw structure array rather than the pdis
     // pointers in case the display swap happens between these two
-    // assignments, causing a double assigment to one dispay and none
+    // assignments, causing a double assignment to one display and none
     // to the other.
     extern display display_bufs[2];     // semi-private
     swSingInst =
