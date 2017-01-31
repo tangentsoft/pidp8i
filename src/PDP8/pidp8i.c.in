@@ -458,8 +458,17 @@ static inline void set_single_inst_flag (int f)
     // Also set the displays' single-instruction mode flag, because if
     // we're running the ILS code here, we have to use NLS until we're
     // back to full-speed, since ILS depends on rapid state updates.
-    pdis_paint->cpu_single_inst = pdis_update->cpu_single_inst =
-            swSingInst = f;
+    //
+    //
+    // We do this through the raw structure array rather than the pdis
+    // pointers in case the display swap happens between these two
+    // assignments, causing a double assigment to one dispay and none
+    // to the other.
+    extern display display_bufs[2];     // semi-private
+    swSingInst =
+            display_bufs[0].cpu_single_inst =
+            display_bufs[1].cpu_single_inst =
+            f;
 }
 
 
@@ -470,7 +479,13 @@ void set_stop_flag (int f)
 {
     // Also set the displays' stop flag, so swap_displays keeps the
     // current display up until we resume processing.
-    pdis_paint->cpu_stopped = pdis_update->cpu_stopped = swStop = f;
+    //
+    // See set_single_inst_flag for justification of method.
+    extern display display_bufs[2];     // semi-private
+    swStop =
+            display_bufs[0].cpu_stopped =
+            display_bufs[1].cpu_stopped =
+            f;
 }
 
 

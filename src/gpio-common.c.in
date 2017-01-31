@@ -99,7 +99,7 @@ uint16_t switchstatus[NROWS];
 // zeroes it and swaps it for the current "update-to" copy, giving the
 // CPU thread a blank slate, and giving the GPIO thread a stable set of
 // LED "on" time values to work with.
-static display display_bufs[2];
+display display_bufs[2];
 display* pdis_update = display_bufs + 0;    // exported to SIMH CPU thread
 display* pdis_paint  = display_bufs + 1;    // exported to gpio-*.c
 
