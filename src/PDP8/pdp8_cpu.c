@@ -422,6 +422,10 @@ while (reason == 0) {                                   /* loop until halted */
             // until the simulator is back in free-running mode.
             sim_interval = sim_interval - 1;
 
+            // Have to keep display updated while stopped
+            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+                    int_req, Pause);
+
             // Go no further in STOP mode.  In particular, fetch no more
             // instructions, and do not touch PC!
             continue;
