@@ -540,25 +540,18 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 
     // Check for CONT switch press...
     static int swCont = 0;
-    if (((switchstatus[2] & SS2_CONT) == 0) && (swCont < 2)) {
-        if (swCont == 0) {
-            // On the initial CONT press, release stop mode regardless
-            // of how it was enabled to execute the next instruction.
-            //
-            // FIXME: Are we handling MB correctly? [973271ae36]
+    if (((switchstatus[2] & SS2_CONT) == 0) && (swCont == 0)) {
+        // The initial CONT press is special: how we handle it
+        // depends on the processor's state.
+        //
+        // FIXME: Are we handling MB correctly? [973271ae36]
+        swCont = 1;                 // make it single-shot
+        if (!swSingInst && swStop) {
+            // We were HLTed or STOPped, so CONT returns us to
+            // free-running mode.
             set_stop_flag (0);
-            swCont = 1;                 // make it single-shot
         }
-        else if (swCont == 1) {
-            // The second time we come back in here while the CONT
-            // switch is still down -- the human is too slow to
-            // release it between iterations -- we stop paying attention
-            // to it until the switch opens; check below.  Re-enter stop
-            // mode if SING_INST is still closed, else leave stop mode
-            // because we must have stopped via STOP or HLT.
-            set_stop_flag (!!swSingInst);
-            swCont = 2;
-        }
+        // else, CONT has no effect in this state
     }
 
     // ...and CONT switch release
