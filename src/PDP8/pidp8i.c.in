@@ -470,21 +470,23 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     }
 
     // Check for SING_INST switch close...
-    extern int swSingInst, swStop;
+    extern int swSingInst;
     if (((switchstatus[2] & SS2_S_INST) == 0) && (swSingInst == 0)) {
-        // Put the processor in stop mode until we get a CONT or START
-        // switch closure.  Technically this is wrong according to DEC's
-        // docs: we're supposed to finish executing the next instruction
-        // before we "clear the RUN flip-flop" in DEC terms, whereas
-        // we're testing these switches before we fetch the next
-        // instruction.  Show me how it matters, and I'll fix it. :)
+        // Put the processor in single-instruction mode until we get a
+        // CONT or START switch closure.  Technically this is wrong
+        // according to DEC's docs: we're supposed to finish executing
+        // the next instruction before we "clear the RUN flip-flop" in
+        // DEC terms, whereas we're testing these switches before we
+        // fetch the next instruction.  Show me how it matters, and
+        // I'll fix it. :)
         swSingInst = 1;
-        swStop = 1;
     }
 
     // ...and SING_INST switch open
+    extern int swStop;
     if (swSingInst && (switchstatus[2] & SS2_S_INST)) {
         swSingInst = 0;
+        swStop = 1;     // still stopped on leaving SING_INST mode
     }
 
     // Check for START switch press...
@@ -512,7 +514,12 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         //
         // FIXME: Are we handling MB correctly? [973271ae36]
         swCont = 1;                 // make it single-shot
-        if (!swSingInst && swStop) {
+        if (swSingInst) {
+            // On the initial CONT press while in SING_INST mode, run
+            // one instruction only.
+            return pft_normal;
+        }
+        else if (swStop) {
             // We were HLTed or STOPped, so CONT returns us to
             // free-running mode.
             swStop = 0;
@@ -586,15 +593,14 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for STOP switch press.  No "and release" because we get out of
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.
-    if ((switchstatus[2] & SS2_STOP) == 0) {
+    if (!swStop && ((switchstatus[2] & SS2_STOP) == 0)) {
         swStop = 1;
     }
 
-    // If any of the above put us into STOP mode, go no further.  In
-    // particular, fetch no more instructions, and do not touch PC!
-    if (swStop == 1) return pft_stop;
-
-    return pft_normal;
+    // If any of the above put us into STOP or SING_INST mode, go no
+    // further.  In particular, fetch no more instructions, and do not
+    // touch PC!  The only way to get un-stuck is CONT or STOP.
+    return (swStop || swSingInst) ? pft_stop : pft_normal;
 }
 
 
