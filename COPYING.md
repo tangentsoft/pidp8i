@@ -22,11 +22,14 @@ included with the distribution][sl].
 
 ## PiDP-8/I Design Files
 
-The PiDP-8/I KiCad design files were declared "open source" and "no
-copyright" [on the mailing list][pdp8il] by their author, Oscar
-Vermeulen.
+The PiDP-8/I design files in [`hardware/pidp8i`][hwp] were released
+under the Creative Commons [Attribution-NonCommercial-ShareAlike 4.0
+International][ccl] license [on the mailing list][pdp8il] by their
+author, Oscar Vermeulen.
 
-[pdp8il]: https://groups.google.com/d/msg/pidp-8/bcIH9uEB_kU/twnJbJqzDAAJ
+[ccl]: https://creativecommons.org/licenses/by-nc-sa/4.0/
+[hwp]: https://tangentsoft.com/pidp8i/dir?name=hardware/pdp8i&ci=trunk
+[pdp8il]: https://groups.google.com/d/msg/pidp-8/bcIH9uEB_kU/zg9uho7NDAAJ
 
 
 ## autosetup License
