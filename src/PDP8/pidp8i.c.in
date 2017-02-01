@@ -509,13 +509,13 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for START switch press...
     static int swStart = 0;
     if (((switchstatus[2] & SS2_START) == 0) && (swStart == 0)) {
-        *pint_req = *pint_req & ~INT_ION; // disable ION. says so in handbook, true?
-        *pLAC = 0;                        // clear L and AC;
-        *pMB = 0;                         // clear MB.
-        *pMA = *pPC & 07777;              // transfer PC into MA (FIXME: does IR make this unnecessary?)
-        swStop = 0;                       // START cancels STOP mode
-        swSingInst = 0;                   // allow SING INST mode re-entry
-        swStart = 1;                      // make it single-shot
+        *pint_req &= ~INT_ION; // disable ION. says so in handbook, true?
+        *pLAC = 0;             // clear L and AC
+        *pMB = 0;              // clear MB
+        *pMA = *pPC & 07777;   // transfer PC into MA (FIXME: does IR make this unnecessary?)
+        swStop = 0;            // START cancels STOP mode
+        swSingInst = 0;        // allow SING INST mode re-entry
+        swStart = 1;           // make it single-shot
     }
 
     // ...and START switch release
