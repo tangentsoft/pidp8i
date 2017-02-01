@@ -167,13 +167,13 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
                 GPIO_SET = 1 << ledrows[row];
                 OUT_GPIO(ledrows[row]);
 
-                sleep_ns(intervl);
+                sleep_us(intervl);
 
                 // Toggle this LED row off
                 GPIO_CLR = 1 << ledrows[row]; // superstition
                 INP_GPIO(ledrows[row]);
 
-                sleep_us(intervl);
+                sleep_ns(5);
             }
         }
 
