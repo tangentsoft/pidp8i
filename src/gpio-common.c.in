@@ -420,6 +420,15 @@ static const char* pi_type(int p)
 void update_led_states (const us_time_t delay)
 {
     uint16_t *pcurr = pdis_paint->curr;
+
+#if 0   // debugging
+    static time_t last = 0, now;
+    if (time(&now) != last) {
+        printf("\r\n[PC:%04o] [MA:%04o] [MB:%04o] [AC:%04o] [MQ:%04o]",
+                pcurr[0], pcurr[1], pcurr[2], pcurr[3], pcurr[4]);
+        last = now;
+    }
+#endif
     
     // Override Execute and Run LEDs if the CPU is currently stopped,
     // since we only get set_pidp8i_leds calls while the CPU's running.
