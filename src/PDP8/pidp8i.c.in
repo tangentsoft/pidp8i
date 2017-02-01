@@ -219,13 +219,14 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     // times, but they're twiddled so rapidly that they both just become
     // a 50% blur in normal operation, so we don't make the CPU core set
     // these "on-time."  It just doesn't matter.
-    extern int swStop;
-    if (!swStop) set_pidp8i_led (pd, 5, 2);    // Execute
+    extern int swStop, swSingInst;
+    int running = !swStop && !swSingInst;
+    if (running) set_pidp8i_led (pd, 5, 2);    // Execute
     set_pidp8i_led (pd, 5, 3);                 // Fetch
 
     // Row 6a: Remaining LEDs in upper right block
     pd->curr[6] = 0;
-    if (swStop == 0)       set_pidp8i_led (pd, 6, 7); // bump Run LED
+    if (running)           set_pidp8i_led (pd, 6, 7); // bump Run LED
     if (Pause)             set_pidp8i_led (pd, 6, 8); // bump Pause LED
     if (int_req & INT_ION) set_pidp8i_led (pd, 6, 9); // bump ION LED
 
@@ -237,6 +238,12 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     set_3_pidp8i_leds (pd, 9, sDF);
     set_3_pidp8i_leds (pd, 6, sIF);
     if (sLAC & 010000) set_pidp8i_led (pd, 7, 5);
+
+    // If we're stopped or single-stepped, the display-swapping code
+    // won't happen, so copy the above over to the paint-from version.
+    if (!running) {
+        memcpy(pdis_paint, pdis_update, sizeof(struct display));
+    }
 }
 
 
