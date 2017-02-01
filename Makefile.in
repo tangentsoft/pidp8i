@@ -36,7 +36,7 @@
 
 # Git commit ID of the latest version of the SIMH 4 project on GitHub 
 # that has been merged into this source base.
-SGCID=d14243c858f0d469b0adb94157c47d70d42aac81
+SGCID=370cb0edb7ae14fb6467d7f8c734a70130b5bf3f
 
 CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
