@@ -177,6 +177,24 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
             }
         }
 
+#if 0   // debugging
+        static time_t last = 0, now;
+        if (time(&now) != last) {
+            float* p = brightness[0];
+            #define B(n) (p[n] / MAX_BRIGHTNESS * 100.0)
+            printf("\r\nPC:"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]",
+                    B(11), B(10), B(9),
+                    B(8),  B(7),  B(6),
+                    B(5),  B(4),  B(3),
+                    B(2),  B(1),  B(0));
+            last = now;
+        }
+#endif
+
         // 625 = * 1000 / (100 / 60) where 60 is the difference in
         // iteration rate between ILS and NLS.  See the same call
         // in gpio-nls.c.
