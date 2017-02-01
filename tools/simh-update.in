@@ -40,6 +40,19 @@ LOGFILE="$WORKDIR/output.log"
 PATCHFILE="$WORKDIR/pidp8i.patch"
 OLD_SGCID=$(grep ^SGCID "@srcdir@"/Makefile.in | cut -f2 -d=)
 
+# If we don't have the Git worktree sub-command, we're probably running
+# this on Jessie, which ships Git 2.1.4.
+if ! git help worktree &> /dev/null
+then
+    cat <<ERROR
+Sorry, this must be run on a system with the "git worktree" feature,
+which first shipped in Git 2.5.
+
+ERROR
+    exit 1
+fi
+
+# Set up working directory
 rm -rf "$WORKDIR"
 mkdir -p "$WORKDIR"
 
