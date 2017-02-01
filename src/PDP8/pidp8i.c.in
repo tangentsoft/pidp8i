@@ -241,7 +241,8 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
 
     // If we're stopped or single-stepped, the display-swapping code
     // won't happen, so copy the above over to the paint-from version.
-    if (!running) {
+    extern int resumeFromInstructionLoopExit;
+    if (!running || resumeFromInstructionLoopExit) {
         memcpy(pdis_paint, pdis_update, sizeof(struct display));
     }
 }
@@ -525,12 +526,15 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 
     // Check for CONT switch press...
     static int swCont = 0;
-    if (((switchstatus[2] & SS2_CONT) == 0) && (swCont == 0)) {
+    extern int resumeFromInstructionLoopExit;
+    if ((((switchstatus[2] & SS2_CONT) == 0) && (swCont == 0)) ||
+            resumeFromInstructionLoopExit) {
         // The initial CONT press is special: how we handle it
         // depends on the processor's state.
         //
         // FIXME: Are we handling MB correctly? [973271ae36]
         swCont = 1;                 // make it single-shot
+        resumeFromInstructionLoopExit = 0;
         if (swSingInst) {
             // On the initial CONT press while in SING_INST mode, run
             // one instruction only.

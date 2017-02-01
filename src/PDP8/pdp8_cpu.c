@@ -401,8 +401,18 @@ while (reason == 0) {                                   /* loop until halted */
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (sim_interval <= 0) {                            /* check clock queue */
-        if ((reason = sim_process_event ()))
+        if ((reason = sim_process_event ())) {
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+            // We're about to leave the loop, so repaint one last time
+            // in case this is a Ctrl-E and we later get a "cont"
+            // command.  Set a flag that will let us auto-resume.
+            extern int resumeFromInstructionLoopExit, swStop, swSingInst;
+            resumeFromInstructionLoopExit = swStop = swSingInst = 1;
+            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+                    int_req, Pause);
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
             break;
+            }
         }
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */

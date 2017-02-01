@@ -124,12 +124,16 @@ static const ms_time_t debounce_ms = 50;    // time switch state must remain sta
 static const char* gpio_mem_dev = "/dev/gpiomem";
 
 
-// STOP and SING_INST switch states.  They're global because they are
-// owned by -- that is, only modified by -- the PDP8/pidp8i module, but
-// we can't define these there because we refer to them below, and not
-// all programs that link to us link to that module as well.  For such
-// programs, it's fine if these two flags stay 0.
+// Flow-control switch states which are owned by -- that is, primarily
+// modified by -- the PDP8/pidp8i module, but we can't define these
+// there because we refer to them below, and not all programs that link
+// to us link to that module as well.  For such programs, it's fine if
+// these two flags stay 0.
 int swStop = 0, swSingInst = 0;
+
+// Flag set when sim_instr() exits due to some SIMH event like Ctrl-E,
+// which lets us resume from our imposed "pause" display state.
+int resumeFromInstructionLoopExit = 0;
 
 
 //// MEMORY MAPPED GPIO FUNCTIONS //////////////////////////////////////
