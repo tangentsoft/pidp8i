@@ -183,6 +183,16 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     set_pidp8i_row_leds (pd, 3, sLAC & 07777);
     set_pidp8i_row_leds (pd, 4, sMQ);
 
+#if 0   // debugging
+    static time_t last = 0, now;
+    if (time(&now) != last) {
+        uint16* pcurr = pd->curr;
+        printf("\r\nSET: [PC:%04o] [MA:%04o] [MB:%04o] [AC:%04o] [MQ:%04o]",
+                pcurr[0], pcurr[1], pcurr[2], pcurr[3], pcurr[4]);
+        last = now;
+    }
+#endif
+
     // Row 5a: instruction type column, decoded from high octal
     // digit of IR value
     pd->curr[5] = 0;
