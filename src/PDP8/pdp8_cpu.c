@@ -410,14 +410,16 @@ while (reason == 0) {                                   /* loop until halted */
             resumeFromInstructionLoopExit = swStop = swSingInst = 1;
             set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
+
+            // Also copy SR hardware value to software register in case
+            // the user tries poking at it from the sim> prompt.
+            SR = get_switch_register();
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
             break;
             }
         }
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-
-    SR = get_switch_register();                         /* might've changed */
 
     switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
             &DF, &int_req)) {
@@ -1026,8 +1028,12 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                 tsc_cdf = 0;                            /* clear flag */
                 }
             else {
-                if (IR & 04)                            /* OSR */
+                if (IR & 04) {                          /* OSR */
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+                    SR = get_switch_register();         /* get current SR */
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
                     LAC = LAC | SR;
+                    }
                 if (IR & 02) {                          /* HLT */
 //--- PiDP change-----------------------------------------------------------------------
                     // reason = STOP_HALT;
