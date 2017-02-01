@@ -39,7 +39,34 @@ CURR_SIMH_DIR="$WORKDIR/simh/curr"
 LOGFILE="$WORKDIR/output.log"
 PATCHFILE="$WORKDIR/pidp8i.patch"
 OLD_SGCID=$(grep ^SGCID "@srcdir@"/Makefile.in | cut -f2 -d=)
+SOFFICE=/Applications/LibreOffice.app/Contents/MacOS/soffice
 
+# If LibreOffice isn't here, we can't convert DOC to PDF below.
+if [ ! -x "$SOFFICE" ]
+then
+    cat <<USAGE
+Sorry, this must be run on a system where LibreOffice is installed
+as $SOFFICE.
+
+TODO: Find this same program in other places.
+
+USAGE
+    exit 1
+fi
+
+# If we don't have the Git worktree sub-command, we're probably running
+# this on Jessie, which ships Git 2.1.4.
+if ! git help worktree &> /dev/null
+then
+    cat <<ERROR
+Sorry, this must be run on a system with the "git worktree" feature,
+which first shipped in Git 2.5.
+
+ERROR
+    exit 1
+fi
+
+# Set up working directory
 rm -rf "$WORKDIR"
 mkdir -p "$WORKDIR"
 
@@ -118,10 +145,13 @@ for fs in pdp8_doc simh_faq simh_doc
 do
 	ft=$(echo $fs | sed -e 's/simh_//' -e 's/_doc//')
 	test "$ft" = "doc" && ft=main
-	doc="doc/simh/$ft.doc"
-	cp "$CURR_SIMH_DIR/doc/$fs.doc" "$doc"
-	fossil uv add "$doc"
+	pdf=doc/simh/$ft.pdf
+    say "Converting upstream $fs.doc to $pdf..."
+    "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
+            mv "$fs.pdf" $pdf &&
+            fossil uv add $pdf
 done
+say "Syncing new PDFs..."
 fossil uv sync
 popd
 
