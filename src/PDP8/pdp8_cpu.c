@@ -221,6 +221,7 @@
 */
 
 /* ---PiDP change------------------------------------------------------------------------------------------- */
+#include "gpio-common.h"
 #include "pidp8i.h"
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -382,6 +383,12 @@ static size_t max_skips = 0;
 static const size_t pidp8i_updates_per_sec = 3200;
 max_skips = get_pidp8i_initial_max_skips (pidp8i_updates_per_sec);
 srand48 (time (&last_update));
+
+// Reset display info in case we're re-entering the simulator from Ctrl-E
+extern display display_bufs[2];
+memset (display_bufs, 0, sizeof(display_bufs));
+static size_t skip_count, dither, inst_count;
+skip_count = dither = inst_count = 0;
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -1531,10 +1538,8 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // and try to get GCC to inline it: that's good for a 1 MIPS speed
     // hit in my testing!  (GCC 4.9.2 on Raspbian Jessie on Pi 3B.)
 
-    static size_t skip_count = 0, dither = 0;
     if (++skip_count >= (max_skips - dither)) {
         // Save skips to inst counter and reset
-        static size_t inst_count = 0;
         inst_count += skip_count;
         skip_count = 0;
 
