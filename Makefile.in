@@ -175,7 +175,7 @@ install: all
 	@(test -x /bin/systemctl && /bin/systemctl disable pidp8  || true)
 
 	@# Install the init script if this system is systemd based.
-	@INSTALL@ -m 750 @srcdir@/etc/pidp8i-init @prefix@/etc
+	@INSTALL@ -m 755 @srcdir@/etc/pidp8i-init @prefix@/etc
 	@(  test -w /etc/init.d -a -x /bin/systemctl && \
 		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
 		/bin/systemctl enable pidp8i \
