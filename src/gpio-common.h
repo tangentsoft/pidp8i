@@ -102,25 +102,41 @@ struct bcm2835_peripheral {
 
 typedef uint64_t   ns_time_t;
 typedef useconds_t us_time_t;
-typedef uint32_t   ms_time_t;
+typedef uint64_t   ms_time_t;
+
+typedef struct display {
+    // Counters incremented each time the LED is known to be turned on,
+    // in instructions since the last display paint.
+    size_t on[NLEDROWS][NCOLS];
+
+    // Most recent state for each LED, for use by NLS full-time and by
+    // ILS in STOP mode.  (One bitfield per row.)
+    uint16_t curr[NLEDROWS];
+
+    // Number of instructions executed since this display was cleared
+    int inst_count;
+} display;
+extern display* pdis_update, *pdis_paint;
 
 extern uint16_t switchstatus[];
-extern uint16_t ledstatus[];
 extern uint8_t cols[];
 extern uint8_t ledrows[];
 extern uint8_t rows[];
 extern uint8_t pidp8i_gpio_present;
 
-extern int gss_initted;
+extern void *gpio_thread (void *ptr);
+extern void update_led_states (const us_time_t delay);
 
-extern void *blink(void *ptr);	// thread entry point to the gpio module
 extern unsigned bcm_host_get_peripheral_address(void);
-extern void debounce_switch(int row, int col, int ss, ms_time_t now_ms);
 extern int map_peripheral(struct bcm2835_peripheral *p);
-extern ms_time_t ms_time(ms_time_t* pt);
+extern void unmap_peripheral(struct bcm2835_peripheral *p);
+
+extern void read_switches (ns_time_t delay);
+
+extern void swap_displays ();
+
 extern void sleep_ns(ns_time_t ns);
 #define sleep_us(us) usleep(us)
-#define sleep_ms(ms) usleep(ms * 1000)
-void unmap_peripheral(struct bcm2835_peripheral *p);
+extern ms_time_t ms_time(ms_time_t* pt);
  
 #endif // !defined(PIDP8I_GPIO_H)

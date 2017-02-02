@@ -1,5 +1,5 @@
 /*
- * gpio-nls.c: implements blink_core() with the original simple LED driver
+ * gpio-nls.c: implements gpio_core () with the original simple LED driver
  *
  * This file differs from gpio.c in that it does not include the
  * incandescent lamp simulator feature by Ian Schofield.  It is
@@ -35,73 +35,30 @@
 
 #include "gpio-common.h"
 
+#include "PDP8/pidp8i.h"
 
-//// blink_core ////////////////////////////////////////////////////////
+
+//// gpio_core  ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
-void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
+void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
 {
-    int i, j, k;
-    const us_time_t intervl = 300;  // light each row of leds 300 µs
-    ms_time_t now_ms;
+    // Light each row of LEDs 1.2 ms.  With 8 rows, that's an update
+    // rate of ~100x per second.  Not coincidentally, this is the human
+    // persistence of vision limit: changes faster than this are
+    // difficult for humans to perceive visually.
+    const us_time_t intervl = 1200;  
 
+    // This is a simplified version of what's in the gpio-ils.c version
+    // of this function, so if you want more comments, read them there.
     while (*terminate == 0) {
-        // prepare for lighting LEDs by setting col pins to output
-        for (i = 0; i < NCOLS; i++) {
-            INP_GPIO(cols[i]);
-            OUT_GPIO(cols[i]);          // Define cols as output
-        }
-        
-        // light up LEDs
-        for (i = 0; i < NLEDROWS; i++) {
-            // Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-            for (k = 0; k < NCOLS; k++) {
-                if ((ledstatus[i] & (1 << k)) == 0)
-                    GPIO_SET = 1 << cols[k];
-                else 
-                    GPIO_CLR = 1 << cols[k];
-            }
-
-            // Toggle this ledrow on
-            INP_GPIO(ledrows[i]);
-            GPIO_SET = 1 << ledrows[i]; // test for flash problem
-            OUT_GPIO(ledrows[i]);
-
-            sleep_us(intervl);
-
-            // Toggle ledrow off
-            GPIO_CLR = 1 << ledrows[i]; // superstition
-            INP_GPIO(ledrows[i]);
-            sleep_ns(10000); // waste of cpu cycles but may help against udn2981 ghosting, not flashes though
-        }
-
-        // prepare for reading switches
-        ms_time(&now_ms);
-        for (i = 0; i < NCOLS; i++)
-            INP_GPIO(cols[i]);          // flip columns to input. Need internal pull-ups enabled.
-
-        // read three rows of switches
-        for (i = 0; i < NROWS; i++) {
-            INP_GPIO(rows[i]);          
-            OUT_GPIO(rows[i]);          // turn on one switch row
-            GPIO_CLR = 1 << rows[i];    // and output 0V to overrule built-in pull-up from column input pin
-
-            sleep_us(intervl / 100);
-
-            for (j = 0; j < NCOLS; j++) {      // NCOLS switches in each row
-                int ss = GPIO_READ(cols[j]);
-                debounce_switch(i, j, !!ss, now_ms);
-            }
-
-            INP_GPIO(rows[i]);          // stop sinking current from this row of switches
-        }
-
-        fflush(stdout);
-        gss_initted = 1;
-
+        for (size_t i = 0; i < NCOLS; ++i) OUT_GPIO(cols[i]);
+        swap_displays ();
+        update_led_states (intervl);
+        read_switches (intervl * 1000 / 100);
 #if defined(HAVE_SCHED_YIELD)
-        sched_yield();
+        sched_yield ();
 #endif
     }
 }

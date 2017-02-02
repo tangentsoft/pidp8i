@@ -221,6 +221,7 @@
 */
 
 /* ---PiDP change------------------------------------------------------------------------------------------- */
+#include "gpio-common.h"
 #include "pidp8i.h"
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -371,12 +372,23 @@ reason = 0;
 
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-// Set some register values we care about which may not get values
-// before we need them, and which weren't set above.
-MA = MB = IR = 0;
+// PiDP-8/I specific flag, set when the last instruction was an IOT
+// instruction to a real device.  SIMH doesn't track this, but the front
+// panel needs it.
+int Pause = 0;
 
-// Turn LEDs on the first time thru in case we begin in STOP state
-set_pidp8i_leds(PC, 0, 0, 0, LAC, MQ, IF, DF, 0, int_req);
+// Set our initial IPS value from the throttle, if given.
+static time_t last_update = 0;
+static size_t max_skips = 0;
+static const size_t pidp8i_updates_per_sec = 3200;
+max_skips = get_pidp8i_initial_max_skips (pidp8i_updates_per_sec);
+srand48 (time (&last_update));
+
+// Reset display info in case we're re-entering the simulator from Ctrl-E
+extern display display_bufs[2];
+memset (display_bufs, 0, sizeof(display_bufs));
+static size_t skip_count, dither, inst_count;
+skip_count = dither = inst_count = 0;
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -393,19 +405,28 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     awfulHackFlag = 0; // no do script pending. Did I mention awful?
-
-    // Start out in Fetch state
-    set_pidp8i_fetch_led ();
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (sim_interval <= 0) {                            /* check clock queue */
-        if ((reason = sim_process_event ()))
+        if ((reason = sim_process_event ())) {
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+            // We're about to leave the loop, so repaint one last time
+            // in case this is a Ctrl-E and we later get a "cont"
+            // command.  Set a flag that will let us auto-resume.
+            extern int resumeFromInstructionLoopExit, swStop, swSingInst;
+            resumeFromInstructionLoopExit = swStop = swSingInst = 1;
+            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+                    int_req, Pause);
+
+            // Also copy SR hardware value to software register in case
+            // the user tries poking at it from the sim> prompt.
+            SR = get_switch_register();
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
             break;
+            }
         }
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-
-    SR = get_switch_register();                         /* might've changed */
 
     switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
             &DF, &int_req)) {
@@ -414,6 +435,14 @@ while (reason == 0) {                                   /* loop until halted */
             // we're stopped.  Without this, it will ignore Ctrl-E
             // until the simulator is back in free-running mode.
             sim_interval = sim_interval - 1;
+
+            // Have to keep display updated while stopped.  This does
+            // mean if the software starts with the STOP switch held
+            // down, we'll put garbage onto the display for MA, MB, and
+            // IR, but that's what the real hardware does, too.  See
+            // https://github.com/simh/simh/issues/386
+            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+                    int_req, Pause);
 
             // Go no further in STOP mode.  In particular, fetch no more
             // instructions, and do not touch PC!
@@ -462,15 +491,6 @@ while (reason == 0) {                                   /* loop until halted */
     PC = (PC + 1) & 07777;                              /* increment PC */
     int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
     sim_interval = sim_interval - 1;
-
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-
-    // Show fetched instruction info and report that we're entering the
-    // execute stage, having gotten past the flow control switch tests
-    // and the actual fetch above.
-    set_pidp8i_execute_led ();
-
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 /* Instruction decoding.
 
@@ -1015,12 +1035,17 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                 tsc_cdf = 0;                            /* clear flag */
                 }
             else {
-                if (IR & 04)                            /* OSR */
+                if (IR & 04) {                          /* OSR */
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+                    SR = get_switch_register();         /* get current SR */
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
                     LAC = LAC | SR;
+                    }
                 if (IR & 02) {                          /* HLT */
 //--- PiDP change-----------------------------------------------------------------------
                     // reason = STOP_HALT;
-                    set_stop_mode();
+                    extern int swStop;
+                    swStop = 1;
                     }
 //--- end of PiDP change----------------------------------------------------------------
                 }
@@ -1454,7 +1479,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             if (dev_tab[device]) {                      /* dev present? */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
                 // Any other device will trigger IOP, so light pause
-                set_pidp8i_pause_led ();
+                Pause = 1;
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
@@ -1471,7 +1496,69 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
     // Update the front panel with this instruction's final state.
-    set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req);
+    //
+    // There's no point saving *every* LED "on" count.  We just need a
+    // suitable amount of oversampling.  We can skip this if we called
+    // set_pidp8i_leds recently enough, avoiding all the expensive bit
+    // shift and memory update work below.
+    //
+    // The trick here is figuring out what "recently enough" means
+    // without making expensive OS timer calls.  These timers aren't
+    // hopelessly slow (http://stackoverflow.com/a/13096917/142454) but
+    // we still don't want to be taking dozens of cycles per instruction
+    // just to keep our update estimate current in the face of system
+    // load changes and SET THROTTLE updates.
+    //
+    // Instead, we use the IPS value SIMH already keeps to figure out
+    // how many calls we can skip while still meeting our other goals.
+    // This involves FP math, but when paid only once a second, it
+    // amortizes much nicer than estimating the skip count directly
+    // based on a more accurate time source which is more expensive
+    // to call.
+    //
+    // A further refinement is that we do the test for skipping the call
+    // before doing that FP arithmetic, which is super-fast.
+    //
+    // Each LED panel repaint takes about 10 ms, so we do about 100
+    // full-panel updates per second.  We need a bare minimum of 32
+    // discernible brightness values per update for ILS, so if we don't
+    // update the LED status data at least 3,200 times per second, we
+    // don't have enough data for smooth panel updates.  Fortunately,
+    // computers are pretty quick, and our slowest script runs at 30
+    // kIPS.  (5.script.)
+    //
+    // We deliberately add some timing jitter here to get stochastic
+    // sampling of the incoming instructions to avoid beat frequencies
+    // between our update rate and the instruction pattern being
+    // executed by the front panel.  It's a form of dithering.
+    //
+    // The early-leave test is out here instead of at the top of that
+    // function because the function call itself is a nontrivial hit.
+    // In fact, you don't even want to move all of this to a function
+    // and try to get GCC to inline it: that's good for a 1 MIPS speed
+    // hit in my testing!  (GCC 4.9.2 on Raspbian Jessie on Pi 3B.)
+
+    if (++skip_count >= (max_skips - dither)) {
+        // Save skips to inst counter and reset
+        inst_count += skip_count;
+        skip_count = 0;
+
+        // We need to update the LED data again
+        set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
+        Pause = 0;
+
+        // Has it been ~1s since we updated our max_skips value?
+        time_t now;
+        if (time(&now) > last_update) {
+            // Yep; simulator IPS may have changed, so freshen it.
+            last_update = now;
+            max_skips = inst_count / pidp8i_updates_per_sec;
+            //printf("Inst./repaint: %zu - %zu; %.2f MIPS\r\n",
+            //        max_skips, dither, inst_count / 1e6);
+            inst_count = 0;
+            }
+        dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
+        }
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 

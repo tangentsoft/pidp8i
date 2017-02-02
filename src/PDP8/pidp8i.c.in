@@ -40,33 +40,119 @@
 int awfulHackFlag = 0;
 
 
-//// INTERNAL GLOBALS AND CONSTANTS ////////////////////////////////////
+//// set_pidp8i_led ////////////////////////////////////////////////////
+// Sets the current state for a single LED at the given row and column
+// on the PiDP-8/I PCB.  Also increments the LED on-count value for 
+// that LED.
+//
+// You may say, "You can't just use the C postincrement operator here!
+// Look at the assembly output!  You must use an atomic increment for
+// this!"  And indeed, there is a big difference between the two
+// methods: https://godbolt.org/g/0Qt0Ap
+//
+// The thing is, both structures referred to by pdis_* are fixed in RAM,
+// and the two threads involved are arranged in a strict producer-and-
+// consumer fashion, so it doesn't actually matter if pdis_update gets
+// swapped for pdis_paint while we're halfway through an increment: we
+// dereference the pointer only once here, so we'll finish our increment
+// within the same structure we started with, even if pdis_update points
+// at the other display structure before we leave.
 
-// Single-shot flag for the STOP switch.  It's global because several of
-// the functions below need to examine or modify it, since more than
-// just the STOP switch handler can put us into STOP mode.
-static int swStop = 0;
-
-
-//// set_pidp8i_*_led //////////////////////////////////////////////////
-// Set individual LEDs that have to change at odd places within the SIMH
-// CPU thread.
-
-void set_pidp8i_execute_led ()
+static inline void set_pidp8i_led (display *pd, size_t row, size_t col)
 {
-    ledstatus[5] |=  (1 << 2); // set Execute LED
-    ledstatus[5] &= ~(1 << 3); // clear Fetch LED
+    ++pd->on[row][col];
+    pd->curr[row] |= 1 << col;
 }
 
-void set_pidp8i_fetch_led ()
+
+//// set_pidp8i_row_leds ///////////////////////////////////////////////
+// Like set_pidp8i_led, except that it takes a 12-bit state value for
+// setting all LEDs on the given row.  Because we copy the pdis_update
+// pointer before making changes, if the display swap happens while
+// we're working, we'll simply finish updating what has become the
+// paint-from display, which is what you want; you don't want the
+// updates spread over both displays.
+
+static inline void set_pidp8i_row_leds (display *pd, size_t row,
+        uint16 state)
 {
-    ledstatus[5] |=  (1 << 3); // set Fetch LED
-    ledstatus[5] &= ~(1 << 2); // clear Execute LED
+    size_t *prow = pd->on[row];
+    pd->curr[row] = state;
+    for (size_t col = 0, mask = 1; col < NCOLS; ++col, mask <<= 1) {
+        if (state & mask) ++prow[col];
+    }
 }
 
-void set_pidp8i_pause_led ()
+
+//// set_3_pidp8i_leds /////////////////////////////////////////////////
+// Special case of set_pidp8i_row_leds for the DF and IF LEDs: we only
+// pay attention to bits 12, 13, and 14 of the given state value,
+// because SIMH's PDP-8 simulator shifts those 3 bits up there so it can
+// simply OR these 3-bit registers with PC to produce a 15-bit extended
+// address.
+//
+// We don't take a row parameter because we know which row they're on,
+// but we do take a column parameter so we can generalize for IF & DF.
+
+static inline void set_3_pidp8i_leds (display *pd, size_t col,
+        uint16 state)
 {
-    ledstatus[6] |= (1 << 8);
+    static const int row = 7;       // DF and IF are on row 6
+    size_t *prow = pd->on[row];
+    size_t last_col = col + 3;
+    pd->curr[row] |= state >> (12 - col);
+    for (size_t mask = 1 << 12; col < last_col; ++col, mask <<= 1) {
+        if (state & mask) ++prow[col];
+    }
+}
+
+
+//// set_5_pidp8i_leds /////////////////////////////////////////////////
+// Like set_3... but for the 5-bit SC register.  Because it's only used
+// for that purpose, we don't need the col parameter.
+
+static inline void set_5_pidp8i_leds (display *pd, uint16 state)
+{
+    static const int row = 6;       // SC is on row 6
+    size_t *prow = pd->on[row];
+    size_t last_col = 7;
+    pd->curr[row] |= (state & 0x1f) << 2;
+    for (size_t col = 2, mask = 1; col < last_col; ++col, mask <<= 1) {
+        if (state & mask) ++prow[col];
+    }
+}
+
+
+//// get_pidp8i_initial_max_skips //////////////////////////////////////
+// Return the number of times we should skip updating the front panel
+// LEDs the first time thru, to give the simulator time to settle.
+// If we don't do this, the front panel LEDs can start out dim and
+// slowly rise or they can overshoot and then take a while to recover
+// with the IPS.
+
+size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
+{
+    DEVICE *pthrot = find_dev ("INT-THROTTLE");
+    if (pthrot) {
+        REG *ptyper = find_reg ("THROT_TYPE", NULL, pthrot);
+        REG *pvalr  = find_reg ("THROT_VAL", NULL, pthrot);
+        if (ptyper && pvalr) {
+            uint32 *ptype = ptyper->loc;
+            uint32 *pval  =  pvalr->loc;
+            size_t ips = 0;
+            switch (*ptype) {
+                case SIM_THROT_MCYC: ips = *pval * 1e6; break;
+                case SIM_THROT_KCYC: ips = *pval * 1e3; break;
+            }
+            if (ips) {
+                printf("PiDP-8/I initial throttle = %zu IPS\r\n", ips);
+                return ips / updates_per_sec;
+            }
+        }
+    }
+
+    // No better idea, so give a plausible value for an unthrottled Pi 1
+    return 200;
 }
 
 
@@ -78,73 +164,87 @@ void set_pidp8i_pause_led ()
 
 void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
-    int32 sSC, int32 int_req)
+    int32 sSC, int32 int_req, int Pause)
 {
-    // First time thru, allocate temp working space so we can flash the
-    // LED values over instantaneously, avoiding the need for cross-
-    // thread locking to get a coherent display update.
-    #define LS_BYTES (NLEDROWS * sizeof (uint16))
-    static uint16 temp_led_status[LS_BYTES];
+    // Bump the instruction count.  This should always be equal to the
+    // Fetch LED's value, but integers are too cheap to get cute here.
+    //
+    // Note that we only update pdis_update directly once in this whole
+    // process.  This is in case the display swap happens while we're
+    // working: we want to finish work on the same display even though
+    // it's now called the paint-from display, so it's consistent.
+    display* pd = pdis_update;
+    ++pd->inst_count;
 
     // Rows 0-4, easy cases: single-register LED strings
-    temp_led_status[0] = (uint32) sPC;
-    temp_led_status[1] = (uint32) sMA;
-    temp_led_status[2] = (uint32) sMB;
-    temp_led_status[3] = (uint32) sLAC;
-    temp_led_status[4] = (uint32) sMQ;
+    set_pidp8i_row_leds (pd, 0, sPC);
+    set_pidp8i_row_leds (pd, 1, sMA);
+    set_pidp8i_row_leds (pd, 2, sMB);
+    set_pidp8i_row_leds (pd, 3, sLAC & 07777);
+    set_pidp8i_row_leds (pd, 4, sMQ);
+
+#if 0   // debugging
+    static time_t last = 0, now;
+    if (time(&now) != last) {
+        uint16* pcurr = pd->curr;
+        printf("\r\nSET: [PC:%04o] [MA:%04o] [MB:%04o] [AC:%04o] [MQ:%04o]",
+                pcurr[0], pcurr[1], pcurr[2], pcurr[3], pcurr[4]);
+        last = now;
+    }
+#endif
 
     // Row 5a: instruction type column, decoded from high octal
     // digit of IR value
-    uint32 tempLeds = 0;
+    pd->curr[5] = 0;
     uint16 inst_type = sIR & 07000;
     switch (inst_type) {
-        case 00000: tempLeds |= (1 << 11); break; // 000 AND
-        case 01000: tempLeds |= (1 << 10); break; // 001 TAD
-        case 02000: tempLeds |= (1 <<  9); break; // 010 DCA
-        case 03000: tempLeds |= (1 <<  8); break; // 011 ISZ
-        case 04000: tempLeds |= (1 <<  7); break; // 100 JMS
-        case 05000: tempLeds |= (1 <<  6); break; // 101 JMP
-        case 06000: tempLeds |= (1 <<  5); break; // 110 IOT
-        case 07000: tempLeds |= (1 <<  4); break; // 111-0 and 111-1 OPR group 1 & 2
+        case 00000: set_pidp8i_led (pd, 5, 11); break; // 000 AND
+        case 01000: set_pidp8i_led (pd, 5, 10); break; // 001 TAD
+        case 02000: set_pidp8i_led (pd, 5,  9); break; // 010 DCA
+        case 03000: set_pidp8i_led (pd, 5,  8); break; // 011 ISZ
+        case 04000: set_pidp8i_led (pd, 5,  7); break; // 100 JMS
+        case 05000: set_pidp8i_led (pd, 5,  6); break; // 101 JMP
+        case 06000: set_pidp8i_led (pd, 5,  5); break; // 110 IOT
+        case 07000: set_pidp8i_led (pd, 5,  4); break; // 111 OPR 1 & 2
     }
 
     // Row 5b: set the Defer LED if...
     if ((inst_type <= 05000) &&  // it's a memory reference instruction
             (sIR & 00400)) {     // and indirect addressing flag is set
-        tempLeds += (1 << 1);
+        set_pidp8i_led (pd, 5, 1);
     }
 
-    // Row 5c: the execute and fetch LEDs are also in this LED row on
-    // the PCB, but they're set via set_pidp8i_*_led calls.
+    // Row 5c: The Fetch LED is bumped once per CPU instruction, as is
+    // Execute while we're not in STOP state.  They're set at different
+    // times, but they're twiddled so rapidly that they both just become
+    // a 50% blur in normal operation, so we don't make the CPU core set
+    // these "on-time."  It just doesn't matter.
+    extern int swStop, swSingInst;
+    int running = !swStop && !swSingInst;
+    if (running) set_pidp8i_led (pd, 5, 2);    // Execute
+    set_pidp8i_led (pd, 5, 3);                 // Fetch
 
-    // Row 5 is done: set LEDs all at once
-    temp_led_status[5] = tempLeds;
+    // Row 6a: Remaining LEDs in upper right block
+    pd->curr[6] = 0;
+    if (running)           set_pidp8i_led (pd, 6, 7); // bump Run LED
+    if (Pause)             set_pidp8i_led (pd, 6, 8); // bump Pause LED
+    if (int_req & INT_ION) set_pidp8i_led (pd, 6, 9); // bump ION LED
 
-    // Row 6: remaining LEDs in upper right block plus step count LEDs.
-    // The pause LED is also in this row, but it's set separately via a
-    // set_pidp8i_pause_led call from the CPU decoding loop.
-    tempLeds = 0;
-    if (int_req & INT_ION) tempLeds |= (1 << 9); // set ION LED
-    if (swStop == 0)       tempLeds |= (1 << 7); // set Run LED
-    tempLeds |= ((uint32)(sSC) & 0x1f) << 2;     // set Step Count LEDs
-    temp_led_status[6] = tempLeds;
+    // Row 6b: The Step Count LEDs are also on row 6
+    set_5_pidp8i_leds (pd, sSC);
 
     // Row 7: DF, IF, and Link.
-    //
-    // DF and IF are shifted up 12 bits for the simulator's convenience so
-    // they can simply be OR'd with PC to construct 15-bit addresses, so
-    // shift these values down to their positions in the LED string.
-    //
-    // Then OR in the Link bit, which SIMH keeps in bit 12 (0-based) of
-    // the 13-bit LAC register.
-    tempLeds  = (uint32) (sDF >> 3) | (sIF >> 6);
-    tempLeds |= (uint32) ((sLAC & 010000) >> 7);
-    temp_led_status[7] = tempLeds;
+    pd->curr[7] = 0;
+    set_3_pidp8i_leds (pd, 9, sDF);
+    set_3_pidp8i_leds (pd, 6, sIF);
+    if (sLAC & 010000) set_pidp8i_led (pd, 7, 5);
 
-    // Set all the LED values instantaneously.  (If the compiler here
-    // doesn't implement this atomically, it's near-to; it may actually
-    // be a single CPU instruction.)
-    memcpy (ledstatus, temp_led_status, LS_BYTES);
+    // If we're stopped or single-stepped, the display-swapping code
+    // won't happen, so copy the above over to the paint-from version.
+    extern int resumeFromInstructionLoopExit;
+    if (!running || resumeFromInstructionLoopExit) {
+        memcpy(pdis_paint, pdis_update, sizeof(struct display));
+    }
 }
 
 
@@ -388,33 +488,35 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     }
 
     // Check for SING_INST switch close...
-    static int swSingInst = 0;
+    extern int swSingInst;
     if (((switchstatus[2] & SS2_S_INST) == 0) && (swSingInst == 0)) {
-        // Put the processor in stop mode until we get a CONT or START
-        // switch closure.  Technically this is wrong according to DEC's
-        // docs: we're supposed to finish executing the next instruction
-        // before we "clear the RUN flip-flop" in DEC terms, whereas
-        // we're testing these switches before we fetch the next
-        // instruction.  Show me how it matters, and I'll fix it. :)
+        // Put the processor in single-instruction mode until we get a
+        // CONT or START switch closure.  Technically this is wrong
+        // according to DEC's docs: we're supposed to finish executing
+        // the next instruction before we "clear the RUN flip-flop" in
+        // DEC terms, whereas we're testing these switches before we
+        // fetch the next instruction.  Show me how it matters, and
+        // I'll fix it. :)
         swSingInst = 1;
-        set_stop_mode ();
     }
 
     // ...and SING_INST switch open
+    extern int swStop;
     if (swSingInst && (switchstatus[2] & SS2_S_INST)) {
         swSingInst = 0;
+        swStop = 1;     // still stopped on leaving SING_INST mode
     }
 
     // Check for START switch press...
     static int swStart = 0;
     if (((switchstatus[2] & SS2_START) == 0) && (swStart == 0)) {
-        *pint_req = *pint_req & ~INT_ION; // disable ION. says so in handbook, true?
-        *pLAC = 0;                        // clear L and AC;
-        *pMB = 0;                         // clear MB.
-        *pMA = *pPC & 07777;              // transfer PC into MA (FIXME: does IR make this unnecessary?)
-        swStop = 0;                       // START cancels STOP mode
-        swSingInst = 0;                   // allow SING INST mode re-entry
-        swStart = 1;                      // make it single-shot
+        *pint_req &= ~INT_ION; // disable ION. says so in handbook, true?
+        *pLAC = 0;             // clear L and AC
+        *pMB = 0;              // clear MB
+        *pMA = *pPC & 07777;   // transfer PC into MA (FIXME: does IR make this unnecessary?)
+        swStop = 0;            // START cancels STOP mode
+        swSingInst = 0;        // allow SING INST mode re-entry
+        swStart = 1;           // make it single-shot
     }
 
     // ...and START switch release
@@ -424,25 +526,26 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 
     // Check for CONT switch press...
     static int swCont = 0;
-    if (((switchstatus[2] & SS2_CONT) == 0) && (swCont < 2)) {
-        if (swCont == 0) {
-            // On the initial CONT press, release stop mode regardless
-            // of how it was enabled to execute the next instruction.
-            //
-            // FIXME: Are we handling MB correctly? [973271ae36]
+    extern int resumeFromInstructionLoopExit;
+    if ((((switchstatus[2] & SS2_CONT) == 0) && (swCont == 0)) ||
+            resumeFromInstructionLoopExit) {
+        // The initial CONT press is special: how we handle it
+        // depends on the processor's state.
+        //
+        // FIXME: Are we handling MB correctly? [973271ae36]
+        swCont = 1;                 // make it single-shot
+        resumeFromInstructionLoopExit = 0;
+        if (swSingInst) {
+            // On the initial CONT press while in SING_INST mode, run
+            // one instruction only.
+            return pft_normal;
+        }
+        else if (swStop) {
+            // We were HLTed or STOPped, so CONT returns us to
+            // free-running mode.
             swStop = 0;
-            swCont = 1;                 // make it single-shot
         }
-        else if (swCont == 1) {
-            // The second time we come back in here while the CONT
-            // switch is still down -- the human is too slow to
-            // release it between iterations -- we stop paying attention
-            // to it until the switch opens; check below.  Re-enter stop
-            // mode if SING_INST is still closed, else leave stop mode
-            // because we must have stopped via STOP or HLT.
-            swStop = !!swSingInst;
-            swCont = 2;
-        }
+        // else, CONT has no effect in this state
     }
 
     // ...and CONT switch release
@@ -511,15 +614,14 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for STOP switch press.  No "and release" because we get out of
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.
-    if ((switchstatus[2] & SS2_STOP) == 0) {
-        set_stop_mode ();
+    if (!swStop && ((switchstatus[2] & SS2_STOP) == 0)) {
+        swStop = 1;
     }
 
-    // If any of the above put us into STOP mode, go no further.  In
-    // particular, fetch no more instructions, and do not touch PC!
-    if (swStop == 1) return pft_stop;
-
-    return pft_normal;
+    // If any of the above put us into STOP or SING_INST mode, go no
+    // further.  In particular, fetch no more instructions, and do not
+    // touch PC!  The only way to get un-stuck is CONT or STOP.
+    return (swStop || swSingInst) ? pft_stop : pft_normal;
 }
 
 
@@ -529,15 +631,4 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 int32 get_switch_register (void)
 {
     return switchstatus[0] ^ 07777;
-}
-
-
-//// set_stop_mode /////////////////////////////////////////////////////
-// Set the STOP mode flag.  This is a wrapper around a module-global
-// variable that the CPU simulator core currently needs to set.
-
-void set_stop_mode (void)
-{
-    swStop = 1;
-    ledstatus[6] &= ~(1 << 7); // clear Run LED
 }

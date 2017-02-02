@@ -79,8 +79,8 @@ int main( int argc, char *argv[] )
       exit( EXIT_FAILURE );
     }
 	
-  // create thread
-  iret1 = pthread_create( &thread1, NULL, blink, &terminate );
+  // create GPIO thread
+  iret1 = pthread_create( &thread1, NULL, gpio_thread, &terminate );
   if( iret1 )
     {
       fprintf( stderr, "Error creating thread, return code %d\n", iret1 );
@@ -94,6 +94,7 @@ int main( int argc, char *argv[] )
 	}
 
   fprintf( stdout, "turn on ALL LEDs\n" );
+#if 0
   for( row=0; row<NLEDROWS; ++row )
     ledstatus[row] = 07777;
   CHECK( !terminate, TERMINATE )
@@ -124,6 +125,7 @@ int main( int argc, char *argv[] )
       for( row=0; row<NLEDROWS; ++row )
 	ledstatus[row] = 0;
     }
+#endif
 	
   fprintf( stdout, "Reading the switches.  Toggle any pattern desired.  CTRL-C to quit.\n" );
   
@@ -138,8 +140,10 @@ int main( int argc, char *argv[] )
 	{
 	  delay = 0;
 	  
+#if 0
 	  ledstatus[led_row] = 0;
 	  ledstatus[led_row=(path[path_idx]>>4) - 1] = 04000 >> ((path[path_idx]&0x0F) - 1);
+#endif
 	  if( ++path_idx >= sizeof(path)/sizeof(path[0]) ) path_idx = 0;
 	}
 
