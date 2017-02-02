@@ -78,9 +78,9 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	# Rewrite symbolic values with values SIMH can understand.  See
 	# README-throttle.md for the justification of these values.
 	if {$tv == "single-core" || $tvsl == 0} {
-		# value for ~75% CPU usage on a Pi Model B+ with the simple
-        # LED driving code; conveniently, 4x the speed of a real PDP-8/I
-		set tv "1332k"
+		# value for 60-70% CPU usage on a Pi Model B+ with the simple
+        # LED driving code; conveniently, 2x the speed of a real PDP-8/I
+		set tv "666k"
 	} elseif {$tv == "pdp8e"} {
 		set tv "416k"
 	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
