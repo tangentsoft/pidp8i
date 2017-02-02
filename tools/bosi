@@ -41,6 +41,7 @@ os=jessie-lite
 img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
 greadlink=$(type -p greadlink || type -p readlink)
 this=$($greadlink -f $0)
+topdir="$(greadlink "$(dirname "$this")/..")"
 
 
 # Initial steps
@@ -206,10 +207,18 @@ function do_image() {
 			*) exit 1
 		esac
 
+        mf=/tmp/MANIFEST.TXT
+        readme=/tmp/README.md
+        cp "$topdir/README-OS-images.md" $readme
 		set -x
-		sudo diskutil unmountDisk $dev			# it auto-mounted
+		sudo diskutil unmountDisk $dev		# it auto-mounted
 		sudo dd if=$dev bs=4k count=$object of=$img
-		zip -9j $img.zip $img
+        echo -e 'SHA256 hash and size of included *.img file:\n' >> $mf
+        shasum -a 256 $img >> $mf
+        wc -c $img >> $mf
+        unix2dos $mf                        # might be opened on Windows
+		zip -9j $img.zip $img $mf $readme
+        rm -f $mf $readme
 
 		sudo dd if=$img of=$dev bs=1m
 		sudo diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
