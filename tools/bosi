@@ -220,6 +220,7 @@ function do_image() {
 		zip -9j $img.zip $img $mf $readme
         rm -f $mf $readme
 
+		sudo dd if=/dev/zero of=$dev bs=1m  # ensure a clean test
 		sudo dd if=$img of=$dev bs=1m
 		sudo diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
 	else
