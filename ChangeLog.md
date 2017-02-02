@@ -1,9 +1,74 @@
 # PiDP-8/I Changes
 
-## Version 2017.01.30?  INCOMPLETE
+## Version 2017.02.02?  INCOMPLETE
+
+*   Largely rewrote the incandescent lamp simulator (ILS) feature.
+    The core of Ian Schofield's original contribution is still hiding
+    in there if you go spelunking, but everything surrounding it
+    is different.
+
+    The basic idea is that instead of trying to keep a running
+    prediction of the correct brightness for each LED, we assemble the
+    "on" time statistics for each LED over a ~10 millisecond window,
+    giving 100 total display repaints per second.  This quantized
+    display update rate is dithered somewhat to randomize the sampling
+    times, which results in a fair sampling of the processor's state.
+
+    The new ILS also dynamically adjusts its delay values to give a
+    semi-fixed update rate, whereas in prior versions, the display
+    would simply update faster at faster clock speeds, both internal
+    to the simulator (a.k.a. THROTTLE) and external to it (the Pi
+    SoC clock).
+
+    The prior scheme's on-the-fly state updates and fixed timing made
+    it susceptible to aliasing, beat frequencies, loading effects,
+    and other bad effects which showed up as unsteady displays even
+    in cases where the display *should* have been steady.
+
+*   Although most of the ILS work does not directly apply to the "no
+    lamp simulator" (NLS) case, the sample rate dithering reduces
+    various types of blips seen in this case as well.
+
+*   Slowed the ILS brightness rates down a bit: more lampy, less
+    snappy.  Whether this is accurate or not is something we'll have
+    to determine through future research, already in progress.
+
+*   The ILS display is a bit brighter: the delay values used in prior
+    versions put a cap on max brightness that was well under the full
+    LED brightness achievable.
+
+*   In normal free-running mode, the simulator lights the Fetch and
+    Execute LEDs at 50%, whereas before there was an imbalance that
+    purely had to do with the much lower complexity of fetching an
+    instruction vs executing it.  I haven't compared this to a real
+    PDP-8/I, but the manuals talk about "fetch-and-execute" cycles
+    as if they are equally sized, so the lights should be on an equal
+    time each.
+
+*   Several other tweaks to LED state handling to better match real
+    hardware.
+
+*   The SIMH PDP-8 simulator's internal SR register now matches the
+    hardware switches when you say Ctrl-E then `ex sr`.  Prior versions
+    only loaded the hardware switch register values into the internal
+    register when it executed an `OSR` instruction.
 
 *   Merged in the relevant SIMH updates.  This is all internal stuff
     that doesn't affect current PiDP-8/I behavior.
+
+*   Copied the KiCad design files into the source tree, now that
+    they're formally released by Oscar Vermeulen under a Creative
+    Commons license.  Also included the PDF version of the schematic
+    produced by Tony Hill.  (This is all in the `hardware/` directory.)
+
+*   Lowered the default simulator throttle value for single-core Pi
+    boards from 1332 kIPS to 666 kIPS after doing some testing with
+    the current code on a Raspberry Pi 1 Model B+.  This value was
+    chosen since it is approximately twice the speed of a PDP-8/I.
+    This leaves a fair bit of CPU left over for background tasks,
+    including interactive shell use.
+
+*   Many build system and documentation improvements.
 
 
 ## Version 2017.01.23
