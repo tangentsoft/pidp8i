@@ -38,10 +38,11 @@ anyone.
 ## Getting Rid of the Login Prompt
 
 The first thing you have to do on logging in is change your user name
-back from `pidp8i` to `pi`, because the following step is hard-coded to
-use `pi` as the user name.  Give these commands, being *very careful*
-how you type them, because you can lock yourself out of the system if
-you fat-finger them:
+back from `pidp8i` to `pi`, because the final step below is hard-coded
+to use `pi` as the user name.
+
+Give these commands, being *very careful* how you type them, because you
+can lock yourself out of the system if you fat-finger them:
 
     $ exec sudo -i
     # usermod -l pi -d /home/pi -m pidp8i
@@ -50,7 +51,18 @@ you fat-finger them:
 Now log back in as user `pi`, with the same password you had for
 user `pidp8i` prior to this change.
 
-Back at a Raspbian command prompt, say
+If you have the PiDP-8/I PCB attached to your Pi, you will notice when
+it reboots that the front panel did not light up.  This is becasue the
+PiDP-8/I software was built with the knowledge that the default user
+name was `pidp8i`.  You need to rebuild and reinstall it to fix this:
+
+    $ cd ~/pidp8i
+    $ ./configure && make && sudo make install
+    $ sudo systemctl restart pidp8i
+
+That should light the panel back up.
+
+Now we can finally set up auto-login:
 
     $ sudo raspi-config
     
