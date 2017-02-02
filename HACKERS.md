@@ -41,18 +41,17 @@ Fossil Anonymous Access
 
 To clone the code repository anonymously, say:
 
-    $ mkdir ~/museum         # because where else do you store fossils?
+    $ mkdir -p ~/museum ~/src/pidp8i/trunk
+    $ sudo apt install fossil
     $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
-    $ mkdir -p ~/src/pidp8i/trunk
     $ cd ~/src/pidp8i/trunk
     $ fossil open ~/museum/pidp8i.fossil
 
-The second command gets you a file called `pidp8i.fossil` containing the
-full history of PiDP-8/I from the upstream 2015.12.15 release onward.
-You can call that clone file anything you like and put it in any
-directory you like.  Even the `.fossil` extension is just a convention,
-not a requirement.  (There is one feature of Fossil that requires that
-file extension, but you probably won't use that feature.)
+The `clone` command gets you a file called `pidp8i.fossil` containing
+the full history of PiDP-8/I from the upstream 2015.12.15 release
+onward.  You can call that clone file anything you like and put it in
+any directory you like.  Even the `.fossil` extension is largely a
+convention, not a requirement.
 
 
 Working With Existing Tags and Branches
