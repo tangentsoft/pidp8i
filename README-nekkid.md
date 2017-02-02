@@ -115,10 +115,11 @@ way, there are a bunch of reasons:
     information.  This document is as far as I'm willing to go: you must
     take the next steps, if you insist on running a naked PiDP-8/I.
 
-2.  Defaults matter.  If I provide secure OS images and it takes extra
-    work to throw open the barriers, I believe the world is a better
-    place than if I provide insecure OS images which people who care
-    about security much tighten down.
+2.  Defaults matter.  I believe I contribute to a better world by
+    providing secure OS images that require extra effort on the part of
+    those who wish to throw open the barriers than if I provide insecure
+    OS images which must be tightened down by those who care about
+    security.
 
 3.  This guide took me about an hour to write, about the amount of time
     it would take to build a third OS image.  Then I'd need to do it
