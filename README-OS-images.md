@@ -1,6 +1,15 @@
-These OS images install to an SD card in the same way as the [official
-Raspbian images][1].  Follow their [installation guide][2].  You will
-need to use a 2 GB or larger SD card.
+The Raspbian OS images you can downlod from [the PiDP-8/I development
+site][1] install to an SD card in the same way as the [official Raspbian
+images][2].  Follow the [installation guide][3] published by the
+Raspberry Pi Foundation.  You will need to use a 2 GB or larger SD card.
+
+The contents of the Zip file are:
+
+| File Name         | Description
+|--------------------------------
+| `README.md`       | this file
+| `pidp8i-*.img`    | the OS image, based on Raspbian Jessie Lite
+| `MANIFEST.txt`    | SHA 256 hash and file size for the OS image file
 
 One small difference between these OS images and the ones that come from
 the Raspberry Pi Foundation is that mine have already booted once, so
@@ -15,10 +24,11 @@ Another difference is the default user name and password:
 
 You will be made to change that password on first login.
 
-(The "S" in ["IoT"][3] stands for "security." If we want security, we
+(The "S" in ["IoT"][4] stands for "security." If we want security, we
 have to see to it ourselves!)
 
 
-[1]: https://www.raspberrypi.org/downloads/raspbian/
-[2]: https://www.raspberrypi.org/documentation/installation/installing-images/README.md
-[3]: https://en.wikipedia.org/wiki/Internet_of_things
+[1]: https://tangentsoft.com/pidp8i/
+[2]: https://raspberrypi.org/downloads/raspbian/
+[3]: https://raspberrypi.org/documentation/installation/installing-images/
+[4]: https://en.wikipedia.org/wiki/Internet_of_things
