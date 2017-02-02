@@ -7,23 +7,11 @@
     in there if you go spelunking, but everything surrounding it
     is different.
 
-    The basic idea is that instead of trying to keep a running
-    prediction of the correct brightness for each LED, we assemble the
-    "on" time statistics for each LED over a ~10 millisecond window,
-    giving 100 total display repaints per second.  This quantized
-    display update rate is dithered somewhat to randomize the sampling
-    times, which results in a fair sampling of the processor's state.
-
-    The new ILS also dynamically adjusts its delay values to give a
-    semi-fixed update rate, whereas in prior versions, the display
-    would simply update faster at faster clock speeds, both internal
-    to the simulator (a.k.a. THROTTLE) and external to it (the Pi
-    SoC clock).
-
-    The prior scheme's on-the-fly state updates and fixed timing made
-    it susceptible to aliasing, beat frequencies, loading effects,
-    and other bad effects which showed up as unsteady displays even
-    in cases where the display *should* have been steady.
+    The changes and design decisions are complicated and subtle, but
+    the end result is that there are fewer blips, jitters, shudders,
+    and chugs.  (Those are all technical terms for "badness.")
+    The ILS is now buttery smooth from 1 kIPS to the un-throttled
+    many-MIPS rates you can get on a Raspberryr Pi 3.
 
 *   Although most of the ILS work does not directly apply to the "no
     lamp simulator" (NLS) case, the sample rate dithering reduces
