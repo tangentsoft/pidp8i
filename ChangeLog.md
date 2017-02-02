@@ -9,7 +9,7 @@
 
     The changes and design decisions are complicated and subtle, but
     the end result is that there are fewer blips, jitters, shudders,
-    and chugs.  (Those are all technical terms for "badness.")
+    and chugs.  (Those are nuanced technical terms for "badness.")
     The ILS is now buttery smooth from 1 kIPS to the un-throttled
     many-MIPS rates you can get on a Raspberryr Pi 3.
 
