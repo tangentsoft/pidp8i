@@ -136,7 +136,7 @@ the PiDP-8/I simulator back up with:
 
     $ sudo systemctl start pidp8i
 
-See [`README-test.md`][test] for more details.
+See [its documentation][test] for more details.
 
 
 ## Using the Software
@@ -192,7 +192,7 @@ the terms of [the SIMH license][sl].
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
 [sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
-[test]: https://tangentsoft.com/pidp8i/doc/trunk/README-test.md
+[test]: https://tangentsoft.com/pidp8i/doc/trunk/doc/pidp8i-test.md
 [thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
 [sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

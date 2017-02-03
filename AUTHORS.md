@@ -47,7 +47,7 @@
     dark even when using the EAE.
 
 *   **Paul R. Bernard <prb@downspout.ca>** wrote `src/test.c` and the
-    core of what now appears as `README-test.md`. (The program builds
+    core of what now appears as `doc/pidp8i-test.md`. (The program builds
     and installs as `pidp8i-test`.)  He also provided a one-line fix
     that completes the work of Henk Gooijen's step counter patch.
 
