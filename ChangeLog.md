@@ -8,18 +8,18 @@
     is different.
 
     The changes and design decisions surrounding this are [complicated
-    and subtle][ilsstory], but the end result is that there are fewer
-    blips, jitters, shudders, and chugs.  (Those are nuanced technical
-    terms for "badness.")  The ILS is now buttery smooth from 1 kIPS to
-    the un-throttled many-MIPS rate you get on a Raspberry Pi 3.
+    and subtle][ilsstory], but the end result is that the ILS is now
+    free of judders, blips, shudders, and chugs.  (Those are nuanced
+    technical terms for "badness.")  The ILS is now buttery smooth from
+    1 kIPS to the many-MIPS rate you get running un-throttled on a Pi 3.
 
 *   Although most of the ILS work does not directly apply to the "no
     lamp simulator" (NLS) case, the sample rate dithering reduces
-    various types of blips seen in this case as well.
+    display update artifacts seen in this case as well.
 
 *   Slowed the ILS brightness rates down a bit: more lampy, less
     snappy.  Whether this is accurate or not is something we'll have
-    to determine through future research, already in progress.
+    to determine through research separately in progress.
 
 *   The ILS display is a bit brighter: the delay values used in prior
     versions put a cap on max brightness that was well under the full
