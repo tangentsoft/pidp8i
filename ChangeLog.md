@@ -1,17 +1,17 @@
 # PiDP-8/I Changes
 
-## Version 2017.02.02?  INCOMPLETE
+## Version 2017.02.03?  INCOMPLETE
 
 *   Largely rewrote the incandescent lamp simulator (ILS) feature.
     The core of Ian Schofield's original contribution is still hiding
     in there if you go spelunking, but everything surrounding it
     is different.
 
-    The changes and design decisions are complicated and subtle, but
-    the end result is that there are fewer blips, jitters, shudders,
-    and chugs.  (Those are nuanced technical terms for "badness.")
-    The ILS is now buttery smooth from 1 kIPS to the un-throttled
-    many-MIPS rates you can get on a Raspberryr Pi 3.
+    The changes and design decisions surrounding this are [complicated
+    and subtle][ilsstory], but the end result is that there are fewer
+    blips, jitters, shudders, and chugs.  (Those are nuanced technical
+    terms for "badness.")  The ILS is now buttery smooth from 1 kIPS to
+    the un-throttled many-MIPS rate you get on a Raspberry Pi 3.
 
 *   Although most of the ILS work does not directly apply to the "no
     lamp simulator" (NLS) case, the sample rate dithering reduces
@@ -28,10 +28,17 @@
 *   In normal free-running mode, the simulator lights the Fetch and
     Execute LEDs at 50%, whereas before there was an imbalance that
     purely had to do with the much lower complexity of fetching an
-    instruction vs executing it.  I haven't compared this to a real
-    PDP-8/I, but the manuals talk about "fetch-and-execute" cycles
-    as if they are equally sized, so the lights should be on an equal
-    time each.
+    instruction inside the simulator vs executing it.
+    
+    (In real hardware, the complexities were different: fetch involved a
+    core memory retreival, very much non-instantaneous, whereas the
+    execution of the fetched instruction kind of happened all at once in
+    complicated electron flows, rather than the sequential C code of the
+    SIMH PDP-8 simulator.  Thus, it was reasonable for DEC to talk about
+    PDP-8/I fetch-and-execute cycles as if the two steps were of equal
+    time complexity.)
+
+    I haven't compared the resulting LED appearance to a real PDP-8/I.
 
 *   Several other tweaks to LED state handling to better match real
     hardware.
@@ -40,9 +47,6 @@
     hardware switches when you say Ctrl-E then `ex sr`.  Prior versions
     only loaded the hardware switch register values into the internal
     register when it executed an `OSR` instruction.
-
-*   Merged in the relevant SIMH updates.  This is all internal stuff
-    that doesn't affect current PiDP-8/I behavior.
 
 *   Copied the KiCad design files into the source tree, now that
     they're formally released by Oscar Vermeulen under a Creative
@@ -56,7 +60,15 @@
     This leaves a fair bit of CPU left over for background tasks,
     including interactive shell use.
 
+    This value may be a bit low for Pi Zero users, but it is easily
+    [adjustable][rmth].
+
+*   Merged in the relevant SIMH updates.  This is all internal stuff
+    that doesn't affect current PiDP-8/I behavior.
+
 *   Many build system and documentation improvements.
+
+[ilsstory]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
 
 
 ## Version 2017.01.23
