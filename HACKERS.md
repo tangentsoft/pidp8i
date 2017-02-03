@@ -415,23 +415,8 @@ loss of the first indent level for the statements inside a function makes
 functions all visually run together in a screenful of code.  Therefore,
 when we have the luxury to be working on a file separate from SIMH,
 we use a variant of its style with these two changes, which you can
-produce with this command:
-
-    $ indent -kr -nce -cli4 -nlp -pcs -di1 -i4 -l100 \
-        -ncs -ss -nbbo FILES...
-
-That is, start with K&R, then:
-
--   nce:  don't cuddle else
--   cli4: indent case statement labels 4 spaces
--   nlp:  don't align continued statements at the opening parenthesis
--   pcs:  put a space before the opening parenthesis of a function call
--   di1:  don't line up variable types and names in separate columns
--   i4:   use 4-space indents
--   l100: allow lines up to 100 columns before forcibly breaking them
--   ncs:  don't put a space between a cast and its operand
--   ss:   add a space before semicolon with empty loop body
--   nbbo: don't break long lines before || and && operators
+produce with the `tools/restyle` command.  See its internal comments for
+details.
 
 That gives the following, when applied to the above example:
 
@@ -463,12 +448,6 @@ closing braces, which we leave at their previous position.
 
 SIMH occasionally exceeds 100-column lines.  I recommend breaking
 long lines at 72 columns.  Call me an 80-column traditionalist.
-
-BSD `indent` does't understand the `-kr` option, so you can use this
-alternative on BSD and macOS systems:
-
-    $ indent -nce -cli4 -nlp -pcs -di1 -i4 -l100 \
-            -bap -ncdb -nfc1 -npsl -nsc FILES...
 
 When in doubt, mimic what you see in the current code.  When still in
 doubt, ask on the mailing list.
