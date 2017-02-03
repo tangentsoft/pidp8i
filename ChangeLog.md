@@ -472,7 +472,7 @@
 
 *   Many build system and documentation improvements.
 
-[vteditdoc][https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT]
+[vteditdoc]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 
 ## Version 2016.12.06
