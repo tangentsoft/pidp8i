@@ -209,7 +209,7 @@ function do_image() {
 
         mf=/tmp/MANIFEST.txt
         readme=/tmp/README.md
-        cp "$topdir/README-OS-images.md" $readme
+        cp "$topdir/doc/OS-images.md" $readme
 		set -x
 		sudo diskutil unmountDisk $dev		# it auto-mounted
 		sudo dd if=$dev bs=4k count=$object of=$img
