@@ -5,7 +5,7 @@
     -   Creator of the project (both hardware and software)
     
     -   Author of the initial modifications to the SIMH PDP-8 simulator
-	    necessary to make it use the PiDP-8/I front panel hardware
+        necessary to make it use the PiDP-8/I front panel hardware
 
     -   Curator of the default set of binary demo media
 
@@ -16,7 +16,7 @@
     -   Author of the bulk of the documentation
 
     -   Host and major contributor to the PiDP-8/I support forum on
-	    Google Groups
+        Google Groups
 
     -   Hardware kit assembler and distributor
 
@@ -37,7 +37,9 @@
 
 *   **Ian Schofield <isysxp@gmail.com>** Modified the LED lamp driving
     code in the simulator to better simulate the incandescent lamps in
-    the original PDP-8/I hardware.
+    the original PDP-8/I hardware.  (The bulk of his original code has
+    since been rewritten, but the core idea remains, and it is doubtful
+    whether the current method would exist without his instigation.)
 
 *   **Henk Gooijen <henk.gooijen@boschrexroth.nl>** Pushed the PDP-8
     simulator's internal EAE step counter value down into the PiDP-8/I's
