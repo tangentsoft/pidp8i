@@ -1500,7 +1500,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // There's no point saving *every* LED "on" count.  We just need a
     // suitable amount of oversampling.  We can skip this if we called
     // set_pidp8i_leds recently enough, avoiding all the expensive bit
-    // shift and memory update work below.
+    // shift and memory update work it does.
     //
     // The trick here is figuring out what "recently enough" means
     // without making expensive OS timer calls.  These timers aren't
@@ -1509,15 +1509,14 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // just to keep our update estimate current in the face of system
     // load changes and SET THROTTLE updates.
     //
-    // Instead, we use the IPS value SIMH already keeps to figure out
+    // Instead, we maintain a model of the current IPS value — seeded
+    // with the initial "SET THROTTLE" value, if any — to figure out
     // how many calls we can skip while still meeting our other goals.
-    // This involves FP math, but when paid only once a second, it
-    // amortizes much nicer than estimating the skip count directly
+    // This involves a bit of math, but when paid only once a second,
+    // it amortizes much nicer than estimating the skip count directly
     // based on a more accurate time source which is more expensive
-    // to call.
-    //
-    // A further refinement is that we do the test for skipping the call
-    // before doing that FP arithmetic, which is super-fast.
+    // to call.  It's also cheaper than continually asking SIMH to
+    // estimate the SIMH IPS value, since it uses FP math.
     //
     // Each LED panel repaint takes about 10 ms, so we do about 100
     // full-panel updates per second.  We need a bare minimum of 32
@@ -1532,11 +1531,11 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // between our update rate and the instruction pattern being
     // executed by the front panel.  It's a form of dithering.
     //
-    // The early-leave test is out here instead of at the top of that
-    // function because the function call itself is a nontrivial hit.
-    // In fact, you don't even want to move all of this to a function
-    // and try to get GCC to inline it: that's good for a 1 MIPS speed
-    // hit in my testing!  (GCC 4.9.2 on Raspbian Jessie on Pi 3B.)
+    // You might think to move this code to the top of set_pidp8i_leds,
+    // but the function call itself is a nontrivial hit.  In fact, you
+    // don't even want to move all of this to a function here in this
+    // module and try to get GCC to inline it: that's good for a 1 MIPS
+    // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
 
     if (++skip_count >= (max_skips - dither)) {
         // Save skips to inst counter and reset
