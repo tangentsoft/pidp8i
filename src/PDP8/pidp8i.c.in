@@ -54,9 +54,9 @@ int awfulHackFlag = 0;
 // and the two threads involved are arranged in a strict producer-and-
 // consumer fashion, so it doesn't actually matter if pdis_update gets
 // swapped for pdis_paint while we're halfway through an increment: we
-// dereference the pointer only once here, so we'll finish our increment
-// within the same structure we started with, even if pdis_update points
-// at the other display structure before we leave.
+// get a copy of the pointer to dereference here, so we'll finish our
+// increment within the same structure we started with, even if
+// pdis_update points at the other display structure before we leave.
 
 static inline void set_pidp8i_led (display *pd, size_t row, size_t col)
 {
