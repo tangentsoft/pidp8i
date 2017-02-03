@@ -36,4 +36,4 @@ to Run a Nekkid PiDP-8/I][6]."
 [3]: https://raspberrypi.org/documentation/installation/installing-images/
 [4]: https://en.wikipedia.org/wiki/Internet_of_things
 [5]: http://www.testandverification.com/iot/s-iot-stands-security/
-[6]: https://tangentsoft.com/pidp8i/doc/trunk/README-nekkid.md
+[6]: https://tangentsoft.com/pidp8i/wiki?name=How+to+Run+a+Naked+PiDP-8/I
