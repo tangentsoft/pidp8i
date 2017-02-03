@@ -118,6 +118,10 @@ typedef struct display {
 } display;
 extern display* pdis_update, *pdis_paint;
 
+// Compatibility accessor for programs like src/test.c that depend on
+// being able to modify the LED values directly.
+#define ledstatus (pdis_update->curr)
+
 extern uint16_t switchstatus[];
 extern uint8_t cols[];
 extern uint8_t ledrows[];
