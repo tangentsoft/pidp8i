@@ -16,7 +16,7 @@ without tying you to a proprietary web service.
 This guide will introduce you to some of the basics, but you should also
 at least read the [Fossil Quick Start Guide][fqsd]. For a more thorough
 introduction, I recommend [the Schimpf book][fbook]. If you have
-questions, it is best to ask them on [its low-volumn mailing list][fml],
+questions, it is best to ask them on [its low-volume mailing list][fml],
 though you may also ask me, either on [the PiDP-8/I mailing list][ggml]
 or via private email.
 
