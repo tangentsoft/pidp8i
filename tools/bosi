@@ -204,9 +204,16 @@ function do_image() {
     set -x
     diskutil unmountDisk $dev	    	# it auto-mounted
     sudo dd if=$dev bs=1m of=$img
-    echo -e 'SHA256 hash and size of included *.img file:\n' >> $mf
-    shasum -a 256 $img >> $mf
-    wc -c $img >> $mf
+    sum=($(shasum README.md))
+    bytes=($(wc -c $img))
+
+    cat > $mf <<MF
+SHA256 hash and size of included *.img file:
+
+${sum[1]}  ${sum[0]}
+${bytes[1]}  ${bytes[0]}
+MF
+
     imgdir="$(dirname "$img")"
     sed -i '' -e "s_$imgdir/__" "$mf"   # nix local paths in manifest
     unix2dos $mf                        # might be opened on Windows
