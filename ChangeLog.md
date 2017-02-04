@@ -62,6 +62,8 @@
     or either <kbd>Ctrl-C</kbd> or <kbd>X</kbd> to exit the program
     gracefully.
 
+    This requires that you have `libncurses-dev` installed on your Pi.
+
 *   The SIMH PDP-8 simulator's internal SR register now matches the
     hardware switches when you say Ctrl-E then `ex sr`.  Prior versions
     only loaded the hardware switch register values into the internal
