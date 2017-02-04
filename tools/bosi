@@ -108,7 +108,7 @@ function do_reset() {
 		usermod -d $nh -l $nu -p $encpass -m pi 
 	fi
 	passwd -e pidp8i
-	( sleep 1 ; poweroff ) & exit
+	poweroff
 }
 
 
