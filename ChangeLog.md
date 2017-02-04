@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2017.02.03?  INCOMPLETE
+## Version 2017.02.04? (INCOMPLETE)
 
 *   Largely rewrote the incandescent lamp simulator (ILS) feature.
     The core of Ian Schofield's original contribution is still hiding
@@ -24,6 +24,11 @@
 *   The ILS display is a bit brighter: the delay values used in prior
     versions put a cap on max brightness that was well under the full
     LED brightness achievable.
+
+*   For the first time, it is possible to build Deeper Thought (any
+    version) against the ILS, with minor adjustments.  Prior versions of
+    the ILS had too different an external interface to allow this.  Full
+    details are in a [new wiki article][ithought].
 
 *   In normal free-running mode, the simulator lights the Fetch and
     Execute LEDs at 50%, whereas before there was an imbalance that
@@ -83,6 +88,7 @@
 *   Many build system and documentation improvements.
 
 [ilsstory]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
+[ithought]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 
 
 ## Version 2017.01.23
