@@ -78,9 +78,9 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	# Rewrite symbolic values with values SIMH can understand.  See
 	# README-throttle.md for the justification of these values.
 	if {$tv == "single-core" || $tvsl == 0} {
-		# value for ~75% CPU usage on a Pi Model B+ with the simple
-        # LED driving code; conveniently, 4x the speed of a real PDP-8/I
-		set tv "1332k"
+		# value for 60-70% CPU usage on a Pi Model B+ with the simple
+        # LED driving code; conveniently, 2x the speed of a real PDP-8/I
+		set tv "666k"
 	} elseif {$tv == "pdp8e"} {
 		set tv "416k"
 	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
@@ -146,6 +146,9 @@ if {[cc-check-progs greadlink]} {
 }
 msg-result "Found GNU readlink(1) as $rlprg."
 
+# If we have cscope here, we'll use it in the "tags" target
+define HAVE_PROG_CSCOPE [cc-check-progs cscope]
+
 # Canonicalize some paths which may be relative and generate others from them
 define ABSPREFIX [exec $rlprg -f [get-define prefix]]
 define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
@@ -180,14 +183,23 @@ if {![opt-bool debug-mode]} {
 		cc-check-flags -fgcse-after-reload
 		cc-check-flags -finline-functions
 		cc-check-flags -fno-unsafe-loop-optimizations
-		define-append CFLAGS "-D_GNU_SOURCE"
 	}
 }
 
 # Embed this software's Fossil-based version string into gpio-common.c
 define VERSION [exec "[get-define srcdir]/tools/version"]
 
-# Write outputs
+# Build Deeper Thought if we find it here
+if {[file exists "[get-define srcdir]/src/deeper.c"]} {
+    set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
+	msg-result "Found Deeper Thought; building it against $ls GPIO module"
+    define BUILD_DEEPER_THOUGHT 1
+}
+
+# Write outputs.
+#
+# NOTE: If you change the list of files here, change INFILES in
+# Makefile.in, too.
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
 	-bare {ILS_MODE PCB_SERIAL_MOD}
@@ -201,7 +213,10 @@ make-template boot/6.script.in
 make-template boot/7.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
+make-template examples/Makefile.in
+make-template src/Makefile.in
 make-template src/gpio-common.c.in
+make-template src/PDP8/Makefile.in
 make-template src/PDP8/pidp8i.c.in
 make-template src/scp.c.in
 make-template tools/simh-update.in

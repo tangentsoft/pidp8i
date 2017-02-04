@@ -1,6 +1,20 @@
-#!/usr/bin/env perl
 ########################################################################
-# tools/version - Print a string summarizing the software version
+# Makefile.in - Processed by autosetup's configure script to generate
+#    an intermediate GNU make(1) file for building the PiDP-8/I software
+#    from within its src/PDP8 subdirectory.
+#
+# The resulting Makefile will redirect simple "make" calls to the top
+# level as well as the major top-level targets (e.g. "make clean") but
+# purposefully will not redirect anything like an installation or "run
+# the system" type target.  Its only purpose is to help out those who
+# are working on the PiDP-8/I project's C source code from within this
+# directory.  If you need to work on the wider system, do it from the
+# project's top level.
+#
+# If you are seeing this at the top of a file called Makefile and you
+# intend to make edits, do that in Makefile.in.  Saying "make" will then
+# re-build Makefile from that modified Makefile.in before proceeding to
+# do the "make" operation.
 #
 # Copyright © 2017 Warren Young
 #
@@ -29,49 +43,5 @@
 # authorization from those authors.
 ########################################################################
 
-use strict;
-use warnings;
-
-use Cwd 'abs_path';
-use File::Basename;
-
-my $topdir = dirname($0) . '/..';
-if (not -e "$topdir/.fslckout") {
-	# We're not within a Fossil checkout, so try to get the version
-	# number from the top directory name.
-	$topdir = basename(abs_path($topdir));
-	my ($v) = $topdir =~ m{v\d+};
-	print 'pkg:', ($v ? $v : 'vUNKNOWN'), "\n";
-	exit 0;
-}
-
-# Get version info from Fossil
-my ($branch, $checkout, $version, $comment);
-open my $s, '-|', 'fossil status';
-while (<$s>) {
-	chomp;
-	my ($attr, $value) = split /:\s+/;
-
-	if ($attr eq 'checkout') {
-		my @elems = split ' ', $value;
-		$checkout = substr($elems[0], 0, 8);
-	}
-	elsif ($attr eq 'tags') {
-		my @tags = split /, /, $value;
-		for my $t (@tags) {
-			if ($t =~ m{^v\d+}) {
-				$version = $t;
-			}
-			else {
-				$branch = $t;
-			}
-		}
-	}
-	elsif ($attr eq 'comment') {
-		$comment = $value;
-	}
-}
-close $s;
-
-($version) = $comment =~ m{(v\d+)} if $branch eq 'release';
-print $branch, ':', ($version || "id[$checkout]");
+all clean ctags distclean tags reconfig:
+	cd @builddir@; make $@

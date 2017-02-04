@@ -1,15 +1,14 @@
 # PiDP-8/I Software Release Process
 
-If you are just a user of this software, you need read no further. This
-document is for those producing release versions of the software, or for
-those curious about what goes into doing so.
+This documents the process for producing release versions of the
+software.
 
 
 ## Update ChangeLog.md
 
 Trawl the Fossil timeline for user-visible changes since the last
 release, and write them up in user-focused form into the `ChangeLog.md`
-file. If a regular user of the software cannot see a given change, it
+file.  If a regular user of the software cannot see a given change, it
 shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 

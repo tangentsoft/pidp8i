@@ -1,5 +1,96 @@
 # PiDP-8/I Changes
 
+## Version 2017.02.04
+
+*   Largely rewrote the incandescent lamp simulator (ILS) feature.
+    The core of Ian Schofield's original contribution is still hiding
+    in there if you go spelunking, but everything surrounding it
+    is different.
+
+    The changes and design decisions surrounding this are [complicated
+    and subtle][ilsstory], but the end result is that the ILS is now
+    free of judders, blips, shudders, and chugs.  (Those are nuanced
+    technical terms for "badness.")  The ILS is now buttery smooth from
+    1 kIPS to the many-MIPS rate you get running un-throttled on a Pi 3.
+
+*   Although most of the ILS work does not directly apply to the "no
+    lamp simulator" (NLS) case, the sample rate dithering reduces
+    display update artifacts seen in this case as well.
+
+*   Slowed the ILS brightness rates down a bit: more lampy, less
+    snappy.  Whether this is accurate or not is something we'll have
+    to determine through research separately in progress.
+
+*   The ILS display is a bit brighter: the delay values used in prior
+    versions put a cap on max brightness that was well under the full
+    LED brightness achievable.
+
+*   For the first time, it is possible to build Deeper Thought (any
+    version) against the ILS, with minor adjustments.  Prior versions of
+    the ILS had too different an external interface to allow this.  Full
+    details are in a [new wiki article][ithought].
+
+*   In normal free-running mode, the simulator lights the Fetch and
+    Execute LEDs at 50%, whereas before there was an imbalance that
+    purely had to do with the much lower complexity of fetching an
+    instruction inside the simulator vs executing it.
+    
+    (In real hardware, the complexities were different: fetch involved a
+    core memory retreival, very much non-instantaneous, whereas the
+    execution of the fetched instruction kind of happened all at once in
+    complicated electron flows, rather than the sequential C code of the
+    SIMH PDP-8 simulator.  Thus, it was reasonable for DEC to talk about
+    PDP-8/I fetch-and-execute cycles as if the two steps were of equal
+    time complexity.)
+
+    I haven't compared the resulting LED appearance to a real PDP-8/I.
+
+*   Several other tweaks to LED state handling to better match real
+    hardware.
+
+*   Redesigned the `pidp8i-test` program to allow manual stepping
+    forwards and backwards in addition to the previous auto-advancing
+    behavior.
+    
+    As soon as you press one of the arrow keys, the test program moves
+    to the next or previous action in the sequence and stops
+    auto-advancing.  This mode is useful when testing the hardware with
+    a multimeter or similar, and you need a certain row or column to
+    stay lit up indefinitely.
+
+    You can also press <kbd>R</kbd> to resume auto-advancing behavior,
+    or either <kbd>Ctrl-C</kbd> or <kbd>X</kbd> to exit the program
+    gracefully.
+
+*   The SIMH PDP-8 simulator's internal SR register now matches the
+    hardware switches when you say Ctrl-E then `ex sr`.  Prior versions
+    only loaded the hardware switch register values into the internal
+    register when it executed an `OSR` instruction.
+
+*   Copied the KiCad design files into the source tree, now that
+    they're formally released by Oscar Vermeulen under a Creative
+    Commons license.  Also included the PDF version of the schematic
+    produced by Tony Hill.  (This is all in the `hardware/` directory.)
+
+*   Lowered the default simulator throttle value for single-core Pi
+    boards from 1332 kIPS to 666 kIPS after doing some testing with
+    the current code on a Raspberry Pi 1 Model B+.  This value was
+    chosen since it is approximately twice the speed of a PDP-8/I.
+    This leaves a fair bit of CPU left over for background tasks,
+    including interactive shell use.
+
+    This value may be a bit low for Pi Zero users, but it is easily
+    [adjustable][rmth].
+
+*   Merged in the relevant SIMH updates.  This is all internal stuff
+    that doesn't affect current PiDP-8/I behavior.
+
+*   Many build system and documentation improvements.
+
+[ilsstory]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
+[ithought]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
+
+
 ## Version 2017.01.23
 
 *   When any program that talks to the PiDP-8/I front panel starts up,
@@ -401,7 +492,7 @@
 
 *   Many build system and documentation improvements.
 
-[vteditdoc][https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT]
+[vteditdoc]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 
 ## Version 2016.12.06

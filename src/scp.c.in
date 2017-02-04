@@ -249,7 +249,7 @@
 #include <stdint.h>
 #include <unistd.h> // for sleep()
 
-extern void *blink(void *ptr);  // the real-time multiplexing process to start up
+extern void *gpio_thread (void *ptr);  // the real-time multiplexing process to start up
 #endif
 
 #define NOT_MUX_USING_CODE /* sim_tmxr library provider or agnostic */
@@ -2029,7 +2029,7 @@ t_stat stat;
 //  printf("\nPiDP FP driver 3\n");
 
  // create thread
- iret1 = pthread_create( &thread1, NULL, blink, &terminate);
+ iret1 = pthread_create( &thread1, NULL, gpio_thread, &terminate);
 
  if (iret1) {
    fprintf(stderr, "Error creating thread, return code %d\n", iret1);

@@ -32,7 +32,7 @@
 
 #include "gpio-common.h"
 
-#define short_wait() sleep_ms(100)
+#define short_wait() sleep_us(100000)
 
 #define pgpio (&gpio)
 
@@ -55,11 +55,11 @@ int main()
 	}
 
 	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
-	for (i=0;i<nledrows;i++)	// Define ledrows as input
+	for (i=0;i<NLEDROWS;i++)	// Define ledrows as input
 		INP_GPIO(ledrows[i]);
-	for (i=0;i<ncols;i++)		// Define cols as input
+	for (i=0;i<NCOLS;i++)		// Define cols as input
 		INP_GPIO(cols[i]);
-	for (i=0;i<nrows;i++)		// Define rows as input
+	for (i=0;i<NROWS;i++)		// Define rows as input
 		INP_GPIO(rows[i]);
 
 	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
@@ -105,7 +105,7 @@ int main()
 		sleep_us(10);                   // unnecessarily long?
 		switchscan[row-1]=0;
 
-		for (j=0;j<ncols;j++)			// 12 switches in each row
+		for (j=0;j<NCOLS;j++)			// 12 switches in each row
 		{	tmp = GPIO_READ(cols[j]);
 			if (tmp==0)
 				switchscan[row-1] += 1<<j;

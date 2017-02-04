@@ -36,12 +36,12 @@
 
 # Git commit ID of the latest version of the SIMH 4 project on GitHub 
 # that has been merged into this source base.
-SGCID=0046905f72e2372a8bf5dfc90425fd5214b0ba8a
+SGCID=370cb0edb7ae14fb6467d7f8c734a70130b5bf3f
 
 CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
 	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
-	-U__STRICT_ANSI__ \
+	-D_GNU_SOURCE -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
 
 SIM = bin/pidp8i-sim
@@ -83,6 +83,10 @@ OBJS = \
 	obj/sim_timer.o \
 	obj/sim_tmxr.o
 
+ifeq (@BUILD_DEEPER_THOUGHT@, 1)
+BINS += bin/deeper
+endif
+
 LIBS = -lm -ldl -lpthread
 
 EXAMPLES := $(wildcard @srcdir@/examples/*.pal)
@@ -95,8 +99,12 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 	boot/1.script \
 	boot/5.script
 
-# List of *.in files from auto.def file.  If the first file changes,
-# change the AUTOREBUILD rule near the end of the file!
+# List of *.in files from auto.def file, except for this present file
+# (Makefile.in) which is handled separately.  This list should only
+# change when the list of "make-template" calls in auto.def changes.
+#
+# If the first file listed below changes, change the AUTOREBUILD rule
+# near the end of this file to match!
 INFILES = \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
@@ -111,34 +119,44 @@ INFILES = \
 	@srcdir@/src/PDP8/pidp8i.c.in \
 	@srcdir@/src/scp.c.in \
 	@srcdir@/tools/simh-update.in
+PRECIOUS_INFILES = \
+	@srcdir@/examples/Makefile.in \
+	@srcdir@/src/Makefile.in \
+	@srcdir@/src/PDP8/Makefile.in
 OUTFILES := $(subst @srcdir@/,,$(INFILES))
 OUTFILES := $(subst .in,,$(OUTFILES))
+PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
+PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 
 CLTXT = /boot/cmdline.txt
 
 .PHONY: tags
+.PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
+all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
 	@chmod 755 @builddir@/bin/pidp8i
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) $(OUTFILES) \
 		@builddir@/tags \
-			@builddir@/obj/*.d \
+		@builddir@/obj/*.d \
 		@builddir@/obj/*.o \
 		@builddir@/obj/PDP8/*.d \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
-	@rm -f \
+	@rm -f $(PRECIOUS_OUTFILES) \
 		@builddir@/config.log \
 		@builddir@/Makefile \
 		@builddir@/autosetup/jimsh0 \
 		@builddir@/src/config.h
 
 ctags tags:
-	ctags -R @srcdir@
+	@ctags -R @srcdir@
+ifeq (@HAVE_PROG_CSCOPE@, 1)
+	@cscope -bR -s@srcdir@
+endif
 
 install: all
 	@echo Installing to @prefix@...
@@ -161,7 +179,7 @@ install: all
 	@(test -x /bin/systemctl && /bin/systemctl disable pidp8  || true)
 
 	@# Install the init script if this system is systemd based.
-	@INSTALL@ -m 750 @srcdir@/etc/pidp8i-init @prefix@/etc
+	@INSTALL@ -m 755 @srcdir@/etc/pidp8i-init @prefix@/etc
 	@(  test -w /etc/init.d -a -x /bin/systemctl && \
 		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
 		/bin/systemctl enable pidp8i \
@@ -216,14 +234,14 @@ mediainstall:
 	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
 	@INSTALL@ -m 664 -g @INSTGRP@ @builddir@/boot/*.script @BOOTDIR@
 
-os8test:
-	@builddir@/$(SIM) @srcdir@/boot/0.script
-
 reconfig:
 	@AUTOREMAKE@
 
 release: all
 	@srcdir@/tools/mkrel
+
+run:
+	sudo @builddir@/$(SIM) @srcdir@/boot/0.script
 
 simh-update simh-update-f:
 	@@builddir@/tools/simh-update $(subst simh-update,,$@)
@@ -282,13 +300,16 @@ $(SIM): $(OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ $^ $(LIBS)
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
+	$(CC) -o $@ $^ $(LIBS) -lncurses
+
+bin/deeper: obj/deeper.o obj/gpio-@LED_DRIVER_MODULE@ls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) @AUTODEPS@
+Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
 # If you simply make $(OUTFILES) depend on $(INFILES), make(1) thinks it

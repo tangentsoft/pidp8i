@@ -1,6 +1,6 @@
 /* test.c - Front panel LED and switch testing program, built as pidp8i-test
 
-   Copyright © 2016 Paul R. Bernard
+   Copyright © 2016-2017 Paul R. Bernard and Warren Young
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -30,138 +30,270 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <curses.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
-typedef unsigned int    uint32; 
-typedef unsigned char   uint8;
+typedef unsigned int uint32;
+typedef unsigned char uint8;
 
 static uint16_t lastswitchstatus[3];    // to watch for switch changes
 
-uint8 path[] = { 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x11, 0x12, 0x13, 0x14, 0x15,
-		 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x2c, 0x2b, 0x2a, 0x29,
-		 0x28, 0x27, 0x26, 0x25, 0x24, 0x23, 0x22, 0x21, 0x31, 0x32, 0x33,
-		 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x4c, 0x4b,
-		 0x4a, 0x49, 0x48, 0x47, 0x46, 0x45, 0x44, 0x43, 0x42, 0x41, 0x87,
-		 0x76, 0x77, 0x78, 0x79, 0x7a, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56,
-		 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x68, 0x67, 0x66, 0x65, 0x64,
-		 0x63, 0x62, 0x61, 0x69, 0x6a, 0x6b, 0x6c, 0x71, 0x72, 0x75, 0x74,
-		 0x73 };
+uint8 path[] = {
+    0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x11, 0x12, 0x13, 0x14, 0x15,
+    0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x2c, 0x2b, 0x2a, 0x29,
+    0x28, 0x27, 0x26, 0x25, 0x24, 0x23, 0x22, 0x21, 0x31, 0x32, 0x33,
+    0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x4c, 0x4b,
+    0x4a, 0x49, 0x48, 0x47, 0x46, 0x45, 0x44, 0x43, 0x42, 0x41, 0x87,
+    0x76, 0x77, 0x78, 0x79, 0x7a, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56,
+    0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x68, 0x67, 0x66, 0x65, 0x64,
+    0x63, 0x62, 0x61, 0x69, 0x6a, 0x6b, 0x6c, 0x71, 0x72, 0x75, 0x74,
+    0x73
+};
 
-#define CHECK(cond,name) while(!(cond)) goto CLN_ ## name;
-#define CLEANUP(name)    if( 0 ) { CLN_ ## name: {
-#define CLEANUP_END      } } else;
+static int auto_advance = 1;
 
-int terminate=0;
+#define KEY_CHECK \
+        switch (getch()) { \
+            case KEY_DOWN: \
+            case KEY_LEFT:  auto_advance = 0; return step - 1; \
+            case KEY_UP: \
+            case KEY_RIGHT: auto_advance = 0; return step + 1; \
+            case 'r': \
+            case 'R':       auto_advance = 1; return step + 1; \
+            case 'x': \
+            case 'X': \
+            case 3:         exit(1); \
+        }
+#define DISPLAY_HOLD_ITERATIONS 20
+#define DISPLAY_HOLD \
+        sleep_us (250 * 1000); \
+        if (auto_advance) { putchar('.'); } else { dhi = 0; } \
+        KEY_CHECK
 
-void sig_handler( int signo )
+
+typedef int (*action_handler)(int, int);
+struct action {
+    action_handler ph;
+    int step;
+    int arg;
+};
+
+
+static void banner (const char* b, ...)
 {
-  if( signo == SIGINT )
-    terminate = 1;
+    va_list ap;
+    va_start (ap, b);
+
+    if (!auto_advance) {
+        clear();
+        refresh();
+        printf ("Manual mode: Press x or Ctrl-C to exit, "
+                "arrows to step, r to resume.");
+    }
+
+    printf ("\r\n");
+    vprintf (b, ap);
+    va_end (ap);
 }
 
 
-int main( int argc, char *argv[] )
+int all_leds_on (int step, int ignored)
 {
-  pthread_t thread1;
-  int iret1, row, col, i, chr;
-  int path_idx = 0, led_row = 0, delay = 0;
+    puts ("\r");
+    banner ("Turn on ALL LEDs");
 
-  assert(sizeof(lastswitchstatus == switchstatus));
+    for (int row = 0; row < NLEDROWS; ++row) ledstatus[row] = 07777;
 
-  // install handler to terminate future thread
-  if( signal(SIGINT, sig_handler) == SIG_ERR )
-    {
-      fprintf( stderr, "Failed to install SIGINT handler.\n" );
-      exit( EXIT_FAILURE );
+    for (int dhi = 0; dhi < DISPLAY_HOLD_ITERATIONS; ++dhi) {
+        DISPLAY_HOLD;
     }
-	
-  // create thread
-  iret1 = pthread_create( &thread1, NULL, blink, &terminate );
-  if( iret1 )
-    {
-      fprintf( stderr, "Error creating thread, return code %d\n", iret1 );
-      exit( EXIT_FAILURE );
-    }
-  sleep( 2 );			// allow 2 sec for multiplex to start
-  if( !pidp8i_gpio_present )
-    {
-      fprintf( stderr, "Cannot run the test while another PiDP-8/I program runs.\n");
-      exit( EXIT_FAILURE );
-	}
 
-  fprintf( stdout, "turn on ALL LEDs\n" );
-  for( row=0; row<nledrows; ++row )
-    ledstatus[row] = 07777;
-  CHECK( !terminate, TERMINATE )
-  sleep( 5 );
-  for( row=0; row<nledrows; ++row )
+    return step + 1;
+}
+
+
+int all_leds_off (int step, int ignored)
+{
+    puts ("\r");
+    banner ("Turn off ALL LEDs");
+
+    memset (ledstatus, 0, sizeof(ledstatus));
+    for (int dhi = 0; dhi < DISPLAY_HOLD_ITERATIONS; ++dhi) {
+        DISPLAY_HOLD;
+    }
+
+    return step + 1;
+}
+
+
+int led_row_on (int step, int row)
+{
+    if (row == 0) puts ("\r");
+    memset (ledstatus, 0, sizeof(ledstatus));
+
+    banner ("Turning on LED row %d", row + 1);
+
+    for (int dhi = 0; dhi < DISPLAY_HOLD_ITERATIONS / 4; ++dhi) {
+        ledstatus[row] = 07777;
+        DISPLAY_HOLD;
+    }
     ledstatus[row] = 0;
-  fprintf( stdout, "turn off ALL LEDs\n" );
-  CHECK( !terminate, TERMINATE )
-  sleep( 5 );
+    
+    return step + 1;
+}
 
-  for( row=0; row<nledrows; ++row )
-    {
-      CHECK( !terminate, TERMINATE )
-      fprintf( stdout, "turning on LED row %d\n", row );
-      ledstatus[row] = 07777;
-      sleep( 5 );
-      ledstatus[row] = 0;
+
+int led_col_on (int step, int col)
+{
+    if (col == 0) puts ("\r");
+    memset (ledstatus, 0, sizeof(ledstatus));
+
+    banner ("Turning on LED col %d", col + 1);
+
+    for (int dhi = 0; dhi < DISPLAY_HOLD_ITERATIONS / 4; ++dhi) {
+        for (int row = 0; row < NLEDROWS; ++row)
+            ledstatus[row] |= 1 << col;
+        DISPLAY_HOLD;
+    }
+    ledstatus[col] = 0;
+    
+    return step + 1;
+}
+
+
+int switch_scan (int step, int ignored)
+{
+    int path_idx = 0, led_row = 0, delay = 0;
+
+    puts ("\r");
+    banner ("Reading the switches.  Toggle any pattern desired.  "
+            "Ctrl-C to quit.\r\n");
+
+    memset (ledstatus, 0, sizeof(ledstatus));
+    for (int i = 0; i < NROWS; ++i)
+        lastswitchstatus[i] = switchstatus[i];
+
+    for (;;) {
+        if (delay++ >= 30) {
+            delay = 0;
+
+            ledstatus[led_row] = 0;
+            ledstatus[led_row = (path[path_idx] >> 4) - 1] = 04000 >> ((path[path_idx] & 0x0F) - 1);
+            sleep_us (1);
+            KEY_CHECK;
+
+            if (++path_idx >= sizeof (path) / sizeof (path[0]))
+                path_idx = 0;
+        }
+
+        if (lastswitchstatus[0] != switchstatus[0] ||
+            lastswitchstatus[1] != switchstatus[1] || lastswitchstatus[2] != switchstatus[2]) {
+            for (int i = 0; i < NROWS; ++i) {
+                printf ("%04o ", ~switchstatus[i] & 07777);
+                lastswitchstatus[i] = switchstatus[i];
+            }
+            printf ("\r\n");
+        }
+        usleep (1000);
     }
 
-  for( col=0; col<ncols; ++col )
-    {
-      CHECK( !terminate, TERMINATE )
-      fprintf( stdout, "turning on LED col %d\n", col );
+    return step + 1;
+}
 
-      for( row=0; row<nledrows; ++row )
-	ledstatus[row] |= 1<<col;
-      sleep( 5 );
-      for( row=0; row<nledrows; ++row )
-	ledstatus[row] = 0;
+
+void start_gpio (void)
+{
+    assert (sizeof (lastswitchstatus == switchstatus));
+
+    // Tell the GPIO thread we're updating the display via direct
+    // ledstatus[] manipulation instead of set_pidp8i_leds calls.
+    pidp8i_simple_gpio_mode = 1;
+
+    // Create GPIO thread
+    pthread_t pth;
+    static int terminate = 0;
+    int ret = pthread_create (&pth, NULL, gpio_thread, &terminate);
+    if (ret) {
+        fprintf (stderr, "Error creating thread, return code %d\r\n", ret);
+        exit (EXIT_FAILURE);
     }
-	
-  fprintf( stdout, "Reading the switches.  Toggle any pattern desired.  CTRL-C to quit.\n" );
-  
-  for( i=0; i<nrows; ++i )
-    lastswitchstatus[i] = switchstatus[i];
-  
-  for( ;; )
-    {
-      CHECK( !terminate, TERMINATE )
+    sleep (2);                  // allow 2 sec for multiplex to start
+    if (!pidp8i_gpio_present) {
+        fprintf (stderr, "Cannot run the test while another PiDP-8/I "
+                "program runs.\r\n");
+        exit (EXIT_FAILURE);
+    }
+}
 
-      if( delay++ >= 30 )
-	{
-	  delay = 0;
-	  
-	  ledstatus[led_row] = 0;
-	  ledstatus[led_row=(path[path_idx]>>4) - 1] = 04000 >> ((path[path_idx]&0x0F) - 1);
-	  if( ++path_idx >= sizeof(path)/sizeof(path[0]) ) path_idx = 0;
-	}
 
-      if( lastswitchstatus[0]!=switchstatus[0] ||
-	  lastswitchstatus[1]!=switchstatus[1] ||
-	  lastswitchstatus[2]!=switchstatus[2] )
-	{
-	  for( i=0; i<nrows; ++i )
-	    {
-	      fprintf( stdout, "%04o ", ~switchstatus[i] & 07777 );
-	      lastswitchstatus[i] = switchstatus[i];
-	    }
-	  fprintf( stdout, "\n" );
-	}
-      usleep( 1000 );
-    }	  
+// Tell ncurses we want character-at-a-time input without echo,
+// non-blocking reads, and no input interpretation.
+void init_ncurses (void)
+{
+    initscr ();
+    nodelay (stdscr, TRUE);
+    keypad  (stdscr, TRUE);
+    noecho ();
+    cbreak ();
+    clear ();
+    refresh ();
+}
 
-  CLEANUP( TERMINATE )
 
-    if( pthread_join(thread1, NULL) )
-      printf( "\r\nError joining multiplex thread\r\n" );
+void run_actions (void)
+{
+    // Define action sequence
+    struct action actions[] = {
+        { all_leds_on,  0,  0 },
+        { all_leds_off, 1,  0 },
+
+        { led_row_on,   2,  0 },
+        { led_row_on,   3,  1 },
+        { led_row_on,   4,  2 },
+        { led_row_on,   5,  3 },
+        { led_row_on,   6,  4 },
+        { led_row_on,   7,  5 },
+        { led_row_on,   8,  6 },
+        { led_row_on,   9,  7 },
+
+        { led_col_on,  10,  0 },
+        { led_col_on,  11,  1 },
+        { led_col_on,  12,  2 },
+        { led_col_on,  13,  3 },
+        { led_col_on,  14,  4 },
+        { led_col_on,  15,  5 },
+        { led_col_on,  16,  6 },
+        { led_col_on,  17,  7 },
+        { led_col_on,  18,  8 },
+        { led_col_on,  19,  9 },
+        { led_col_on,  20, 10 },
+        { led_col_on,  21, 11 },
+
+        { switch_scan, 22, 0 },
+    };
+    const size_t num_actions = sizeof(actions) / sizeof(actions[0]);
+
+    // Run actions
+    int i = 0;
+    while (i < num_actions) {
+        i = (actions[i].ph)(i, actions[i].arg);
+        if (i == num_actions) i = 0;
+        if (i == -1)          i = num_actions - 1;
+    }
+}
+
+
+int main (int argc, char *argv[])
+{
+    start_gpio ();
+    init_ncurses ();
+    run_actions ();
+
     return 0;
-
-  CLEANUP_END
 }

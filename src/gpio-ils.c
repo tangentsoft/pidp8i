@@ -1,5 +1,5 @@
 /*
- * gpio-ils.c: implements blink_core() for Ian Schofield's incandescent
+ * gpio-ils.c: implements gpio_core () for Ian Schofield's incandescent
  *             lamp simulator
  * 
  * Copyright © 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
@@ -34,114 +34,171 @@
 
 #include "sim_defs.h"
 
+#include "PDP8/pidp8i.h"
+
 
 //// CONSTANTS /////////////////////////////////////////////////////////
 
 // Brightness range is [0, MAX_BRIGHTNESS) truncated.
 #define MAX_BRIGHTNESS 32
 
-// On each iteration, we add or subtract a proportion of the current LED
-// value back to it as its new brightness, based on the LED's current
-// internal state.  This gives a nonlinear increase/decrease behavior,
-// where rising from "off" or dropping from "full-on" is fast to start
-// and slows down as it approaches its destination.
+// On each iteration, we add or subtract a proportion of the LED's "on"
+// time back to it as its new brightness, so that it takes several
+// iterations at that same "on" time for the LED to achieve that
+// brightness level.  Because the delta is based on the prior value, we
+// get nonlinear asymptotic increase/decrease behavior.
 //
 // We use an asymmetric function depending on whether the LED is turning
 // on or off to better mimic the behavior of an incandescent lamp, which
 // reaches full brightness faster than it turns fully off.
-#define RISING_FACTOR 0.02
-#define FALLING_FACTOR 0.008
+#define RISING_FACTOR 0.012
+#define FALLING_FACTOR 0.005
 
 
-//// blink_core ////////////////////////////////////////////////////////
+//// gpio_core  ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
-void blink_core(struct bcm2835_peripheral* pgpio, int* terminate)
+void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
 {
-    int i, j, k;
-    const us_time_t intervl = 5;    // light each row of leds 5 µs
-    ms_time_t now_ms;
+    // The ILS version uses an iteration rate 60x faster than the NLS
+    // version because we have to get through 32 PWM steps, each of
+    // which takes roughly 2 * intervl µs.  There's a bit of extra delay
+    // over intervl in the NLS version, so the while loop iteration time
+    // is about the same for both versions.
+    const us_time_t intervl = 20;
 
-	float brtval[96];
-	uint8 brctr[96], bctr = 0, ndx;
-	memset(brtval, 0, sizeof (brtval));
+    // Current brightness level for each LED.  It goes from 0 to
+    // MAX_BRIGHTNESS, but we keep it as a float because the decay
+    // function smoothly ramps from the current value to the ever-
+    // changing target value.
+    float brightness[NLEDROWS][NCOLS];
+    memset(brightness, 0, sizeof (brightness));
+
+    // Brightness target for each LED, updated at the start of each PWM
+    // cycle when we get fresh "on" counts from the CPU thread.
+    uint8 br_targets[NLEDROWS][NCOLS];
+    memset(br_targets, 0, sizeof (br_targets));
+
+    // Current PWM brightness step
+    uint8 step = MAX_BRIGHTNESS;
 
     while (*terminate == 0) {
-        // prepare for lighting LEDs by setting col pins to output
-        for (i = 0; i < ncols; i++) {
-            INP_GPIO(cols[i]);
-            OUT_GPIO(cols[i]);          // Define cols as output
-        }
-        if (bctr == 0) {
-			memset(brctr, 0, sizeof (brctr));
-            bctr = MAX_BRIGHTNESS;
-        }
+        // Prepare for lighting LEDs by setting col pins to output
+        for (size_t i = 0; i < NCOLS; ++i) OUT_GPIO(cols[i]);
 
-		// Increase or decrease each LED's brightness based on whether
-		// it is currently enabled.  These values affect the duty cycle
-		// of the signal put out by the GPIO thread to each LED, thus
-		// controlling brightness.
-		float *p = brtval;
-		for (int row = 0; row < nledrows; ++row) {
-			for (int col = 0, msk = 1; col < ncols; ++col, ++p, msk <<= 1) {
-				if (ledstatus[row] & msk)
-					*p += (MAX_BRIGHTNESS - *p) * RISING_FACTOR;
-				else
-					*p -= *p * FALLING_FACTOR;
-			}
-		}
+        // Restart PWM cycle if prior one is complete
+        if (step == MAX_BRIGHTNESS) {
+            // Reset PWM step counter
+            step = 0;
+      
+            // Go get the current LED "on" times, and give the SIMH
+            // CPU thread a blank copy to begin updating.  Because we're
+            // in control of the swap timing, we don't need to copy the
+            // pdis_paint pointer: it points to the same thing between
+            // these swap_displays() calls.
+            swap_displays();
 
-        // light up LEDs
-        for (i = ndx = 0; i < nledrows; i++) {
-            // Toggle columns for this ledrow (which LEDs should be on (CLR = on))
-            for (k = 0; k < ncols; k++, ndx++) {
-                if (++brctr[ndx] < brtval[ndx])
-                    GPIO_CLR = 1 << cols[k];
-                else
-                    GPIO_SET = 1 << cols[k];
+            // Recalculate the brightness target values based on the
+            // "on" counts in *pdis_paint and the quantized brightness
+            // level, which is based on the number of instructions
+            // executed for this display update.
+            //
+            // Handle the cases where inst_count is < 32 specially
+            // because we don't want all LEDs to go out when the
+            // simulator is heavily throttled.
+            const size_t inst_count = pdis_paint->inst_count;
+            size_t br_quant = inst_count >= 32 ? (inst_count >> 5) : 1;
+            for (int row = 0; row < NLEDROWS; ++row) {
+                size_t *prow = pdis_paint->on[row];
+                for (int col = 0; col < NCOLS; ++col) {
+                    br_targets[row][col] = prow[col] / br_quant;
+
+                }
             }
 
-            // Toggle this ledrow on
-            INP_GPIO(ledrows[i]);
-            GPIO_SET = 1 << ledrows[i]; // test for flash problem
-            OUT_GPIO(ledrows[i]);
-
-            sleep_us(intervl);
-
-            // Toggle ledrow off
-            GPIO_CLR = 1 << ledrows[i]; // superstition
-            INP_GPIO(ledrows[i]);
-
-            sleep_us(intervl);
+            // Hard-code the Fetch and Execute brightnesses; in running
+            // mode, they're both on half the instruction time, so we
+            // just set them to 50% brightness.  Execute differs in STOP
+            // mode, but that's handled in update_led_states () because
+            // we fall back to NLS in STOP mode.
+            br_targets[5][2] = br_targets[5][3] = MAX_BRIGHTNESS / 2;
         }
+        ++step;
 
-        // prepare for reading switches
-        ms_time(&now_ms);
-        for (i = 0; i < ncols; i++) {
-            INP_GPIO(cols[i]);          // flip columns to input. Need internal pull-ups enabled.
-        }
-
-        // read three rows of switches
-        for (i = 0; i < nrows; i++) {
-            INP_GPIO(rows[i]);          
-            OUT_GPIO(rows[i]);          // turn on one switch row
-            GPIO_CLR = 1 << rows[i];    // and output 0V to overrule built-in pull-up from column input pin
-
-            sleep_ns(intervl * 1000 / 100);
-
-            for (j = 0; j < ncols; j++) {   // ncols switches in each row
-                int ss = GPIO_READ(cols[j]);
-                debounce_switch(i, j, !!ss, now_ms);
+        // Update the brightness values.
+        for (int row = 0; row < NLEDROWS; ++row) {
+            size_t *prow = pdis_paint->on[row];
+            for (int col = 0; col < NCOLS; ++col) {
+                uint8 br_target = br_targets[row][col];
+                float *p = brightness[row] + col;
+                if (*p <= br_target) {
+                    *p += (br_target - *p) * RISING_FACTOR;
+                }
+                else {
+                    *p -= *p * FALLING_FACTOR;
+                }
             }
-
-            INP_GPIO(rows[i]);          // stop sinking current from this row of switches
         }
 
-        fflush(stdout);
-        gss_initted = 1;
-        bctr--;
+        // Light up LEDs
+        extern int swStop, swSingInst;
+        if (swStop || swSingInst) {
+            // The CPU is in STOP mode, so show the current LED states
+            // full-brightness using the same mechanism NLS uses.
+            update_led_states (intervl * 60);
+        }
+        else {
+            // Normal case: PWM display using the on-count values
+            for (size_t row = 0; row < NLEDROWS; ++row) {
+                // Output 0 (CLR) for LEDs in this row which should be on
+                size_t *prow = pdis_paint->on[row];
+                for (size_t col = 0; col < NCOLS; ++col) {
+                    if (brightness[row][col] >= step) {
+                        GPIO_CLR = 1 << cols[col];
+                    }
+                    else {
+                        GPIO_SET = 1 << cols[col];
+                    }
+                }
 
+                // Toggle this LED row on
+                INP_GPIO(ledrows[row]);
+                GPIO_SET = 1 << ledrows[row];
+                OUT_GPIO(ledrows[row]);
+
+                sleep_us(intervl);
+
+                // Toggle this LED row off
+                GPIO_CLR = 1 << ledrows[row]; // superstition
+                INP_GPIO(ledrows[row]);
+
+                sleep_ns(5);
+            }
+        }
+
+#if 0   // debugging
+        static time_t last = 0, now;
+        if (time(&now) != last) {
+            float* p = brightness[0];
+            #define B(n) (p[n] / MAX_BRIGHTNESS * 100.0)
+            printf("\r\nPC:"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]"
+                    " [%3.0f%%][%3.0f%%][%3.0f%%]",
+                    B(11), B(10), B(9),
+                    B(8),  B(7),  B(6),
+                    B(5),  B(4),  B(3),
+                    B(2),  B(1),  B(0));
+            last = now;
+        }
+#endif
+
+        // 625 = * 1000 / (100 / 60) where 60 is the difference in
+        // iteration rate between ILS and NLS.  See the same call
+        // in gpio-nls.c.
+        read_switches(intervl * 625);      
 #if defined(HAVE_SCHED_YIELD)
         sched_yield();
 #endif
