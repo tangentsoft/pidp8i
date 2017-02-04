@@ -28,9 +28,7 @@
 # those authors.
 
 verb="$1"
-object="$2"
-
-tag=$(echo $verb | cut -f2 -d- -s)
+tag="$2"
 test -z "$tag" && tag=ils
 
 nu=pidp8i
@@ -48,7 +46,7 @@ topdir="$($greadlink -f "$(dirname "$this")"/..)"
 function do_init() {
 	sudo apt-get update && sudo apt-get -y upgrade || true
 
-	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi init $object
+	test "$USER" = "root" && exec sudo -i -u $nu $nh/bosi init
 	cd $HOME
 
 	test -n "$(type -p fossil)" || sudo apt-get -y install fossil
@@ -68,7 +66,7 @@ function do_init() {
 		fossil update release
 	else
 		fossil open ~/museum/$repo.fossil release
-		./configure $object
+		./configure
 	fi
 
 	tools/mmake
@@ -124,10 +122,12 @@ function do_reset() {
 # who neglects to expand the card image into the free space available on
 # their SD card after first boot.
 function do_shrink() {
-	test "$USER" = "root" || exec sudo $this shrink $object
+	test "$USER" = "root" || exec sudo $this shrink
 
 	umount /dev/sda2 || true	# might auto-mount, might not
 	e2fsck -f /dev/sda2			# resize2fs demands it
+
+    # Pack it down tight
 	blocks=$(
 		resize2fs -M /dev/sda2 2>&1 |
 		grep 'blocks long' | 
@@ -135,18 +135,13 @@ function do_shrink() {
 	)
 	if [ "$blocks" -gt 0 ]
 	then
+        # And now give it a bit of breathing room
 		parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
-		blocks=$(
-			resize2fs /dev/sda2 2>&1 |
-			grep 'blocks long' | 
-			grep -wo '[0-9]\+'
-		)
+        resize2fs /dev/sda2
 
 		cat <<NEXT
 Move the USB SD card reader to the desktop machine and resume the
-process with
-
-    bosi image $blocks
+process with 'bosi image'.
 
 NEXT
 	else
@@ -160,77 +155,72 @@ NEXT
 # This script images the OS SD card in a USB reader on a Mac OS X box.
 function do_image() {
 	set +x
-	if [ -n "$object" ]
-	then
-		while read line
-		do
-			case $line in
-				/dev/*)
-					dev=$(echo $line | cut -f1 -d' ')
-					;;
+    while read line
+    do
+        case $line in
+            /dev/*)
+                dev=$(echo $line | cut -f1 -d' ')
+                ;;
 
-				0:*)
-					case $line in
-						*FDisk_partition_scheme*) ;;
-						*) dev= ;;		# can't be the OS SD card
-					esac
-					;;
+            0:*)
+                case $line in
+                    *FDisk_partition_scheme*) ;;
+                    *) dev= ;;		# can't be the OS SD card
+                esac
+                ;;
 
-				1:*)
-					case $line in
-						*Windows_FAT_32\ boot*) ;;
-						*) dev= ;;		# can't be the OS SD card
-					esac
-					;;
+            1:*)
+                case $line in
+                    *Windows_FAT_32\ boot*) ;;
+                    *) dev= ;;		# can't be the OS SD card
+                esac
+                ;;
 
-				2:*)
-					case $line in
-						*Linux\ Untitled*) break ;;	# found it!
-						*) dev= ;;		# can't be the OS SD card
-					esac
-					;;
-			esac
-		done < <(diskutil list)
+            2:*)
+                case $line in
+                    *Linux\ Untitled*) break ;;	# found it!
+                    *) dev= ;;		# can't be the OS SD card
+                esac
+                ;;
+        esac
+    done < <(diskutil list)
 
-		if [ -z "$dev" ]
-		then
-			echo "Failed to find OS SD card!"
-			echo
-			exit 1
-		fi
+    if [ -z "$dev" ]
+    then
+        echo "Failed to find OS SD card!"
+        echo
+        exit 1
+    fi
 
-		echo
-		echo "-------------------------------------------------------"
-		diskutil info "$dev"
-		echo "-------------------------------------------------------"
-		echo
-		read -p "Is that the OS SD card? [y/N]: " answer
-		case $answer in
-			[Yy]*) ;;
-			*) exit 1
-		esac
+    echo
+    echo "-------------------------------------------------------"
+    diskutil info "$dev"
+    echo "-------------------------------------------------------"
+    echo
+    read -p "Is that the OS SD card? [y/N]: " answer
+    case $answer in
+        [Yy]*) ;;
+        *) exit 1
+    esac
 
-        mf=/tmp/MANIFEST.txt
-        readme=/tmp/README.md
-        cp "$topdir/doc/OS-images.md" $readme
-		set -x
-		diskutil unmountDisk $dev	    	# it auto-mounted
-		sudo dd if=$dev bs=4k count=$object of=$img
-        echo -e 'SHA256 hash and size of included *.img file:\n' >> $mf
-        shasum -a 256 $img >> $mf
-        wc -c $img >> $mf
-        imgdir="$(dirname "$img")"
-        sed -i '' -e "s_$imgdir/__" "$mf"   # nix local paths in manifest
-        unix2dos $mf                        # might be opened on Windows
-		zip -9j $img.zip $img $mf $readme
-        rm -f $mf $readme
+    mf=/tmp/MANIFEST.txt
+    readme=/tmp/README.md
+    cp "$topdir/doc/OS-images.md" $readme
+    set -x
+    diskutil unmountDisk $dev	    	# it auto-mounted
+    sudo dd if=$dev bs=1m of=$img
+    echo -e 'SHA256 hash and size of included *.img file:\n' >> $mf
+    shasum -a 256 $img >> $mf
+    wc -c $img >> $mf
+    imgdir="$(dirname "$img")"
+    sed -i '' -e "s_$imgdir/__" "$mf"   # nix local paths in manifest
+    unix2dos $mf                        # might be opened on Windows
+    zip -9j $img.zip $img $mf $readme
+    rm -f $mf $readme
 
-		sudo dd if=/dev/zero of=$dev bs=1m  # ensure a clean test
-		sudo dd if=$img of=$dev bs=1m
-		diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
-	else
-		usage
-	fi
+    sudo dd if=/dev/zero of=$dev bs=1m  # ensure a clean test
+    sudo dd if=$img of=$dev bs=1m
+    diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
 }
 
 
@@ -245,15 +235,15 @@ function do_finish() {
 # Display the usage message
 function usage() {
 	cat <<USAGE
-usage: $0 <verb[-tag]> [object]
+usage: $0 <verb> [tag]
 
-    The available verbs are init, fossil, shrink, image, and finish.
+    The available verbs are init, reset, shrink, image, and finish.
 
-    You may append a tag to the image and finish verbs (e.g. image-nls)
-    to override the default tag ('all') used in image and zip file
+    You may include a tag parameter with the 'image' and 'finish' verbs
+    to override the default tag ('ils') used in image and zip file
     outputs.
 
-    The object depends on the verb.  See RELEASE-PROCESS.md.
+    See RELEASE-PROCESS.md for more info.
 
 USAGE
 	exit 1
