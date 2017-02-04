@@ -64,6 +64,12 @@
 // managed to lock the GPIO device.
 uint8_t pidp8i_gpio_present;
 
+// Flag external programs can set to make us use the old-style (and
+// simpler, hence still supported) ledstatus[] interface for updating
+// the LED values when swapping displays internally.  The external
+// program doesn't need to know anything about struct display.
+int pidp8i_simple_gpio_mode = 0;
+
 struct bcm2835_peripheral gpio; // needs initialisation
 #define pgpio (&gpio)
 
@@ -233,12 +239,35 @@ unsigned bcm_host_get_peripheral_address(void)
 void swap_displays ()
 {
     if (!swStop && !swSingInst) {
-        // Clear old paint-from display
-        memset (pdis_paint, 0, sizeof(display));
+        if (pidp8i_simple_gpio_mode) {
+            // We're linked to a program that wants to use the old
+            // ledstatus[] interface for updating the display, so copy
+            // its values into the paint-from display structure and
+            // return.  We don't need to touch the update-to display or
+            // swap anything, because set_pidp8i_leds won't be called.
+            memcpy (pdis_paint->curr, ledstatus, 
+                    sizeof (pdis_paint->curr));
+            pdis_paint->inst_count = 1;
 
-        // Send old paint-from display to CPU as new update-to display,
-        // and overwrite paint-from pointer with prior update-to pointer.
-        pdis_paint = pdis_update == display_bufs + 0 ? SWAP(1) : SWAP(0);
+            for (size_t row = 0; row < NCOLS; ++row) {
+                size_t *prow = pdis_paint->on[row];
+                for (size_t col = 0, mask = 1; col < NCOLS;
+                        ++col, mask <<= 1) {
+                    prow[col] = !!(ledstatus[row] & mask);
+                }
+            }
+        }
+        else {
+            // Clear old paint-from display
+            memset (pdis_paint, 0, sizeof(display));
+
+            // Send old paint-from display to CPU as new update-to
+            // display, and overwrite paint-from pointer with prior
+            // update-to pointer.
+            pdis_paint = pdis_update == display_bufs + 0 ?
+                    SWAP(1) :
+                    SWAP(0);
+        }
     }
     // else, leave current LED values as-is so we don't go to a black
     // screen while in STOP mode, either from front panel or HLT

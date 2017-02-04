@@ -1,6 +1,6 @@
 /* test.c - Front panel LED and switch testing program, built as pidp8i-test
 
-   Copyright © 2016 Paul R. Bernard
+   Copyright © 2016-2017 Paul R. Bernard and Warren Young
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -52,10 +52,10 @@ uint8 path[] = { 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x11, 0x12, 0x13, 0x14, 0x1
     0x73
 };
 
-#define DISPLAY_HOLD_ITERATIONS 100000
+#define DISPLAY_HOLD_ITERATIONS 10
 #define DISPLAY_HOLD \
-        sleep_ns (10); \
-        if (dhi % 10000 == 0) putchar('.');
+        sleep_us (500 * 1000); \
+        putchar('.');
 
 
 int main (int argc, char *argv[])
@@ -63,6 +63,10 @@ int main (int argc, char *argv[])
     pthread_t thread1;
     int iret1, row, col, i, chr, dhi;
     int path_idx = 0, led_row = 0, delay = 0;
+
+    // Tell the GPIO thread we're updating the display via direct
+    // ledstatus[] manipulation instead of set_pidp8i_leds calls.
+    pidp8i_simple_gpio_mode = 1;
 
     assert (sizeof (lastswitchstatus == switchstatus));
 
