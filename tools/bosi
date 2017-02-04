@@ -52,6 +52,7 @@ function do_init() {
 	cd $HOME
 
 	test -n "$(type -p fossil)" || sudo apt-get -y install fossil
+	test -f /usr/include/curses.h || sudo apt-get -y install libncurses-dev
 
 	if [ ! -d museum ]
 	then
