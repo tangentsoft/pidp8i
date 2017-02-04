@@ -1,5 +1,5 @@
-# schofield-brtval.R: Generate SVG graph from data output by the C
-#    program of the same name, written to a CSV file of the same name.
+# schofield-brtval.R: Generate SVG graph of the brightness curves
+#    produced by Ian Schofield's ILS patch.
 #
 # The schofield-brtval.svg file checked into Fossil is modified from the
 # version output by this program:
@@ -36,9 +36,27 @@
 # authors.
 #
 
-library(readr)
-rawData <- read_csv("schofield-brtval.csv")
-dts <- ts(rawData)
-svg("schofield-brtval.svg", width=5, height=3.6)
-plot.ts(dts, plot.type='single', ylab='Brightness', yaxp=c(0, 32, 16))
+min = 0
+max = 32
+a = min
+b = max
+
+rising  = c(min);
+falling = c(max);
+
+for (i in 1:400) {
+  a = a + (max - a) * 0.01
+  b = b + (min - b) * 0.01
+  
+  rising[i]  = a
+  falling[i] = b
+  
+  if (a > 31 || b < 1) break
+}
+
+data = data.frame(Rising = rising, Falling = falling)
+dts = ts(data)
+svg("schofield-brtval.svg", width=8, height=6)
+plot.ts(dts, plot.type='single', ylab='Brightness',
+        yaxp=c(min, max, 8))
 dev.off()
