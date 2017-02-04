@@ -118,9 +118,10 @@ typedef struct display {
 } display;
 extern display* pdis_update, *pdis_paint;
 
-// Compatibility accessor for programs like src/test.c that depend on
+// Compatibility interface for programs like src/test.c that depend on
 // being able to modify the LED values directly.
 #define ledstatus (pdis_update->curr)
+extern int pidp8i_simple_gpio_mode;
 
 extern uint16_t switchstatus[];
 extern uint8_t cols[];
@@ -141,6 +142,7 @@ extern void swap_displays ();
 
 extern void sleep_ns(ns_time_t ns);
 #define sleep_us(us) usleep(us)
+#define sleep_ms(ms) sleep_us(ms * 1000)
 extern ms_time_t ms_time(ms_time_t* pt);
  
 #endif // !defined(PIDP8I_GPIO_H)
