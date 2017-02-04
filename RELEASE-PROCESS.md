@@ -34,11 +34,12 @@ after tagging it.
 
 ## Produce the Normal Binary OS Image
 
-Start with the latest [Raspbian Lite OS image][os].
+Start with the latest version of [Raspbian Lite][os] on a multi-core
+Raspberry Pi.
 
 1.  If the version of the base OS has changed since the last binary OS
     image was created, download the new one and blast it onto an SD card
-    used for no other purpose. Boot it up.
+    used for no other purpose.  Boot it up.
 
 2.  After logging in, retreive and initialize the BOSI process:
 
@@ -70,14 +71,17 @@ Start with the latest [Raspbian Lite OS image][os].
 
 6.  Move the USB reader to the Mac,¹ then say:
 
-        $ bosi image[-nls] BLOCKS
+        $ bosi image [nls]
 
-    `BLOCKS` is the value output at the end of the `shrink` step.
+    For the ILS images, you can give "ils" as a parameter or leave it
+    blank.
 
 7.  The prior step rewrote the SD card with the image file it created.
     Boot it up and make sure it still works.  If you're happy with it:
 
-        $ bosi finish[-nls]
+        $ bosi finish [nls]
+
+    As above, the parameter can be "ils" or left off for the ILS images.
 
 8.  While the OS image uploads, compose the announcement message, and
     modify the front page to point to the new images.  Post the
@@ -88,11 +92,8 @@ Start with the latest [Raspbian Lite OS image][os].
 
 ## Produce the "No Lamp Simulator" Binary OS Image
 
-Log into the SD card from which you made the regular image above, then
-say `./bosi init --no-lamp-simulator`, and continue from step 3 above.
-
-When you get down to the `image` and `test` steps, give `image-nls` and
-`test-nls` instead.
+Do the same series of steps above on a single-core Raspberry Pi, except
+that you give "nls" parameters to the `image` and `finish` steps.
 
 
 ----------------------
