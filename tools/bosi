@@ -41,7 +41,7 @@ os=jessie-lite
 img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
 greadlink=$(type -p greadlink || type -p readlink)
 this=$($greadlink -f $0)
-topdir="$(greadlink "$(dirname "$this")/..")"
+topdir="$($greadlink "$(dirname "$this")/..")"
 
 
 # Initial steps
