@@ -189,6 +189,13 @@ if {![opt-bool debug-mode]} {
 # Embed this software's Fossil-based version string into gpio-common.c
 define VERSION [exec "[get-define srcdir]/tools/version"]
 
+# Build Deeper Thought if we find it here
+if {[file exists "[get-define srcdir]/src/deeper.c"]} {
+    set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
+	msg-result "Found Deeper Thought; building it against $ls GPIO module"
+    define BUILD_DEEPER_THOUGHT 1
+}
+
 # Write outputs.
 #
 # NOTE: If you change the list of files here, change INFILES in

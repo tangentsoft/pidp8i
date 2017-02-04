@@ -83,6 +83,10 @@ OBJS = \
 	obj/sim_timer.o \
 	obj/sim_tmxr.o
 
+ifeq (@BUILD_DEEPER_THOUGHT@, 1)
+BINS += bin/deeper
+endif
+
 LIBS = -lm -ldl -lpthread
 
 EXAMPLES := $(wildcard @srcdir@/examples/*.pal)
@@ -297,6 +301,9 @@ $(SIM): $(OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS) -lncurses
+
+bin/deeper: obj/deeper.o obj/gpio-@LED_DRIVER_MODULE@ls.o obj/gpio-common.o
+	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^
