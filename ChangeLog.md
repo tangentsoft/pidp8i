@@ -43,6 +43,20 @@
 *   Several other tweaks to LED state handling to better match real
     hardware.
 
+*   Redesigned the `pidp8i-test` program to allow manual stepping
+    forwards and backwards in addition to the previous auto-advancing
+    behavior.
+    
+    As soon as you press one of the arrow keys, the test program moves
+    to the next or previous action in the sequence and stops
+    auto-advancing.  This mode is useful when testing the hardware with
+    a multimeter or similar, and you need a certain row or column to
+    stay lit up indefinitely.
+
+    You can also press <kbd>R</kbd> to resume auto-advancing behavior,
+    or either <kbd>Ctrl-C</kbd> or <kbd>X</kbd> to exit the program
+    gracefully.
+
 *   The SIMH PDP-8 simulator's internal SR register now matches the
     hardware switches when you say Ctrl-E then `ex sr`.  Prior versions
     only loaded the hardware switch register values into the internal
