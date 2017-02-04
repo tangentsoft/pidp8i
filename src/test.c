@@ -246,7 +246,7 @@ void init_ncurses (void)
 }
 
 
-int run_actions (void)
+void run_actions (void)
 {
     // Define action sequence
     struct action actions[] = {
