@@ -41,5 +41,5 @@ fossil update &&
 	fossil merge $tag &&
 	! fossil status | grep -q '^CONFLICT' &&
 	tools/mmake &&
-	( fossil diff -i -w | less ) &&
+	fossil diff --command 'colordiff -wu' &&
 	fossil ci -m "Merged trunk changes for $tag into release branch"
