@@ -108,10 +108,18 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 }
 msg-result "Simulator CPU throttle set to $tv IPS"
 
-# Compiler and header checks
+# Check for headers, functions, etc. whose absence we can work around
 cc-check-includes time.h
 cc-check-functions clock_nanosleep nanosleep usleep
 cc-check-functions sched_yield
+
+# Ensure we have the libncurses development files installed here, else
+# pidp8i-test won't build.
+if {![cc-check-includes curses.h]} {
+	user-error "Could not find curses.h.  Try installing libncurses-dev."
+} elseif {![cc-check-function-in-lib initscr ncurses]} {
+	user-error "Could not find initscr() in libncurses."
+}
 
 # We need to find an install(1) type program that supports -D.  The
 # Raspberry Pi OSes typically used with the PiDB-8/I board do have this,
