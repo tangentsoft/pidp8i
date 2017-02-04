@@ -296,7 +296,7 @@ $(SIM): $(OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ $^ $(LIBS)
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) -o $@ $^ $(LIBS) -lncurses
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^
