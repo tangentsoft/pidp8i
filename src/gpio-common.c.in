@@ -245,15 +245,16 @@ void swap_displays ()
             // its values into the paint-from display structure and
             // return.  We don't need to touch the update-to display or
             // swap anything, because set_pidp8i_leds won't be called.
+            static const int levels = 32;
             memcpy (pdis_paint->curr, ledstatus, 
                     sizeof (pdis_paint->curr));
-            pdis_paint->inst_count = 1;
+            pdis_paint->inst_count = levels;
 
             for (size_t row = 0; row < NLEDROWS; ++row) {
                 size_t *prow = pdis_paint->on[row];
                 for (size_t col = 0, mask = 1; col < NCOLS;
                         ++col, mask <<= 1) {
-                    prow[col] = !!(ledstatus[row] & mask);
+                    prow[col] = !!(ledstatus[row] & mask) * levels;
                 }
             }
         }
