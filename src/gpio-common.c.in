@@ -249,7 +249,7 @@ void swap_displays ()
                     sizeof (pdis_paint->curr));
             pdis_paint->inst_count = 1;
 
-            for (size_t row = 0; row < NCOLS; ++row) {
+            for (size_t row = 0; row < NLEDROWS; ++row) {
                 size_t *prow = pdis_paint->on[row];
                 for (size_t col = 0, mask = 1; col < NCOLS;
                         ++col, mask <<= 1) {
