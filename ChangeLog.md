@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2017.02.04? (INCOMPLETE)
+## Version 2017.02.04
 
 *   Largely rewrote the incandescent lamp simulator (ILS) feature.
     The core of Ian Schofield's original contribution is still hiding
