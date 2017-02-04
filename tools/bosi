@@ -220,7 +220,7 @@ function do_image() {
         shasum -a 256 $img >> $mf
         wc -c $img >> $mf
         imgdir="$(dirname "$img")"
-        sed -i -e "s_$imgdir/__" "$mf"      # nix local paths in manifest
+        sed -i '' -e "s_$imgdir/__" "$mf"   # nix local paths in manifest
         unix2dos $mf                        # might be opened on Windows
 		zip -9j $img.zip $img $mf $readme
         rm -f $mf $readme
