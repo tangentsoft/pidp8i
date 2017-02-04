@@ -90,10 +90,10 @@ function do_reset() {
 	history -c ; rm -f ~/.bash_history
 	test "$USER" = "root" || exec sudo $this reset
 
-	shred -u /etc/ssh/*key*
-	dphys-swapfile uninstall
+	shred -u /etc/ssh/*key* || true             # allow multiple resets
+	dphys-swapfile uninstall || true
 	dd if=/dev/zero of=/junk bs=1M || true		# it *will* error-out!
-	rm /junk
+	rm -f /junk
 	encpass=$(openssl passwd -1 edsonDeCastro1968)
 	if [ -e "$nh" ]
 	then
