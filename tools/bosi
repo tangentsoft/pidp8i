@@ -138,12 +138,7 @@ function do_shrink() {
         # And now give it a bit of breathing room
 		parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
         resize2fs /dev/sda2
-
-		cat <<NEXT
-Move the USB SD card reader to the desktop machine and resume the
-process with 'bosi image'.
-
-NEXT
+        poweroff
 	else
 		echo "Failed to extract new filesystem size from resize2fs!"
 		echo
