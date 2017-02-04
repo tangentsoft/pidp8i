@@ -41,7 +41,7 @@ os=jessie-lite
 img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
 greadlink=$(type -p greadlink || type -p readlink)
 this=$($greadlink -f $0)
-topdir="$($greadlink "$(dirname "$this")/..")"
+topdir="$($greadlink -f "$(dirname "$this")"/..)"
 
 
 # Initial steps
@@ -214,7 +214,7 @@ function do_image() {
         readme=/tmp/README.md
         cp "$topdir/doc/OS-images.md" $readme
 		set -x
-		sudo diskutil unmountDisk $dev		# it auto-mounted
+		diskutil unmountDisk $dev	    	# it auto-mounted
 		sudo dd if=$dev bs=4k count=$object of=$img
         echo -e 'SHA256 hash and size of included *.img file:\n' >> $mf
         shasum -a 256 $img >> $mf
@@ -225,7 +225,7 @@ function do_image() {
 
 		sudo dd if=/dev/zero of=$dev bs=1m  # ensure a clean test
 		sudo dd if=$img of=$dev bs=1m
-		sudo diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
+		diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
 	else
 		usage
 	fi
