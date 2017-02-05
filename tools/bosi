@@ -133,9 +133,9 @@ function do_prepare() {
 
     history -c ; rm -f ~/.bash_history
 
-    sudo shred -u /etc/ssh/*key* || true         # allow multiple passes
+    sudo shred -u /etc/ssh/*key* || true              # allow multiple passes
     sudo dphys-swapfile uninstall || true
-    sudo dd if=/dev/zero of=/junk bs=1M || true  # it *will* error-out!
+    sudo time dd if=/dev/zero of=/junk bs=1M || true  # it *will* error-out!
     sudo rm -f /junk
 
     encpass=$(openssl passwd -1 edsonDeCastro1968)
@@ -239,7 +239,7 @@ function do_image() {
     cp "$topdir/doc/OS-images.md" $readme
     set -x
     diskutil unmountDisk $dev           # it auto-mounted
-    sudo dd if=$dev bs=1m of=$img
+    sudo time dd if=$dev bs=1m of=$img
     sum=($(shasum README.md))
     bytes=($(wc -c $img))
 
@@ -253,13 +253,13 @@ MF
     imgdir="$(dirname "$img")"
     sed -i '' -e "s_$imgdir/__" "$mf"   # nix local paths in manifest
     unix2dos $mf                        # might be opened on Windows
-    zip -9j $img.zip $img $mf $readme
+    time zip -9j $img.zip $img $mf $readme
     rm -f $mf $readme
 
     # Now re-image the card, starting with a zeroed card to ensure a
     # clean test.  Ignore the end-of-device error from the zero step.
-    sudo dd if=/dev/zero of=$dev bs=1m || true
-    sudo dd if=$img of=$dev bs=1m
+    sudo time dd if=/dev/zero of=$dev bs=1m || true
+    sudo time dd if=$img of=$dev bs=1m
     diskutil unmountDisk $dev || true   # Paragon ExtFS might be installed
 }
 
