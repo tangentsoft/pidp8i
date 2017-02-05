@@ -83,7 +83,6 @@ function do_init() {
         # First pass on a clean SD card: rename 'pi' user to 'pidp8i'
         # and move its home directory.  Must shut simulator down first
         # else user "pi" will still be in use.
-        systemctl stop pidp8i
         usermod -d $nh -l $nu -p $encpass -m pi 
     fi
 }
