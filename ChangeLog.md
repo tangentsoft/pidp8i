@@ -69,8 +69,8 @@
     only loaded the hardware switch register values into the internal
     register when it executed an `OSR` instruction.
 
-*   Copied the KiCad design files into the source tree, now that
-    they're formally released by Oscar Vermeulen under a Creative
+*   Copied the KiCad design files into the source tree since they are
+    now formally released by Oscar Vermeulen under a Creative
     Commons license.  Also included the PDF version of the schematic
     produced by Tony Hill.  (This is all in the `hardware/` directory.)
 
