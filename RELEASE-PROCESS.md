@@ -44,8 +44,8 @@ Raspberry Pi.
 2.  After logging in, retreive and initialize the BOSI process:
 
         $ wget https://tangentsoft.com/bosi
-		$ chmod +x bosi
-		$ ./bosi init
+        $ chmod +x bosi
+        $ ./bosi init
  
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
@@ -66,7 +66,7 @@ Raspberry Pi.
     from its prior SD card, and shrink the OS image:
 
         $ wget https://tangentsoft.com/bosi
-		$ chmod +x bosi
+        $ chmod +x bosi
         $ ./bosi shrink
 
 6.  Move the USB reader to the Mac,¹ then say:
@@ -77,15 +77,12 @@ Raspberry Pi.
     blank.
 
 7.  The prior step rewrote the SD card with the image file it created.
-    Boot it up and make sure it still works.  If you're happy with it:
+    Boot it up and make sure it still works.  If you're happy with it,
+    give this command *on the desktop PC*.
 
         $ bosi finish [nls]
 
     As above, the parameter can be "ils" or left off for the ILS images.
-
-8.  While the OS image uploads, compose the announcement message, and
-    modify the front page to point to the new images.  Post the
-    announcement message and new front page once the uploads complete.
 
 [os]: https://www.raspberrypi.org/downloads/raspbian/
 
@@ -94,6 +91,16 @@ Raspberry Pi.
 
 Do the same series of steps above on a single-core Raspberry Pi, except
 that you give "nls" parameters to the `image` and `finish` steps.
+
+
+## Publicizing
+
+While the NLS image uploads — the ILS image was already sent in step 7
+in the first pass through the list above — compose the announcement
+message, and modify the front page to point to the new images.  You
+might also need to update the approximate image sizes reported on that
+page.  Post the announcement message and new front page once that second
+upload completes.
 
 
 ----------------------
