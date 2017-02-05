@@ -82,9 +82,11 @@ function do_init() {
     then
         # First pass on a clean SD card: rename 'pi' user and group to
         # 'pidp8i' and rename its home directory to match.
-        usermod -d $nh -l $nu -p $encpass -m pi 
+        usermod  -l $nu -d $nh -m pi 
         groupmod -n $nu pi
     fi
+
+    reboot
 }
 
 
