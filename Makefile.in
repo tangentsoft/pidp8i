@@ -120,6 +120,7 @@ INFILES = \
 	@srcdir@/src/scp.c.in \
 	@srcdir@/tools/simh-update.in
 PRECIOUS_INFILES = \
+	@srcdir@/Makefile.in \
 	@srcdir@/examples/Makefile.in \
 	@srcdir@/src/Makefile.in \
 	@srcdir@/src/PDP8/Makefile.in
@@ -148,7 +149,6 @@ clean:
 distclean: clean
 	@rm -f $(PRECIOUS_OUTFILES) \
 		config.log \
-		Makefile \
 		autosetup/jimsh0 \
 		src/config.h
 
