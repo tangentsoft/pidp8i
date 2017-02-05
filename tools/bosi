@@ -247,7 +247,7 @@ function do_image() {
 
     diskutil unmountDisk $dev           # it auto-mounted
     sudo time dd if=$dev bs=1m of=$img
-    sum=($(shasum README.md))
+    sum=($(shasum "$img"))
     bytes=($(wc -c $img))
 
     cat > $mf <<MF
