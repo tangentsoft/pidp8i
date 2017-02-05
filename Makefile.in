@@ -42,7 +42,7 @@ CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
 	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
 	-D_GNU_SOURCE -U__STRICT_ANSI__ \
-	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
+	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
 
 SIM = bin/pidp8i-sim
 BINS = bin/palbart $(SIM) bin/pidp8i-test libexec/scanswitch
@@ -134,23 +134,23 @@ CLTXT = /boot/cmdline.txt
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
 all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
-	@chmod 755 @builddir@/bin/pidp8i
+	@chmod 755 bin/pidp8i
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) $(OUTFILES) \
-		@builddir@/tags \
-		@builddir@/obj/*.d \
-		@builddir@/obj/*.o \
-		@builddir@/obj/PDP8/*.d \
+		tags \
+		obj/*.d \
+		obj/*.o \
+		obj/PDP8/*.d \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
 	@rm -f $(PRECIOUS_OUTFILES) \
-		@builddir@/config.log \
-		@builddir@/Makefile \
-		@builddir@/autosetup/jimsh0 \
-		@builddir@/src/config.h
+		config.log \
+		Makefile \
+		autosetup/jimsh0 \
+		src/config.h
 
 ctags tags:
 	@ctags -R @srcdir@
@@ -220,7 +220,7 @@ install: all
 	) || true
 
 	@# Install palbart stuff
-	@INSTALL@ -m 755 @builddir@/bin/palbart @prefix@/bin
+	@INSTALL@ -m 755 bin/palbart @prefix@/bin
 	@INSTALL@ -m 644 @srcdir@/palbart/palbart.1 @prefix@/share/man/man1
 
 mediainstall:
@@ -232,7 +232,7 @@ mediainstall:
 		-name \*.rk05 -o \
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
-	@INSTALL@ -m 664 -g @INSTGRP@ @builddir@/boot/*.script @BOOTDIR@
+	@INSTALL@ -m 664 -g @INSTGRP@ boot/*.script @BOOTDIR@
 
 reconfig:
 	@AUTOREMAKE@
@@ -241,10 +241,10 @@ release: all
 	@srcdir@/tools/mkrel
 
 run:
-	sudo @builddir@/$(SIM) @srcdir@/boot/0.script
+	sudo $(SIM) @srcdir@/boot/0.script
 
 simh-update simh-update-f:
-	@@builddir@/tools/simh-update $(subst simh-update,,$@)
+	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
@@ -262,9 +262,9 @@ obj/%.o: @srcdir@/src/%.c
 
 # Near-duplicate of above rule for those *.c files generated from *.c.in
 # files in the srcdir.  Needed when building out-of-tree.
-obj/%.o: @builddir@/src/%.c
-	$(CC)  -c $(CFLAGS) @builddir@/src/$*.c -o obj/$*.o
-	$(CC) -MM $(CFLAGS) @builddir@/src/$*.c > obj/$*.d
+obj/%.o: src/%.c
+	$(CC)  -c $(CFLAGS) src/$*.c -o obj/$*.o
+	$(CC) -MM $(CFLAGS) src/$*.c > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
 	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
@@ -273,9 +273,9 @@ obj/%.o: @builddir@/src/%.c
 
 # Rule for building example PAL assembly language programs.
 obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
-	@builddir@/bin/palbart -lr $< || cat @srcdir@/examples/$*.err
-	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
-	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
+	bin/palbart -lr $< || cat @srcdir@/examples/$*.err
+	mv @srcdir@/examples/$*.lst obj/$*.lst
+	mv @srcdir@/examples/$*.rim bin/$*.pt
 
 # Rule for translating PAL assembly language program listings to SIMH
 # boot scripts.

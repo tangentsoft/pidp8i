@@ -57,7 +57,9 @@ if {[opt-bool debug-mode]} {
 # Swap the incandescent lamp simulator feature out for the original LED
 # driving method on single-core hosts.  The user can force this on
 # multi-core hosts via --no-lamp-simulator.
-set cores [exec tools/corecount]
+set builddir [get-define builddir]
+set srcdir [get-define srcdir]
+set cores [exec $srcdir/tools/corecount]
 if {($cores < 2) || [opt-bool no-lamp-simulator]} {
 	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
 	define LED_DRIVER_MODULE n
@@ -195,7 +197,7 @@ if {![opt-bool debug-mode]} {
 }
 
 # Embed this software's Fossil-based version string into gpio-common.c
-define VERSION [exec "[get-define srcdir]/tools/version"]
+define VERSION [exec "$srcdir/tools/version"]
 
 # Build Deeper Thought if we find it here
 if {[file exists "[get-define srcdir]/src/deeper.c"]} {
@@ -228,4 +230,4 @@ make-template src/PDP8/Makefile.in
 make-template src/PDP8/pidp8i.c.in
 make-template src/scp.c.in
 make-template tools/simh-update.in
-exec chmod +x "[get-define builddir]/tools/simh-update"
+exec chmod +x "$builddir/tools/simh-update"
