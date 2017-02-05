@@ -30,7 +30,7 @@
 
 # Display the usage message
 function usage() {
-	cat <<USAGE
+    cat <<USAGE
 usage: $0 <verb> [tag]
 
     The available verbs are init, build, prepare, shrink, image, and finish.
@@ -42,7 +42,7 @@ usage: $0 <verb> [tag]
     See RELEASE-PROCESS.md for more info.
 
 USAGE
-	exit 1
+    exit 1
 }
 
 verb="$1"
@@ -65,81 +65,81 @@ topdir="$($greadlink -f "$(dirname "$this")"/..)"
 
 # Initial steps
 function do_init() {
-	if [ "$USER" != "root" ]
-	then
-		echo "The init step has to be run as root.  The explanation is"
-		echo "given in the section for 'init' in RELEASE-PROCESS.md."
-		echo
-		exit 1
-	fi
+    if [ "$USER" != "root" ]
+    then
+        echo "The init step has to be run as root.  The explanation is"
+        echo "given in the section for 'init' in RELEASE-PROCESS.md."
+        echo
+        exit 1
+    fi
 
-	apt-get update && apt-get -y upgrade || true
+    apt-get update && apt-get -y upgrade || true
 
-	test -n "$(type -p fossil)" || apt-get -y install fossil
-	test -f /usr/include/curses.h || apt-get -y install libncurses-dev
+    test -n "$(type -p fossil)" || apt-get -y install fossil
+    test -f /usr/include/curses.h || apt-get -y install libncurses-dev
 
-	if [ ! -e "$nh" ]
-	then
-		# First pass on a clean SD card: rename 'pi' user to 'pidp8i'
-		# and move its home directory.  Must shut simulator down first
+    if [ ! -e "$nh" ]
+    then
+        # First pass on a clean SD card: rename 'pi' user to 'pidp8i'
+        # and move its home directory.  Must shut simulator down first
         # else user "pi" will still be in use.
         systemctl stop pidp8i
-		usermod -d $nh -l $nu -p $encpass -m pi 
-	fi
+        usermod -d $nh -l $nu -p $encpass -m pi 
+    fi
 }
 
 
 # Clone repo and build the software under [new] pidp8i account
 function do_build() {
-	if [ "$USER" != "$nu" ]
-	then
-		echo "The build step has to be run as $nu."
-		echo
-		exit 1
-	fi
+    if [ "$USER" != "$nu" ]
+    then
+        echo "The build step has to be run as $nu."
+        echo
+        exit 1
+    fi
 
-	if [ ! -d museum ]
-	then
-		mkdir -p museum $repo
-		fossil clone https://tangentsoft.com/$repo museum/$repo.fossil
-	fi
+    if [ ! -d museum ]
+    then
+        mkdir -p museum $repo
+        fossil clone https://tangentsoft.com/$repo museum/$repo.fossil
+    fi
 
-	cd $repo
+    cd $repo
 
-	if [ -r ChangeLog.md ]
-	then
-		fossil revert			# just in case
-		fossil update release
-	else
-		fossil open ~/museum/$repo.fossil release
-		./configure
-	fi
+    if [ -r ChangeLog.md ]
+    then
+        fossil revert           # just in case
+        fossil update release
+    else
+        fossil open ~/museum/$repo.fossil release
+        ./configure
+    fi
 
-	tools/mmake
-	sudo make install || true       # don't care about return code
-	sudo reboot
+    tools/mmake
+    sudo make install || true       # don't care about return code
+    sudo reboot
 }
 
 
 # This script prepares the OS's configuration to a clean first boot state.
 function do_prepare() {
-	if [ "$USER" != "$nu" ]
-	then
-		echo "The prepare step has to be run as $nu."
-		echo
-		exit 1
-	fi
+    if [ "$USER" != "$nu" ]
+    then
+        echo "The prepare step has to be run as $nu."
+        echo
+        exit 1
+    fi
 
-	history -c ; rm -f ~/.bash_history
+    history -c ; rm -f ~/.bash_history
 
-	sudo shred -u /etc/ssh/*key* || true         # allow multiple passes
-	sudo dphys-swapfile uninstall || true
-	sudo dd if=/dev/zero of=/junk bs=1M || true  # it *will* error-out!
-	sudo rm -f /junk
-	encpass=$(openssl passwd -1 edsonDeCastro1968)
+    sudo shred -u /etc/ssh/*key* || true         # allow multiple passes
+    sudo dphys-swapfile uninstall || true
+    sudo dd if=/dev/zero of=/junk bs=1M || true  # it *will* error-out!
+    sudo rm -f /junk
+    encpass=$(openssl passwd -1 edsonDeCastro1968)
     sudo usermod -p $encpass pidp8i
-	sudo passwd -e pidp8i
-	sudo poweroff
+    sudo passwd -e pidp8i
+    sudo poweroff
 }
 
 
@@ -155,34 +155,34 @@ function do_prepare() {
 # who neglects to expand the card image into the free space available on
 # their SD card after first boot.
 function do_shrink() {
-	test "$USER" = "root" || exec sudo $this shrink
+    test "$USER" = "root" || exec sudo $this shrink
 
-	umount /dev/sda2 || true	# might auto-mount, might not
-	e2fsck -f /dev/sda2			# resize2fs demands it
+    umount /dev/sda2 || true    # might auto-mount, might not
+    e2fsck -f /dev/sda2         # resize2fs demands it
 
     # Pack it down tight
-	blocks=$(
-		resize2fs -M /dev/sda2 2>&1 |
-		grep 'blocks long' | 
-		grep -wo '[0-9]\+'
-	)
-	if [ "$blocks" -gt 0 ]
-	then
+    blocks=$(
+        resize2fs -M /dev/sda2 2>&1 |
+        grep 'blocks long' | 
+        grep -wo '[0-9]\+'
+    )
+    if [ "$blocks" -gt 0 ]
+    then
         # And now give it a bit of breathing room
-		parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
+        parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
         resize2fs /dev/sda2
         poweroff
-	else
-		echo "Failed to extract new filesystem size from resize2fs!"
-		echo
-		exit 1
-	fi
+    else
+        echo "Failed to extract new filesystem size from resize2fs!"
+        echo
+        exit 1
+    fi
 }
 
 
 # This script images the OS SD card in a USB reader on a Mac OS X box.
 function do_image() {
-	set +x
+    set +x
     while read line
     do
         case $line in
@@ -193,21 +193,21 @@ function do_image() {
             0:*)
                 case $line in
                     *FDisk_partition_scheme*) ;;
-                    *) dev= ;;		# can't be the OS SD card
+                    *) dev= ;;      # can't be the OS SD card
                 esac
                 ;;
 
             1:*)
                 case $line in
                     *Windows_FAT_32\ boot*) ;;
-                    *) dev= ;;		# can't be the OS SD card
+                    *) dev= ;;      # can't be the OS SD card
                 esac
                 ;;
 
             2:*)
                 case $line in
-                    *Linux\ Untitled*) break ;;	# found it!
-                    *) dev= ;;		# can't be the OS SD card
+                    *Linux\ Untitled*) break ;; # found it!
+                    *) dev= ;;      # can't be the OS SD card
                 esac
                 ;;
         esac
@@ -235,7 +235,7 @@ function do_image() {
     readme=/tmp/README.md
     cp "$topdir/doc/OS-images.md" $readme
     set -x
-    diskutil unmountDisk $dev	    	# it auto-mounted
+    diskutil unmountDisk $dev           # it auto-mounted
     sudo dd if=$dev bs=1m of=$img
     sum=($(shasum README.md))
     bytes=($(wc -c $img))
@@ -257,26 +257,26 @@ MF
     # clean test.  Ignore the end-of-device error from the zero step.
     sudo dd if=/dev/zero of=$dev bs=1m || true
     sudo dd if=$img of=$dev bs=1m
-    diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
+    diskutil unmountDisk $dev || true   # Paragon ExtFS might be installed
 }
 
 
 # Clean up after the above
 function do_finish() {
-	rmtrash $img
-	cd $dldir/..
-	make synch
+    rmtrash $img
+    cd $dldir/..
+    make synch
 }
 
 
 # Main routine
 set -e
 case "$verb" in
-	in*) do_init ;;
-	bu*) do_build ;;
-	pr*) do_prepare ;;
-	sh*) do_shrink ;;
-	im*) do_image ;;
-	fi*) do_finish ;;
-	*)   usage ;;
+    in*) do_init ;;
+    bu*) do_build ;;
+    pr*) do_prepare ;;
+    sh*) do_shrink ;;
+    im*) do_image ;;
+    fi*) do_finish ;;
+    *)   usage ;;
 esac
