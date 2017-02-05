@@ -457,6 +457,10 @@ static const char* pi_type()
                 return "picm1";
             }
         }
+        else if (kind[0] == 'Z') {
+            // It's a Pi Zero
+            return "pi0";
+        }
         else if ((series = atoi(kind)) > 1) {
             // Pi 2 and newer have a number after the "Pi"
             char* pm = strstr(kind, " Model ");
