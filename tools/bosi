@@ -241,7 +241,9 @@ MF
     zip -9j $img.zip $img $mf $readme
     rm -f $mf $readme
 
-    sudo dd if=/dev/zero of=$dev bs=1m  # ensure a clean test
+    # Now re-image the card, starting with a zeroed card to ensure a
+    # clean test.  Ignore the end-of-device error from the zero step.
+    sudo dd if=/dev/zero of=$dev bs=1m || true
     sudo dd if=$img of=$dev bs=1m
     diskutil unmountDisk $dev || true	# Paragon ExtFS might be installed
 }
