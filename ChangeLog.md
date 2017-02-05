@@ -36,7 +36,7 @@
     instruction inside the simulator vs executing it.
     
     (In real hardware, the complexities were different: fetch involved a
-    core memory retreival, very much non-instantaneous, whereas the
+    core memory retrieval, very much non-instantaneous, whereas the
     execution of the fetched instruction kind of happened all at once in
     complicated electron flows, rather than the sequential C code of the
     SIMH PDP-8 simulator.  Thus, it was reasonable for DEC to talk about
