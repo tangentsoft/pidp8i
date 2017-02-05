@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 # bosi - The Binary OS Image creation/update script
 #
 # Copyright © 2016-2017 by Warren Young
@@ -27,9 +27,30 @@
 # other dealings in this Software without prior written authorization from
 # those authors.
 
+
+# Display the usage message
+function usage() {
+	cat <<USAGE
+usage: $0 <verb> [tag]
+
+    The available verbs are init, reset, shrink, image, and finish.
+
+    You may include a tag parameter with the 'image' and 'finish' verbs
+    to override the default tag ('ils') used in image and zip file
+    outputs.
+
+    See RELEASE-PROCESS.md for more info.
+
+USAGE
+	exit 1
+}
+
 verb="$1"
 tag="$2"
+test -n "$verb" || usage
 test -z "$tag" && tag=ils
+
+set -x
 
 nu=pidp8i
 nh=/home/$nu
@@ -231,24 +252,6 @@ function do_finish() {
 	rmtrash $img
 	cd $dldir/..
 	make synch
-}
-
-
-# Display the usage message
-function usage() {
-	cat <<USAGE
-usage: $0 <verb> [tag]
-
-    The available verbs are init, reset, shrink, image, and finish.
-
-    You may include a tag parameter with the 'image' and 'finish' verbs
-    to override the default tag ('ils') used in image and zip file
-    outputs.
-
-    See RELEASE-PROCESS.md for more info.
-
-USAGE
-	exit 1
 }
 
 
