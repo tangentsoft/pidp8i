@@ -137,9 +137,11 @@ function do_prepare() {
     sudo dphys-swapfile uninstall || true
     sudo dd if=/dev/zero of=/junk bs=1M || true  # it *will* error-out!
     sudo rm -f /junk
+
     encpass=$(openssl passwd -1 edsonDeCastro1968)
     sudo usermod -p $encpass pidp8i
     sudo passwd -e pidp8i
+
     sudo poweroff
 }
 
