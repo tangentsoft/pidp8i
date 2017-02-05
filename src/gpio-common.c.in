@@ -417,32 +417,63 @@ void read_switches (ns_time_t delay)
 //// UNGROUPED FUNCTIONS ///////////////////////////////////////////////
 
 //// pi_type ///////////////////////////////////////////////////////////
-// Write a configuration string tag.
+// Return a short string succinctly describing the type of Raspberry Pi
+// we're running on, or "cake" if it's not a pi.
 
-static const char* pi_type(int p)
+static const char* pi_type()
 {
-    if (p == 0x20200000) {
-        return "pi1+";
-    }
-    else {
-        FILE* fp = fopen("/proc/device-tree/model", "r");
-        if (fp) {
-            static char ac[60];
-            if (fgets(ac, sizeof(ac), fp) && (strlen(ac) > 20)) {
-                if (strstr(ac, "Raspberry Pi ") == ac) {
-                    int series = atoi(ac + 13);
-                    char model = 'x';
-                    char* pm = strstr(ac, " Model ");
-                    if (pm) model = tolower(pm[7]);
-                    snprintf(ac, sizeof(ac), "pi%d%c", series, model);
-                    return ac;
-                }
+    static char ac[60] = { '\0' };
+    static const char* prefix = "Raspberry Pi ";
+
+    FILE* fp = fopen("/proc/device-tree/model", "r");
+    if (fp &&
+            fgets(ac, sizeof(ac), fp) &&
+            (strlen(ac) > 20) &&
+            (strstr(ac, prefix) == ac)) {
+        const char* kind = ac + strlen(prefix);
+        int series = 1;
+        if (kind[0] == 'M') {
+            // It's one of the "plus" models.
+            const char* pm = kind + strlen("Model ");
+            char model = *pm;
+            model = (isalpha(model) && isupper(model)) ?
+                    tolower(model) : 'x';
+            snprintf(ac, sizeof(ac), "pi%d%c", series, model);
+        }
+        else if (kind[0] == 'C') {
+            // It's one of the compute modules.  We don't actually
+            // support these, but we need to report them in case
+            // someone tries it.
+            const char* ps = kind + strlen("Compute Module");
+            char series = *ps;
+            if (series) {
+                // It's should be one of the later Compute Module series.
+                series = isdigit(ps[1]) ? ps[1] : 'x';
+                snprintf(ac, sizeof(ac), "picm%c", series);
             }
-            return "pi2+";
+            else {
+                // We're at the end of the string, so it's the original
+                // Compute Module.
+                return "picm1";
+            }
+        }
+        else if ((series = atoi(kind)) > 1) {
+            // Pi 2 and newer have a number after the "Pi"
+            char* pm = strstr(kind, " Model ");
+            snprintf(ac, sizeof(ac), "pi%d%c", series,
+                    pm ? tolower(pm[7]) : 'x');
+        }
+        else {
+            // Not a model string we can parse, but it's some kind of
+            // RPi.  Two 'x's stand for unknown series and model.
+            return "pixx";
         }
     }
+    else {
+        return "cake";      // not pi
+    }
 
-    return 0;       // not a Pi
+    return ac;
 }
 
 
@@ -517,15 +548,15 @@ void *gpio_thread (void *terminate)
     int mapped = map_peripheral(&gpio) == 0;
 
     // Tell the user about our configuration, succinctly
-    const char* pt = pi_type(mapped ? gpio.addr_p : 0);
+    const char* pt = pi_type();
     printf(
-        "PiDP-8/I @VERSION@ [%s] [@LED_DRIVER_MODULE@ls] [%spcb]%s"
+        "PiDP-8/I trunk:id[23aeef1c] [%s] [nls] [%spcb]%s"
 #ifdef DEBUG
         " [debug]"
 #endif
         "%s",
-        pt ? pt : "cake",       // pt == 0 == not a Pi
-        pt ? 
+        pt,
+        pt[0] == 'p' ? 
 #ifdef PCB_SERIAL_MOD
             "ser" : 
 #else
