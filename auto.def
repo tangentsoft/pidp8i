@@ -85,7 +85,7 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
         # isn't fast enough and give up on throttling.
         set dtm "/proc/device-tree/model"
         if {[exec grep -q 'Raspberry Pi Zero' $dtm > /dev/null 2>&1]} {
-            set tv "1m"
+            set tv "1250k"
         } else {
             set tv "850k"
         }
