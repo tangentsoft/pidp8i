@@ -54,21 +54,10 @@ if {[opt-bool debug-mode]} {
 	define BUILDMODE {-O2}
 }
 
-# Swap the incandescent lamp simulator feature out for the original LED
-# driving method on single-core hosts.  The user can force this on
-# multi-core hosts via --no-lamp-simulator.
+# High-level definitions
 set builddir [get-define builddir]
 set srcdir [get-define srcdir]
 set cores [exec $srcdir/tools/corecount]
-if {($cores < 2) || [opt-bool no-lamp-simulator]} {
-	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
-	define LED_DRIVER_MODULE n
-	define ILS_MODE 0
-} else {
-	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
-	define LED_DRIVER_MODULE i
-	define ILS_MODE 1
-}
 
 # Translate --throttle value to a SIMH command
 set tv [opt-val throttle]
@@ -107,14 +96,29 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 		set tv "63k"
 	} elseif {$tv == "human"} {
 		set tv "10/1000"
+        set cores 1     ;# can't use ILS below 1 kIPS
 	} elseif {$tv == "trace"} {
 		set tv "1/1000"
+        set cores 1     ;# can't use ILS below 1 kIPS
 	}
 	# else, assume --throttle was given a legal SIMH throttle value
 
 	define SET_THROTTLE "set throttle $tv"
 }
 msg-result "Simulator CPU throttle set to $tv IPS"
+
+# Swap the incandescent lamp simulator feature out for the original LED
+# driving method on single-core hosts.  The user can force this on
+# multi-core hosts via --no-lamp-simulator.
+if {($cores < 2) || [opt-bool no-lamp-simulator]} {
+	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
+	define LED_DRIVER_MODULE n
+	define ILS_MODE 0
+} else {
+	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
+	define LED_DRIVER_MODULE i
+	define ILS_MODE 1
+}
 
 # Check for headers, functions, etc. whose absence we can work around
 cc-check-includes time.h
