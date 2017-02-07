@@ -23,36 +23,6 @@
    used in advertising or otherwise to promote the sale, use or other dealings
    in this Software without prior written authorization from Robert M Supnik.
 
-   ----------------------------------------------------------------------------
-
-   Portions copyright (c) 2015-2017, Oscar Vermeulen, Ian Schofield, and
-   Warren Young
-
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-   THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-
-   Except as contained in this notice, the names of the authors above shall
-   not be used in advertising or otherwise to promote the sale, use or other
-   dealings in this Software without prior written authorization from those
-   authors.
-
-   ----------------------------------------------------------------------------
-
    cpu          central processor
 
    28-Jan-17    RMS     Renamed switch register variable to SR, per request
@@ -220,10 +190,7 @@
         pdp8_sys.c      add sim_devices table entry
 */
 
-/* ---PiDP change------------------------------------------------------------------------------------------- */
-#include "gpio-common.h"
-#include "pidp8i.h"
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
+#include "pdp8_defs.h"
 
 #define PCQ_SIZE        64                              /* must be 2**n */
 #define PCQ_MASK        (PCQ_SIZE - 1)
@@ -248,10 +215,17 @@ typedef struct {
     } InstHistory;
 
 uint16 M[MAXMEMSIZE] = { 0 };                           /* main memory */
-int32 saved_LAC = 0;                                    /* saved L'AC */
-int32 saved_MQ = 0;                                     /* saved MQ */
 int32 saved_PC = 0;                                     /* saved IF'PC */
-int32 saved_DF = 0;                                     /* saved Data Field */
+
+int32 IR;                                               /* instruction register */
+int32 MB;                                               /* memory buffer */
+int32 IF;                                               /* instruction field */
+int32 DF;                                               /* data field */
+int32 LAC;                                              /* accumulator */
+int32 MQ;                                               /* multiplier-quotient */
+uint32 PC;                                              /* program counter */
+uint32 MA;                                              /* memory address */
+
 int32 IB = 0;                                           /* Instruction Buffer */
 int32 SF = 0;                                           /* Save Field */
 int32 emode = 0;                                        /* EAE mode */
@@ -296,14 +270,21 @@ t_bool build_dev_tab (void);
 UNIT cpu_unit = { UDATA (NULL, UNIT_FIX + UNIT_BINK, MAXMEMSIZE) };
 
 REG cpu_reg[] = {
-    { ORDATAD (PC, saved_PC, 15, "program counter") },
-    { ORDATAD (AC, saved_LAC, 12, "accumulator") },
-    { FLDATAD (L, saved_LAC, 12, "link") },
-    { ORDATAD (MQ, saved_MQ, 12, "multiplier-quotient") },
-    { ORDATAD (SR, SR, 12, "front panel switches") },
-    { GRDATAD (IF, saved_PC, 8, 3, 12, "instruction field") },
-    { GRDATAD (DF, saved_DF, 8, 3, 12, "data field") },
-    { GRDATAD (IB, IB, 8, 3, 12, "instruction field buffter") },
+    { ORDATAD (PC, saved_PC, 15,        "program counter") },
+    { ORDATAD (AC, LAC, 12,             "accumulator") },
+    { FLDATAD (L,  LAC, 12,             "link") },
+    { ORDATAD (MQ, MQ,  12,             "multiplier-quotient") },
+    { ORDATAD (SR, SR, 12,              "front panel switches") },
+    { GRDATAD (IF, saved_PC, 8, 3, 12,  "instruction field") },
+    { GRDATAD (DF, DF,  8, 3, 12,       "data field") },
+    { ORDATAD (IR, IR, 12,              "instruction register") },
+    { ORDATAD (MA, MA, 15,              "memory address") },
+    { ORDATAD (MB, MB, 12,              "memory buffer") },
+
+    { GRDATAD (FP_IF, IF, 8, 3, 12,     "instruction field") },
+    { ORDATAD (FP_PC, PC, 12,           "program counter") },
+
+    { GRDATAD (IB, IB, 8, 3, 12, "instruction field buffer") },
     { ORDATAD (SF, SF, 7, "save field") },
     { FLDATAD (UB, UB, 0, "user mode buffer") },
     { FLDATAD (UF, UF, 0, "user mode flag") },
@@ -353,10 +334,8 @@ DEVICE cpu_dev = {
 
 t_stat sim_instr (void)
 {
-int32 IR, MB, IF, DF, LAC, MQ;
-uint32 PC, MA;
 int32 device, pulse, temp, iot_data;
-t_stat reason;
+t_stat reason = 0;
 
 /* Restore register state */
 
@@ -364,107 +343,26 @@ if (build_dev_tab ())                                   /* build dev_tab */
     return SCPE_STOP;
 PC = saved_PC & 007777;                                 /* load local copies */
 IF = saved_PC & 070000;
-DF = saved_DF & 070000;
-LAC = saved_LAC & 017777;
-MQ = saved_MQ & 07777;
 int_req = INT_UPDATE;
-reason = 0;
-
-
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-// PiDP-8/I specific flag, set when the last instruction was an IOT
-// instruction to a real device.  SIMH doesn't track this, but the front
-// panel needs it.
-int Pause = 0;
-
-// Set our initial IPS value from the throttle, if given.
-static time_t last_update = 0;
-static size_t max_skips = 0;
-static const size_t pidp8i_updates_per_sec = 3200;
-max_skips = get_pidp8i_initial_max_skips (pidp8i_updates_per_sec);
-srand48 (time (&last_update));
-
-// Reset display info in case we're re-entering the simulator from Ctrl-E
-extern display display_bufs[2];
-memset (display_bufs, 0, sizeof(display_bufs));
-static size_t skip_count, dither, inst_count;
-skip_count = dither = inst_count = 0;
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
-
 
 /* Main instruction fetch/decode loop */
 
 while (reason == 0) {                                   /* loop until halted */
 
-    // Allow clean exit to SCP: https://github.com/simh/simh/issues/387
     if (cpu_astop != 0) {
         cpu_astop = 0;
         reason = SCPE_STOP;
         break;
         }
 
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-    awfulHackFlag = 0; // no do script pending. Did I mention awful?
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
-
     if (sim_interval <= 0) {                            /* check clock queue */
-        if ((reason = sim_process_event ())) {
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-            // We're about to leave the loop, so repaint one last time
-            // in case this is a Ctrl-E and we later get a "cont"
-            // command.  Set a flag that will let us auto-resume.
-            extern int resumeFromInstructionLoopExit, swStop, swSingInst;
-            resumeFromInstructionLoopExit = swStop = swSingInst = 1;
-            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-                    int_req, Pause);
-
-            // Also copy SR hardware value to software register in case
-            // the user tries poking at it from the sim> prompt.
-            SR = get_switch_register();
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
+        saved_PC = IF | (PC & 07777);                   /* combine to 15 bit address */
+        if ((reason = sim_process_event ()))
             break;
-            }
+        PC = saved_PC & 007777;                         /* decomponse address pieces */
+        IF = saved_PC & 070000;
+        int_req = INT_UPDATE;
         }
-
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-
-    switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
-            &DF, &int_req)) {
-        case pft_stop:
-            // Tell the SIMH event queue to keep running even though
-            // we're stopped.  Without this, it will ignore Ctrl-E
-            // until the simulator is back in free-running mode.
-            sim_interval = sim_interval - 1;
-
-            // Have to keep display updated while stopped.  This does
-            // mean if the software starts with the STOP switch held
-            // down, we'll put garbage onto the display for MA, MB, and
-            // IR, but that's what the real hardware does, too.  See
-            // https://github.com/simh/simh/issues/386
-            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
-                    int_req, Pause);
-
-            // Go no further in STOP mode.  In particular, fetch no more
-            // instructions, and do not touch PC!
-            continue;
-
-        case pft_halt:
-            // Clear all registers and halt simulator
-            PC  = saved_PC  = 0;
-            IF  = saved_PC  = 0;
-            DF  = saved_DF  = 0;
-            LAC = saved_LAC = 0;
-            MQ  = saved_MQ  = 0;
-            int_req = 0;
-            reason = STOP_HALT;
-            continue;
-
-        case pft_normal:
-            // execute normally
-            break;
-    }
-
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (int_req > INT_PENDING) {                        /* interrupt? */
         int_req = int_req & ~INT_ION;                   /* interrupts off */
@@ -1035,19 +933,10 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                 tsc_cdf = 0;                            /* clear flag */
                 }
             else {
-                if (IR & 04) {                          /* OSR */
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-                    SR = get_switch_register();         /* get current SR */
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
+                if (IR & 04)                            /* OSR */
                     LAC = LAC | SR;
-                    }
-                if (IR & 02) {                          /* HLT */
-//--- PiDP change-----------------------------------------------------------------------
-                    // reason = STOP_HALT;
-                    extern int swStop;
-                    swStop = 1;
-                    }
-//--- end of PiDP change----------------------------------------------------------------
+                if (IR & 02)                            /* HLT */
+                    reason = STOP_HALT;
                 }
             break;
             }                                           /* end if group 2 */
@@ -1318,11 +1207,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             break;
             }
         device = (IR >> 3) & 077;                       /* device = IR<3:8> */
-
-/* --------------------------------------------------------------------------------------------------------- */
-// the IOT ION, IOF do not light pause, anything else does:
-/* --------------------------------------------------------------------------------------------------------- */
-
         pulse = IR & 07;                                /* pulse = IR<9:11> */
         iot_data = LAC & 07777;                         /* AC unchanged */
         switch (device) {                               /* decode IR<3:8> */
@@ -1384,11 +1268,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
         case 020:case 021:case 022:case 023:
         case 024:case 025:case 026:case 027:            /* memory extension */
-
-/* --------------------------------------------------------------------------------------------------------- */
-// Memory extension does not trigger IOP pauses --> do not light pause
-/* --------------------------------------------------------------------------------------------------------- */
-
             switch (pulse) {                            /* decode IR<9:11> */
 
             case 1:                                     /* CDF */
@@ -1447,7 +1326,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                     break;
                     }                                   /* end switch device */
                 break;
-
+            
             default:
                 reason = stop_inst;
                 break;
@@ -1477,10 +1356,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
         default:                                        /* I/O device */
             if (dev_tab[device]) {                      /* dev present? */
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-                // Any other device will trigger IOP, so light pause
-                Pause = 1;
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
                 if (iot_data & IOT_SKP)
@@ -1493,80 +1368,11 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             }                                           /* end switch device */
         break;                                          /* end case IOT */
         }                                               /* end switch opcode */
-
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-    // Update the front panel with this instruction's final state.
-    //
-    // There's no point saving *every* LED "on" count.  We just need a
-    // suitable amount of oversampling.  We can skip this if we called
-    // set_pidp8i_leds recently enough, avoiding all the expensive bit
-    // shift and memory update work it does.
-    //
-    // The trick here is figuring out what "recently enough" means
-    // without making expensive OS timer calls.  These timers aren't
-    // hopelessly slow (http://stackoverflow.com/a/13096917/142454) but
-    // we still don't want to be taking dozens of cycles per instruction
-    // just to keep our update estimate current in the face of system
-    // load changes and SET THROTTLE updates.
-    //
-    // Instead, we maintain a model of the current IPS value — seeded
-    // with the initial "SET THROTTLE" value, if any — to figure out
-    // how many calls we can skip while still meeting our other goals.
-    // This involves a bit of math, but when paid only once a second,
-    // it amortizes much nicer than estimating the skip count directly
-    // based on a more accurate time source which is more expensive
-    // to call.  It's also cheaper than continually asking SIMH to
-    // estimate the SIMH IPS value, since it uses FP math.
-    //
-    // Each LED panel repaint takes about 10 ms, so we do about 100
-    // full-panel updates per second.  We need a bare minimum of 32
-    // discernible brightness values per update for ILS, so if we don't
-    // update the LED status data at least 3,200 times per second, we
-    // don't have enough data for smooth panel updates.  Fortunately,
-    // computers are pretty quick, and our slowest script runs at 30
-    // kIPS.  (5.script.)
-    //
-    // We deliberately add some timing jitter here to get stochastic
-    // sampling of the incoming instructions to avoid beat frequencies
-    // between our update rate and the instruction pattern being
-    // executed by the front panel.  It's a form of dithering.
-    //
-    // You might think to move this code to the top of set_pidp8i_leds,
-    // but the function call itself is a nontrivial hit.  In fact, you
-    // don't even want to move all of this to a function here in this
-    // module and try to get GCC to inline it: that's good for a 1 MIPS
-    // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
-
-    if (++skip_count >= (max_skips - dither)) {
-        // Save skips to inst counter and reset
-        inst_count += skip_count;
-        skip_count = 0;
-
-        // We need to update the LED data again
-        set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
-        Pause = 0;
-
-        // Has it been ~1s since we updated our max_skips value?
-        time_t now;
-        if (time(&now) > last_update) {
-            // Yep; simulator IPS may have changed, so freshen it.
-            last_update = now;
-            max_skips = inst_count / pidp8i_updates_per_sec;
-            //printf("Inst./repaint: %zu - %zu; %.2f MIPS\r\n",
-            //        max_skips, dither, inst_count / 1e6);
-            inst_count = 0;
-            }
-        dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
-        }
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 
 /* Simulation halted */
 
 saved_PC = IF | (PC & 07777);                           /* save copies */
-saved_DF = DF & 070000;
-saved_LAC = LAC & 017777;
-saved_MQ = MQ & 07777;
 pcq_r->qptr = pcq_p;                                    /* update pc q ptr */
 return reason;
 }                                                       /* end sim_instr */
@@ -1576,7 +1382,7 @@ return reason;
 t_stat cpu_reset (DEVICE *dptr)
 {
 int_req = (int_req & ~INT_ION) | INT_NO_CIF_PENDING;
-saved_DF = IB = saved_PC & 070000;
+DF = IB = saved_PC & 070000;
 UF = UB = gtf = emode = 0;
 pcq_r = find_reg ("PCQ", NULL, dptr);
 if (pcq_r)
@@ -1584,6 +1390,7 @@ if (pcq_r)
 else return SCPE_IERR;
 sim_brk_types = SWMASK ('E') | SWMASK('I');
 sim_brk_dflt = SWMASK ('E');
+sim_set_stable_registers_state ();
 return SCPE_OK;
 }
 
@@ -1592,7 +1399,7 @@ return SCPE_OK;
 void cpu_set_bootpc (int32 pc)
 {
 saved_PC = pc;                                          /* set PC, IF */
-saved_DF = IB = pc & 070000;                            /* set IB, DF */
+DF = IB = pc & 070000;                                  /* set IB, DF */
 return;
 }
 
