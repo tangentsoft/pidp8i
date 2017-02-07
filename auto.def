@@ -96,12 +96,17 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 		set tv "63k"
 	} elseif {$tv == "human"} {
 		set tv "10/1000"
-        set cores 1     ;# can't use ILS below 1 kIPS
 	} elseif {$tv == "trace"} {
 		set tv "1/1000"
-        set cores 1     ;# can't use ILS below 1 kIPS
 	}
 	# else, assume --throttle was given a legal SIMH throttle value
+    
+    if {[string first "/" $tv] > -1} {
+        # Assume the ratio given will push us below 1 kIPS, where ILS
+        # fails badly because of the simulator's sleeping behavior, so
+        # disable the ILS feature if we were going to build it.
+        set cores 1
+    }
 
 	define SET_THROTTLE "set throttle $tv"
 }
