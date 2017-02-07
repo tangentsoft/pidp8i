@@ -59,7 +59,7 @@ process does other things that do require `root` access.
 #### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
-normally built with Ian Schofield's incandescent lamp simulator feature,
+normally built with the [incandescent lamp simulator][ils] feature,
 which drives the LEDs in a way that mimics the incandescent lamps used
 in the original PDP-8/I.  This feature currently takes too much CPU
 power to run on anything but a multi-core Raspberry Pi, currently
@@ -70,7 +70,10 @@ Zero — the simulator uses the original low-CPU-usage LED driving method
 instead.
 
 Those on a multi-core host who want this low-CPU-usage LED driving
-method can give the `--no-lamp-simulator` option to `configure`.
+method can give the `--no-lamp-simulator` option to `configure`.  This
+method not only uses less CPU, which may be helpful if you're trying to
+run a lot of background tasks on your Pi 2 or Pi 3, it can also be
+helpful when the CPU is [heavily throttled][thro].
 
 
 #### --serial-mod
@@ -123,7 +126,7 @@ fresh versions from the source distribution.
 You can test your PiDP-8/I LED and switch functions with these commands:
 
     $ sudo systemctl stop pidp8i
-	$ pidp8i-test
+    $ pidp8i-test
 
 You may have to log out and back in before the second command will work,
 since the installation script modifies your normal user's `PATH` the
@@ -196,3 +199,4 @@ the terms of [the SIMH license][sl].
 [thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
 [sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[ils]:  https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
