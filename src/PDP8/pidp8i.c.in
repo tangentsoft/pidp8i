@@ -517,6 +517,12 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         swStop = 0;            // START cancels STOP mode
         swSingInst = 0;        // allow SING INST mode re-entry
         swStart = 1;           // make it single-shot
+
+#if 0   // debugging
+        uint16* pcurr = pdis_update->curr;
+        printf("\r\nSTART: [PC:%04o] [MA:%04o] [MB:%04o] [AC:%04o] [MQ:%04o]",
+                pcurr[0], pcurr[1], pcurr[2], pcurr[3], pcurr[4]);
+#endif
     }
 
     // ...and START switch release
@@ -544,6 +550,12 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             // We were HLTed or STOPped, so CONT returns us to
             // free-running mode.
             swStop = 0;
+
+#if 0   // debugging
+            uint16* pcurr = pdis_update->curr;
+            printf("\r\nCONT: [PC:%04o] [MA:%04o] [MB:%04o] [AC:%04o] [MQ:%04o]",
+                    pcurr[0], pcurr[1], pcurr[2], pcurr[3], pcurr[4]);
+#endif
         }
         // else, CONT has no effect in this state
     }
