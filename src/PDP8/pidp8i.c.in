@@ -574,9 +574,10 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // but our printf() here is idempotent.
     static int swLAdd = 0;
     if ((swLAdd == 0) && (switchstatus[2] & SS2_L_ADD) == 0) {
-        // Copy SR into PC.  We must flip the bits because GPIO returns
-        // 0 for a closed switch and 1 for open, opposite what we want.
-        *pPC = (~switchstatus[0]) & 07777;
+        // Copy SR into PC.  XOR copies the complement of the bits, as
+        // GPIO returns 0 for a closed switch and 1 for open, opposite
+        // what we want.
+        *pPC = switchstatus[0] ^ 07777;
                                
         // Copy DF switch settings to DF register
         //
