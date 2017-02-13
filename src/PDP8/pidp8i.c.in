@@ -510,10 +510,15 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for START switch press...
     static int swStart = 0;
     if (((switchstatus[2] & SS2_START) == 0) && (swStart == 0)) {
-        *pint_req &= ~INT_ION; // disable ION. says so in handbook, true?
-        *pLAC = 0;             // clear L and AC
-        *pMB = 0;              // clear MB
-        *pMA = *pPC & 07777;   // transfer PC into MA (FIXME: does IR make this unnecessary?)
+        // Reset the CPU per the DEC docs.  We can use SIMH's own
+        // cpu_reset() function for this, but there are some things it
+        // doesn't do that DEC's docs say START does, so we do that.
+        extern DEVICE cpu_dev;
+        extern t_stat cpu_reset (DEVICE *);
+        cpu_reset (&cpu_dev);
+        *pLAC = *pMB = 0;
+
+        // Reset our switch flags, too
         swStop = 0;            // START cancels STOP mode
         swSingInst = 0;        // allow SING INST mode re-entry
         swStart = 1;           // make it single-shot
