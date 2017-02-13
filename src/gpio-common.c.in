@@ -554,12 +554,13 @@ void *gpio_thread (void *terminate)
     // Tell the user about our configuration, succinctly
     const char* pt = pi_type();
     printf(
-        "PiDP-8/I trunk:id[23aeef1c] [%s] [nls] [%spcb]%s"
+        "PiDP-8/I trunk:id[23aeef1c] [%s] [%cls] [%spcb]%s"
 #ifdef DEBUG
         " [debug]"
 #endif
         "%s",
         pt,
+        ILS_MODE ? 'i' : 'n',
         pt[0] == 'p' ? 
 #ifdef PCB_SERIAL_MOD
             "ser" : 
