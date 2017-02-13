@@ -519,8 +519,10 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         swStart = 1;           // make it single-shot
 
 #if 0   // debugging
-        printf("\r\nSTART: [PC:%04o] [MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
-                *pPC, *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
+        printf("\r\nSTART: [DF:%o] [IF:%o] [PC:%04o] "
+                "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
 #endif
     }
 
@@ -551,8 +553,10 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             swStop = 0;
 
 #if 0   // debugging
-            printf("\r\nCONT: [PC:%04o] [MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
-                    *pPC, *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
+            printf("\r\nCONT: [DF:%o] [IF:%o] [PC:%04o] "
+                    "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                    (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                    *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
 #endif
         }
         // else, CONT has no effect in this state
@@ -590,8 +594,10 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         *pIF = (css1 & SS1_IF_ALL) << 6;
 
 #if 0   // debugging
-        printf("\r\nL_ADD: [PC:%04o] [DF:%o] [IF:%o]",
-                *pPC, *pDF >> 12, *pIF >> 12);
+        printf("\r\nL_ADD: [DF:%o] [IF:%o] [PC:%04o] "
+                "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
 #endif
         swLAdd = 1;                 // make it single-shot
     }
@@ -637,6 +643,13 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // STOP mode, this switch's function is idempotent.
     if (!swStop && ((switchstatus[2] & SS2_STOP) == 0)) {
         swStop = 1;
+
+#if 0   // debugging
+            printf("\r\nSTOP: [DF:%o] [IF:%o] [PC:%04o] "
+                    "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                    (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                    *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
+#endif
     }
 
     // If any of the above put us into STOP or SING_INST mode, go no
