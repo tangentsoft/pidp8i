@@ -527,10 +527,8 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         // registers instead, since our STOP/START behavior doesn't
         // make use of saved_*.
         REG* pibr = find_reg ("IB", NULL, &cpu_dev);
-        if (pibr) {
-            int32* pIB = pibr->loc;
-            *pIB = *pPC & 070000;
-        }
+        int32* pIB = pibr ? pibr->loc : 0 /* force segfault on err */ ;
+        *pIB = *pIF;
 
         // Reset our switch flags, too
         swStop = 0;            // START cancels STOP mode
@@ -538,9 +536,9 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         swStart = 1;           // make it single-shot
 
 #if 0   // debugging
-        printf("\r\nSTART: [DF:%o] [IF:%o] [PC:%04o] "
+        printf("\r\nSTART: [DF:%o] [IF:%o] [IB:%o] [PC:%04o] "
                 "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
-                (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                (*pDF >> 12), (*pIF >> 12), (*pIB >> 12), (*pPC & 07777),
                 *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
 #endif
     }
