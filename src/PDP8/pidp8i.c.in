@@ -519,9 +519,8 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         swStart = 1;           // make it single-shot
 
 #if 0   // debugging
-        uint16* pcurr = pdis_update->curr;
-        printf("\r\nSTART: [PC:%04o] [MA:%04o] [MB:%04o] [AC:%04o] [MQ:%04o]",
-                pcurr[0], pcurr[1], pcurr[2], pcurr[3], pcurr[4]);
+        printf("\r\nSTART: [PC:%04o] [MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                *pPC, *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
 #endif
     }
 
@@ -552,9 +551,8 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             swStop = 0;
 
 #if 0   // debugging
-            uint16* pcurr = pdis_update->curr;
-            printf("\r\nCONT: [PC:%04o] [MA:%04o] [MB:%04o] [AC:%04o] [MQ:%04o]",
-                    pcurr[0], pcurr[1], pcurr[2], pcurr[3], pcurr[4]);
+            printf("\r\nCONT: [PC:%04o] [MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                    *pPC, *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
 #endif
         }
         // else, CONT has no effect in this state
@@ -565,15 +563,16 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         swCont = 0;
     }
 
-    // Check for LOAD_ADD switch press.  (No "and release" beacuse it's
-    // harmless if this keeps happening until the slow human releases the
-    // switch.  This function is idempotent.)
-    if ((switchstatus[2] & SS2_L_ADD) == 0) {
-        // Copy SR into PC.  We're XORing instead of masking and copying
-        // because the switchstatus bits are opposite what we want here: we
-        // get a 0 from the GPIO peripheral when the switch is closed, which
-        // is the switch's "1" position.
-        *pPC = switchstatus[0] ^ 07777;
+    // Check for LOAD_ADD switch press.  The only reason we bother
+    // making it single-shot is in case debugging is enabled.
+    // Otherwise, it matters not how long the slow human holds this
+    // swithc down, and thus how often we apply the values: all else
+    // but our printf() here is idempotent.
+    static int swLAdd = 0;
+    if ((swLAdd == 0) && (switchstatus[2] & SS2_L_ADD) == 0) {
+        // Copy SR into PC.  We must flip the bits because GPIO returns
+        // 0 for a closed switch and 1 for open, opposite what we want.
+        *pPC = (~switchstatus[0]) & 07777;
                                
         // Copy DF switch settings to DF register
         //
@@ -582,14 +581,24 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         // in DF here: we want to be able to logically OR PC and DF to make
         // 15-bit data access addresses.
         //
-        // We complement the bits here for the same reason we XOR'd the PC
-        // value above.
+        // We complement the bits here for the same reason we did above
         uint16_t css1 = ~switchstatus[1]; 
         *pDF = (css1 & SS1_DF_ALL) << 3;
 
-        // Do the same for IF.  The only difference comes from the fact that
-        // IF is the next 3 bits down in switchstatus[1].
+        // Do the same for IF.  The only difference comes from the fact
+        // that IF is the next 3 bits down in switchstatus[1].
         *pIF = (css1 & SS1_IF_ALL) << 6;
+
+#if 0   // debugging
+        printf("\r\nL_ADD: [PC:%04o] [DF:%o] [IF:%o]",
+                *pPC, *pDF >> 12, *pIF >> 12);
+#endif
+        swLAdd = 1;                 // make it single-shot
+    }
+
+    // ...and L_ADD switch release
+    if (swLAdd && (switchstatus[2] & SS2_L_ADD)) {
+        swLAdd = 0;
     }
 
     // Check for DEP switch press...
