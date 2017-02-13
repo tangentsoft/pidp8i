@@ -510,13 +510,27 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for START switch press...
     static int swStart = 0;
     if (((switchstatus[2] & SS2_START) == 0) && (swStart == 0)) {
-        // Reset the CPU per the DEC docs.  We can use SIMH's own
-        // cpu_reset() function for this, but there are some things it
-        // doesn't do that DEC's docs say START does, so we do that.
+        // Reset the CPU.
         extern DEVICE cpu_dev;
         extern t_stat cpu_reset (DEVICE *);
         cpu_reset (&cpu_dev);
+
+        // DEC's docs say there are a few additional things START does
+        // that cpu_reset() doesn't do for us.
+        //
+        // Don't need to do anything with MA and IR, as SIMH does that
+        // shortly after this function returns.
         *pLAC = *pMB = 0;
+
+        // cpu_reset() does its thing to the saved_* register copies
+        // in a few cases, but we need it to happen to the "real"
+        // registers instead, since our STOP/START behavior doesn't
+        // make use of saved_*.
+        REG* pibr = find_reg ("IB", NULL, &cpu_dev);
+        if (pibr) {
+            int32* pIB = pibr->loc;
+            *pIB = *pPC & 070000;
+        }
 
         // Reset our switch flags, too
         swStop = 0;            // START cancels STOP mode
