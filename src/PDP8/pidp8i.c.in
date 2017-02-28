@@ -591,10 +591,9 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // but our printf() here is idempotent.
     static int swLAdd = 0;
     if ((swLAdd == 0) && (switchstatus[2] & SS2_L_ADD) == 0) {
-        // Copy SR into PC.  XOR copies the complement of the bits, as
-        // GPIO returns 0 for a closed switch and 1 for open, opposite
-        // what we want.
-        *pPC = switchstatus[0] ^ 07777;
+        // Copy SR into PC.  Have to flip the bits because GPIO gives
+        // 0 for a closed switch and 1 for open, opposite what we want.
+        *pPC = (~switchstatus[0]) & 07777;
                                
         // Copy DF switch settings to DF register
         //
@@ -628,13 +627,21 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for DEP switch press...
     static int swDep = 0;
     if (((switchstatus[2] & SS2_DEP) == 0) && (swDep == 0)) {
-        pM[*pPC] = switchstatus[0] ^ 07777;    // XOR rationale above
+        uint16 sSR = (~switchstatus[0]) & 07777; // bit flip justified above
+        *pPC = *pPC & 07777;  // sometimes high bits get set; squish 'em
+
+#if 0   // debugging
+        printf("\r\nDEP: [IF:%o] [PC:%04o] [SR:%04o]",
+                (*pIF >> 12), *pPC, sSR);
+#endif
+
         /* ??? in 66 handbook: strictly speaking, SR goes into AC,
            then AC into MB. Does it clear AC afterwards? If not, needs fix */
-        *pMB = pM[*pPC];
-        *pMA = *pPC & 07777;          // MA trails PC on FP
-        *pPC = (*pPC + 1) & 07777;    // increment PC
-        swDep = 1;                    // make it single-shot
+        pM[*pPC] = sSR;             // FIXME: shouldn't we use IF/DF here?
+        *pMB = sSR;
+        *pMA = *pPC & 07777;        // MA trails PC on FP; FIXME: OR in IF?
+        *pPC = (*pPC + 1) & 07777;  // increment PC
+        swDep = 1;                  // make it single-shot
     }
 
     // ...and DEP switch release
