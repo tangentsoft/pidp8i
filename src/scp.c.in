@@ -54,26 +54,26 @@
 
    08-Mar-16    RMS     Added shutdown flag for detach_all
    20-Mar-12    MP      Fixes to "SHOW <x> SHOW" commands
-   06-Jan-12    JDB     Fixed "SHOW DEVICE" with only one enabled unit (Dave Bryan)
-   25-Sep-11    MP      Added the ability for a simulator built with
+   06-Jan-12    JDB     Fixed "SHOW DEVICE" with only one enabled unit (Dave Bryan)  
+   25-Sep-11    MP      Added the ability for a simulator built with 
                         SIM_ASYNCH_IO to change whether I/O is actually done
-                        asynchronously by the new scp command SET ASYNCH and
+                        asynchronously by the new scp command SET ASYNCH and 
                         SET NOASYNCH
-   22-Sep-11    MP      Added signal catching of SIGHUP and SIGTERM to cause
+   22-Sep-11    MP      Added signal catching of SIGHUP and SIGTERM to cause 
                         simulator STOP.  This allows an externally signalled
                         event (i.e. system shutdown, or logoff) to signal a
-                        running simulator of these events and to allow
-                        reasonable actions to be taken.  This will facilitate
-                        running a simulator as a 'service' on *nix platforms,
-                        given a sufficiently flexible simulator .ini file.
+                        running simulator of these events and to allow 
+                        reasonable actions to be taken.  This will facilitate 
+                        running a simulator as a 'service' on *nix platforms, 
+                        given a sufficiently flexible simulator .ini file.  
    20-Apr-11    MP      Added expansion of %STATUS% and %TSTATUS% in do command
-                        arguments.  STATUS is the numeric value of the last
+                        arguments.  STATUS is the numeric value of the last 
                         command error status and TSTATUS is the text message
                         relating to the last command error status
    17-Apr-11    MP      Changed sim_rest to defer attaching devices until after
                         device register contents have been restored since some
                         attach activities may reference register contained info.
-   29-Jan-11    MP      Adjusted sim_debug to:
+   29-Jan-11    MP      Adjusted sim_debug to: 
                           - include the simulator timestamp (sim_gtime)
                             as part of the prefix for each line of output
                           - write complete lines at a time (avoid asynch I/O issues).
