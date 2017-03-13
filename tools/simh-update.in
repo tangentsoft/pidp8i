@@ -158,8 +158,12 @@ popd
 # Rename upstream Git paths to match our *.in files so that our produced
 # patches are made against those higher-level versions.  If we didn't do
 # this, we'd have to manually resubstitute variables for absolute paths.
+#
+# Filter out Makefile.in because we don't want to try and patch the
+# upstream plain Makefile to work with autosetup.  It complicates the
+# resulting patch file to no purpose.
 say Renaming upstream files to match our \*.in variants...
-find "$SRCSUBDIR" -name \*.in -print | while read f
+find "$SRCSUBDIR" -name \*.in -print | grep -v Makefile.in | while read f
 do
 	inf="${f#$SRCSUBDIR/}"	# make path fully relative
 	genf="${inf%.in}"		# remove .in from the end
