@@ -134,6 +134,7 @@ mkdir -p "$CURR_SIMH_DIR"
 git clone https://github.com/simh/simh "$CURR_SIMH_DIR"
 pushd "$CURR_SIMH_DIR"
 NEW_SGCID=$(git rev-parse HEAD)
+say "Pulled ${NEW_SGCID:0:8} as curr; prev is ${OLD_SGCID:0:8}."
 git worktree add "$OUR_SIMH_DIR" $OLD_SGCID
 popd
 
