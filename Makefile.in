@@ -53,7 +53,6 @@ INSTDIRS = bin etc libexec share/boot share/media share/man/man1
 
 OBJS = \
 	obj/gpio-common.o \
-	obj/sim_console.o \
 	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_cpu.o \
 	obj/PDP8/pdp8_clk.o \
@@ -74,6 +73,7 @@ OBJS = \
 	obj/PDP8/pdp8_ttx.o \
 	obj/PDP8/pidp8i.o \
 	obj/scp.o \
+	obj/sim_console.o \
 	obj/sim_disk.o \
 	obj/sim_ether.o \
 	obj/sim_fio.o \
@@ -81,7 +81,8 @@ OBJS = \
 	obj/sim_sock.o \
 	obj/sim_tape.o \
 	obj/sim_timer.o \
-	obj/sim_tmxr.o
+	obj/sim_tmxr.o \
+	obj/sim_video.o
 
 ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
