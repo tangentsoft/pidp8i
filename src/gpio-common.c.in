@@ -114,6 +114,7 @@ display* pdis_paint  = display_bufs + 1;    // exported to gpio-*.c
 // GPIO thread control variables manipulated by start/stop_*() below
 static pthread_t gpio_thread_info;
 static int terminate_gpio_thread = 0;
+static pthread_mutex_t gpio_start_mutex;
 
 
 // Time-delayed reaction to switch changes to debounce the contacts.
@@ -576,15 +577,14 @@ static void *gpio_thread (void *terminate)
         (rt ? " [rt]" : "")
     );
 
+    // It's okay for our caller to resume executing, if it's locked
+    // waiting for us to finish the initialization bits that can only
+    // happen in this thread.
+    pthread_mutex_unlock (&gpio_start_mutex);
+
     // If we didn't map the GPIO peripheral and get here, it was
     // optional, and we've done all we can without it.
     if (!pidp8i_gpio_present) return (void*)-1;
-
-    // Until gpio_core () reads the switches for the first time, we need
-    // to mark them as all-open, lest we have a race condition with the
-    // simulator where it interprets the all-0 initial switchstatus[]
-    // value as "all switches closed," which includes the shutdown seq!
-    memset(switchstatus, 0xFF, sizeof(switchstatus));
 
     // initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
     //  INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
@@ -666,9 +666,24 @@ int start_pidp8i_gpio_thread (const char* must_map)
     map_peripheral (&gpio, 1);
     if (must_map && !pidp8i_gpio_present) return EFAULT;
 
+    // Until gpio_core () reads the switches for the first time, we need
+    // to mark them as all-open, lest we have a race condition with the
+    // simulator where it interprets the all-0 initial switchstatus[]
+    // value as "all switches closed," which includes the shutdown seq!
+    memset (switchstatus, 0xFF, sizeof (switchstatus));
+
+    // Create the startup sequencing mutex and lock it once to block the
+    // GPIO thread after it's sufficiently initialized.
+    int pcerr;
+    if (    ((pcerr = pthread_mutex_init (&gpio_start_mutex)) != 0) ||
+            ((pcerr = pthread_mutex_lock (&gpio_start_mutex)) != 0)) {
+        perror ("GPIO startup sequence mutex creation failed");
+        return errno;
+    }
+
     // Create the actual GPIO handler thread
-    int pcerr = pthread_create (&gpio_thread_info, NULL, gpio_thread,
-                                &terminate_gpio_thread);
+    pcerr = pthread_create (&gpio_thread_info, NULL, gpio_thread,
+                            &terminate_gpio_thread);
     if (pcerr != 0) {
         int errlen = snprintf (errs, sizeof(errs), "Error creating "
                 "PiDP-8/I GPIO thread: %s\n", strerror (pcerr));
@@ -681,7 +696,23 @@ int start_pidp8i_gpio_thread (const char* must_map)
         pcerr = EACCES;
     }
     else {
-        sleep (2);  // give thread time to start; FIXME [88fad950a3]
+        // Don't return until GPIO thread is sufficiently initted.
+        //
+        // There are two possible sequences:
+        //
+        // 1. We get here before the GPIO thread gets to its "unlock"
+        //    call, so our back-to-back locks in this thread stall this
+        //    thread until the GPIO thread gets to its unlock condition,
+        //    which removes the first lock taken above, and our second
+        //    unlock call below removes the second lock.
+        //
+        // 2. The GPIO thread hits its "unlock" call before we get here,
+        //    so it unlocks the lock we made above, so that these two
+        //    calls happen back to back, with no real effect.  We got
+        //    here too late to cause any problem that this interlock
+        //    solves, so it just locks and immediately unlocks.
+        pthread_mutex_lock   (&gpio_start_mutex);
+        pthread_mutex_unlock (&gpio_start_mutex);
     }
 
     return pcerr;
@@ -694,4 +725,5 @@ void stop_pidp8i_gpio_thread ()
         printf("\r\nError joining multiplex thread\r\n");
     }
     unmap_peripheral(&gpio);
+    pthread_mutex_destroy (&gpio_start_mutex);
 }
