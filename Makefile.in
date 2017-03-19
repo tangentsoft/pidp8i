@@ -306,7 +306,7 @@ bin/deeper: obj/deeper.o obj/gpio-@LED_DRIVER_MODULE@ls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
