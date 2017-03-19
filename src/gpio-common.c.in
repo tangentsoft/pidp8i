@@ -675,7 +675,7 @@ int start_pidp8i_gpio_thread (const char* must_map)
     // Create the startup sequencing mutex and lock it once to block the
     // GPIO thread after it's sufficiently initialized.
     int pcerr;
-    if (    ((pcerr = pthread_mutex_init (&gpio_start_mutex)) != 0) ||
+    if (    ((pcerr = pthread_mutex_init (&gpio_start_mutex, NULL)) != 0) ||
             ((pcerr = pthread_mutex_lock (&gpio_start_mutex)) != 0)) {
         perror ("GPIO startup sequence mutex creation failed");
         return errno;
