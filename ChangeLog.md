@@ -1,5 +1,79 @@
 # PiDP-8/I Changes
 
+## Version 2017.03.18 (INCOMPLETE)
+
+*   Increased the stock CPU throttle from 666 kIPS to 850 kIPS on most
+    Pi 1 class devices, or 1.25 MIPS on the Pi Zero, which is clocked a
+    bit faster than the older Pi 1 class devices.
+
+*   Improved Raspberry Pi type detection logic in the code that builds
+    the configuration string written out as the simulator and test
+    programs start up.  Most of the improvements affect how we deal with
+    the various flavors of Compute Module and the Pi Zero.
+
+*   Merged in upstream SIMH improvements.  Changes relevant to the
+    PiDP-8/I include:
+
+    *   The PDP-8 CPU reset mechanism now does more of what our
+        preexisting `START` switch handler did, so we now delegate to
+        that upstream mechanism, reducing behavior differences between
+        the cases.
+
+    *   We now build and link in the upstream `sim_video` module, which
+        allows access to a video display via SDL.  We do not currently
+        use this in the project core, but I recall hearing about a
+        third-party project that uses this for a local graphical X-Y
+        vector display implementation for playing Spacewar!  When built
+        on a system without SDL or even a local bitmap display, this
+        code becomes nearly a no-op, affecting build time very little.
+
+    *   Fixed many bugs identified by Coverity Scan in many different
+        subsystems of the simulator.  Normally I wouldn't note such
+        problems in this user-facing document, but it is possible that
+        some of these resulted in user-visible bugs that are now fixed.
+
+*   SIMH's default PDP-8 configuration enables the DF32 disk device with
+    the short name "DF", but since the SIMH `DEPOSIT` command works on
+    both devices and registers, a command like `d df 0` is ambiguous,
+    causing the default configuration of SIMH to give a "Too few
+    arguments" error for this command, even though it's obvious that you
+    mean the CPU DF register here.  (Surely you didn't mean to overwrite
+    the first word of your disk image instead?)  Since upstream refuses
+    to fix it, I have disabled the DF32 device in all of the default
+    `boot/*.script` files.
+
+    Since these scripts aren't overwritten on installation, this will
+    only affect new installs unless you say `make mediainstall`, in
+    which case your binary OS media is also overwritten.  Do this at
+    your own risk!
+
+*   Fixed a problem introduced in v20170204 which causes the `LOAD_ADD`
+    and `DEPOSIT` switch handlers to generate incorrect core addresses
+    when the SIMH PDP-8 CPU core sets bits beyond the lower 12 in the PC
+    register.  The prior release was assuming this reigster is always
+    12-bit clean, but it isn't.
+
+*   SIMH changes to a different delay mechanism at CPU throttle rates
+    below 1000 IPS, which prevents our incandescent lamp simulator from
+    running correctly.  Therefore, when you give a `./configure
+    --throttle` flag value that would use this throttle mode, we disable
+    the ILS even when building on multi-core Raspberry Pis.
+
+    (This fix doesn't disable the ILS at run time if you manually set a
+    throttle value under 1000 IPS via a SIMH command.  We'll try to help
+    you avoid accidentally shooting yourself in the foot, but if you're
+    going to *aim*, you're on your own.)
+
+*   Improved error handling in the process that inserts the version info
+    into the configuration string emitted when the simulator and test
+    programs start up.
+
+*   Several internal refactorings to improve code style, reduce the
+    [upstream SIMH patch footprint][foot], and fix corner case bugs.
+
+[foot]: http://pastebin.com/5Jnx15QX
+
+
 ## Version 2017.02.04
 
 *   Largely rewrote the incandescent lamp simulator (ILS) feature.
