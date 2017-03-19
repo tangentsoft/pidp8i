@@ -6,6 +6,11 @@
     Pi 1 class devices, or 1.25 MIPS on the Pi Zero, which is clocked a
     bit faster than the older Pi 1 class devices.
 
+*   Replaced the hard-coded 2-second startup delay in the simulator and
+    in `pidp8i-test` with an interlocked startup mechanism that lets the
+    software start as soon as initialization is complete.  Such programs
+    now start up noticeably faster.
+
 *   Fixed a problem introduced in v20170204 which causes the `LOAD_ADD`
     and `DEPOSIT` switch handlers to generate incorrect core addresses
     when the SIMH PDP-8 CPU core sets bits beyond the lower 12 in the PC
