@@ -2032,24 +2032,19 @@ t_bool lookswitch;
 t_stat stat;
 
 #ifdef PIDP8I
-// PiDP-8/I hack here
- pthread_t thread1;
- const char *message="Thread 1";
- int terminate=0, iret1;
-//  printf("\nPiDP FP driver 3\n");
-
- // create thread
- iret1 = pthread_create( &thread1, NULL, gpio_thread, &terminate);
-
- if (iret1) {
-   fprintf(stderr, "Error creating thread, return code %d\n", iret1);
-   exit (EXIT_FAILURE);
- }
-//  printf("Created thread, return code %d\n", iret1);
-
- sleep(2);          // allow 2 sec for multiplex to start
-// ------------------------------------------------------------------------
-#endif
+/* Start the PiDP-8/I GPIO thread */
+pthread_t pidp8i_gpio_thread;
+int terminate_pidp8i_gpio_thread = 0;
+int pcerr = pthread_create (&pidp8i_gpio_thread, NULL, gpio_thread,
+                            &terminate_pidp8i_gpio_thread);
+if (pcerr) {
+    fprintf (stderr, "Error creating PiDP-8/I GPIO thread: %s\n",
+             strerror (pcerr));
+    exit (EXIT_FAILURE);
+    }
+else
+    sleep (2);          // give GPIO thread time to start; FIXME [88fad950a3]
+#endif  // PIDP8I
 
 #if defined (__MWERKS__) && defined (macintosh)
 argc = ccommand (&argv);
@@ -2196,9 +2191,9 @@ fclose (stdnul);                                        /* close bit bucket file
 free (targv);                                           /* release any argv copy that was made */
 
 #ifdef PIDP8I
- terminate=1;
- if (pthread_join(thread1, NULL))
-   printf("\r\nError joining multiplex thread\r\n");
+terminate_pidp8i_gpio_thread = 1;
+if (pthread_join (pidp8i_gpio_thread, NULL))
+    printf("\r\nError joining multiplex thread\r\n");
 #endif
 
 return 0;
