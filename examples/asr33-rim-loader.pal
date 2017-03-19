@@ -23,6 +23,7 @@
 / and was printed on the front panel of every PDP-8/I.
 /
 / SIMH: echo Installing the RIM loader for the ASR 33 paper tape reader...
+/ SIMH: set df disabled
 
 	*7755
 	HLT		/ nonstandard: auto-halt on SIMH startup

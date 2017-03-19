@@ -5,6 +5,7 @@ reset
 set cpu 32k
 set cpu noidle
 @SET_THROTTLE@
+set df disabled
 set tsc enabled
 attach ttix 4000
 att rk0 @MEDIADIR@/etos/etosv5b-demo.rk05

@@ -2,6 +2,7 @@
 ; in 0.script.
 ;
 echo Loading OS/8 from DECtape...
+set df disabled
 set dt disabled
 set td enabled
 @SET_THROTTLE@

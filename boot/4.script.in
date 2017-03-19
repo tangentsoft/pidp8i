@@ -19,6 +19,7 @@ echo things.  See the SimH manual for details.
 echo
 l @MEDIADIR@/spacewar/spacewar.bin
 @SET_THROTTLE@
+set df disabled
 at ttix 2222
 set ttox0 8b
 
