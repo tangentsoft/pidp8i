@@ -576,7 +576,8 @@ static void *gpio_thread (void *terminate)
         (rt ? " [rt]" : "")
     );
 
-    // If we didn't map the GPIO peripheral, we've done all we can here
+    // If we didn't map the GPIO peripheral and get here, it was
+    // optional, and we've done all we can without it.
     if (!pidp8i_gpio_present) return (void*)-1;
 
     // Until gpio_core () reads the switches for the first time, we need
@@ -665,6 +666,7 @@ int start_pidp8i_gpio_thread (const char* must_map)
     map_peripheral (&gpio, 1);
     if (must_map && !pidp8i_gpio_present) return EFAULT;
 
+    // Create the actual GPIO handler thread
     int pcerr = pthread_create (&gpio_thread_info, NULL, gpio_thread,
                                 &terminate_gpio_thread);
     if (pcerr != 0) {
