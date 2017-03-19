@@ -49,7 +49,7 @@ int main()
 	if (gpio.addr_p== 0x20200000) printf("scanswitch - RPi Plus\n");
 	else printf("scanswitch - RPi 2\n");
 
-	if(map_peripheral(&gpio) == -1) 
+	if (map_peripheral(&gpio, 0) != 0)
 	{	printf("Failed to map the physical GPIO registers into the virtual memory space.\n");
 		return -1;
 	}

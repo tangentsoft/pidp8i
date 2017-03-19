@@ -2032,7 +2032,7 @@ t_bool lookswitch;
 t_stat stat;
 
 #ifdef PIDP8I
-if (start_pidp8i_gpio_thread ("PiDP-8/I simulator", 1) != 0) exit (EXIT_FAILURE);
+if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
 #endif
 
 #if defined (__MWERKS__) && defined (macintosh)

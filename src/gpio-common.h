@@ -129,12 +129,12 @@ extern uint8_t ledrows[];
 extern uint8_t rows[];
 extern uint8_t pidp8i_gpio_present;
 
-extern int start_pidp8i_gpio_thread (const char* what, int exclusive);
+extern int start_pidp8i_gpio_thread (const char* must_map);
 extern void stop_pidp8i_gpio_thread ();
 extern void update_led_states (const us_time_t delay);
 
 extern unsigned bcm_host_get_peripheral_address(void);
-extern int map_peripheral(struct bcm2835_peripheral *p);
+extern int map_peripheral(struct bcm2835_peripheral *p, int exclusive);
 extern void unmap_peripheral(struct bcm2835_peripheral *p);
 
 extern void read_switches (ns_time_t delay);

@@ -132,9 +132,6 @@ static struct switch_state gss[NROWS][NCOLS];
 static int gss_initted = 0;
 static const ms_time_t debounce_ms = 50;    // time switch state must remain stable
 
-// Name of GPIO memory-mapped device
-static const char* gpio_mem_dev = "/dev/gpiomem";
-
 
 // Flow-control switch states which are owned by -- that is, primarily
 // modified by -- the PDP8/pidp8i module, but we can't define these
@@ -153,10 +150,19 @@ int resumeFromInstructionLoopExit = 0;
 //// map_peripheral ////////////////////////////////////////////////////
 // Exposes the physical address defined in the passed structure
 
-int map_peripheral(struct bcm2835_peripheral *p)
+int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
 {
+    // Name of GPIO memory-mapped device
+    static const char* gpio_mem_dev = "/dev/gpiomem";
+
+    if (access(gpio_mem_dev, F_OK) < 0) {
+        // That dev node isn't even present, so it's probably not a Pi
+        return -1;
+    }
+
     // Open the GPIO device
-    if ((p->mem_fd = open(gpio_mem_dev, O_RDWR|O_SYNC) ) < 0) {
+    if ((p->mem_fd = open(gpio_mem_dev, 
+            exclusive ? O_RDWR|O_SYNC : O_RDONLY)) < 0) {
 #ifdef DEBUG
         printf("Failed to open %s: %s\n", gpio_mem_dev, strerror(errno));
         puts("Disabling PiDP-8/I front panel functionality.");
@@ -166,7 +172,7 @@ int map_peripheral(struct bcm2835_peripheral *p)
 
     // Attempt to lock it.  If we can't, another program has it locked,
     // so we shouldn't keep running; it'll just end in tears.
-    if (flock(p->mem_fd, LOCK_EX | LOCK_NB) < 0) {
+    if (exclusive && (flock(p->mem_fd, LOCK_EX | LOCK_NB) < 0)) {
         if (errno == EWOULDBLOCK) {
             printf("Failed to lock %s.  Only one PiDP-8/I\n", gpio_mem_dev);
             puts("program can be running at a given time.");
@@ -553,14 +559,10 @@ static void *gpio_thread (void *terminate)
     sp.sched_priority = 4;  // not high, just above the minimum of 1
     int rt = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp) == 0;
 
-    // Map the GPIO peripheral, but hold off exiting if it fails, until
-    // we report its absence in the config line.
-    int mapped = map_peripheral(&gpio) == 0;
-
     // Tell the user about our configuration, succinctly
     const char* pt = pi_type();
     printf(
-        "PiDP-8/I trunk:id[23aeef1c] [%s] [%cls] [%spcb]%s"
+        "PiDP-8/I @VERSION@ [%s] [%cls] [%spcb] [%sgpio]"
 #ifdef DEBUG
         " [debug]"
 #endif
@@ -574,12 +576,12 @@ static void *gpio_thread (void *terminate)
             "std" : 
 #endif
             "no",
-        mapped ? " [gpio]" : "",
-        rt     ? " [rt]" : ""
+        (pidp8i_gpio_present ? "" : "no"),
+        (rt ? " [rt]" : "")
     );
 
     // If we didn't map the GPIO peripheral, we've done all we can here
-    if (!mapped) return (void*)-1;
+    if (!pidp8i_gpio_present) return (void*)-1;
 
     // Until gpio_core () reads the switches for the first time, we need
     // to mark them as all-open, lest we have a race condition with the
@@ -655,9 +657,15 @@ static void *gpio_thread (void *terminate)
 // export gpio_thread() directly so this module's users don't have to
 // know anything about pthreads and such.
 
-int start_pidp8i_gpio_thread (const char* what, int exclusive)
+int start_pidp8i_gpio_thread (const char* must_map)
 {
     char errs[100];
+
+    // Attempt to map the GPIO peripheral for our exclusive use.  Some
+    // callers care if this fails, and some don't.
+    map_peripheral (&gpio, 1);
+    if (must_map && !pidp8i_gpio_present) return EFAULT;
+
     int pcerr = pthread_create (&gpio_thread_info, NULL, gpio_thread,
                                 &terminate_gpio_thread);
     if (pcerr != 0) {
@@ -665,9 +673,9 @@ int start_pidp8i_gpio_thread (const char* what, int exclusive)
                 "PiDP-8/I GPIO thread: %s\n", strerror (pcerr));
         if (errlen > 0 && errlen < sizeof(errs)) write (2, errs, errlen);
     }
-    else if (exclusive && !pidp8i_gpio_present) {
+    else if (must_map && !pidp8i_gpio_present) {
         int errlen = snprintf (errs, sizeof(errs), "Cannot run the %s "
-                "while another PiDP-8/I program runs.\r\n", what);
+                "while another PiDP-8/I program runs.\r\n", must_map);
         if (errlen > 0 && errlen < sizeof(errs)) write (2, errs, errlen);
         pcerr = EACCES;
     }
@@ -684,4 +692,5 @@ void stop_pidp8i_gpio_thread ()
     if (pthread_join (gpio_thread_info, NULL)) {
         printf("\r\nError joining multiplex thread\r\n");
     }
+    unmap_peripheral(&gpio);
 }

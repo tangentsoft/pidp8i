@@ -216,7 +216,7 @@ void start_gpio (void)
     pidp8i_simple_gpio_mode = 1;
 
     // Create GPIO thread
-    if (start_pidp8i_gpio_thread ("test program", 1) != 0) {
+    if (start_pidp8i_gpio_thread ("test program") != 0) {
         exit (EXIT_FAILURE);
     }
 }
