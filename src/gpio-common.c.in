@@ -161,8 +161,7 @@ int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
     }
 
     // Open the GPIO device
-    if ((p->mem_fd = open(gpio_mem_dev, 
-            exclusive ? O_RDWR|O_SYNC : O_RDONLY)) < 0) {
+    if ((p->mem_fd = open(gpio_mem_dev, O_RDWR|O_SYNC)) < 0) {
 #ifdef DEBUG
         printf("Failed to open %s: %s\n", gpio_mem_dev, strerror(errno));
         puts("Disabling PiDP-8/I front panel functionality.");
