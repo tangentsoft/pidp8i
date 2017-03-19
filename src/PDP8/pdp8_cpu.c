@@ -25,8 +25,7 @@
 
    ----------------------------------------------------------------------------
 
-   Portions copyright (c) 2015-2017, Oscar Vermeulen, Ian Schofield, and
-   Warren Young
+   Portions copyright (c) 2015-2017, Oscar Vermeulen and Warren Young
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
