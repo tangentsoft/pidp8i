@@ -129,7 +129,8 @@ extern uint8_t ledrows[];
 extern uint8_t rows[];
 extern uint8_t pidp8i_gpio_present;
 
-extern void *gpio_thread (void *ptr);
+extern int start_pidp8i_gpio_thread (const char* what, int exclusive);
+extern void stop_pidp8i_gpio_thread ();
 extern void update_led_states (const us_time_t delay);
 
 extern unsigned bcm_host_get_peripheral_address(void);

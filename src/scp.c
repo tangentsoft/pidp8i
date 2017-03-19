@@ -244,7 +244,7 @@
 /* Macros and data structures */
 
 #ifdef PIDP8I
-#include "gpio-common.h"        // for gpio_thread()
+#include "gpio-common.h"        // for start/stop_pidp8i_gpio_thread()
 #include "PDP8/pidp8i.h"        // for build_pidp8i_scp_cmd()
 #endif
 
@@ -2032,19 +2032,8 @@ t_bool lookswitch;
 t_stat stat;
 
 #ifdef PIDP8I
-/* Start the PiDP-8/I GPIO thread */
-pthread_t pidp8i_gpio_thread;
-int terminate_pidp8i_gpio_thread = 0;
-int pcerr = pthread_create (&pidp8i_gpio_thread, NULL, gpio_thread,
-                            &terminate_pidp8i_gpio_thread);
-if (pcerr) {
-    fprintf (stderr, "Error creating PiDP-8/I GPIO thread: %s\n",
-             strerror (pcerr));
-    exit (EXIT_FAILURE);
-    }
-else
-    sleep (2);          // give GPIO thread time to start; FIXME [88fad950a3]
-#endif  // PIDP8I
+if (start_pidp8i_gpio_thread ("PiDP-8/I simulator", 1) != 0) exit (EXIT_FAILURE);
+#endif
 
 #if defined (__MWERKS__) && defined (macintosh)
 argc = ccommand (&argv);
@@ -2191,9 +2180,7 @@ fclose (stdnul);                                        /* close bit bucket file
 free (targv);                                           /* release any argv copy that was made */
 
 #ifdef PIDP8I
-terminate_pidp8i_gpio_thread = 1;
-if (pthread_join (pidp8i_gpio_thread, NULL))
-    printf("\r\nError joining multiplex thread\r\n");
+stop_pidp8i_gpio_thread ();
 #endif
 
 return 0;

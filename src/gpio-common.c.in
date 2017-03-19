@@ -46,6 +46,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_TIME_H
@@ -108,6 +109,11 @@ uint16_t switchstatus[NROWS];
 display display_bufs[2];
 display* pdis_update = display_bufs + 0;    // exported to SIMH CPU thread
 display* pdis_paint  = display_bufs + 1;    // exported to gpio-*.c
+
+
+// GPIO thread control variables manipulated by start/stop_*() below
+static pthread_t gpio_thread_info;
+static int terminate_gpio_thread = 0;
 
 
 // Time-delayed reaction to switch changes to debounce the contacts.
@@ -537,7 +543,7 @@ void update_led_states (const us_time_t delay)
 // The GPIO thread entry point: initializes GPIO and then calls
 // the gpio_core () implementation linked to this program.
 
-void *gpio_thread (void *terminate)
+static void *gpio_thread (void *terminate)
 {
     // Find GPIO address (it varies by Pi model)
     gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
@@ -641,4 +647,41 @@ void *gpio_thread (void *terminate)
     // it's safe to leave them in that state.  No need to de-init GPIO.
     gss_initted = 0;
     return 0;
+}
+
+
+//// start/stop_pidp8i_gpio_thread /////////////////////////////////////
+// Start and stop gpio_thread().  We export these functions rather than
+// export gpio_thread() directly so this module's users don't have to
+// know anything about pthreads and such.
+
+int start_pidp8i_gpio_thread (const char* what, int exclusive)
+{
+    char errs[100];
+    int pcerr = pthread_create (&gpio_thread_info, NULL, gpio_thread,
+                                &terminate_gpio_thread);
+    if (pcerr != 0) {
+        int errlen = snprintf (errs, sizeof(errs), "Error creating "
+                "PiDP-8/I GPIO thread: %s\n", strerror (pcerr));
+        if (errlen > 0 && errlen < sizeof(errs)) write (2, errs, errlen);
+    }
+    else if (exclusive && !pidp8i_gpio_present) {
+        int errlen = snprintf (errs, sizeof(errs), "Cannot run the %s "
+                "while another PiDP-8/I program runs.\r\n", what);
+        if (errlen > 0 && errlen < sizeof(errs)) write (2, errs, errlen);
+        pcerr = EACCES;
+    }
+    else {
+        sleep (2);  // give thread time to start; FIXME [88fad950a3]
+    }
+
+    return pcerr;
+}
+
+void stop_pidp8i_gpio_thread ()
+{
+    terminate_gpio_thread = 1;
+    if (pthread_join (gpio_thread_info, NULL)) {
+        printf("\r\nError joining multiplex thread\r\n");
+    }
 }

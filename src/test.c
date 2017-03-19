@@ -216,17 +216,7 @@ void start_gpio (void)
     pidp8i_simple_gpio_mode = 1;
 
     // Create GPIO thread
-    pthread_t pth;
-    static int terminate = 0;
-    int ret = pthread_create (&pth, NULL, gpio_thread, &terminate);
-    if (ret) {
-        fprintf (stderr, "Error creating thread, return code %d\r\n", ret);
-        exit (EXIT_FAILURE);
-    }
-    sleep (2);                  // allow 2 sec for multiplex to start
-    if (!pidp8i_gpio_present) {
-        fprintf (stderr, "Cannot run the test while another PiDP-8/I "
-                "program runs.\r\n");
+    if (start_pidp8i_gpio_thread ("test program", 1) != 0) {
         exit (EXIT_FAILURE);
     }
 }
