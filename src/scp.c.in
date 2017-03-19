@@ -244,12 +244,8 @@
 /* Macros and data structures */
 
 #ifdef PIDP8I
-#include <pthread.h>
-#include <time.h>
-#include <stdint.h>
-#include <unistd.h> // for sleep()
-
-extern void *gpio_thread (void *ptr);  // the real-time multiplexing process to start up
+#include "gpio-common.h"        // for gpio_thread()
+#include "PDP8/pidp8i.h"        // for build_pidp8i_scp_cmd()
 #endif
 
 #define NOT_MUX_USING_CODE /* sim_tmxr library provider or agnostic */
@@ -353,10 +349,6 @@ extern void *gpio_thread (void *ptr);  // the real-time multiplexing process to 
     else if (sim_switches & SWMASK ('D')) val = 10; \
     else if (sim_switches & SWMASK ('H')) val = 16; \
     else val = dft;
-
-#ifdef PIDP8I
-extern int awfulHackFlag;
-#endif
 
 /* Asynch I/O support */
 #if defined (SIM_ASYNCH_IO)
@@ -2222,38 +2214,8 @@ CTAB *cmdp;
 stat = SCPE_BARE_STATUS(stat);                          /* remove possible flag */
 while (stat != SCPE_EXIT) {                             /* in case exit */
 #ifdef PIDP8I
-    if (awfulHackFlag) {
-        cptr = 0;
-        if ((awfulHackFlag >= 0) && (awfulHackFlag <= 7)) {
-            /* restart simulator with a different init script */
-            char path[256];
-            snprintf(path, sizeof(path), "@BOOTDIR@/%d.script", awfulHackFlag);
-            if (access(path, R_OK) == 0) {
-                sprintf(cbuf, "do %s", path);
-                cptr = cbuf;
-                }
-            else {
-                /* Give up; can't find that boot script.
-                 *
-                 * Leave cptr unset to force an exit, else we'll spam
-                 * the console with errors until the slow user manages
-                 * to flip the offending switch back; it's especially
-                 * bad with a slow serial console.
-                 */
-                int access_error = errno;               /* preserve it from getcwd() */
-                char cwd[256];
-                getcwd (cwd, sizeof (cwd));
-                printf ("Cannot read %s from %s: %s!\n", path, cwd,
-                        strerror (access_error));
-                }
-            }
-
-        if (!cptr) {                                    /* didn't get into happy path */ 
-            cptr = strcpy (cbuf, "exit");               /* regardless of reason, stop sim */
-            if (awfulHackFlag != 8)                     /* not the only other legitimate value */
-                printf ("Invalid PiDP-8/I SCP flow redirect value %d!\n", awfulHackFlag);
-            }
-        }
+    if (cptr = build_pidp8i_scp_cmd (cbuf, sizeof (cbuf)))
+        printf ("Running '%s'...\n", cptr);
     else
 #endif
     if ((cptr = sim_brk_getact (cbuf, sizeof(cbuf))))   /* pending action? */

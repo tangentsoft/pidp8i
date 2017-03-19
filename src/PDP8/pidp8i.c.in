@@ -31,13 +31,90 @@
 
 #include "../gpio-common.h"
 
+#include <assert.h>
 #include <dirent.h> // for USB stick searching
 
 
-//// EXPORTED GLOBALS //////////////////////////////////////////////////
+//// MODULE GLOBALS ////////////////////////////////////////////////////
 
-// truly terrible even for me - break out of sim and start new script in scp.c
-int awfulHackFlag = 0;
+// handle_sing_step() sets this to nonzero and returns a value breaking
+// us out of the PDP-8 simulator's sim_instr() loop, which causes SCP to
+// call our build_pidp8i_scp_cmd(), which gives SCP a command to run:
+// either "exit" when it wants the simulator to stop (e.g the shutdown
+// and reboot combos) or "do $script" on IF + SING_STEP combo.
+//
+// We loop the flow control from this module out into the generic SIMH
+// code and then back in here so we don't have to export this global.
+// Basically, this module global lets us remember what handle_sing_step
+// wants SCP to do in the window between switch handling time and SCP
+// command handling time.
+static enum {
+    CMD_NONE = 0,            // "do nothing" idle case
+    CMD_DO_BOOTSCRIPT_1,     // SING_STEP + IF combos
+    CMD_DO_BOOTSCRIPT_2,
+    CMD_DO_BOOTSCRIPT_3,
+    CMD_DO_BOOTSCRIPT_4,
+    CMD_DO_BOOTSCRIPT_5,
+    CMD_DO_BOOTSCRIPT_6,
+    CMD_DO_BOOTSCRIPT_7,
+    CMD_EXIT,
+} insert_scp_cmd = CMD_NONE;
+
+
+//// build_pidp8i_scp_cmd //////////////////////////////////////////////
+// If insert_scp_cmd is nonzero, we return the corresponding SCP command 
+// we want run to make the simulator do something else.
+
+char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
+{
+    if (insert_scp_cmd == CMD_NONE) {
+        return 0;                               // nothing to do yet
+    }
+    else if ((insert_scp_cmd > 0) && (insert_scp_cmd <= 7)) {
+        // We got one of the IF + SING_STEP combos, so restart the
+        // simulator with the corresponding init script.
+        char path[256];
+        snprintf (path, sizeof (path), "@BOOTDIR@/%d.script", insert_scp_cmd);
+        insert_scp_cmd = CMD_NONE;              // it's a one-shot
+        if (access(path, R_OK) == 0) {
+            snprintf (cbuf, cbufsize, "do %s", path);
+            return cbuf;
+        }
+        else {
+            // That boot script doesn't exist or isn't readable.
+            //
+            // Fall through to the "exit" command builder below because
+            // we don't want to keep coming back in here at host CPU
+            // speed, failing the same way and issuing the same error
+            // until the slow human manages to flip the offending switch
+            // back.  This is especially annoying when the PiDP-8/I is
+            // attached to a slow serial console.  Ask me how I know.
+            int access_errno = errno;      // preserve it from getcwd()
+            char cwd[256];
+            getcwd (cwd, sizeof (cwd));
+            printf ("Cannot read %s from %s: %s!\n", path, cwd,
+                    strerror (access_errno));
+        }
+    }
+    else if (insert_scp_cmd < 0) {
+        printf ("Negative PiDP-8/I SCP command value %d given!\n",
+                insert_scp_cmd);
+    }
+    else if (insert_scp_cmd > CMD_EXIT) {
+        printf ("Invalid PiDP-8/I SCP command value %d given!\n",
+                insert_scp_cmd);
+    }
+    else {
+        // C doesn't require that "if" statements handle all cases
+        // statically, so do a runtime check to make sure we have
+        // exhausted all the other cases above.
+        assert (insert_scp_cmd == CMD_EXIT);
+    }
+
+    // If we get here, we got a nonzero command value but didn't get
+    // into the happy path above, so die.
+    return strncpy (cbuf, "exit", cbufsize);
+}
 
 
 //// set_pidp8i_led ////////////////////////////////////////////////////
@@ -400,11 +477,8 @@ static pidp8i_flow_t handle_sing_step (int closed)
         // down from the DF switches above.
         int swScript = (css1 & SS1_IF_ALL) >> 6;
         if (swScript) {
-            // build filename from IF value
-            char sScript[256];
-            snprintf (sScript, sizeof (sScript), "@BOOTDIR@/%d.script", swScript);
-            printf ("\r\n\nRebooting %s\r\n\r\n", sScript);
-            awfulHackFlag = swScript;   // this triggers a do command after leaving the simulator run.
+            printf ("\r\n\nRestarting with IF == %d...\r\n\r\n", swScript);
+            insert_scp_cmd = swScript;
             return pft_halt;
         }
     } // end if single-shot flag clear
@@ -420,7 +494,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
         // 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Stop)
         if ((switchstatus[2] & (SS2_S_INST | SS2_STOP)) == 0) {
             printf ("\r\nShutdown\r\n\r\n");
-            awfulHackFlag = 8;  // this triggers an exit command after leaving the simulator run.
+            insert_scp_cmd = CMD_EXIT;
             if (spawn_cmd (0, "sudo /bin/systemctl poweroff") != SCPE_OK) {
                 printf ("\r\n\r\npoweroff failed\r\n\r\n");
             }
@@ -430,7 +504,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
         // 4. Scan for host reboot command (Sing_Step + Sing_Inst + Start)
         if ((switchstatus[2] & (SS2_S_INST | SS2_START)) == 0) {
             printf ("\r\nReboot\r\n\r\n");
-            awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
+            insert_scp_cmd = CMD_EXIT;
             if (spawn_cmd (0, "sudo /bin/systemctl reboot") != SCPE_OK) {
                 printf ("\r\n\r\nreboot failed\r\n\r\n");
             }
