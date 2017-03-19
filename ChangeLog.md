@@ -6,6 +6,12 @@
     Pi 1 class devices, or 1.25 MIPS on the Pi Zero, which is clocked a
     bit faster than the older Pi 1 class devices.
 
+*   Fixed a problem introduced in v20170204 which causes the `LOAD_ADD`
+    and `DEPOSIT` switch handlers to generate incorrect core addresses
+    when the SIMH PDP-8 CPU core sets bits beyond the lower 12 in the PC
+    register.  The prior release was assuming this reigster is always
+    12-bit clean, but it isn't.
+
 *   Improved Raspberry Pi type detection logic in the code that builds
     the configuration string written out as the simulator and test
     programs start up.  Most of the improvements affect how we deal with
@@ -18,14 +24,6 @@
         preexisting `START` switch handler did, so we now delegate to
         that upstream mechanism, reducing behavior differences between
         the cases.
-
-    *   We now build and link in the upstream `sim_video` module, which
-        allows access to a video display via SDL.  We do not currently
-        use this in the project core, but I recall hearing about a
-        third-party project that uses this for a local graphical X-Y
-        vector display implementation for playing Spacewar!  When built
-        on a system without SDL or even a local bitmap display, this
-        code becomes nearly a no-op, affecting build time very little.
 
     *   Fixed many bugs identified by Coverity Scan in many different
         subsystems of the simulator.  Normally I wouldn't note such
@@ -47,11 +45,13 @@
     which case your binary OS media is also overwritten.  Do this at
     your own risk!
 
-*   Fixed a problem introduced in v20170204 which causes the `LOAD_ADD`
-    and `DEPOSIT` switch handlers to generate incorrect core addresses
-    when the SIMH PDP-8 CPU core sets bits beyond the lower 12 in the PC
-    register.  The prior release was assuming this reigster is always
-    12-bit clean, but it isn't.
+*   We now build and link in the upstream `sim_video` module, which
+    allows access to a video display via SDL.  We do not currently
+    use this in the project core, but I recall hearing about a
+    third-party project that uses this for a local graphical X-Y
+    vector display implementation for playing Spacewar!  When built
+    on a system without SDL or even a local bitmap display, this
+    code becomes nearly a no-op, affecting build time very little.
 
 *   SIMH changes to a different delay mechanism at CPU throttle rates
     below 1000 IPS, which prevents our incandescent lamp simulator from
