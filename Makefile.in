@@ -118,7 +118,6 @@ INFILES = \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
-	@srcdir@/src/scp.c.in \
 	@srcdir@/tools/simh-update.in
 PRECIOUS_INFILES = \
 	@srcdir@/Makefile.in \
