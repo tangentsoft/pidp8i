@@ -96,10 +96,6 @@ char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
                     strerror (access_errno));
         }
     }
-    else if (insert_scp_cmd < 0) {
-        printf ("Negative PiDP-8/I SCP command value %d given!\n",
-                insert_scp_cmd);
-    }
     else if (insert_scp_cmd > CMD_EXIT) {
         printf ("Invalid PiDP-8/I SCP command value %d given!\n",
                 insert_scp_cmd);
@@ -108,6 +104,14 @@ char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
         // C doesn't require that "if" statements handle all cases
         // statically, so do a runtime check to make sure we have
         // exhausted all the other cases above.
+        //
+        // We can get in here by means other than programmer error in
+        // modifying the enum: some C compilers allow signed values
+        // to be assigned to enums, so we could get in here on negative
+        // values.  We can't test for that above because one of the C
+        // compilers we build under (clang on macOS 10.12+) won't allow
+        // that short of nasty low-level hackery, so it complains if we
+        // test for negative values, claiming it can never happen.
         assert (insert_scp_cmd == CMD_EXIT);
     }
 
