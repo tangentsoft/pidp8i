@@ -550,9 +550,6 @@ void update_led_states (const us_time_t delay)
 
 static void *gpio_thread (void *terminate)
 {
-    // Find GPIO address (it varies by Pi model)
-    gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
-
     // Set thread to real time priority
     struct sched_param sp;
     sp.sched_priority = 4;  // not high, just above the minimum of 1
@@ -659,6 +656,9 @@ static void *gpio_thread (void *terminate)
 int start_pidp8i_gpio_thread (const char* must_map)
 {
     char errs[100];
+
+    // Find GPIO address (it varies by Pi model)
+    gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
 
     // Attempt to map the GPIO peripheral for our exclusive use.  Some
     // callers care if this fails, and some don't.
