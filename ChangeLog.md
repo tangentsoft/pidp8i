@@ -6,10 +6,10 @@
     Pi 1 class devices, or 1.25 MIPS on the Pi Zero, which is clocked a
     bit faster than the older Pi 1 class devices.
 
-*   Replaced the hard-coded 2-second startup delay in the simulator and
-    in `pidp8i-test` with an interlocked startup mechanism that lets the
-    software start as soon as initialization is complete.  Such programs
-    now start up noticeably faster.
+*   Replaced a simplistic 2-second delay in the startup sequence of the
+    simulator, `pidp8i-test`, and "[Incandescent Thought][it]" with a
+    smarter interlocked startup sequencing mechanism that largely
+    eliminates the delay.
 
 *   Fixed a problem introduced in v20170204 which causes the `LOAD_ADD`
     and `DEPOSIT` switch handlers to generate incorrect core addresses
@@ -77,6 +77,7 @@
     [upstream SIMH patch footprint][foot], and fix corner case bugs.
 
 [foot]: http://pastebin.com/5Jnx15QX
+[it]:   https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 
 
 ## Version 2017.02.04
