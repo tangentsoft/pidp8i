@@ -210,10 +210,10 @@ sed -e "s/^SGCID=.*/SGCID=$NEW_SGCID/" -i tmp @srcdir@/Makefile.in
 tools/mmake
 
 # Restore stdout and let the human test it
-say "Build completed without error.  Starting OS/8 in the simulator..."
+say "Build completed without error.  Running default bootscript to test it..."
 say
 say "(Nuke $WORKDIR when finished.)"
 say
 exec 1<&-
 exec 1<>/dev/tty
-exec make os8test
+exec make run
