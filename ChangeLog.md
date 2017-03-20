@@ -2,9 +2,13 @@
 
 ## Version 2017.03.18 (INCOMPLETE)
 
-*   Increased the stock CPU throttle from 0.67 MIPS to 0.85 MIPS on most
-    Pi 1 class devices, except for the Pi Zero which is a bit faster and
-    so is able to run at 1.25 MIPS.
+*   Testing shows that we can increase the stock CPU throttle from 0.67
+    MIPS to 0.85 MIPS on most Pi 1 class devices, except for the Pi Zero
+    which is a bit faster and so is able to run at 1.25 MIPS.
+
+    (Increasing it further causes SIMH to complain that it doesn't have
+    enough CPU power to run that fast, despite the fact that top(1)
+    shows it taking only about half the available CPU power.)
 
 *   Replaced a simplistic 2-second delay in the startup sequence of the
     simulator, `pidp8i-test`, and "[Incandescent Thought][it]" with a
