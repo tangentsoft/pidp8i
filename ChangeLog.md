@@ -2,9 +2,9 @@
 
 ## Version 2017.03.18 (INCOMPLETE)
 
-*   Increased the stock CPU throttle from 666 kIPS to 850 kIPS on most
-    Pi 1 class devices, or 1.25 MIPS on the Pi Zero, which is clocked a
-    bit faster than the older Pi 1 class devices.
+*   Increased the stock CPU throttle from 0.67 MIPS to 0.85 MIPS on most
+    Pi 1 class devices, except for the Pi Zero which is a bit faster and
+    so is able to run at 1.25 MIPS.
 
 *   Replaced a simplistic 2-second delay in the startup sequence of the
     simulator, `pidp8i-test`, and "[Incandescent Thought][it]" with a
