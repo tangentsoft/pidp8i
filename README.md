@@ -78,7 +78,7 @@ helpful when the CPU is [heavily throttled][thro].
 
 #### --serial-mod
 
-If you have done the [serial mod][smod] to your PiDP-8/I PCB and the
+If you have done [Oscar's serial mod][sm1] to your PiDP-8/I PCB and the
 Raspberry Pi you have connected to it, add `--serial-mod` to the
 `configure` command above.
 
@@ -89,6 +89,19 @@ trying to run the software may even crash the Pi.
 If you give this flag and your PCBs are *not* modified, most of the
 hardware will work correctly, but several lights and switches will not
 work correctly.
+
+
+#### --alt-serial-mod
+
+This flag is for an [alternative serial mod by James L-W][sm2]. It
+doesn't require mods to the Pi, and the mods to the PiDP-8/I board are
+different from Oscar's.  This flag changes the GPIO code to work with
+these modifications to the PiDP-8/I circuit design.
+
+See the linked mailing list thread for details.
+
+As with `--serial-mod`, you should only enable this flag if you have
+actually done the mods as specified by James L-W.
 
 
 #### --throttle
@@ -190,7 +203,8 @@ the terms of [the SIMH license][sl].
 
 [prj]:  https://tangentsoft.com/pidp8i/
 [upst]: http://obsolescence.wixsite.com/obsolescence/pidp-8
-[smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
+[sm1]:  http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
+[sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
 [usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
 [sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf

@@ -37,13 +37,21 @@ use cc-lib
 options {
 	debug-mode =>        "create a debug build (default is release)"
 	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
-	serial-mod =>        "build simulator to expect the PCB serial mods"
+	serial-mod =>        "use GPIO drive suitable for Oscar Vermeulen's serial mod method"
+	alt-serial-mod =>    "use GPIO drive suitable for James L-W's serial mod method"
 	throttle:  =>        "override the throttle values in the boot scripts"
 }
 
+if {[opt-bool alt-serial-mod]} {
+	msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
+	define PCB_SERIAL_MOD_JLW
+	define PCB_SERIAL_MOD_ANY
+}
+
 if {[opt-bool serial-mod]} {
-	msg-result "The simulator will expect the serial mods to the Pi and PiDP-8/I PCBs."
-	define PCB_SERIAL_MOD
+	msg-result "GPIO drive adjusted for Oscar Vermeulen's serial mods to the Pi and PiDP-8/I PCBs."
+	define PCB_SERIAL_MOD_OV
+	define PCB_SERIAL_MOD_ANY
 }
 
 if {[opt-bool debug-mode]} {
@@ -248,7 +256,7 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # Makefile.in, too.
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {ILS_MODE PCB_SERIAL_MOD}
+	-bare {ILS_MODE PCB_SERIAL_MOD_JLW PCB_SERIAL_MOD_OV}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in

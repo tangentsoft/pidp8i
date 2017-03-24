@@ -1,6 +1,9 @@
 # PiDP-8/I Changes
 
-## Version 2017.03.18 (INCOMPLETE)
+## Version 2017.03.24 (INCOMPLETE)
+
+*   Added the `configure --alt-serial-mod` option to change the GPIO
+    code to work with [James L-W's alternative serial mod][sm2].
 
 *   Testing shows that we can increase the stock CPU throttle from 0.67
     MIPS to 0.85 MIPS on most Pi 1 class devices, except for the Pi Zero
@@ -82,6 +85,7 @@
 
 [foot]: http://pastebin.com/5Jnx15QX
 [it]:   https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
+[sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
 
 
 ## Version 2017.02.04

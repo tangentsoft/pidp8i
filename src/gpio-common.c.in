@@ -71,8 +71,12 @@ uint8_t pidp8i_gpio_present;
 // program doesn't need to know anything about struct display.
 int pidp8i_simple_gpio_mode = 0;
 
-struct bcm2835_peripheral gpio; // needs initialisation
+// GPIO peripheral info, initted in start_pidp8i_gpio_thread()
+struct bcm2835_peripheral gpio;
 #define pgpio (&gpio)
+#ifdef PCB_SERIAL_MOD_JLW
+struct bcm2835_peripheral gpio2;
+#endif
 
 
 // A constant meaning "indeterminate milliseconds", used for error
@@ -81,10 +85,11 @@ struct bcm2835_peripheral gpio; // needs initialisation
 static const ms_time_t na_ms = (ms_time_t)-1;
 
 
-// Adjust columns to scan based on whether the serial mod was done, as
-// that affects the free GPIOs for our use, and how the PCB connects
-// them to the LED matrix.
-#ifdef PCB_SERIAL_MOD
+// Adjust columns to scan based on whether Oscar Vermeulen's serial mod
+// was done, as that affects the free GPIOs for our use, and how the PCB
+// connects them to the LED matrix.  James L-W's mod leaves GPIO pin
+// numbering unchanged relative to the stock circuit design.
+#ifdef PCB_SERIAL_MOD_OV
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
@@ -567,8 +572,10 @@ static void *gpio_thread (void *terminate)
         pt,
         ILS_MODE ? 'i' : 'n',
         pt[0] == 'p' ? 
-#ifdef PCB_SERIAL_MOD
-            "ser" : 
+#ifdef PCB_SERIAL_MOD_OV
+            "sermod" : 
+#elif PCB_SERIAL_MOD_JLW
+            "altser" : 
 #else
             "std" : 
 #endif
@@ -587,9 +594,6 @@ static void *gpio_thread (void *terminate)
     if (!pidp8i_gpio_present) return (void*)-1;
 
     // initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
-    //  INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
-    //  AT THE MOMENT, USE "sudo ./gpio mode 14 in" and "sudo ./gpio mode 15 in". "sudo ./gpio readall" to verify.
-    #define pgpio (&gpio)
     int i;
     for (i = 0; i < NLEDROWS; i++) {     // Define ledrows as input
         INP_GPIO(ledrows[i]);
@@ -605,10 +609,15 @@ static void *gpio_thread (void *terminate)
     // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
     GPIO_PULL = 2;  // pull-up
     usleep(1);  // must wait 150 cycles
-#ifdef PCB_SERIAL_MOD
-    GPIO_PULLCLK0 = 0x03ffc; // selects GPIO pins 2..13 (frees up serial port on 14 & 15)
+#ifdef PCB_SERIAL_MOD_OV
+    // Oscar Vermeulen's serial mod the PiDP-8/I board rearranges the
+    // GPIO matrix to use Pi GPIO pins 2..13, freeing up the hardware
+    // serial port on GPIO pins 14 & 15.
+    GPIO_PULLCLK0 = 0x03ffc;
 #else
-    GPIO_PULLCLK0 = 0x0fff0; // selects GPIO pins 4..15 (assumes we avoid pins 2 and 3!)
+    // The standard PiDP-8/I board drive scheme uses Pi GPIO pins 4..15.
+    // (James L-W's alternative serial mod also uses this scheme.)
+    GPIO_PULLCLK0 = 0x0fff0;
 #endif
     usleep(1);
     GPIO_PULL = 0; // reset GPPUD register
@@ -659,12 +668,23 @@ int start_pidp8i_gpio_thread (const char* must_map)
     char errs[100];
 
     // Find GPIO address (it varies by Pi model)
-    gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
+    unsigned int gpio_base_addr = bcm_host_get_peripheral_address();
+    gpio.addr_p = gpio_base_addr + 0x200000;
+
+#ifdef PCB_SERIAL_MOD_JLW
+    // James L-W's alternative serial mods were declared to be done here
+    // at configure time, so disable the hysteresis on the GPIO inputs.
+    gpio2.addr_p = gpio_base_addr + 0x100000;
+    gpio2.addr[0x0B] = (gpio2.addr[0x0B] & 0xF7) | (0x5A << 24);
+#endif
 
     // Attempt to map the GPIO peripheral for our exclusive use.  Some
     // callers care if this fails, and some don't.
     map_peripheral (&gpio, 1);
     if (must_map && !pidp8i_gpio_present) return EFAULT;
+#ifdef PCB_SERIAL_MOD_JLW
+    map_peripheral (&gpio2, 1);  // assume success since prior mapping worked
+#endif
 
     // Until gpio_core () reads the switches for the first time, we need
     // to mark them as all-open, lest we have a race condition with the
@@ -724,6 +744,9 @@ void stop_pidp8i_gpio_thread ()
     if (pthread_join (gpio_thread_info, NULL)) {
         printf("\r\nError joining multiplex thread\r\n");
     }
-    unmap_peripheral(&gpio);
+    unmap_peripheral (&gpio);
+#ifdef PCB_SERIAL_MOD_JLW
+    unmap_peripheral (&gpio2);
+#endif
     pthread_mutex_destroy (&gpio_start_mutex);
 }

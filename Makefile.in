@@ -213,7 +213,7 @@ install: all
 	@# If serial mod is disabled, turn off serial console and kgdb stuff
 	@# in case they were enabled previously, else they will fight with
 	@# our use of GPIO.
-	@(  test -z "@PCB_SERIAL_MOD@" -a -r $(CLTXT) && ! -w $(CLTXT) && \
+	@(  test -z "@PCB_SERIAL_MOD_ANY@" -a -r $(CLTXT) && ! -w $(CLTXT) && \
 		cp -p $(CLTXT) "$(CLTXT)"_orig && \
 		sed -e 's/console\=[a-zA-Z0-9]+,[0-9]+ //' \
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
