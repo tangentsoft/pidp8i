@@ -37,8 +37,8 @@ use cc-lib
 options {
 	debug-mode =>        "create a debug build (default is release)"
 	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
-	serial-mod =>        "use GPIO drive suitable for Oscar Vermeulen's serial mod method"
-	alt-serial-mod =>    "use GPIO drive suitable for James L-W's serial mod method"
+	serial-mod =>        "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+	alt-serial-mod =>    "use GPIO drive scheme suitable for James L-W's serial mod method"
 	throttle:  =>        "override the throttle values in the boot scripts"
 }
 
@@ -49,7 +49,7 @@ if {[opt-bool alt-serial-mod]} {
 }
 
 if {[opt-bool serial-mod]} {
-	msg-result "GPIO drive adjusted for Oscar Vermeulen's serial mods to the Pi and PiDP-8/I PCBs."
+	msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
 	define PCB_SERIAL_MOD_OV
 	define PCB_SERIAL_MOD_ANY
 }
