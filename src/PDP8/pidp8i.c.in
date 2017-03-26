@@ -344,7 +344,7 @@ static void mount_usb_stick_file (int devNo, char *devCode)
     // the passed-in device code.
     fileExtension[0] = '.';                     // extension starts with a .
     strncpy (fileExtension + 1, devCode, 2);    // extension is PT, RX, RL etc
-    fileExtension[2] = '\0';                    // chop off device number
+    fileExtension[3] = '\0';                    // chop off device number
 
 #if 0   // debugging
     printf("\r\nMOUNT USB: [DEV:%d] [CODE:%s], [EXT:%s]",
