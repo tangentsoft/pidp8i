@@ -346,7 +346,7 @@ static void mount_usb_stick_file (int devNo, char *devCode)
     strncpy (fileExtension + 1, devCode, 2);    // extension is PT, RX, RL etc
     fileExtension[3] = '\0';                    // chop off device number
 
-#if 0   // debugging
+#if 1   // debugging
     printf("\r\nMOUNT USB: [DEV:%d] [CODE:%s], [EXT:%s]",
             devNo, devCode, fileExtension);
 #endif
@@ -371,18 +371,18 @@ static void mount_usb_stick_file (int devNo, char *devCode)
                             sUSBPath, pDirent->d_name);
                     for (j = 0; j < 7; ++j) {
                         if (strncmp (mountedFiles[j], sFoundFile, CBUFSIZE) == 0) {
-                            break;  // already mounted; skip next
+#if 0   // debugging
+                            printf("\r\nAlready have %s mounted, slot %d; will not remount.",
+                                    sFoundFile, j);
+#endif
+                            sFoundFile[0] = '\0';   // don't leave outer loop; keep looking
+                            break;
                         }
                     }
                     if (j == 7) {
                         // Media image file is not already mounted, so leave while
                         // loop with path set to mount it
                         break;
-                    }
-                    else {
-                        // It's mounted, so forget its path, else we will stop
-                        // searching the other USB mount points
-                        sFoundFile[0] = '\0';
                     }
                 }
             }
