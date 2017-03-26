@@ -398,15 +398,19 @@ static void mount_usb_stick_file (int devNo, char *devCode)
 
     if (sFoundFile[0]) {            // no file found, exit
         if (access (sFoundFile, R_OK) == 0) {
-            t_stat scpCode = attach_cmd ((int32) 0, sFoundFile);   // issue ATTACH command
+            char sAttachCmd[CBUFSIZE] = { '\0' };
+            snprintf (sAttachCmd, sizeof(sAttachCmd), "%s %s",
+                    devCode, sFoundFile);
+            t_stat scpCode = attach_cmd ((int32) 0, sAttachCmd);
             if (scpCode == SCPE_OK) {
                 // add file to mount list
                 strncpy (mountedFiles[devNo], sFoundFile, CBUFSIZE);
                 printf ("\r\nMounted %s %s\r\n", devCode, mountedFiles[devNo]);
             }
             else {
-                printf ("\r\nSIMH error code %d mounting %s on %s\r\n",
-                        scpCode, sFoundFile, devCode);
+                // SIMH ATTACH command failed
+                printf ("\r\nSIMH error mounting %s on %s: %s\r\n",
+                        sFoundFile, devCode, sim_error_text (scpCode));
             }
         }
         else {
