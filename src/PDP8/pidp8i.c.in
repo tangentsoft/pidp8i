@@ -346,6 +346,11 @@ static void mount_usb_stick_file (int devNo, char *devCode)
     strncpy (fileExtension + 1, devCode, 2);    // extension is PT, RX, RL etc
     fileExtension[2] = '\0';                    // chop off device number
 
+#if 0   // debugging
+    printf("\r\nMOUNT USB: [DEV:%d] [CODE:%s], [EXT:%s]",
+            devNo, devCode, fileExtension);
+#endif
+
     // Forget the prior file attached to this PDP-8 device.  The only reason
     // we keep track is so we don't have the same media image file attached
     // to both devices of a given type we support.  That is, you can't have
@@ -393,13 +398,15 @@ static void mount_usb_stick_file (int devNo, char *devCode)
 
     if (sFoundFile[0]) {            // no file found, exit
         if (access (sFoundFile, R_OK) == 0) {
-            if (attach_cmd ((int32) 0, sFoundFile) == SCPE_OK) {   // issue ATTACH command
+            t_stat scpCode = attach_cmd ((int32) 0, sFoundFile);   // issue ATTACH command
+            if (scpCode == SCPE_OK) {
                 // add file to mount list
                 strncpy (mountedFiles[devNo], sFoundFile, CBUFSIZE);
                 printf ("\r\nMounted %s %s\r\n", devCode, mountedFiles[devNo]);
             }
             else {
-                printf ("\r\nSIMH error mounting %s\r\n", devCode);
+                printf ("\r\nSIMH error code %d mounting %s on %s\r\n",
+                        scpCode, sFoundFile, devCode);
             }
         }
         else {
