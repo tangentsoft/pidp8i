@@ -346,7 +346,7 @@ static void mount_usb_stick_file (int devNo, char *devCode)
     strncpy (fileExtension + 1, devCode, 2);    // extension is PT, RX, RL etc
     fileExtension[3] = '\0';                    // chop off device number
 
-#if 1   // debugging
+#if 0   // debugging
     printf("\r\nMOUNT USB: [DEV:%d] [CODE:%s], [EXT:%s]",
             devNo, devCode, fileExtension);
 #endif
@@ -366,9 +366,16 @@ static void mount_usb_stick_file (int devNo, char *devCode)
         if (pDir) {
             struct dirent* pDirent;
             while ((pDirent = readdir (pDir)) != 0) { // search all files in directory
-                if (strstr (pDirent->d_name, fileExtension)) {
+                if (pDirent->d_name[0] == '.') continue;    // dotfiles clutter debug output
+
+                char* pext = strstr (pDirent->d_name, fileExtension);
+                if (pext && (pext == (pDirent->d_name + strlen (pDirent->d_name) - 3))) {
                     snprintf (sFoundFile, sizeof (sFoundFile), "%s/%s",
                             sUSBPath, pDirent->d_name);
+#if 0   // debugging
+                    printf("\r\nFound candidate file %s for dev %s, ext *%s...",
+                            sFoundFile, devCode, fileExtension);
+#endif
                     for (j = 0; j < 7; ++j) {
                         if (strncmp (mountedFiles[j], sFoundFile, CBUFSIZE) == 0) {
 #if 0   // debugging
@@ -385,6 +392,12 @@ static void mount_usb_stick_file (int devNo, char *devCode)
                         break;
                     }
                 }
+#if 0   // debugging
+                else {
+                    printf("\r\nFile %s on %s doesn't match *%s...",
+                            pDirent->d_name, sUSBPath, fileExtension);
+                }
+#endif
             }
 
             closedir (pDir);
