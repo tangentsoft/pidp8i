@@ -479,7 +479,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
                 case 4: strcpy (swDevCode, "dt1"); break;
                 case 5: strcpy (swDevCode, "rx0"); break; // RX8E (8/e peripheral!)
                 case 6: strcpy (swDevCode, "rx1"); break;
-                case 7: strcpy (swDevCode, "rl0"); break; // RL8A
+                case 7: strcpy (swDevCode, "rk1"); break; // second RK05 disk pack
             }
             if (swDevCode[0]) mount_usb_stick_file (swDevice, swDevCode);
         }
