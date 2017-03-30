@@ -16,6 +16,7 @@
 /
 / SIMH: set throttle 30k
 / SIMH: set df disabled
+/ SIMH: set cpu noidle
 /
 / Copyright © 2000 Robert Krten
 /

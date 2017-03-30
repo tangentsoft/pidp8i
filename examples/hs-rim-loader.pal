@@ -21,6 +21,7 @@
 /
 / SIMH: echo Installing the RIM loader for the DEC high-speed tape reader...
 / SIMH: set df disabled
+/ SIMH: set cpu noidle
 
 	*7755
 	HLT		/ nonstandard: auto-halt on SIMH startup

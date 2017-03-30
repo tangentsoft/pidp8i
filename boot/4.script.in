@@ -18,6 +18,7 @@ echo command prompt, where you can say "quit", "help" and other
 echo things.  See the SimH manual for details.
 echo
 l @MEDIADIR@/spacewar/spacewar.bin
+set cpu @SIMH_CPU_IDLE_FLAG@idle
 @SET_THROTTLE@
 set df disabled
 at ttix 2222

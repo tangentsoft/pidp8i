@@ -5,6 +5,7 @@ echo Loading OS/8 from DECtape...
 set df disabled
 set dt disabled
 set td enabled
+set cpu @SIMH_CPU_IDLE_FLAG@idle
 @SET_THROTTLE@
 attach td0 @MEDIADIR@/os8/os8.tu56
 boot td0

@@ -24,7 +24,7 @@
 reset
 echo Loading OS/8 from the RK05 cartridge disk...
 set cpu 32k
-set cpu noidle
+set cpu @SIMH_CPU_IDLE_FLAG@idle
 set df disabled
 @SET_THROTTLE@
 att rk0 @MEDIADIR@/os8/os8.rk05
