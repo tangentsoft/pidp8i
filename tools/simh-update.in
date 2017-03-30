@@ -146,11 +146,17 @@ for fs in pdp8_doc simh_faq simh_doc
 do
 	ft=$(echo $fs | sed -e 's/simh_//' -e 's/_doc//')
 	test "$ft" = "doc" && ft=main
-	pdf=doc/simh/$ft.pdf
-    say "Converting upstream $fs.doc to $pdf..."
-    "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
-            mv "$fs.pdf" $pdf &&
-            fossil uv add $pdf
+	pdfout=doc/simh/$ft.pdf
+    pdftmp="$fs.pdf"
+    say "Converting upstream $fs.doc to $pdfout..."
+    if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
+            ! cmp -q "$pdftmp" "$pdfout"
+    then
+        # The upstream doc has apparently changed, since the PDF output
+        # file is different.  Replace our public version.
+        mv "$pdftmp" "$pdfout"
+        fossil uv add "$pdfout"
+    fi
 done
 say "Syncing new PDFs..."
 fossil uv sync
