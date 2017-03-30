@@ -55,7 +55,7 @@ while (<$s>) {
 
 	if ($attr eq 'checkout') {
 		my @elems = split ' ', $value;
-		$checkout = substr($elems[0], 0, 8);
+		$checkout = substr($elems[0], 0, 10);
 	}
 	elsif ($attr eq 'tags') {
 		my @tags = split /, /, $value;

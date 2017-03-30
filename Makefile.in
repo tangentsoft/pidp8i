@@ -312,16 +312,28 @@ ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
-# If you simply make $(OUTFILES) depend on $(INFILES), make(1) thinks it
-# can build all of $(OUTFILES) in parallel if given -jN, which causes
-# ./configure --args to run N times in parallel, which blows shit up
-# right good and proper.  We purposely list only the first file in
+# Rebuild simulator whenever one of its *.in files change.
+#
+# This is trickier than it appears.  If you simply make $(OUTFILES)
+# depend on $(INFILES), make(1) thinks it can build all of $(OUTFILES)
+# in parallel if given -jN, which causes ./configure --args to run N
+# times in parallel, which blows the build system up right good and
+# proper; bits everywhere.  We purposely list only the first file in
 # $(INFILES) here to prevent that.  The other files in $(INFILES) will
 # also be built, which confuses make(1) somewhat, but it figures things
 # out on the subsequent $(MAKE) call.
-bin/pidp8i: @srcdir@/bin/pidp8i.in
+#
+# We also list files like tools/version which, when they change, trigger
+# a rebuild of $(OUTFILES) because their change may affect what gets
+# generated.  This happened when we moved from 8 to 10 character Fossil
+# artifact IDs in the version string to match Fossil timeline's default.
+bin/pidp8i: @srcdir@/bin/pidp8i.in @srcdir@/tools/version
 	@AUTOREMAKE@ && $(MAKE)
 endif
+
+# Rebuild simulator if the version string tool changes, since its output
+# may have changed.
+src/gpio-common.c: @srcdir@/tools/version
 
 -include $(OBJS:.o=.d) obj/scanswitch.d
 
