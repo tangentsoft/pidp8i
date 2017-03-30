@@ -2065,7 +2065,7 @@ for (i = 1; i < argc; i++) {                            /* loop thru args */
             return 0;
             }
         if (*cbuf)                                      /* concat args */
-            strcat (cbuf, " "); 
+            sim_strlcat (cbuf, " ", sizeof(cbuf)); 
         sprintf(&cbuf[strlen(cbuf)], "%s%s%s", strchr(argv[i], ' ') ? "\"" : "", argv[i], strchr(argv[i], ' ') ? "\"" : "");
         lookswitch = FALSE;                             /* no more switches */
         }
@@ -2151,7 +2151,7 @@ else if (*argv[0]) {                                    /* sim name arg? */
     strncpy (nbuf + 1, argv[0], PATH_MAX + 1);          /* copy sim name */
     if ((np = (char *)match_ext (nbuf, "EXE")))         /* remove .exe */
         *np = 0;
-    strcat (nbuf, ".ini\"");                            /* add .ini" */
+    sim_strlcat (nbuf, ".ini\"", sizeof(nbuf));         /* add .ini" */
     stat = do_cmd (-1, nbuf) & ~SCPE_NOMESSAGE;         /* proc default cmd file */
     if (stat == SCPE_OPENERR) {                         /* didn't exist/can't open? */
         np = strrchr (nbuf, '/');                       /* stript path and try again in cwd */
@@ -2954,7 +2954,8 @@ for (nargs = 0; nargs < 10; ) {                         /* extract arguments */
 if (do_arg [0] == NULL)                                 /* need at least 1 */
     return SCPE_2FARG;
 if ((fpin = fopen (do_arg[0], "r")) == NULL) {          /* file failed to open? */
-    strcat (strcpy (cbuf, do_arg[0]), ".sim");          /* try again with .sim extension */
+    sim_strlcpy (cbuf, do_arg[0], sizeof (cbuf));       /* try again with .sim extension */
+    sim_strlcat (cbuf, ".sim", sizeof (cbuf));
     if ((fpin = fopen (cbuf, "r")) == NULL) {           /* failed a second time? */
         if (flag == 0)                                  /* cmd line file? */
              fprintf (stderr, "Can't open file %s\n", do_arg[0]);
@@ -2985,7 +2986,8 @@ if (flag >= 0) {                                        /* Only bump nesting fro
         }
     }
 
-strcpy( sim_do_filename[sim_do_depth], do_arg[0]);      /* stash away do file name for possible use by 'call' command */
+sim_strlcpy( sim_do_filename[sim_do_depth], do_arg[0], 
+             sizeof (sim_do_filename[sim_do_depth]));   /* stash away do file name for possible use by 'call' command */
 sim_do_label[sim_do_depth] = label;                     /* stash away do label for possible use in messages */
 sim_goto_line[sim_do_depth] = 0;
 if (label) {
@@ -3786,8 +3788,11 @@ int32 saved_goto_line = sim_goto_line[sim_do_depth];
 
 if (NULL == sim_gotofile) return SCPE_UNK;              /* only valid inside of do_cmd */
 get_glyph (fcptr, gbuf1, 0);
-if ('\0' == gbuf1[0]) return SCPE_ARG;                  /* unspecified goto target */
+if ('\0' == gbuf1[0])                                   /* unspecified goto target */
+    return sim_messagef (SCPE_ARG, "Missing goto target\n");
 fpos = ftell(sim_gotofile);                             /* Save start position */
+if (fpos < 0)
+    return sim_messagef (SCPE_IERR, "goto ftell error: %s\n", strerror (errno));
 rewind(sim_gotofile);                                   /* start search for label */
 sim_goto_line[sim_do_depth] = 0;                        /* reset line number */
 sim_do_echo = 0;                                        /* Don't echo while searching for label */
@@ -3799,7 +3804,7 @@ while (1) {
     if (*cptr != ':') continue;                         /* ignore non-labels */
     ++cptr;                                             /* skip : */
     while (sim_isspace (*cptr)) ++cptr;                 /* skip blanks */
-    cptr = get_glyph (cptr, gbuf, 0);                   /* get label glyph */
+    get_glyph (cptr, gbuf, 0);                          /* get label glyph */
     if (0 == strcmp(gbuf, gbuf1)) {
         sim_brk_clract ();                              /* goto defangs current actions */
         sim_do_echo = saved_do_echo;                    /* restore echo mode */
@@ -3809,9 +3814,10 @@ while (1) {
         }
     }
 sim_do_echo = saved_do_echo;                            /* restore echo mode */
-fseek(sim_gotofile, fpos, SEEK_SET);                    /* restore start position */
 sim_goto_line[sim_do_depth] = saved_goto_line;          /* restore start line number */
-return SCPE_ARG;
+if (fseek(sim_gotofile, fpos, SEEK_SET))                /* restore start position */
+    return sim_messagef (SCPE_IERR, "goto seek error: %s\n", strerror (errno));
+return sim_messagef (SCPE_ARG, "goto target '%s' not found\n", gbuf1);
 }
 
 /* Return command */
@@ -5120,23 +5126,25 @@ struct stat filestat;
 char *c;
 char DirName[PATH_MAX + 1], WholeName[PATH_MAX + 1], WildName[PATH_MAX + 1];
 
-strcpy (WildName, cptr);
+memset (DirName, 0, sizeof(DirName));
+memset (WholeName, 0, sizeof(WholeName));
+sim_strlcpy (WildName, cptr, sizeof(WildName));
 cptr = WildName;
 sim_trim_endspc (WildName);
 if ((!stat (WildName, &filestat)) && (filestat.st_mode & S_IFDIR))
-    strcat (WildName, "/*");
+    sim_strlcat (WildName, "/*", sizeof(WildName));
 if ((*cptr != '/') || (0 == memcmp (cptr, "./", 2)) || (0 == memcmp (cptr, "../", 3))) {
 #if defined (VMS)
-    getcwd (WholeName, PATH_MAX, 0);
+    getcwd (WholeName, sizeof(WholeName)-1, 0);
 #else
-    getcwd (WholeName, PATH_MAX);
+    getcwd (WholeName, sizeof(WholeName)-1);
 #endif
-    strcat (WholeName, "/");
-    strcat (WholeName, cptr);
+    sim_strlcat (WholeName, "/", sizeof(WholeName));
+    sim_strlcat (WholeName, cptr, sizeof(WholeName));
     sim_trim_endspc (WholeName);
     }
 else
-    strcpy (WholeName, cptr);
+    sim_strlcpy (WholeName, cptr, sizeof(WholeName));
 while ((c = strstr (WholeName, "/./")))
     memmove (c + 1, c + 3, 1 + strlen (c + 3));
 while ((c = strstr (WholeName, "//")))
@@ -5157,9 +5165,9 @@ if (c) {
     }
 else {
 #if defined (VMS)
-    getcwd (WholeName, PATH_MAX, 0);
+    getcwd (WholeName, sizeof(WholeName)-1, 0);
 #else
-    getcwd (WholeName, PATH_MAX);
+    getcwd (WholeName, sizeof(WholeName)-1);
 #endif
     }
 cptr = WholeName;
@@ -5194,7 +5202,8 @@ if (dir) {
         sprintf (FileName, "%s/%s", DirName, ent->d_name);
 #endif
         p_name = FileName + strlen (DirName);
-        stat (FileName, &filestat);
+        memset (&filestat, 0, sizeof (filestat));
+        (void)stat (FileName, &filestat);
         FileSize = (t_offset)((filestat.st_mode & S_IFDIR) ? 0 : sim_fsize_name_ex (FileName));
         entry (DirName, p_name, FileSize, &filestat, context);
         }
@@ -6198,7 +6207,10 @@ sim_switches &= ~(SWMASK ('F') | SWMASK ('D') | SWMASK ('Q'));  /* remove digest
     goto Cleanup_Return;                                                \
     }
 
-fstat (fileno (rfile), &rstat);
+if (fstat (fileno (rfile), &rstat)) {
+    r = SCPE_IOERR;
+    goto Cleanup_Return;
+    }
 READ_S (buf);                                           /* [V2.5+] read version */
 v40 = v35 = v32 = FALSE;
 if (strcmp (buf, save_ver40) == 0)                      /* version 4.0? */
@@ -6651,7 +6663,8 @@ for (i = 1; (dptr = sim_devices[i]) != NULL; i++) {     /* reposition all */
     for (j = 0; j < dptr->numunits; j++) {              /* seq devices */
         uptr = dptr->units + j;
         if ((uptr->flags & (UNIT_ATT + UNIT_SEQ)) == (UNIT_ATT + UNIT_SEQ))
-            sim_fseek (uptr->fileref, uptr->pos, SEEK_SET);
+            if (sim_fseek (uptr->fileref, uptr->pos, SEEK_SET))
+                return sim_messagef (SCPE_IERR, "Can't seek to %u in %s for %s\n", (unsigned)uptr->pos, uptr->filename, sim_uname (uptr));
         }
     }
 stop_cpu = 0;
@@ -6837,8 +6850,10 @@ fputc ('\n', st);                                       /* start on a new line *
 if (v >= SCPE_BASE)                                     /* SCP error? */
     fputs (sim_error_text (v), st);                     /* print it from the SCP list */
 else {                                                  /* VM error */
-    fputs (sim_stop_messages [v], st);                  /* print the VM-specific message */
-
+    if (sim_stop_messages [v])
+        fputs (sim_stop_messages [v], st);              /* print the VM-specific message */
+    else
+        fprintf (st, "Unknown %s simulator stop code %d", sim_name, v);
     if ((sim_vm_fprint_stopped != NULL) &&              /* if a VM-specific stop handler is defined */
         (!sim_vm_fprint_stopped (st, v)))               /*   call it; if it returned FALSE, */
         return;                                         /*     we're done */
@@ -6866,7 +6881,6 @@ if ((dptr != NULL) && (dptr->examine != NULL)) {
         }
     }
 fprintf (st, "\n");
-return;
 }
 
 void fprint_stopped (FILE *st, t_stat v)
@@ -7455,7 +7469,11 @@ for (i = 0, j = addr; i < sim_emax; i++, j = j + dptr->aincr) {
             SZ_LOAD (sz, sim_eval[i], uptr->filebuf, loc);
             }
         else {
-            sim_fseek (uptr->fileref, (t_addr)(sz * loc), SEEK_SET);
+            if (sim_fseek (uptr->fileref, (t_addr)(sz * loc), SEEK_SET)) {
+                clearerr (uptr->fileref);
+                reason = SCPE_IOERR;
+                break;
+                }
             sim_fread (&sim_eval[i], sz, 1, uptr->fileref);
             if ((feof (uptr->fileref)) &&
                !(uptr->flags & UNIT_FIX)) {
@@ -7546,7 +7564,10 @@ for (i = 0, j = addr; i < count; i++, j = j + dptr->aincr) {
                 uptr->hwmark = (uint32) loc + 1;
             }
         else {
-            sim_fseek (uptr->fileref, (t_addr)(sz * loc), SEEK_SET);
+            if (sim_fseek (uptr->fileref, (t_addr)(sz * loc), SEEK_SET)) {
+                clearerr (uptr->fileref);
+                return SCPE_IOERR;
+                }
             sim_fwrite (&sim_eval[i], sz, 1, uptr->fileref);
             if (ferror (uptr->fileref)) {
                 clearerr (uptr->fileref);
@@ -7864,7 +7885,7 @@ return 0;
 }
 
 /* strcasecmp() is not available on all platforms */
-int sim_strcasecmp (const char* string1, const char* string2)
+int sim_strcasecmp (const char *string1, const char *string2)
 {
 size_t i = 0;
 unsigned char s1, s2;
@@ -7888,6 +7909,71 @@ while (1) {
         return 1;
     }
 return 0;
+}
+
+/* strlcat() and strlcpy() are not available on all platforms */
+/* Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com> */
+/*
+ * Appends src to string dst of size siz (unlike strncat, siz is the
+ * full size of dst, not space left).  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz <= strlen(dst)).
+ * Returns strlen(src) + MIN(siz, strlen(initial dst)).
+ * If retval >= siz, truncation occurred.
+ */
+size_t sim_strlcat(char *dst, const char *src, size_t size)
+{
+char *d = dst;
+const char *s = src;
+size_t n = size;
+size_t dlen;
+
+/* Find the end of dst and adjust bytes left but don't go past end */
+while (n-- != 0 && *d != '\0')
+    d++;
+dlen = d - dst;
+n = size - dlen;
+
+if (n == 0)
+    return (dlen + strlen(s));
+while (*s != '\0') {
+    if (n != 1) {
+        *d++ = *s;
+        n--;
+        }
+    s++;
+    }
+*d = '\0';
+
+return (dlen + (s - src));          /* count does not include NUL */
+}
+
+/*
+ * Copy src to string dst of size siz.  At most siz-1 characters
+ * will be copied.  Always NUL terminates (unless siz == 0).
+ * Returns strlen(src); if retval >= siz, truncation occurred.
+ */
+size_t sim_strlcpy (char *dst, const char *src, size_t size)
+{
+char *d = dst;
+const char *s = src;
+size_t n = size;
+
+/* Copy as many bytes as will fit */
+if (n != 0) {
+    while (--n != 0) {
+        if ((*d++ = *s++) == '\0')
+            break;
+        }
+    }
+
+    /* Not enough room in dst, add NUL and traverse rest of src */
+    if (n == 0) {
+        if (size != 0)
+            *d = '\0';              /* NUL-terminate dst */
+        while (*s++)
+            ;
+        }
+return (s - src - 1);               /* count does not include NUL */
 }
 
 /* get_yn               yes/no question
@@ -8222,6 +8308,7 @@ while (size--) {
         case '\'':
             if (quote == *iptr)
                 *tptr++ = '\\';
+            /* fall through */
         default:
             if (sim_isprint (*iptr))
                 *tptr++ = *iptr;

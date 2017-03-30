@@ -37,6 +37,8 @@
         that upstream mechanism, reducing behavior differences between
         the cases.
 
+    *   Improved keyboard polling behavior in terminal handler.
+
     *   Fixed many bugs identified by Coverity Scan in many different
         subsystems of the simulator.  Normally I wouldn't note such
         problems in this user-facing document, but it is possible that
