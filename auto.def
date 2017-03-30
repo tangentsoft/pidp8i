@@ -35,11 +35,11 @@ use cc
 use cc-lib
 
 options {
-	debug-mode =>        "create a debug build (default is release)"
+	debug-mode        => "create a debug build (default is release)"
 	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
-	serial-mod =>        "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
-	alt-serial-mod =>    "use GPIO drive scheme suitable for James L-W's serial mod method"
-	throttle:  =>        "override the throttle values in the boot scripts"
+	serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
+	throttle:         => "override the throttle values in the boot scripts"
 }
 
 if {[opt-bool alt-serial-mod]} {
