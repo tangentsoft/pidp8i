@@ -72,29 +72,34 @@ building with the `--no-lamp-simulator` option or when the ILS is
 automatically disabled, as when configuring the software on a
 single-core Raspberry Pi. See the next item for details.
 
-This automatic `--no-idle` feature only went into effect on 2017.03.30,
-and the changes it makes aren't normally updated as part of the normal
-build-and-install sequence because it involves overwriting files you may
-consider precious. Specifically, the SIMH simulator configuration
-scripts, installed at `$prefix/share/boot/*.script`. If you want to
-enforce no-idle behavior on an existing installation, you therefore have
-several options:
+Since this automatic `--no-idle` feature only went into effect on
+2017.03.30, and the changes it makes don't normally take effect when
+re-installing over the top of an existing installation, you may need to
+take additional steps to get this new "no idle" behavior. This
+configuration setting changes the PDP-8 simulator configuration scripts
+installed at `$prefix/share/boot/*.script`, but the `sudo make install`
+step doesn't overwrite those files because they may contain local
+changes. If you want to enforce no-idle behavior on an existing
+installation, you therefore have several options:
 
-1.  Hand-edit the installed SIMH scripts to match the changes in the
-    newly-generated `boot/*.script` files in the build directory; or
+1.  Hand-edit the installed simulator configuration scripts to match the
+    changes in the newly-generated `boot/*.script` files in the build
+    directory; or
 
 2.  If your previously installed binary OS media images — e.g. the OS/8
-    RK05 disk image that the simulator boots from by default — is
-    precious but the SIMH configuration scripts aren't precious, you can
-    copy the `boot/*.script` files over the top of your existing
+    RK05 disk image that the simulator boots from by default — are
+    precious but the simulator configuration scripts aren't precious,
+    you can copy the `boot/*.script` files over the top of your existing
     `$prefix/share/boot/*.script` files; or
 
-3.  If neither your SIMH configuration files nor the binary OS media
-    images are precious, you can force the installer to overwrite them
-    with a `sudo make mediainstall` command after `sudo make install`.
+3.  If neither your previously installed simulator configuration files
+    nor the binary media images are precious, you can force the
+    installer to overwrite them both with a `sudo make mediainstall`
+    command after `sudo make install`.
+    
     Beware that this is potentially destructive! If you've made changes
     to your PDP-8 operating systems or have saved files to your OS
-    system disks, this option will overwrite those changes.
+    system disks, this option will overwrite those changes!
 
 The only practical reason I know of for setting `--no-idle` in NLS mode
 is that it can result in slightly higher SIMH benchmark results. I don't
