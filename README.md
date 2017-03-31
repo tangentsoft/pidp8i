@@ -56,6 +56,57 @@ to, you still need to install via `sudo` because the installation
 process does other things that do require `root` access.
 
 
+#### --no-idle
+
+By default, the PDP-8 simulator configuration files are generated with
+the CPU idling option set appropriately for your configuration. Idling
+causes the simulator to go into a low-CPU usage mode when it detects
+that the simulated PDP-8 software isn't doing anything CPU-critical,
+like waiting for a keypress.
+
+Idling is incompatible with the incandescent lamp simulator (ILS)
+because it throws off the timing used to calculate the LED brightness
+values, so when building with the ILS, the build system implicitly sets
+the `--no-idle` option. This option therefore only takes effect when
+building with the `--no-lamp-simulator` option or when the ILS is
+automatically disabled, as when configuring the software on a
+single-core Raspberry Pi. See the next item for details.
+
+This automatic `--no-idle` feature only went into effect on 2017.03.30,
+and the changes it makes aren't normally updated as part of the normal
+build-and-install sequence because it involves overwriting files you may
+consider precious. Specifically, the SIMH simulator configuration
+scripts, installed at `$prefix/share/boot/*.script`. If you want to
+enforce no-idle behavior on an existing installation, you therefore have
+several options:
+
+1.  Hand-edit the installed SIMH scripts to match the changes in the
+    newly-generated `boot/*.script` files in the build directory; or
+
+2.  If your previously installed binary OS media images — e.g. the OS/8
+    RK05 disk image that the simulator boots from by default — is
+    precious but the SIMH configuration scripts aren't precious, you can
+    copy the `boot/*.script` files over the top of your existing
+    `$prefix/share/boot/*.script` files; or
+
+3.  If neither your SIMH configuration files nor the binary OS media
+    images are precious, you can force the installer to overwrite them
+    with a `sudo make mediainstall` command after `sudo make install`.
+    Beware that this is potentially destructive! If you've made changes
+    to your PDP-8 operating systems or have saved files to your OS
+    system disks, this option will overwrite those changes.
+
+The only practical reason I know of for setting `--no-idle` in NLS mode
+is that it can result in slightly higher SIMH benchmark results. I don't
+know if it actually makes the simulator run faster, particularly when
+it's been [throttled][thro], as it always will be when built on a
+single-core Pi, which also means you're running in NLS mode. Therefore,
+it may only have this tiny benchmarking effect when running on a
+multi-core Pi, completely unthrottled.
+
+tl;dr: You probably don't need to give this option, ever.
+
+
 #### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
