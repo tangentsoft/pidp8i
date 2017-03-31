@@ -187,7 +187,7 @@ files:
 Sometimes this "protect the precious" behavior isn't what you want.
 (Gollum!) One common reason this may be the case is that you've damaged
 your local configuration and want to start over. Another common case is
-that the newer softare you're installing contains changes that you want
+that the newer software you're installing contains changes that you want
 to reflect into your local configuration.
 
 You have several options here:
