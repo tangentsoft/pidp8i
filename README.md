@@ -35,6 +35,11 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
 
+If you've checked out a new version of the source code and the `make`
+step fails, try redoing the `configure` step. Sometimes changes made to
+the source code invalidate prior `make` dependencies, which are
+implicitly repaired by the `configure` script.
+
 
 ### Configure Script Options
 
