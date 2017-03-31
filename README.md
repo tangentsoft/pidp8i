@@ -117,13 +117,13 @@ tl;dr: You probably don't need to give this option, ever.
 If you build the software on a multi-core host, the PDP-8/I simulator is
 normally built with the [incandescent lamp simulator][ils] feature,
 which drives the LEDs in a way that mimics the incandescent lamps used
-in the original PDP-8/I.  This feature currently takes too much CPU
-power to run on anything but a multi-core Raspberry Pi, currently
-limited to the Pi 2 and Pi 3 series.
+in the original PDP-8/I. (We call this the ILS for short.) This feature
+currently takes too much CPU power to run on anything but a multi-core
+Raspberry Pi, currently limited to the Pi 2 and Pi 3 series.
 
 If you configure the software on a single-core Pi — models A+, B+, and
 Zero — the simulator uses the original low-CPU-usage LED driving method
-instead.
+instead. (a.k.a. NLS for short, named after this configuration option.)
 
 Those on a multi-core host who want this low-CPU-usage LED driving
 method can give the `--no-lamp-simulator` option to `configure`.  This
