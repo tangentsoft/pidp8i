@@ -197,11 +197,10 @@ You have several options here:
     installed simulator configuration scripts to match the changes in
     the newly-generated `boot/*.script` files under the build directory.
 
-2.  If the upstream change you want to merge into your local
-    configuration is to the OS media instead, you'll have to mount both
-    versions of the media image files under the PDP-8 simulator and copy
-    the changes over by hand, if you're unwilling to overwrite the media
-    image files wholesale.
+2.  If the upstream change is to the binary PDP-8 media image files and
+    you're unwilling to overwrite them wholesale, you'll have to mount
+    both versions of the media image files under the PDP-8 simulator and
+    copy the changes over by hand.
 
 3.  If your previously installed binary OS media images — e.g. the OS/8
     RK05 disk image that the simulator boots from by default — are
