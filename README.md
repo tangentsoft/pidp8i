@@ -64,10 +64,10 @@ process does other things that do require `root` access.
 #### --no-idle
 
 By default, the PDP-8 simulator configuration files are generated with
-the CPU idling option set appropriately for your configuration. Idling
-causes the simulator to go into a low-CPU usage mode when it detects
-that the simulated PDP-8 software isn't doing anything CPU-critical,
-like waiting for a keypress.
+the PDP-8 CPU idling option set appropriately for your configuration.
+Idling causes the simulator to go into a low-CPU usage mode when it
+detects that the simulated PDP-8 software isn't doing any real work,
+such as spinning in a tight loop waiting for a keypress.
 
 Idling is incompatible with the incandescent lamp simulator (ILS)
 because it throws off the timing used to calculate the LED brightness
@@ -77,42 +77,32 @@ building with the `--no-lamp-simulator` option or when the ILS is
 automatically disabled, as when configuring the software on a
 single-core Raspberry Pi. See the next item for details.
 
-Since this automatic `--no-idle` feature only went into effect on
-2017.03.30, and the changes it makes don't normally take effect when
-re-installing over the top of an existing installation, you may need to
-take additional steps to get this new "no idle" behavior. This
-configuration setting changes the PDP-8 simulator configuration scripts
-installed at `$prefix/share/boot/*.script`, but the `sudo make install`
-step doesn't overwrite those files because they may contain local
-changes. If you want to enforce no-idle behavior on an existing
-installation, you therefore have several options:
+If you're:
 
-1.  Hand-edit the installed simulator configuration scripts to match the
-    changes in the newly-generated `boot/*.script` files in the build
-    directory; or
+1.  updating an installation made before 2017.03.30;
 
-2.  If your previously installed binary OS media images — e.g. the OS/8
-    RK05 disk image that the simulator boots from by default — are
-    precious but the simulator configuration scripts aren't precious,
-    you can copy the `boot/*.script` files over the top of your existing
-    `$prefix/share/boot/*.script` files; or
+2.  it uses the ILS feature; and
 
-3.  If neither your previously installed simulator configuration files
-    nor the binary media images are precious, you can force the
-    installer to overwrite them both with a `sudo make mediainstall`
-    command after `sudo make install`.
-    
-    Beware that this is potentially destructive! If you've made changes
-    to your PDP-8 operating systems or have saved files to your OS
-    system disks, this option will overwrite those changes!
+3.  you have added any `set cpu idle` options in your PDP-8
+    confifguration scripts
+
+...see the "Overwriting the Local Simulator Setup" section below.
+
+You may also need to use one of the solutions in that section if you
+first install with the NLS enabled, then later decide that you want to
+try the ILS.
+
+You know you need to fix your local PDP-8 simulator configuration if
+you're using the ILS and the display is correct only while the simulated
+PDP-8 is doing real work. If the display dims to zero brightness and
+then flutters between off, dim, and on states seemingly randomly while
+the PDP-8 is idle, you've got a `set cpu idle` setting somehwere. Again,
+see the "Overwriting the Local Simulator Setup" section for the options
+you have to fix this.
 
 The only practical reason I know of for setting `--no-idle` in NLS mode
-is that it can result in slightly higher SIMH benchmark results. I don't
-know if it actually makes the simulator run faster, particularly when
-it's been [throttled][thro], as it always will be when built on a
-single-core Pi, which also means you're running in NLS mode. Therefore,
-it may only have this tiny benchmarking effect when running on a
-multi-core Pi, completely unthrottled.
+is that it can result in slightly higher SIMH benchmark results when
+running on a multi-core Pi without any [throttled][thro] restriction.
 
 tl;dr: You probably don't need to give this option, ever.
 
@@ -177,22 +167,57 @@ or less.
 Run `./configure --help` for more information on your options here.
 
 
-### Installing
+## Overwriting the Local Simulator Setup
 
-The `sudo make install` step in the command above does what most people
-want.
+When you run `sudo make install` step on a system that already has an
+existing installation, it purposely does not overwrite two classes of
+files:
 
-That step will not overwrite the operating system and program media
-(e.g. the OS/8 RK05 disk cartridge image) when installing multiple times
-to the same location, but you can demand an overwrite with:
+1.  **The binary PDP-8 media files**, such as the RK05 disk image that
+    holds the OS/8 image the simulator boots from by default. These media
+    image files are considered "precious" because you may have modified
+    the OS configuration or saved personal files to the disk the OS
+    boots from, which in turn modifies this media image file out in the
+    host operating environment.
 
-    $ sudo make mediainstall
+2.  **The PDP-8 simulator configuration files**, installed as
+    `$prefix/share/boot/*.script`, which may similarly have local
+    changes, and thus be precious to you.
 
-This can be helpful if you have damaged your OS/program media or simply
-want to return to the pristine versions as distributed.
+Sometimes this "protect the precious" behavior isn't what you want.
+(Gollum!) One common reason this may be the case is that you've damaged
+your local configuration and want to start over. Another common case is
+that the newer softare you're installing contains changes that you want
+to reflect into your local configuration.
 
-This will also overwrite the boot scripts in `$prefix/share/boot` with
-fresh versions from the source distribution.
+You have several options here:
+
+1.  If you just want to reflect upstream PDP-8 simulator configuration
+    file changes into your local versions, you can hand-edit the
+    installed simulator configuration scripts to match the changes in
+    the newly-generated `boot/*.script` files under the build directory.
+
+2.  If the upstream change you want to merge into your local
+    configuration is to the OS media instead, you'll have to mount both
+    versions of the media image files under the PDP-8 simulator and copy
+    the changes over by hand, if you're unwilling to overwrite the media
+    image files wholesale.
+
+3.  If your previously installed binary OS media images — e.g. the OS/8
+    RK05 disk image that the simulator boots from by default — are
+    precious but the simulator configuration scripts aren't precious,
+    you can just copy the generated `boot/*.script` files from the build
+    directory into the installation directory, `$prefix/share/boot`.
+    (See the `--prefix` option above for the meaning of `$prefix`.)
+
+4.  If neither your previously installed simulator configuration files
+    nor the binary media images are precious, you can force the
+    installation script to overwrite them both with a `sudo make
+    mediainstall` command after `sudo make install`.
+
+    Beware that this is potentially destructive! If you've made changes
+    to your PDP-8 operating systems or have saved files to your OS
+    system disks, this option will overwrite those changes!
 
 
 ## Testing
