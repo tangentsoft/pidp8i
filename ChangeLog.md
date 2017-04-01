@@ -39,7 +39,7 @@
 *   Fixed a problem introduced in v20170204 which causes the `LOAD_ADD`
     and `DEPOSIT` switch handlers to generate incorrect core addresses
     when the SIMH PDP-8 CPU core sets bits beyond the lower 12 in the PC
-    register.  We were assuming this reigster is always 12-bit clean,
+    register.  We were assuming this register is always 12-bit clean,
     but it isn't.
 
 *   Merged in upstream SIMH improvements.  Changes relevant to the
