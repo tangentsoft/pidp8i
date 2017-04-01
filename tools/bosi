@@ -254,6 +254,8 @@ function do_image() {
         *) exit 1
     esac
 
+    dev=${dev/disk/rdisk}               # speeds zeroing and re-imaging
+
     mf=/tmp/MANIFEST.txt
     readme=/tmp/README.md
     cp "$topdir/doc/OS-images.md" $readme
