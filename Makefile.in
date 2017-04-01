@@ -291,7 +291,7 @@ boot/5.script: boot/ac-mq-blinker.script
 
 bin/palbart: @srcdir@/palbart/palbart.c
 	$(CC) -Wall -Wno-strict-prototypes @BUILDMODE@ $< -o $@
-	$(CC) -MM $< -o obj/$*.d
+	$(CC) -MM $< -o obj/palbart.d
 
 $(BUILDDIRS):
 	mkdir -p $@
