@@ -36,13 +36,13 @@
 
 # Git commit ID of the latest version of the SIMH 4 project on GitHub 
 # that has been merged into this source base.
-SGCID=370cb0edb7ae14fb6467d7f8c734a70130b5bf3f
+SGCID=17903827bdb294f7e60d4c7f172bd6a1a71dfbd5
 
 CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
 	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
 	-D_GNU_SOURCE -U__STRICT_ANSI__ \
-	-I @srcdir@/src -I @srcdir@/src/PDP8 -I @builddir@/src
+	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
 
 SIM = bin/pidp8i-sim
 BINS = bin/palbart $(SIM) bin/pidp8i-test libexec/scanswitch
@@ -53,7 +53,6 @@ INSTDIRS = bin etc libexec share/boot share/media share/man/man1
 
 OBJS = \
 	obj/gpio-common.o \
-	obj/sim_console.o \
 	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_cpu.o \
 	obj/PDP8/pdp8_clk.o \
@@ -74,6 +73,7 @@ OBJS = \
 	obj/PDP8/pdp8_ttx.o \
 	obj/PDP8/pidp8i.o \
 	obj/scp.o \
+	obj/sim_console.o \
 	obj/sim_disk.o \
 	obj/sim_ether.o \
 	obj/sim_fio.o \
@@ -81,7 +81,8 @@ OBJS = \
 	obj/sim_sock.o \
 	obj/sim_tape.o \
 	obj/sim_timer.o \
-	obj/sim_tmxr.o
+	obj/sim_tmxr.o \
+	obj/sim_video.o
 
 ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
@@ -117,9 +118,9 @@ INFILES = \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
-	@srcdir@/src/scp.c.in \
 	@srcdir@/tools/simh-update.in
 PRECIOUS_INFILES = \
+	@srcdir@/Makefile.in \
 	@srcdir@/examples/Makefile.in \
 	@srcdir@/src/Makefile.in \
 	@srcdir@/src/PDP8/Makefile.in
@@ -134,23 +135,22 @@ CLTXT = /boot/cmdline.txt
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
 all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(EXAMPLES)
-	@chmod 755 @builddir@/bin/pidp8i
+	@chmod 755 bin/pidp8i
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(EXAMPLES) $(LISTINGS) $(OBJS) $(OUTFILES) \
-		@builddir@/tags \
-		@builddir@/obj/*.d \
-		@builddir@/obj/*.o \
-		@builddir@/obj/PDP8/*.d \
+		tags \
+		obj/*.d \
+		obj/*.o \
+		obj/PDP8/*.d \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
 	@rm -f $(PRECIOUS_OUTFILES) \
-		@builddir@/config.log \
-		@builddir@/Makefile \
-		@builddir@/autosetup/jimsh0 \
-		@builddir@/src/config.h
+		config.log \
+		autosetup/jimsh0 \
+		src/config.h
 
 ctags tags:
 	@ctags -R @srcdir@
@@ -213,14 +213,14 @@ install: all
 	@# If serial mod is disabled, turn off serial console and kgdb stuff
 	@# in case they were enabled previously, else they will fight with
 	@# our use of GPIO.
-	@(  test -z "@PCB_SERIAL_MOD@" -a -r $(CLTXT) && ! -w $(CLTXT) && \
+	@(  test -z "@PCB_SERIAL_MOD_ANY@" -a -r $(CLTXT) && ! -w $(CLTXT) && \
 		cp -p $(CLTXT) "$(CLTXT)"_orig && \
 		sed -e 's/console\=[a-zA-Z0-9]+,[0-9]+ //' \
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
 	) || true
 
 	@# Install palbart stuff
-	@INSTALL@ -m 755 @builddir@/bin/palbart @prefix@/bin
+	@INSTALL@ -m 755 bin/palbart @prefix@/bin
 	@INSTALL@ -m 644 @srcdir@/palbart/palbart.1 @prefix@/share/man/man1
 
 mediainstall:
@@ -232,7 +232,7 @@ mediainstall:
 		-name \*.rk05 -o \
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
-	@INSTALL@ -m 664 -g @INSTGRP@ @builddir@/boot/*.script @BOOTDIR@
+	@INSTALL@ -m 664 -g @INSTGRP@ boot/*.script @BOOTDIR@
 
 reconfig:
 	@AUTOREMAKE@
@@ -241,10 +241,10 @@ release: all
 	@srcdir@/tools/mkrel
 
 run:
-	sudo @builddir@/$(SIM) @srcdir@/boot/0.script
+	sudo $(SIM) @srcdir@/boot/0.script
 
 simh-update simh-update-f:
-	@@builddir@/tools/simh-update $(subst simh-update,,$@)
+	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
@@ -262,9 +262,9 @@ obj/%.o: @srcdir@/src/%.c
 
 # Near-duplicate of above rule for those *.c files generated from *.c.in
 # files in the srcdir.  Needed when building out-of-tree.
-obj/%.o: @builddir@/src/%.c
-	$(CC)  -c $(CFLAGS) @builddir@/src/$*.c -o obj/$*.o
-	$(CC) -MM $(CFLAGS) @builddir@/src/$*.c > obj/$*.d
+obj/%.o: src/%.c
+	$(CC)  -c $(CFLAGS) src/$*.c -o obj/$*.o
+	$(CC) -MM $(CFLAGS) src/$*.c > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
 	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
@@ -273,9 +273,9 @@ obj/%.o: @builddir@/src/%.c
 
 # Rule for building example PAL assembly language programs.
 obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
-	@builddir@/bin/palbart -lr $< || cat @srcdir@/examples/$*.err
-	mv @srcdir@/examples/$*.lst @builddir@/obj/$*.lst
-	mv @srcdir@/examples/$*.rim @builddir@/bin/$*.pt
+	bin/palbart -lr $< || cat @srcdir@/examples/$*.err
+	mv @srcdir@/examples/$*.lst obj/$*.lst
+	mv @srcdir@/examples/$*.rim bin/$*.pt
 
 # Rule for translating PAL assembly language program listings to SIMH
 # boot scripts.
@@ -306,22 +306,34 @@ bin/deeper: obj/deeper.o obj/gpio-@LED_DRIVER_MODULE@ls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
-# If you simply make $(OUTFILES) depend on $(INFILES), make(1) thinks it
-# can build all of $(OUTFILES) in parallel if given -jN, which causes
-# ./configure --args to run N times in parallel, which blows shit up
-# right good and proper.  We purposely list only the first file in
+# Rebuild simulator whenever one of its *.in files change.
+#
+# This is trickier than it appears.  If you simply make $(OUTFILES)
+# depend on $(INFILES), make(1) thinks it can build all of $(OUTFILES)
+# in parallel if given -jN, which causes ./configure --args to run N
+# times in parallel, which blows the build system up right good and
+# proper; bits everywhere.  We purposely list only the first file in
 # $(INFILES) here to prevent that.  The other files in $(INFILES) will
 # also be built, which confuses make(1) somewhat, but it figures things
 # out on the subsequent $(MAKE) call.
-bin/pidp8i: @srcdir@/bin/pidp8i.in
+#
+# We also list files like tools/version which, when they change, trigger
+# a rebuild of $(OUTFILES) because their change may affect what gets
+# generated.  This happened when we moved from 8 to 10 character Fossil
+# artifact IDs in the version string to match Fossil timeline's default.
+bin/pidp8i: @srcdir@/bin/pidp8i.in @srcdir@/tools/version
 	@AUTOREMAKE@ && $(MAKE)
 endif
+
+# Rebuild simulator if the version string tool changes, since its output
+# may have changed.
+src/gpio-common.c: @srcdir@/tools/version
 
 -include $(OBJS:.o=.d) obj/scanswitch.d
 

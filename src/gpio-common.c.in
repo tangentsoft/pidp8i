@@ -46,6 +46,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_TIME_H
@@ -70,8 +71,12 @@ uint8_t pidp8i_gpio_present;
 // program doesn't need to know anything about struct display.
 int pidp8i_simple_gpio_mode = 0;
 
-struct bcm2835_peripheral gpio; // needs initialisation
+// GPIO peripheral info, initted in start_pidp8i_gpio_thread()
+struct bcm2835_peripheral gpio;
 #define pgpio (&gpio)
+#ifdef PCB_SERIAL_MOD_JLW
+struct bcm2835_peripheral gpio2;
+#endif
 
 
 // A constant meaning "indeterminate milliseconds", used for error
@@ -80,10 +85,11 @@ struct bcm2835_peripheral gpio; // needs initialisation
 static const ms_time_t na_ms = (ms_time_t)-1;
 
 
-// Adjust columns to scan based on whether the serial mod was done, as
-// that affects the free GPIOs for our use, and how the PCB connects
-// them to the LED matrix.
-#ifdef PCB_SERIAL_MOD
+// Adjust columns to scan based on whether Oscar Vermeulen's serial mod
+// was done, as that affects the free GPIOs for our use, and how the PCB
+// connects them to the LED matrix.  James L-W's mod leaves GPIO pin
+// numbering unchanged relative to the stock circuit design.
+#ifdef PCB_SERIAL_MOD_OV
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
@@ -110,6 +116,12 @@ display* pdis_update = display_bufs + 0;    // exported to SIMH CPU thread
 display* pdis_paint  = display_bufs + 1;    // exported to gpio-*.c
 
 
+// GPIO thread control variables manipulated by start/stop_*() below
+static pthread_t gpio_thread_info;
+static int terminate_gpio_thread = 0;
+static pthread_mutex_t gpio_start_mutex;
+
+
 // Time-delayed reaction to switch changes to debounce the contacts.
 // This is especially important with the incandescent lamp simulation
 // feature enabled since that speeds up the GPIO scanning loop, making
@@ -125,9 +137,6 @@ struct switch_state {
 static struct switch_state gss[NROWS][NCOLS];
 static int gss_initted = 0;
 static const ms_time_t debounce_ms = 50;    // time switch state must remain stable
-
-// Name of GPIO memory-mapped device
-static const char* gpio_mem_dev = "/dev/gpiomem";
 
 
 // Flow-control switch states which are owned by -- that is, primarily
@@ -147,10 +156,18 @@ int resumeFromInstructionLoopExit = 0;
 //// map_peripheral ////////////////////////////////////////////////////
 // Exposes the physical address defined in the passed structure
 
-int map_peripheral(struct bcm2835_peripheral *p)
+int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
 {
+    // Name of GPIO memory-mapped device
+    static const char* gpio_mem_dev = "/dev/gpiomem";
+
+    if (access(gpio_mem_dev, F_OK) < 0) {
+        // That dev node isn't even present, so it's probably not a Pi
+        return -1;
+    }
+
     // Open the GPIO device
-    if ((p->mem_fd = open(gpio_mem_dev, O_RDWR|O_SYNC) ) < 0) {
+    if ((p->mem_fd = open(gpio_mem_dev, O_RDWR|O_SYNC)) < 0) {
 #ifdef DEBUG
         printf("Failed to open %s: %s\n", gpio_mem_dev, strerror(errno));
         puts("Disabling PiDP-8/I front panel functionality.");
@@ -160,7 +177,7 @@ int map_peripheral(struct bcm2835_peripheral *p)
 
     // Attempt to lock it.  If we can't, another program has it locked,
     // so we shouldn't keep running; it'll just end in tears.
-    if (flock(p->mem_fd, LOCK_EX | LOCK_NB) < 0) {
+    if (exclusive && (flock(p->mem_fd, LOCK_EX | LOCK_NB) < 0)) {
         if (errno == EWOULDBLOCK) {
             printf("Failed to lock %s.  Only one PiDP-8/I\n", gpio_mem_dev);
             puts("program can be running at a given time.");
@@ -417,32 +434,67 @@ void read_switches (ns_time_t delay)
 //// UNGROUPED FUNCTIONS ///////////////////////////////////////////////
 
 //// pi_type ///////////////////////////////////////////////////////////
-// Write a configuration string tag.
+// Return a short string succinctly describing the type of Raspberry Pi
+// we're running on, or "cake" if it's not a pi.
 
-static const char* pi_type(int p)
+static const char* pi_type()
 {
-    if (p == 0x20200000) {
-        return "pi1+";
-    }
-    else {
-        FILE* fp = fopen("/proc/device-tree/model", "r");
-        if (fp) {
-            static char ac[60];
-            if (fgets(ac, sizeof(ac), fp) && (strlen(ac) > 20)) {
-                if (strstr(ac, "Raspberry Pi ") == ac) {
-                    int series = atoi(ac + 13);
-                    char model = 'x';
-                    char* pm = strstr(ac, " Model ");
-                    if (pm) model = tolower(pm[7]);
-                    snprintf(ac, sizeof(ac), "pi%d%c", series, model);
-                    return ac;
-                }
+    static char ac[60] = { '\0' };
+    static const char* prefix = "Raspberry Pi ";
+
+    FILE* fp = fopen("/proc/device-tree/model", "r");
+    if (fp &&
+            fgets(ac, sizeof(ac), fp) &&
+            (strlen(ac) > 20) &&
+            (strstr(ac, prefix) == ac)) {
+        const char* kind = ac + strlen(prefix);
+        int series = 1;
+        if (kind[0] == 'M') {
+            // It's one of the "plus" models.
+            const char* pm = kind + strlen("Model ");
+            char model = *pm;
+            model = (isalpha(model) && isupper(model)) ?
+                    tolower(model) : 'x';
+            snprintf(ac, sizeof(ac), "pi%d%c", series, model);
+        }
+        else if (kind[0] == 'C') {
+            // It's one of the compute modules.  We don't actually
+            // support these, but we need to report them in case
+            // someone tries it.
+            const char* ps = kind + strlen("Compute Module");
+            char series = *ps;
+            if (series) {
+                // It's should be one of the later Compute Module series.
+                series = isdigit(ps[1]) ? ps[1] : 'x';
+                snprintf(ac, sizeof(ac), "picm%c", series);
             }
-            return "pi2+";
+            else {
+                // We're at the end of the string, so it's the original
+                // Compute Module.
+                return "picm1";
+            }
+        }
+        else if (kind[0] == 'Z') {
+            // It's a Pi Zero
+            return "pi0";
+        }
+        else if ((series = atoi(kind)) > 1) {
+            // Pi 2 and newer have a number after the "Pi"
+            char* pm = strstr(kind, " Model ");
+            snprintf(ac, sizeof(ac), "pi%d%c", series,
+                    pm ? tolower(pm[7]) : 'x');
+        }
+        else {
+            // Not a model string we can parse, but it's some kind of
+            // RPi.  Two 'x's stand for unknown series and model.
+            return "pixx";
         }
     }
+    else {
+        return "cake";      // not pi
+    }
 
-    return 0;       // not a Pi
+    return ac;
 }
 
 
@@ -498,57 +550,65 @@ void update_led_states (const us_time_t delay)
 }
 
 
+//// turn_off_pidp8i_leds //////////////////////////////////////////////
+// Set GPIO pins into a state that disconnects all the LEDs from power.
+// Doesn't pay any attention to the panel values.
+
+void turn_off_pidp8i_leds ()
+{
+    for (size_t i = 0; i < NCOLS; ++i) {
+        OUT_GPIO(cols[i]);
+    }
+    for (size_t row = 0; row < NLEDROWS; ++row) {
+        INP_GPIO (ledrows[row]);
+    }
+}
+
+
 //// gpio_thread ///////////////////////////////////////////////////////
 // The GPIO thread entry point: initializes GPIO and then calls
 // the gpio_core () implementation linked to this program.
 
-void *gpio_thread (void *terminate)
+static void *gpio_thread (void *terminate)
 {
-    // Find GPIO address (it varies by Pi model)
-    gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
-
     // Set thread to real time priority
     struct sched_param sp;
     sp.sched_priority = 4;  // not high, just above the minimum of 1
     int rt = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp) == 0;
 
-    // Map the GPIO peripheral, but hold off exiting if it fails, until
-    // we report its absence in the config line.
-    int mapped = map_peripheral(&gpio) == 0;
-
     // Tell the user about our configuration, succinctly
-    const char* pt = pi_type(mapped ? gpio.addr_p : 0);
+    const char* pt = pi_type();
     printf(
-        "PiDP-8/I @VERSION@ [%s] [@LED_DRIVER_MODULE@ls] [%spcb]%s"
+        "PiDP-8/I @VERSION@ [%s] [%cls] [%spcb] [%sgpio]"
 #ifdef DEBUG
         " [debug]"
 #endif
         "%s",
-        pt ? pt : "cake",       // pt == 0 == not a Pi
-        pt ? 
-#ifdef PCB_SERIAL_MOD
-            "ser" : 
+        pt,
+        ILS_MODE ? 'i' : 'n',
+        pt[0] == 'p' ? 
+#ifdef PCB_SERIAL_MOD_OV
+            "sermod" : 
+#elif PCB_SERIAL_MOD_JLW
+            "altser" : 
 #else
             "std" : 
 #endif
             "no",
-        mapped ? " [gpio]" : "",
-        rt     ? " [rt]" : ""
+        (pidp8i_gpio_present ? "" : "no"),
+        (rt ? " [rt]" : "")
     );
 
-    // If we didn't map the GPIO peripheral, we've done all we can here
-    if (!mapped) return (void*)-1;
+    // It's okay for our caller to resume executing, if it's locked
+    // waiting for us to finish the initialization bits that can only
+    // happen in this thread.
+    pthread_mutex_unlock (&gpio_start_mutex);
 
-    // Until gpio_core () reads the switches for the first time, we need
-    // to mark them as all-open, lest we have a race condition with the
-    // simulator where it interprets the all-0 initial switchstatus[]
-    // value as "all switches closed," which includes the shutdown seq!
-    memset(switchstatus, 0xFF, sizeof(switchstatus));
+    // If we didn't map the GPIO peripheral and get here, it was
+    // optional, and we've done all we can without it.
+    if (!pidp8i_gpio_present) return (void*)-1;
 
     // initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
-    //  INSERT CODE HERE TO SET GPIO 14 AND 15 TO I/O INSTEAD OF ALT 0.
-    //  AT THE MOMENT, USE "sudo ./gpio mode 14 in" and "sudo ./gpio mode 15 in". "sudo ./gpio readall" to verify.
-    #define pgpio (&gpio)
     int i;
     for (i = 0; i < NLEDROWS; i++) {     // Define ledrows as input
         INP_GPIO(ledrows[i]);
@@ -564,10 +624,15 @@ void *gpio_thread (void *terminate)
     // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
     GPIO_PULL = 2;  // pull-up
     usleep(1);  // must wait 150 cycles
-#ifdef PCB_SERIAL_MOD
-    GPIO_PULLCLK0 = 0x03ffc; // selects GPIO pins 2..13 (frees up serial port on 14 & 15)
+#ifdef PCB_SERIAL_MOD_OV
+    // Oscar Vermeulen's serial mod the PiDP-8/I board rearranges the
+    // GPIO matrix to use Pi GPIO pins 2..13, freeing up the hardware
+    // serial port on GPIO pins 14 & 15.
+    GPIO_PULLCLK0 = 0x03ffc;
 #else
-    GPIO_PULLCLK0 = 0x0fff0; // selects GPIO pins 4..15 (assumes we avoid pins 2 and 3!)
+    // The standard PiDP-8/I board drive scheme uses Pi GPIO pins 4..15.
+    // (James L-W's alternative serial mod also uses this scheme.)
+    GPIO_PULLCLK0 = 0x0fff0;
 #endif
     usleep(1);
     GPIO_PULL = 0; // reset GPPUD register
@@ -605,4 +670,98 @@ void *gpio_thread (void *terminate)
     // it's safe to leave them in that state.  No need to de-init GPIO.
     gss_initted = 0;
     return 0;
+}
+
+
+//// start/stop_pidp8i_gpio_thread /////////////////////////////////////
+// Start and stop gpio_thread().  We export these functions rather than
+// export gpio_thread() directly so this module's users don't have to
+// know anything about pthreads and such.
+
+int start_pidp8i_gpio_thread (const char* must_map)
+{
+    char errs[100];
+
+    // Find GPIO address (it varies by Pi model)
+    unsigned int gpio_base_addr = bcm_host_get_peripheral_address();
+    gpio.addr_p = gpio_base_addr + 0x200000;
+
+#ifdef PCB_SERIAL_MOD_JLW
+    // James L-W's alternative serial mods were declared to be done here
+    // at configure time, so disable the hysteresis on the GPIO inputs.
+    gpio2.addr_p = gpio_base_addr + 0x100000;
+    gpio2.addr[0x0B] = (gpio2.addr[0x0B] & 0xF7) | (0x5A << 24);
+#endif
+
+    // Attempt to map the GPIO peripheral for our exclusive use.  Some
+    // callers care if this fails, and some don't.
+    map_peripheral (&gpio, 1);
+    if (must_map && !pidp8i_gpio_present) return EFAULT;
+#ifdef PCB_SERIAL_MOD_JLW
+    map_peripheral (&gpio2, 1);  // assume success since prior mapping worked
+#endif
+
+    // Until gpio_core () reads the switches for the first time, we need
+    // to mark them as all-open, lest we have a race condition with the
+    // simulator where it interprets the all-0 initial switchstatus[]
+    // value as "all switches closed," which includes the shutdown seq!
+    memset (switchstatus, 0xFF, sizeof (switchstatus));
+
+    // Create the startup sequencing mutex and lock it once to block the
+    // GPIO thread after it's sufficiently initialized.
+    int pcerr;
+    if (    ((pcerr = pthread_mutex_init (&gpio_start_mutex, NULL)) != 0) ||
+            ((pcerr = pthread_mutex_lock (&gpio_start_mutex)) != 0)) {
+        perror ("GPIO startup sequence mutex creation failed");
+        return errno;
+    }
+
+    // Create the actual GPIO handler thread
+    pcerr = pthread_create (&gpio_thread_info, NULL, gpio_thread,
+                            &terminate_gpio_thread);
+    if (pcerr != 0) {
+        int errlen = snprintf (errs, sizeof(errs), "Error creating "
+                "PiDP-8/I GPIO thread: %s\n", strerror (pcerr));
+        if (errlen > 0 && errlen < sizeof(errs)) write (2, errs, errlen);
+    }
+    else if (must_map && !pidp8i_gpio_present) {
+        int errlen = snprintf (errs, sizeof(errs), "Cannot run the %s "
+                "while another PiDP-8/I program runs.\r\n", must_map);
+        if (errlen > 0 && errlen < sizeof(errs)) write (2, errs, errlen);
+        pcerr = EACCES;
+    }
+    else {
+        // Don't return until GPIO thread is sufficiently initted.
+        //
+        // There are two possible sequences:
+        //
+        // 1. We get here before the GPIO thread gets to its "unlock"
+        //    call, so our back-to-back locks in this thread stall this
+        //    thread until the GPIO thread gets to its unlock condition,
+        //    which removes the first lock taken above, and our second
+        //    unlock call below removes the second lock.
+        //
+        // 2. The GPIO thread hits its "unlock" call before we get here,
+        //    so it unlocks the lock we made above, so that these two
+        //    calls happen back to back, with no real effect.  We got
+        //    here too late to cause any problem that this interlock
+        //    solves, so it just locks and immediately unlocks.
+        pthread_mutex_lock   (&gpio_start_mutex);
+        pthread_mutex_unlock (&gpio_start_mutex);
+    }
+
+    return pcerr;
+}
+
+void stop_pidp8i_gpio_thread ()
+{
+    terminate_gpio_thread = 1;
+    if (pthread_join (gpio_thread_info, NULL)) {
+        printf("\r\nError joining multiplex thread\r\n");
+    }
+    unmap_peripheral (&gpio);
+#ifdef PCB_SERIAL_MOD_JLW
+    unmap_peripheral (&gpio2);
+#endif
+    pthread_mutex_destroy (&gpio_start_mutex);
 }

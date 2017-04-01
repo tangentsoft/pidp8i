@@ -134,6 +134,7 @@ mkdir -p "$CURR_SIMH_DIR"
 git clone https://github.com/simh/simh "$CURR_SIMH_DIR"
 pushd "$CURR_SIMH_DIR"
 NEW_SGCID=$(git rev-parse HEAD)
+say "Pulled ${NEW_SGCID:0:8} as curr; prev is ${OLD_SGCID:0:8}."
 git worktree add "$OUR_SIMH_DIR" $OLD_SGCID
 popd
 
@@ -145,11 +146,29 @@ for fs in pdp8_doc simh_faq simh_doc
 do
 	ft=$(echo $fs | sed -e 's/simh_//' -e 's/_doc//')
 	test "$ft" = "doc" && ft=main
-	pdf=doc/simh/$ft.pdf
-    say "Converting upstream $fs.doc to $pdf..."
-    "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
-            mv "$fs.pdf" $pdf &&
-            fossil uv add $pdf
+	pdfout=doc/simh/$ft.pdf
+    pdftmp="$fs.pdf"
+    say -n "Converting upstream $fs.doc to $pdfout..."
+    if [ ! -e "$pdfout" ] ; then touch $pdfout ; fi  # complaint squisher
+    if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
+            [ -s "$pdfout" != -s "$pdftmp" ]
+    then
+        # The upstream doc has apparently changed, since the PDF output
+        # file is a different size.  Replace our public version.
+        #
+        # We can't use cmp or similar here because a bunch of metadata
+        # change each time we re-render the PDF, even if the source doc
+        # is unchanged.  There are proper PDF comparison tools, but none
+        # preinstalled everywhere, and we don't want to make one of
+        # those tools a dependency of this script.  Size comparison
+        # suffices for our purposes, since most any substantial text
+        # change will change the output file size.
+        say "changes detected."
+        mv "$pdftmp" "$pdfout"
+        fossil uv add "$pdfout"
+    else
+        say "unchanged."
+    fi
 done
 say "Syncing new PDFs..."
 fossil uv sync
@@ -158,8 +177,12 @@ popd
 # Rename upstream Git paths to match our *.in files so that our produced
 # patches are made against those higher-level versions.  If we didn't do
 # this, we'd have to manually resubstitute variables for absolute paths.
+#
+# Filter out Makefile.in because we don't want to try and patch the
+# upstream plain Makefile to work with autosetup.  It complicates the
+# resulting patch file to no purpose.
 say Renaming upstream files to match our \*.in variants...
-find "$SRCSUBDIR" -name \*.in -print | while read f
+find "$SRCSUBDIR" -name \*.in -print | grep -v Makefile.in | while read f
 do
 	inf="${f#$SRCSUBDIR/}"	# make path fully relative
 	genf="${inf%.in}"		# remove .in from the end
@@ -205,10 +228,10 @@ sed -e "s/^SGCID=.*/SGCID=$NEW_SGCID/" -i tmp @srcdir@/Makefile.in
 tools/mmake
 
 # Restore stdout and let the human test it
-say "Build completed without error.  Starting OS/8 in the simulator..."
+say "Build completed without error.  Running default bootscript to test it..."
 say
 say "(Nuke $WORKDIR when finished.)"
 say
 exec 1<&-
 exec 1<>/dev/tty
-exec make os8test
+exec make run

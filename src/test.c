@@ -68,7 +68,7 @@ static int auto_advance = 1;
             case 'R':       auto_advance = 1; return step + 1; \
             case 'x': \
             case 'X': \
-            case 3:         exit(1); \
+            case 3:         exit (1); \
         }
 #define DISPLAY_HOLD_ITERATIONS 20
 #define DISPLAY_HOLD \
@@ -216,17 +216,7 @@ void start_gpio (void)
     pidp8i_simple_gpio_mode = 1;
 
     // Create GPIO thread
-    pthread_t pth;
-    static int terminate = 0;
-    int ret = pthread_create (&pth, NULL, gpio_thread, &terminate);
-    if (ret) {
-        fprintf (stderr, "Error creating thread, return code %d\r\n", ret);
-        exit (EXIT_FAILURE);
-    }
-    sleep (2);                  // allow 2 sec for multiplex to start
-    if (!pidp8i_gpio_present) {
-        fprintf (stderr, "Cannot run the test while another PiDP-8/I "
-                "program runs.\r\n");
+    if (start_pidp8i_gpio_thread ("test program") != 0) {
         exit (EXIT_FAILURE);
     }
 }
@@ -289,11 +279,46 @@ void run_actions (void)
 }
 
 
+static void emergency_shut_down (int signum)
+{
+    // Shut ncurses down before we call printf, so it's down at the
+    // bottom.  This duplicates part of the graceful shutdown path,
+    // which is why it checks whether it's necessary.
+    endwin ();
+
+    printf ("\r\nExiting pidp8i-test, signal %d: %s\n\n", signum,
+            strsignal (signum));
+
+    exit (2);       // continues in graceful_shut_down
+}
+
+
+static void graceful_shut_down ()
+{
+    if (!isendwin()) endwin ();
+    turn_off_pidp8i_leds ();
+}
+
+
+static void register_shut_down_handlers ()
+{
+    struct sigaction sa;
+    memset (&sa, 0, sizeof (sa));
+    sa.sa_handler = emergency_shut_down;
+    sigaction (SIGINT, &sa, 0);
+    atexit (graceful_shut_down);
+}
+
+
 int main (int argc, char *argv[])
 {
     start_gpio ();
-    init_ncurses ();
-    run_actions ();
+
+    if ((argc < 2) || (strcmp (argv[1], "-v") != 0)) {
+        register_shut_down_handlers ();
+        init_ncurses ();
+        run_actions ();
+    }
 
     return 0;
 }

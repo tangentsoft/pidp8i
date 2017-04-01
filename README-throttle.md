@@ -15,7 +15,7 @@ The most hungry thread is the PDP-8 simulator proper, which runs flat-out,
 taking an entire core's available power by default.
 
 The other hungry thread is the one that drives the front panel LEDs,
-which takes about 15% of a single core's power on a Raspberry Pi 3 when
+which takes about 35% of a single core's power on a Raspberry Pi 3 when
 you build the software with the incandescent lamp simulator enabled.
 
 This leaves over 2 cores worth of CPU power untapped on multi-core
@@ -29,17 +29,18 @@ You can force this behavior with `--throttle=none`.
 
 If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
-it takes about 75% of a single core's worth of power on the slowest
-Raspberry Pi supported by this software. This leaves enough CPU power
-for some background tasks on a single-core Pi.
+it takes about 50% of a single core's worth of power on the slowest
+Raspberry Pi supported by this software while running about twice as
+fast as a real PDP-8/I. This leaves enough CPU power for some background
+tasks on a single-core Pi.
 
-This default assumes you are building without the incandescent lamp
-simulator feature enabled, as that currently takes so much CPU power to
-run that the simulator runs slower than even a PDP-8/S!  (We're working
-on ways to improve the speed of that lamp simulator to let it run on
-single-core raspberry Pis.)  Indeed, the build system will actively try
-to prevent you from building the incandescent lamp simulator feature on
-a single-core Pi.
+This default assumes you are building without the [incandescent lamp
+simulator][ils] feature enabled, as that currently takes so much CPU
+power to run that the simulator runs slower than even a PDP-8/S!  (We're
+working on ways to improve the speed of that lamp simulator to let it
+run on single-core raspberry Pis, but we may not succeed.)  Indeed, the
+build system will actively try to prevent you from building the
+incandescent lamp simulator feature on a single-core Pi.
 
 You can force the build system to select this throttle value even on a
 multi-core Pi with `--throttle=single-core`.
@@ -47,7 +48,7 @@ multi-core Pi with `--throttle=single-core`.
 You will erroneously get this single-core behavior if you run the
 `configure` script on a system where `tools/corecount` has no built-in
 way to count the CPU cores in your system correctly, so it returns 1,
-forcing a single-core build. That script currently only returns the
+forcing a single-core build.  That script currently only returns the
 correct value on Linux, BSD, and macOS systems.  To fix it, you can
 either say `--throttle=none` or you can patch `tools/corecount` to
 properly report the number of cores on your system.  If you choose the
@@ -57,17 +58,21 @@ integrated into the next release of the software.
 
 ## Underclocking
 
-If you want the software to run even slower, there are additional
-`configure --throttle` option values available to achieve that:
+There are a couple of reasons to make the software run slower than it
+does by default.  Saving CPU power is one reason.  Another is emulating
+the speed of a real PDP-8 variant.
+
+There are several `configure --throttle` option values available to
+achieve such ends:
 
 *   `--throttle=STRING`: any value not otherwise understood is passed
     directly to SIMH in `SET THROTTLE` commands inserted into the
     generated `boot/*.script` files. You can use any string here that
-    SIMH itself supports; RTFM.
+    SIMH itself supports; [RTFM][tfm].
 
 *   `--throttle=CPUTYPE`: if you give a value referencing one of the
     many PDP-8 family members, it selects a value based on the execution
-    time of `TAD` in direct access mode on that processor:
+    time of a `TAD` instruction in direct access mode on that processor:
 
     | Value            | Alias For | Memory Cycle Time
     ---------------------------------------------------
@@ -92,9 +97,10 @@ If you want the software to run even slower, there are additional
     does its best to execute exactly 333,000 instructions per second,
     regardless of the instruction type.  Consequently, if you were to
     benchmark this simulator configured with one of the options above,
-    there would doubtless be some difference in execution speed,
-    depending on the mix of instructions executed.
-    
+    there would doubtless be some difference in execution speed when
+    compared to the original hardware, depending on the mix of
+    instructions executed.
+
     (See the I/O Matters section below for a further complication.)
 
     The values for the Intersil and Harris CMOS microprocessors are for
@@ -118,10 +124,15 @@ If you want the software to run even slower, there are additional
 
     This mode is useful for running otherwise-useful software as a
     "blinkenlights" demo.
-    
+
+    You cannot currently use this mode with the [ILS][ils].  Give the
+    `--no-lamp-simulator` option along with this option, or the display
+    will not do what you want.
+
 *   `--throttle=trace`: Alias for `--throttle=1`, causing the simulator
     to act more or less like it's in single-instruction mode and you're
     pressing the `CONT` button once a second to step through a program.
+    Again, you need to give `--no-lamp-simulator` with this.
 
 
 ## I/O Matters
@@ -131,12 +142,12 @@ PDP-8 CPU simulator. It does not affect the speed of I/O operations.
 
 The only I/O channel you can throttle in the same way is a serial
 terminal by purposely choosing a slower bit rate for it than the maximum
-value. If you set it to 110 bps, it runs at the speed of a Teletype
+value.  If you set it to 110 bps, it runs at the speed of a Teletype
 Model 33 ASR, the most common terminal type used for the PDP-8/I, and
-most other early PDP-8 flavors. Later PDP-8s were often paired with (or
+most other early PDP-8 flavors.  Later PDP-8s were often paired with (or
 integrated into!) glass TTYs such as the VT05, which flew along at 2400
-bps. Then things got really fancy with the VT52, which screamed along at
-9600 bps. Wowee!
+bps.  Then things got really fancy with the VT52, which screamed along
+at 9600 bps. Wowee!
 
 I'm not aware of a way to make SIMH slow the other I/O operations, such
 as disk access speeds, in order to emulate the speed of the actual
@@ -148,4 +159,6 @@ hardware.
 Copyright © 2017 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
-[sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[sl]:  https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[ils]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
+[tfm]: https://tangentsoft.com/pidp8i/uv/doc/simh/main.pdf

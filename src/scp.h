@@ -90,6 +90,7 @@ t_stat set_default_cmd (int32 flg, CONST char *cptr);
 t_stat pwd_cmd (int32 flg, CONST char *cptr);
 t_stat dir_cmd (int32 flg, CONST char *cptr);
 t_stat type_cmd (int32 flg, CONST char *cptr);
+t_stat delete_cmd (int32 flg, CONST char *cptr);
 t_stat brk_cmd (int32 flag, CONST char *ptr);
 t_stat do_cmd (int32 flag, CONST char *ptr);
 t_stat goto_cmd (int32 flag, CONST char *ptr);
@@ -144,7 +145,9 @@ t_stat reset_all (uint32 start_device);
 t_stat reset_all_p (uint32 start_device);
 const char *sim_dname (DEVICE *dptr);
 const char *sim_uname (UNIT *dptr);
+const char *sim_set_uname (UNIT *uptr, const char *uname);
 t_stat get_yn (const char *ques, t_stat deflt);
+char *sim_trim_endspc (char *cptr);
 int sim_isspace (char c);
 int sim_islower (char c);
 int sim_isalpha (char c);
@@ -154,6 +157,8 @@ int sim_isgraph (char c);
 int sim_isalnum (char c);
 int sim_strncasecmp (const char *string1, const char *string2, size_t len);
 int sim_strcasecmp (const char *string1, const char *string2);
+size_t sim_strlcat (char *dst, const char *src, size_t size);
+size_t sim_strlcpy (char *dst, const char *src, size_t size);
 CONST char *get_sim_opt (int32 opt, CONST char *cptr, t_stat *st);
 const char *put_switches (char *buf, size_t bufsize, uint32 sw);
 CONST char *get_glyph (const char *iptr, char *optr, char mchar);
@@ -195,6 +200,7 @@ CTAB *find_ctab (CTAB *tab, const char *gbuf);
 C1TAB *find_c1tab (C1TAB *tab, const char *gbuf);
 SHTAB *find_shtab (SHTAB *tab, const char *gbuf);
 t_stat get_aval (t_addr addr, DEVICE *dptr, UNIT *uptr);
+t_value get_rval (REG *rptr, uint32 idx);
 BRKTAB *sim_brk_fnd (t_addr loc);
 uint32 sim_brk_test (t_addr bloc, uint32 btyp);
 void sim_brk_clrspc (uint32 spc, uint32 btyp);
@@ -264,6 +270,8 @@ t_stat scp_vhelpFromFile (FILE *st, DEVICE *dptr,
 /* Global data */
 
 extern DEVICE *sim_dflt_dev;
+extern DEVICE *sim_dfdev;
+extern UNIT *sim_dfunit;
 extern int32 sim_interval;
 extern int32 sim_switches;
 extern int32 sim_quiet;
@@ -299,10 +307,10 @@ void sim_aio_activate (ACTIVATE_API caller, UNIT *uptr, int32 event_time);
 
 /* VM interface */
 
-extern char sim_name[];
+extern char sim_name[64];
 extern DEVICE *sim_devices[];
 extern REG *sim_PC;
-extern const char *sim_stop_messages[];
+extern const char *sim_stop_messages[SCPE_BASE];
 extern t_stat sim_instr (void);
 extern t_stat sim_load (FILE *ptr, CONST char *cptr, CONST char *fnam, int flag);
 extern int32 sim_emax;

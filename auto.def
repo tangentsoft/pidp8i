@@ -35,15 +35,24 @@ use cc
 use cc-lib
 
 options {
-	debug-mode =>        "create a debug build (default is release)"
+	debug-mode        => "create a debug build (default is release)"
+    no-idle           => "disable CPU idle detection; automatic if ILS enabled"
 	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
-	serial-mod =>        "build simulator to expect the PCB serial mods"
-	throttle:  =>        "override the throttle values in the boot scripts"
+	serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
+	throttle:         => "override the throttle values in the boot scripts"
+}
+
+if {[opt-bool alt-serial-mod]} {
+	msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
+	define PCB_SERIAL_MOD_JLW
+	define PCB_SERIAL_MOD_ANY
 }
 
 if {[opt-bool serial-mod]} {
-	msg-result "The simulator will expect the serial mods to the Pi and PiDP-8/I PCBs."
-	define PCB_SERIAL_MOD
+	msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
+	define PCB_SERIAL_MOD_OV
+	define PCB_SERIAL_MOD_ANY
 }
 
 if {[opt-bool debug-mode]} {
@@ -54,19 +63,10 @@ if {[opt-bool debug-mode]} {
 	define BUILDMODE {-O2}
 }
 
-# Swap the incandescent lamp simulator feature out for the original LED
-# driving method on single-core hosts.  The user can force this on
-# multi-core hosts via --no-lamp-simulator.
-set cores [exec tools/corecount]
-if {($cores < 2) || [opt-bool no-lamp-simulator]} {
-	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
-	define LED_DRIVER_MODULE n
-	define ILS_MODE 0
-} else {
-	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
-	define LED_DRIVER_MODULE i
-	define ILS_MODE 1
-}
+# High-level definitions
+set builddir [get-define builddir]
+set srcdir [get-define srcdir]
+set cores [exec $srcdir/tools/corecount]
 
 # Translate --throttle value to a SIMH command
 set tv [opt-val throttle]
@@ -78,9 +78,15 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	# Rewrite symbolic values with values SIMH can understand.  See
 	# README-throttle.md for the justification of these values.
 	if {$tv == "single-core" || $tvsl == 0} {
-		# value for 60-70% CPU usage on a Pi Model B+ with the simple
-        # LED driving code; conveniently, 2x the speed of a real PDP-8/I
-		set tv "666k"
+		# Set throttle to the highest values we can achive on the single
+        # core Pi boards with NLS without causing SIMH to claim the CPU
+        # isn't fast enough and give up on throttling.
+        set dtm "/proc/device-tree/model"
+        if {[exec grep -q 'Raspberry Pi Zero' $dtm > /dev/null 2>&1]} {
+            set tv "1250k"
+        } else {
+            set tv "850k"
+        }
 	} elseif {$tv == "pdp8e"} {
 		set tv "416k"
 	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
@@ -103,10 +109,62 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 		set tv "1/1000"
 	}
 	# else, assume --throttle was given a legal SIMH throttle value
+    
+    if {[string first "/" $tv] > -1} {
+        # Assume the ratio given will push us below 1 kIPS, where ILS
+        # fails badly because of the simulator's sleeping behavior, so
+        # disable the ILS feature if we were going to build it.
+        set cores 1
+    }
 
 	define SET_THROTTLE "set throttle $tv"
 }
 msg-result "Simulator CPU throttle set to $tv IPS"
+
+# The default is to let the simulator detect when the CPU is idle,
+# reducing the instruction clock when the system otherwise has nothing
+# important to do (e.g. during the OS/8 keyboard busy-wait loop) but
+# the user can elect to disable this.  It can improve benchmark results
+# somewhat.  We override this entirely below in the ILS case.
+if {[opt-bool no-idle]} {
+    define SIMH_CPU_IDLE_FLAG {no}
+} else {
+    define SIMH_CPU_IDLE_FLAG {}
+}
+
+# Swap the incandescent lamp simulator feature out for the original LED
+# driving method on single-core hosts.  The user can force this on
+# multi-core hosts via --no-lamp-simulator.
+if {($cores < 2) || [opt-bool no-lamp-simulator]} {
+	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
+	define LED_DRIVER_MODULE n
+	define ILS_MODE 0
+} else {
+	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
+	define LED_DRIVER_MODULE i
+	define ILS_MODE 1
+
+    # If we let the PDP-8 simulator's CPU to go into idle mode, its IPS
+    # rate falls to near-zero, which royally messes up the brightness
+    # calculations.  The LEDs initially follow IPS towards zero, turning
+    # the whole panel off, then they flicker back on occasionally as IPS
+    # totals up to something slightly above 0, then back down, then back
+    # up...  It looks like a Star Trek sick bay medical vitals display as
+    # the patient is dying.  It turns out, Jim, he's not actually dead;
+    # 'e's just resting.  (Two geek references in one.  Ooorah!)
+    #
+    # Thus, ILS implies --no-idle.
+    define SIMH_CPU_IDLE_FLAG {no}
+}
+
+# Tell user what we ultimately decided for CPU idling
+if {[get-define SIMH_CPU_IDLE_FLAG] == {}} {
+    msg-result "Simulator CPU will idle when possible."
+} elseif {[get-define ILS_MODE] == {1}} {
+    msg-result "Simulator CPU will not be allowed to idle; ILS enabled."
+} else {
+    msg-result "Simulator CPU will not be allowed to idle."
+}
 
 # Check for headers, functions, etc. whose absence we can work around
 cc-check-includes time.h
@@ -194,8 +252,29 @@ if {![opt-bool debug-mode]} {
 	}
 }
 
-# Embed this software's Fossil-based version string into gpio-common.c
-define VERSION [exec "[get-define srcdir]/tools/version"]
+# Embed this software's Fossil-based version string into gpio-common.c.
+# Fail hard if we can't get this version string because all supported
+# configurations require Fossil and work from a Fossil checkout.  Don't
+# fall back on some lame "UNKNOWN" version string because that would
+# mask a real problem that needs to be diagnosed.
+set tool "tools/version"
+set cmd "$srcdir/$tool"
+set status [catch {exec $cmd} version]
+if {$status != 0} {
+    # The most likely cause for tools/version to fail is that the repo
+    # file has become disassociated from the local checkout directory.
+    set sql "select value from vvar where name=\"repository\""
+    set cmd "fossil sql --no-repository $srcdir/.fslckout '$sql'"
+    set status [catch {exec /bin/sh -c $cmd} path]
+    if {$status != 0} {
+        user-error "Fossil doesn't seem to work here.  Is it installed?\nCMD: $cmd"
+    } elseif {[file exists $path]} {
+        user-error "$tool failed to get checkout version from $path"
+    } else {
+        user-error "$tool failed: $path does not exist."
+    }
+}
+define VERSION $version
 
 # Build Deeper Thought if we find it here
 if {[file exists "[get-define srcdir]/src/deeper.c"]} {
@@ -210,7 +289,7 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # Makefile.in, too.
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {ILS_MODE PCB_SERIAL_MOD}
+	-bare {ILS_MODE PCB_* SIMH_*}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in
@@ -226,6 +305,5 @@ make-template src/Makefile.in
 make-template src/gpio-common.c.in
 make-template src/PDP8/Makefile.in
 make-template src/PDP8/pidp8i.c.in
-make-template src/scp.c.in
 make-template tools/simh-update.in
-exec chmod +x "[get-define builddir]/tools/simh-update"
+exec chmod +x "$builddir/tools/simh-update"

@@ -38,7 +38,7 @@ typedef enum {
     pft_stop,
 } pidp8i_flow_t;
 
-extern int awfulHackFlag;
+extern char *build_pidp8i_scp_cmd (char* cbuf, size_t cbufsize); 
 
 extern int32 get_switch_register (void);
 extern size_t get_pidp8i_initial_max_skips (size_t updates_per_sec);

@@ -31,13 +31,94 @@
 
 #include "../gpio-common.h"
 
+#include <assert.h>
 #include <dirent.h> // for USB stick searching
 
 
-//// EXPORTED GLOBALS //////////////////////////////////////////////////
+//// MODULE GLOBALS ////////////////////////////////////////////////////
 
-// truly terrible even for me - break out of sim and start new script in scp.c
-int awfulHackFlag = 0;
+// handle_sing_step() sets this to nonzero and returns a value breaking
+// us out of the PDP-8 simulator's sim_instr() loop, which causes SCP to
+// call our build_pidp8i_scp_cmd(), which gives SCP a command to run:
+// either "exit" when it wants the simulator to stop (e.g the shutdown
+// and reboot combos) or "do $script" on IF + SING_STEP combo.
+//
+// We loop the flow control from this module out into the generic SIMH
+// code and then back in here so we don't have to export this global.
+// Basically, this module global lets us remember what handle_sing_step
+// wants SCP to do in the window between switch handling time and SCP
+// command handling time.
+static enum {
+    CMD_NONE = 0,            // "do nothing" idle case
+    CMD_DO_BOOTSCRIPT_1,     // SING_STEP + IF combos
+    CMD_DO_BOOTSCRIPT_2,
+    CMD_DO_BOOTSCRIPT_3,
+    CMD_DO_BOOTSCRIPT_4,
+    CMD_DO_BOOTSCRIPT_5,
+    CMD_DO_BOOTSCRIPT_6,
+    CMD_DO_BOOTSCRIPT_7,
+    CMD_EXIT,
+} insert_scp_cmd = CMD_NONE;
+
+
+//// build_pidp8i_scp_cmd //////////////////////////////////////////////
+// If insert_scp_cmd is nonzero, we return the corresponding SCP command 
+// we want run to make the simulator do something else.
+
+char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
+{
+    if (insert_scp_cmd == CMD_NONE) {
+        return 0;                               // nothing to do yet
+    }
+    else if ((insert_scp_cmd > 0) && (insert_scp_cmd <= 7)) {
+        // We got one of the IF + SING_STEP combos, so restart the
+        // simulator with the corresponding init script.
+        char path[256];
+        snprintf (path, sizeof (path), "@BOOTDIR@/%d.script", insert_scp_cmd);
+        insert_scp_cmd = CMD_NONE;              // it's a one-shot
+        if (access(path, R_OK) == 0) {
+            snprintf (cbuf, cbufsize, "do %s", path);
+            return cbuf;
+        }
+        else {
+            // That boot script doesn't exist or isn't readable.
+            //
+            // Fall through to the "exit" command builder below because
+            // we don't want to keep coming back in here at host CPU
+            // speed, failing the same way and issuing the same error
+            // until the slow human manages to flip the offending switch
+            // back.  This is especially annoying when the PiDP-8/I is
+            // attached to a slow serial console.  Ask me how I know.
+            int access_errno = errno;      // preserve it from getcwd()
+            char cwd[256];
+            getcwd (cwd, sizeof (cwd));
+            printf ("Cannot read %s from %s: %s!\n", path, cwd,
+                    strerror (access_errno));
+        }
+    }
+    else if (insert_scp_cmd > CMD_EXIT) {
+        printf ("Invalid PiDP-8/I SCP command value %d given!\n",
+                insert_scp_cmd);
+    }
+    else {
+        // C doesn't require that "if" statements handle all cases
+        // statically, so do a runtime check to make sure we have
+        // exhausted all the other cases above.
+        //
+        // We can get in here by means other than programmer error in
+        // modifying the enum: some C compilers allow signed values
+        // to be assigned to enums, so we could get in here on negative
+        // values.  We can't test for that above because one of the C
+        // compilers we build under (clang on macOS 10.12+) won't allow
+        // that short of nasty low-level hackery, so it complains if we
+        // test for negative values, claiming it can never happen.
+        assert (insert_scp_cmd == CMD_EXIT);
+    }
+
+    // If we get here, we got a nonzero command value but didn't get
+    // into the happy path above, so die.
+    return strncpy (cbuf, "exit", cbufsize);
+}
 
 
 //// set_pidp8i_led ////////////////////////////////////////////////////
@@ -263,7 +344,12 @@ static void mount_usb_stick_file (int devNo, char *devCode)
     // the passed-in device code.
     fileExtension[0] = '.';                     // extension starts with a .
     strncpy (fileExtension + 1, devCode, 2);    // extension is PT, RX, RL etc
-    fileExtension[2] = '\0';                    // chop off device number
+    fileExtension[3] = '\0';                    // chop off device number
+
+#if 0   // debugging
+    printf("\r\nMOUNT USB: [DEV:%d] [CODE:%s], [EXT:%s]",
+            devNo, devCode, fileExtension);
+#endif
 
     // Forget the prior file attached to this PDP-8 device.  The only reason
     // we keep track is so we don't have the same media image file attached
@@ -280,12 +366,24 @@ static void mount_usb_stick_file (int devNo, char *devCode)
         if (pDir) {
             struct dirent* pDirent;
             while ((pDirent = readdir (pDir)) != 0) { // search all files in directory
-                if (strstr (pDirent->d_name, fileExtension)) {
+                if (pDirent->d_name[0] == '.') continue;    // dotfiles clutter debug output
+
+                char* pext = strstr (pDirent->d_name, fileExtension);
+                if (pext && (pext == (pDirent->d_name + strlen (pDirent->d_name) - 3))) {
                     snprintf (sFoundFile, sizeof (sFoundFile), "%s/%s",
                             sUSBPath, pDirent->d_name);
+#if 0   // debugging
+                    printf("\r\nFound candidate file %s for dev %s, ext *%s...",
+                            sFoundFile, devCode, fileExtension);
+#endif
                     for (j = 0; j < 7; ++j) {
                         if (strncmp (mountedFiles[j], sFoundFile, CBUFSIZE) == 0) {
-                            break;  // already mounted; skip next
+#if 0   // debugging
+                            printf("\r\nAlready have %s mounted, slot %d; will not remount.",
+                                    sFoundFile, j);
+#endif
+                            sFoundFile[0] = '\0';   // don't leave outer loop; keep looking
+                            break;
                         }
                     }
                     if (j == 7) {
@@ -293,12 +391,13 @@ static void mount_usb_stick_file (int devNo, char *devCode)
                         // loop with path set to mount it
                         break;
                     }
-                    else {
-                        // It's mounted, so forget its path, else we will stop
-                        // searching the other USB mount points
-                        sFoundFile[0] = '\0';
-                    }
                 }
+#if 0   // debugging
+                else {
+                    printf("\r\nFile %s on %s doesn't match *%s...",
+                            pDirent->d_name, sUSBPath, fileExtension);
+                }
+#endif
             }
 
             closedir (pDir);
@@ -312,13 +411,19 @@ static void mount_usb_stick_file (int devNo, char *devCode)
 
     if (sFoundFile[0]) {            // no file found, exit
         if (access (sFoundFile, R_OK) == 0) {
-            if (attach_cmd ((int32) 0, sFoundFile) == SCPE_OK) {   // issue ATTACH command
+            char sAttachCmd[CBUFSIZE] = { '\0' };
+            snprintf (sAttachCmd, sizeof(sAttachCmd), "%s %s",
+                    devCode, sFoundFile);
+            t_stat scpCode = attach_cmd ((int32) 0, sAttachCmd);
+            if (scpCode == SCPE_OK) {
                 // add file to mount list
                 strncpy (mountedFiles[devNo], sFoundFile, CBUFSIZE);
                 printf ("\r\nMounted %s %s\r\n", devCode, mountedFiles[devNo]);
             }
             else {
-                printf ("\r\nSIMH error mounting %s\r\n", devCode);
+                // SIMH ATTACH command failed
+                printf ("\r\nSIMH error mounting %s on %s: %s\r\n",
+                        sFoundFile, devCode, sim_error_text (scpCode));
             }
         }
         else {
@@ -387,7 +492,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
                 case 4: strcpy (swDevCode, "dt1"); break;
                 case 5: strcpy (swDevCode, "rx0"); break; // RX8E (8/e peripheral!)
                 case 6: strcpy (swDevCode, "rx1"); break;
-                case 7: strcpy (swDevCode, "rl0"); break; // RL8A
+                case 7: strcpy (swDevCode, "rk1"); break; // second RK05 disk pack
             }
             if (swDevCode[0]) mount_usb_stick_file (swDevice, swDevCode);
         }
@@ -400,11 +505,8 @@ static pidp8i_flow_t handle_sing_step (int closed)
         // down from the DF switches above.
         int swScript = (css1 & SS1_IF_ALL) >> 6;
         if (swScript) {
-            // build filename from IF value
-            char sScript[256];
-            snprintf (sScript, sizeof (sScript), "@BOOTDIR@/%d.script", swScript);
-            printf ("\r\n\nRebooting %s\r\n\r\n", sScript);
-            awfulHackFlag = swScript;   // this triggers a do command after leaving the simulator run.
+            printf ("\r\n\nRestarting with IF == %d...\r\n\r\n", swScript);
+            insert_scp_cmd = swScript;
             return pft_halt;
         }
     } // end if single-shot flag clear
@@ -420,7 +522,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
         // 3. Scan for host poweroff command (Sing_Step + Sing_Inst + Stop)
         if ((switchstatus[2] & (SS2_S_INST | SS2_STOP)) == 0) {
             printf ("\r\nShutdown\r\n\r\n");
-            awfulHackFlag = 8;  // this triggers an exit command after leaving the simulator run.
+            insert_scp_cmd = CMD_EXIT;
             if (spawn_cmd (0, "sudo /bin/systemctl poweroff") != SCPE_OK) {
                 printf ("\r\n\r\npoweroff failed\r\n\r\n");
             }
@@ -430,7 +532,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
         // 4. Scan for host reboot command (Sing_Step + Sing_Inst + Start)
         if ((switchstatus[2] & (SS2_S_INST | SS2_START)) == 0) {
             printf ("\r\nReboot\r\n\r\n");
-            awfulHackFlag = 8;      // this triggers an exit command after leaving the simulator run.
+            insert_scp_cmd = CMD_EXIT;
             if (spawn_cmd (0, "sudo /bin/systemctl reboot") != SCPE_OK) {
                 printf ("\r\n\r\nreboot failed\r\n\r\n");
             }
@@ -510,13 +612,37 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for START switch press...
     static int swStart = 0;
     if (((switchstatus[2] & SS2_START) == 0) && (swStart == 0)) {
-        *pint_req &= ~INT_ION; // disable ION. says so in handbook, true?
-        *pLAC = 0;             // clear L and AC
-        *pMB = 0;              // clear MB
-        *pMA = *pPC & 07777;   // transfer PC into MA (FIXME: does IR make this unnecessary?)
+        // Reset the CPU.
+        extern DEVICE cpu_dev;
+        extern t_stat cpu_reset (DEVICE *);
+        cpu_reset (&cpu_dev);
+
+        // DEC's docs say there are a few additional things START does
+        // that cpu_reset() doesn't do for us.
+        //
+        // Don't need to do anything with MA and IR, as SIMH does that
+        // shortly after this function returns.
+        *pLAC = *pMB = 0;
+
+        // cpu_reset() does its thing to the saved_* register copies
+        // in a few cases, but we need it to happen to the "real"
+        // registers instead, since our STOP/START behavior doesn't
+        // make use of saved_*.
+        REG* pibr = find_reg ("IB", NULL, &cpu_dev);
+        int32* pIB = pibr ? pibr->loc : 0 /* force segfault on err */ ;
+        *pIB = *pIF;
+
+        // Reset our switch flags, too
         swStop = 0;            // START cancels STOP mode
         swSingInst = 0;        // allow SING INST mode re-entry
         swStart = 1;           // make it single-shot
+
+#if 0   // debugging
+        printf("\r\nSTART: [DF:%o] [IF:%o] [IB:%o] [PC:%04o] "
+                "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                (*pDF >> 12), (*pIF >> 12), (*pIB >> 12), (*pPC & 07777),
+                *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
+#endif
     }
 
     // ...and START switch release
@@ -544,6 +670,13 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             // We were HLTed or STOPped, so CONT returns us to
             // free-running mode.
             swStop = 0;
+
+#if 0   // debugging
+            printf("\r\nCONT: [DF:%o] [IF:%o] [PC:%04o] "
+                    "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                    (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                    *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
+#endif
         }
         // else, CONT has no effect in this state
     }
@@ -553,15 +686,16 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         swCont = 0;
     }
 
-    // Check for LOAD_ADD switch press.  (No "and release" beacuse it's
-    // harmless if this keeps happening until the slow human releases the
-    // switch.  This function is idempotent.)
-    if ((switchstatus[2] & SS2_L_ADD) == 0) {
-        // Copy SR into PC.  We're XORing instead of masking and copying
-        // because the switchstatus bits are opposite what we want here: we
-        // get a 0 from the GPIO peripheral when the switch is closed, which
-        // is the switch's "1" position.
-        *pPC = switchstatus[0] ^ 07777;
+    // Check for LOAD_ADD switch press.  The only reason we bother
+    // making it single-shot is in case debugging is enabled.
+    // Otherwise, it matters not how long the slow human holds this
+    // swithc down, and thus how often we apply the values: all else
+    // but our printf() here is idempotent.
+    static int swLAdd = 0;
+    if ((swLAdd == 0) && (switchstatus[2] & SS2_L_ADD) == 0) {
+        // Copy SR into PC.  Have to flip the bits because GPIO gives
+        // 0 for a closed switch and 1 for open, opposite what we want.
+        *pPC = (~switchstatus[0]) & 07777;
                                
         // Copy DF switch settings to DF register
         //
@@ -570,26 +704,46 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         // in DF here: we want to be able to logically OR PC and DF to make
         // 15-bit data access addresses.
         //
-        // We complement the bits here for the same reason we XOR'd the PC
-        // value above.
+        // We complement the bits here for the same reason we did above
         uint16_t css1 = ~switchstatus[1]; 
         *pDF = (css1 & SS1_DF_ALL) << 3;
 
-        // Do the same for IF.  The only difference comes from the fact that
-        // IF is the next 3 bits down in switchstatus[1].
+        // Do the same for IF.  The only difference comes from the fact
+        // that IF is the next 3 bits down in switchstatus[1].
         *pIF = (css1 & SS1_IF_ALL) << 6;
+
+#if 0   // debugging
+        printf("\r\nL_ADD: [DF:%o] [IF:%o] [PC:%04o] "
+                "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
+#endif
+        swLAdd = 1;                 // make it single-shot
+    }
+
+    // ...and L_ADD switch release
+    if (swLAdd && (switchstatus[2] & SS2_L_ADD)) {
+        swLAdd = 0;
     }
 
     // Check for DEP switch press...
     static int swDep = 0;
     if (((switchstatus[2] & SS2_DEP) == 0) && (swDep == 0)) {
-        pM[*pPC] = switchstatus[0] ^ 07777;    // XOR rationale above
+        uint16 sSR = (~switchstatus[0]) & 07777; // bit flip justified above
+        *pPC = *pPC & 07777;  // sometimes high bits get set; squish 'em
+
+#if 0   // debugging
+        printf("\r\nDEP: [IF:%o] [PC:%04o] [SR:%04o]",
+                (*pIF >> 12), *pPC, sSR);
+#endif
+
         /* ??? in 66 handbook: strictly speaking, SR goes into AC,
            then AC into MB. Does it clear AC afterwards? If not, needs fix */
-        *pMB = pM[*pPC];
-        *pMA = *pPC & 07777;          // MA trails PC on FP
-        *pPC = (*pPC + 1) & 07777;    // increment PC
-        swDep = 1;                    // make it single-shot
+        pM[*pPC] = sSR;             // FIXME: shouldn't we use IF/DF here?
+        *pMB = sSR;
+        *pMA = *pPC & 07777;        // MA trails PC on FP; FIXME: OR in IF?
+        *pPC = (*pPC + 1) & 07777;  // increment PC
+        swDep = 1;                  // make it single-shot
     }
 
     // ...and DEP switch release
@@ -616,6 +770,13 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // STOP mode, this switch's function is idempotent.
     if (!swStop && ((switchstatus[2] & SS2_STOP) == 0)) {
         swStop = 1;
+
+#if 0   // debugging
+            printf("\r\nSTOP: [DF:%o] [IF:%o] [PC:%04o] "
+                    "[MA:%04o] [MB:%04o] [L:%d] [AC:%04o]",
+                    (*pDF >> 12), (*pIF >> 12), (*pPC & 07777),
+                    *pMA, *pMB, !!(*pLAC & 010000), *pLAC & 07777);
+#endif
     }
 
     // If any of the above put us into STOP or SING_INST mode, go no

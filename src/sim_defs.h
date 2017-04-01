@@ -1,6 +1,6 @@
 /* sim_defs.h: simulator definitions
 
-   Copyright (c) 1993-2008, Robert M Supnik
+   Copyright (c) 1993-2016, Robert M Supnik
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -23,6 +23,9 @@
    used in advertising or otherwise to promote the sale, use or other dealings
    in this Software without prior written authorization from Robert M Supnik.
 
+   25-Sep-16    RMS     Removed KBD_WAIT and friends
+   08-Mar-16    RMS     Added shutdown invisible switch
+   24-Dec-14    JDB     Added T_ADDR_FMT
    05-Jan-11    MP      Added Asynch I/O support
    18-Jan-11    MP      Added log file reference count support
    21-Jul-08    RMS     Removed inlining support
@@ -243,8 +246,15 @@ typedef uint32          t_addr;
 
 #if defined (_WIN32) /* Actually, a GCC issue */
 #define LL_FMT "I64"
+#define LL_TYPE long long
+#else
+#if defined (__VAX) /* No 64 bit ints on VAX */
+#define LL_FMT "l"
+#define LL_TYPE long
 #else
 #define LL_FMT "ll"
+#define LL_TYPE long long
+#endif
 #endif
 
 #if defined (VMS) && (defined (__ia64) || defined (__ALPHA))
@@ -370,9 +380,10 @@ typedef uint32          t_addr;
 #define SCPE_INVREM     (SCPE_BASE + 43)                /* invalid remote console command */
 #define SCPE_NOTATT     (SCPE_BASE + 44)                /* not attached */
 #define SCPE_EXPECT     (SCPE_BASE + 45)                /* expect matched */
-#define SCPE_REMOTE     (SCPE_BASE + 46)                /* remote console command */
+#define SCPE_AMBREG     (SCPE_BASE + 46)                /* ambiguous register */
+#define SCPE_REMOTE     (SCPE_BASE + 47)                /* remote console command */
 
-#define SCPE_MAX_ERR    (SCPE_BASE + 47)                /* Maximum SCPE Error Value */
+#define SCPE_MAX_ERR    (SCPE_BASE + 48)                /* Maximum SCPE Error Value */
 #define SCPE_KFLAG      0x1000                          /* tti data flag */
 #define SCPE_BREAK      0x2000                          /* tti break flag */
 #define SCPE_NOMESSAGE  0x10000000                      /* message display supression flag */
@@ -388,12 +399,9 @@ typedef uint32          t_addr;
 /* Default timing parameters */
 
 #define KBD_POLL_WAIT   5000                            /* keyboard poll */
-#define KBD_MAX_WAIT    500000
 #define SERIAL_IN_WAIT  100                             /* serial in time */
 #define SERIAL_OUT_WAIT 100                             /* serial output */
 #define NOQUEUE_WAIT    1000000                         /* min check time */
-#define KBD_LIM_WAIT(x) (((x) > KBD_MAX_WAIT)? KBD_MAX_WAIT: (x))
-#define KBD_WAIT(w,s)   ((w)? w: KBD_LIM_WAIT (s))
 
 /* Convert switch letter to bit mask */
 
@@ -544,9 +552,12 @@ struct UNIT {
     int32               u6;                             /* device specific */
     void                *up7;                           /* device specific */
     void                *up8;                           /* device specific */
+    uint16              us9;                            /* device specific */
+    uint16              us10;                           /* device specific */
     void                *tmxr;                          /* TMXR linkage */
     t_bool              (*cancel)(UNIT *);
     double              usecs_remaining;                /* time balance for long delays */
+    char                *uname;                         /* Unit name */
 #ifdef SIM_ASYNCH_IO
     void                (*a_check_completion)(UNIT *);
     t_bool              (*a_is_active)(UNIT *);
@@ -1041,7 +1052,7 @@ extern int32 sim_asynch_inst_latency;
 /* This approach uses intrinsics to manage access to the link list head     */
 /* sim_asynch_queue.  This implementation is a completely lock free design  */
 /* which avoids the potential ABA issues.                                   */
-#define AIO_QUEUE_MODE "Lock free asynchronous event queue access"
+#define AIO_QUEUE_MODE "Lock free asynchronous event queue"
 #define AIO_INIT                                                  \
     do {                                                          \
       int tmr;                                                    \
@@ -1073,7 +1084,7 @@ extern int32 sim_asynch_inst_latency;
 #define AIO_ILOCK AIO_LOCK
 #define AIO_IUNLOCK AIO_UNLOCK
 #define AIO_QUEUE_VAL (UNIT *)(InterlockedCompareExchangePointer((void * volatile *)&sim_asynch_queue, (void *)sim_asynch_queue, NULL))
-#define AIO_QUEUE_SET(val, queue) (UNIT *)(InterlockedCompareExchangePointer((void * volatile *)&sim_asynch_queue, (void *)val, queue))
+#define AIO_QUEUE_SET(newval, oldval) (UNIT *)(InterlockedCompareExchangePointer((void * volatile *)&sim_asynch_queue, (void *)newval, oldval))
 #define AIO_UPDATE_QUEUE sim_aio_update_queue ()
 #define AIO_ACTIVATE(caller, uptr, event_time)                                   \
     if (!pthread_equal ( pthread_self(), sim_asynch_main_threadid )) {           \
@@ -1084,7 +1095,7 @@ extern int32 sim_asynch_inst_latency;
 /* This approach uses a pthread mutex to manage access to the link list     */
 /* head sim_asynch_queue.  It will always work, but may be slower than the  */
 /* lock free approach when using USE_AIO_INTRINSICS                         */
-#define AIO_QUEUE_MODE "Lock based asynchronous event queue access"
+#define AIO_QUEUE_MODE "Lock based asynchronous event queue"
 #define AIO_INIT                                                  \
     do {                                                          \
       int tmr;                                                    \
@@ -1114,7 +1125,7 @@ extern int32 sim_asynch_inst_latency;
 #define AIO_ILOCK AIO_LOCK
 #define AIO_IUNLOCK AIO_UNLOCK
 #define AIO_QUEUE_VAL sim_asynch_queue
-#define AIO_QUEUE_SET(val, queue) (sim_asynch_queue = val)
+#define AIO_QUEUE_SET(newval, oldval) ((sim_asynch_queue = newval),oldval)
 #define AIO_UPDATE_QUEUE sim_aio_update_queue ()
 #define AIO_ACTIVATE(caller, uptr, event_time)                         \
     if (!pthread_equal ( pthread_self(), sim_asynch_main_threadid )) { \

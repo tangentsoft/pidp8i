@@ -35,6 +35,11 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
 
+If you've checked out a new version of the source code and the `make`
+step fails, try redoing the `configure` step. Sometimes changes made to
+the source code invalidate prior `make` dependencies, which are
+implicitly repaired by the `configure` script.
+
 
 ### Configure Script Options
 
@@ -56,26 +61,75 @@ to, you still need to install via `sudo` because the installation
 process does other things that do require `root` access.
 
 
+#### --no-idle
+
+By default, the PDP-8 simulator configuration files are generated with
+the PDP-8 CPU idling option set appropriately for your configuration.
+Idling causes the simulator to go into a low-CPU usage mode when it
+detects that the simulated PDP-8 software isn't doing any real work,
+such as spinning in a tight loop waiting for a keypress.
+
+Idling is incompatible with the incandescent lamp simulator (ILS)
+because it throws off the timing used to calculate the LED brightness
+values, so when building with the ILS, the build system implicitly sets
+the `--no-idle` option. This option therefore only takes effect when
+building with the `--no-lamp-simulator` option or when the ILS is
+automatically disabled, as when configuring the software on a
+single-core Raspberry Pi. See the next item for details.
+
+If you're:
+
+1.  updating an installation made before 2017.03.30;
+
+2.  it uses the ILS feature; and
+
+3.  you have added any `set cpu idle` options in your PDP-8
+    confifguration scripts
+
+...see the "Overwriting the Local Simulator Setup" section below.
+
+You may also need to use one of the solutions in that section if you
+first install with the NLS enabled, then later decide that you want to
+try the ILS.
+
+You know you need to fix your local PDP-8 simulator configuration if
+you're using the ILS and the display is correct only while the simulated
+PDP-8 is doing real work. If the display dims to zero brightness and
+then flutters between off, dim, and on states seemingly randomly while
+the PDP-8 is idle, you've got a `set cpu idle` setting somehwere. Again,
+see the "Overwriting the Local Simulator Setup" section for the options
+you have to fix this.
+
+The only practical reason I know of for setting `--no-idle` in NLS mode
+is that it can result in slightly higher SIMH benchmark results when
+running on a multi-core Pi without any [throttled][thro] restriction.
+
+tl;dr: You probably don't need to give this option, ever.
+
+
 #### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
-normally built with Ian Schofield's incandescent lamp simulator feature,
+normally built with the [incandescent lamp simulator][ils] feature,
 which drives the LEDs in a way that mimics the incandescent lamps used
-in the original PDP-8/I.  This feature currently takes too much CPU
-power to run on anything but a multi-core Raspberry Pi, currently
-limited to the Pi 2 and Pi 3 series.
+in the original PDP-8/I. (We call this the ILS for short.) This feature
+currently takes too much CPU power to run on anything but a multi-core
+Raspberry Pi, currently limited to the Pi 2 and Pi 3 series.
 
 If you configure the software on a single-core Pi — models A+, B+, and
 Zero — the simulator uses the original low-CPU-usage LED driving method
-instead.
+instead. (a.k.a. NLS for short, named after this configuration option.)
 
 Those on a multi-core host who want this low-CPU-usage LED driving
-method can give the `--no-lamp-simulator` option to `configure`.
+method can give the `--no-lamp-simulator` option to `configure`.  This
+method not only uses less CPU, which may be helpful if you're trying to
+run a lot of background tasks on your Pi 2 or Pi 3, it can also be
+helpful when the CPU is [heavily throttled][thro].
 
 
 #### --serial-mod
 
-If you have done the [serial mod][smod] to your PiDP-8/I PCB and the
+If you have done [Oscar's serial mod][sm1] to your PiDP-8/I PCB and the
 Raspberry Pi you have connected to it, add `--serial-mod` to the
 `configure` command above.
 
@@ -86,6 +140,19 @@ trying to run the software may even crash the Pi.
 If you give this flag and your PCBs are *not* modified, most of the
 hardware will work correctly, but several lights and switches will not
 work correctly.
+
+
+#### --alt-serial-mod
+
+This flag is for an [alternative serial mod by James L-W][sm2]. It
+doesn't require mods to the Pi, and the mods to the PiDP-8/I board are
+different from Oscar's.  This flag changes the GPIO code to work with
+these modifications to the PiDP-8/I circuit design.
+
+See the linked mailing list thread for details.
+
+As with `--serial-mod`, you should only enable this flag if you have
+actually done the mods as specified by James L-W.
 
 
 #### --throttle
@@ -100,22 +167,56 @@ or less.
 Run `./configure --help` for more information on your options here.
 
 
-### Installing
+## Overwriting the Local Simulator Setup
 
-The `sudo make install` step in the command above does what most people
-want.
+When you run `sudo make install` step on a system that already has an
+existing installation, it purposely does not overwrite two classes of
+files:
 
-That step will not overwrite the operating system and program media
-(e.g. the OS/8 RK05 disk cartridge image) when installing multiple times
-to the same location, but you can demand an overwrite with:
+1.  **The binary PDP-8 media files**, such as the RK05 disk image that
+    holds the OS/8 image the simulator boots from by default. These media
+    image files are considered "precious" because you may have modified
+    the OS configuration or saved personal files to the disk the OS
+    boots from, which in turn modifies this media image file out in the
+    host operating environment.
 
-    $ sudo make mediainstall
+2.  **The PDP-8 simulator configuration files**, installed as
+    `$prefix/share/boot/*.script`, which may similarly have local
+    changes, and thus be precious to you.
 
-This can be helpful if you have damaged your OS/program media or simply
-want to return to the pristine versions as distributed.
+Sometimes this "protect the precious" behavior isn't what you want.
+(Gollum!) One common reason this may be the case is that you've damaged
+your local configuration and want to start over. Another common case is
+that the newer software you're installing contains changes that you want
+to reflect into your local configuration.
 
-This will also overwrite the boot scripts in `$prefix/share/boot` with
-fresh versions from the source distribution.
+You have several options here:
+
+1.  If you just want to reflect upstream PDP-8 simulator configuration
+    file changes into your local versions, you can hand-edit the
+    installed simulator configuration scripts to match the changes in
+    the newly-generated `boot/*.script` files under the build directory.
+
+2.  If the upstream change is to the binary PDP-8 media image files and
+    you're unwilling to overwrite them wholesale, you'll have to mount
+    both versions of the media image files under the PDP-8 simulator and
+    copy the changes over by hand.
+
+3.  If your previously installed binary OS media images — e.g. the OS/8
+    RK05 disk image that the simulator boots from by default — are
+    precious but the simulator configuration scripts aren't precious,
+    you can just copy the generated `boot/*.script` files from the build
+    directory into the installation directory, `$prefix/share/boot`.
+    (See the `--prefix` option above for the meaning of `$prefix`.)
+
+4.  If neither your previously installed simulator configuration files
+    nor the binary media images are precious, you can force the
+    installation script to overwrite them both with a `sudo make
+    mediainstall` command after `sudo make install`.
+
+    Beware that this is potentially destructive! If you've made changes
+    to your PDP-8 operating systems or have saved files to your OS
+    system disks, this option will overwrite those changes!
 
 
 ## Testing
@@ -123,7 +224,7 @@ fresh versions from the source distribution.
 You can test your PiDP-8/I LED and switch functions with these commands:
 
     $ sudo systemctl stop pidp8i
-	$ pidp8i-test
+    $ pidp8i-test
 
 You may have to log out and back in before the second command will work,
 since the installation script modifies your normal user's `PATH` the
@@ -187,7 +288,8 @@ the terms of [the SIMH license][sl].
 
 [prj]:  https://tangentsoft.com/pidp8i/
 [upst]: http://obsolescence.wixsite.com/obsolescence/pidp-8
-[smod]: http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
+[sm1]:  http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
+[sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
 [usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
 [sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
@@ -196,3 +298,4 @@ the terms of [the SIMH license][sl].
 [thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
 [sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[ils]:  https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
