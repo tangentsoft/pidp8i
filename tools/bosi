@@ -75,8 +75,17 @@ function do_init() {
 
     apt-get update && apt-get -y upgrade || true
 
-    test -n "$(type -p fossil)" || apt-get -y install fossil
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
+
+    if [ -n "$(type -p fossil)" ]
+    then
+        bn=fossil-release
+        tb=$bn.tar.gz
+        wget -O $tb https://fossil-scm.org/index.html/tarball/$bn?uuid=release
+        ( tar xf $tb && cd $bn && ./configure && make install )
+        chown -R pi.pi $bn
+        rm $tb
+    fi
 
     if [ ! -e "$nh" ]
     then
