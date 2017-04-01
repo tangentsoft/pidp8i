@@ -78,7 +78,7 @@ function do_init() {
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
 	test -h /media/usb || apt-get -y install usbmount
 
-    if [ -n "$(type -p fossil)" ]
+    if [ -z "$(type -p fossil)" ]
     then
         bn=fossil-release
         tb=$bn.tar.gz
@@ -96,7 +96,7 @@ function do_init() {
         groupmod -n $nu pi
     fi
 
-    sed -iorig \
+    sed -i.orig \
             -e 's/^FS_MOUNTO.*/FS_MOUNTOPTIONS="-fstype=vfat,dmask=0000,fmask=0000"/' \
             /etc/usbmount/usbmount.conf
 
