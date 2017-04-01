@@ -83,7 +83,8 @@ function do_init() {
         bn=fossil-release
         tb=$bn.tar.gz
         wget -O $tb https://fossil-scm.org/index.html/tarball/$bn?uuid=release
-        ( tar xf $tb && cd $bn && ./configure && make -j3 && install )
+        apt-get -y install libssl-dev
+        ( tar xf $tb && cd $bn && ./configure && make -j3 && make install )
         chown -R pi.pi $bn
         rm $tb
     fi
