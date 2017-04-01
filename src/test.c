@@ -68,7 +68,7 @@ static int auto_advance = 1;
             case 'R':       auto_advance = 1; return step + 1; \
             case 'x': \
             case 'X': \
-            case 3:         exit(1); \
+            case 3:         exit (1); \
         }
 #define DISPLAY_HOLD_ITERATIONS 20
 #define DISPLAY_HOLD \
@@ -279,8 +279,40 @@ void run_actions (void)
 }
 
 
+static void emergency_shut_down (int signum)
+{
+    // Shut ncurses down before we call printf, so it's down at the
+    // bottom.  This duplicates part of the graceful shutdown path,
+    // which is why it checks whether it's necessary.
+    endwin ();
+
+    printf ("\r\nExiting pidp8i-test, signal %d: %s\n\n", signum,
+            strsignal (signum));
+
+    exit (2);       // continues in graceful_shut_down
+}
+
+
+static void graceful_shut_down ()
+{
+    if (!isendwin()) endwin ();
+    turn_off_pidp8i_leds ();
+}
+
+
+static void register_shut_down_handlers ()
+{
+    struct sigaction sa;
+    memset (&sa, 0, sizeof (sa));
+    sa.sa_handler = emergency_shut_down;
+    sigaction (SIGINT, &sa, 0);
+    atexit (graceful_shut_down);
+}
+
+
 int main (int argc, char *argv[])
 {
+    register_shut_down_handlers ();
     start_gpio ();
     init_ncurses ();
     run_actions ();
