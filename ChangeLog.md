@@ -1,17 +1,35 @@
 # PiDP-8/I Changes
 
-## Version 2017.03.24 (INCOMPLETE)
+## Version 2017.04.01 The "I May Be a Fool, but I am *Your* Fool" Release
 
 *   Added the `configure --alt-serial-mod` option to change the GPIO
     code to work with [James L-W's alternative serial mod][sm2].
 
-*   Testing shows that we can increase the stock CPU throttle from 0.67
-    MIPS to 0.85 MIPS on most Pi 1 class devices, except for the Pi Zero
-    which is a bit faster and so is able to run at 1.25 MIPS.
+*   Increased the stock CPU throttle from 0.67 MIPS to 0.85 MIPS on most
+    Pi 1 class devices, except for the Pi Zero which is a bit faster and
+    so is able to run at 1.25 MIPS.
 
-    (Increasing it further causes SIMH to complain that it doesn't have
-    enough CPU power to run that fast, despite the fact that top(1)
-    shows it taking only about half the available CPU power.)
+    (Testing shows that increasing it further causes SIMH to complain
+    that it doesn't have enough CPU power to run that fast, despite the
+    fact that top(1) shows it taking only about half the available CPU
+    power.  It's just as well: we don't want to hog all the CPU power on
+    a single-core Pi, anyway.)
+
+*   When built in NLS mode, most of the PDP-8 simulator configuration
+    files we generate now have CPU idle detection enabled, allowing host
+    CPU usage to drop when the simulated CPU is basically idle, such as
+    when waiting for keyboard input.
+
+    This is not done when the ILS is enabled because doing so throws off
+    the timing needed to calculate LED brightness correctly.
+
+    NLS users can get the old behavior back with `configure --no-idle`.
+    (This flag is always overridden in ILS mode.)
+
+    None of this affects existing installations, since the simulator
+    configuration files are not normally overwritten when upgrading to a
+    new version of the software.  See the `--no-idle` section of
+    `README.md` for more details.
 
 *   Replaced a simplistic 2-second delay in the startup sequence of the
     simulator, `pidp8i-test`, and "[Incandescent Thought][it]" with a
@@ -21,13 +39,8 @@
 *   Fixed a problem introduced in v20170204 which causes the `LOAD_ADD`
     and `DEPOSIT` switch handlers to generate incorrect core addresses
     when the SIMH PDP-8 CPU core sets bits beyond the lower 12 in the PC
-    register.  The prior release was assuming this reigster is always
-    12-bit clean, but it isn't.
-
-*   Improved Raspberry Pi type detection logic in the code that builds
-    the configuration string written out as the simulator and test
-    programs start up.  Most of the improvements affect how we deal with
-    the various flavors of Compute Module and the Pi Zero.
+    register.  We were assuming this reigster is always 12-bit clean,
+    but it isn't.
 
 *   Merged in upstream SIMH improvements.  Changes relevant to the
     PiDP-8/I include:
@@ -40,9 +53,9 @@
     *   Improved keyboard polling behavior in terminal handler.
 
     *   Fixed many bugs identified by Coverity Scan in many different
-        subsystems of the simulator.  Normally I wouldn't note such
-        problems in this user-facing document, but it is possible that
-        some of these resulted in user-visible bugs that are now fixed.
+        subsystems of the simulator.  Normally I wouldn't note such a
+        low-level change in this user-centric document, but it is
+        possible that some of these improvements fix user-visible bugs.
 
 *   SIMH's default PDP-8 configuration enables the DF32 disk device with
     the short name "DF", but since the SIMH `DEPOSIT` command works on
@@ -58,6 +71,50 @@
     only affect new installs unless you say `make mediainstall`, in
     which case your binary OS media is also overwritten.  Do this at
     your own risk!
+
+*   Many improvements to the `SING_STEP` + `DF` USB auto-mounting and
+    SIMH attaching feature:
+
+    *   Prior versions apparently could only mount paper tape images
+        correctly.  This release includes a fix that allows RX type
+        floppy images and TU type DECtape images to autoattach.
+
+    *   Changed the meaning of `SING_STEP` + `DF=7` from attaching an RL
+        type removable hard disk cartridge image to the first RL01 drive
+        to attaching an older and more period-correct RK type image to
+        the *second* RK05 drive.  The second half of the change lets you
+        use this feature along with the stock OS/8 image to attach a
+        second hard disk at runtime.
+
+    *   The file name matching code used by this feature was only using
+        the first character of the file name extension, and it wasn't
+        pinning the match to the end of the file name string.  Thus, if
+        you'd set `DF=0`, it would look for the first file with `.p`
+        anywhere in the file name, not `.pt` at the end, as expected.
+
+    *   Improved error messages given when this feature doesn't work.
+
+*   The `pidp8i-test` program now accepts a `-v` flag to make it give
+    the version and configuration string and exit.
+
+*   `pidp8i-test` now exits more cleanly, shutting down ncurses, turning
+    off the front panel LEDs, and writing a diagnostic message on signal
+    exits.
+
+*   The version number part of the configuration string written by
+    `pidp8i-test -v` and as the first line of output from the simulator
+    now uses the same 10-digit Fossil checkin ID format as the Fossil
+    timeline, making it easier to match that version to a particular
+    Fossil checkin.
+
+*   The Raspberry Pi model detection code behind the Pi model tag in the
+    configuration string was only doing the right thing for the more
+    common Pi models.  It now reports the correct Pi model for the
+    various flavors of Compute Module and the Pi Zero.
+
+*   Improved error handling in the process that inserts the version info
+    into the configuration string emitted when the simulator and test
+    programs start up.
 
 *   We now build and link in the upstream `sim_video` module, which
     allows access to a video display via SDL.  We do not currently
@@ -77,10 +134,6 @@
     throttle value under 1000 IPS via a SIMH command.  We'll try to help
     you avoid accidentally shooting yourself in the foot, but if you're
     going to *aim*, you're on your own.)
-
-*   Improved error handling in the process that inserts the version info
-    into the configuration string emitted when the simulator and test
-    programs start up.
 
 *   Several internal refactorings to improve code style, reduce the
     [upstream SIMH patch footprint][foot], and fix corner case bugs.
