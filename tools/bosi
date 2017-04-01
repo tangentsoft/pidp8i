@@ -76,13 +76,15 @@ function do_init() {
     apt-get update && apt-get -y upgrade || true
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
+	test -h /media/usb || apt-get -y install usbmount
 
-    if [ -n "$(type -p fossil)" ]
+    if [ -z "$(type -p fossil)" ]
     then
         bn=fossil-release
         tb=$bn.tar.gz
         wget -O $tb https://fossil-scm.org/index.html/tarball/$bn?uuid=release
-        ( tar xf $tb && cd $bn && ./configure && make -j3 && install )
+        apt-get -y install libssl-dev
+        ( tar xf $tb && cd $bn && ./configure && make -j3 && make install )
         chown -R pi.pi $bn
         rm $tb
     fi
@@ -95,7 +97,7 @@ function do_init() {
         groupmod -n $nu pi
     fi
 
-    sed -i 'orig' \
+    sed -i.orig \
             -e 's/^FS_MOUNTO.*/FS_MOUNTOPTIONS="-fstype=vfat,dmask=0000,fmask=0000"/' \
             /etc/usbmount/usbmount.conf
 
@@ -252,6 +254,8 @@ function do_image() {
         *) exit 1
     esac
 
+    rdev=${dev/disk/rdisk}              # speeds zeroing and re-imaging
+
     mf=/tmp/MANIFEST.txt
     readme=/tmp/README.md
     cp "$topdir/doc/OS-images.md" $readme
@@ -259,7 +263,7 @@ function do_image() {
     set -x
 
     diskutil unmountDisk $dev           # it auto-mounted
-    sudo time dd if=$dev bs=1m of=$img
+    sudo time dd if=$rdev bs=1m of=$img
     sum=($(shasum "$img"))
     bytes=($(wc -c $img))
 
@@ -278,8 +282,8 @@ MF
 
     # Now re-image the card, starting with a zeroed card to ensure a
     # clean test.  Ignore the end-of-device error from the zero step.
-    sudo time dd if=/dev/zero of=$dev bs=1m || true
-    sudo time dd if=$img of=$dev bs=1m
+    sudo time dd if=/dev/zero of=$rdev bs=1m || true
+    sudo time dd if=$img of=$rdev bs=1m
     diskutil unmountDisk $dev || true   # Paragon ExtFS might be installed
 }
 

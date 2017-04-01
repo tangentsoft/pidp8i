@@ -38,10 +38,16 @@ Start with the latest version of [Raspbian Lite][os] on a multi-core
 Raspberry Pi.
 
 1.  If the version of the base OS has changed since the last binary OS
-    image was created, download the new one and blast it onto an SD card
-    used for no other purpose.  Boot it up.
+    image was created, download the new one.
 
-2.  After logging in, retreive and initialize the BOSI process:
+    While the OS is downloading, zero the SD card you're going to use
+    for this, so the prior contents don't affect this process.
+    
+    Blast the base OS image onto the cleaned SD card.
+
+2.  Boot it up on a multi-core Pi.
+
+    Log in, then retreive and initialize BOSI:
 
         $ wget https://tangentsoft.com/bosi
         $ chmod +x bosi
