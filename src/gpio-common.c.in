@@ -550,6 +550,26 @@ void update_led_states (const us_time_t delay)
 }
 
 
+//// turn_off_pidp8i_leds //////////////////////////////////////////////
+// Simplified version of NLS driving code called during program
+// tear-down to turn off all LEDs.
+
+void turn_off_pidp8i_leds ()
+{
+    // Set col pins to output
+    for (size_t i = 0; i < NCOLS; ++i) {
+        OUT_GPIO(cols[i]);
+        GPIO_SET = 1 << cols[i];
+    }
+
+    // Set all rows to 0
+    for (size_t row = 0; row < NLEDROWS; ++row) {
+        GPIO_CLR = 1 << ledrows[row];
+        INP_GPIO (ledrows[row]);
+    }
+}
+
+
 //// gpio_thread ///////////////////////////////////////////////////////
 // The GPIO thread entry point: initializes GPIO and then calls
 // the gpio_core () implementation linked to this program.

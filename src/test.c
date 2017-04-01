@@ -279,8 +279,23 @@ void run_actions (void)
 }
 
 
+static void shut_down (int signum)
+{
+    endwin ();
+    printf ("\r\nExiting pidp8i-test, signal %d: %s\n\n", signum,
+            strsignal (signum));
+    exit (1);
+}
+
+
 int main (int argc, char *argv[])
 {
+    struct sigaction sa;
+    memset (&sa, 0, sizeof (sa));
+    sa.sa_handler = shut_down;
+    sigaction (SIGINT, &sa, 0);
+    atexit (turn_off_pidp8i_leds);
+
     start_gpio ();
     init_ncurses ();
     run_actions ();

@@ -131,6 +131,7 @@ extern uint8_t pidp8i_gpio_present;
 
 extern int start_pidp8i_gpio_thread (const char* must_map);
 extern void stop_pidp8i_gpio_thread ();
+extern void turn_off_pidp8i_leds ();
 extern void update_led_states (const us_time_t delay);
 
 extern unsigned bcm_host_get_peripheral_address(void);
