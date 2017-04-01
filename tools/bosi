@@ -95,7 +95,7 @@ function do_init() {
         groupmod -n $nu pi
     fi
 
-    sed -i 'orig' \
+    sed -iorig \
             -e 's/^FS_MOUNTO.*/FS_MOUNTOPTIONS="-fstype=vfat,dmask=0000,fmask=0000"/' \
             /etc/usbmount/usbmount.conf
 
