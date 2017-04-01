@@ -76,7 +76,7 @@ function do_init() {
     apt-get update && apt-get -y upgrade || true
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
-	test -h /media/usb && apt-get -y install usbmount || true
+	test -h /media/usb || apt-get -y install usbmount
 
     if [ -n "$(type -p fossil)" ]
     then
