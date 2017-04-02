@@ -58,17 +58,9 @@ integrated into the next release of the software.
 
 ## Underclocking
 
-There are a couple of reasons to make the software run slower than it
-does by default.  Saving CPU power is one reason.  Another is emulating
-the speed of a real PDP-8 variant.
-
-There are several `configure --throttle` option values available to
-achieve such ends:
-
-*   `--throttle=STRING`: any value not otherwise understood is passed
-    directly to SIMH in `SET THROTTLE` commands inserted into the
-    generated `boot/*.script` files. You can use any string here that
-    SIMH itself supports; [RTFM][tfm].
+There are many reasons to make the software run slower than it normally
+would.  You may achieve such ends by giving the `--throttle` option to
+the `configure` script:
 
 *   `--throttle=CPUTYPE`: if you give a value referencing one of the
     many PDP-8 family members, it selects a value based on the execution
@@ -104,9 +96,9 @@ achieve such ends:
     (See the I/O Matters section below for a further complication.)
 
     The values for the Intersil and Harris CMOS microprocessors are for
-    the fastest clock speed supported for that particular chip. Use the
-    `STRING` form of this option if you wish to emulate an underclocked
-    microprocessor.
+    the fastest clock speed supported for that particular chip.  Use the
+    `STRING` form of this option (documented below) if you wish to
+    emulate an underclocked microprocessor.
 
 *   `--throttle=human`: Causes the computer to throttle the human.
 
@@ -125,14 +117,33 @@ achieve such ends:
     This mode is useful for running otherwise-useful software as a
     "blinkenlights" demo.
 
-    You cannot currently use this mode with the [ILS][ils].  Give the
-    `--no-lamp-simulator` option along with this option, or the display
-    will not do what you want.
+    This mode disables the incandescent lamp simulator (ILS); see below.
 
-*   `--throttle=trace`: Alias for `--throttle=1`, causing the simulator
-    to act more or less like it's in single-instruction mode and you're
+*   `--throttle=trace`: Runs one instruction per second.  The effect is
+    as if you were running a PDP-8/I in single-instruction mode and were
     pressing the `CONT` button once a second to step through a program.
-    Again, you need to give `--no-lamp-simulator` with this.
+
+    This mode also disables the ILS.
+
+*   `--throttle=STRING`: any value not otherwise understood is passed
+    directly to SIMH in `SET THROTTLE` commands inserted into the
+    generated `boot/*.script` files.  You can use any string here that
+    SIMH itself supports; [read the fine manual][tfm].
+
+    If you use the ratio form here (e.g. `--throttle=123/456`) the
+    configuration script disables the ILS feature because of the way
+    SIMH handles this type of timing.  The ratio form of CPU throttling
+    tells SIMH to run some number of instructions and then sleep for
+    some number of milliseconds.  (The above 123/456 example means "run
+    123 instructions, then sleep for 456 ms.")  This batched instruction
+    execution scheme interferes with the high-speed LED panel update
+    rate, so we must disable the ILS when running with such a throttle
+    value set.
+
+    Therefore, you should only use the ratio form of throttle value when
+    you need to get under 1000 instructions per second.  For any value
+    over that, give `--throttle=1k` or higher, which allows the ILS
+    feature to properly maintain its LED brightness values.
 
 
 ## I/O Matters
