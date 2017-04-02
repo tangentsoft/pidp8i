@@ -14,7 +14,7 @@ features of GitHub under a simpler operating model than Subversion
 without tying you to a proprietary web service.
 
 This guide will introduce you to some of the basics, but you should also
-at least read the [Fossil Quick Start Guide][fqsd]. For a more thorough
+at least read the [Fossil Quick Start Guide][fqsg]. For a more thorough
 introduction, I recommend [the Schimpf book][fbook]. If you have
 questions, it is best to ask them on [its low-volume mailing list][fml],
 though you may also ask me, either on [the PiDP-8/I mailing list][ggml]
@@ -379,10 +379,10 @@ of its source files:
             char *buffer = malloc (4 * nbytes);
 
             switch (some_parameter) {
-				case 'a':
-					do_something_with_buffer ((char *)buffer); 
-				default:
-					do_something_else ();
+                case 'a':
+                    do_something_with_buffer ((char *)buffer); 
+                default:
+                    do_something_else ();
                 }
             }
         else {
@@ -422,24 +422,24 @@ That gives the following, when applied to the above example:
 
         int some_function (char some_parameter)
         {
-			int some_variable = 0;
+            int some_variable = 0;
 
-			if (some_parameter != '\0') {
-				int nbytes = sizeof (some_parameter);
-				char *buffer = malloc (4 * nbytes);
+            if (some_parameter != '\0') {
+                int nbytes = sizeof (some_parameter);
+                char *buffer = malloc (4 * nbytes);
 
-				switch (some_parameter) {
-					case 'a':
-						do_something_with_buffer ((char *)buffer); 
-					default:
-						do_something_else ();
-				}
-			}
-			else {
-				some_other_function (with_a_large, "number of parameters",
-					wraps_with_a_single, "indent level");
-				printf (stderr, "Failed to allocate buffer.\n");
-			}
+                switch (some_parameter) {
+                    case 'a':
+                        do_something_with_buffer ((char *)buffer); 
+                    default:
+                        do_something_else ();
+                }
+            }
+            else {
+                some_other_function (with_a_large, "number of parameters",
+                    wraps_with_a_single, "indent level");
+                printf (stderr, "Failed to allocate buffer.\n");
+            }
         }
     
 If that looks greatly different, realize that it is just two indenting
