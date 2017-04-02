@@ -190,8 +190,9 @@ Getting Developer Access
 ----
 
 The administrator of this repository is Warren Young, whose email you
-can find on the [official PiDP-8/I project mailing list][ggml].
-Developer access is available to anyone who makes a reasonable request.
+can find on the [official PiDP-8/I project mailing list][ggml].  I
+generally give developer access to anyone who makes a reasonable
+request.
 
 
 Creating Branches
