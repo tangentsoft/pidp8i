@@ -1,5 +1,20 @@
 # PiDP-8/I Changes
 
+## Version 2017.04.03
+
+*   Removed the PDP-8 CPU idle detection feature.  Oscar Vermeulen
+    reports that it also interfered with NLS LED driving mode in his
+    last version, and we have no reason to believe our NLS code is
+    sufficiently different to avoid the problem.
+
+    This does not affect ILS users, since enabling ILS mode disables
+    this change.
+
+    NLS system upgrades wouldn't normally be affected because the
+    changed files are not normally overwritten on installation.  If
+    you're affected, you know it, and how to fix it.
+
+
 ## Version 2017.04.01 The "I May Be a Fool, but I am *Your* Fool" Release
 
 *   Added the `configure --alt-serial-mod` option to change the GPIO
@@ -19,17 +34,6 @@
     files we generate now have CPU idle detection enabled, allowing host
     CPU usage to drop when the simulated CPU is basically idle, such as
     when waiting for keyboard input.
-
-    This is not done when the ILS is enabled because doing so throws off
-    the timing needed to calculate LED brightness correctly.
-
-    NLS users can get the old behavior back with `configure --no-idle`.
-    (This flag is always overridden in ILS mode.)
-
-    None of this affects existing installations, since the simulator
-    configuration files are not normally overwritten when upgrading to a
-    new version of the software.  See the `--no-idle` section of
-    `README.md` for more details.
 
 *   Replaced a simplistic 2-second delay in the startup sequence of the
     simulator, `pidp8i-test`, and "[Incandescent Thought][it]" with a

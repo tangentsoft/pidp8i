@@ -14,17 +14,44 @@ features of GitHub under a simpler operating model than Subversion
 without tying you to a proprietary web service.
 
 This guide will introduce you to some of the basics, but you should also
-at least read the [Fossil Quick Start Guide][fqsd]. For a more thorough
+at least read the [Fossil Quick Start Guide][fqsg]. For a more thorough
 introduction, I recommend [the Schimpf book][fbook]. If you have
 questions, it is best to ask them on [its low-volume mailing list][fml],
 though you may also ask me, either on [the PiDP-8/I mailing list][ggml]
 or via private email.
 
-Most Raspberry Pi OS distributions include Fossil in their package
-repository, and it is also available for all common desktop platforms.
-If you started with one of the binary OS images downloaded from
-tangentsoft.com, Fossil is already installed.  If you don't like any of
-those options, you can also use [the official binaries][fbin].
+Although most Raspberry Pi OS distributions include Fossil in their
+package repository, I am not aware of any that are currently shipping
+Fossil 2.1 or newer, the minimum version I currently recommend.  That
+version made a substantial change to the way Fossil operates that we
+will soon be depending upon.  Therefore, I recommend building Fossil
+from source:
+
+    $ sudo apt install libssl-dev
+    $ wget -O fossil-release.tar.gz \
+      https://fossil-scm.org/index.html/tarball/fossil-release?uuid=release
+    $ tar xvf fossil-release.tar.gz
+    $ cd fossil-release
+    $ ./configure
+    $ make
+    $ sudo make install
+    $ sudo apt remove fossil
+
+Fossil is also available for all common desktop platforms.  One of [the
+official binaries][fbin] may work on your system.  If you're getting
+binaries from a third party, be sure it is Fossil 2.1 or higher.
+
+If you started with binary OS image version 20170401 or newer, Fossil 2
+is already installed.  Binary OS images made before that date will need
+to be updated with the source code build option above, since Raspbian
+will not be shipping Fossil 2 until about the year 2020, by my
+reckoning.
+
+(The next Debian release after Jessie (called Stretch) went into feature
+freeze while Fossil 1.37 was still current, so we'll have to wait until
+the next one after that before we'll get Fossil 2.x in Raspbian.  Since
+Debian releases typically last about 2 years, and Raspbian lags
+Debian...2020.  Ouch.)
 
 
 [fbin]:   http://fossil-scm.org/index.html/uv/download.html
@@ -163,8 +190,9 @@ Getting Developer Access
 ----
 
 The administrator of this repository is Warren Young, whose email you
-can find on the [official PiDP-8/I project mailing list][ggml].
-Developer access is available to anyone who makes a reasonable request.
+can find on the [official PiDP-8/I project mailing list][ggml].  I
+generally give developer access to anyone who makes a reasonable
+request.
 
 
 Creating Branches
@@ -379,10 +407,10 @@ of its source files:
             char *buffer = malloc (4 * nbytes);
 
             switch (some_parameter) {
-				case 'a':
-					do_something_with_buffer ((char *)buffer); 
-				default:
-					do_something_else ();
+                case 'a':
+                    do_something_with_buffer ((char *)buffer); 
+                default:
+                    do_something_else ();
                 }
             }
         else {
@@ -422,24 +450,24 @@ That gives the following, when applied to the above example:
 
         int some_function (char some_parameter)
         {
-			int some_variable = 0;
+            int some_variable = 0;
 
-			if (some_parameter != '\0') {
-				int nbytes = sizeof (some_parameter);
-				char *buffer = malloc (4 * nbytes);
+            if (some_parameter != '\0') {
+                int nbytes = sizeof (some_parameter);
+                char *buffer = malloc (4 * nbytes);
 
-				switch (some_parameter) {
-					case 'a':
-						do_something_with_buffer ((char *)buffer); 
-					default:
-						do_something_else ();
-				}
-			}
-			else {
-				some_other_function (with_a_large, "number of parameters",
-					wraps_with_a_single, "indent level");
-				printf (stderr, "Failed to allocate buffer.\n");
-			}
+                switch (some_parameter) {
+                    case 'a':
+                        do_something_with_buffer ((char *)buffer); 
+                    default:
+                        do_something_else ();
+                }
+            }
+            else {
+                some_other_function (with_a_large, "number of parameters",
+                    wraps_with_a_single, "indent level");
+                printf (stderr, "Failed to allocate buffer.\n");
+            }
         }
     
 If that looks greatly different, realize that it is just two indenting
