@@ -36,7 +36,6 @@ use cc-lib
 
 options {
 	debug-mode        => "create a debug build (default is release)"
-    no-idle           => "disable CPU idle detection; automatic if ILS enabled"
 	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
 	serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
 	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
@@ -124,17 +123,6 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 }
 msg-result "Simulator CPU throttle set to $tv IPS"
 
-# The default is to let the simulator detect when the CPU is idle,
-# reducing the instruction clock when the system otherwise has nothing
-# important to do (e.g. during the OS/8 keyboard busy-wait loop) but
-# the user can elect to disable this.  It can improve benchmark results
-# somewhat.  We override this entirely below in the ILS case.
-if {[opt-bool no-idle]} {
-    define SIMH_CPU_IDLE_FLAG {no}
-} else {
-    define SIMH_CPU_IDLE_FLAG {}
-}
-
 # Swap the incandescent lamp simulator feature out for the original LED
 # driving method on single-core hosts.  The user can force this on
 # multi-core hosts via --no-lamp-simulator.
@@ -146,27 +134,6 @@ if {($cores < 2) || [opt-bool no-lamp-simulator]} {
 	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
 	define LED_DRIVER_MODULE i
 	define ILS_MODE 1
-
-    # If we let the PDP-8 simulator's CPU to go into idle mode, its IPS
-    # rate falls to near-zero, which royally messes up the brightness
-    # calculations.  The LEDs initially follow IPS towards zero, turning
-    # the whole panel off, then they flicker back on occasionally as IPS
-    # totals up to something slightly above 0, then back down, then back
-    # up...  It looks like a Star Trek sick bay medical vitals display as
-    # the patient is dying.  It turns out, Jim, he's not actually dead;
-    # 'e's just resting.  (Two geek references in one.  Ooorah!)
-    #
-    # Thus, ILS implies --no-idle.
-    define SIMH_CPU_IDLE_FLAG {no}
-}
-
-# Tell user what we ultimately decided for CPU idling
-if {[get-define SIMH_CPU_IDLE_FLAG] == {}} {
-    msg-result "Simulator CPU will idle when possible."
-} elseif {[get-define ILS_MODE] == {1}} {
-    msg-result "Simulator CPU will not be allowed to idle; ILS enabled."
-} else {
-    msg-result "Simulator CPU will not be allowed to idle."
 }
 
 # Check for headers, functions, etc. whose absence we can work around
@@ -292,7 +259,7 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # Makefile.in, too.
 make-config-header src/config.h \
 	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {ILS_MODE PCB_* SIMH_*}
+	-bare {ILS_MODE PCB_*}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in

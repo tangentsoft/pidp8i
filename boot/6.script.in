@@ -3,7 +3,7 @@
 echo Loading ETOS from the RK05 cartridge disk drive...
 reset
 set cpu 32k
-set cpu @SIMH_CPU_IDLE_FLAG@idle
+set cpu noidle
 @SET_THROTTLE@
 set df disabled
 set tsc enabled

@@ -61,52 +61,6 @@ to, you still need to install via `sudo` because the installation
 process does other things that do require `root` access.
 
 
-#### --no-idle
-
-By default, the PDP-8 simulator configuration files are generated with
-the PDP-8 CPU idling option set appropriately for your configuration.
-Idling causes the simulator to go into a low-CPU usage mode when it
-detects that the simulated PDP-8 software isn't doing any real work,
-such as spinning in a tight loop waiting for a keypress.
-
-Idling is incompatible with the incandescent lamp simulator (ILS)
-because it throws off the timing used to calculate the LED brightness
-values, so when building with the ILS, the build system implicitly sets
-the `--no-idle` option. This option therefore only takes effect when
-building with the `--no-lamp-simulator` option or when the ILS is
-automatically disabled, as when configuring the software on a
-single-core Raspberry Pi. See the next item for details.
-
-If you're:
-
-1.  updating an installation made before 2017.03.30;
-
-2.  it uses the ILS feature; and
-
-3.  you have added any `set cpu idle` options in your PDP-8
-    confifguration scripts
-
-...see the "Overwriting the Local Simulator Setup" section below.
-
-You may also need to use one of the solutions in that section if you
-first install with the NLS enabled, then later decide that you want to
-try the ILS.
-
-You know you need to fix your local PDP-8 simulator configuration if
-you're using the ILS and the display is correct only while the simulated
-PDP-8 is doing real work. If the display dims to zero brightness and
-then flutters between off, dim, and on states seemingly randomly while
-the PDP-8 is idle, you've got a `set cpu idle` setting somehwere. Again,
-see the "Overwriting the Local Simulator Setup" section for the options
-you have to fix this.
-
-The only practical reason I know of for setting `--no-idle` in NLS mode
-is that it can result in slightly higher SIMH benchmark results when
-running on a multi-core Pi without any [throttled][thro] restriction.
-
-tl;dr: You probably don't need to give this option, ever.
-
-
 #### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
