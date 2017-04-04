@@ -87,7 +87,7 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
         if {$sc == 0} {
             set tv "1250k"
         } else {
-            set tv "850k"
+            set tv "800k"
         }
 	} elseif {$tv == "pdp8e"} {
 		set tv "416k"

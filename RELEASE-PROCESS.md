@@ -69,6 +69,11 @@ Raspberry Pi.
     On reboot, say `top -H` to make sure the software is running and
     that the CPU percentages are reasonable for the platform.
 
+    You may also want to check that it is running properly with a
+    `pidp8i` command.  Is the configuration line printed by the
+    simulator correct?  Does OS/8 run?  Are there any complaints from
+    SIMH, such as about insufficient CPU power?
+
 4.  Do final inside-the-image steps:
 
         $ ./bosi prepare
