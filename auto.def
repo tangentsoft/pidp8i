@@ -77,18 +77,11 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
 	# Rewrite symbolic values with values SIMH can understand.  See
 	# README-throttle.md for the justification of these values.
 	if {$tv == "single-core" || $tvsl == 0} {
-		# Set throttle to the highest values we can achive on the single
-        # core Pi boards with NLS without causing SIMH to claim the CPU
-        # isn't fast enough and give up on throttling.
-        set dtm "/proc/device-tree/model"
-        set sc [catch {
-            exec grep -q 'Raspberry Pi Zero' $dtm > /dev/null 2>&1
-        } msg]
-        if {$sc == 0} {
-            set tv "1250k"
-        } else {
-            set tv "800k"
-        }
+		# It's a single-core Pi board, so just tell SIMH to take half
+        # the host CPU power, leaving the rest left for background
+        # tasks.  We can't use an IPS value here for several reasons.
+        # See README-throttle.md for details.
+        set tv "50%"
 	} elseif {$tv == "pdp8e"} {
 		set tv "416k"
 	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
