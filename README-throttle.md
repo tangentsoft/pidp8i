@@ -29,18 +29,46 @@ You can force this behavior with `--throttle=none`.
 
 If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
-it takes about 50% of a single core's worth of power on the slowest
-Raspberry Pi supported by this software while running about twice as
-fast as a real PDP-8/I. This leaves enough CPU power for some background
-tasks on a single-core Pi.
+it takes about 50% of a single core's worth of power on your system.
 
-This default assumes you are building without the [incandescent lamp
-simulator][ils] feature enabled, as that currently takes so much CPU
-power to run that the simulator runs slower than even a PDP-8/S!  (We're
-working on ways to improve the speed of that lamp simulator to let it
-run on single-core raspberry Pis, but we may not succeed.)  Indeed, the
-build system will actively try to prevent you from building the
-incandescent lamp simulator feature on a single-core Pi.
+Since different single-core Raspberry Pi boards run at different default
+clock rates — overclocking aside — we cannot just set a single IPS value
+and know that it's correct.
+
+Besides that, SIMH's reaction to not having enough host CPU power to run
+at the requested IPS rate is to *turn off throttling entirely*, thus
+hogging the whole host CPU, exactly the opposite of what you want by
+turning on throttling! Since host CPU power is briefly impacted when
+starting the simulator up for the first time, SIMH's guesses about
+whether you've asked it to run at too fast a rate undershoot the actual
+capability of the hardware badly.
+
+Worse, when you set the PiDP-8/I software to start on boot via
+`systemd`, it's running in parallel with other startup tasks, further
+reducing the amount of host CPU power available to the simulator at the
+instant of startup, requiring an even lower IPS rate if you want to
+prevent SIMH from going into no-throttle mode.
+
+The solution to all of these problems is `set throttle 50%`, which tells
+SIMH to dynamically adjust the IPS rate according to available host CPU
+power. This does mean you don't get a steady IPS rate, but it does
+enforce our wish to leave some CPU power left over for background tasks.
+
+You might wish to adjust that default host/simulator CPU usage split.
+The `--throttle` option accepts percentages:
+
+     ./configure --throttle='75%'
+
+Note the single-quoted value: you must do that to avoid problems with
+the shell, since the percent character is special to it.
+
+Incidentally, you cannot use this throttling feature to leave enough CPU
+power on a single-core Pi to run the [incandescent lamp simulator][ils].
+We've tried, and you have to clock the simulator down to less than the
+speed of a PDP-8/S!  We're working on ways to improve the speed of that
+lamp simulator to let it run on single-core raspberry Pis, but we may
+not succeed. For this reason, the build system disables the incandescent
+lamp simulator feature on a single-core Pi.
 
 You can force the build system to select this throttle value even on a
 multi-core Pi with `--throttle=single-core`.

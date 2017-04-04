@@ -14,9 +14,13 @@
     changed files are not normally overwritten on installation.  If
     you're affected, you know it, and how to fix it.
 
-*   Backed the default throttle value for Pi 1 class devices from 850
-    kIPS to 800 kIPS, after we saw it complain about insufficient CPU
-    power once.
+*   Replaced the earlier attempts at finding an ideal IPS rate for the
+    simulator when run on single-core hosts with usage of SIMH's
+    percentage style throttle rates.  We now explicitly set the throttle
+    rate to "50%" which not only achieves an even higher throttle rate
+    than in earlier releases, it's reliable in the face of varying
+    background CPU usage.  See the single-core section of
+    `README-throttle.md` for details.
 
 
 ## Version 2017.04.01 The "I May Be a Fool, but I am *Your* Fool" Release
