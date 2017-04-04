@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2017.04.03
+## Version 2017.04.04
 
 *   Removed the PDP-8 CPU idle detection feature.  Oscar Vermeulen
     reports that it also interfered with NLS LED driving mode in his
@@ -13,6 +13,10 @@
     NLS system upgrades wouldn't normally be affected because the
     changed files are not normally overwritten on installation.  If
     you're affected, you know it, and how to fix it.
+
+*   Backed the default throttle value for Pi 1 class devices from 850
+    kIPS to 800 kIPS, after we saw it complain about insufficient CPU
+    power once.
 
 
 ## Version 2017.04.01 The "I May Be a Fool, but I am *Your* Fool" Release
