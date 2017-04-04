@@ -29,10 +29,14 @@ You can force this behavior with `--throttle=none`.
 
 If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
-it takes about 50% of a single core's worth of power on the slowest
-Raspberry Pi supported by this software while running about twice as
-fast as a real PDP-8/I. This leaves enough CPU power for some background
-tasks on a single-core Pi.
+it takes about 50% of a single core's worth of power on your system.
+Depending on whether you're running this on a Raspberry Pi A+, B+, Zero,
+or original Compute Module (all single-core Pi boards) it may run
+between 2 and 3 times the speed of a real PDP-8/I.  The throttle rate
+varies among these because the available CPU power varies.
+
+This leaves enough CPU power for some background tasks on a single-core
+Pi.
 
 This default assumes you are building without the [incandescent lamp
 simulator][ils] feature enabled, as that currently takes so much CPU
