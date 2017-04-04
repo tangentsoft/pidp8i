@@ -154,7 +154,7 @@ function do_prepare() {
 
     sudo shred -u /etc/ssh/*key* || true              # allow multiple passes
     sudo dphys-swapfile uninstall || true
-    sudo time dd if=/dev/zero of=/junk bs=1M || true  # it *will* error-out!
+    sudo dd if=/dev/zero of=/junk bs=1M || true       # it *will* error-out!
     sudo rm -f /junk
 
     encpass=$(openssl passwd -1 edsonDeCastro1968)
