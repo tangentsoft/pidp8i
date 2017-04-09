@@ -26,8 +26,9 @@
 *   **Mike Barnes** Ported Oscar Vermeulen's SIMH 3.9 based PiDP-8/I
     simulator to the new SIMH 4.0 code base.  (September 2015.)
 
-*   **Dylan McNamee** Ported the software to Buildroot for the
-    official 2015.12.15 binary OS images.
+*   **Dylan McNamee** Ported the software to Buildroot for the official
+    2015.12.15 binary OS images, and helped to merge the James L-W
+    "alt-serial" mode in.
 
 *   **Mark G. Thomas** Creator of the installation scripts for the
     2015.12.15 release, which were folded into the `make install`
