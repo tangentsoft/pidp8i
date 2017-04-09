@@ -686,9 +686,11 @@ int start_pidp8i_gpio_thread (const char* must_map)
     unsigned int gpio_base_addr = bcm_host_get_peripheral_address();
     gpio.addr_p = gpio_base_addr + 0x200000;
 
+    // Attempt to map the GPIO peripheral for our exclusive use.  Some
     // callers care if this fails, and some don't.
     map_peripheral (&gpio, 1);
     if (must_map && !pidp8i_gpio_present) return EFAULT;
+
 #ifdef PCB_SERIAL_MOD_JLW
     // James L-W's alternative serial mods were declared to be done here
     // at configure time, so disable the hysteresis on the GPIO inputs.
@@ -696,8 +698,6 @@ int start_pidp8i_gpio_thread (const char* must_map)
     gpio2.addr_p = gpio_base_addr + 0x100000;
     gpio2.addr[0x0B] = (gpio2.addr[0x0B] & 0xF7) | (0x5A << 24);
 #endif
-
-    // Attempt to map the GPIO peripheral for our exclusive use.  Some
 
     // Until gpio_core () reads the switches for the first time, we need
     // to mark them as all-open, lest we have a race condition with the
