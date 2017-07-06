@@ -153,6 +153,7 @@ function do_prepare() {
     history -c ; rm -f ~/.bash_history
 
     sudo systemctl stop pidp8i || true          # avoid sim hogging CPU
+    sudo systemctl enable sshd || true          # disabled by default
     sudo shred -u /etc/ssh/*key* || true        # allow multiple passes
     sudo dphys-swapfile uninstall || true
     sudo dd if=/dev/zero of=/junk bs=1M || true # it *will* error-out!
