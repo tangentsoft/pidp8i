@@ -131,6 +131,7 @@ if {($cores < 2) || [opt-bool no-lamp-simulator]} {
 
 # Check for headers, functions, etc. whose absence we can work around
 cc-check-includes time.h
+cc-check-function-in-lib clock_gettime rt
 cc-check-functions clock_nanosleep nanosleep usleep
 cc-check-functions sched_yield
 
