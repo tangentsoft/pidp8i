@@ -56,14 +56,12 @@ used as the second pass of the OS/8 FORTRAN II system.
 You use this cross-compiler to compile the 3 components of the OS/8 C
 compiler:
 
-1.  **`n8.c`** &rarr; **`n8.s`** The parser/tokeniser section of the
-    compiler
+1.  `n8.c` &rarr; `n8.s`: The parser/tokeniser section of the compiler
 
-2.  **`p8.c`** &rarr; **`p8.s`** The token to SABR code converter
-    section.
+2.  `p8.c` &rarr; `p8.s`: The token to SABR code converter section.
 
-3.  **`libc.c`** &rarr; **`libc.s`** The C library used by both of the
-    above via the `libc.h` include file.
+3.  `libc.c` &rarr; `libc.s`: The C library used by both of the above
+    via the `libc.h` include file.
 
 When you build and run this cross-compiler on a POSIX type system such
 as the Raspbian PiDP-8/I environment, the resulting `*.s` files will
