@@ -822,5 +822,8 @@
 ## Version 2015.12.15
 
 *   The last release of the software made by Oscar Vermeulen, the
-    creator of the PiDP-8/I project. Since May of 2017, this version
-    of the software is now considered the current stable version.
+    creator of the PiDP-8/I project. This version of the software
+    derives from it, but differs in many ways. (See above.)
+
+    Since May of 2017, this version of the software is now considered
+    the current stable version.
