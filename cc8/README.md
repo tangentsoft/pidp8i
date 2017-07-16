@@ -207,7 +207,7 @@ However, all variables, functions and arrays must be declared `int`.
 
 6.  Comparison operators compare signed. Result is boolean true = -1.
 
-7.  `&`, `|` and `!` are bitwise.
+7.  The `&`, `\|` and `!` operators are bitwise.
 
 8.  See `libc.h` for allowed libc functions. There are 31.
 
