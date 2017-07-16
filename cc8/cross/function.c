@@ -24,7 +24,7 @@ newfunc ()
 	if (!symname (n) ) {
 		error ("illegal function or declaration");
 		kill ();
-		return;
+		return 0;
 	}
 	if (ptr = findglb (n)) {
 		if (ptr[IDENT] != FUNCTION)
@@ -130,7 +130,7 @@ int	t;
 
 	FOREVER {
 		if (argstk == 0)
-			return;
+			return 0;
 		if (match ("*"))
 			j = POINTER;
 		else
@@ -157,7 +157,7 @@ int	t;
 		}
 		argstk = argstk - intsize();
 		if (endst ())
-			return;
+			return 0;
 		if (!match (","))
 			error ("expected comma");
 	}

@@ -57,7 +57,7 @@ fixname (s)
 char	*s;
 {
 	while (*s && *s++ != EOL);
-	if (!*s) return;
+	if (!*s) return 0;
 	*(--s) = 0;
 }
 
@@ -89,7 +89,7 @@ inln ()
 
 	FOREVER {
 		if (feof (input))
-			return;
+			return 0;
 		if ((unit = input2) == NULL)
 			unit = input;
 		kill ();
@@ -115,7 +115,7 @@ inln ()
 				nl ();
 			}
 			lptr = 0;
-			return;
+			return 0;
 		}
 	}
 }

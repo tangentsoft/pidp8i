@@ -146,7 +146,7 @@ int	func;
 	ncmp++;
 	while (!match ("}")) {
 		if (feof (input))
-			return;
+			return 0;
 		if (decls) {
 			if (!stdecl ())
 				decls = NO;
@@ -173,7 +173,7 @@ doif ()
 	locptr = flev;
 	if (!amatch ("else", 4)) {
 		gnlabel (flab1);
-		return;
+		return 0;
 	}
 	jump (flab2 = getlabel ());
 	gnlabel (flab1);
@@ -224,7 +224,7 @@ dodo ()
 	statement (NO);
 	if (!match ("while")) {
 		error ("missing while");
-		return;
+		return 0;
 	}
 	gnlabel (ws[WSTEST]);
 	test (ws[WSBODY], TRUE);
@@ -371,7 +371,7 @@ dobreak ()
 	int	*ptr;
 
 	if ((ptr = readwhile ()) == 0)
-		return;
+		return 0;
 	modstk (ptr[WSSP]);
 	jump (ptr[WSEXIT]);
 }
@@ -384,7 +384,7 @@ docont ()
 	int	*ptr;
 
 	if ((ptr = findwhile ()) == 0)
-		return;
+		return 0;
 /*	modstk (ptr[WSSP]); */
 	if (ptr[WSTYP] == WSFOR)
 		jump (ptr[WSINCR]);

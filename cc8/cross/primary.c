@@ -253,7 +253,7 @@ spechar() {
 	else if (c == 'f') c = FFEED;
 	else if (c == 'b') c = BKSP;
 	else if (c == '0') c = EOS;
-	else if (c == EOS) return;
+	else if (c == EOS) return 0;
 
 	gch();
 	return (c);
@@ -277,13 +277,13 @@ char	*ptr;
 		expression(NO);
 		stri();
 		needbrack(")");
-		return;
+		return 0;
 	}
 	if (strcmp(ptr,"iinit")==0) {
 		expression(NO);
 		iinit();
 		needbrack(")");
-		return;
+		return 0;
 	}
 
 	nargs = 0;

@@ -84,9 +84,9 @@ char** argv;        /* OS/8 CC8 can't cope, but bootstrapping CC8 doesn't work, 
 			 *	compiler body
 			 */
 			if (!openin (p))
-				return;
+				return 0;
 			if (!openout ())
-				return;
+				return 0;
 			header ();
 			gtext ();
 			parse ();
@@ -200,7 +200,7 @@ dumplits ()
 	onum (-litptr);
 	nl();
 	if (litptr == 0)
-		return;
+		return 0;
 /*	Generate a loc containing the address of the literals */
 	outbyte('X');
 	printlabel (litlab);
@@ -236,7 +236,7 @@ dumpglbs ()
 	if (!glbflag) {
 		ot("GBLS,\t0");
 		nl();
-		return;
+		return 0;
 	}
 	cptr = rglbptr;
 	while (cptr < glbptr) {

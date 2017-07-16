@@ -20,7 +20,7 @@ int	typ,
 	FOREVER {
 		FOREVER {
 			if (endst ())
-				return;
+				return 0;
 			k = 1;
 			if (match ("*"))
 				j = POINTER;
@@ -41,7 +41,7 @@ int	typ,
 			break;
 		}
 		if (!match (","))
-			return;
+			return 0;
 	}
 }
 
@@ -60,7 +60,7 @@ int	typ, stclass;
 	FOREVER {
 		FOREVER {
 			if (endst ())
-				return;
+				return 0;
 			if (match ("*"))
 				j = POINTER;
 			else
@@ -93,7 +93,7 @@ int	typ, stclass;
 			break;
 		}
 		if (!match (","))
-			return;
+			return 0;
 	}
 }
 

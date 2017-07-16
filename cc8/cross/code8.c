@@ -204,7 +204,7 @@ gdata ()
  *  Output the variable symbol at scptr as an extrn or a public
  */
 ppubext(scptr) char *scptr; {
-	if (scptr[STORAGE] == STATIC) return;
+	if (scptr[STORAGE] == STATIC) return 0;
 //	ot (scptr[STORAGE] == EXTERN ? "extrn\t" : "public\t");
 //	prefix ();
 //	outstr (scptr);
@@ -465,7 +465,7 @@ int		*nargs;
 		ol("\tCALL 1,LIBC");
 		ol("\tARG STKP");
 		ol("\tCDF1");		/* Make sure DF is correct */
-		return;
+		return 0;
 	}
 	ol("\tCPAGE 2");
 	ol("\tJMSI PCAL");
@@ -836,7 +836,7 @@ int *lval;
 
 	if (lval[1]) {
 		ol ("\tISZI JLC");
-		return;
+		return 0;
 	}
 
 	ot ("\tISZI (");

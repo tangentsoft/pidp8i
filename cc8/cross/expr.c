@@ -22,7 +22,7 @@ int	comma;
 		if (heir1 (lval))
 			rvalue (lval);
 		if (!comma)
-			return;
+			return 0;
 	} while (match (","));
 }
 

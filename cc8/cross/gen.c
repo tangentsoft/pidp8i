@@ -102,7 +102,7 @@ int	number;
 
 	if (number == -32768) {
 		outstr ("-32768");
-		return;
+		return 0;
 	}
 	zs = 0;
 	k = 10000;
