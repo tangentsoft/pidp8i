@@ -1,4 +1,4 @@
-# A Minimal Implementation of C for the Digital Equipment Corp. PDP-8 Processor
+# A Minimal Implementation of C for the DEC PDP-8 Processor
 
 ## Introduction
 
@@ -56,12 +56,14 @@ used as the second pass of the OS/8 FORTRAN II system.
 You use this cross-compiler to compile the 3 components of the OS/8 C
 compiler:
 
-1.  **`n8.c` &rarr; `n8.s`** The parser/tokeniser section of the compiler
+1.  **`n8.c`** &rarr; **`n8.s`** The parser/tokeniser section of the
+    compiler
 
-2.  **`p8.c` &rarr; `p8.s`** The token to SABR code converter section.
+2.  **`p8.c`** &rarr; **`p8.s`** The token to SABR code converter
+    section.
 
-3.  **`libc.c` &rarr; `libc.s`** The C library used by both of the above
-    via the `libc.h` include file.
+3.  **`libc.c`** &rarr; **`libc.s`** The C library used by both of the
+    above via the `libc.h` include file.
 
 When you build and run this cross-compiler on a POSIX type system such
 as the Raspbian PiDP-8/I environment, the resulting `*.s` files will
@@ -70,13 +72,13 @@ have LF-only line endings. You may need to run these files through a
 OS/8's SABR assembler expects, depending on how you get those `*.s`
 files into OS/8 as `*.SB`.
 
-The `\*.SB` files may be assembled under OS/8:
+The `*.SB` files may be assembled under OS/8:
 
     .COMP N8.SB
     .COMP LIBC.SB
     .COMP P8.SB
 
-This will create the `\*.RL` files for the linking loader (`LOADER.SV`).
+This will create the `*.RL` files for the linking loader (`LOADER.SV`).
 
 The cross-compiler has some non-standard features to enable the
 interface between the main programme and the C library. This constitutes
@@ -142,12 +144,21 @@ some example programs.
 
 To try it out:
 
-Boot OS/8 from the RK05 image as above, preferably on your PiDP-8/I;
-this app really flashes the lights! Check the bootscript in `7.script` to
-enable lower case in Simh. Then, you can enter a C programme in lower
-case via the editor.
+Boot OS/8 from the included RK05 image with:
 
-First, copy an example to `CC.CC`:
+     $ bin/pidp8i-sim boot/cc8.script
+
+Note that this is a different version of OS/8 than the one currently
+distributed in the IF=0, IF=3, and IF=7 positions in the PiDP-8/I boot
+scheme. It is version V3Q (up from V3D) and it is configured to smash
+lowercase input to uppercase only in the OS/8 command processor.
+Lowercase input in the text editor will be saved as lowercase.
+
+With this special CC8 OS/8 environment running, you can enter a C
+programme in lower case via the editor.
+
+Before getting into the text editor, try building a copy of one of the
+example programs:
 
     .COPY CC.CC<PS.CC
 
