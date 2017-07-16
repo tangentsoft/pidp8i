@@ -139,6 +139,7 @@ INFILES = \
 	@srcdir@/tools/simh-update.in
 PRECIOUS_INFILES = \
 	@srcdir@/Makefile.in \
+	@srcdir@/cc8/Makefile.in \
 	@srcdir@/examples/Makefile.in \
 	@srcdir@/src/Makefile.in \
 	@srcdir@/src/PDP8/Makefile.in
