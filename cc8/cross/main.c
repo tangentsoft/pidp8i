@@ -8,7 +8,8 @@
 #include "data.h"
 
 main (argc, argv)
-int	argc, *argv;
+int	argc;
+char** argv;        /* OS/8 CC8 can't cope, but bootstrapping CC8 doesn't work, either */
 {
 	char	*p,*bp;
 	int smacptr;
