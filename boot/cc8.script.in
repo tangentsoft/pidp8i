@@ -1,0 +1,16 @@
+; This script initializes a populated OS/8 environment on an
+; RK05 cartridge disk pack.  That's 10 whole megabytes, so big 
+; the OS requires that you split it into two partitions in order
+; to address the whole disk!  These are:
+;
+;     SYS: which conyains all of the OS/8 system files and CC8
+;     DSK: which contains all of the user files
+;
+reset
+echo Loading the CC8 OS/8 environment from the RK05 cartridge disk...
+set tti 7b
+set cpu 32k
+set cpu noidle
+@SET_THROTTLE@
+att rk0 @MEDIADIR@/os8/cc8.rk05
+boot rk0

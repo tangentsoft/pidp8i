@@ -1,0 +1,521 @@
+#asm
+/
+/	PDP8/E Run time routines for Small c compiler
+/
+ABSYM POP 160
+ABSYM PSH 161
+ABSYM JLC 162
+ABSYM STKP 163
+ABSYM PTSK 164
+ABSYM POPR 165
+ABSYM PCAL 166
+ABSYM TMP 167
+ABSYM GBL 170
+ABSYM ZTMP 171
+/
+	DECIM
+/
+STK,	COMMN 3840
+/
+/
+/
+		ENTRY MAIN
+MAIN,	BLOCK 2
+		TAD GBLS
+		DCA STKP
+		TAD GBLS
+		TAD (2		/ ACTUAL START AFTER A NULL AND 1 WORD CALL
+		DCA GBL
+		TAD PVL
+		DCA PSH
+		TAD OVL
+		DCA POP
+		TAD MVL
+		DCA PTSK
+		TAD PVR
+		DCA POPR
+		TAD PVC
+		DCA PCAL
+		RIF
+		TAD (3201
+		DCA PCL1
+		TAD PCL1
+		DCA DCC0
+		JMSI PCAL
+		XMAIN
+		CALL 0,EXIT
+/
+PUSH,	0
+		CDF1
+		ISZ STKP
+		DCAI STKP
+		TADI STKP
+		JMPI PUSH
+PPOP,	0
+		CDF1
+		DCA TMP
+		TADI STKP
+		MQL
+		CMA
+		TAD STKP
+		DCA STKP
+		TAD TMP
+		JMPI PPOP
+PUTSTK,	0
+		JMSI POP
+		SWP
+		DCA JLC
+		SWP
+		DCAI JLC
+		TADI JLC
+		JMPI PUTSTK
+POPRET,	JMSI POP
+		SWP
+		DCA ZTMP
+		SWP
+		JMPI ZTMP
+PCALL,	0
+		CLA CLL
+PCL1,	0
+		TADI PCALL
+		DCA ZTMP
+		TAD STKP
+		DCAI (163		/ ADDRESS OF STKP
+		TAD PCALL
+		IAC
+		JMSI PSH		/ PUSH RETURN
+		CLA
+		JMPI ZTMP
+PVL,	PUSH
+OVL,	PPOP
+MVL,	PUTSTK
+SVL,	STK
+PVR,	POPRET
+PVC,	PCALL
+/
+#endasm
+
+/* Comparison routines */
+
+
+outdec (number)
+int	number;
+{
+#asm
+		CLA CLL CMA
+		TAD STKP		/ STKP-1 -> ARG
+		DCA VAL#
+		CALL 2,WRITE
+		ARG (1
+		ARG FMT
+		CALL 1,IOH
+VAL,	ARG 0
+		CALL 1,IOH
+		ARG 0
+		JMSI POPR
+FMT,	TEXT /(I5)/
+#endasm
+} 
+
+outstr(p)
+char *p;
+	{
+		while (*p++) 
+#asm
+		TLS
+XC1,	TSF
+		JMP XC1
+#endasm
+	}
+
+nl()
+{
+	outstr("\r\n");
+}
+
+getch()
+{
+#asm
+	CLA
+GT1, KSF
+	 JMP GT1
+	 KRB
+#endasm
+}
+
+instr(p)
+char *p;
+{
+int q,tm;
+		tm=1;
+		q=p;
+		while (tm) {
+#asm
+XC2,	CLA MQL
+		KSF
+		JMP XC2
+		KRB
+		TLS
+XC3,	AND (127
+		SWP
+		TAD STKP
+		JMSI PSH
+		MQA
+		JMSI PTSK
+#endasm
+		if (tm==13) tm=0;
+		if (tm==127) {
+		  if (p-q) {
+		   p--;
+		   outstr("\b \b");
+		  }
+		} else {
+		*p++=tm;
+		}
+	}
+	outstr("\n");
+	return 1;		
+}
+
+atoi(p)
+char *p;
+{
+#asm
+	DCA ZTMP
+	TAD (3584		/ NOP
+	DCA XINV
+	CDF1			/ Change DF back to 1 in case SABR changes it!
+#endasm
+	while (*p==' ')
+	 p++;
+	if (*p=='-') {
+#asm
+	CLA
+	TAD (3617
+	DCA XINV		/ CIA
+	CDF1
+#endasm
+	p++;
+	}
+	while (*p++) {
+#asm
+	TAD (-48		/ '0' ... SEE CODE
+	DCA JLC
+	TAD JLC
+	SPA CLA
+	JMP XRET
+	TAD (-10
+	TAD JLC
+	SMA CLA
+	JMP XRET
+	TAD ZTMP
+	CLL RTL
+	TAD ZTMP
+	CLL RAL
+	TAD JLC
+	DCA ZTMP
+#endasm
+	}
+#asm
+XRET,	TAD ZTMP
+XINV,	NOP
+#endasm
+}
+
+cend()
+{
+#asm
+	CLA SKP
+CX,	CCEND
+	TAD CX
+#endasm
+}
+
+xinit()
+{
+	outstr("PDP-8 C Compiler V1.0:");
+	poct(cend());
+	nl();
+}
+/*		Excluded at present 
+#asm
+		PAGE
+NARG,	0
+PFMT,	BLOCK 20
+PXFMT,	PFMT
+SCF,	CALL 0,READ
+PTF,	CALL 0,WRITE
+QTF,	JMP PL11
+QMF,	NOP
+
+SCANF,	CIA
+		DCA NARG
+		TAD SCF#
+		DCA PL9#
+		TAD QMF
+		DCA PL12
+		JMP PL10
+
+PRINTF,	CIA
+		DCA NARG
+		TAD PTF#
+		DCA PL9#
+		TAD QTF
+		DCA PL12
+PL10,	TAD STKP
+		TAD NARG
+		DCA JLC
+		TADI JLC
+		DCA JLC
+		TAD PXFMT
+		DCA TMP
+PL1,	CDF1
+		TADI JLC
+		SNA
+		JMP PL2
+		AND (63
+		CLL RTL;RTL;RTL
+		MQL
+		ISZ JLC
+		TADI JLC
+		SNA
+		JMP PL21
+		AND (63
+		MQO
+		CDF0
+		DCAI TMP
+		ISZ TMP
+		ISZ JLC
+		JMP PL1
+PL21,	MQO
+PL2,	CDF0
+		DCAI TMP
+PL9,	CALL 2,WRITE
+		ARG (1
+		ARG PFMT
+PL4,	ISZ NARG
+		SKP
+		JMP PL3
+		TAD STKP
+		TAD NARG
+PL12,	NOP
+		DCA JLC
+		CDF1
+		TADI JLC
+PL11,	DCA PL5#
+		CALL 1,IOH
+PL5,	ARG 0
+		JMP PL4
+PL3,	CALL 1,IOH
+		ARG 0
+		JMSI POPR
+#endasm
+*/
+disp(x,y)
+int x,y;
+{
+#asm
+		OCTAL
+OPDEF DISPX 6053
+OPDEF DISPY 6054
+OPDEF INTEN 6055
+SKPDF DSSKP 6052
+OPDEF DSCLR 6050
+		DECIM
+
+		TAD STKP
+		TAD (-1
+		DCA JLC
+		TADI JLC
+		DISPY
+		CLA
+		TAD STKP
+		TAD (-2
+		DCA JLC
+		TADI JLC
+		DISPX
+		CLA
+		INTEN
+DS1,	DSSKP
+		JMP DS1
+		DSCLR
+#endasm
+}
+
+kbhit()
+{
+#asm
+		CLA CMA
+		KSF
+		CLA
+#endasm	
+}
+
+putchar(p)
+char p;
+{
+	p;
+#asm
+		TLS
+MP1,	TSF
+		JMP MP1
+#endasm
+}
+
+strcpy( dm , sm )
+char *dm,*sm;
+{
+	while (*sm)
+		*dm++=*sm++;
+	*dm=0;
+}
+
+strcat( dm , sm )
+char *dm,*sm;
+{
+	int qm;
+	qm=dm;
+	while(*dm) dm++;
+	strcpy(dm,sm);
+	return qm;
+}
+
+strstr ( s , o )
+char *s , *o ;
+{
+char *x , *y , *z ;
+ for ( x = s ; * x ; x ++ ) {
+  for ( y = x , z = o ; * z && * y == * z ; y ++ ) z ++ ;
+  if ( z > o && ! * z ) return x ;
+ } return 0 ;
+}
+
+cexit(retval)
+int retval;
+{
+#asm
+		CALL 0,EXIT
+		HLT
+#endasm
+}
+
+isnum(vl)
+int vl;
+{
+		vl;
+#asm
+		TAD (-48
+		SPA
+		JMP XNO
+		TAD (-10
+		SMA CLA
+XNO,	CLA SKP
+		IAC
+#endasm
+}
+
+isalpha(vl)
+int vl;
+{
+		vl;				/* Include '?' and '@' as alpha vars */
+#asm
+		TAD (-63
+		SPA
+		JMP ANO
+		TAD (-28
+		SMA CLA
+ANO,	CLA SKP
+		IAC
+#endasm
+}
+
+poct(vl)
+int vl;
+{
+	vl;
+#asm
+		CLL RAL
+		DCA TMP
+		TAD (-4
+		DCA PCTR
+PWR0,	TAD TMP
+		RAL
+		RTL
+		DCA TMP
+		TAD TMP
+		AND (7
+		TAD (48
+		TLS
+PRW1,	TSF
+		JMP PRW1
+		CLA
+		ISZ PCTR
+		JMP PWR0
+PCTR,	0
+#endasm	
+}
+
+/* Not included */
+pdec(vl)
+int vl;
+{
+		if (vl&2048) {
+		 vl=-vl;
+		 putchar('-');
+		}
+		vl;
+#asm
+			CPAGE 52
+ARW7,		SZA
+			JMP ARW6
+			TAD (-1
+			DCA CZB
+			JMP ARW8
+ARW6,		DCA VALUE
+			DCA DIGIT
+			DCA AFLG
+			TAD (-4
+			DCA CZB
+			TAD AZA
+			DCA ARW
+			SKP
+ARW4,		DCA VALUE
+			CLL
+ARW2,		TAD VALUE
+ARW,		TAD TENPWR
+			SZL
+			ISZ DIGIT
+			SZL
+			JMP ARW4
+			CLA
+			TAD DIGIT
+			SZA CLA
+			JMP ARW5
+			TAD AFLG
+			SNA CLA
+			JMP ARW3		/SKIP LEADING ZEROES
+ARW5,		ISZ AFLG
+			TAD DIGIT
+ARW8,		TAD (48
+			TLS
+ARW3,		TSF
+			JMP ARW3
+			CLA
+			DCA DIGIT
+			ISZ ARW
+			ISZ CZB
+			JMP ARW2
+			JMP CZB			/WILL NOW BE 0
+AZA,		TAD TENPWR
+TENPWR,		-1000
+			-100
+			-10
+			-1
+VALUE,		0
+DIGIT,		0
+AFLG,		0
+CZB,		0
+
+#endasm
+}
+
