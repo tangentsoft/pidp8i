@@ -100,8 +100,10 @@ moment.  So, to add a few other checkouts, you could say:
 This gives you multiple independent checkouts.  The branch checkouts
 remain pinned to the tip of that branch, so that if someone else checks
 changes in on that branch and you say `fossil update`, those changes
-appear in your checkout of that branch.  The tag checkouts behave
-differently, always showing a specific checkout with the given tag name.
+appear in your checkout of that branch.  The tag checkouts simply give
+you the latest checkin with that tag; saying `fossil update` in a
+checkout made from a tag will fast-forward you to the tip of the branch
+that tag was made on.
 
 (In Fossil, tags and branches are related, but the details are beyond
 our scope here.  See the [Fossil Quick Start Guide][fqsg] and the
