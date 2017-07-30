@@ -241,7 +241,7 @@ release: all
 	@srcdir@/tools/mkrel
 
 run:
-	sudo $(SIM) @srcdir@/boot/0.script
+	$(SIM) @srcdir@/boot/0.script
 
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
