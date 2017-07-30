@@ -235,8 +235,14 @@ points:
 
 Fossil's sync-by-default behavior fights these negative tendencies.
 
-[daff]: http://www.hanselman.com/blog/YouAreNotYourCode.aspx
-[dosd]: http://amzn.to/2iEVoBL
+PiDP-8/I project developers are welcome to create branches at will. The
+main rule is to follow the branch naming scheme: all lowercase with
+hyphens separating words. See the [available branch list][brlist] for
+examples to emulate.
+
+[brlist]: https://tangentsoft.com/pidp8i/brlist
+[daff]:   http://www.hanselman.com/blog/YouAreNotYourCode.aspx
+[dosd]:   http://amzn.to/2iEVoBL
 
 
 Debug Builds
