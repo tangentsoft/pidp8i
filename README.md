@@ -246,7 +246,7 @@ the terms of [the SIMH license][sl].
 [sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
 [usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
-[sdoc]: http://simh.trailing-edge.com/pdf/simh_doc.pdf
+[sdoc]: https://tangentsoft.com/pidp8i/uv/doc/simh/main.pdf
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
 [test]: https://tangentsoft.com/pidp8i/doc/trunk/doc/pidp8i-test.md
 [thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md

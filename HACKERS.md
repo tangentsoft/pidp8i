@@ -20,12 +20,17 @@ questions, it is best to ask them on [its low-volume mailing list][fml],
 though you may also ask me, either on [the PiDP-8/I mailing list][ggml]
 or via private email.
 
-Although most Raspberry Pi OS distributions include Fossil in their
-package repository, I am not aware of any that are currently shipping
-Fossil 2.1 or newer, the minimum version I currently recommend.  That
-version made a substantial change to the way Fossil operates that we
-will soon be depending upon.  Therefore, I recommend building Fossil
-from source:
+You must use Fossil version 2.1 or higher with our repository, or you
+will get an error.
+
+If you started with one of our PiDP-8/I binary OS images made in or
+after April 2017, Fossil 2.x is already installed.
+
+If you're starting from some other OS, you either won't have Fossil
+installed at all, or you'll most likley be using an older version, since
+the Debian project is still shipping version 1.37 and likely will
+continue to do so until 2020 or so.  You'll have to build Fossil from
+source:
 
     $ sudo apt install libssl-dev
     $ wget -O fossil-release.tar.gz \
@@ -35,23 +40,10 @@ from source:
     $ ./configure
     $ make
     $ sudo make install
-    $ sudo apt remove fossil
 
 Fossil is also available for all common desktop platforms.  One of [the
 official binaries][fbin] may work on your system.  If you're getting
 binaries from a third party, be sure it is Fossil 2.1 or higher.
-
-If you started with binary OS image version 20170401 or newer, Fossil 2
-is already installed.  Binary OS images made before that date will need
-to be updated with the source code build option above, since Raspbian
-will not be shipping Fossil 2 until about the year 2020, by my
-reckoning.
-
-(The next Debian release after Jessie (called Stretch) went into feature
-freeze while Fossil 1.37 was still current, so we'll have to wait until
-the next one after that before we'll get Fossil 2.x in Raspbian.  Since
-Debian releases typically last about 2 years, and Raspbian lags
-Debian...2020.  Ouch.)
 
 
 [fbin]:   http://fossil-scm.org/index.html/uv/download.html
@@ -108,8 +100,10 @@ moment.  So, to add a few other checkouts, you could say:
 This gives you multiple independent checkouts.  The branch checkouts
 remain pinned to the tip of that branch, so that if someone else checks
 changes in on that branch and you say `fossil update`, those changes
-appear in your checkout of that branch.  The tag checkouts behave
-differently, always showing a specific checkout with the given tag name.
+appear in your checkout of that branch.  The tag checkouts simply give
+you the latest checkin with that tag; saying `fossil update` in a
+checkout made from a tag will fast-forward you to the tip of the branch
+that tag was made on.
 
 (In Fossil, tags and branches are related, but the details are beyond
 our scope here.  See the [Fossil Quick Start Guide][fqsg] and the
@@ -241,8 +235,14 @@ points:
 
 Fossil's sync-by-default behavior fights these negative tendencies.
 
-[daff]: http://www.hanselman.com/blog/YouAreNotYourCode.aspx
-[dosd]: http://amzn.to/2iEVoBL
+PiDP-8/I project developers are welcome to create branches at will. The
+main rule is to follow the branch naming scheme: all lowercase with
+hyphens separating words. See the [available branch list][brlist] for
+examples to emulate.
+
+[brlist]: https://tangentsoft.com/pidp8i/brlist
+[daff]:   http://www.hanselman.com/blog/YouAreNotYourCode.aspx
+[dosd]:   http://amzn.to/2iEVoBL
 
 
 Debug Builds
