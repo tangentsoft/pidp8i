@@ -61,5 +61,8 @@
     changes produced between late September 2015 and late December 2016
     into the PiDP-8/I simulator.
 
+*   **Bill Cattey <bill.cattey@gmail.com>** aka poetnerd. Currently
+    working on system pack images. Making myself useful where I can.
+
 *   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
     `ChangeLog.md` that is not attributed to anyone else.
