@@ -139,20 +139,23 @@ def make_binary ():
   ]
   check_exists(_media_dir, bin_images)
 
-  image_path = _media_dir+_bin_rk05
+  print "Generating " + _bin_rk05 + " from " + str(len(bin_images)) + \
+        " source tapes..."
+
+  image_path = _media_dir + _bin_rk05
   if os.path.isfile(image_path):
-    save_path = _media_dir+_bin_rk05 + ".save"
+    save_path = _media_dir + _bin_rk05 + ".save"
     print "Pre-existing " + _bin_rk05 + " found.  Saving as " + _bin_rk05 + ".save"
     if os.path.isfile(save_path):
       print "Overwriting old " + _bin_rk05 + ".save"
       os.remove(save_path)
-    os.rename(image_path,save_path)
-
+    os.rename(image_path, save_path)
+  
+  print "Building initial OS/8 system..."
   simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
   simh_send("attach dt0 " + _media_dir + "al-4711c-ba-os8-v3d-1.1978.tu56")
   simh_send("attach dt1 " + _media_dir + "al-4712c-ba-os8-v3d-2.1978.tu56")
   simh_send("boot dt0")
-  
   os8_pmt_send("\.", "RUN SYS BUILD")
   os8_pmt_send("\$", "LOAD DTA1:RK8ESY.BN")
   os8_pmt_send("\$", "LOAD DTA1:PT8E.BN")
@@ -172,45 +175,43 @@ def make_binary ():
   os8_pmt_send("\$", "BOOT")
   os8_pmt_send("WRITE ZERO DIRECT\?", "Y")
   os8_pmt_send("\.", "SAVE SYS BUILD")
-  
   back_to_simh("\.")
   
+  print "Copying OS/8 system files from TU56 source to RK05 image..."
   simh_send("boot dt0")
-  
   os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
-  
   back_to_simh("\.")
   
+  print "Rebooting into freshly-built OS/8 system..."
   simh_send("detach dt0")
   simh_send("detach dt1")
   simh_send("attach dt0 " + _media_dir + "al-4761c-ba-os8-v3d-ext.1978.tu56")
   simh_send("boot rk0")
   
+  print "Installing OS/8 V3D extensions..."
   os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
-  os8_pmt_send("\.", "RESORC /L")
-  
+  os8_pmt_send("\.", "RESORC /L")    # we might be logging output to console
   back_to_simh("\.")
   
+  print "Installing FORTRAN IV..."
   simh_send("detach dt0")
   simh_send("attach dt0 " + _media_dir + "al-4549d-ba-fr4-v3d-1.1978.tu56")
   simh_send("attach dt1 " + _media_dir + "al-5596d-ba-fr4-v3d-2.1978.tu56")
   simh_send("boot rk0")
-  
   os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
-  
   back_to_simh("\.")
   
+  print "Installing MACREL..."
   simh_send("detach dt0")
   simh_send("detach dt1")
   simh_send("attach dt0 " + _media_dir + "al-5642a-ba-macrel-linker.1978.tu56")
-  simh_send("boot rk")
-  
+  simh_send("boot rk0")
   os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
-  
   back_to_simh("\.")
 
+  print "Cleaning up..."
   simh_send("detach rk0")
   simh_send("detach rk1")
   simh_send("detach dt0")
@@ -232,24 +233,27 @@ def make_src ():
     "al-4759c-sa-os8-ext-1.1978.tu56",
     "al-4760c-sa-os8-ext-2.1978.tu56",
     "al-5586c-sa-os8-ext-3.1978.tu56"
-    ]
-
+  ]
   check_exists(_media_dir, src_images)
 
-  image_path = _media_dir+_bin_rk05
+  print "Generating " + _src_rk05 + " from " + str(len(src_images)) + \
+        " source tapes..."
+
+  image_path = _media_dir + _bin_rk05
   if (not os.path.isfile(image_path)):
     print _bin_rk05 + " is needed to build src.  Creating..."
     make_binary()
 
-  image_path = _media_dir+_src_rk05
+  image_path = _media_dir + _src_rk05
   if os.path.isfile(image_path):
-    save_path = _media_dir+_src_rk05 + ".save"
+    save_path = _media_dir + _src_rk05 + ".save"
     print "Pre-existing " + _src_rk05 + " found.  Saving as " + _src_rk05 + ".save"
     if os.path.isfile(save_path):
       print "Overwriting old " + _src_rk05 + ".save"
       os.remove(save_path)
     os.rename(image_path,save_path)
     
+  print "Copying OS/8 source distribution:"
   simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
   simh_send("attach rk1 " + _media_dir + "os8v3d-src.rk05")
   simh_send("attach -r dt0 " + _media_dir + "al-4691c-sa-os8-v3d-1.1978.tu56")
@@ -257,7 +261,9 @@ def make_src ():
   simh_send("boot rk0")
   
   os8_pmt_send("\.", "ZERO RKA1:")
+  print "...part 1 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
+  print "...part 2 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -268,7 +274,9 @@ def make_src ():
   simh_send("attach -r dt1 " + _media_dir + "al-4694c-sa-os8-v3d-4.1978.tu56")
   simh_send("boot rk0")
 
+  print "...part 3 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
+  print "...part 4 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -280,7 +288,9 @@ def make_src ():
   simh_send("boot rk0")
   
   os8_pmt_send("\.", "ZERO RKB1:")
+  print "...part 5 of 7..."
   os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
+  print "...part 6 of 7..."
   os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -291,7 +301,10 @@ def make_src ():
   simh_send("attach -r dt1 " + _media_dir + "al-4759c-sa-os8-ext-1.1978.tu56")
   simh_send("boot rk0")
   
+  print "...part 7 of 7..."
   os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
+  print "Copying OS/8 V3D extensions:"
+  print "...part 1 of 3..."
   os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -302,11 +315,14 @@ def make_src ():
   simh_send("attach -r dt1 " + _media_dir + "al-5586c-sa-os8-ext-3.1978.tu56")
   simh_send("boot rk0")
   
+  print "...part 2 of 3..."
   os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
+  print "...part 3 of 3..."
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
 
   back_to_simh("\.")
 
+  print "Cleaning up..."
   simh_send("detach rk0")
   simh_send("detach rk1")
   simh_send("detach dt0")
@@ -349,6 +365,7 @@ def main ():
   
   simh_send("q")
   child.expect(pexpect.EOF)
+  print "Done!"
 
 
 if __name__ == "__main__":
