@@ -27,5 +27,5 @@ set cpu 32k
 set cpu noidle
 set df disabled
 @SET_THROTTLE@
-att rk0 @MEDIADIR@/os8/os8.rk05
+att rk0 @MEDIADIR@/os8/os8v3d-bin.rk05
 boot rk0
