@@ -116,6 +116,16 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
+#### --with-music
+
+The `*.MU` files and the player program for it are not normally
+installed to the built OS/8 binary RK05 disk image because the Raspberry
+Pi reportedly does not emit enough RFI when running these demos to cause
+sufficient interference on an AM radio for you to hear the music, the
+very point of these demos.  Until a way is found around this problem —
+what, low RFI is a *problem* now? — this option will default to "off".
+
+
 #### --help
 
 Run `./configure --help` for more information on your options here.

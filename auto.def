@@ -40,6 +40,7 @@ options {
 	serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
 	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
 	throttle:         => "override the throttle values in the boot scripts"
+    music             => "add *.MU files to built OS/8 RK05 disk image"
 }
 
 if {[opt-bool alt-serial-mod]} {
@@ -61,6 +62,13 @@ if {[opt-bool debug-mode]} {
 	msg-result "Creating a release build."
 	define BUILDMODE {-O2}
 }
+
+set mk_os8_rk05s_options ""
+if {[opt-bool music]} {
+    msg-result "Will add music files to OS/8 binary media."
+	append mk_os8_rk05s_options " --with-music"
+}
+define MK_OS8_RK05_OPTS $mk_os8_rk05s_options
 
 # High-level definitions
 set builddir [get-define builddir]
