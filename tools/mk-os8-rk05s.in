@@ -8,7 +8,7 @@ import time
 
 child = None
 
-_media_dir = "@builddir@"+"/media/os8/"
+_media_dir = "@builddir@/media/os8/"
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
 
