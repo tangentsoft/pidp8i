@@ -240,6 +240,22 @@ if {$status != 0} {
 }
 define VERSION $version
 
+# We need Python and pexpect installed here for mk-os8-rk05s to run.
+set status [catch {exec python -c exit} result]
+if {$status != 0} {
+    user-error "Python does not appear to be installed here.  It is required."
+}
+msg-result "Python is installed here."
+set status [catch {exec python -c "import pexpect" 2> /dev/null} result]
+if {$status != 0} {
+    set msg "The Python pexpect module is not installed here.  Fix with\n"
+    append msg "\n    sudo pip install pexpect\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo easy_install pexpect\n"
+    user-error $msg
+}
+msg-result "Python module pexpect is installed here."
+
 # Build Deeper Thought if we find it here
 if {[file exists "[get-define srcdir]/src/deeper.c"]} {
     set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
