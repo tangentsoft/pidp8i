@@ -129,13 +129,13 @@ def check_exists (images):
         exit (-1)
 
 
-#### make_binary #######################################################
+#### make_bin ##########################################################
 # Top-level driver for the "make binary OS/8 RK05 disk image" process.
 #
 # If there is already an RK05 binary destination image, moves it aside
 # to a ".save" instance, overwriting the previous .save if it exists.
 
-def make_binary (args):
+def make_bin (args):
   bin_images = [
     "os8/al-4711c-ba-os8-v3d-1.1978.tu56",
     "os8/al-4712c-ba-os8-v3d-2.1978.tu56",
@@ -265,7 +265,7 @@ def make_binary (args):
 
 
 #### make_src ##########################################################
-# Source-disk version of make_binary() above.
+# Source-disk version of make_bin() above.
 
 def make_src ():
   src_images = [
@@ -289,7 +289,7 @@ def make_src ():
   image_path = os8_mdir + _bin_rk05
   if (not os.path.isfile(image_path)):
     print _bin_rk05 + " is needed to build src.  Creating..."
-    make_binary()
+    make_bin()
 
   image_path = os8_mdir + _src_rk05
   if os.path.isfile(image_path):
@@ -435,7 +435,7 @@ def main ():
   child.logfile = open('@builddir@/obj/mk-os8-rk05s.log', 'w') \
     if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
 
-  if acts["bin"]: make_binary(args)
+  if acts["bin"]: make_bin(args)
   if acts["src"]: make_src()
   
   simh_send("q")
