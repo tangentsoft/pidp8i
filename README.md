@@ -116,7 +116,7 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
-#### --with-music
+#### --enable-music, --music or --with-music
 
 The `*.MU` files and the player program for it are not normally
 installed to the built OS/8 binary RK05 disk image because the Raspberry
@@ -124,6 +124,28 @@ Pi reportedly does not emit enough RFI when running these demos to cause
 sufficient interference on an AM radio for you to hear the music, the
 very point of these demos.  Until a way is found around this problem —
 what, low RFI is a *problem* now? — this option will default to "off".
+
+These options are all equivalent.
+
+
+#### --disable-\* or --without-\*
+
+Several components of the built OS/8 binary RK05 disk image which are
+installed by default can be left out of the build process to save space
+and build time by giving one of these flags:
+
+*   **basic-games** - Leave out the BASIC games and demos, most of which
+    come from DEC's book "101 BASIC Computer Games." These are normally
+    installed to `RKB0:`.
+
+*   **cc8** - Leave out Ian Schofield's native OS/8 CC8 compiler
+    normally installed to `RKA0:`
+
+*   **k12** - Leave out the 12-bit Kermit implementation normally
+    installed to `RKA0:`
+
+The `configure` script accepts both the `--disable-*` and `--without-*`
+forms of these options.
 
 
 #### --help

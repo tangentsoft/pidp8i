@@ -35,12 +35,15 @@ use cc
 use cc-lib
 
 options {
+	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
 	debug-mode        => "create a debug build (default is release)"
+    ba=1              => "leave *.BA BASIC games and demos off built OS/8 RK05 disk image"
+    cc8=1             => "leave CC8 compiler off built OS/8 RK05 disk image"
+    k12=1             => "leave 12-bit Kermit off built OS/8 RK05 disk image"
+    music             => "add *.MU files to built OS/8 RK05 disk image"
 	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
 	serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
-	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
 	throttle:         => "override the throttle values in the boot scripts"
-    music             => "add *.MU files to built OS/8 RK05 disk image"
 }
 
 if {[opt-bool alt-serial-mod]} {
@@ -64,9 +67,23 @@ if {[opt-bool debug-mode]} {
 }
 
 set mk_os8_rk05s_options ""
+if {![opt-bool ba]} {
+    msg-result "Will not add BASIC games and demos to OS/8 binary RK05 disk image."
+	append mk_os8_rk05s_options " --without-ba"
+}
+if {![opt-bool cc8]} {
+    msg-result "Will not add CC8 to OS/8 binary RK05 disk image."
+	append mk_os8_rk05s_options " --without-cc8"
+}
+if {![opt-bool k12]} {
+    msg-result "Will not add 12-bit Kermit to OS/8 binary RK05 disk image."
+	append mk_os8_rk05s_options " --without-k12"
+}
 if {[opt-bool music]} {
-    msg-result "Will add music files to OS/8 binary media."
+    msg-result "Will add music files to OS/8 binary RK05 disk image."
 	append mk_os8_rk05s_options " --with-music"
+} else {
+    msg-result "Will not add music files to OS/8 binary RK05 disk image."
 }
 define MK_OS8_RK05_OPTS $mk_os8_rk05s_options
 

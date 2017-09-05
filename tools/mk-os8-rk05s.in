@@ -144,7 +144,10 @@ def make_binary (args):
     "os8/al-5596d-ba-fr4-v3d-2.1978.tu56",
     "os8/al-5642a-ba-macrel-linker.1978.tu56"
   ]
-  if args.with_music: bin_images.append('subsys/music.tu56')
+  if args.with_music:      bin_images.append('subsys/music.tu56')
+  if not args.without_ba:  bin_images.append('subsys/basic-games.tu56')
+  if not args.without_cc8: bin_images.append('subsys/cc-bin.tu56')
+  if not args.without_k12: bin_images.append('subsys/k12-bin.tu56')
   check_exists(bin_images)
 
   print "Generating " + _bin_rk05 + " from " + str(len(bin_images)) + \
@@ -228,6 +231,30 @@ def make_binary (args):
     simh_send("attach dt0 " + _media_dir + "subsys/music.tu56")
     simh_send("boot rk0")
     os8_pmt_send("\.", "COPY RKB0:<DTA0:*.*")
+    back_to_simh("\.")
+
+  if not args.without_ba:
+    if progmsg: print "Installing *.BA BASIC games and demos..."
+    simh_send("detach dt0")
+    simh_send("attach dt0 " + _media_dir + "subsys/basic-games.tu56")
+    simh_send("boot rk0")
+    os8_pmt_send("\.", "COPY RKB0:<DTA0:*.*")
+    back_to_simh("\.")
+
+  if not args.without_cc8:
+    if progmsg: print "Installing Ian Schofield's CC8 compiler..."
+    simh_send("detach dt0")
+    simh_send("attach dt0 " + _media_dir + "subsys/cc-bin.tu56")
+    simh_send("boot rk0")
+    os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
+    back_to_simh("\.")
+
+  if not args.without_k12:
+    if progmsg: print "Installing 12-bit Kermit..."
+    simh_send("detach dt0")
+    simh_send("attach dt0 " + _media_dir + "subsys/k12-bin.tu56")
+    simh_send("boot rk0")
+    os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
     back_to_simh("\.")
 
   if progmsg: print "Cleaning up..."
@@ -363,6 +390,18 @@ def main ():
                       action='store_true',
                       default=False,
                       help='add *.MU files to binary disk')
+  parser.add_argument('--without-ba',
+                      action='store_true',
+                      default=False,
+                      help='leave BASIC games and demos off binary disk')
+  parser.add_argument('--without-cc8',
+                      action='store_true',
+                      default=False,
+                      help='leave CC8 off binary disk')
+  parser.add_argument('--without-k12',
+                      action='store_true',
+                      default=False,
+                      help='leave 12-bit Kermit off binary disk')
   parser.add_argument('what',
                       choices=allowed_acts,
                       help='select which RK05 media gets built; default is "all"',
