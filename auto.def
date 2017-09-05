@@ -270,4 +270,6 @@ make-template src/gpio-common.c.in
 make-template src/PDP8/Makefile.in
 make-template src/PDP8/pidp8i.c.in
 make-template tools/simh-update.in
+make-template media/os8/make_os8_rk05s.py.in
 exec chmod +x "$builddir/tools/simh-update"
+exec chmod +x "$builddir/media/os8/make_os8_rk05s.py"

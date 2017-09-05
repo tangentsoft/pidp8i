@@ -1,0 +1,279 @@
+#!/usr/bin/python
+
+import os
+import sys
+import subprocess
+import pexpect
+import time
+
+child = None
+
+_media_dir = "@builddir@"+"/media/os8/"
+_bin_rk05 = "os8v3d-bin.rk05"
+
+
+# waits for simh prompt and then sends line
+def simh_send (send_line):
+  global child
+
+  child.expect("sim> $")
+  child.sendline(send_line)
+
+# used for when in OS/8 environment,
+# waits for prompt and then sends line,
+# but with some delays after the prompt
+# and during sending of the line
+def os8_pmt_send (prompt, send_line):
+  global child
+
+  child.expect("\n%s$" % prompt)
+  time.sleep(0.5)
+  for i in xrange(0, len(send_line)):
+    child.send(send_line[i])
+  child.send("\r")
+
+# send a line to OS/8, adds some
+# delays during sendning of the line
+def os8_send (send_line):
+  global child
+
+  time.sleep(0.5)
+  for i in xrange(0, len(send_line)):
+    child.send(send_line[i])
+  child.send("\r")
+
+# go back to simh when the passed prompt 
+# is encountered
+def back_to_simh (prompt):
+  global child
+
+  child.expect("\n%s$" % prompt)
+  time.sleep(0.50)
+  child.sendcontrol('e')
+
+# Check existence of all files needed
+def check_exists(_media_dir, images):
+  global child
+
+  # Confirm necessary media images exist.
+  for image in images:
+    image_path = _media_dir+image
+    if (not os.path.isfile(image_path)):
+        print "Required file: " + image_path + "not found."
+        simh_send("q")
+        child.expect(pexpect.EOF)
+        exit (-1)
+
+########## make binary disk ################################
+# If there is already an rk05 binary destination image,
+# move it aside to a ".save" instance.
+# But just overwrite a ".save" instance if that too is found.
+
+def make_binary():
+  global child
+
+  bin_images = [
+    "al-4711c-ba-os8-v3d-1.1978.tu56",
+    "al-4712c-ba-os8-v3d-2.1978.tu56",
+    "al-4761c-ba-os8-v3d-ext.1978.tu56",
+    "al-4549d-ba-fr4-v3d-1.1978.tu56",
+    "al-5596d-ba-fr4-v3d-2.1978.tu56",
+    "al-5642a-ba-macrel-linker.1978.tu56"
+  ]
+  check_exists(_media_dir, bin_images)
+
+  image_path = _media_dir+_bin_rk05
+  if os.path.isfile(image_path):
+    save_path = _media_dir+_bin_rk05 + ".save"
+    print "Pre-existing " + _bin_rk05 + " found.  Saving as " + _bin_rk05 + ".save"
+    if os.path.isfile(save_path):
+      print "Overwriting old " + _bin_rk05 + ".save"
+      os.remove(save_path)
+    os.rename(image_path,save_path)
+
+  return
+  
+  simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
+  simh_send("attach dt0 " + _media_dir + "al-4711c-ba-os8-v3d-1.1978.tu56")
+  simh_send("attach dt1 " + _media_dir + "al-4712c-ba-os8-v3d-2.1978.tu56")
+  simh_send("boot dt0")
+  
+  os8_pmt_send("\.", "RUN SYS BUILD")
+  os8_pmt_send("\$", "LOAD DTA1:RK8ESY.BN")
+  os8_pmt_send("\$", "LOAD DTA1:PT8E.BN")
+  os8_pmt_send("\$", "DELETE SYS")
+  os8_pmt_send("\$", "DSK RK8E:SYS")
+  os8_pmt_send("\$", "SYSTEM RK8E")
+  os8_pmt_send("\$", "DELETE RXA1")
+  os8_pmt_send("\$", "INSERT PT8E,PTR")
+  os8_pmt_send("\$", "INSERT PT8E,PTP")
+  os8_pmt_send("\$", "DELETE RKA0")
+  os8_pmt_send("\$", "DELETE RKB0")
+  os8_pmt_send("\$", "INSERT RK8E,RKA0,RKB0")
+  os8_pmt_send("\$", "INSERT RK05,RKA2,RKB2")
+  os8_pmt_send("\$", "DELETE DTA0")
+  os8_pmt_send("\$", "INSERT TC,DTA0")
+  os8_pmt_send("\$", "PRINT")
+  os8_pmt_send("\$", "BOOT")
+  os8_pmt_send("WRITE ZERO DIRECT\?", "Y")
+  os8_pmt_send("\.", "SAVE SYS BUILD")
+  
+  back_to_simh("\.")
+  
+  simh_send("boot dt0")
+  
+  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
+  
+  back_to_simh("\.")
+  
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+  simh_send("attach dt0 " + _media_dir + "al-4761c-ba-os8-v3d-ext.1978.tu56")
+  simh_send("boot rk0")
+  
+  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
+  os8_pmt_send("\.", "RESORC /L")
+  
+  back_to_simh("\.")
+  
+  simh_send("detach dt0")
+  simh_send("attach dt0 " + _media_dir + "al-4549d-ba-fr4-v3d-1.1978.tu56")
+  simh_send("attach dt1 " + _media_dir + "al-5596d-ba-fr4-v3d-2.1978.tu56")
+  simh_send("boot rk0")
+  
+  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
+  
+  back_to_simh("\.")
+  
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+  simh_send("attach dt0 " + _media_dir + "al-5642a-ba-macrel-linker.1978.tu56")
+  simh_send("boot rk")
+  
+  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
+  
+  back_to_simh("\.")
+
+  simh_send("detach rk0")
+  simh_send("detach rk1")
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+
+  ########## make src disk ################################
+def make_src():
+  src_images = [
+    "al-4691c-sa-os8-v3d-1.1978.tu56",
+    "al-4692c-sa-os8-v3d-2.1978.tu56",
+    "al-4693d-sa-os8-v3d-3.1978.tu56",
+    "al-4694c-sa-os8-v3d-4.1978.tu56",
+    "al-4695c-sa-os8-v3d-5.1978.tu56",
+    "al-4696c-sa-os8-v3d-6.1978.tu56",
+    "al-4697c-sa-os8-v3d-7.1978.tu56",
+    "al-4759c-sa-os8-ext-1.1978.tu56",
+    "al-4760c-sa-os8-ext-2.1978.tu56",
+    "al-5586c-sa-os8-ext-3.1978.tu56"
+    ]
+
+  check_exists(_media_dir, src_images)
+
+  image_path = _media_dir+_bin_rk05
+  if (not os.path.isfile(image_path)):
+    print _bin_rk05 + " is needed to build src.  Creating..."
+    make_binary()
+
+  return
+  
+  simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
+  simh_send("attach rk1 " + _media_dir + "os8v3d-src.rk05")
+  simh_send("attach -r dt0 " + _media_dir + "al-4691c-sa-os8-v3d-1.1978.tu56")
+  simh_send("attach -r dt1 " + _media_dir + "al-4692c-sa-os8-v3d-2.1978.tu56")
+  simh_send("boot rk0")
+  
+  os8_pmt_send("\.", "ZERO RKA1:")
+  os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
+  
+  back_to_simh("\.")
+  
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+  simh_send("attach -r dt0 " + _media_dir + "al-4693d-sa-os8-v3d-3.1978.tu56")
+  simh_send("attach -r dt1 " + _media_dir + "al-4694c-sa-os8-v3d-4.1978.tu56")
+  simh_send("cont")
+
+  os8_send(         "COPY RKA1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
+  
+  back_to_simh("\.")
+
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+  simh_send("attach -r dt0 " + _media_dir + "al-4695c-sa-os8-v3d-5.1978.tu56")
+  simh_send("attach -r dt1 " + _media_dir + "al-4696c-sa-os8-v3d-6.1978.tu56")
+  simh_send("cont")
+  
+  os8_send(         "ZERO RKB1:")
+  os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
+  
+  back_to_simh("\.")
+  
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+  simh_send("attach -r dt0 " + _media_dir + "al-4697c-sa-os8-v3d-7.1978.tu56")
+  simh_send("attach -r dt1 " + _media_dir + "al-4759c-sa-os8-ext-1.1978.tu56")
+  simh_send("cont")
+  
+  os8_send(         "COPY RKB1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
+  
+  back_to_simh("\.")
+  
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+  simh_send("attach -r dt0 " + _media_dir + "al-4760c-sa-os8-ext-2.1978.tu56")
+  simh_send("attach -r dt1 " + _media_dir + "al-5586c-sa-os8-ext-3.1978.tu56")
+  simh_send("cont")
+  
+  os8_send(         "COPY RKB1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
+
+  back_to_simh("\.")
+  
+
+def main():
+  global child
+  allowed_acts = ["all", "bin", "src", "os8"]
+  acts = {}
+
+  # Initialize our acts dict.
+  for this in allowed_acts:
+    acts[this] = False
+
+  for act in sys.argv[1:]:
+    if act not in allowed_acts:
+      print "Invalid act: " + act + " ignored."
+      continue
+    if act == "all":
+      for this in allowed_acts:
+        acts[this] = True
+      break
+    acts[act] = True
+  
+    child = pexpect.spawn('pdp8')
+    child.logfile = open('log.txt', 'w')
+    # trick for logging to stdout from 
+    # https://stackoverflow.com/questions/21239338/displaying-output-to-the-terminal-in-pexpect-python
+    # child.logfile = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
+    if acts["bin"]: make_binary()
+    if acts["src"]: make_src()
+  
+    simh_send("q")
+    child.expect(pexpect.EOF)
+
+
+if __name__ == "__main__":
+    main()
