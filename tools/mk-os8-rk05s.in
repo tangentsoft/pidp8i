@@ -261,10 +261,14 @@ def make_src():
 
 def main():
   global child
+
   allowed_acts = ["all", "bin", "src", "os8"]
-  acts = {}
+  if len(sys.argv) == 1:
+    print 'usage: ' + __file__ + ' <' + '|'.join(allowed_acts) + '>\n'
+    return 1
 
   # Initialize our acts dict.
+  acts = {}
   for this in allowed_acts:
     acts[this] = False
 
