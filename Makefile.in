@@ -118,8 +118,8 @@ INFILES = \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
-	@srcdir@/tools/simh-update.in \
-	@srcdir@/media/os8/make_os8_rk05s.py.in
+	@srcdir@/tools/mk-os8-rk05.in \
+	@srcdir@/tools/simh-update.in
 PRECIOUS_INFILES = \
 	@srcdir@/Makefile.in \
 	@srcdir@/examples/Makefile.in \
