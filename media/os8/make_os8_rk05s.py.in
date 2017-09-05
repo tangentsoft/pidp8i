@@ -10,6 +10,7 @@ child = None
 
 _media_dir = "@builddir@"+"/media/os8/"
 _bin_rk05 = "os8v3d-bin.rk05"
+_src_rk05 = "os8v3d-src.rk05"
 
 
 # waits for simh prompt and then sends line
@@ -34,6 +35,9 @@ def os8_pmt_send (prompt, send_line):
 
 # send a line to OS/8, adds some
 # delays during sendning of the line
+# The intent here is to resume OS/8 after sending
+# "cont" to simh.  It doesn't seem to work yet.
+# For now we just reboot into OS/8 after attaching new devices.
 def os8_send (send_line):
   global child
 
@@ -91,8 +95,6 @@ def make_binary():
       os.remove(save_path)
     os.rename(image_path,save_path)
 
-  return
-  
   simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
   simh_send("attach dt0 " + _media_dir + "al-4711c-ba-os8-v3d-1.1978.tu56")
   simh_send("attach dt1 " + _media_dir + "al-4712c-ba-os8-v3d-2.1978.tu56")
@@ -183,8 +185,17 @@ def make_src():
     print _bin_rk05 + " is needed to build src.  Creating..."
     make_binary()
 
-  return
-  
+  image_path = _media_dir+_src_rk05
+  if os.path.isfile(image_path):
+    save_path = _media_dir+_src_rk05 + ".save"
+    print "Pre-existing " + _src_rk05 + " found.  Saving as " + _src_rk05 + ".save"
+    if os.path.isfile(save_path):
+      print "Overwriting old " + _src_rk05 + ".save"
+      os.remove(save_path)
+    os.rename(image_path,save_path)
+
+
+    
   simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
   simh_send("attach rk1 " + _media_dir + "os8v3d-src.rk05")
   simh_send("attach -r dt0 " + _media_dir + "al-4691c-sa-os8-v3d-1.1978.tu56")
@@ -201,9 +212,9 @@ def make_src():
   simh_send("detach dt1")
   simh_send("attach -r dt0 " + _media_dir + "al-4693d-sa-os8-v3d-3.1978.tu56")
   simh_send("attach -r dt1 " + _media_dir + "al-4694c-sa-os8-v3d-4.1978.tu56")
-  simh_send("cont")
+  simh_send("boot rk0")
 
-  os8_send(         "COPY RKA1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -212,9 +223,9 @@ def make_src():
   simh_send("detach dt1")
   simh_send("attach -r dt0 " + _media_dir + "al-4695c-sa-os8-v3d-5.1978.tu56")
   simh_send("attach -r dt1 " + _media_dir + "al-4696c-sa-os8-v3d-6.1978.tu56")
-  simh_send("cont")
+  simh_send("boot rk0")
   
-  os8_send(         "ZERO RKB1:")
+  os8_pmt_send("\.", "ZERO RKB1:")
   os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
   os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
   
@@ -224,9 +235,9 @@ def make_src():
   simh_send("detach dt1")
   simh_send("attach -r dt0 " + _media_dir + "al-4697c-sa-os8-v3d-7.1978.tu56")
   simh_send("attach -r dt1 " + _media_dir + "al-4759c-sa-os8-ext-1.1978.tu56")
-  simh_send("cont")
+  simh_send("boot rk0")
   
-  os8_send(         "COPY RKB1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
   os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -235,13 +246,18 @@ def make_src():
   simh_send("detach dt1")
   simh_send("attach -r dt0 " + _media_dir + "al-4760c-sa-os8-ext-2.1978.tu56")
   simh_send("attach -r dt1 " + _media_dir + "al-5586c-sa-os8-ext-3.1978.tu56")
-  simh_send("cont")
+  simh_send("boot rk0")
   
-  os8_send(         "COPY RKB1:<DTA0:*.*")
+  os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
 
   back_to_simh("\.")
-  
+
+  simh_send("detach rk0")
+  simh_send("detach rk1")
+  simh_send("detach dt0")
+  simh_send("detach dt1")
+
 
 def main():
   global child
@@ -262,17 +278,17 @@ def main():
       break
     acts[act] = True
   
-    child = pexpect.spawn('pdp8')
-    child.logfile = open('log.txt', 'w')
-    # trick for logging to stdout from 
-    # https://stackoverflow.com/questions/21239338/displaying-output-to-the-terminal-in-pexpect-python
-    # child.logfile = os.fdopen(sys.stdout.fileno(), 'w', 0)
+  child = pexpect.spawn('@builddir@/bin/pidp8i-sim')
+  child.logfile = open('log.txt', 'w')
+  # trick for logging to stdout from 
+  # https://stackoverflow.com/questions/21239338/displaying-output-to-the-terminal-in-pexpect-python
+  # child.logfile = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
-    if acts["bin"]: make_binary()
-    if acts["src"]: make_src()
+  if acts["bin"]: make_binary()
+  if acts["src"]: make_src()
   
-    simh_send("q")
-    child.expect(pexpect.EOF)
+  simh_send("q")
+  child.expect(pexpect.EOF)
 
 
 if __name__ == "__main__":
