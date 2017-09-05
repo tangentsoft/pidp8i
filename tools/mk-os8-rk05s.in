@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 ########################################################################
 # mk-os8-rk05s - Build media/os8/*.rk05 from media/os8/*.tu56 and other
 #   source media by scripting commands to SIMH and OS/8.
