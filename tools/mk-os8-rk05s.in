@@ -31,6 +31,7 @@
 # authorization from those authors.
 ########################################################################
 
+import argparse
 import os
 import sys
 import subprocess
@@ -333,17 +334,25 @@ def make_src ():
 # Program entry point.  Parses the command line and drives the above.
 
 def main ():
+  # Parse the command line
   allowed_acts = ["all", "bin", "src", "os8"]
-  if len(sys.argv) == 1:
-    print 'usage: ' + __file__ + ' <' + '|'.join(allowed_acts) + '>\n'
-    return 1
+  parser = argparse.ArgumentParser(description='Build OS/8 RK05 disk images')
+  parser.add_argument('-v', '--verbose',
+                      action='store_true',
+                      help='verbose SIMH output instead of progress messages')
+  parser.add_argument('what',
+                      choices=allowed_acts,
+                      help='select which RK05 media gets built; default is "all"',
+                      nargs=argparse.REMAINDER)
+  args = parser.parse_args()
+  if len(args.what) == 0: args.what = [ 'all' ]
 
   # Initialize our acts dict.
   acts = {}
   for this in allowed_acts:
     acts[this] = False
 
-  for act in sys.argv[1:]:
+  for act in args.what:
     if act not in allowed_acts:
       print "Invalid act: " + act + " ignored."
       continue
