@@ -133,12 +133,14 @@ OUTFILES := $(subst .in,,$(OUTFILES))
 PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
 PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 
+OS8_BIN_RK05 = @builddir@/media/os8/os8v3d-bin.rk05
+
 CLTXT = /boot/cmdline.txt
 
 .PHONY: tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(EX_PTS)
+all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(EX_PTS) $(OS8_BIN_RK05)
 	@chmod 755 bin/pidp8i
 
 clean:
@@ -244,12 +246,20 @@ reconfig:
 release: all
 	@srcdir@/tools/mkrel
 
-run:
+run: $(OS8_BIN_RK05) install
 	$(SIM) @srcdir@/boot/0.script
 
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
+
+# How to build the OS/8 binary media needed by 0.script
+OS8_BIN_SRCS = \
+	@srcdir@/tools/mk-os8-rk05s.in \
+	@srcdir@/media/os8/al-*-ba-*.tu56 \
+	@srcdir@/media/subsys/*.tu56
+$(OS8_BIN_RK05): $(OS8_BIN_SRCS)
+	tools/mk-os8-rk05s bin
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
 # Explained at http://scottmcpeak.com/autodepend/autodepend.html
