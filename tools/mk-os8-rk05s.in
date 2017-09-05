@@ -36,6 +36,9 @@ import subprocess
 import pexpect
 import time
 
+
+#### globals and constants #############################################
+
 child = None
 
 _media_dir = "@builddir@/media/os8/"
@@ -43,17 +46,28 @@ _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
 
 
-# waits for simh prompt and then sends line
+#### simh_send #########################################################
+# Wait for a SIMH command prompt and then send the given line
+
 def simh_send (send_line):
   global child
 
   child.expect("sim> $")
   child.sendline(send_line)
 
-# used for when in OS/8 environment,
-# waits for prompt and then sends line,
-# but with some delays after the prompt
-# and during sending of the line
+
+#### os8_pmt_send ######################################################
+# Wait for an OS/8 command prompt running within SIMH, then send the
+# given line.
+#
+# The prompt string is passed in because OS/8 has several different
+# prompt types.
+#
+# FIXME: This function has hard-coded delay constants, apparently to
+# deal with the way OS/8 is run underneath SIMH.  This is likely either
+# brittle or wasteful with respect to the host system's CPU speed.
+# There must be a better way.  
+
 def os8_pmt_send (prompt, send_line):
   global child
 
@@ -63,11 +77,14 @@ def os8_pmt_send (prompt, send_line):
     child.send(send_line[i])
   child.send("\r")
 
-# send a line to OS/8, adds some
-# delays during sendning of the line
-# The intent here is to resume OS/8 after sending
-# "cont" to simh.  It doesn't seem to work yet.
-# For now we just reboot into OS/8 after attaching new devices.
+
+#### os8_send ##########################################################
+# Send a line of text to OS/8.
+#
+# FIXME: The intent here is to resume OS/8 after sending "cont" to simh.
+# It doesn't seem to work yet.  For now we just reboot into OS/8 after
+# attaching new devices.
+
 def os8_send (send_line):
   global child
 
@@ -76,8 +93,10 @@ def os8_send (send_line):
     child.send(send_line[i])
   child.send("\r")
 
-# go back to simh when the passed prompt 
-# is encountered
+
+#### back_to_simh ######################################################
+# Go back to SIMH when the passed prompt string is encountered
+
 def back_to_simh (prompt):
   global child
 
@@ -85,8 +104,11 @@ def back_to_simh (prompt):
   time.sleep(0.50)
   child.sendcontrol('e')
 
+
+#### check_exists ######################################################
 # Check existence of all files needed
-def check_exists(_media_dir, images):
+
+def check_exists (_media_dir, images):
   global child
 
   # Confirm necessary media images exist.
@@ -98,12 +120,14 @@ def check_exists(_media_dir, images):
         child.expect(pexpect.EOF)
         exit (-1)
 
-########## make binary disk ################################
-# If there is already an rk05 binary destination image,
-# move it aside to a ".save" instance.
-# But just overwrite a ".save" instance if that too is found.
 
-def make_binary():
+#### make_binary #######################################################
+# Top-level driver for the "make binary OS/8 RK05 disk image" process.
+#
+# If there is already an RK05 binary destination image, moves it aside
+# to a ".save" instance, overwriting the previous .save if it exists.
+
+def make_binary ():
   bin_images = [
     "al-4711c-ba-os8-v3d-1.1978.tu56",
     "al-4712c-ba-os8-v3d-2.1978.tu56",
@@ -191,8 +215,11 @@ def make_binary():
   simh_send("detach dt0")
   simh_send("detach dt1")
 
-  ########## make src disk ################################
-def make_src():
+
+#### make_src ##########################################################
+# Source-disk version of make_binary() above.
+
+def make_src ():
   src_images = [
     "al-4691c-sa-os8-v3d-1.1978.tu56",
     "al-4692c-sa-os8-v3d-2.1978.tu56",
@@ -221,8 +248,6 @@ def make_src():
       print "Overwriting old " + _src_rk05 + ".save"
       os.remove(save_path)
     os.rename(image_path,save_path)
-
-
     
   simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
   simh_send("attach rk1 " + _media_dir + "os8v3d-src.rk05")
@@ -287,7 +312,10 @@ def make_src():
   simh_send("detach dt1")
 
 
-def main():
+#### main ##############################################################
+# Program entry point.  Parses the command line and drives the above.
+
+def main ():
   allowed_acts = ["all", "bin", "src", "os8"]
   if len(sys.argv) == 1:
     print 'usage: ' + __file__ + ' <' + '|'.join(allowed_acts) + '>\n'
