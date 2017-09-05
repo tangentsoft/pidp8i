@@ -43,6 +43,12 @@ import time
 
 child = None
 
+# Flag set when -v is *not* given.  Causes make_*() and the functions
+# called thereby to print progress messages to the console since SIMH
+# and OS/8 output is not being sent there to clue the user into the
+# script's progress.
+progmsg = True
+
 _media_dir = "@builddir@/media/os8/"
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
@@ -152,7 +158,8 @@ def make_binary ():
       os.remove(save_path)
     os.rename(image_path, save_path)
   
-  print "Building initial OS/8 system..."
+  global progmsg
+  if progmsg: print "Building initial OS/8 system..."
   simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
   simh_send("attach dt0 " + _media_dir + "al-4711c-ba-os8-v3d-1.1978.tu56")
   simh_send("attach dt1 " + _media_dir + "al-4712c-ba-os8-v3d-2.1978.tu56")
@@ -178,24 +185,24 @@ def make_binary ():
   os8_pmt_send("\.", "SAVE SYS BUILD")
   back_to_simh("\.")
   
-  print "Copying OS/8 system files from TU56 source to RK05 image..."
+  if progmsg: print "Copying OS/8 system files from TU56 source to RK05 image..."
   simh_send("boot dt0")
   os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
   back_to_simh("\.")
   
-  print "Rebooting into freshly-built OS/8 system..."
+  if progmsg: print "Rebooting into freshly-built OS/8 system..."
   simh_send("detach dt0")
   simh_send("detach dt1")
   simh_send("attach dt0 " + _media_dir + "al-4761c-ba-os8-v3d-ext.1978.tu56")
   simh_send("boot rk0")
   
-  print "Installing OS/8 V3D extensions..."
+  if progmsg: print "Installing OS/8 V3D extensions..."
   os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
   os8_pmt_send("\.", "RESORC /L")    # we might be logging output to console
   back_to_simh("\.")
   
-  print "Installing FORTRAN IV..."
+  if progmsg: print "Installing FORTRAN IV..."
   simh_send("detach dt0")
   simh_send("attach dt0 " + _media_dir + "al-4549d-ba-fr4-v3d-1.1978.tu56")
   simh_send("attach dt1 " + _media_dir + "al-5596d-ba-fr4-v3d-2.1978.tu56")
@@ -204,7 +211,7 @@ def make_binary ():
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
   back_to_simh("\.")
   
-  print "Installing MACREL..."
+  if progmsg: print "Installing MACREL..."
   simh_send("detach dt0")
   simh_send("detach dt1")
   simh_send("attach dt0 " + _media_dir + "al-5642a-ba-macrel-linker.1978.tu56")
@@ -212,7 +219,7 @@ def make_binary ():
   os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
   back_to_simh("\.")
 
-  print "Cleaning up..."
+  if progmsg: print "Cleaning up..."
   simh_send("detach rk0")
   simh_send("detach rk1")
   simh_send("detach dt0")
@@ -254,7 +261,7 @@ def make_src ():
       os.remove(save_path)
     os.rename(image_path,save_path)
     
-  print "Copying OS/8 source distribution:"
+  if progmsg: print "Copying OS/8 source distribution:"
   simh_send("attach rk0 " + _media_dir + "os8v3d-bin.rk05")
   simh_send("attach rk1 " + _media_dir + "os8v3d-src.rk05")
   simh_send("attach -r dt0 " + _media_dir + "al-4691c-sa-os8-v3d-1.1978.tu56")
@@ -262,9 +269,9 @@ def make_src ():
   simh_send("boot rk0")
   
   os8_pmt_send("\.", "ZERO RKA1:")
-  print "...part 1 of 7..."
+  if progmsg: print "...part 1 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
-  print "...part 2 of 7..."
+  if progmsg: print "...part 2 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -275,9 +282,9 @@ def make_src ():
   simh_send("attach -r dt1 " + _media_dir + "al-4694c-sa-os8-v3d-4.1978.tu56")
   simh_send("boot rk0")
 
-  print "...part 3 of 7..."
+  if progmsg: print "...part 3 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
-  print "...part 4 of 7..."
+  if progmsg: print "...part 4 of 7..."
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -289,9 +296,9 @@ def make_src ():
   simh_send("boot rk0")
   
   os8_pmt_send("\.", "ZERO RKB1:")
-  print "...part 5 of 7..."
+  if progmsg: print "...part 5 of 7..."
   os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
-  print "...part 6 of 7..."
+  if progmsg: print "...part 6 of 7..."
   os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -302,10 +309,10 @@ def make_src ():
   simh_send("attach -r dt1 " + _media_dir + "al-4759c-sa-os8-ext-1.1978.tu56")
   simh_send("boot rk0")
   
-  print "...part 7 of 7..."
+  if progmsg: print "...part 7 of 7..."
   os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
-  print "Copying OS/8 V3D extensions:"
-  print "...part 1 of 3..."
+  if progmsg: print "Copying OS/8 V3D extensions:"
+  if progmsg: print "...part 1 of 3..."
   os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
   
   back_to_simh("\.")
@@ -316,14 +323,14 @@ def make_src ():
   simh_send("attach -r dt1 " + _media_dir + "al-5586c-sa-os8-ext-3.1978.tu56")
   simh_send("boot rk0")
   
-  print "...part 2 of 3..."
+  if progmsg: print "...part 2 of 3..."
   os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
-  print "...part 3 of 3..."
+  if progmsg: print "...part 3 of 3..."
   os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
 
   back_to_simh("\.")
 
-  print "Cleaning up..."
+  if progmsg: print "Cleaning up..."
   simh_send("detach rk0")
   simh_send("detach rk1")
   simh_send("detach dt0")
@@ -346,6 +353,8 @@ def main ():
                       nargs=argparse.REMAINDER)
   args = parser.parse_args()
   if len(args.what) == 0: args.what = [ 'all' ]
+  global progmsg
+  progmsg = not args.verbose
 
   # Initialize our acts dict.
   acts = {}
@@ -364,17 +373,19 @@ def main ():
   
   global child
   child = pexpect.spawn('@builddir@/bin/pidp8i-sim')
-  child.logfile = open('log.txt', 'w')
-  # trick for logging to stdout from 
-  # https://stackoverflow.com/questions/21239338/displaying-output-to-the-terminal-in-pexpect-python
-  # child.logfile = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
+  # Log SIMH and OS/8 output to a file by default, but send it to the
+  # console instead of the progress messages if -v was given using the
+  # trick from https://stackoverflow.com/questions/21239338
+  child.logfile = open('@builddir@/obj/mk-os8-rk05s.log', 'w') \
+    if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
 
   if acts["bin"]: make_binary()
   if acts["src"]: make_src()
   
   simh_send("q")
   child.expect(pexpect.EOF)
-  print "Done!"
+  if progmsg: print "Done!"
 
 
 if __name__ == "__main__":
