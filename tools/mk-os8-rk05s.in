@@ -74,8 +74,6 @@ def check_exists(_media_dir, images):
 # But just overwrite a ".save" instance if that too is found.
 
 def make_binary():
-  global child
-
   bin_images = [
     "al-4711c-ba-os8-v3d-1.1978.tu56",
     "al-4712c-ba-os8-v3d-2.1978.tu56",
@@ -260,8 +258,6 @@ def make_src():
 
 
 def main():
-  global child
-
   allowed_acts = ["all", "bin", "src", "os8"]
   if len(sys.argv) == 1:
     print 'usage: ' + __file__ + ' <' + '|'.join(allowed_acts) + '>\n'
@@ -282,6 +278,7 @@ def main():
       break
     acts[act] = True
   
+  global child
   child = pexpect.spawn('@builddir@/bin/pidp8i-sim')
   child.logfile = open('log.txt', 'w')
   # trick for logging to stdout from 
