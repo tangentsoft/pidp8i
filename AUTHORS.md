@@ -59,10 +59,13 @@
 
 *   **Tony Hill <hill.anthony@gmail.com>** Merged all the upstream SIMH
     changes produced between late September 2015 and late December 2016
-    into the PiDP-8/I simulator.
+    into the PiDP-8/I simulator.  (Since then, this merge process is
+    automated as `tools/simh-update`.)
 
-*   **Bill Cattey <bill.cattey@gmail.com>** aka poetnerd. Currently
-    working on system pack images. Making myself useful where I can.
+*   **Bill Cattey <bill.cattey@gmail.com>** (a.k.a. poetnerd) did the
+    bulk of the work on automatic generation of OS/8 system pack images
+    from original source media, replacing the hand-assembled and -hacked
+    `os8.rk05` image.
 
 *   **Jonathan Trites <tritesnikov@gmail.com>** wrote the original
     version of what has become `tools/mk-os8-rk05s.in`, the script
