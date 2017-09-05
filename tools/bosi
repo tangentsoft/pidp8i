@@ -266,11 +266,11 @@ function do_image() {
 
     diskutil unmountDisk $dev           # it auto-mounted
     sudo time dd if=$rdev bs=1m of=$img
-    sum=($(shasum "$img"))
+    sum=($(shasum -a 256 "$img"))
     bytes=($(wc -c $img))
 
     cat > $mf <<MF
-SHA256 hash and size of ${sum[1]}:
+SHA-256 hash and size of ${sum[1]}:
 
 Hash:  ${sum[0]}
 Size:  ${bytes[0]}
