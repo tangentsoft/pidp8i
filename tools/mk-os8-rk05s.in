@@ -225,7 +225,7 @@ def make_bin (args):
   check_exists(build_copyins)
   check_exists(bin_copyins)
 
-  print "Generating " + _bin_rk05 + " from " + str(len(bin_copyins) +1) + \
+  print "Generating " + _bin_rk05 + " from " + str(len(bin_copyins) + 2) + \
         " source tapes..."
 
   os8_mdir = _media_dir + 'os8/'
@@ -294,68 +294,7 @@ def make_bin (args):
 
   if progmsg: print "Performing remaining copies/installs..."
   do_all_copyins(bin_copyins)
-  
-
-  """
-  simh_send("attach -r dt0 " + os8_mdir + "al-4761c-ba-os8-v3d-ext.1978.tu56")
-  simh_send("boot rk0")
-  
-  if progmsg: print "Installing OS/8 V3D extensions..."
-  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
-  os8_pmt_send("\.", "RESORC /L")
-  back_to_simh("\.")
-  
-  if progmsg: print "Installing FORTRAN IV..."
-  simh_send("detach dt0")
-  simh_send("attach -r dt0 " + os8_mdir + "al-4549d-ba-fr4-v3d-1.1978.tu56")
-  simh_send("attach -r dt1 " + os8_mdir + "al-5596d-ba-fr4-v3d-2.1978.tu56")
-  simh_send("boot rk0")
-  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
-  os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
-  back_to_simh("\.")
-  
-  if progmsg: print "Installing MACREL..."
-  simh_send("detach dt0")
-  simh_send("detach dt1")
-  simh_send("attach -r dt0 " + os8_mdir + "al-5642a-ba-macrel-linker.1978.tu56")
-  simh_send("boot rk0")
-  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
-  back_to_simh("\.")
-
-  if args.with_music:
-    if progmsg: print "Installing *.MU files..."
-    simh_send("detach dt0")
-    simh_send("attach -r dt0 " + _media_dir + "subsys/music.tu56")
-    simh_send("boot rk0")
-    os8_pmt_send("\.", "COPY RKB0:<DTA0:*.*")
-    back_to_simh("\.")
-
-  if not args.without_ba:
-    if progmsg: print "Installing *.BA BASIC games and demos..."
-    simh_send("detach dt0")
-    simh_send("attach -r dt0 " + _media_dir + "subsys/basic-games.tu56")
-    simh_send("boot rk0")
-    os8_pmt_send("\.", "COPY RKB0:<DTA0:*.*")
-    back_to_simh("\.")
-
-  if not args.without_cc8:
-    if progmsg: print "Installing Ian Schofield's CC8 compiler..."
-    simh_send("detach dt0")
-    simh_send("attach -r dt0 " + _media_dir + "subsys/cc-bin.tu56")
-    simh_send("boot rk0")
-    os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
-    back_to_simh("\.")
-
-  if not args.without_k12:
-    if progmsg: print "Installing 12-bit Kermit..."
-    simh_send("detach dt0")
-    simh_send("attach -r dt0 " + _media_dir + "subsys/k12-bin.tu56")
-    simh_send("boot rk0")
-    os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
-    back_to_simh("\.")
-
-  """
-  
+    
   if progmsg: print "Cleaning up..."
   simh_send("detach rk0")
 
@@ -365,20 +304,7 @@ def make_bin (args):
 # Source-disk version of make_bin() above.
 
 def make_src ():
-  src_images = [
-    "os8/al-4691c-sa-os8-v3d-1.1978.tu56",
-    "os8/al-4692c-sa-os8-v3d-2.1978.tu56",
-    "os8/al-4693d-sa-os8-v3d-3.1978.tu56",
-    "os8/al-4694c-sa-os8-v3d-4.1978.tu56",
-    "os8/al-4695c-sa-os8-v3d-5.1978.tu56",
-    "os8/al-4696c-sa-os8-v3d-6.1978.tu56",
-    "os8/al-4697c-sa-os8-v3d-7.1978.tu56",
-    "os8/al-4759c-sa-os8-ext-1.1978.tu56",
-    "os8/al-4760c-sa-os8-ext-2.1978.tu56",
-    "os8/al-5586c-sa-os8-ext-3.1978.tu56"
-  ]
-
-  src_copyin = [
+  src_copyins = [
     ["RKA1:", "os8/al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7..."],
     ["RKA1:", "os8/al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7..."],
     ["RKA1:", "os8/al-4693d-sa-os8-v3d-3.1978.tu56", "...part 3 of 7..."],
@@ -388,13 +314,12 @@ def make_src ():
     ["RKB1:", "os8/al-4697c-sa-os8-v3d-7.1978.tu56", "...part 7 of 7..."],
     ["RKB1:", "os8/al-4759c-sa-os8-ext-1.1978.tu56", "extensions part 1 of 3..."],
     ["RKB1:", "os8/al-4760c-sa-os8-ext-2.1978.tu56", "...part 2 of 3..."],
-    ["RKBA:", "os8/al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3..."],
-    
+    ["RKA1:", "os8/al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3..."],
   ]
   
-  check_exists(src_images)
+  check_exists(src_copyins)
 
-  print "Generating " + _src_rk05 + " from " + str(len(src_images)) + \
+  print "Generating " + _src_rk05 + " from " + str(len(src_copyins)) + \
         " source tapes..."
 
   os8_mdir = _media_dir + 'os8/'
@@ -415,77 +340,19 @@ def make_src ():
   if progmsg: print "Copying OS/8 source distribution:"
   simh_send("attach rk0 "    + os8_mdir + "os8v3d-bin.rk05")
   simh_send("attach rk1 "    + os8_mdir + "os8v3d-src.rk05")
-  simh_send("attach -r dt0 " + os8_mdir + "al-4691c-sa-os8-v3d-1.1978.tu56")
-  simh_send("attach -r dt1 " + os8_mdir + "al-4692c-sa-os8-v3d-2.1978.tu56")
+
   simh_send("boot rk0")
   
   os8_pmt_send("\.", "ZERO RKA1:")
-  if progmsg: print "...part 1 of 7..."
-  os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
-  if progmsg: print "...part 2 of 7..."
-  os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
-  
-  back_to_simh("\.")
-  
-  simh_send("detach dt0")
-  simh_send("detach dt1")
-  simh_send("attach -r dt0 " + os8_mdir + "al-4693d-sa-os8-v3d-3.1978.tu56")
-  simh_send("attach -r dt1 " + os8_mdir + "al-4694c-sa-os8-v3d-4.1978.tu56")
-  simh_send("boot rk0")
-
-  if progmsg: print "...part 3 of 7..."
-  os8_pmt_send("\.", "COPY RKA1:<DTA0:*.*")
-  if progmsg: print "...part 4 of 7..."
-  os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
-  
-  back_to_simh("\.")
-
-  simh_send("detach dt0")
-  simh_send("detach dt1")
-  simh_send("attach -r dt0 " + os8_mdir + "al-4695c-sa-os8-v3d-5.1978.tu56")
-  simh_send("attach -r dt1 " + os8_mdir + "al-4696c-sa-os8-v3d-6.1978.tu56")
-  simh_send("boot rk0")
-  
   os8_pmt_send("\.", "ZERO RKB1:")
-  if progmsg: print "...part 5 of 7..."
-  os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
-  if progmsg: print "...part 6 of 7..."
-  os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
-  
-  back_to_simh("\.")
-  
-  simh_send("detach dt0")
-  simh_send("detach dt1")
-  simh_send("attach -r dt0 " + os8_mdir + "al-4697c-sa-os8-v3d-7.1978.tu56")
-  simh_send("attach -r dt1 " + os8_mdir + "al-4759c-sa-os8-ext-1.1978.tu56")
-  simh_send("boot rk0")
-  
-  if progmsg: print "...part 7 of 7..."
-  os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
-  if progmsg: print "Copying OS/8 V3D extensions:"
-  if progmsg: print "...part 1 of 3..."
-  os8_pmt_send("\.", "COPY RKB1:<DTA1:*.*")
-  
-  back_to_simh("\.")
-  
-  simh_send("detach dt0")
-  simh_send("detach dt1")
-  simh_send("attach -r dt0 " + os8_mdir + "al-4760c-sa-os8-ext-2.1978.tu56")
-  simh_send("attach -r dt1 " + os8_mdir + "al-5586c-sa-os8-ext-3.1978.tu56")
-  simh_send("boot rk0")
-  
-  if progmsg: print "...part 2 of 3..."
-  os8_pmt_send("\.", "COPY RKB1:<DTA0:*.*")
-  if progmsg: print "...part 3 of 3..."
-  os8_pmt_send("\.", "COPY RKA1:<DTA1:*.*")
 
   back_to_simh("\.")
+
+  do_all_copyins(src_copyins)
 
   if progmsg: print "Cleaning up..."
   simh_send("detach rk0")
   simh_send("detach rk1")
-  simh_send("detach dt0")
-  simh_send("detach dt1")
 
 
 #### main ##############################################################
