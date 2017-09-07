@@ -250,6 +250,7 @@ def make_bin (args):
 
   if progmsg: print "Performing config with BUILD..."
   simh_send("boot dt0")
+  os8_pmt_send("\.", "SET SYS NO INIT")   # For Safety's Sake
   os8_pmt_send("\.", "RUN SYS BUILD")
   os8_pmt_send("\$", "LOAD DTA1:RK8ESY.BN")
   os8_pmt_send("\$", "LOAD DTA1:PT8E.BN")
@@ -278,10 +279,16 @@ def make_bin (args):
 
   # There are not enough directory entries to put everything
   # Including all device drivers on the running packs.
-  # So we DONT copy in the device drivers
+  # So we DONT copy in the device drivers, nor TDINIT.SV,
+  # nor the two TD8E-based Dectape system area files.
+  # CCL.PA and KL8E.PA will be on the source disk.
+  # However Dectape 2 has HELP.HL and .RL files that ARE needed.
   # if progmsg: print "Copying in system tape 2 of 2..."
   # os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
-  
+
+  if progmsg: print "Copying in Fortran II libraries and help files from tape 2 of 2"
+  os8_pmt_send("\.", "COPY RKA0:<DTA1:*.RL")
+  os8_pmt_send("\.", "COPY RKA0:<DTA1:*.HL")
   os8_pmt_send("\.", "ZERO RKB0:")      # must precede subsys/* copies
   
   back_to_simh("\.")
