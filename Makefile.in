@@ -258,7 +258,7 @@ OS8_BIN_SRCS = \
 	@srcdir@/tools/mk-os8-rk05s.in \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/subsys/*.tu56
-$(OS8_BIN_RK05): $(OS8_BIN_SRCS)
+$(OS8_BIN_RK05): $(SIM) $(OS8_BIN_SRCS)
 	tools/mk-os8-rk05s@MK_OS8_RK05_OPTS@ bin
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
