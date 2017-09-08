@@ -193,16 +193,19 @@ def do_all_copyins (copyins):
 
 def make_bin (args):
 
-  ro_boot_tape = "os8/al-4711c-ba-os8-v3d-1.1978.tu56"
-  ro_boot_tape_path = _media_dir + ro_boot_tape
-  driver_tape = "os8/al-4712c-ba-os8-v3d-2.1978.tu56"
-  driver_tape_path = _media_dir + driver_tape
+  ro_boot_tape =       "os8/al-4711c-ba-os8-v3d-1.1978.tu56"
+  ro_boot_tape_path =  _media_dir + ro_boot_tape
+  driver_tape =        "os8/al-4712c-ba-os8-v3d-2.1978.tu56"
+  driver_tape_path =   _media_dir + driver_tape
+  local_tape =         "os8/local.tu56"
+  local_tape_path =    _media_dir + local_tape
   
   boot_dt_path = _media_dir + "os8/bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
 
-  build_copyins = [
+  special_bin_copyins = [
     ["", ro_boot_tape,  ""],
     ['RKA0:', driver_tape, "Device Drivers..."],
+    ["", local_tape, ""]
   ]
 
   music_copyin =  ['RKB0:', 'subsys/music.tu56', "Copying in Music score files and source code..."]
@@ -224,7 +227,7 @@ def make_bin (args):
   if not args.without_k12:    bin_copyins.append(kermit_copyin)
   if not args.without_advent: bin_copyins.append(advent_copyin)
 
-  check_exists(build_copyins)
+  check_exists(special_bin_copyins)
   check_exists(bin_copyins)
 
   print "Generating " + _bin_rk05 + " from " + str(len(bin_copyins) + 2) + \
@@ -305,16 +308,29 @@ def make_bin (args):
   do_all_copyins(bin_copyins)
 
   # Any further initialization of installed software is done here.
+  simh_send("attach -r dt0 " + local_tape_path)
   simh_send("boot rk0")
 
+  if progmsg: print "Installing LCSYS.BI and UCSYS.BI batch scripts..."
+  os8_pmt_send("\.", "COPY RKA0:<DTA0:?CSYS.BI")
+  
   if not args.without_crt:
     # NO SCOPE mode is the default on distribution tapes.
-    if progmsg: print "Configuring scope-style rubout processing"
+    if progmsg: print "Configuring scope-style rubout processing..."
     os8_pmt_send("\.", "SET TTY SCOPE")
   
-    
+  if not args.without_chess:
+    if progmsg: print "Installing CHESS.SV binary and CHESS.TX documentation..."
+    os8_pmt_send("\.", "COPY RKA0:<DTA0:CHESS.*")
+
+  if args.with-vtedit:
+    if progmsg: print "Installing TECO VTEDIT setup..."
+    os8_pmt_send("\.", "COPY RKA0:<DTA0:VTEDIT.*")
+    os8_pmt_send("\.", "COPY RKA0:<DTA0:TECO.IN")
+  
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
+  simh_send("detach dt0")
   simh_send("detach rk0")
 
 
@@ -357,8 +373,8 @@ def make_src ():
     os.rename(image_path,save_path)
     
   if progmsg: print "Copying OS/8 source distribution:"
-  simh_send("attach rk0 "    + os8_mdir + "os8v3d-bin.rk05")
-  simh_send("attach rk1 "    + os8_mdir + "os8v3d-src.rk05")
+  simh_send("attach rk0 " + os8_mdir + "os8v3d-bin.rk05")
+  simh_send("attach rk1 " + os8_mdir + "os8v3d-src.rk05")
 
   simh_send("boot rk0")
   
