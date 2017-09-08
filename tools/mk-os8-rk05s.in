@@ -260,7 +260,6 @@ def make_bin (args):
   os8_pmt_send("\$", "LOAD DTA1:RK8ESY.BN")
   os8_pmt_send("\$", "LOAD DTA1:PT8E.BN")
   os8_pmt_send("\$", "DELETE SYS")
-  os8_pmt_send("\$", "DSK RK8E:SYS")
   os8_pmt_send("\$", "SYSTEM RK8E")
   os8_pmt_send("\$", "DELETE RXA1")
   os8_pmt_send("\$", "INSERT PT8E,PTR")
@@ -271,6 +270,7 @@ def make_bin (args):
   os8_pmt_send("\$", "INSERT RK05,RKA2,RKB2")
   os8_pmt_send("\$", "DELETE DTA0")
   os8_pmt_send("\$", "INSERT TC,DTA0")
+  os8_pmt_send("\$", "DSK RK8E:RKB0")
   os8_pmt_send("\$", "PRINT")
   os8_pmt_send("\$", "BOOT")
   os8_pmt_send("WRITE ZERO DIRECT\?", "Y")
@@ -330,7 +330,7 @@ def make_bin (args):
 
   if args.with_lcmod:
     if progmsg: print "Running batch script LCSYS.BI for lower case system that auto-upcases commands only..."
-    os8_pmt_send("\.", "SUBMIT LCSYS.BI")
+    os8_pmt_send("\.", "SUBMIT SYS:LCSYS.BI")
   
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
