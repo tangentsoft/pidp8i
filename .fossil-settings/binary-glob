@@ -1,3 +1,4 @@
+doc/*.jpg
 doc/*.png
 examples/*.pt
 labels/*.pdf
