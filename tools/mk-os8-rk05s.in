@@ -323,7 +323,7 @@ def make_bin (args):
     if progmsg: print "Installing CHESS.SV binary and CHESS.TX documentation..."
     os8_pmt_send("\.", "COPY RKA0:<DTA0:CHESS.*")
 
-  if args.with-vtedit:
+  if args.with_vtedit:
     if progmsg: print "Installing TECO VTEDIT setup..."
     os8_pmt_send("\.", "COPY RKA0:<DTA0:VTEDIT.*")
     os8_pmt_send("\.", "COPY RKA0:<DTA0:TECO.IN")
