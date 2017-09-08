@@ -327,6 +327,10 @@ def make_bin (args):
     if progmsg: print "Installing TECO VTEDIT setup..."
     os8_pmt_send("\.", "COPY RKA0:<DTA0:VTEDIT.*")
     os8_pmt_send("\.", "COPY RKA0:<DTA0:TECO.IN")
+
+  if args.with_lcmod:
+    if progmsg: print "Running batch script LCSYS.BI for lower case system that auto-upcases commands only..."
+    os8_pmt_send("\.", "SUBMIT LCSYS.BI")
   
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
@@ -426,7 +430,7 @@ def main ():
                       action='store_true',
                       default=False,
                       help='console is a printing terminal and does not use character overwrite on rubout')
-  parser.add_argument('--without-lowercase',
+  parser.add_argument('--with-lcmod',
                       action='store_true',
                       default=True,
                       help='Disable lower case input and command conversions to upper case')

@@ -37,6 +37,11 @@ use cc-lib
 options {
 	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
 	debug-mode        => "create a debug build (default is release)"
+	os8-lcmod=1	  => "turn off simh auto-upcase and enable os8 config to auto-upcase commands"
+	advent=1	  => "add the game of ADVENT to built OS/8 RK05 image"
+	chess=1		  => "add the game of CHESS to built OS/8 RK05 image"
+	os8-vtedit=0	  => "add the TECO VTEDIT setup to built OS/8 RK05 image"
+	os8-crt=1	  => "set crt-style rubout processing in built OS/8 KR05 image"
     ba=1              => "leave *.BA BASIC games and demos off built OS/8 RK05 disk image"
     cc8=1             => "leave CC8 compiler off built OS/8 RK05 disk image"
     k12=1             => "leave 12-bit Kermit off built OS/8 RK05 disk image"
@@ -67,6 +72,27 @@ if {[opt-bool debug-mode]} {
 }
 
 set mk_os8_rk05s_options ""
+if {[opt-bool os8-lcmod]} {
+    msg-result "Turn off simh auto-upcase and enable os8 system config to auto-upcase commands."
+    	define OS8_LCMOD
+	append mk_os8_rk05s_options " --with-lcmod"
+}
+if {![opt-bool advent]} {
+    msg-result "Will not add game of ADVENT to OS/8 binary RK05 disk image."
+	append mk_os8_rk05s_options " --without-advent"
+}
+if {![opt-bool chess]} {
+    msg-result "Will not add game of CHESS to OS/8 binary RK05 disk image."
+	append mk_os8_rk05s_options " --without-chess"
+}
+if {[opt-bool os8-vtedit]} {
+    msg-result "Will add VTEDIT setup to OS/8 binary RK05 disk image."
+	append mk_os8_rk05s_options " --with-vtedit"
+}
+if {![opt-bool os8-crt]} {
+    msg-result "Will not add BASIC games and demos to OS/8 binary RK05 disk image."
+	append mk_os8_rk05s_options " --without-crt"
+}
 if {![opt-bool ba]} {
     msg-result "Will not add BASIC games and demos to OS/8 binary RK05 disk image."
 	append mk_os8_rk05s_options " --without-ba"

@@ -27,5 +27,10 @@ set cpu 32k
 set cpu noidle
 set df disabled
 @SET_THROTTLE@
+@if OS8_LCMOD
+set tti 7b
+@else
+set tti ksr
+@endif
 att rk0 @MEDIADIR@/os8/os8v3d-bin.rk05
 boot rk0
