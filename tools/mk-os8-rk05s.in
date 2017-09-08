@@ -209,6 +209,7 @@ def make_bin (args):
   basic_copyin =  ['RKB0:', 'subsys/basic-games.tu56', "Installing *.BA BASIC games and demos..."]
   cc8_copyin =    ['RKA0:', 'subsys/cc-bin.tu56', "Installing Ian Schofield's CC8 compiler..."]
   kermit_copyin = ['RKA0:', 'subsys/k12-bin.tu56', "Installing 12-bit Kermit..."]
+  advent_copyin = ['RKB0:', 'subsys/advent.tu56', "Installing ADVENT..."]
 
   bin_copyins = [
     ['RKA0:', "os8/al-4761c-ba-os8-v3d-ext.1978.tu56", "Copying in OS/8 V3D extensions..."],
@@ -217,10 +218,11 @@ def make_bin (args):
     ['RKA0:', "os8/al-5642a-ba-macrel-linker.1978.tu56", "Installing MACREL..."]
     ]
 
-  if args.with_music:      bin_copyins.append(music_copyin)
-  if not args.without_ba:  bin_copyins.append(basic_copyin)
-  if not args.without_cc8: bin_copyins.append(cc8_copyin)
-  if not args.without_k12: bin_copyins.append(kermit_copyin)
+  if args.with_music:         bin_copyins.append(music_copyin)
+  if not args.without_ba:     bin_copyins.append(basic_copyin)
+  if not args.without_cc8:    bin_copyins.append(cc8_copyin)
+  if not args.without_k12:    bin_copyins.append(kermit_copyin)
+  if not args.without_advent: bin_copyins.append(advent_copyin)
 
   check_exists(build_copyins)
   check_exists(bin_copyins)
@@ -290,7 +292,7 @@ def make_bin (args):
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.RL")
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.HL")
   os8_pmt_send("\.", "ZERO RKB0:")      # must precede subsys/* copies
-  
+
   back_to_simh("\.")
   
   if progmsg: print "Deleting bootable copy of dectape image and"
@@ -301,8 +303,18 @@ def make_bin (args):
 
   if progmsg: print "Performing remaining copies/installs..."
   do_all_copyins(bin_copyins)
+
+  # Any further initialization of installed software is done here.
+  simh_send("boot rk0")
+
+  if not args.without_crt:
+    # NO SCOPE mode is the default on distribution tapes.
+    if progmsg: print "Configuring scope-style rubout processing"
+    os8_pmt_send("\.", "SET TTY SCOPE")
+  
     
   if progmsg: print "Cleaning up..."
+  back_to_simh("\.")
   simh_send("detach rk0")
 
 
@@ -367,6 +379,8 @@ def make_src ():
 
 def main ():
   # Parse the command line
+  # os8 is a place holder for future functionality if we decide
+  # to have a separate master rk05 sys pack and a runnable os8 pack.
   allowed_acts = ["all", "bin", "src", "os8"]
   parser = argparse.ArgumentParser(description='Build OS/8 RK05 disk images')
   parser.add_argument('-v', '--verbose',
@@ -388,6 +402,26 @@ def main ():
                       action='store_true',
                       default=False,
                       help='leave 12-bit Kermit off binary disk')
+  parser.add_argument('--with-vtedit',
+                      action='store_true',
+                      default=False,
+                      help='Install and enable TECO vtedit mode')
+  parser.add_argument('--without-crt',
+                      action='store_true',
+                      default=False,
+                      help='console is a printing terminal and does not use character overwrite on rubout')
+  parser.add_argument('--without-lowercase',
+                      action='store_true',
+                      default=True,
+                      help='Disable lower case input and command conversions to upper case')
+  parser.add_argument('--without-advent',
+                      action='store_true',
+                      default=False,
+                      help='leave game of Adventure off binary disk')
+  parser.add_argument('--without-chess',
+                      action='store_true',
+                      default=False,
+                      help='Leave CHEKMO-II off binary disk')
   parser.add_argument('what',
                       choices=allowed_acts,
                       help='select which RK05 media gets built; default is "all"',
