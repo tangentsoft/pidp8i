@@ -17,8 +17,8 @@ with other PDP-8 operating systems or without an OS entirely.
 | DECtape Image File Name | Content Description
 | ----------------------------------------------------------------------------
 | `advent.tu56`           | [OS/8 Adventure][os8a] v2.4
-| `basic-games.tu56`      | Several programs from DEC's book ["101 BASIC Computer Games"][bcg]
-| `cc-bin.tu56`           | Ian Schofield's [CC8 OS/8 C compiler system][cc8]
+| `ba.tu56`               | Several \*.BA programs from DEC's book ["101 BASIC Computer Games"][bcg]
+| `cc8.tu56`              | Ian Schofield's [CC8 OS/8 C compiler system][cc8]
 | `k12.tu56`              | [Kermit-12][k12] for OS/8, OS/78, OS/278, and OS/12
 | `music.tu56`            | [RFI-based][rfi] music playback programs
 

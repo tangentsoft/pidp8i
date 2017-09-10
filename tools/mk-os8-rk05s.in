@@ -209,11 +209,11 @@ def make_bin (args):
     ["", local_tape, ""]
   ]
 
-  music_copyin =  ['RKB0:', 'subsys/music.tu56', "Copying in Music score files and source code..."]
-  basic_copyin =  ['RKB0:', 'subsys/basic-games.tu56', "Installing *.BA BASIC games and demos..."]
-  cc8_copyin =    ['RKA0:', 'subsys/cc-bin.tu56', "Installing Ian Schofield's CC8 compiler..."]
-  kermit_copyin = ['RKA0:', 'subsys/k12-bin.tu56', "Installing 12-bit Kermit..."]
-  advent_copyin = ['RKB0:', 'subsys/advent.tu56', "Installing ADVENT..."]
+  music_copyin  = ['RKB0:', 'subsys/music.tu56',   "Copying in Music score files and source code..."]
+  ba_copyin     = ['RKB0:', 'subsys/ba.tu56',      "Installing *.BA BASIC games and demos..."]
+  cc8_copyin    = ['RKA0:', 'subsys/cc8.tu56',     "Installing Ian Schofield's CC8 compiler..."]
+  k12_copyin    = ['RKA0:', 'subsys/k12.tu56',     "Installing Kermit-12..."]
+  advent_copyin = ['RKB0:', 'subsys/advent.tu56',  "Installing ADVENT..."]
 
   bin_copyins = [
     ['RKA0:', "os8/al-4761c-ba-os8-v3d-ext.1978.tu56", "Copying in OS/8 V3D extensions..."],
@@ -225,7 +225,7 @@ def make_bin (args):
   if args.with_music:         bin_copyins.append(music_copyin)
   if not args.without_ba:     bin_copyins.append(basic_copyin)
   if not args.without_cc8:    bin_copyins.append(cc8_copyin)
-  if not args.without_k12:    bin_copyins.append(kermit_copyin)
+  if not args.without_k12:    bin_copyins.append(k12_copyin)
   if not args.without_advent: bin_copyins.append(advent_copyin)
 
   check_exists(special_bin_copyins)
