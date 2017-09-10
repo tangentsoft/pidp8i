@@ -45,8 +45,8 @@ options {
     music             => "add *.MU files to built OS/8 RK05 disk image"
     no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
     os8-crt=1         => "set crt-style rubout processing in built OS/8 KR05 image"
-    os8-vtedit        => "add the TECO VTEDIT setup to built OS/8 RK05 image"
     os8-lcmod=1       => "turn off simh auto-upcase and enable os8 config to auto-upcase commands"
+    os8-vtedit        => "add the TECO VTEDIT setup to built OS/8 RK05 image"
     serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:         => "override the throttle values in the boot scripts"
 }
