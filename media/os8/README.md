@@ -1,28 +1,36 @@
-# Guide to Contents
-
-Files here are listed in functional, not alphabetical (directory
-listing) order.
+# OS/8 Media
 
 
-# Bootable Systems
+## Bootable Systems
 
-`os8.tu56` Bootable OS/8 DECtape image suitable for experimentation.
+`os8v3d-bin.rk05` — Bootable OS/8 system made from the binary DECtapes
+of OS/8 V3D in the Willem van der Mark Archives described below plus
+other tapes in [`../subsys`](/file/media/subsys) during the PiDP-8/I
+software build process. This is the disk image used by boot options IF=0
+and IF=7. See the [top-level `README.md` file][tlrm] for instructions on
+controlling what goes into this image.
 
-`os8.rk05` The OS/8 RK05 pack you should boot and use.  Built from the
-`os8v3d-bin.rk05` baseline below plus additional stuff.  (To be
-docmented somewhere soon.)
+`os8.tu56` — Bootable OS/8 DECtape image used by boot option IF=3.
+Primarily intended to demonstrate the uncommon "boot and run from tape"
+experience offered by early DEC systems.
 
 
-# Baseline Disk Images
+## Data Disks
 
-`os8v3d-bin.rk05`   OS/8 Bootable Binary distribution baseline system
-made from the binary DECtapes of OS/8 V3D in the Willem van der Mark
-Archives.
+`os8v3d-src.rk05` — OS/8 Source RK05 pack made from the source DECtapes
+of OS/8 V3D in the Willem van der Mark Archives, described below. This
+is not a bootable OS/8 system. It is merely a convenience for use with a
+bootable OS/8 system, so you can avoid mounting the seven "Source"
+distribution tapes in succession.
 
-`os8v3d-src.rk05`   OS/8 Source RK05 pack made from the source DECtapes
-of OS/8 V3D in the Willem van der Mark Archives.
+If you give the following command to SIMH:
 
-# Willem van der Mark Archives
+    att rk1 media/os8/os8v3d-src.rk05
+   
+...this disk will appear as RKA1: and RKB1: under OS/8.
+
+
+## Willem van der Mark Archives
 
 Willem van der Mark wrote a really cool [PDP-8 emulator in Java][vdms].
 He has a well organized archive of DEC media.  The following DECtapes
@@ -53,13 +61,14 @@ a project for an interested person.
 | `al-5586c-sa-os8-ext-3.1978.tu56`     | DEC OS/8 V3D Extensions **Source** Distribution  1/3
 
 
-# Others
+## Other Files
 
 | File Name       | Content Description
 | ----------------------------------------------------------------------------
 | `LICENSE.md`    | License provided by DEC that makes our use of OS/8 legal
-| `local.tu56`    | files created for or vetted by the PiDP-8/I project
+| `local.tu56`    | Files created for or vetted by the PiDP-8/I project; used at build time
 
 [dga]:  http://www.pdp8online.com/images/images/misc_dectapes.shtml
+[tlrm]: /doc/trunk/README.md
 [vdms]: http://vandermark.ch/pdp8/index.php?n=OS8.OS8-V3D
 [vdma]: http://vandermark.ch/pdp8/index.php
