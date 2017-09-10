@@ -71,25 +71,22 @@ def simh_send (send_line):
 #### os8_kbd_delay #####################################################
 # Artificially delay the media generation process to account for the
 # fact that OS/8 lacks a modern multi-character keyboard input buffer.
-# We may not be able to send text to it any faster than a contemporary
-# terminal could.
+# It is unsafe to send text faster than a contemporary terminal could.
 #
-# The constant is expanded to show that it comes from an ASR-33 teletype
-# bit rate (110 bps) divided by 7-bit ASCII plus necessary start, stop,
-# and parity bits, then is inverted to get seconds per character instead
-# of characters per second.  OS/8 must be at least this fast.
+# The constant is expanded to show that it comes from the 2400 bps of
+# the VT05s used by some well-heeled PDP-8 users divided by 7-bit ASCII
+# plus necessary start, stop, and parity bits.  The constant is inverted
+# to get seconds per character instead of characters per second.  OS/8
+# must be at least this fast, being contemporary with the VT05.
 #
-# (Which begs the question: what happend on real PDP-8 hardware with a
-# typist capable of > 11cps?  Did the typist have to moderate his speed
-# to avoid dropping characters, or is there a buffer in the system
-# somewhere that we're disregarding?)
-#
-# FIXME: Can we speed this up?  Surely the higher IPS rate of a
-# simulated PDP-8 helps here.  Also, OS/8 was later used with faster
-# terminals; were later versions of OS/8 enhanced to buffer fast input,
-# or is the version we're shipping capable of coping with faster input?
+# You might think to try and speed this up by increasing the 2400 bps
+# value below.  For one thing, the 9600 bps VT52 was probably used with
+# some later OS/8 systems.  Also, the higher IPS rate of our simulated
+# PDP-8 must help here.  However, if you actually time doing so, it
+# does't help, presumably because other I/O overheads (e.g. TU56 reading
+# time) swamp any improvement you can get here.
 
-_kbd_delay = 1 / (110 / (7 + 1 + 1 + 1))
+_kbd_delay = 1 / (2400 / (7 + 1 + 1 + 1))
 def os8_kbd_delay():
   time.sleep(_kbd_delay)
 
