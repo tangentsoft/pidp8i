@@ -68,23 +68,44 @@ def simh_send (send_line):
   child.sendline(send_line)
 
 
+#### os8_kbd_delay #####################################################
+# Artificially delay the media generation process to account for the
+# fact that OS/8 lacks a modern multi-character keyboard input buffer.
+# We may not be able to send text to it any faster than a contemporary
+# terminal could.
+#
+# The constant is expanded to show that it comes from an ASR-33 teletype
+# bit rate (110 bps) divided by 7-bit ASCII plus necessary start, stop,
+# and parity bits, then is inverted to get seconds per character instead
+# of characters per second.  OS/8 must be at least this fast.
+#
+# (Which begs the question: what happend on real PDP-8 hardware with a
+# typist capable of > 11cps?  Did the typist have to moderate his speed
+# to avoid dropping characters, or is there a buffer in the system
+# somewhere that we're disregarding?)
+#
+# FIXME: Can we speed this up?  Surely the higher IPS rate of a
+# simulated PDP-8 helps here.  Also, OS/8 was later used with faster
+# terminals; were later versions of OS/8 enhanced to buffer fast input,
+# or is the version we're shipping capable of coping with faster input?
+
+_kbd_delay = 1 / (110 / (7 + 1 + 1 + 1))
+def os8_kbd_delay():
+  time.sleep(_kbd_delay)
+
+
 #### os8_pmt_send ######################################################
 # Wait for an OS/8 command prompt running within SIMH, then send the
 # given line.
 #
 # The prompt string is passed in because OS/8 has several different
 # prompt types.
-#
-# FIXME: This function has hard-coded delay constants, apparently to
-# deal with the way OS/8 is run underneath SIMH.  This is likely either
-# brittle or wasteful with respect to the host system's CPU speed.
-# There must be a better way.  
 
 def os8_pmt_send (prompt, send_line):
   global child
 
   child.expect("\n%s$" % prompt)
-  time.sleep(0.5)
+  os8_kbd_delay()
   for i in xrange(0, len(send_line)):
     child.send(send_line[i])
   child.send("\r")
@@ -100,7 +121,7 @@ def os8_pmt_send (prompt, send_line):
 def os8_send (send_line):
   global child
 
-  time.sleep(0.5)
+  os8_kbd_delay()
   for i in xrange(0, len(send_line)):
     child.send(send_line[i])
   child.send("\r")
@@ -113,7 +134,7 @@ def back_to_simh (prompt):
   global child
 
   child.expect("\n%s$" % prompt)
-  time.sleep(0.50)
+  os8_kbd_delay()
   child.sendcontrol('e')
 
 
