@@ -247,7 +247,7 @@ def make_bin (args):
   global progmsg
   if progmsg: print "Building initial OS/8 system..."
   
-  if progmsg: print "Making a writeable copy of boot dectape..."
+  if progmsg: print "Making a writeable copy of boot DECtape..."
   copyfile(ro_boot_tape_path, boot_dt_path)
   
   simh_send("attach rk0 " + os8_mdir + "os8v3d-bin.rk05")
@@ -299,8 +299,8 @@ def make_bin (args):
 
   back_to_simh("\.")
   
-  if progmsg: print "Deleting bootable copy of dectape image and"
-  if progmsg: print "rebooting into freshly-built rk05 OS/8 system..."
+  if progmsg: print "Deleting bootable copy of DECtape image and"
+  if progmsg: print "rebooting into freshly-built RK05 OS/8 system..."
   simh_send("detach dt0")
   simh_send("detach dt1")
   os.remove(boot_dt_path)
@@ -401,7 +401,7 @@ def make_src ():
 def main ():
   # Parse the command line
   # os8 is a place holder for future functionality if we decide
-  # to have a separate master rk05 sys pack and a runnable os8 pack.
+  # to have a separate master RK05 sys pack and a runnable os8 pack.
   allowed_acts = ["all", "bin", "src", "os8"]
   parser = argparse.ArgumentParser(description='Build OS/8 RK05 disk images')
   parser.add_argument('-v', '--verbose',
