@@ -223,7 +223,7 @@ def make_bin (args):
     ]
 
   if args.with_music:         bin_copyins.append(music_copyin)
-  if not args.without_ba:     bin_copyins.append(basic_copyin)
+  if not args.without_ba:     bin_copyins.append(ba_copyin)
   if not args.without_cc8:    bin_copyins.append(cc8_copyin)
   if not args.without_k12:    bin_copyins.append(k12_copyin)
   if not args.without_advent: bin_copyins.append(advent_copyin)
