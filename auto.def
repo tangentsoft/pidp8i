@@ -73,9 +73,11 @@ if {[opt-bool debug-mode]} {
 
 set mk_os8_rk05s_options ""
 if {[opt-bool os8-lcmod]} {
-    msg-result "Turn off simh auto-upcase and enable os8 system config to auto-upcase commands."
-        define OS8_LCMOD
-    append mk_os8_rk05s_options " --with-lcmod"
+    msg-result "Auto-upcasing commands via an OS/8 patch rather than via SIMH."
+    define OS8_LCMOD
+} else {
+    msg-result "Auto-upcasing via SIMH; suppressing command upcasing OS/8 patch."
+    append mk_os8_rk05s_options " --without-lcmod"
 }
 if {![opt-bool advent]} {
     msg-result "Will not add game of ADVENT to OS/8 binary RK05 disk image."

@@ -133,6 +133,7 @@ def check_exists (image_copyins):
         child.expect(pexpect.EOF)
         exit (-1)
     # else: print "Found " + image_path
+   
 
 #### copyin_2 ##########################################################
 # Copy two images into two destinations with two messages
@@ -328,8 +329,8 @@ def make_bin (args):
     os8_pmt_send("\.", "COPY RKA0:<DTA0:VTEDIT.*")
     os8_pmt_send("\.", "COPY RKA0:<DTA0:TECO.IN")
 
-  if args.with_lcmod:
-    if progmsg: print "Running batch script LCSYS.BI for lower case system that auto-upcases commands only..."
+  if not args.without_lcmod:
+    if progmsg: print "Patching OS/8 to upcase commands only; SIMH is set not to auto-upcase."
     os8_pmt_send("\.", "SUBMIT SYS:LCSYS.BI")
   
   if progmsg: print "Cleaning up..."
@@ -430,10 +431,10 @@ def main ():
                       action='store_true',
                       default=False,
                       help='console is a printing terminal and does not use character overwrite on rubout')
-  parser.add_argument('--with-lcmod',
+  parser.add_argument('--without-lcmod',
                       action='store_true',
-                      default=True,
-                      help='Disable lower case input and command conversions to upper case')
+                      default=False,
+                      help='Disable the OS/8 command upcasing patch; best set when SIMH is set to tti ksr mode')
   parser.add_argument('--without-advent',
                       action='store_true',
                       default=False,
