@@ -27,8 +27,8 @@ with other PDP-8 operating systems or without an OS entirely.
 
 Most of these files are merged into the OS/8 binary disk image by
 default, but can be excluded by giving a `--without-NAME` flag to the
-`configure` script, where `NAME` is some variant on the TU56 file name
-above.
+`configure` script, where `NAME` is the file name above without the
+`.tu56` extension. (e.g. `--without-k12` excludes Kermit-12.)
 
 Only one of the files above is currently excluded by default, that being
 `music.tu56`, because we have not yet received any report of reliable
