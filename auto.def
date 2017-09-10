@@ -35,79 +35,79 @@ use cc
 use cc-lib
 
 options {
-	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
-	debug-mode        => "create a debug build (default is release)"
-	os8-lcmod=1	  => "turn off simh auto-upcase and enable os8 config to auto-upcase commands"
-	advent=1	  => "add the game of ADVENT to built OS/8 RK05 image"
-	chess=1		  => "add the game of CHESS to built OS/8 RK05 image"
-	os8-vtedit=0	  => "add the TECO VTEDIT setup to built OS/8 RK05 image"
-	os8-crt=1	  => "set crt-style rubout processing in built OS/8 KR05 image"
+    alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
+    advent=1          => "add the game of ADVENT to built OS/8 RK05 image"
     ba=1              => "leave *.BA BASIC games and demos off built OS/8 RK05 disk image"
     cc8=1             => "leave CC8 compiler off built OS/8 RK05 disk image"
+    chess=1           => "add the game of CHESS to built OS/8 RK05 image"
+    debug-mode        => "create a debug build (default is release)"
     k12=1             => "leave 12-bit Kermit off built OS/8 RK05 disk image"
     music             => "add *.MU files to built OS/8 RK05 disk image"
-	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
-	serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
-	throttle:         => "override the throttle values in the boot scripts"
+    no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
+    os8-lcmod=1       => "turn off simh auto-upcase and enable os8 config to auto-upcase commands"
+    os8-vtedit        => "add the TECO VTEDIT setup to built OS/8 RK05 image"
+    os8-crt=1         => "set crt-style rubout processing in built OS/8 KR05 image"
+    serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+    throttle:         => "override the throttle values in the boot scripts"
 }
 
 if {[opt-bool alt-serial-mod]} {
-	msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
-	define PCB_SERIAL_MOD_JLW
-	define PCB_SERIAL_MOD_ANY
+    msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
+    define PCB_SERIAL_MOD_JLW
+    define PCB_SERIAL_MOD_ANY
 }
 
 if {[opt-bool serial-mod]} {
-	msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
-	define PCB_SERIAL_MOD_OV
-	define PCB_SERIAL_MOD_ANY
+    msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
+    define PCB_SERIAL_MOD_OV
+    define PCB_SERIAL_MOD_ANY
 }
 
 if {[opt-bool debug-mode]} {
-	msg-result "Creating a debuggable build."
-	define BUILDMODE {-O0 -g}
+    msg-result "Creating a debuggable build."
+    define BUILDMODE {-O0 -g}
 } else {
-	msg-result "Creating a release build."
-	define BUILDMODE {-O2}
+    msg-result "Creating a release build."
+    define BUILDMODE {-O2}
 }
 
 set mk_os8_rk05s_options ""
 if {[opt-bool os8-lcmod]} {
     msg-result "Turn off simh auto-upcase and enable os8 system config to auto-upcase commands."
-    	define OS8_LCMOD
-	append mk_os8_rk05s_options " --with-lcmod"
+        define OS8_LCMOD
+    append mk_os8_rk05s_options " --with-lcmod"
 }
 if {![opt-bool advent]} {
     msg-result "Will not add game of ADVENT to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --without-advent"
+    append mk_os8_rk05s_options " --without-advent"
 }
 if {![opt-bool chess]} {
     msg-result "Will not add game of CHESS to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --without-chess"
+    append mk_os8_rk05s_options " --without-chess"
 }
 if {[opt-bool os8-vtedit]} {
     msg-result "Will add VTEDIT setup to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --with-vtedit"
+    append mk_os8_rk05s_options " --with-vtedit"
 }
 if {![opt-bool os8-crt]} {
     msg-result "Will not add BASIC games and demos to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --without-crt"
+    append mk_os8_rk05s_options " --without-crt"
 }
 if {![opt-bool ba]} {
     msg-result "Will not add BASIC games and demos to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --without-ba"
+    append mk_os8_rk05s_options " --without-ba"
 }
 if {![opt-bool cc8]} {
     msg-result "Will not add CC8 to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --without-cc8"
+    append mk_os8_rk05s_options " --without-cc8"
 }
 if {![opt-bool k12]} {
     msg-result "Will not add 12-bit Kermit to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --without-k12"
+    append mk_os8_rk05s_options " --without-k12"
 }
 if {[opt-bool music]} {
     msg-result "Will add music files to OS/8 binary RK05 disk image."
-	append mk_os8_rk05s_options " --with-music"
+    append mk_os8_rk05s_options " --with-music"
 } else {
     msg-result "Will not add music files to OS/8 binary RK05 disk image."
 }
@@ -122,39 +122,39 @@ set cores [exec $srcdir/tools/corecount]
 set tv [opt-val throttle]
 set tvsl [string length $tv]
 if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
-	define SET_THROTTLE {set nothrottle}
-	set tv "unlimited"
+    define SET_THROTTLE {set nothrottle}
+    set tv "unlimited"
 } else {
-	# Rewrite symbolic values with values SIMH can understand.  See
-	# README-throttle.md for the justification of these values.
-	if {$tv == "single-core" || $tvsl == 0} {
-		# It's a single-core Pi board, so just tell SIMH to take half
+    # Rewrite symbolic values with values SIMH can understand.  See
+    # README-throttle.md for the justification of these values.
+    if {$tv == "single-core" || $tvsl == 0} {
+        # It's a single-core Pi board, so just tell SIMH to take half
         # the host CPU power, leaving the rest left for background
         # tasks.  We can't use an IPS value here for several reasons.
         # See README-throttle.md for details.
         set tv "50%"
-	} elseif {$tv == "pdp8e"} {
-		set tv "416k"
-	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
-		set tv "333k"
-	} elseif {$tv == "pdp8l" || $tv == "pdp8"} {
-		set tv "313k"
-	} elseif {$tv == "ha6120"} {
-		set tv "182k"
-	} elseif {$tv == "im6100a"} {
-		set tv "200k"
-	} elseif {$tv == "im6100"} {
-		set tv "100k"
-	} elseif {$tv == "im6100c"} {
-		set tv "83k"
-	} elseif {$tv == "pdp8s"} {
-		set tv "63k"
-	} elseif {$tv == "human"} {
-		set tv "1/100"
-	} elseif {$tv == "trace"} {
-		set tv "1/1000"
-	}
-	# else, assume --throttle was given a legal SIMH throttle value
+    } elseif {$tv == "pdp8e"} {
+        set tv "416k"
+    } elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
+        set tv "333k"
+    } elseif {$tv == "pdp8l" || $tv == "pdp8"} {
+        set tv "313k"
+    } elseif {$tv == "ha6120"} {
+        set tv "182k"
+    } elseif {$tv == "im6100a"} {
+        set tv "200k"
+    } elseif {$tv == "im6100"} {
+        set tv "100k"
+    } elseif {$tv == "im6100c"} {
+        set tv "83k"
+    } elseif {$tv == "pdp8s"} {
+        set tv "63k"
+    } elseif {$tv == "human"} {
+        set tv "1/100"
+    } elseif {$tv == "trace"} {
+        set tv "1/1000"
+    }
+    # else, assume --throttle was given a legal SIMH throttle value
     
     if {[string first "/" $tv] > -1} {
         # Assume the ratio given will push us below 1 kIPS, where ILS
@@ -163,7 +163,7 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
         set cores 1
     }
 
-	define SET_THROTTLE "set throttle $tv"
+    define SET_THROTTLE "set throttle $tv"
 }
 msg-result "Simulator CPU throttle set to $tv"
 
@@ -171,13 +171,13 @@ msg-result "Simulator CPU throttle set to $tv"
 # driving method on single-core hosts.  The user can force this on
 # multi-core hosts via --no-lamp-simulator.
 if {($cores < 2) || [opt-bool no-lamp-simulator]} {
-	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
-	define LED_DRIVER_MODULE n
-	define ILS_MODE 0
+    msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
+    define LED_DRIVER_MODULE n
+    define ILS_MODE 0
 } else {
-	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
-	define LED_DRIVER_MODULE i
-	define ILS_MODE 1
+    msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
+    define LED_DRIVER_MODULE i
+    define ILS_MODE 1
 }
 
 # Check for headers, functions, etc. whose absence we can work around
@@ -189,9 +189,9 @@ cc-check-functions sched_yield
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
 if {![cc-check-includes curses.h]} {
-	user-error "Could not find curses.h.  Try installing libncurses-dev."
+    user-error "Could not find curses.h.  Try installing libncurses-dev."
 } elseif {![cc-check-function-in-lib initscr ncurses]} {
-	user-error "Could not find initscr() in libncurses."
+    user-error "Could not find initscr() in libncurses."
 }
 
 # We need to find an install(1) type program that supports -D.  The
@@ -201,29 +201,29 @@ if {![cc-check-includes curses.h]} {
 # ginstall name is typical on non-Linux systems where GNU Coreutils was
 # installed alongside the core OS utilities.
 if {[cc-check-progs ginstall]} {
-	define INSTALL ginstall
+    define INSTALL ginstall
 } elseif {[cc-check-progs install]} {
-	if {[catch {exec install -D -d . >& /dev/null} result] == 0} {
-		define INSTALL install
-	} else {
-		user-error "install(1) does not support -D; install GNU Coreutils."
-	}
+    if {[catch {exec install -D -d . >& /dev/null} result] == 0} {
+        define INSTALL install
+    } else {
+        user-error "install(1) does not support -D; install GNU Coreutils."
+    }
 } else {
-	user-error "No install(1) type program found; install GNU Coreutils."
+    user-error "No install(1) type program found; install GNU Coreutils."
 }
 msg-result "Found GNU install(1) program as [get-define INSTALL]."
 
 # Also find GNU readlink in the same way
 if {[cc-check-progs greadlink]} {
-	set rlprg greadlink
+    set rlprg greadlink
 } elseif {[cc-check-progs readlink]} {
-	if {[catch {exec readlink -f . >& /dev/null} result] == 0} {
-		set rlprg readlink
-	} else {
-		user-error "readlink(1) does not support -D; install GNU Coreutils."
-	}
+    if {[catch {exec readlink -f . >& /dev/null} result] == 0} {
+        set rlprg readlink
+    } else {
+        user-error "readlink(1) does not support -D; install GNU Coreutils."
+    }
 } else {
-	user-error "No readlink(1) type program found; install GNU Coreutils."
+    user-error "No readlink(1) type program found; install GNU Coreutils."
 }
 msg-result "Found GNU readlink(1) as $rlprg."
 
@@ -241,8 +241,8 @@ define MEDIADIR "[get-define ABSPREFIX]/share/media"
 set instgrp [exec id -grn]
 set instusr [exec id -urn]
 if {$instusr == "root"} {
-	msg-result "Error: This software will not install and run as root."
-	user-error "Reconfigure without sudo!"
+    msg-result "Error: This software will not install and run as root."
+    user-error "Reconfigure without sudo!"
 }
 define INSTGRP $instgrp
 define INSTUSR $instusr
@@ -257,14 +257,14 @@ msg-result "Owner of screen(1) session will be $instusr."
 # to fool autosetup.
 cc-check-standards c99
 if {![opt-bool debug-mode]} {
-	cc-check-flags -fipa-cp-clone
-	cc-check-flags -fno-strict-overflow
-	cc-check-flags -fpredictive-commoning
-	if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
-		cc-check-flags -fgcse-after-reload
-		cc-check-flags -finline-functions
-		cc-check-flags -fno-unsafe-loop-optimizations
-	}
+    cc-check-flags -fipa-cp-clone
+    cc-check-flags -fno-strict-overflow
+    cc-check-flags -fpredictive-commoning
+    if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
+        cc-check-flags -fgcse-after-reload
+        cc-check-flags -finline-functions
+        cc-check-flags -fno-unsafe-loop-optimizations
+    }
 }
 
 # Embed this software's Fossil-based version string into gpio-common.c.
@@ -310,7 +310,7 @@ msg-result "Python module pexpect is installed here."
 # Build Deeper Thought if we find it here
 if {[file exists "[get-define srcdir]/src/deeper.c"]} {
     set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
-	msg-result "Found Deeper Thought; building it against $ls GPIO module"
+    msg-result "Found Deeper Thought; building it against $ls GPIO module"
     define BUILD_DEEPER_THOUGHT 1
 }
 
@@ -319,8 +319,8 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # NOTE: If you change the list of files here, change INFILES in
 # Makefile.in, too.
 make-config-header src/config.h \
-	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {ILS_MODE PCB_*}
+    -auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
+    -bare {ILS_MODE PCB_*}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in
