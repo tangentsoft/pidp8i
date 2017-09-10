@@ -116,16 +116,37 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
-#### --enable-music, --music or --with-music
+#### --enable-\* or --with-\*
 
-The `*.MU` files and the player program for it are not normally
-installed to the built OS/8 binary RK05 disk image because the Raspberry
-Pi reportedly does not emit enough RFI when running these demos to cause
-sufficient interference on an AM radio for you to hear the music, the
-very point of these demos.  Until a way is found around this problem —
-what, low RFI is a *problem* now? — this option will default to "off".
+There are a few file sets not normally installed to the OS/8 RK05 disk
+image used by boot options IF=0 and IF=7. You can install them with the
+following options:
 
-These options are all equivalent.
+*   **--with-music** — The `*.MU` files and the player program for it
+    are not normally installed to the built OS/8 binary RK05 disk image
+    because the Raspberry Pi reportedly does not emit eufficient RFI at
+    AM radio frequencies when running these programs to cause audible
+    music on an AM radio, the very point of these demos. Until a way is
+    found around this problem — what, low RFI is a *problem* now? — this
+    option will default to "off".
+
+*   **--with-vtedit** — This option installs a default-run macro pack
+    called VTEDIT which causes the OS/8 version of TECO to run in
+    full-screen mode and to react to [several special keyboard
+    commands](/wiki?name=Using+VTEDIT) not normally recognized by TEDO.
+
+    This feature is currently disabled because it is not yet fully
+    tested by the person in charge of the OS/8 disk building process.
+
+    It may remain disabled after that because it changes the behavior of
+    the `TECO` and `EDIT` command in OS/8, which violates the
+    expectations of people expecting a historically accurate TECO
+    experience. On the other hand, people don't go to a ren fair and
+    expect to experience the historical ubiquity of typhoid fever
+    either, so we might change our mind on this.
+
+The `configure` script is flexible about option naming.
+`--enable-music`, `--music`, and `--with-music` are equivalent.
 
 
 #### --disable-\* or --without-\*
@@ -134,18 +155,33 @@ Several components of the built OS/8 binary RK05 disk image which are
 installed by default can be left out of the build process to save space
 and build time by giving one of these flags:
 
-*   **basic-games** - Leave out the BASIC games and demos, most of which
-    come from DEC's book "101 BASIC Computer Games." These are normally
-    installed to `RKB0:`.
+*   **--without-advent** — Leave out the Adventure game.
 
-*   **cc8** - Leave out Ian Schofield's native OS/8 CC8 compiler
+*   **--without-ba** - Leave out the BASIC games and demos, which come
+    from DEC's book "101 BASIC Computer Games." These are normally
+    installed to `RKB0:` as `*.BA`, thus the option's name.
+
+*   **--without-cc8** - Leave out Ian Schofield's native OS/8 CC8
+    compiler normally installed to `RKA0:`
+
+*   **--without-chess** — Leave out John Comeau's CHECKMO-II chess
+    implementation.
+
+*   **--without-crt** — Suppress the [console rubout behavior][tty]
+    normally applied by default. You probably only want to do this if
+    you have attached a real teletype to your PiDP-8/I, and thus do not
+    want video terminal style rubout processing.
+
+*   **--without-k12** - Leave out the 12-bit Kermit implementation
     normally installed to `RKA0:`
 
-*   **k12** - Leave out the 12-bit Kermit implementation normally
-    installed to `RKA0:`
+*   **--without-lcmod** — Suppress the [lowercase console mod][tty]
+   normally applied by default.
 
 The `configure` script accepts both the `--disable-*` and `--without-*`
 forms of these options.
+
+[tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 
 
 #### --help
