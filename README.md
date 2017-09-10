@@ -161,6 +161,11 @@ and build time by giving one of these flags:
     from DEC's book "101 BASIC Computer Games." These are normally
     installed to `RKB0:` as `*.BA`, thus the option's name.
 
+    (We considered naming it `--without-basic-games-and-demos`, but
+    that's too long, and it can't be `--without-basic` because that
+    implies that it is the OS/8 BASIC subsystem that is being left out,
+    which is not the case.)
+
 *   **--without-cc8** - Leave out Ian Schofield's native OS/8 CC8
     compiler normally installed to `RKA0:`
 
