@@ -16,7 +16,7 @@ with other PDP-8 operating systems or without an OS entirely.
 
 | DECtape Image File Name | Content Description
 | ----------------------------------------------------------------------------
-| `advent.tu56`           | [OS/8 Adventure](os8a) v2.4
+| `advent.tu56`           | [OS/8 Adventure][os8a] v2.4
 | `basic-games.tu56`      | Several programs from DEC's book ["101 BASIC Computer Games"][bcg]
 | `cc-bin.tu56`           | Ian Schofield's [CC8 OS/8 C compiler system][cc8]
 | `k12.tu56`              | [Kermit-12][k12] for OS/8, OS/78, OS/278, and OS/12
@@ -32,20 +32,19 @@ above.
 
 Only one of the files above is currently excluded by default, that being
 `music.tu56`, because we have not yet received any report of reliable
-playback. We believe this is because the frequencies and trace lengths
-in the PiDP-8/I hardware do not lend themselves to creation of RFI
-strong enough or at a frequency suitable to pick up with a typical AM
-radio. These programs were written for real PDP-8 hardware which had
-much longer wires and much stronger drivers, and so caused more RFI and
-at lower frequencies than a Raspberry Pi coupled to a PiDP-8/I board
-will. Nevertheless, you may force inclusion of these files on your OS/8
-RK05 boot disk with
+playback. We believe this is because the PiDP-8/I realization does not
+lend itself to creation of suitable AM frequency RFI. These programs
+were written for real PDP-8 hardware which had much longer wires backed
+by much stronger drivers than a PiDP-8/I, and which ran at lower
+frequencies than a Raspberry Pi. These problems are not insurmountable,
+so someone interested in the project may force inclusion of these files
+on the OS/8 RK05 boot disk with
 
      $ ./configure --with-music
 
-We suspect hardware modifications may allow these files to play back
-eventually, but if so, we'll still exclude them by default since not all
-PiDP-8/I machines will have these modifications.
+Solving this problem may require hardware modifications. If so, we'll
+still exclude these programs by default since not all PiDP-8/I machines
+will have these modifications.
 
 See the [top-level `README.md` file][tlrm] for further information about
 the `--with-*` and `--without-*` configuration options.
