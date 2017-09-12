@@ -109,22 +109,6 @@ def os8_pmt_send (prompt, send_line):
   child.send("\r")
 
 
-#### os8_send ##########################################################
-# Send a line of text to OS/8.
-#
-# FIXME: The intent here is to resume OS/8 after sending "cont" to simh.
-# It doesn't seem to work yet.  For now we just reboot into OS/8 after
-# attaching new devices.
-
-def os8_send (send_line):
-  global child
-
-  os8_kbd_delay()
-  for i in xrange(0, len(send_line)):
-    child.send(send_line[i])
-  child.send("\r")
-
-
 #### back_to_simh ######################################################
 # Go back to SIMH when the passed prompt string is encountered
 
