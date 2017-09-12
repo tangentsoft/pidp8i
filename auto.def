@@ -162,25 +162,11 @@ if {[cc-check-progs ginstall]} {
 }
 msg-result "Found GNU install(1) program as [get-define INSTALL]."
 
-# Also find GNU readlink in the same way
-if {[cc-check-progs greadlink]} {
-	set rlprg greadlink
-} elseif {[cc-check-progs readlink]} {
-	if {[catch {exec readlink -f . >& /dev/null} result] == 0} {
-		set rlprg readlink
-	} else {
-		user-error "readlink(1) does not support -D; install GNU Coreutils."
-	}
-} else {
-	user-error "No readlink(1) type program found; install GNU Coreutils."
-}
-msg-result "Found GNU readlink(1) as $rlprg."
-
 # If we have cscope here, we'll use it in the "tags" target
 define HAVE_PROG_CSCOPE [cc-check-progs cscope]
 
 # Canonicalize some paths which may be relative and generate others from them
-define ABSPREFIX [exec $rlprg -f [get-define prefix]]
+define ABSPREFIX [file normalize [get-define prefix]]
 define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
