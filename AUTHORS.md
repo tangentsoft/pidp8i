@@ -68,8 +68,8 @@
     `os8.rk05` image.
 
 *   **Jonathan Trites <tritesnikov@gmail.com>** wrote the original
-    version of what has become `tools/mk-os8-rk05s.in`, the script
-    that generates `media/os8/*.rk05` from source media.
+    version of what has become `tools/mkos8s.in`, the script that
+    generates `bin/os8v3d-*.rk05` from source tapes.
 
 *   **Warren Young <tangentsoft@gmail.com>** Did everything listed in
     `ChangeLog.md` that is not attributed to anyone else.

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ########################################################################
-# mk-os8-rk05s - Build media/os8/*.rk05 from media/os8/*.tu56 and other
-#   source media by scripting commands to SIMH and OS/8.
+# mkos8 - Build bin/os8v3d-*.rk05 from media/*/*.tu56 by scripting
+#    commands to SIMH and OS/8.
 #
 # Copyright © 2017 by Jonathan Trites, William Cattey, and Warren Young.
 #
@@ -492,7 +492,7 @@ def main ():
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
-  child.logfile = open('@builddir@/obj/mk-os8-rk05s.log', 'w') \
+  child.logfile = open('@builddir@/obj/mkos8.log', 'w') \
     if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
 
   if acts["bin"]: make_bin(args)
