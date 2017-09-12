@@ -134,13 +134,15 @@ PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
 PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 
 OS8_BIN_RK05 = @builddir@/bin/os8v3d-bin.rk05
+OS8_SRC_RK05 = @builddir@/bin/os8v3d-src.rk05
+OS8_RK05S = $(OS8_BIN_RK05) # FIXME $(OS8_SRC_RK05)
 
 CLTXT = /boot/cmdline.txt
 
 .PHONY: tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(EX_PTS) $(OS8_BIN_RK05)
+all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(EX_PTS) $(OS8_RK05S)
 	@chmod 755 bin/pidp8i
 
 clean:
@@ -253,13 +255,21 @@ simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
 
-# How to build the OS/8 binary media needed by 0.script
+# Build the OS/8 binary media needed by 0.script
 OS8_BIN_SRCS = \
 	@srcdir@/tools/mk-os8-rk05s.in \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/subsys/*.tu56
 $(OS8_BIN_RK05): $(SIM) $(OS8_BIN_SRCS)
 	tools/mk-os8-rk05s@MK_OS8_RK05_OPTS@ bin
+
+# Also build an OS/8 source disk, as a convenience to avoid the 
+# need to mount up the 7 source tapes in succession.
+OS8_SRC_SRCS = \
+	@srcdir@/tools/mk-os8-rk05s.in \
+	@srcdir@/media/os8/al-*-sa-*.tu56
+$(OS8_SRC_RK05): $(OS8_SRC_SRCS)
+	tools/mk-os8-rk05s@MK_OS8_RK05_OPTS@ src
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
 # Explained at http://scottmcpeak.com/autodepend/autodepend.html
