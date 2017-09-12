@@ -133,7 +133,7 @@ OUTFILES := $(subst .in,,$(OUTFILES))
 PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
 PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 
-OS8_BIN_RK05 = @builddir@/media/os8/os8v3d-bin.rk05
+OS8_BIN_RK05 = @builddir@/bin/os8v3d-bin.rk05
 
 CLTXT = /boot/cmdline.txt
 

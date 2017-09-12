@@ -237,6 +237,11 @@ define ABSPREFIX [exec $rlprg -f [get-define prefix]]
 define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
 define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
+# Also provide an absolute version of @top_srcdir@ for scripts that may
+# be run via relative paths.  This is vastly simpler than trying to work
+# out how to resolve the relative paths within the script itself.
+define ABS_TOP_SRCDIR [exec $rlprg -f [get-define top_srcdir]]
+
 # Remember the name and primary group of the user who installed this, since
 # we want to give that group write privileges to some files when they're
 # installed, and we want them to own the screen(1) session.
