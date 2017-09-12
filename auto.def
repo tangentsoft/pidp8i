@@ -38,12 +38,12 @@ options {
     alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
     advent=1          => "add the game of ADVENT to built OS/8 RK05 image"
     ba=1              => "leave *.BA BASIC games and demos off built OS/8 RK05 disk image"
-    cc8=1             => "leave CC8 compiler off built OS/8 RK05 disk image"
     chess=1           => "add the game of CHESS to built OS/8 RK05 image"
     debug-mode        => "create a debug build (default is release)"
     k12=1             => "leave 12-bit Kermit off built OS/8 RK05 disk image"
     music             => "add *.MU files to built OS/8 RK05 disk image"
     no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
+    os8-cc8=1         => "leave the native OS/8 CC8 compiler off the built OS/8 RK05 disk image"
     os8-crt=1         => "set crt-style rubout processing in built OS/8 KR05 image"
     os8-lcmod=1       => "turn off simh auto-upcase and enable os8 config to auto-upcase commands"
     os8-vtedit        => "add the TECO VTEDIT setup to built OS/8 RK05 image"
@@ -99,7 +99,7 @@ if {![opt-bool ba]} {
     msg-result "Will not add BASIC games and demos to OS/8 binary RK05 disk image."
     append mk_os8_rk05s_options " --without-ba"
 }
-if {![opt-bool cc8]} {
+if {![opt-bool os8-cc8]} {
     msg-result "Will not add CC8 to OS/8 binary RK05 disk image."
     append mk_os8_rk05s_options " --without-cc8"
 }
