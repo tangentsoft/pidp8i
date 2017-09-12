@@ -36,43 +36,49 @@ use Cwd 'abs_path';
 use File::Basename;
 
 my $topdir = dirname($0) . '/..';
-if (not -e "$topdir/.fslckout") {
+if (-e "$topdir/.fslckout") {
+    # Get version info from Fossil
+    my ($branch, $checkout, $version, $comment);
+    chdir $topdir;      # we might be building out-of-tree
+
+    open my $s, '-|', 'fossil status 2> /dev/null'
+            or die "Failed to run fossil status!\n";
+    my @lines = <$s>;
+    die "The fossil status command in tools/version failed!\n"
+            unless close $s;
+
+    for (@lines) {
+        chomp;
+        my ($attr, $value) = split /:\s+/;
+
+        if ($attr eq 'checkout') {
+            my @elems = split ' ', $value;
+            $checkout = substr($elems[0], 0, 10);
+        }
+        elsif ($attr eq 'tags') {
+            my @tags = split /, /, $value;
+            for my $t (@tags) {
+                if ($t =~ m{^v\d+}) {
+                    $version = $t;
+                }
+                else {
+                    $branch = $t;
+                }
+            }
+        }
+        elsif ($attr eq 'comment') {
+            $comment = $value;
+        }
+    }
+
+    ($version) = $comment =~ m{(v\d+)} if $branch eq 'release';
+    print $branch, ':', ($version || "id[$checkout]"), "\n";
+}
+else {
 	# We're not within a Fossil checkout, so try to get the version
-	# number from the top directory name.
+	# number from the top directory name, on the assumption that it
+    # is a release tarball and hence contains the release version #.
 	$topdir = basename(abs_path($topdir));
 	my ($v) = $topdir =~ m{v\d+};
 	print 'pkg:', ($v ? $v : 'vUNKNOWN'), "\n";
-	exit 0;
 }
-
-# Get version info from Fossil
-my ($branch, $checkout, $version, $comment);
-open my $s, '-|', 'fossil status 2> /dev/null'
-        or die "Failed to run fossil status!\n";
-while (<$s>) {
-	chomp;
-	my ($attr, $value) = split /:\s+/;
-
-	if ($attr eq 'checkout') {
-		my @elems = split ' ', $value;
-		$checkout = substr($elems[0], 0, 10);
-	}
-	elsif ($attr eq 'tags') {
-		my @tags = split /, /, $value;
-		for my $t (@tags) {
-			if ($t =~ m{^v\d+}) {
-				$version = $t;
-			}
-			else {
-				$branch = $t;
-			}
-		}
-	}
-	elsif ($attr eq 'comment') {
-		$comment = $value;
-	}
-}
-die "The fossil status command in $0 failed!\n" unless close $s;
-
-($version) = $comment =~ m{(v\d+)} if $branch eq 'release';
-print $branch, ':', ($version || "id[$checkout]");
