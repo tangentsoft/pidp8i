@@ -103,9 +103,9 @@ def os8_pmt_send (prompt, send_line):
   global child
 
   child.expect("\n%s$" % prompt)
-  os8_kbd_delay()
   for i in xrange(0, len(send_line)):
     child.send(send_line[i])
+    os8_kbd_delay()
   child.send("\r")
 
 
