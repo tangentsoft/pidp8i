@@ -53,7 +53,7 @@ progmsg = True
 # kludgy flag to add more verbose debug output.
 debug = False
 
-_media_dir = "@ABS_TOP_SRCDIR@/media/"
+_media_dir = "@abs_top_srcdir@/media/"
 _bin_dir = "@builddir@/bin/"
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"

@@ -116,53 +116,50 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
-#### --disable-os8-\* or --without-os8-\*
+#### --disable-os8-\*
 
 Several default components of the OS/8 RK05 disk image used by boot
 options IF=0 and IF=7 can be left out to save space and build time:
 
-*   **--without-os8-advent** — Leave out the Adventure game.
+*   **--disable-os8-advent** — Leave out the Adventure game.
 
-*   **--without-os8-ba** - Leave out the BASIC games and demos which
+*   **--disable-os8-ba** - Leave out the BASIC games and demos which
     come from DEC's book "101 BASIC Computer Games." These are normally
     installed to `RKB0:` as `*.BA`, thus the option's name.
 
-    (We considered naming it `--without-os8-basic-games-and-demos`, but
-    that's too long, and it can't be `--without-os8-basic` because that
+    (We considered naming it `--disable-os8-basic-games-and-demos`, but
+    that's too long, and it can't be `--disable-os8-basic` because that
     implies that it is the OS/8 BASIC subsystem that is being left out,
     which is not even currently an option.)
 
-*   **--without-os8-chess** — Leave out John Comeau's CHECKMO-II chess
+*   **--disable-os8-chess** — Leave out John Comeau's CHECKMO-II chess
     implementation.
 
-*   **--without-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
+*   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
     compiler normally installed to `RKA0:`
 
-*   **--without-os8-crt** — Suppress the [console rubout behavior][tty]
+*   **--disable-os8-crt** — Suppress the [console rubout behavior][tty]
     enabled while building the OS/8 binary RK05 disk image. You
     probably only want to do this if you have attached a real teletype
     to your PiDP-8/I, and thus do not want video terminal style rubout
     processing.
 
-*   **--without-os8-k12** - Leave out the Kermit-12 implementation
+*   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
-*   **--without-os8-lcmod** — Suppress the [lowercase console mod][tty]
+*   **--disable-os8-lcmod** — Suppress the [lowercase console mod][tty]
     applied by default.
-
-The `configure` script accepts both the `--disable-*` and `--without-*`
-forms of these options.
 
 [tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 
 
-#### --enable-os8-\* or --with-os8-\*
+#### --enable-os8-\*
 
 There are a few file sets not normally installed to the OS/8 RK05 disk
 image used by boot options IF=0 and IF=7. You can install them with the
 following options:
 
-*   **--with-os8-music** — The `*.MU` files and the player program for
+*   **--enable-os8-music** — The `*.MU` files and the player program for
     it are not normally installed to the built OS/8 binary RK05 disk
     image because the Raspberry Pi reportedly does not emit eufficient
     RFI at AM radio frequencies when running these programs to cause
@@ -170,7 +167,7 @@ following options:
     Until a way is found around this problem — what, low RFI is a
     *problem* now? — this option will default to "off".
 
-*   **--with-os8-vtedit** — This option installs a default-run macro
+*   **--enable-os8-vtedit** — This option installs a default-run macro
     pack called VTEDIT which causes the OS/8 version of TECO to run in
     full-screen mode and to react to [several special keyboard
     commands](/wiki?name=Using+VTEDIT) not normally recognized by TEDO.
@@ -184,10 +181,6 @@ following options:
     other hand, people don't go to a ren fair and expect to experience
     the historical ubiquity of typhoid fever either, so we might change
     our mind on this.
-
-The `configure` script is flexible about option naming.
-`--enable-os8-music`, `--os8-music`, and `--with-os8-music` are
-equivalent.
 
 
 #### --help
