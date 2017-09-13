@@ -239,9 +239,9 @@ mediainstall:
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
-	\) -exec @INSTALL@ -D -m 664 -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
-	@INSTALL@ -m 644 -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
-	@INSTALL@ -m 664 -g @INSTGRP@ boot/*.script @BOOTDIR@
+	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
+	@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
+	@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
 reconfig:
 	@AUTOREMAKE@
