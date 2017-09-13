@@ -315,8 +315,9 @@ def make_bin (args):
   simh_send("attach -r dt0 " + local_tape_path)
   simh_send("boot rk0")
 
-  if progmsg: print "Installing LCSYS.BI and UCSYS.BI batch scripts..."
-  os8_pmt_send("\.", "COPY RKA0:<DTA0:?CSYS.BI")
+  if progmsg: print "Installing lower case and uppercase config batch scripts..."
+  os8_pmt_send("\.", "COPY RKA0:<DTA0:LC??S.BI")
+  os8_pmt_send("\.", "COPY RKA0:<DTA0:LC??S.BI")
   
   if not args.without_crt:
     # NO SCOPE mode is the default on distribution tapes.
@@ -335,6 +336,8 @@ def make_bin (args):
   if not args.without_lcmod:
     if progmsg: print "Patching OS/8 to upcase commands only; SIMH is set not to auto-upcase."
     os8_pmt_send("\.", "SUBMIT SYS:LCSYS.BI")
+    if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
+    os8_pmt_send("\.", "SUBMIT SYS:LCBAS.BI")
   
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
