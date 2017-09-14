@@ -61,6 +61,70 @@ to, you still need to install via `sudo` because the installation
 process does other things that do require `root` access.
 
 
+#### --lowercase
+
+The American Standards Association (predecessor to ANSI) delivered the
+second major version of the ASCII character encoding standard the same
+year the first PDP-8 came out, 1965. The big new addition? Lowercase.
+
+That bit of history means that when the PDP-8 was new, lowercase was a
+fancy new feature in the computing industry. That, plus the memory
+savings you get from storing [stripped ASCII][sa] as two 6-bit
+characters per 12-bit PDP-8 word means that most PDP-8 software did not
+expect to receive lowercase ASCII text, particularly the older software.
+
+The PDP-8 lived long enough to see lowercase ASCII input become common
+in the computing industry.
+
+As a result, PDP-8 software reacts in many strange and wonderful ways
+when you give it lowercase input. Some software copes nicely, others
+crashes, and some software just sits there dumbly waiting for you to
+type something!
+
+This configuration option lets you control how you want your simulated
+PDP-8/I to react to lowercase input:
+
+*   **auto** — The default is for the software to attempt to "do the
+    right thing." The simulator is configured to send lowercase input to
+    the PDP-8 software running on it. Where we have the skill, will,
+    need, and time for it, we have [patched][tty] some of the software
+    we distribute that otherwise would not do the right thing with
+    lowercase input to make it do so.
+
+    This is *not* the option you want if you are a purist.
+
+*   **upper** — This option tells the PDP-8 simulator to turn lowercase
+    input into upper case. This is the behavior we used for all versions
+    of the PiDP-8/I software up through v2017.04.04.  Essentially, it
+    tells the software that you want it to behave as through you've got
+    it connected to a Teletype Model 33 ASR.
+
+    The advantage of this mode is that you will have no problems running
+    PDP-8 software that does not understand lowercase ASCII text.
+
+    The disadvantage is obvious: you won't be able to input lowercase
+    ASCII text.  The SIMH option we enable in this mode is
+    bidirectional, so that if you run a program that does emit lowercase
+    ASCII text — such as Rick Murphy's version of Adventure — it will be
+    uppercased, just like an ASR-33 would do.
+
+    Another trap here is that the C programming language requires
+    lowercase text, so you will get a warning if you leave the default
+    option **--enable-os8-cc8** set. Pass **--disable-os8-cc8** when
+    enabling **upper** mode.
+
+*   **none** — This passes 7-bit ASCII text through to the software
+    running on the simulator unchanged, and no patches are applied to
+    the PDP-8 software we distribute.
+
+    This is the option for historical purists. If you run into trouble
+    getting the software to work as you expect when built in this mode,
+    try enabling CAPS LOCK.
+
+[sa]:  http://homepage.cs.uiowa.edu/~jones/pdp8/faqs/#charsets
+[tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
+
+
 #### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
@@ -146,11 +210,6 @@ options IF=0 and IF=7 can be left out to save space and build time:
 
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
-
-*   **--disable-os8-lcmod** — Suppress the [lowercase console mod][tty]
-    applied by default.
-
-[tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 
 
 #### --enable-os8-\*

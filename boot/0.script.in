@@ -28,16 +28,16 @@ set cpu noidle
 set df disabled
 @SET_THROTTLE@
 
-@if OS8_LCMOD
-; We ran the LCSYS.BI patch during generation of the disk we're
-; attaching to rk0 below, so send all text input to the simulator
-; as 7-bit ASCII, including lowercase.  Lowercase output from the
-; simulator will also be preserved, as will non-printing chars.
+@if SIMH_PASS_LOWERCASE
+; The software was configured with either --lowercase=auto or =pass,
+; so send all text input to the simulator as 7-bit ASCII, including
+; lowercase.  Lowercase output from the simulator will be sent to the
+; console unchanged, as will non-printing chars.
 set tti 7b
 @else
-; No OS/8 lowercase command patch running here, so have SIMH force
-; all lowercase input to uppercase in both directions, and strip
-; all nonprinting characters output by the simulator.
+; The software was configured with --lowercase=upper, meaning the user
+; wants lowercase text to be forced to uppercase.  This is bidirectional,
+; affecting both input to the simulated PDP-8 and output from it.
 set tti ksr
 @endif
 
