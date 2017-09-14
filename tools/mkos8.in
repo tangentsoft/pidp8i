@@ -349,7 +349,7 @@ def make_bin (args):
 #### make_src ##########################################################
 # Source-disk version of make_bin() above.
 
-def make_src ():
+def make_src (args):
   src_copyins = [
     ["RKA1:", "os8/al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7..."],
     ["RKA1:", "os8/al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7..."],
@@ -371,7 +371,7 @@ def make_src ():
   image_path = _bin_dir + _bin_rk05
   if (not os.path.isfile(image_path)):
     print _bin_rk05 + " is needed to build src.  Creating..."
-    make_bin()
+    make_bin(args)
 
   image_path = _bin_dir + _src_rk05
   if os.path.isfile(image_path):
@@ -483,7 +483,7 @@ def main ():
     if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
 
   if acts["bin"]: make_bin(args)
-  if acts["src"]: make_src()
+  if acts["src"]: make_src(args)
   
   simh_send("q")
   child.expect(pexpect.EOF)
