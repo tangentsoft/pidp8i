@@ -28,6 +28,7 @@
     install such tools with `sudo apt install build-essential`
 
 
+<a name="configuring"></a>
 ## Configuring, Building and Installing
 
 This software distribution builds and installs in the same way as most
@@ -41,12 +42,14 @@ the source code invalidate prior `make` dependencies, which are
 implicitly repaired by the `configure` script.
 
 
+<a name="options"></a>
 ### Configure Script Options
 
 You can change a few things about the way the software is built and
 installed by giving options to the `configure` script:
 
 
+<a name="prefix"></a>
 #### --prefix
 
 Perhaps the most widely useful `configure` script option is `--prefix`,
@@ -61,6 +64,7 @@ to, you still need to install via `sudo` because the installation
 process does other things that do require `root` access.
 
 
+<a name="lowercase"></a>
 #### --lowercase
 
 The American Standards Association (predecessor to ANSI) delivered the
@@ -125,6 +129,7 @@ PDP-8/I to react to lowercase input:
 [tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 
 
+<a name="nls"></a>
 #### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
@@ -145,6 +150,7 @@ run a lot of background tasks on your Pi 2 or Pi 3, it can also be
 helpful when the CPU is [heavily throttled][thro].
 
 
+<a name="serial-mod"></a>
 #### --serial-mod
 
 If you have done [Oscar's serial mod][sm1] to your PiDP-8/I PCB and the
@@ -160,6 +166,7 @@ hardware will work correctly, but several lights and switches will not
 work correctly.
 
 
+<a name="alt-serial-mod"></a>
 #### --alt-serial-mod
 
 This flag is for an [alternative serial mod by James L-W][sm2]. It
@@ -180,6 +187,7 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
+<a name="disable-os8"></a>
 #### --disable-os8-\*
 
 Several default components of the OS/8 RK05 disk image used by boot
@@ -212,6 +220,7 @@ options IF=0 and IF=7 can be left out to save space and build time:
     normally installed to `RKA0:`
 
 
+<a name="enable-os8"></a>
 #### --enable-os8-\*
 
 There are a few file sets not normally installed to the OS/8 RK05 disk
@@ -247,6 +256,7 @@ following options:
 Run `./configure --help` for more information on your options here.
 
 
+<a name="overwrite-setup"></a>
 ## Overwriting the Local Simulator Setup
 
 When you run `sudo make install` step on a system that already has an
@@ -299,6 +309,7 @@ You have several options here:
     system disks, this option will overwrite those changes!
 
 
+<a name="testing"></a>
 ## Testing
 
 You can test your PiDP-8/I LED and switch functions with these commands:
@@ -320,6 +331,7 @@ the PiDP-8/I simulator back up with:
 See [its documentation][test] for more details.
 
 
+<a name="using"></a>
 ## Using the Software
 
 For the most part, this software distribution works like the upstream
