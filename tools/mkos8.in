@@ -84,8 +84,8 @@ def simh_send (send_line):
 # value below.  For one thing, the 9600 bps VT52 was probably used with
 # some later OS/8 systems.  Also, the higher IPS rate of our simulated
 # PDP-8 must help here.  However, if you actually time doing so, it
-# does't help, presumably because other I/O overheads (e.g. TU56 reading
-# time) swamp any improvement you can get here.
+# doesn't help, presumably because other I/O overheads (e.g. the TU56
+# reading time) swamp any improvement you can get here.
 
 _kbd_delay = 1 / (2400 / (7 + 1 + 1 + 1))
 def os8_kbd_delay():
