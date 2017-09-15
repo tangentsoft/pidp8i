@@ -79,9 +79,9 @@ if {$lv == "auto"} {
     define SIMH_PASS_LOWERCASE
 } elseif {$lv == "pass"} {
     define SIMH_PASS_LOWERCASE
-    append mk_os8_rk05s_options " --without-lcmod"
+    append mk_os8_rk05s_options " --disable-lcmod"
 } elseif {$lv == "upper"} {
-    append mk_os8_rk05s_options " --without-lcmod"
+    append mk_os8_rk05s_options " --disable-lcmod"
 } else {
     user-error "Legal values for --lowercase are {auto,pass,upper}."
 }
@@ -89,37 +89,37 @@ msg-result "Lowercase handling set to '$lv' mode."
 
 if {![opt-bool os8-advent]} {
     msg-result "Will not add game of ADVENT to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --without-advent"
+    append mk_os8_rk05s_options " --disable-advent"
 }
 if {![opt-bool os8-ba]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --without-ba"
+    append mk_os8_rk05s_options " --disable-ba"
 }
 if {![opt-bool os8-cc8]} {
     msg-result "Will not add CC8 to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --without-cc8"
+    append mk_os8_rk05s_options " --disable-cc8"
 }
 if {![opt-bool os8-chess]} {
     msg-result "Will not add game of CHESS to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --without-chess"
+    append mk_os8_rk05s_options " --disable-chess"
 }
 if {![opt-bool os8-crt]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --without-crt"
+    append mk_os8_rk05s_options " --disable-crt"
 }
 if {![opt-bool os8-k12]} {
     msg-result "Will not add Kermit-12 to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --without-k12"
+    append mk_os8_rk05s_options " --disable-k12"
 }
 if {[opt-bool os8-music]} {
     msg-result "Will add music files to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --with-music"
+    append mk_os8_rk05s_options " --enable-music"
 } else {
     msg-result "Will not add music files to the OS/8 RK05 disk image."
 }
 if {[opt-bool os8-vtedit]} {
     msg-result "Will add VTEDIT setup to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --with-vtedit"
+    append mk_os8_rk05s_options " --enable-vtedit"
 }
 define MK_OS8_RK05_OPTS $mk_os8_rk05s_options
 
