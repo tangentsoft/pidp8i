@@ -151,6 +151,7 @@ clean:
 		tags \
 		obj/*.d \
 		obj/*.o \
+		obj/*.log \
 		obj/PDP8/*.d \
 		@srcdir@/examples/*.err
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
