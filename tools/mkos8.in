@@ -226,11 +226,11 @@ def make_bin (args):
     ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56", "Installing MACREL..."]
     ]
 
-  if args.with_music:         bin_copyins.append(music_copyin)
-  if not args.without_ba:     bin_copyins.append(ba_copyin)
-  if not args.without_cc8:    bin_copyins.append(cc8_copyin)
-  if not args.without_k12:    bin_copyins.append(k12_copyin)
-  if not args.without_advent: bin_copyins.append(advent_copyin)
+  if args.enable_music:       bin_copyins.append(music_copyin)
+  if not args.disable_ba:     bin_copyins.append(ba_copyin)
+  if not args.disable_cc8:    bin_copyins.append(cc8_copyin)
+  if not args.disable_k12:    bin_copyins.append(k12_copyin)
+  if not args.disable_advent: bin_copyins.append(advent_copyin)
 
   check_exists(special_bin_copyins)
   check_exists(bin_copyins)
@@ -319,21 +319,21 @@ def make_bin (args):
   os8_pmt_send("\.", "COPY RKA0:<DTA0:LC??S.BI")
   os8_pmt_send("\.", "COPY RKA0:<DTA0:LC??S.BI")
   
-  if not args.without_crt:
+  if not args.disable_crt:
     # NO SCOPE mode is the default on distribution tapes.
     if progmsg: print "Configuring scope-style rubout processing..."
     os8_pmt_send("\.", "SET TTY SCOPE")
   
-  if not args.without_chess:
+  if not args.disable_chess:
     if progmsg: print "Installing CHESS.SV binary and CHESS.TX documentation..."
     os8_pmt_send("\.", "COPY RKA0:<DTA0:CHESS.*")
 
-  if args.with_vtedit:
+  if args.enable_vtedit:
     if progmsg: print "Installing TECO VTEDIT setup..."
     os8_pmt_send("\.", "COPY RKA0:<DTA0:VTEDIT.*")
     os8_pmt_send("\.", "COPY RKA0:<DTA0:TECO.IN")
 
-  if not args.without_lcmod:
+  if not args.disable_lcmod:
     if progmsg: print "Patching OS/8 to upcase commands only; SIMH is set not to auto-upcase."
     os8_pmt_send("\.", "SUBMIT SYS:LCSYS.BI")
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
