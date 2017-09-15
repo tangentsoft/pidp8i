@@ -271,7 +271,7 @@ $(OS8_BIN_RK05): $(SIM) $(OS8_BIN_SRCS)
 OS8_SRC_SRCS = \
 	@srcdir@/tools/mkos8.in \
 	@srcdir@/media/os8/al-*-sa-*.tu56
-$(OS8_SRC_RK05): $(OS8_SRC_SRCS)
+$(OS8_SRC_RK05): $(SIM) $(OS8_SRC_SRCS) $(OS8_BIN_RK05)
 	tools/mkos8@MK_OS8_RK05_OPTS@ src
 
 # Rule for compiling *.c to *.o and autogenerating dependency info.
