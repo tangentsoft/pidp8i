@@ -5,10 +5,10 @@
 
 `os8v3d-bin.rk05` — Bootable OS/8 system made from the binary DECtapes
 of OS/8 V3D in the Willem van der Mark Archives described below plus
-other tapes in [`../subsys`](/file/media/subsys) during the PiDP-8/I
-software build process. This is the disk image used by boot options IF=0
-and IF=7. See the [top-level `README.md` file][tlrm] for instructions on
-controlling what goes into this image.
+other tapes in the [`subsys` subdirectory](/file/media/os8/subsys)
+during the PiDP-8/I software build process. This is the disk image used
+by boot options IF=0 and IF=7. See the [top-level `README.md`
+file][tlrm] for instructions on controlling what goes into this image.
 
 `os8.tu56` — Bootable OS/8 DECtape image used by boot option IF=3.
 Primarily intended to demonstrate the uncommon "boot and run from tape"

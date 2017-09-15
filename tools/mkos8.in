@@ -53,7 +53,7 @@ progmsg = True
 # kludgy flag to add more verbose debug output.
 debug = False
 
-_media_dir = "@abs_top_srcdir@/media/"
+_media_dir = "@abs_top_srcdir@/media/os8/"
 _bin_dir = "@builddir@/bin/"
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
@@ -197,14 +197,14 @@ def do_all_copyins (copyins):
 
 def make_bin (args):
 
-  ro_boot_tape =       "os8/al-4711c-ba-os8-v3d-1.1978.tu56"
+  ro_boot_tape =       "al-4711c-ba-os8-v3d-1.1978.tu56"
   ro_boot_tape_path =  _media_dir + ro_boot_tape
-  driver_tape =        "os8/al-4712c-ba-os8-v3d-2.1978.tu56"
+  driver_tape =        "al-4712c-ba-os8-v3d-2.1978.tu56"
   driver_tape_path =   _media_dir + driver_tape
-  local_tape =         "os8/local.tu56"
+  local_tape =         "local.tu56"
   local_tape_path =    _media_dir + local_tape
   
-  boot_dt_path = _media_dir + "os8/bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
+  boot_dt_path = _media_dir + "bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
 
   special_bin_copyins = [
     ["", ro_boot_tape,  ""],
@@ -219,10 +219,10 @@ def make_bin (args):
   advent_copyin = ['RKB0:', 'subsys/advent.tu56',  "Installing ADVENT..."]
 
   bin_copyins = [
-    ['RKA0:', "os8/al-4761c-ba-os8-v3d-ext.1978.tu56", "Copying in OS/8 V3D extensions..."],
-    ['RKA0:', "os8/al-4549d-ba-fr4-v3d-1.1978.tu56", "Copying in FORTRAN IV tape 1 of 2..."],
-    ['RKA0:', "os8/al-5596d-ba-fr4-v3d-2.1978.tu56", "Copying in FORTRAN IV tape 2 of 2..."],
-    ['RKA0:', "os8/al-5642a-ba-macrel-linker.1978.tu56", "Installing MACREL..."]
+    ['RKA0:', "al-4761c-ba-os8-v3d-ext.1978.tu56", "Copying in OS/8 V3D extensions..."],
+    ['RKA0:', "al-4549d-ba-fr4-v3d-1.1978.tu56", "Copying in FORTRAN IV tape 1 of 2..."],
+    ['RKA0:', "al-5596d-ba-fr4-v3d-2.1978.tu56", "Copying in FORTRAN IV tape 2 of 2..."],
+    ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56", "Installing MACREL..."]
     ]
 
   if args.with_music:         bin_copyins.append(music_copyin)
@@ -237,7 +237,6 @@ def make_bin (args):
   print "Generating " + _bin_rk05 + " from " + str(len(bin_copyins) + 2) + \
         " source tapes..."
 
-  os8_mdir = _media_dir + 'os8/'
   image_path = _bin_dir + _bin_rk05
   if os.path.isfile(image_path):
     save_path = _bin_dir + _bin_rk05 + ".save"
@@ -351,16 +350,16 @@ def make_bin (args):
 
 def make_src (args):
   src_copyins = [
-    ["RKA1:", "os8/al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7..."],
-    ["RKA1:", "os8/al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7..."],
-    ["RKA1:", "os8/al-4693d-sa-os8-v3d-3.1978.tu56", "...part 3 of 7..."],
-    ["RKA1:", "os8/al-4694c-sa-os8-v3d-4.1978.tu56", "...part 4 of 7..."],
-    ["RKB1:", "os8/al-4695c-sa-os8-v3d-5.1978.tu56", "...part 5 of 7..."],
-    ["RKB1:", "os8/al-4696c-sa-os8-v3d-6.1978.tu56", "...part 6 of 7..."],
-    ["RKB1:", "os8/al-4697c-sa-os8-v3d-7.1978.tu56", "...part 7 of 7..."],
-    ["RKB1:", "os8/al-4759c-sa-os8-ext-1.1978.tu56", "extensions part 1 of 3..."],
-    ["RKB1:", "os8/al-4760c-sa-os8-ext-2.1978.tu56", "...part 2 of 3..."],
-    ["RKA1:", "os8/al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3..."],
+    ["RKA1:", "al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7..."],
+    ["RKA1:", "al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7..."],
+    ["RKA1:", "al-4693d-sa-os8-v3d-3.1978.tu56", "...part 3 of 7..."],
+    ["RKA1:", "al-4694c-sa-os8-v3d-4.1978.tu56", "...part 4 of 7..."],
+    ["RKB1:", "al-4695c-sa-os8-v3d-5.1978.tu56", "...part 5 of 7..."],
+    ["RKB1:", "al-4696c-sa-os8-v3d-6.1978.tu56", "...part 6 of 7..."],
+    ["RKB1:", "al-4697c-sa-os8-v3d-7.1978.tu56", "...part 7 of 7..."],
+    ["RKB1:", "al-4759c-sa-os8-ext-1.1978.tu56", "extensions part 1 of 3..."],
+    ["RKB1:", "al-4760c-sa-os8-ext-2.1978.tu56", "...part 2 of 3..."],
+    ["RKA1:", "al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3..."],
   ]
   
   check_exists(src_copyins)
