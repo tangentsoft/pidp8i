@@ -299,6 +299,8 @@ if {$status != 0} {
     append msg "\n    sudo pip install pexpect\n"
     append msg "\nOR:\n"
     append msg "\n    sudo easy_install pexpect\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo apt install python-pexpect\n"
     user-error $msg
 }
 msg-result "Python module pexpect is installed here."
@@ -308,6 +310,8 @@ if {$status != 0} {
     append msg "\n    sudo pip install pkg_resources\n"
     append msg "\nOR:\n"
     append msg "\n    sudo easy_install pkg_resources\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo apt install python-pkg-resources\n"
     user-error $msg
 }
 msg-result "Python module pkg_resources is installed here."
