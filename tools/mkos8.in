@@ -33,6 +33,7 @@
 
 import argparse
 import os
+import pkg_resources
 import sys
 import subprocess
 import pexpect
@@ -471,9 +472,15 @@ def main ():
       break
     acts[act] = True
   
+  # Start the simulator instance we'll use to build the media images
   global child
   child = pexpect.spawn('@builddir@/bin/pidp8i-sim')
-  child.delaybeforesend = None
+
+  # Turn off pexpect's default inter-send() delay.  We add our own as
+  # necessary.  The conditional is due to an API change between 3 and 4.
+  pev4 = (pkg_resources.get_distribution("pexpect").parsed_version >
+          pkg_resources.parse_version("4.0"))
+  child.delaybeforesend = None if pev4 else 0
 
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
