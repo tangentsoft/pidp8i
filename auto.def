@@ -287,7 +287,7 @@ if {$status != 0} {
 }
 define VERSION $version
 
-# We need Python and pexpect installed here for mkos8 to run.
+# The mkos8 script requires Python and some non-core modules.
 set status [catch {exec python -c exit} result]
 if {$status != 0} {
     user-error "Python does not appear to be installed here.  It is required."
@@ -302,6 +302,15 @@ if {$status != 0} {
     user-error $msg
 }
 msg-result "Python module pexpect is installed here."
+set status [catch {exec python -c "import pkg_resources" 2> /dev/null} result]
+if {$status != 0} {
+    set msg "The Python pkg_resources module is not installed here.  Fix with\n"
+    append msg "\n    sudo pip install pkg_resources\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo easy_install pkg_resources\n"
+    user-error $msg
+}
+msg-result "Python module pkg_resources is installed here."
 
 # Build Deeper Thought if we find it here
 if {[file exists "[get-define srcdir]/src/deeper.c"]} {
