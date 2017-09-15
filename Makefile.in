@@ -147,6 +147,7 @@ all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LIST
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(EX_PTS) $(LISTINGS) $(OBJS) $(OUTFILES) \
+		$(OS8_RK05S) bin/*.save \
 		tags \
 		obj/*.d \
 		obj/*.o \
