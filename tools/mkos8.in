@@ -412,39 +412,39 @@ def main ():
   parser.add_argument('-v', '--verbose',
                       action='store_true',
                       help='verbose SIMH output instead of progress messages')
-  parser.add_argument('--with-music',
+  parser.add_argument('--enable-music',
                       action='store_true',
                       default=False,
                       help='add *.MU files to binary disk')
-  parser.add_argument('--without-ba',
+  parser.add_argument('--disable-ba',
                       action='store_true',
                       default=False,
                       help='leave BASIC games and demos off binary disk')
-  parser.add_argument('--without-cc8',
+  parser.add_argument('--disable-cc8',
                       action='store_true',
                       default=False,
                       help='leave CC8 off binary disk')
-  parser.add_argument('--without-k12',
+  parser.add_argument('--disable-k12',
                       action='store_true',
                       default=False,
                       help='leave 12-bit Kermit off binary disk')
-  parser.add_argument('--with-vtedit',
+  parser.add_argument('--enable-vtedit',
                       action='store_true',
                       default=False,
                       help='Install and enable TECO vtedit mode')
-  parser.add_argument('--without-crt',
+  parser.add_argument('--disable-crt',
                       action='store_true',
                       default=False,
                       help='console is a printing terminal and does not use character overwrite on rubout')
-  parser.add_argument('--without-lcmod',
+  parser.add_argument('--disable-lcmod',
                       action='store_true',
                       default=False,
                       help='Disable the OS/8 command upcasing patch; best set when SIMH is set to tti ksr mode')
-  parser.add_argument('--without-advent',
+  parser.add_argument('--disable-advent',
                       action='store_true',
                       default=False,
                       help='leave game of Adventure off binary disk')
-  parser.add_argument('--without-chess',
+  parser.add_argument('--disable-chess',
                       action='store_true',
                       default=False,
                       help='Leave CHEKMO-II off binary disk')
