@@ -215,7 +215,7 @@ def make_bin (args):
 
   music_copyin  = ['RKB0:', 'subsys/music.tu56',   "Copying in Music score files and source code..."]
   ba_copyin     = ['RKB0:', 'subsys/ba.tu56',      "Installing *.BA BASIC games and demos..."]
-  cc8_copyin    = ['RKA0:', 'subsys/cc8.tu56',     "Installing Ian Schofield's CC8 compiler..."]
+  cc8_copyin    = ['RKB0:', 'subsys/cc8.tu56',     "Installing Ian Schofield's CC8 compiler..."]
   k12_copyin    = ['RKA0:', 'subsys/k12.tu56',     "Installing Kermit-12..."]
   advent_copyin = ['RKB0:', 'subsys/advent.tu56',  "Installing ADVENT..."]
 
@@ -338,7 +338,19 @@ def make_bin (args):
     os8_pmt_send("\.", "SUBMIT SYS:LCSYS.BI")
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
     os8_pmt_send("\.", "SUBMIT SYS:LCBAS.BI")
-  
+
+  if not args.disable_cc8:
+    if progmsg: print "Moving CC SV files from RKB0 to SYS"
+    os8_pmt_send("\.", "COPY SYS:<RKB0:CC?.SV")
+    os8_pmt_send("\.", "DEL RKB0:CC?.SV ")
+
+    # Currently we de-fragment RKB0 only if cc8 is installed.
+    # Later on, if other activites fragment RKB0, we can
+    # do SQUISH more broadly.
+    if progmsg: print "Running SQUISH to de-fragment RKB0"
+    os8_pmt_send("\.", "SQUISH RKB0:")
+    os8_pmt_send("ARE YOU SURE\?\r\n", "Y") 
+
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
   simh_send("detach dt0")
