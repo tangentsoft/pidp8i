@@ -471,6 +471,7 @@ def main ():
 
   # Initialize our acts dict.
   acts = {}
+  first_act = None
   for this in allowed_acts:
     acts[this] = False
 
@@ -478,6 +479,9 @@ def main ():
     if act not in allowed_acts:
       print "Invalid act: " + act + " ignored."
       continue
+
+    if first_act == None: first_act = act
+
     if act == "all":
       for this in allowed_acts:
         acts[this] = True
@@ -497,7 +501,7 @@ def main ():
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
-  child.logfile = open('@builddir@/obj/mkos8.log', 'w') \
+  child.logfile = open('@builddir@/obj/mkos8-' + first_act + '.log', 'w') \
     if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
 
   if acts["bin"]: make_bin(args)
