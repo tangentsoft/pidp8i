@@ -20,30 +20,29 @@
 
     -   Hardware kit assembler and distributor
 
-*   **Robert M Supnik** Primary author of the SIMH PDP-8 simulator upon
-    which this project is based.
+*   **Robert M Supnik** is the primary author of the SIMH PDP-8
+    simulator upon which this project is based.
 
-*   **Mike Barnes** Ported Oscar Vermeulen's SIMH 3.9 based PiDP-8/I
+*   **Mike Barnes** ported Oscar Vermeulen's SIMH 3.9 based PiDP-8/I
     simulator to the new SIMH 4.0 code base.  (September 2015.)
 
-*   **Dylan McNamee** Ported the software to Buildroot for the official
-    2015.12.15 binary OS images, and helped to merge the James L-W
+*   **Dylan McNamee** ported the software to Buildroot for the official
+    2015.12.15 binary OS images and helped to merge the James L-W
     "alt-serial" mode in.
 
-*   **Mark G. Thomas** Creator of the installation scripts for the
-    2015.12.15 release, which were folded into the `make install`
-    handler within `Makefile.in`. Also wrote the version of the SysV
-    init script that came with that release as `rc.pidp8`, shipped here
-    as `pidp8i-init`.
+*   **Mark G. Thomas** wrote the installation scripts for the 2015.12.15
+    release, which were folded into the `make install` handler within
+    the current `Makefile.in`. He also wrote the version of the SysV
+    init script shipped here as `etc/pidp8i-init.in`.
 
-*   **[Ian Schofield](mailto:isysxp@gmail.com)** Modified the LED lamp
+*   **[Ian Schofield](mailto:isysxp@gmail.com)** modified the LED lamp
     driving code in the simulator to better simulate the incandescent lamps
     in the original PDP-8/I hardware.  (The bulk of his original code
     has since been rewritten, but the core idea remains, and it is
     doubtful whether the current method would exist without his
     instigation.)
 
-*   **[Henk Gooijen](mailto:henk.gooijen@boschrexroth.nl)** Pushed the
+*   **[Henk Gooijen](mailto:henk.gooijen@boschrexroth.nl)** pushed the
     PDP-8 simulator's internal EAE step counter value down into the
     PiDP-8/I's LED manipulation code, without which the step counter
     LEDs remain dark even when using the EAE.
@@ -60,13 +59,12 @@
     also optimized the `pep001.pal` example so that it fits into a
     single page of PDP-8 core.
 
-*   **[Tony Hill](mailto:hill.anthony@gmail.com)** Merged all the
+*   **[Tony Hill](mailto:hill.anthony@gmail.com)** merged all the
     upstream SIMH changes produced between late September 2015 and late
     December 2016 into the PiDP-8/I simulator.
 
-*   **[Bill Cattey](mailto:bill.cattey@gmail.com)** aka poetnerd.
-    Currently working on system pack images. Making myself useful where I
-    can.
+*   **[Bill Cattey](mailto:bill.cattey@gmail.com)** aka poetnerd is
+    crrently working on system pack images and making himself useful.
 
 *   **[Warren Young](mailto:tangentsoft@gmail.com)** Did everything
     listed in `ChangeLog.md` that is not attributed to anyone else.
