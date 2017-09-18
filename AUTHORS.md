@@ -1,4 +1,4 @@
-# Creators and Major Contributors to the PiDP-8/I Project
+# Creators of and Major Contributors to the PiDP-8/I Project
 
 *   **[Oscar Vermeulen](mailto:oscar.vermeulen@hotmail.com)**:
 
@@ -61,7 +61,11 @@
 
 *   **[Tony Hill](mailto:hill.anthony@gmail.com)** merged all the
     upstream SIMH changes produced between late September 2015 and late
-    December 2016 into the PiDP-8/I simulator.
+    December 2016 into the PiDP-8/I simulator. This is the basis for the
+    current automatic upstream feature merge capability, which is why
+    many releases since December 2016 include an update to the latest
+    version of upstream SIMH. His contributions are made to the project
+    [as `tony`][thcomm].
 
 *   **[Jonathan Trites](mailto:tritesnikov@gmail.com)** wrote the
     initial version of the script now called `tools/mkos8.in`, which
@@ -79,7 +83,7 @@
     listed in [the change log][cl] that is not attributed to anyone
     else.
 
-    His contributions are made to the project [as `tangent`][tcomm],
+    His contributions are made to the project [as `tangent`][wycomm],
     though keep in mind that some of those are commits of external
     contributions made by people who do not have commit rights on our
     software repository. The changelog provides proper attribution for
@@ -88,5 +92,6 @@
 [advent]: http://www.rickmurphy.net/advent/
 [cl]:     https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
 [pncomm]: https://tangentsoft.com/pidp8i/timeline?u=poetnerd
-[tcomm]:  https://tangentsoft.com/pidp8i/timeline?u=tangent
+[thcomm]: https://tangentsoft.com/pidp8i/timeline?u=tony
 [vtedit]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
+[wycomm]: https://tangentsoft.com/pidp8i/timeline?u=tangent
