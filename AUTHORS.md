@@ -63,11 +63,21 @@
     upstream SIMH changes produced between late September 2015 and late
     December 2016 into the PiDP-8/I simulator.
 
-*   **[Bill Cattey](mailto:bill.cattey@gmail.com)** aka poetnerd is
-    crrently working on system pack images and making himself useful.
+*   **[Jonathan Trites](mailto:tritesnikov@gmail.com)** wrote the
+    initial version of the script now called `tools/mkos8.in`, which
+    builds the OS/8 disk images from source tapes.
+
+*   **[Bill Cattey](mailto:bill.cattey@gmail.com)** is the project lead
+    and primary developer of the system that builds the OS/8 RK05 disk
+    images from source tapes. He greatly extended the `mkos8` script,
+    curated the tape collection we ship as `media/.../*.tu56`, created
+    some of those tapes, and more. He has also contributed to other
+    areas of the software project. His contributions are made to the
+    project [as `poetnerd`][pncomm].
 
 *   **[Warren Young](mailto:tangentsoft@gmail.com)** Did everything
     listed in `ChangeLog.md` that is not attributed to anyone else.
 
 [advent]: http://www.rickmurphy.net/advent/
+[pncomm]: https://tangentsoft.com/pidp8i/timeline?u=poetnerd
 [vtedit]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
