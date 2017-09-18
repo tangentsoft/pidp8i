@@ -76,8 +76,17 @@
     project [as `poetnerd`][pncomm].
 
 *   **[Warren Young](mailto:tangentsoft@gmail.com)** Did everything
-    listed in `ChangeLog.md` that is not attributed to anyone else.
+    listed in [the change log][cl] that is not attributed to anyone
+    else.
+
+    His contributions are made to the project [as `tangent`][tcomm],
+    though keep in mind that some of those are commits of external
+    contributions made by people who do not have commit rights on our
+    software repository. The changelog provides proper attribution for
+    these where the checkin comments do not.
 
 [advent]: http://www.rickmurphy.net/advent/
+[cl]:     https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
 [pncomm]: https://tangentsoft.com/pidp8i/timeline?u=poetnerd
+[tcomm]:  https://tangentsoft.com/pidp8i/timeline?u=tangent
 [vtedit]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
