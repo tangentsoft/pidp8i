@@ -1098,6 +1098,7 @@ The form of a PDF call is:
 
 where the letter `F` identifies this as a function call and the line (or group) number identifies the function. This number can be replaced by a suitably chosen variable so that one may use a ['named' function call](#named-pdf) rather than a 'numeric' one. The argument list is not required, but may contain several arguments. Typically, only 1 or 2 are used although this is not a fundamental restriction. The arguments may consist of other PDF calls which do not themselves have arguments, or any other internal functions, with or without arguments. The use of nested PDF calls containing an argument list is restricted since the arguments are not stored recursively. Here are few examples of Program Defined Functions: 
 
+| Call        | Description                                   |
 | ----------: | --------------------------------------------- |
 |  `F(2,A*B)` | Calls Group 2, passing `A*B` as the argument  |
 | `F(.9,X,Y)` | Calls line XX.90 in the current group         |  
