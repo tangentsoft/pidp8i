@@ -231,13 +231,14 @@ Such expressions can be used *anywhere* that explicit numbers appear in this wri
 
 Arithmetic operations are performed in the following sequence: 
 
-| --------------- | ------------------------------- |
-| First priority  | integer powers (`^`)            |
-| Second priority | multiplication (`*`)            |
-| Third priority  | division (`/`)                  |
-| Fourth priority | subtraction and negation (`-`)  |
-| Fifth priority  | addition (`+`)                  |
-| Last priority   | replacement (`=`)               |
+| Priority | Op  | Description              |
+| -------: | ------------------------------ |
+|      1st | `^` | integer power            |
+|      2nd | `*` | multiplication           |
+|      3rd | `/` |  division                |
+|      4th | `-` | subtraction and negation |
+|      5th | `+` | addition                 |
+|     Last | `=` | replacement              |
 
 When UWF evaluates an expression which includes several operations, the order above is followed- For example, UWF evaluates the expression: 
 
@@ -986,7 +987,7 @@ The `FSQT` function computes the square root of the argument using an iterative 
 `FRAC` returns the fractional part of a number — the part which `FITR` discards! This may be used to do "modulo-N' arithmetic or to check for a remainder. The user is cautioned, however, that the value returned by `FRAC` may have only limited accuracy and hence checks for 'exact' values computed from expressions containing the `FRAC` function should generally be avoided. To illustrate, the fractional value of '.002' is .002, but the fractional value of 1.002 is off in the 8th place while that of 1000000.002 is only correct to 3 digits. This is simply the result of taking the difference between two large numbers. 
 
 
-#### <a id="min" name="fmax">`FMIN`/`FMAX`
+#### <a id="min" name="fmax"></a>`FMIN`/`FMAX`
 
 These functions compare two arguments, returning the algebraically smallest or largest value. Thus `FMIN(+1,-2)` would return -2 while `FMAX` would return +1. These functions have several uses. A simple example in connection with the `FLOG` function allows one to avoid the 'log-of-zero' error with a call such as `FLOG(FMAX(1E-10,X))`. Similarly, the `FMIN` function can be used to avoid typing nonexistent values when dumping an array in a multi-column format. In this example, `C` is the number of columns and `N` the number of data values in the array: 
 
@@ -1046,9 +1047,10 @@ As discussed [earlier](#terminators), the `ASK` command treats any input other t
 
 These functions allow UWF to use extra memory for data storage and are thus of interest only for systems with more that 12<. They may be added by setting SvHtch 8 -UP- when UWF is started for the first time (see page 3). FBUF is designed to handle 12-bit (signed) integer data while FCOM may be used for storing either 24- bit integers or 48-bit floating-point values. Both functions are called in the same manner: the first argument specifies the relative location in the storage area and the second argument (if any) is the value to be stored at that location. The function always returns the value at the location specified. Thus: 
 
+| Function    | Description                                      |
 | ----------- | ------------------------------------------------ |
-| `FCOM(I)`   | returns the 'Ith' value in the 'FCOM' area       |
-| `FBUF(I,V)` | stores the value of 'V* in the 'Ith' location.   |
+| `FCOM(I)`   | returns the `I`th value in the `FCOM` area       |
+| `FBUF(I,V)` | stores the value of `V` in the `I`th location.   |
 
 The range of the index is typically 0-4095 for FBUF and 0-1023 for FCOM. FCOM has another mode houever, in which data is stored as two-word integers (rather than four-word floating point values) thereby doubling the amount of storage available but limiting the range of the data to +/- 2"i23. To use FCOM in this mode, specify a -negative- index (legal range is -1 to -2048). Here is a loop which stores the square root of all numbers from 0-1023: 
 
@@ -1067,11 +1069,11 @@ The FSR function reads the value of the Switch Register. This may be used to con
 The FMQ function displays the integer part of the argument in the MQ register. This is quite handy for 'spying' on the progress of a long calculation simply by displaying the value of a loop index. Since FMQ returns the integer part of the argument, it can be included in a subscript expression, such as 'A(FMQ(I))' which is functionally the same as 'A(I)' but also displays the index in the MQ. 
 
 
-<a id="fdin"></a>`FDIN` 
+### <a id="fdin"></a>`FDIN` 
 
-This is an optional function for reading the input register of a DR8-EA par- allel I/O module. It may be added (along with the 'KONTROL' command) by setting Switch 7 -UP- the first time UWF is started. The interface may be wired to respond to either Levels or pusles, the difference being that it will 'remember' a pulse^ but 'forget* when a Level changes. Each bit is separately addressable, and each may be wired for puLse or level sensing. For use with the FDIN ('Digital INput') function, the bits are considered to be numbered from 1-12 (rather than from 0-11), just as they are for the 'KONTROL' command (page 49). 
+This is an optional function for reading the input register of a DR8-EA parallel I/O module. It may be added (along with the `KONTROL` command) by setting Switch 7 *UP* the first time UWF is started. The interface may be wired to respond to either levels or pulses, the difference being that it will 'remember' a pulse, but 'forget' when a level changes. Each bit is separately addressable, and each may be wired for pulse or level sensing. For use with the `FDIN` ('Digital INput') function, the bits are considered to be numbered from 1-12 (rather than from 0-11), just as they are for the [`KONTROL` command](#kontrol).
 
-The value of 'FDIN(O)' (or just 'FDINO' since 'zero' is always the default value of an argument) is simply the weighted sum of all input bits which have been •set'. Bit '1' has the value 2048, bit '2' 'weighs' 1024, etc. The maximum value is thus '4095' if all the bits are turned on. Any bits which are read by the FDIN fmction will be reset if they are resettable, i.e. if they are wired for 'pulse' input. This ensures that only one occurrence of an event will be detected by the program. 
+The value of `FDIN(0)` (or just `FDIN()` since 'zero' is always the default value of an argument) is simply the weighted sum of all input bits which have been 'set'. Bit '1' has the value 2048, bit '2' 'weighs' 1024, etc. The maximum value is thus '4095' if all the bits are turned on. Any bits which are read by the FDIN fmction will be reset if they are resettable, i.e. if they are wired for 'pulse' input. This ensures that only one occurrence of an event will be detected by the program. 
 
 FDIN can be made to respond to only a single bit, or to a collection of bits, by including various arguments as the programmer desires. For instance, 'FDIN(I)' will only sense the state of bit '1'. If bit 1 is on, FDIN will have the value 2048, while if it is off, the value '0' will be returned, regardless of the setting of any other bits. Furthermore only bit 1 will be reset. The value of •FDIN(-I)' on the other hand, will be the status of all bits -except- bit 1, i.e. bits 2-12. Any bits which are read will be reset as described above. 
 
