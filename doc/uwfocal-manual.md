@@ -1286,8 +1286,8 @@ Here is a list of patches for adding a number of special features to UWF. They a
 | Code   | Meaning                                                               |
 | -----: | --------------------------------------------------------------------- |  
 | ?      | Keyboard interrupt (<kbd>CTRL/F</kbd>) or restart from location 10200 |
-| ?01.50 | Group number greater than 51                                          |
-| ?01.93 | Non-existent Line number in a `MODIFY` or `MOVE` command              |
+| ?01.50 | Group number greater than 31                                          |
+| ?01.93 | Non-existent line number in a `MODIFY` or `MOVE` command              |
 | ?03.10 | Non-existent line called by `GOTO`, `IF`, `NEXT`, `BREAK` or `QUIT`   |
 | ?03.30 | Illegal command                                                       |
 | ?03.47 | Non-existent line or group: `DO`, `ON`, `JUMP`, `LINK` or `PDF` call  |
@@ -1306,7 +1306,7 @@ Here is a list of patches for adding a number of special features to UWF. They a
 | ?25.02 | Stack overflow: reduce nested subroutines and expressions             |
 | ?27.90 | Zero divisor                                                          |
 | ?31.<7 | Non-existent program area called by `LOOK` or `LINK`                  |
-| <span style="white-space: nowrap;">&larr; or _</span> | End of input sensed, I/O switched back to the terminal 
+| <span style="white-space: nowrap;">&larr; or \_</span> | End of input sensed, I/O switched back to the terminal 
 
 
 ## <a id="fpal"></a>`FPAL`
