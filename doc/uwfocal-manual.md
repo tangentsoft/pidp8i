@@ -8,9 +8,7 @@ This document is based on the [OCR'd text][ocr] of the [scanned U/W FOCAL Manual
 
 3. Page footnotes referenced by asterisks are now numbered end-notes.
 
-4. Removed page numbers, removed the table of contents, and replaced prose page references with internal hyperlinks. This version is intended to be read on a computer screen, not on paper; even if printed, the original pagination would no longer apply.
-
-    (TODO: Restore ToC using internal hyperlinks? We should probably have named anchors for each level 2 header at least, and probably level 3 as well.)
+4. Removed page numbers and replaced prose page references with internal hyperlinks. This version is intended to be read on a computer screen, not on paper; even if printed, the original pagination would no longer apply.
 
 5. Replaced instances of the obscure Latin initialism [v.i.][videf] (*vide infra*, meaning "see below") with hyperlinks to the referenced section.
 
@@ -36,6 +34,82 @@ This document is based on the [OCR'd text][ocr] of the [scanned U/W FOCAL Manual
 ---------------------------
 
 # U/W FOCAL Manual V4E, October 1978
+
+## Index to Major Topics in This Manual
+
+*   [Abbreviations](#abbreviations)
+*   [Arithmetic operators](#operators)
+*   [Break key](#ctrl-keys)
+*   [Character codes](#character-codes)
+*   Commands
+	*   [Summary](#commands)
+	*   [Direct, indirect](#dir-ind-cmd)
+		*   [`ASK`](#io-cmds)
+		*   [`BREAK`](#break)
+		*   [`COMMENT`](#comment)
+		*   [`DO`](#do)
+		*   [`ERASE`](#erase)
+		*   [`FOR`](#for)
+		*   [`GOTO`](#goto)
+		*   [`HESITATE`](#hesitate)
+		*   [`IF`](#if)
+		*   [`JUMP`](#jump)
+		*   [`KONTROL`](#kontrol)
+		*   [`LINK`](#link)
+		*   [`LOOK`](#look)
+		*   [`MODIFY`/`MOVE`](#modify)
+		*   [`NEXT`](#next)
+		*   [`ON`](#on)
+		*   [`OPEN`](#open)
+		*   [`PUNCH`](#punch)
+		*   [`QUIT`](#quit)
+		*   [`RETURN`](#return)
+		*   [`SET`](#set)
+		*   [`TYPE`](#io-cmds)
+		*   [`WRITE`](#write)
+		*   [`XECUTE`](#xecute)
+		*   [`YNCREMENT`](#yncrement)
+		*   [`ZERO`](#zero)
+	*   [Editing](#editing)
+	*   [Enclosures](#enclosures)
+	*   [Error messages](#error-messages)
+	*   [Formatting](#formatting)
+	*   Functions
+		*   [Summary](#function-summary)
+		*   [Program Defined](#pdfs)
+		*   [`FABS`](#fabs)
+		*   [`FATN`](#fatn)
+		*   [`FBUF`, `FCOM`](#fbuf)
+		*   [`FCOS`](#fcos)
+		*   [`FDIN`](#fdin)
+		*   [`FEXP`](#fexp)
+		*   [`FIN`](#fin)
+		*   [`FIND`](#find)
+		*   [`FITR`](#fitr)
+		*   [`FLOG`](#flog)
+		*   [`FMIN`, `FMAX`](#fmin)
+		*   [`FMQ`](#fmq)
+		*   [`FOUT`](#fout)
+		*   [`FRAC`](#frac)
+		*   [`FRAN`](#fran)
+		*   [`FSGN`](#fsgn)
+		*   [`FSIN`](#fsin)
+		*   [`FSQT`](#fsqt)
+		*   [`FSR`](#fsr)
+		*   [`FTRM`](#ftrm)
+	*   [Input echo](#input-echo)
+	*   [Input terminators](#input-terminators)
+	*   [I/O operators](#io-operators)
+	*   [Line numbers](#line-numbers)
+	*   [Loops](#loops)
+	*   [Numbers and variables](#numbers)
+	*   [Patches](#patches)
+	*   [Punctuation](#punctuation)
+	*   [Reading in programs](#punch)
+	*   [Symbol table dump](#symbol-table-dump)
+	*   [Trace feature](#trace)
+	*   [Variables](#variables)
+
 
 ## Introduction to U/W-FOCAL for the PDP-8
 
@@ -130,7 +204,7 @@ Remember: UWF can be interrupted at any time simply by typing <kbd>CTRL/F</kbd>.
     ?@ 05.13                    UWF was interrupted at line 5.13
     
 
-## <a id="dirind"></a>Direct and Indirect Commands
+## <a id="dir-ind-cmd"></a>Direct and Indirect Commands
 
 UWF prints an asterisk (`*`) whenever it is in command mode waiting for new instructions. You can then type in either 'direct commands' which are executed immediately, or 'indirect commands' which are saved for execution at a later time. To use UWF as a fancy calculator simply give it a 'direct command' and hit the RETURN key. For example, if you enter the command: 
 
@@ -169,7 +243,7 @@ It is a common practice to put several commands on the same line in order to red
 Commands which operate on more than one expression use a comma to separate the values. Thus the command `TYPE A,B` is equivalent to `TYPE A; TYPE B`. Spaces may be included to improve the readability of a program, but one must remember that 'space' is a terminator, equivalent to a comma, so the command `TYPE A B` is interpreted as `TYPE A,B`, not as `TYPE AB`. 
 
 
-## <a id="nums-vars"></a>Numbers and Variables
+## <a id="numbers-variables" name="numbers"></a>Numbers and Variables
 
 UWF can handle up to 10-digit numbers with a magnitude range of 10<sup>615</sup>. Numbers may be written as signed or unsigned quantities and may include a decimal fraction as well as a 'power-of-ten' exponent indicated by the letter `E`. All numbers are stored internally in a 'floating-point' format with 35 bits of mantissa and 11 bits of exponent. This is equivalent to more than 10-digit accuracy. UWF will respond with an error message if a user attempts to enter a number with too many digits. The following all represent the value 'sixty': 
 
@@ -181,7 +255,7 @@ UWF can handle up to 10-digit numbers with a magnitude range of 10<sup>615</sup>
 UWF also allows letters to be treated as numbers so that questions may be answered with a 'YES' or 'NO' response rather than with a numeric reply. When decoded in this manner, the letters 'A-Z' have the values '1-26', except that the letter 'E' always means 'power-of-ten'. Thus the answer 'NO' would have the numerical value '155' and the number 'sixty' could also be written as `0DT` or `0FEA`. Note that the leading '0' is only required when incorporating such 'numbers' into a program. It is not required as part of a user response. 
 
 
-### <a id="var-names"></a>Variable Names
+### <a id="var-names" name="variables"></a>Variable Names
 
 Variables are used to store input values or to save intermediate results. Variables are thus like the storage registers on a calculator except that the programmer may make up his own names to designate the values stored. UWF allows variable names of any length, but only the first two characters are retained internally. Thus the names JOHN and JOE would both refer to the variable `JO`. The first character of a variable name must obviously not be a number, nor can it be the letter `F` since that letter is used to designate functions. However UWF does allow symbols such as `$` and `"` to be used as part of a variable name so you can have quantities such as `A$`, `A`, and `A"`. Variables are always stored as numeric quantities; UWF does not currently have 'string' variables. 
 
@@ -267,7 +341,7 @@ This feature of the language is both good and bad. On the one hand it greatly re
 We will now turn to a detailed examination of all the commands available to the UWF programmer, beginning with the editing commands since they are required for further program development. 
 
 
-## <a id="cmd-editing"></a>Command Mode Editing
+## <a id="editing"></a>Command Mode Editing
 
 When UWF is in command mode you can use the `RUBOUT` or `DELETE` key to correct any typing errors. Each time that you hit this key UWF will delete the preceding character and echo a `\` on the terminal. If you have a video terminal, and you set switch up when you started UWF for the first time (or made the appropriate patch yourself), hitting <kbd>DELETE</kbd> will actually remove the character from the screen. This is obviously much nicer since 'what you see is what you've got'. On the other hand, users with a hard-copy terminal can always just hit the <kbd>LINEFEED</kbd> key to have the current input line retyped so that they can see just how it 'really' looks to UWF. There is no limit to the length of input lines, however if your terminal does not handle 'wrap-around' automatically, the practical limit is the width of paper. 
 
@@ -319,14 +393,14 @@ If you have many lines to move (say all the lines in Group 5), and you have a sl
 On video terminals the number of the line being modified is printed out at the beginning so that the changes will be properly positioned on the screen. With a hard-copy terminal, however, the line number is not normally printed in order to leave as much room as possible for rubouts and insertions. [The Patches section below](#patches) indicates the location to change if you wish to add the line number printout in this case. 
 
 
-## <a id="text"></a>Expanded Text Storage
+## <a id="text" name="look"></a>Expanded Text Storage
 
 If your machine has more than 12K of memory, UWF will automatically use Fields 3-7 for additional text buffers. This allows such systems to keep several different programs in memory at the same time which is obviously a very convenient thing to do. The `LOOK` command is then used to select the desired 'area' for editing, program execution, etc. Programs in different areas are essentially independent and may use the same line numbers, but the symbol table and the 'stack' are shared by all areas. 
 
 The `LOOK` command has the form: `LOOK Area`, where `Area` has the value `0` for the main text buffer and `1`, `2`, `3`, etc. (up to `5`) for the additional fields. `LOOK` always returns to command mode and is normally only used as a direct command. `L 1` will switch to Area 1 while `L 0` (or just `L`) will return to Area 0. For calls between program areas, see [the `LINK` command](#link).
 
 
-## <a id="io-cmds"></a>Input/Output Commands
+## <a id="io-cmds" name="io-operators"></a>Input/Output Commands
 
 UWF's I/O commands are called `ASK` and `TYPE`, respectively. The `TYPE` command has appeared previously in a few of the examples; basically, it converts the value of an arithmetic expression to a string of ASCII characters which are then sent to the terminal, or to whatever output device has been selected as a result of an appropriate [`OPEN` command](#open). Similarly, the `ASK` command is used to input numeric values, either from the keyboard, or from another input device. Both of these commands recognize 6 special operators for controlling the format of I/O operations. These operators are, in fact, just the symbols previously identified as 'protected variables' and it is because of their special significance in `ASK` / `TYPE` commands that they cannot be input or output directly. These operators and their meanings are as follows: 
 
@@ -352,12 +426,12 @@ The `!` operator is used to advance to a new line. UWF never performs this funct
 UWF uses the `"` operator to enclose strings which are output just as they appear in the program. Thus the command: `TYPE "HELLO THERE, HOW ARE YOU TODAY?"` would simply print the message enclosed by the quote marks. The `ASK` command uses such output for prompting: `ASK "HOW OLD ARE YOU? ",AGE` will print the question and then wait for a response. In some cases the [`TRACE` operator (`?`)](#trace) is also useful for printing labels during an `ASK` or `TYPE` command.
 
 
-### <a id="dump"></a>The Symbol Table Dump `$` Operator
+### <a id="symbol-table-dump"></a>The Symbol Table Dump `$` Operator
 
 The Symbol Table Dump operator (`$`) has already been [mentioned briefly](#symbol-table). It prints all the symbols defined by the user's program in the order in which they were encountered. It does not print the values of the 'secret variables'. To conserve paper and to permit as many symbols as possible to be listed on a video terminal, the listing normally has three values per line. This format can be changed simply by specifying a different number after the `$`. Thus, `TYPE $5` will change the default value to 5, which is convenient on terminals which can print up to 132 characters per line. The total number of symbols possible depends upon the amount of memory available. In an 8K machine there will only be room for about 120 variables while in a 12K machine one can have approximately 675. For internal reasons, a Symbol Table Dump always terminates execution of the command line it is on, hence commands following it on the same line will not be executed. 
 
 
-### <a id="format"></a>The Format `%` Operator
+### <a id="formatting"></a>The Format `%` Operator
 
 The format operator (`%`) allows UWF to print numeric results in any of three standard formats: integer, mixed decimal, or 'floating-point' (scientific notation). A format remains in effect until another one is selected. Initially UWF is set to print all results in full-precision scientific notation so that all digits of a result will be output. However for many calculations a 'decimal' or 'integer' style of output is more desirable. Such formats are selected by the value of an arithmetic expression following the `%` operator which has the form: 
 
@@ -409,10 +483,10 @@ Notice that the tab (`:`) and new line (`!`) operators can be included in an `AS
 
 One other feature of a `TYPE` command should be noted: it is possible to save the value of a quantity being `TYPE`ed' just by including a replacement operator in the expression. Thus `TYPE X=5` will output the value '5' and also save it as the value of the variable `X`.
 
-Numeric input for the `ASK` command can take any of the forms [listed above](#nums-vars); specifically: signed integers, alphabetic responses, decimal values or numbers containing a power-of-ten exponent. Because such numbers are processed as they are being input, it is not possible to use the <kbd>RUBOUT</kbd> key to delete an erroneous character. Rather, one must effectively hit the 'clear key' (as on a calculator) and then re-enter the entire number. The 'clear' function is indicated by typing a <kbd>BACKARROW</kbd> or <kbd>UNDERLINE</kbd> just as it is during command input. If you do attempt to use <kbd>RUBOUT</kbd>, no `\` will be echoed which serves as a reminder that this key is ignored during an `ASK` command. 
+Numeric input for the `ASK` command can take any of the forms [listed above](#numbers-variables); specifically: signed integers, alphabetic responses, decimal values or numbers containing a power-of-ten exponent. Because such numbers are processed as they are being input, it is not possible to use the <kbd>RUBOUT</kbd> key to delete an erroneous character. Rather, one must effectively hit the 'clear key' (as on a calculator) and then re-enter the entire number. The 'clear' function is indicated by typing a <kbd>BACKARROW</kbd> or <kbd>UNDERLINE</kbd> just as it is during command input. If you do attempt to use <kbd>RUBOUT</kbd>, no `\` will be echoed which serves as a reminder that this key is ignored during an `ASK` command. 
 
 
-### <a id="terminators"></a>Input Terminators
+### <a id="input-terminators"></a>Input Terminators
 
 UWF allows a variety of characters to serve as input terminators. In addition to the <kbd>RETURN</kbd> key, one may use a <kbd>SPACE</kbd> — spaces in front of a number are ignored, but may be used to format the input as desired; spaces following the number always act as a terminator — a <kbd>COMMA</kbd>, <kbd>SEMICOLON</kbd>, or other punctuation marks such as a <kbd>QUESTION MARK</kbd> or <kbd>COLON</kbd>. A <kbd>PERIOD</kbd> is, of course, recognized as a decimal point, but a second period also works as a terminator. Any of the arithmetic operators also serve as terminators; in particular, the <kbd>/</kbd> and <kbd>-</kbd> characters are often convenient. This allows responses such as `1/2` or `1-5` for the values of *two* different variables. 
 
@@ -465,19 +539,22 @@ One other use of the `ZERO` command should be mentioned. When the Symbol Table f
 Another special case of the `SET` command — `SET Var = Var + 1` is handled by the `YNCREMENT` command. This command allows a list of variables to be either incremented or decremented by the value '1'. The command `Y K`, for example, is equivalent to `SET K=K+1` while `Y -J` is the same as `SET J=J-1`. Of course commands such as `Y N,O-P` are permitted; this one increments the variables `N` and `O` and decrements `P`. Either commas, spaces or minus signs may be used to separate the variable names. 
 
 
-### <a id="execute"></a>`XECUTE`
+### <a id="xecute"></a>`XECUTE`
 
 The `XECUTE` command has been included for compatibility with earlier versions of UWF. Its purpose was to evaluate arithmetic expressions without setting useless 'dummy' variables. This is now accomplished by the `SET` command itself simply by omitting the replacement operator. Thus `SET FOUT(7)` may be used to ring the bell on the terminal. Internally, `SET` and `XECUTE` are identical; it is recommended that `SET` be used in new programs. 
 
 
 ## <a id="branch-control"></a>Branch and Control Commands
 
-This class of commands is used to test arithmetic results, set up loops and otherwise control the sequence of command execution. There are 11 commands in this catagory — UWF has a very rich control structure built around two fundamentally different types of transfers: the `GOTO` branch and the `DO` call. Both interrupt the normal sequence of command execution, but the `GOTO` is an unconditional branch while a `DO` call eventually returns to the next command following the call. The `DO` command is similar to the `GOSUB` in BASIC, but is considerably more flexible. 
+This class of commands is used to test arithmetic results, set up loops and otherwise control the sequence of command execution. There are 11 commands in this category — UWF has a very rich control structure built around two fundamentally different types of transfers: the `GOTO` branch and the `DO` call. Both interrupt the normal sequence of command execution, but the `GOTO` is an unconditional branch while a `DO` call eventually returns to the next command following the call. The `DO` command is similar to the `GOSUB` in BASIC, but is considerably more flexible. 
 
 
 ### <a id="goto" name="considered-harmful"></a>`GOTO`
 
 This command has the form `GOTO line number`. It causes an immediate transfer to the line specified. The `GO` command is the usual way of starting the indirect program at the lowest numbered line; it may be used to start the program at any other line as well: `G 2.1` will start at line '2.1'. An explicit line number may be replaced by an arithmetic expression to create what FORTRAN calls an 'Assigned Goto': `SET X=5.1 . . . GOTO X`.
+
+
+### <a id="do"></a>`DO`
 
 The `DO` command is effectively a subroutine call. A `DO` command without a modifier (or equivalently, a `DO 0` command) calls the entire stored program. This may be used as a Direct Command in cases where you wish to follow such action with additional commands, e.g. `DO;TYPE FTIM()` might be used to check the running time of a benchmark program. 
 
@@ -734,7 +811,7 @@ It is also possible to use the reader/punch for data storage purposes. This work
 Notice that an `O I,E` command is used at the end of the loop to restore input to the keyboard. If this command were omitted the H.S. reader would continue to be used for input, probably causing an error to occur since it is unlikely that the next data value on the tape would correspond to anything expected from the keyboard. The `,E` part of this command is explained more fully in the next section. 
 
 
-### <a id="echo-option"></a>The ECHO Option
+### <a id="echo-option" name="input-echo"></a>The ECHO Option
 
 The `,E` option may be added to either an `O I` or `O R` command to specify that the input characters are to be 'echoed' to the output device. Generally this option is *always* used with `O I` and *never* used with `O R`. The echo option may at first appear slightly confusing since UWF normally runs with the keyboard echo *on* and thus one comes to expect that whatever is typed will be printed on the terminal. This makes the terminal appear much like a simple typewriter and tends to obscure the fact that if UWF were not sending back each character it received, *nothing* would be printed! The `ECHO` option must be specified when selecting the input device, or *`NO ECHO`* will be assumed. Thus an `O I` command will select the keyboard for input (it may already *be* selected) and effectively turn the echo off. An `O I,E` command is necessary to restore the echo under program control. Of course any program error, or typing CTRL/F, will also restore the echo. 
 
@@ -905,7 +982,7 @@ The transcendental functions can be removed if you wish to increase the number o
 `FEXP(X)` returns the value of e<sup>X</sup> where e=2.718281828... The value of 'e' is always available as `FEXP(1)`. This function is often used to extract roots and compute non-integer powers. For example, X<sup>3.5</sup> is found from the expression: `FEXP(3.5*FLOG(X))`. Similarly, the cube root of 27 may be found from the expression: `FEXP(FLOG(27)/3)`. The absolute value of the argument must be less than approximately 1400 in order to avoid numeric overflow. 
 
 
-#### <a id="sin" name="cos"></a>`FSIN`/`FCOS` 
+#### <a id="fsin" name="fcos"></a>`FSIN`/`FCOS` 
 
 `FSIN(A)` and `FCOS(A)` return the value of the sine and cosine of the angle `A` when `A` is measured in *radians*. A radian is a unit of angular measure preferred for scientific and engineering work because it eliminates factors of π in many formulae. One radian is <sup>1</sup>/<sub>2π</sub> of a full circle, or approximately 60°.
 
@@ -987,7 +1064,7 @@ The `FSQT` function computes the square root of the argument using an iterative 
 `FRAC` returns the fractional part of a number — the part which `FITR` discards! This may be used to do "modulo-N' arithmetic or to check for a remainder. The user is cautioned, however, that the value returned by `FRAC` may have only limited accuracy and hence checks for 'exact' values computed from expressions containing the `FRAC` function should generally be avoided. To illustrate, the fractional value of '.002' is .002, but the fractional value of 1.002 is off in the 8th place while that of 1000000.002 is only correct to 3 digits. This is simply the result of taking the difference between two large numbers. 
 
 
-#### <a id="min" name="fmax"></a>`FMIN`/`FMAX`
+#### <a id="fmin" name="fmax"></a>`FMIN`/`FMAX`
 
 These functions compare two arguments, returning the algebraically smallest or largest value. Thus `FMIN(+1,-2)` would return -2 while `FMAX` would return +1. These functions have several uses. A simple example in connection with the `FLOG` function allows one to avoid the 'log-of-zero' error with a call such as `FLOG(FMAX(1E-10,X))`. Similarly, the `FMIN` function can be used to avoid typing nonexistent values when dumping an array in a multi-column format. In this example, `C` is the number of columns and `N` the number of data values in the array: 
 
@@ -1035,9 +1112,9 @@ which will produce:
 `FIND` searches for a character equal to its argument, reading and echoing all characters it encounters until it finds a match. The echo is controlled by the setting of the input echo switch, as [described earlier](#echo-option). The character which matches is *not* echoed, however, but is returned as the value of the function. To output this character too, you may use a call such as `S FOUT(FIND('A))` where `A` is the search character. To read in a comment line, just search for a Carriage Return: `SET FIND(141)`. To read the same line in from a paper tape, however, you should search for the line feed following the CR: `SET FIND(138)`. This is due to different conventions for the 'end-of-line' character. `FIND` also checks continually for a <kbd>CTRL/Z</kbd>. This is recognized as an 'End-of-File' mark and causes `FIND` to return with the value 'zero' instead of with the value of the search character. 
 
 
-### <a id="#ftrm"></a>`FTRM` 
+### <a id="ftrm"></a>`FTRM` 
 
-As discussed [earlier](#terminators), the `ASK` command treats any input other than `0`-`9` and `A`-`Z` as a terminator, which means that data values may be conveniently 'flagged' by the use of a special terminating character. The purpose of the `FTRM` function is to then pass this information back to the program so that special action may be taken if necessary. For instance, a program might need to be able to work with either metric or English measurements, using an appropriate terminator to differentiate between them. Similarly one can devise a 'pocket calculator' program which accepts numbers terminated by one of the arithmetic operators and then performs the indicated function. One of the more common uses for this feature is to permit an indefinite number of data values to be read in, sensing a special terminator for the last value. A loop like the one in the example below (which checks for a `?`) is all that is required: 
+As discussed [earlier](#input-terminators), the `ASK` command treats any input other than `0`-`9` and `A`-`Z` as a terminator, which means that data values may be conveniently 'flagged' by the use of a special terminating character. The purpose of the `FTRM` function is to then pass this information back to the program so that special action may be taken if necessary. For instance, a program might need to be able to work with either metric or English measurements, using an appropriate terminator to differentiate between them. Similarly one can devise a 'pocket calculator' program which accepts numbers terminated by one of the arithmetic operators and then performs the indicated function. One of the more common uses for this feature is to permit an indefinite number of data values to be read in, sensing a special terminator for the last value. A loop like the one in the example below (which checks for a `?`) is all that is required: 
 
     4.1 ZERO N;TYPE "ENTER QUIZ GRADES, TERMINATE THE LAST ONE WITH A '?'"! 
     4.2 ASK G(N=N+1); IF (FTRM()-'?) .2,,.2; TYPE %2"THERE WERE"N "GRADES"! 
@@ -1235,7 +1312,7 @@ Here is a list of all the functions implemented in the standard version of UWF. 
 
 ## Appendix Ⅰ
 
-### <a id="charmap"></a>Decimal Values for All Character Codes
+### <a id="character-codes"></a>Decimal Values for All Character Codes
 
 | Code | Character | Name | Code | Char    | Code | Char | Code | Char        |
 | ---- | --------- | ---- | ---- | ------- | ---- | ---- | ---- | ----------- |
