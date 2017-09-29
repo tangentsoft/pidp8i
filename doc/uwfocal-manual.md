@@ -1,38 +1,3 @@
-**Formatter's Note**
-
-This document is based on the [OCR'd text][ocr] of the [scanned U/W FOCAL Manual V4E from October 1978][scan]. The following edits have been made to the original text as presented here:
-
-1. Fixed some grammar, OCR, and heading nesting level errors. Some new errors have doubtless been added in this process. [Bug reports][tkt] and [patches][hack] are welcome.
-
-2. "PDP8" and "PDP/8" stylized as "PDP-8" , and "Binary loader" changed to "BIN loader" to match DEC documentation.
-
-3. Page footnotes referenced by asterisks are now numbered end-notes.
-
-4. Removed page numbers and replaced prose page references with internal hyperlinks. This version is intended to be read on a computer screen, not on paper; even if printed, the original pagination would no longer apply.
-
-5. Replaced instances of the obscure Latin initialism [v.i.][videf] (*vide infra*, meaning "see below") with hyperlinks to the referenced section.
-
-6. The original document used typewriter formatting. Where sensible, we use the slightly upgraded formatting possible with Markdown. Examples:
-
-    - Replaced emphasis indicated via `-dashes-` with *italics*
-
-    - Headlines are rendered with larger and bolder fonts rather than CENTERED ALL CAPS TEXT
-
-    - FOCAL program text, keywords within running prose, and computer output are marked up appropriately
-
-    - Removed hard hyphenation and primitive line justification; that is done by the Markdown renderer, if at all
-
-— [Warren Young][wy], September 2017, Aztec, NM, USA
-
-[hack]:  https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
-[ocr]:   https://archive.org/stream/bitsavers_decpdp8focct78_4144912/UW_FOCAL_Manual_V4E_Oct78_djvu.txt
-[scan]:  https://archive.org/details/bitsavers_decpdp8focct78_4144912
-[tkt]:   https://tangentsoft.com/pidp8i/tktnew
-[videf]: https://en.wiktionary.org/wiki/vide_infra#Latin)
-[wy]:    https://tangentsoft.com/
-
----------------------------
-
 # U/W FOCAL Manual V4E, October 1978
 
 ## Index to Major Topics in This Manual
@@ -42,73 +7,73 @@ This document is based on the [OCR'd text][ocr] of the [scanned U/W FOCAL Manual
 *   [Break key](#ctrl-keys)
 *   [Character codes](#character-codes)
 *   Commands
-	*   [Summary](#commands)
-	*   [Direct, indirect](#dir-ind-cmd)
-		*   [`ASK`](#io-cmds)
-		*   [`BREAK`](#break)
-		*   [`COMMENT`](#comment)
-		*   [`DO`](#do)
-		*   [`ERASE`](#erase)
-		*   [`FOR`](#for)
-		*   [`GOTO`](#goto)
-		*   [`HESITATE`](#hesitate)
-		*   [`IF`](#if)
-		*   [`JUMP`](#jump)
-		*   [`KONTROL`](#kontrol)
-		*   [`LINK`](#link)
-		*   [`LOOK`](#look)
-		*   [`MODIFY`/`MOVE`](#modify)
-		*   [`NEXT`](#next)
-		*   [`ON`](#on)
-		*   [`OPEN`](#open)
-		*   [`PUNCH`](#punch)
-		*   [`QUIT`](#quit)
-		*   [`RETURN`](#return)
-		*   [`SET`](#set)
-		*   [`TYPE`](#io-cmds)
-		*   [`WRITE`](#write)
-		*   [`XECUTE`](#xecute)
-		*   [`YNCREMENT`](#yncrement)
-		*   [`ZERO`](#zero)
-	*   [Editing](#editing)
-	*   [Enclosures](#enclosures)
-	*   [Error messages](#error-messages)
-	*   [Formatting](#formatting)
-	*   Functions
-		*   [Summary](#function-summary)
-		*   [Program Defined](#pdfs)
-		*   [`FABS`](#fabs)
-		*   [`FATN`](#fatn)
-		*   [`FBUF`, `FCOM`](#fbuf)
-		*   [`FCOS`](#fcos)
-		*   [`FDIN`](#fdin)
-		*   [`FEXP`](#fexp)
-		*   [`FIN`](#fin)
-		*   [`FIND`](#find)
-		*   [`FITR`](#fitr)
-		*   [`FLOG`](#flog)
-		*   [`FMIN`, `FMAX`](#fmin)
-		*   [`FMQ`](#fmq)
-		*   [`FOUT`](#fout)
-		*   [`FRAC`](#frac)
-		*   [`FRAN`](#fran)
-		*   [`FSGN`](#fsgn)
-		*   [`FSIN`](#fsin)
-		*   [`FSQT`](#fsqt)
-		*   [`FSR`](#fsr)
-		*   [`FTRM`](#ftrm)
-	*   [Input echo](#input-echo)
-	*   [Input terminators](#input-terminators)
-	*   [I/O operators](#io-operators)
-	*   [Line numbers](#line-numbers)
-	*   [Loops](#loops)
-	*   [Numbers and variables](#numbers)
-	*   [Patches](#patches)
-	*   [Punctuation](#punctuation)
-	*   [Reading in programs](#punch)
-	*   [Symbol table dump](#symbol-table-dump)
-	*   [Trace feature](#trace)
-	*   [Variables](#variables)
+    *   [Summary](#commands)
+    *   [Direct, indirect](#dir-ind-cmd)
+        *   [`ASK`](#io-cmds)
+        *   [`BREAK`](#break)
+        *   [`COMMENT`](#comment)
+        *   [`DO`](#do)
+        *   [`ERASE`](#erase)
+        *   [`FOR`](#for)
+        *   [`GOTO`](#goto)
+        *   [`HESITATE`](#hesitate)
+        *   [`IF`](#if)
+        *   [`JUMP`](#jump)
+        *   [`KONTROL`](#kontrol)
+        *   [`LINK`](#link)
+        *   [`LOOK`](#look)
+        *   [`MODIFY`/`MOVE`](#modify)
+        *   [`NEXT`](#next)
+        *   [`ON`](#on)
+        *   [`OPEN`](#open)
+        *   [`PUNCH`](#punch)
+        *   [`QUIT`](#quit)
+        *   [`RETURN`](#return)
+        *   [`SET`](#set)
+        *   [`TYPE`](#io-cmds)
+        *   [`WRITE`](#write)
+        *   [`XECUTE`](#xecute)
+        *   [`YNCREMENT`](#yncrement)
+        *   [`ZERO`](#zero)
+    *   [Editing](#editing)
+    *   [Enclosures](#enclosures)
+    *   [Error messages](#error-messages)
+    *   [Formatting](#formatting)
+    *   Functions
+        *   [Summary](#function-summary)
+        *   [Program Defined](#pdfs)
+        *   [`FABS`](#fabs)
+        *   [`FATN`](#fatn)
+        *   [`FBUF`, `FCOM`](#fbuf)
+        *   [`FCOS`](#fcos)
+        *   [`FDIN`](#fdin)
+        *   [`FEXP`](#fexp)
+        *   [`FIN`](#fin)
+        *   [`FIND`](#find)
+        *   [`FITR`](#fitr)
+        *   [`FLOG`](#flog)
+        *   [`FMIN`, `FMAX`](#fmin)
+        *   [`FMQ`](#fmq)
+        *   [`FOUT`](#fout)
+        *   [`FRAC`](#frac)
+        *   [`FRAN`](#fran)
+        *   [`FSGN`](#fsgn)
+        *   [`FSIN`](#fsin)
+        *   [`FSQT`](#fsqt)
+        *   [`FSR`](#fsr)
+        *   [`FTRM`](#ftrm)
+    *   [Input echo](#input-echo)
+    *   [Input terminators](#input-terminators)
+    *   [I/O operators](#io-operators)
+    *   [Line numbers](#line-numbers)
+    *   [Loops](#loops)
+    *   [Numbers and variables](#numbers)
+    *   [Patches](#patches)
+    *   [Punctuation](#punctuation)
+    *   [Reading in programs](#punch)
+    *   [Symbol table dump](#symbol-table-dump)
+    *   [Trace feature](#trace)
+    *   [Variables](#variables)
 
 
 ## Introduction to U/W-FOCAL for the PDP-8
@@ -1474,6 +1439,41 @@ While it is clearly possible to use `FPAL` to implement patches to UWF itself, t
 4. `LINK` and `LOOK` differ only in the presence or absence of a second parameter.  If only the area is specified, UWF returns to command mode (`LOOK`), otherwise it executes a subroutine call (`LINK`).
 
 -----------------------------
+
+**Formatter's Note**
+
+This document is based on the [OCR'd text][ocr] of the [scanned U/W FOCAL Manual V4E from October 1978][scan]. The following edits have been made to the original text as presented here:
+
+1. Fixed some grammar, OCR, and heading nesting level errors. Some new errors have doubtless been added in this process. [Bug reports][tkt] and [patches][hack] are welcome.
+
+2. "PDP8" and "PDP/8" stylized as "PDP-8" , and "Binary loader" changed to "BIN loader" to match DEC documentation.
+
+3. Page footnotes referenced by asterisks are now numbered end-notes.
+
+4. Removed page numbers and replaced prose page references with internal hyperlinks. This version is intended to be read on a computer screen, not on paper; even if printed, the original pagination would no longer apply.
+
+5. Replaced instances of the obscure Latin initialism [v.i.][videf] (*vide infra*, meaning "see below") with hyperlinks to the referenced section.
+
+6. The original document used typewriter formatting. Where sensible, we use the slightly upgraded formatting possible with Markdown. Examples:
+
+    - Replaced emphasis indicated via `-dashes-` with *italics*
+
+    - Headlines are rendered with larger and bolder fonts rather than CENTERED ALL CAPS TEXT
+
+    - FOCAL program text, keywords within running prose, and computer output are marked up appropriately
+
+    - Removed hard hyphenation and primitive line justification; that is done by the Markdown renderer, if at all
+
+— [Warren Young][wy], September 2017, Aztec, NM, USA
+
+[hack]:  https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
+[ocr]:   https://archive.org/stream/bitsavers_decpdp8focct78_4144912/UW_FOCAL_Manual_V4E_Oct78_djvu.txt
+[scan]:  https://archive.org/details/bitsavers_decpdp8focct78_4144912
+[tkt]:   https://tangentsoft.com/pidp8i/tktnew
+[videf]: https://en.wiktionary.org/wiki/vide_infra#Latin)
+[wy]:    https://tangentsoft.com/
+
+---------------------------
 
 Original document © 1978 by LAB DATA SYSTEMS<br>
 Seattle, Washington 98125<br>
