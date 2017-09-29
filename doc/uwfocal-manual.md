@@ -1237,7 +1237,40 @@ Here is a list of all the functions implemented in the standard version of UWF. 
 
 ### <a id="charmap"></a>Decimal Values for All Character Codes
 
-**TODO**
+| Code | Character | Name | Code | Char    | Code | Char | Code | Char        |
+| ---- | --------- | ---- | ---- | ------- | ---- | ---- | ---- | ----------- |
+| 128  | `Ctrl/@`  | NULL | 160  | `SPACE` | 192  | `@`  | 224  | <code>\`</code> |
+| 129  | `Ctrl/A`  | SOH  | 161  | `!`     | 193  | `A`  | 225  | `a`         |
+| 130  | `Ctrl/B`  | STX  | 162  | `"`     | 194  | `B`  | 226  | `b`         |
+| 131  | `Ctrl/C`  | ETX  | 163  | `#`     | 195  | `C`  | 227  | `c`         |
+| 132  | `Ctrl/D`  | EOT  | 164  | `$`     | 196  | `D`  | 228  | `d`         |
+| 133  | `Ctrl/E`  | ENQ  | 165  | `%`     | 197  | `E`  | 229  | `e`         |
+| 134  | `Ctrl/F`  | ACK  | 166  | `&`     | 198  | `F`  | 230  | `f`         |
+| 135  | `Ctrl/G`  | BELL | 167  | `'`     | 199  | `G`  | 231  | `g`         |
+| 136  | `Ctrl/H`  | B.S. | 168  | `(`     | 200  | `H`  | 232  | `h`         |
+| 137  | `Ctrl/I`  | TAB  | 169  | `)`     | 201  | `I`  | 233  | `i`         |
+| 138  | `Ctrl/J`  | L.F. | 170  | `*`     | 202  | `J`  | 234  | `j`         |
+| 139  | `Ctrl/K`  | V.T. | 171  | `+`     | 203  | `K`  | 235  | `k`         |
+| 140  | `Ctrl-L`  | F.F. | 172  | `,`     | 204  | `L`  | 236  | `l`         |
+| 141  | `Ctrl-M`  | C.R. | 173  | `-`     | 205  | `M`  | 237  | `m`         |
+| 142  | `Ctrl/N`  | SO   | 174  | `.`     | 206  | `N`  | 238  | `n`         |
+| 143  | `Ctrl/O`  | SI   | 175  | `/`     | 207  | `O`  | 239  | `o`         |
+| 144  | `Ctrl/P`  | DLE  | 176  | `0`     | 208  | `P`  | 240  | `p`         |
+| 145  | `Ctrl/Q`  | XON  | 177  | `1`     | 209  | `Q`  | 241  | `q`         |
+| 146  | `Ctrl/R`  | DC2  | 178  | `2`     | 210  | `R`  | 242  | `r`         |
+| 147  | `Ctrl/S`  | XOFF | 179  | `3`     | 211  | `S`  | 243  | `s`         |
+| 148  | `Ctrl/T`  | DC4  | 180  | `4`     | 212  | `T`  | 244  | `t`         |
+| 149  | `Ctrl/U`  | NAK  | 181  | `5`     | 213  | `U`  | 245  | `u`         |
+| 150  | `Ctrl/V`  | SYNC | 182  | `6`     | 214  | `V`  | 246  | `v`         |
+| 151  | `Ctrl/W`  | ETB  | 183  | `7`     | 215  | `W`  | 247  | `w`         |
+| 152  | `Ctrl/X`  | CAN  | 184  | `8`     | 216  | `X`  | 248  | `x`         |
+| 153  | `Ctrl/Y`  | EM   | 185  | `9`     | 217  | `Y`  | 249  | `y`         |
+| 154  | `Ctrl/Z`  | SUB  | 186  | `:`     | 218  | `Z`  | 250  | `z`         |
+| 155  | `Ctrl/[`  | ESC  | 187  | `;`     | 219  | `[`  | 251  | `{`         |
+| 156  | `Ctrl/\`  | FS   | 188  | `<`     | 220  | `\`  | 252  | <code>\|</code> |
+| 157  | `Ctrl/]`  | GS   | 189  | `=`     | 221  | `]`  | 253  | `} ALTMODE` |
+| 158  | `Ctrl/^`  | RS   | 190  | `>`     | 222  | `^`  | 254  | `~ PREFIX`  |
+| 159  | `Ctrl/_`  | US   | 191  | `?`     | 223  | `_`  | 255  | `⌑ DELETE`  |
 
 `FOUT(141)` will output a <kbd>RETURN</kbd>/<kbd>LINE-FEED</kbd> while `FOUT(13)` will just do a <kbd>RETURN</kbd>. Codes 225 through 255 are lower case letters, some of which serve other functions on keyboards without lower case. Many keyboards use <kbd>SHIFT/K</kbd> for `[`, <kbd>SHIFT/L</kbd> for `\`, and <kbd>SHIFT/M</kbd> for ']' and corresponding combinations for the control codes following <kbd>CTRL/Z</kbd>. These symbols are often not printed on the key tops. Codes 0-127 are the same as codes 128-255 except for the parity bit. UWF always forces the parity bit during input. 
 
