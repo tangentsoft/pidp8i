@@ -163,12 +163,12 @@ indicate the amount of memory available in your system. For
 installations with more than 8K, here is how the additional memory space
 is used:
 
-| Core | Features Allowed                           |
-| ---: | ------------------------------------------ |
-|  12K |  Expanded symbol storage or `FCOM`         |
-|  16K |  One additional program area or `FCOM`     |
-|  ... |  ...                                       |
-|  32K | Five more program areas, or four plus FCOM |
+| Core | Features Allowed                             |
+| ---: | -------------------------------------------- |
+|  12K |  Expanded symbol storage or `FCOM`           |
+|  16K |  One additional program area or `FCOM`       |
+|  ... |  ...                                         |
+|  32K | Five more program areas, or four plus `FCOM` |
 
 If you wish to limit the amount of memory available for any reason, you
 should set switches 9-11 in the switch register before proceeding with
@@ -193,18 +193,18 @@ is unnecessary and the switches may remain set to '100'.
 |      2 | Print error messages on a new line                 |
 |      6 | Add three extra 'secret variables' (`&`, `:`, `\`) |
 |      7 | Add the `KONTROL` command and the `FDIN` function  |
-|      8 | Add the 'FCOM' and 'FBUF' functions (requires 12K) |
+|      8 | Add the `FCOM` and `FBUF` functions (requires 12K) |
 
 Example: a switch setting of '4134' limits the program to 16K, adds
-FCOM, FBUF and the digital I/O routines, and installs 'scope rubouts'.
-The '100' bit is ignored.
+`FCOM`, `FBUF` and the digital I/O routines, and installs 'scope
+rubouts'. The '100' bit is ignored.
 
 Some of these patches can also be installed (or removed) after the
 program has been started; see [the Patches section below](#patches) for
 further details. Note that adding the `FCOM` function reduces the
 effective memory size by 1 field, hence users with 16K who add this
 option will normally lose the first additional program area. Since it
-might be more desirable in this particular case to have FCOM replace the
+might be more desirable in this particular case to have `FCOM` replace the
 extra variable storage, there is a 'magic location' which can be changed
 (*before* you start things up!) to effect this arrangement. (16K
 configurations only; see [the Patches section below](#patches) for
@@ -2372,7 +2372,7 @@ These functions allow UWF to use extra memory for data storage and are
 thus of interest only for systems with more that 12<. They may be added
 by setting SvHtch 8 -UP- when UWF is started for the first time (see
 page 3). FBUF is designed to handle 12-bit (signed) integer data while
-FCOM may be used for storing either 24- bit integers or 48-bit
+`FCOM` may be used for storing either 24- bit integers or 48-bit
 floating-point values. Both functions are called in the same manner: the
 first argument specifies the relative location in the storage area and
 the second argument (if any) is the value to be stored at that location.
@@ -2383,21 +2383,21 @@ The function always returns the value at the location specified. Thus:
 | `FCOM(I)`   | returns the `I`th value in the `FCOM` area    |
 | `FBUF(I,V)` | stores the value of `V` in the `I`th location |
 
-The range of the index is typically 0-4095 for FBUF and 0-1023 for FCOM.
-FCOM has another mode houever, in which data is stored as two-word
-integers (rather than four-word floating point values) thereby doubling
-the amount of storage available but limiting the range of the data to
-+/- 2"i23. To use FCOM in this mode, specify a -negative- index (legal
-range is -1 to -2048). Here is a loop which stores the square root of
-all numbers from 0-1023:
+The range of the index is typically 0-4095 for FBUF and 0-1023 for
+`FCOM`.  `FCOM` has another mode houever, in which data is stored as
+two-word integers (rather than four-word floating point values) thereby
+doubling the amount of storage available but limiting the range of the
+data to +/- 2"i23. To use `FCOM` in this mode, specify a -negative-
+index (legal range is -1 to -2048). Here is a loop which stores the
+square root of all numbers from 0-1023:
 
      FOR 1=0,1023; SET FCOM(I,FSQT(I)) 
 
 Although `FBUF` and `FCOM` share the same field, FBUF starts from the
-'bottom up' while FCOM stores from the 'top down", so both functions may
-be used simultaneously. Furthermore both functions are fully recursive,
-so calls such as ' FCOM(I,FCOM(J)) may be used to move data from one
-location to another.
+'bottom up' while `FCOM` stores from the 'top down", so both functions
+may be used simultaneously. Furthermore both functions are fully
+recursive, so calls such as `FCOM(I,FCOM(J))` may be used to move data
+from one location to another.
 
 
 ### <a id="fsr"></a>`FSR` 
@@ -2771,7 +2771,7 @@ be added *before* UWF is started the first time.
 
 ### Field 0
 
-`00045/ 4463 4442` — Replace extra variable storage with FCOM ([16K only](#starting)) 
+`00045/ 4463 4442` — Replace extra variable storage with `FCOM` ([16K only](#starting)) 
 
 `00061/ 7610 6213` — Print a CR/LF before printing an error message 
 
