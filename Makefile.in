@@ -288,16 +288,16 @@ OS8_BIN_SRCS = $(MKOS8_SRCS) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 $(OS8_BIN_RK05): $(OS8_BIN_SRCS)
-	# We depend on the simulator to exist in order to build the OS/8 bin
-	# media, but we don't care how new it is, so we test for it in shell
-	# code here rather than declare it as a make dependency so that we
-	# don't rebuild the OS/8 media every time the simulator is relinked.
-	# In other words, any version of simulator will suffice.
-	#
-	# This does mean we're betting the simulator won't change so wildly
-	# that we do somehow have to rebuild the bin media as a result, but
-	# that's a pretty safe bet.  If by some wild chance that ever does
-	# occur, there's an easy fix: "make clean all".
+	@# We depend on the simulator to exist in order to build the OS/8 bin
+	@# media, but we don't care how new it is, so we test for it in shell
+	@# code here rather than declare it as a make dependency so that we
+	@# don't rebuild the OS/8 media every time the simulator is relinked.
+	@# In other words, any version of simulator will suffice.
+	@#
+	@# This does mean we're betting the simulator won't change so wildly
+	@# that we do somehow have to rebuild the bin media as a result, but
+	@# that's a pretty safe bet.  If by some wild chance that ever does
+	@# occur, there's an easy fix: "make clean all".
 	@test -x $(SIM) || $(MAKE) $(SIM)
 	$(MKOS8)@MKOS8_OPTS@ bin
 
@@ -306,7 +306,7 @@ $(OS8_BIN_RK05): $(OS8_BIN_SRCS)
 OS8_SRC_SRCS = $(MKOS8_SRCS) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) $(OS8_BIN_RK05)
-	# Same justification for these shell code tests as above.
+	@# Same justification for these shell code tests as above.
 	@test -x $(SIM) || $(MAKE) $(SIM)
 	@test -e $(OS8_BIN_RK05) || $(MAKE) $(OS8_BIN_RK05)
 	$(MKOS8)@MKOS8_OPTS@ src
