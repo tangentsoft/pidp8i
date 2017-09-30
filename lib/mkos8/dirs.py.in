@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 ########################################################################
-# __init__.py - mkos8 module initialization
+# dirs.py.in - Declare constants for directory names subbed in by
+#   autosetup, partly so we don't have to do this in multiple modules
+#   but also so that those files don't keep getting touched whenever
+#   other *.in files get touched, thus forcing an OS/8 RK05 rebuild.
 #
 # Copyright © 2017 by Warren Young
 #
@@ -29,4 +32,5 @@
 # authorization from those authors.
 ########################################################################
 
-__all__ = [ 'argparser', 'dirs' ]
+build = "@builddir@"
+src   = "@abs_top_srcdir@"

@@ -62,8 +62,8 @@ progmsg = True
 # kludgy flag to add more verbose debug output.
 debug = False
 
-_media_dir = "@abs_top_srcdir@/media/os8/"
-_bin_dir = "@builddir@/bin/"
+_media_dir = dirs.src + "/media/os8/"
+_bin_dir = dirs.build + "/bin/"
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
 
@@ -451,7 +451,7 @@ def main ():
   
   # Start the simulator instance we'll use to build the media images
   global child
-  child = pexpect.spawn('@builddir@/bin/pidp8i-sim')
+  child = pexpect.spawn(dirs.build + '/bin/pidp8i-sim')
 
   # Turn off pexpect's default inter-send() delay.  We add our own as
   # necessary.  The conditional is due to an API change between 3 and 4.
@@ -462,7 +462,7 @@ def main ():
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
-  child.logfile = open('@builddir@/obj/mkos8-' + first_act + '.log', 'w') \
+  child.logfile = open(dirs.build + '/obj/mkos8-' + first_act + '.log', 'w') \
     if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
 
   if acts["bin"]: make_bin (ap.args)

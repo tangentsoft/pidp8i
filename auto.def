@@ -71,7 +71,7 @@ if {[opt-bool debug-mode]} {
     define BUILDMODE {-O2}
 }
 
-set mk_os8_rk05s_options ""
+set mkos8_opts ""
 
 set lv [opt-val lowercase]
 if {$lv == ""} { set lv "auto" }
@@ -79,9 +79,9 @@ if {$lv == "auto"} {
     define SIMH_PASS_LOWERCASE
 } elseif {$lv == "pass"} {
     define SIMH_PASS_LOWERCASE
-    append mk_os8_rk05s_options " --disable-lcmod"
+    append mkos8_opts " --disable-lcmod"
 } elseif {$lv == "upper"} {
-    append mk_os8_rk05s_options " --disable-lcmod"
+    append mkos8_opts " --disable-lcmod"
 } else {
     user-error "Legal values for --lowercase are {auto,pass,upper}."
 }
@@ -89,39 +89,39 @@ msg-result "Lowercase handling set to '$lv' mode."
 
 if {![opt-bool os8-advent]} {
     msg-result "Will not add game of ADVENT to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --disable-advent"
+    append mkos8_opts " --disable-advent"
 }
 if {![opt-bool os8-ba]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --disable-ba"
+    append mkos8_opts " --disable-ba"
 }
 if {![opt-bool os8-cc8]} {
     msg-result "Will not add CC8 to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --disable-cc8"
+    append mkos8_opts " --disable-cc8"
 }
 if {![opt-bool os8-chess]} {
     msg-result "Will not add game of CHESS to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --disable-chess"
+    append mkos8_opts " --disable-chess"
 }
 if {![opt-bool os8-crt]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --disable-crt"
+    append mkos8_opts " --disable-crt"
 }
 if {![opt-bool os8-k12]} {
     msg-result "Will not add Kermit-12 to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --disable-k12"
+    append mkos8_opts " --disable-k12"
 }
 if {[opt-bool os8-music]} {
     msg-result "Will add music files to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --enable-music"
+    append mkos8_opts " --enable-music"
 } else {
     msg-result "Will not add music files to the OS/8 RK05 disk image."
 }
 if {[opt-bool os8-vtedit]} {
     msg-result "Will add VTEDIT setup to the OS/8 RK05 disk image."
-    append mk_os8_rk05s_options " --enable-vtedit"
+    append mkos8_opts " --enable-vtedit"
 }
-define MK_OS8_RK05_OPTS $mk_os8_rk05s_options
+define MKOS8_OPTS $mkos8_opts
 
 # High-level definitions
 set builddir [get-define builddir]
@@ -341,11 +341,10 @@ make-template boot/7.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
 make-template examples/Makefile.in
-make-template libexec/mkos8.in
+make-template lib/mkos8/dirs.py.in
 make-template src/Makefile.in
 make-template src/gpio-common.c.in
 make-template src/PDP8/Makefile.in
 make-template src/PDP8/pidp8i.c.in
 make-template tools/simh-update.in
-exec chmod +x "$builddir/libexec/mkos8"
 exec chmod +x "$builddir/tools/simh-update"
