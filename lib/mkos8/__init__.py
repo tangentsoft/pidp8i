@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ########################################################################
-# argparse.py - Extend ArgumentParser to add mkos8 bits.
+# __init__.py - mkos8 module initialization
 #
 # Copyright © 2017 by Warren Young
 #
