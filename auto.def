@@ -123,6 +123,21 @@ if {[opt-bool os8-vtedit]} {
 }
 define MKOS8_OPTS $mkos8_opts
 
+# Force a rebuild of the OS/8 media if the option set changed.
+set ofile "obj/mkos8.opts"
+set old_mkos8_opts "IMPOSSIBLE"
+if {[file exists $ofile]} {
+    set fp [open $ofile r]
+    gets $fp old_mkos8_opts
+    close $fp
+}
+if {$old_mkos8_opts != $mkos8_opts} {
+    file delete -force bin/os8v3d-bin.rk05
+    set fp [open $ofile w]
+    puts $fp $mkos8_opts
+    close $fp
+}
+
 # High-level definitions
 set builddir [get-define builddir]
 set srcdir [get-define srcdir]
