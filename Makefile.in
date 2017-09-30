@@ -258,7 +258,10 @@ install: all
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D @srcdir@/$${f}c @prefix@/$${f}c ; \
 	  done \
 	)
-	@INSTALL@ -m 644 -g @INSTGRP@ $(MKOS8_DIRS) $(MKOS8_DIRS)c @prefix@/$(MKOS8_LIB)
+	@sed -e 's#^build =.*$$#build = "@ABSPREFIX@"#' \
+	     -e 's#^src   =.*$$#src   = "@ABSPREFIX@"#' \
+		 < $(MKOS8_DIRS) > @prefix@/$(MKOS8_DIRS)
+	@chgrp @INSTGRP@ @prefix@/$(MKOS8_DIRS)
 
 mediainstall:
 	@echo "[Re]installing OS and program media..."

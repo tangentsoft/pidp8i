@@ -32,5 +32,36 @@
 # authorization from those authors.
 ########################################################################
 
+import os
+
+# Anchor directories.  These have to be statically defined for the
+# development vs installation cases because chances are high that both
+# trees exist on the disk, and these are absolute paths, so we can't
+# just do a "path exists" test to determine which we should be using.
+# So, autosetup subs in the proper values into the .py version of this
+# file in the development tree and the install script overwrites these
+# for the installation tree.
 build = "@builddir@"
 src   = "@abs_top_srcdir@"
+
+# Derived directories.  Where it matters, these are the development tree
+# paths, overridden or adjusted below if we're installed.
+bin   = build + "/bin/"
+log   = build + "/obj/"
+media = src + "/media/os8/"
+os8   = bin
+
+# Adjust paths for the "installed" case
+if not os.path.exists(log):
+    # The obj/ dir doesn't exist in the install tree
+    log = "/tmp/"
+
+if not os.path.exists(media):
+    # We bury media one extra level deeper in the install tree
+    media = media.replace('/media/', '/share/media/')
+
+    # mkos8 outputs *.rk05 into bin/ at build time, but then they're
+    # copied next to the os8/*.tu56 source tapes for installation.
+    # If we're building or modifying the OS/8 media in the installation
+    # tree, though, we need to write straight to the media directory.
+    os8 = media
