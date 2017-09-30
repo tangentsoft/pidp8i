@@ -31,14 +31,22 @@
 # authorization from those authors.
 ########################################################################
 
-import argparse
+# Bring in just the basics so we can bring in our local modules
 import os
-import pkg_resources
 import sys
-import subprocess
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib/mkos8')
+
+# Our local modules
+import argparser
+
+# 3rd party dependencies
+import pkg_resources
 import pexpect
-import time
+
+# Remaining Python core modules
 from shutil import copyfile
+import subprocess
+import time
 
 
 #### globals and constants #############################################
@@ -417,57 +425,10 @@ def make_src (args):
 
 def main ():
   # Parse the command line
-  # os8 is a place holder for future functionality if we decide
-  # to have a separate master RK05 sys pack and a runnable os8 pack.
-  allowed_acts = ["all", "bin", "src", "os8"]
-  parser = argparse.ArgumentParser(description='Build OS/8 RK05 disk images')
-  parser.add_argument('-v', '--verbose',
-                      action='store_true',
-                      help='verbose SIMH output instead of progress messages')
-  parser.add_argument('--enable-music',
-                      action='store_true',
-                      default=False,
-                      help='add *.MU files to binary disk')
-  parser.add_argument('--disable-ba',
-                      action='store_true',
-                      default=False,
-                      help='leave BASIC games and demos off binary disk')
-  parser.add_argument('--disable-cc8',
-                      action='store_true',
-                      default=False,
-                      help='leave CC8 off binary disk')
-  parser.add_argument('--disable-k12',
-                      action='store_true',
-                      default=False,
-                      help='leave 12-bit Kermit off binary disk')
-  parser.add_argument('--enable-vtedit',
-                      action='store_true',
-                      default=False,
-                      help='Install and enable TECO vtedit mode')
-  parser.add_argument('--disable-crt',
-                      action='store_true',
-                      default=False,
-                      help='console is a printing terminal and does not use character overwrite on rubout')
-  parser.add_argument('--disable-lcmod',
-                      action='store_true',
-                      default=False,
-                      help='Disable the OS/8 command upcasing patch; best set when SIMH is set to tti ksr mode')
-  parser.add_argument('--disable-advent',
-                      action='store_true',
-                      default=False,
-                      help='leave game of Adventure off binary disk')
-  parser.add_argument('--disable-chess',
-                      action='store_true',
-                      default=False,
-                      help='Leave CHEKMO-II off binary disk')
-  parser.add_argument('what',
-                      choices=allowed_acts,
-                      help='select which RK05 media gets built; default is "all"',
-                      nargs=argparse.REMAINDER)
-  args = parser.parse_args()
-  if len(args.what) == 0: args.what = [ 'all' ]
+  allowed_acts = ["all", "bin", "src"]
+  ap = argparser.ArgParser (allowed_acts)
   global progmsg
-  progmsg = not args.verbose
+  progmsg = not ap.args.verbose
 
   # Initialize our acts dict.
   acts = {}
@@ -475,7 +436,7 @@ def main ():
   for this in allowed_acts:
     acts[this] = False
 
-  for act in args.what:
+  for act in ap.args.what:
     if act not in allowed_acts:
       print "Invalid act: " + act + " ignored."
       continue
@@ -504,8 +465,8 @@ def main ():
   child.logfile = open('@builddir@/obj/mkos8-' + first_act + '.log', 'w') \
     if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
 
-  if acts["bin"]: make_bin(args)
-  if acts["src"]: make_src(args)
+  if acts["bin"]: make_bin (ap.args)
+  if acts["src"]: make_src (ap.args)
   
   simh_send("q")
   child.expect(pexpect.EOF)
