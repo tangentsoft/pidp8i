@@ -1,5 +1,4 @@
-src/scp.*
-src/sim_*.[ch]
+src/*.[ch]
 src/sim_*.in
 src/PDP8/pdp8_*.[ch]
 src/PDP8/pidp8i.c.in
