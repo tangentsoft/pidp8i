@@ -47,12 +47,19 @@ CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 SIM = bin/pidp8i-sim
 BINS = bin/palbart $(SIM) bin/pidp8i-test libexec/scanswitch
 
-MKOS8     = libexec/mkos8
-MKOS8_SRC = @srcdir@/$(MKOS8).in
+MKOS8      = libexec/mkos8
+MKOS8_IN   = @srcdir@/$(MKOS8).in
+MKOS8_LIB  = lib/mkos8
+MKOS8_PY1  = \
+	$(MKOS8_LIB)/__init__.py \
+	$(MKOS8_LIB)/argparser/__init__.py
+MKOS8_PY2  = $(addprefix @srcdir@/,$(MKOS8_PY1))
+MKOS8_SRCS = $(MKOS8) $(MKOS8_IN) $(MKOS8_PY2)
+MKOS8_BINS = $(MKOS8_PY2:.py=.pyc)
 
 BUILDDIRS = bin libexec obj/PDP8
 
-INSTDIRS = bin etc lib/mkos8 libexec share/boot share/media share/man/man1
+INSTDIRS = bin etc libexec share/boot share/media share/man/man1
 
 OBJS = \
 	obj/gpio-common.o \
@@ -125,7 +132,7 @@ INFILES = \
 	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
 	@srcdir@/tools/simh-update.in \
-	$(MKOS8_SRC)
+	$(MKOS8_IN)
 PRECIOUS_INFILES = \
 	@srcdir@/Makefile.in \
 	@srcdir@/examples/Makefile.in \
@@ -238,7 +245,12 @@ install: all
 
 	@# Install mkos8 and its dependencies
 	@INSTALL@ -m 775 -g @INSTGRP@ $(MKOS8) @prefix@/libexec
-	@INSTALL@ -m 644 -g @INSTGRP@ @srcdir@/lib/mkos8/*.{py,pyc} @prefix@/lib/mkos8
+	@( cd @srcdir@ ; \
+	  for f in $(MKOS8_PY1) ; do \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D @srcdir@/$$f @prefix@/$$f ; \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D @srcdir@/$${f}c @prefix@/$${f}c ; \
+	  done \
+	)
 
 mediainstall:
 	@echo "[Re]installing OS and program media..."
@@ -266,7 +278,7 @@ simh-update simh-update-f:
 
 
 # Build the OS/8 binary media needed by 0.script
-OS8_BIN_SRCS = $(MKOS8_SRC) \
+OS8_BIN_SRCS = $(MKOS8_SRCS) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 $(OS8_BIN_RK05): $(SIM) $(OS8_BIN_SRCS)
@@ -274,7 +286,7 @@ $(OS8_BIN_RK05): $(SIM) $(OS8_BIN_SRCS)
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
 # need to mount up the 7 source tapes in succession.
-OS8_SRC_SRCS = $(MKOS8_SRC) \
+OS8_SRC_SRCS = $(MKOS8_SRCS) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 $(OS8_SRC_RK05): $(SIM) $(OS8_SRC_SRCS) $(OS8_BIN_RK05)
 	$(MKOS8)@MK_OS8_RK05_OPTS@ src

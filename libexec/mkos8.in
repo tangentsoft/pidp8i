@@ -34,10 +34,10 @@
 # Bring in just the basics so we can bring in our local modules
 import os
 import sys
-sys.path.insert (0, os.path.dirname (__file__) + '/../lib/mkos8')
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 
 # Our local modules
-import argparser
+from mkos8 import *
 
 # 3rd party dependencies
 import pkg_resources
