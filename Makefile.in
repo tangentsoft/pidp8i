@@ -45,7 +45,7 @@ CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
 
 SIM = bin/pidp8i-sim
-BINS = bin/palbart $(SIM) bin/pidp8i-test libexec/scanswitch
+BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch
 
 BUILDDIRS = bin libexec obj/PDP8
 
@@ -169,6 +169,7 @@ install: all
 
 	@# Install files into those dirs and set their perms
 	for f in $(BINS) ; do @INSTALL@ -m 755 -D -s $$f @prefix@/$$f ; done
+	( cd @prefix@/bin ; ln -f ptp2txt txt2ptp )
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
 	-for f in @prefix@/bin/pidp8i-* ; do setcap 'cap_sys_nice=eip' $$f ; done || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
@@ -310,6 +311,10 @@ $(SIM): $(OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS) -lncurses
+
+bin/ptp2txt: obj/ptp2txt.o
+	$(CC) -o $@ $^
+	ln -f bin/ptp2txt bin/txt2ptp
 
 bin/deeper: obj/deeper.o obj/gpio-@LED_DRIVER_MODULE@ls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
