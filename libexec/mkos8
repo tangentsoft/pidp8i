@@ -178,6 +178,9 @@ def copyin_pair (copyin0, copyin1):
   if copyin0: simh_send("detach dt0")
   if copyin1: simh_send("detach dt1")
   
+
+#### do_all_copyins ####################################################
+
 def do_all_copyins (copyins):
   pair_idx = 0
   pair_ct = int(len(copyins) / 2)
@@ -186,7 +189,6 @@ def do_all_copyins (copyins):
     pair_idx += 1
   if pair_ct * 2 < len(copyins):
     copyin_pair(copyins[len(copyins) - 1], None)
-
 
   
 #### make_bin ##########################################################
