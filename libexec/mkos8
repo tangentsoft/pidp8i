@@ -144,11 +144,46 @@ def check_exists (image_copyins):
         exit (-1)
     # else: print "Found " + image_path
    
+#### Data Structures ##################################################
+#
+# The make procedures use helper procedures
+# to confirm that the relevant input image file exists and
+# to perform the file copies.
+#
+# A data structure called "image copyin"
+#    describes the image file pathname relative to an implied root,
+#    provides a message string when the action is run,
+#    names a default destination device for whole image content copies,
+#    offers an optional array of specific file copy actions.
+#
+# FUTURE: Parse source path for ".tu56" vs. ".rk05" for more general use.
+# Currently all code assumes a copyin comes from a DECtape image.
+#
+# Example: We Install all files for ADVENT, the Adventure game:
+#
+# advent_copyin = ['RKB0:', 'subsys/advent.tu56',  "Installing ADVENT...", None]
+#
+# A DECtape device is chosen for attachment in SIMH and
+# a 'COPY *.*' command is filled in with the Destination device, and the chosen DECtape.
+#
+# A data structer called "file copyin"
+#     provides override destination to allow renames or varied destinations.
+#     names individual files within a copyin to use
+#
+# Example:  To copy the C compiler we want all .SV files on SYS
+#           but everything else to RKB0:
+#           (Note the useful /V option to invert the match.)
+#
+# cc8_sv_file_copyin   = ['SYS:', '*.SV']
+# cc8_rest_file_copyin = ['RKB0:', '*.SV/V']
+#
+# A 'COPY' command is filled in with the override destination and
+# The file spec is used with the chosen dectape instead of "*.*"
+#
 
 #### copyin_pair #######################################################
 # Copy two images into two destinations with two messages
 #
-# A copyin is a 3 element array: [destination, source, message]
 # Assumes our context is "in simh".
 # Assumes dt0 and dt1 are free.
 # Assumes rk0 is the boot device
@@ -158,26 +193,44 @@ def check_exists (image_copyins):
 
 def copyin_pair (copyin0, copyin1):
   if debug:
-    print "Copying: " + copyin0[1] + " to: " + copyin0[0] + "from dt0"
+    if copyin0:
+      print "Copying: " + copyin0[1] + " to: " + copyin0[0] + "from dt0"
+    else: print "copyin0 is empty."
     if copyin1:
       print "Copying: " + copyin1[1] + " to: " + copyin1[0] + "from dt1"
     else: print "copyin1 is empty."
     
   if not copyin0 and not copyin1: return   # Nothing to do.
+
+  # The order of events here is a bit funky because we want
+  # to use both DECtape drives but also
+  # switch between SIMH and OS/8 as infrequently as possible.
+
   if copyin0: simh_send("attach -r dt0 " + dirs.media + copyin0[1])
   if copyin1: simh_send("attach -r dt1 " + dirs.media + copyin1[1])
   simh_send("boot rk0")
+  
   if copyin0:
     if progmsg: print copyin0[2]
-    os8_pmt_send("\.", "COPY " + copyin0[0] + "<DTA0:*.*")
+    if copyin0[3]:                    # We have specific files to do.
+      for file_copyin in copyin0[3]:
+        os8_pmt_send("\.", "COPY " + file_copyin[0] + "<DTA0:" + file_copyin[1])
+    else:
+      os8_pmt_send("\.", "COPY " + copyin0[0] + "<DTA0:*.*")
+
   if copyin1:
     if progmsg: print copyin1[2]
-    os8_pmt_send("\.", "COPY " + copyin1[0] + "<DTA1:*.*")
+    if copyin1[3]:                    # We have specific files to do.
+      for file_copyin in copyin1[3]:
+        os8_pmt_send("\.", "COPY " + file_copyin[0] + "<DTA1:" + file_copyin[1])
+    else:
+      os8_pmt_send("\.", "COPY " + copyin1[0] + "<DTA1:*.*")
+
   back_to_simh("\.")
 
   if copyin0: simh_send("detach dt0")
   if copyin1: simh_send("detach dt1")
-  
+
 
 #### do_all_copyins ####################################################
 
@@ -216,22 +269,37 @@ def make_bin (args):
   boot_dt_path = dirs.media + "bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
 
   special_bin_copyins = [
-    ["", ro_boot_tape,  ""],
-    ['RKA0:', driver_tape, "Device Drivers..."],
-    ["", local_tape, ""]
+    ["", ro_boot_tape,  "", None],
+    ['RKA0:', driver_tape, "Device Drivers...", None],
+    ["", local_tape, "", None]
   ]
 
-  music_copyin  = ['RKB0:', 'subsys/music.tu56',   "Copying in Music score files and source code..."]
-  ba_copyin     = ['RKB0:', 'subsys/ba.tu56',      "Installing *.BA BASIC games and demos..."]
-  cc8_copyin    = ['RKB0:', 'subsys/cc8.tu56',     "Installing Ian Schofield's CC8 compiler..."]
-  k12_copyin    = ['RKA0:', 'subsys/k12.tu56',     "Installing Kermit-12..."]
-  advent_copyin = ['RKB0:', 'subsys/advent.tu56',  "Installing ADVENT..."]
+  music_copyin  = ['RKB0:', 'subsys/music.tu56',
+                    "Copying in Music score files and source code...", None]
+
+  ba_copyin     = ['RKB0:', 'subsys/ba.tu56',
+                   "Installing *.BA BASIC games and demos...", None]
+
+  cc8_files     = [['SYS:', '*.SV'], ['RKB0:', '*.SV/V']]
+
+  cc8_copyin    = ['RKB0:', 'subsys/cc8.tu56',
+                   "Installing Ian Schofield's CC8 compiler...", cc8_files]
+
+  k12_copyin    = ['RKA0:', 'subsys/k12.tu56',
+                   "Installing Kermit-12...", None]
+
+  advent_copyin = ['RKB0:', 'subsys/advent.tu56',
+                   "Installing ADVENT...", None]
 
   bin_copyins = [
-    ['RKA0:', "al-4761c-ba-os8-v3d-ext.1978.tu56", "Copying in OS/8 V3D extensions..."],
-    ['RKA0:', "al-4549d-ba-fr4-v3d-1.1978.tu56", "Copying in FORTRAN IV tape 1 of 2..."],
-    ['RKA0:', "al-5596d-ba-fr4-v3d-2.1978.tu56", "Copying in FORTRAN IV tape 2 of 2..."],
-    ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56", "Installing MACREL..."]
+    ['RKA0:', "al-4761c-ba-os8-v3d-ext.1978.tu56",
+     "Copying in OS/8 V3D extensions...", None],
+    ['RKA0:', "al-4549d-ba-fr4-v3d-1.1978.tu56",
+     "Copying in FORTRAN IV tape 1 of 2...", None],
+    ['RKA0:', "al-5596d-ba-fr4-v3d-2.1978.tu56",
+     "Copying in FORTRAN IV tape 2 of 2...", None],
+    ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56",
+     "Installing MACREL...", None]
     ]
 
   if args.enable_music:       bin_copyins.append(music_copyin)
@@ -347,6 +415,8 @@ def make_bin (args):
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
     os8_pmt_send("\.", "SUBMIT SYS:LCBAS.BI")
 
+  # Not needed with new file_copyin data structure
+  """
   if not args.disable_cc8:
     if progmsg: print "Moving CC SV files from RKB0 to SYS"
     os8_pmt_send("\.", "COPY SYS:<RKB0:CC?.SV")
@@ -358,6 +428,7 @@ def make_bin (args):
     if progmsg: print "Running SQUISH to de-fragment RKB0"
     os8_pmt_send("\.", "SQUISH RKB0:")
     os8_pmt_send("ARE YOU SURE\?\r\n", "Y") 
+  """
 
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
@@ -371,16 +442,17 @@ def make_bin (args):
 
 def make_src (args):
   src_copyins = [
-    ["RKA1:", "al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7..."],
-    ["RKA1:", "al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7..."],
-    ["RKA1:", "al-4693d-sa-os8-v3d-3.1978.tu56", "...part 3 of 7..."],
-    ["RKA1:", "al-4694c-sa-os8-v3d-4.1978.tu56", "...part 4 of 7..."],
-    ["RKB1:", "al-4695c-sa-os8-v3d-5.1978.tu56", "...part 5 of 7..."],
-    ["RKB1:", "al-4696c-sa-os8-v3d-6.1978.tu56", "...part 6 of 7..."],
-    ["RKB1:", "al-4697c-sa-os8-v3d-7.1978.tu56", "...part 7 of 7..."],
-    ["RKB1:", "al-4759c-sa-os8-ext-1.1978.tu56", "extensions part 1 of 3..."],
-    ["RKB1:", "al-4760c-sa-os8-ext-2.1978.tu56", "...part 2 of 3..."],
-    ["RKA1:", "al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3..."],
+    ["RKA1:", "al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7...", None],
+    ["RKA1:", "al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7...", None],
+    ["RKA1:", "al-4693d-sa-os8-v3d-3.1978.tu56", "...part 3 of 7...", None],
+    ["RKA1:", "al-4694c-sa-os8-v3d-4.1978.tu56", "...part 4 of 7...", None],
+    ["RKB1:", "al-4695c-sa-os8-v3d-5.1978.tu56", "...part 5 of 7...", None],
+    ["RKB1:", "al-4696c-sa-os8-v3d-6.1978.tu56", "...part 6 of 7...", None],
+    ["RKB1:", "al-4697c-sa-os8-v3d-7.1978.tu56", "...part 7 of 7...", None],
+    ["RKB1:", "al-4759c-sa-os8-ext-1.1978.tu56",
+     "extensions part 1 of 3...", None],
+    ["RKB1:", "al-4760c-sa-os8-ext-2.1978.tu56", "...part 2 of 3...", None],
+    ["RKA1:", "al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3...", None],
   ]
   
   check_exists(src_copyins)
