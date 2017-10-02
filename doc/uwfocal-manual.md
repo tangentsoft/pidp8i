@@ -1553,11 +1553,11 @@ in the example above.)
 Notice that the `NEXT` command contains no references to the loop
 variable. This is a little different from the way most versions of BASIC
 implement this command, but the effect is quite similar and since only
-the first letter of the command word is decoded, variations such as
-`NI`<!--Peng--><!--Neee-Wom--> or `NEXT-J` may prove helpful to some
-programmers. Nested loops, of course, may require 'nested `NEXT`s':
-`N;N`. Here is an example which types out all the elements of a 5×5
-array a row at a time with a CR/LF printed at the end of each row:
+the first letter of the command word is decoded, variations such as `NI`
+or `NEXT-J` may prove helpful to some programmers. Nested loops, of
+course, may require 'nested `NEXT`s': `N;N`. Here is an example which
+types out all the elements of a 5×5 array a row at a time with a CR/LF
+printed at the end of each row:
 
     FOR I=1,5; FOR J=1,5; TYPE A(I,J); NEXT; TYPE ! 
 
