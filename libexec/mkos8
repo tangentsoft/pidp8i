@@ -116,6 +116,29 @@ def os8_pmt_send (prompt, send_line):
   child.send("\r")
 
 
+#### os8_restart #######################################################
+# Called while in the SIMH command prompt, this restarts OS/8.
+#
+# This one-line function exists to abstract the method we use and to
+# document the reason we do it this way.
+#
+# Currently we do this by calling the OS/8 command entry point, which
+# has the virtue that it forces another . prompt, which keeps the send/
+# expect sequencing simple when switching between OS/8 and SIMH command 
+# modes.
+#
+# That is why we don't use "cont" here instead: it requires that the
+# caller always be aware of when the . prompt went out; complicated.
+#
+# Another simple alternative is "boot rk0", which actually benchmarks a
+# smidge faster here.  We choose this method instead because we expect
+# that some of our callers will want to do several different things in
+# a single OS/8 session, which rebooting would screw up.
+
+def os8_restart ():
+  simh_send("go 7600")
+
+
 #### back_to_simh ######################################################
 # Go back to SIMH when the passed prompt string is encountered
 
@@ -208,8 +231,9 @@ def copyin_pair (copyin0, copyin1):
 
   if copyin0: simh_send("attach -r dt0 " + dirs.media + copyin0[1])
   if copyin1: simh_send("attach -r dt1 " + dirs.media + copyin1[1])
-  simh_send("boot rk0")
-  
+
+  os8_restart()
+
   if copyin0:
     if progmsg: print copyin0[2]
     if copyin0[3]:                    # We have specific files to do.
@@ -382,6 +406,8 @@ def make_bin (args):
   if progmsg: print "rebooting into freshly-built RK05 OS/8 system..."
   simh_send("detach dt0")
   simh_send("detach dt1")
+  simh_send("boot rk0")     # must do: boot media just went away
+  back_to_simh("\.")
   os.remove(boot_dt_path)
 
   if progmsg: print "Performing remaining copies/installs..."
