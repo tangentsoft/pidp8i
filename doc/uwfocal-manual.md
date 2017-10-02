@@ -136,7 +136,7 @@ follows:
     otherwise go to the next step.
 
 3.  Place the tape in the reader so that the read-head is positioned
-    over the Leader section and hit the `START` (or `CLEAR` and
+    over the leader section and hit the `START` (or `CLEAR` and
     `CONTINUE`) switches.
 
 The run light will go off when the tape has finished loading; check to
@@ -152,7 +152,7 @@ In order to start UWF for the first time, do the following:
 
 1.  Set the Switch Register to 0100 (UWF's Starting Address)
 
-2.  Press the 'ADDR LOAD' and 'EXTD. ADDR LOAD' switches
+2.  Press the `ADDR LOAD` and `EXTD. ADDR LOAD` switches
 
 3.  Set switches 0-2 and 6-11 for any [options desired](#opt-switch)
 
@@ -181,8 +181,8 @@ automatically when the program is first started up. These options are
 controlled by the setting of bits 0-2 and 6-8 in the switch register.
 The first group (0-2) selects various terminal options while the second
 group (6-8) controls additional features. Switches 3-5 are ignored and
-may be set to any value. Once UWF has been started the first time step 3
-is unnecessary and the switches may remain set to '100'.
+may be set to any value. Once UWF has been started the first time, step
+3 is unnecessary and the switches may remain set to '100'.
 
 <a id="opt-switch"></a>
 
@@ -195,7 +195,7 @@ is unnecessary and the switches may remain set to '100'.
 |      7 | Add the `KONTROL` command and the `FDIN` function  |
 |      8 | Add the `FCOM` and `FBUF` functions (requires 12K) |
 
-Example: a switch setting of '4134' limits the program to 16K, adds
+Example: A switch setting of '4134' limits the program to 16K, adds
 `FCOM`, `FBUF` and the digital I/O routines, and installs 'scope
 rubouts'. The '100' bit is ignored.
 
@@ -212,7 +212,7 @@ details.)
 
 Note that UWF runs with the interrupt system *ON* which allows program
 execution to overlap certain I/O operations. The result is faster run
-times, a 'Live' keyboard and the possibility of adding 'background'
+times, a 'live' keyboard and the possibility of adding 'background'
 tasks which can be controlled by the program or 'high-level' interrupts
 in which an external event causes the execution of a specific group of
 statements within the program.
@@ -220,9 +220,9 @@ statements within the program.
 With the interrupt system enabled, however, it is possible that an
 'unknown' device will create a continuous interrupt and thus prevent UWF
 from running. If the `RUN` light goes on but there is no output as soon
-as you hit the `CONTINUE` switch halt the machine, hit the `RESET` or
-`CLEAR` switch a few times and then restart at location 100. If UWF
-still appears to be stuck in an endless loop you will probably have to
+as you hit the `CONTINUE` switch, halt the machine, hit the `RESET` or
+`CLEAR` switch a few times, and then restart at location 100. If UWF
+still appears to be stuck in an endless loop, you will probably have to
 add an appropriate 'clear flag' instruction to the interrupt routine.
 See [the Patches section below](#patches) for the proper location.
 
@@ -237,18 +237,18 @@ UWF recognizes the following control keys:
 2.  <kbd>CTRL/C</kbd> is the monitor break key. It will eventually trap
     to a resident 'ODT' package which is not yet implemented.
 
-3.  <kbd>CTRL/S (`XOFF`)</kbd> stops output to the terminal. This
+3.  <kbd>CTRL/S</kbd> (`XOFF`) stops output to the terminal. This
     provides users with video terminals time to inspect their results.
 
 4.  <kbd>CTRL/Q</kbd> (`XON`) resumes output to the terminal. Some
-    terminals issue XON/XOFF codes automatically when the screen fills
-    up.
+    terminals issue `XON`/`XOFF` codes automatically when the screen
+    fills up.
 
 5.  The <kbd>RETURN</kbd> key is used to terminate all command lines.
     UWF will not recognize a command until the RETURN key is typed.
 
 6.  The <kbd>RUBOUT</kbd> or <kbd>DELETE</kbd> key is used to cancel the
-    previous character. On hard-copy terminals a `\` is echoed for each
+    previous character. On hard-copy terminals, a `\` is echoed for each
     character deleted. On video terminals they just disappear!
 
 7.  The <kbd>LINE-FEED</kbd> key is used to retype a command line
@@ -284,7 +284,7 @@ step at a time, or to try out several different ways of doing something.
 You can experiment with any of UWF's commands by simply typing them in
 as you read through this manual.
 
-Indirect Commands always begin with a Line number which indicates the
+Indirect Commands always begin with a line number which indicates the
 order in which they are to be executed. They may be entered in *any*
 order, however, and can be examined or changed at any time. Changes to
 indirect commands are facilitated by the use of UWF's built-in editor
@@ -293,9 +293,9 @@ program, or deleted. Since indirect commands can be selectively executed
 by direct commands it is possible to build a very powerful set of
 'macros' which can then be called with just a few keystrokes.
 
-Line numbers in UWF have a 'dollar and cents' format: `XX.YY` where `XX`
-may range from 00-31 (the 'group' number) and `YY` may have any value
-from 00-99 (the 'step' number). Group and Step both have special
+Line numbers in UWF have a 'dollars and cents' format: `XX.YY` where
+`XX` may range from 00-31 (the 'group' number) and `YY` may have any
+value from 00-99 (the 'step' number). Group and Step both have special
 meanings in some commands, so the first line of the program is usually
 labeled `1.1`. Notice that leading and trailing zeros are not necessary,
 but one must always include a space after the line number to separate it
@@ -328,13 +328,13 @@ in a group is generally reserved for comments in order to avoid any
 complications with group operations.
 
 UWF can also designate a 'sub-group' operation consisting of all the
-Lines following a specified line in the same group. Such operations are
+lines following a specified line in the same group. Such operations are
 indicated by a 'negative line number': 'WRITE -1.5', for instance, will
-list all of the lines in Group 1 starting from Line 1.5 (if it exists).
+list all of the lines in Group 1 starting from line 1.5 (if it exists).
 
 Line numbers in the range '.01-. 99" are termed 'relative line numbers',
-i.e. they refer to Lines in the -current group-, rather than to lines in
-'Group 0'. The use of such Line numbers is encouraged because it makes
+i.e. they refer to lines in the -current group-, rather than to lines in
+'Group 0'. The use of such line numbers is encouraged because it makes
 the program more compact and also allows subroutines to be moved easily
 from one part of the program to another without having to worry about
 internal references. Lines with numbers less than 1.00 -can- be saved as
@@ -342,7 +342,7 @@ part of the indirect program, but they can only be executed when the
 program is started from the beginning since there is no way to branch to
 them at a later time.
 
-Finally, references to line '0' aLso have a special meaning. A few
+Finally, references to line '0' also have a special meaning. A few
 commands interpret such references to mean 'the entire program', while
 most others regard 'line 0' as a reference to 'the next command'. Line 0
 itself is the permanent comment line (the 'Header Line') at the
@@ -639,14 +639,14 @@ numerical sequence, no matter in what order they were entered, and are
 separated into the groups you have specified. For this reason it is very
 convenient to use a different group number for each major part of the
 program even if such a section only has a few program steps. Using the
-first Line (line `XX.00`) for a `COMMENT` to describe the purpose of
+first line (line `XX.00`) for a `COMMENT` to describe the purpose of
 that section is also highly recommended.
 
 The `WRITE` command can also be qualified by a string of numbers to
 limit the listing to selected portions of the program. `WRITE 1`, for
 example, will print out just the commands belonging to Group 1, while
 `WRITE 2.2` will list only that single line. A command such as `WRITE
-1,2,3.3,4.9,5` will List 3 groups and 2 single lines, in the order
+1,2,3.3,4.9,5` will list 3 groups and 2 single lines, in the order
 specified. Of course you should try to plan your program so that it
 executes smoothly 'from top to bottom', but if you do need to add a
 major section at the end, the `WRITE` command can be used to at least
@@ -685,7 +685,7 @@ program, you must use the `MODIFY` or `MOVE` commands. `MODIFY` without
 a qualifier can be used to examine the header line, but it cannot be
 used to change this line. `MODIFY` with a single line number permits
 changes to the line specified while a `MODIFY` (or `MOVE`) with *two*
-line numbers allows similar changes, but saves the modified Line with
+line numbers allows similar changes, but saves the modified line with
 the new number. The old line, in this case, remains just as it was.
 
 `MODIFY` only operates on single lines at the moment, so a command such
@@ -713,7 +713,7 @@ again.
 | <kbd>CTRL/G</kbd>                         | BELL | Rings bell and waits for a new search char.    |
 | <kbd>CTRL/J</kbd>                         | LF   | Copies the rest of the line without changes    |  
 | <kbd>CTRL/L</kbd>                         | FF   | Looks for the next occurrence of search char.  |
-| <kbd>CTRL/M</kbd>                         | CR   | Terminates the Line at this point              |
+| <kbd>CTRL/M</kbd>                         | CR   | Terminates the line at this point              |
 | <kbd>BACKARROW</kbd>/<kbd>UNDERLINE</kbd> | —    | Deletes all chars to the left, except line no. |
 | <kbd>RUBOUT</kbd>/<kbd>DELETE</kbd>       | —    | Deletes previous character, as in command mode |
 
@@ -1492,7 +1492,7 @@ Here are some examples:
 4. `FOR A=0, PI/180, 2*PI;`
 5. `FOR Q= P/2, Q, 5*Q;`
 
-Notice that loops may contain other Loops (Ex. 2). Such 'nesting' is
+Notice that loops may contain other loops (Ex. 2). Such 'nesting' is
 permitted to a depth of 15 or so, but in practice, loops are rarely
 nested more than 5 deep. Another point, illustrated in example 5, is
 that the initial value of the loop variable can be used by the
@@ -1698,7 +1698,7 @@ compatible with the OS/8 version, are somewhat less than perfect!
 Only the first two commands (`O I` and `O O`) and the ECHO option are
 useful unless you have a high speed reader/punch (or an audio tape
 recorder). The list of `OPEN` commands could also be expanded to include
-things Like `O L` (for selecting a line printer) or `O S` to send output
+things like `O L` (for selecting a line printer) or `O S` to send output
 to a 'scope display, etc. Such expansion is, however, entirely up to the
 user.
 
@@ -2040,7 +2040,7 @@ repertoire.
 | `TYPE`             | arithmetic expressions, "labels", formatting     | `T !?A ?:10"B="B`    |
 | `U`                | available for user expansion                     |                      |
 | `V`                | available for user expansion                     |                      |
-| `WRITE`            | list of Lines, groups, sub-groups, or 'all'      | `W or W -1.5,2,3.1`  |
+| `WRITE`            | list of lines, groups, sub-groups, or 'all'      | `W or W -1.5,2,3.1`  |
 | `XECUTE`           | list of arithmetic expressions (same as `SET`)   | `X FSIN(#)/FCOS(#)`  |
 | `YNCR`             | list of variables                                | `Y I-J,K L`          |
 | `ZERO`             | list of variables or 'all'                       | `Z,#,A,B(I),C(J,K)`  |
@@ -2763,7 +2763,7 @@ always forces the parity bit during input.
 Here is a list of patches for adding a number of special features to
 UWF. They are shown in the format: `FLLLL/ CCCC PPPP; QQQQ` where
 `FLLLL` is the Field + Memory location, `CCCC` is the original contents,
-and `PPPP` is the patch. In cases where several successive Locations are
+and `PPPP` is the patch. In cases where several successive locations are
 to be changed, a semicolon is shown, followed by the next patch `QQQQ`.
 Note that the `FCOM` patch shown below is for 16K versions only and must
 be added *before* UWF is started the first time.
@@ -2788,7 +2788,7 @@ be added *before* UWF is started the first time.
 
 `13070/ 7106 7107` — Increase the delay after a Carriage Return 
 
-`13134/ 7000 6xxx` — Clear an unwanted interrupt (next 3 Locations too) 
+`13134/ 7000 6xxx` — Clear an unwanted interrupt (next 3 locations too) 
 
 `15665/ 1103 1213` — Make `TYPE` print an `=` ahead of each value 
 
