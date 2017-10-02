@@ -251,7 +251,7 @@ UWF recognizes the following control keys:
     previous character. On hard-copy terminals, a `\` is echoed for each
     character deleted. On video terminals they just disappear!
 
-7.  The <kbd>LINE-FEED</kbd> key is used to retype a command line
+7.  The <kbd>LINE FEED</kbd> key is used to retype a command line
     *before* typing <kbd>RETURN</kbd> in order to verify that all
     corrections were made properly. This is mostly for hard-copy
     terminals.
@@ -333,11 +333,11 @@ indicated by a 'negative line number': 'WRITE -1.5', for instance, will
 list all of the lines in Group 1 starting from line 1.5 (if it exists).
 
 Line numbers in the range '.01-. 99" are termed 'relative line numbers',
-i.e. they refer to lines in the -current group-, rather than to lines in
+i.e. they refer to lines in the *current group*, rather than to lines in
 'Group 0'. The use of such line numbers is encouraged because it makes
 the program more compact and also allows subroutines to be moved easily
 from one part of the program to another without having to worry about
-internal references. Lines with numbers less than 1.00 -can- be saved as
+internal references. Lines with numbers less than 1.00 *can* be saved as
 part of the indirect program, but they can only be executed when the
 program is started from the beginning since there is no way to branch to
 them at a later time.
@@ -424,8 +424,8 @@ a direct command before restarting the program. Variables are always
 assumed to have the value 'zero' until another value has been assigned.
 The `TYPE $` command can be used to list all the values in the Symbol
 Table in the order they were defined by the program. The ZERO command is
-used to clear the table, or to selectively set some of the variables to
-zero. Variables with the value '0' may be replaced by other, non-zero
+used to clear the table or to selectively set some of the variables to
+zero. Variables with the value '0' may be replaced by other non-zero
 variables when the symbol table fills up. This is transparent to the
 programmer since 'undefined' variables are always zero anyway.
 
@@ -438,7 +438,7 @@ replaced or removed by a ZERO command. This makes them useful for saving
 results which are needed by a second program. Since they cannot be input
 or output directly and do not appear in a symbol table dump, they are
 also sometimes called 'secret' variables. Note that UWF automatically
-sets `PI` equal to 3.141592654 so users should not use `PI---` as a
+sets `PI` equal to 3.141592654, so users should not use `PI---` as a
 variable name or this value will be lost. The variable `!` ('bang') is
 used as the dimension constant for [double subscripting](#dsub) and many
 of the remaining 'secret variables' serve as dummy arguments for
@@ -450,12 +450,12 @@ variables, you must prefix a `+` sign or enclose them in parentheses:
 ### <a id="subscripted-vars"></a>Subscripted Variables
 
 Variables may be further identified by attaching a subscript enclosed in
-parentheses immediately after the name, e.g. 'A(I)'. Such subscripts may
-consist of arithmetic expressions involving other subscripted variables
+parentheses immediately after the name, e.g. `A(I)`. Such subscripts may
+consist of arithmetic expressions involving other subscripted variables,
 so quite intricate relations can be developed. Unlike many other
 high-level languages, UWF does not require any 'dimension' statements
 for processing subscripted variables, nor are the subscripts limited to
-only positive integers (they are limited to 12 bits, however). A
+only positive integers. (They are limited to 12 bits, however.) A
 variable such as `APPLE(-PIE)` is thus perfectly acceptable although UWF
 will view this more prosaically as simply `AP(-3)`. Non-subscripted
 variables are the same as those with a subscript of zero, i.e. `A` =
@@ -508,10 +508,10 @@ this writeup. In particular, they may be used to compute line numbers.
 All expressions are evaluated to 10-digit accuracy independent of the
 format used for output. Intermediate results are generally rounded off
 rather than being truncated. Most commands use, or operate on,
-arithmetic expressions. If such expressions are *omitted* a value of
+arithmetic expressions. If such expressions are *omitted*, a value of
 'zero' is always assumed. This occurs frequently when evaluating line
 numbers, hence you should recall the comments about line '00.00'
-mentioned on page 6.
+mentioned [above](#line-numbers).
 
 
 ### <a id="operator-priority"></a>Priority of Arithmetic Operations
@@ -593,14 +593,14 @@ are required for further program development.
 When UWF is in command mode you can use the `RUBOUT` or `DELETE` key to
 correct any typing errors. Each time that you hit this key UWF will
 delete the preceding character and echo a `\` on the terminal. If you
-have a video terminal, and you set switch up when you started UWF for
-the first time (or made the appropriate patch yourself), hitting
+have a video terminal, and you set switch 0 up when you started UWF for
+the first time — or made the appropriate patch yourself — hitting
 <kbd>DELETE</kbd> will actually remove the character from the screen.
 This is obviously much nicer since 'what you see is what you've got'. On
 the other hand, users with a hard-copy terminal can always just hit the
-<kbd>LINEFEED</kbd> key to have the current input line retyped so that
+<kbd>LINE FEED</kbd> key to have the current input line retyped so that
 they can see just how it 'really' looks to UWF. There is no limit to the
-length of input lines, however if your terminal does not handle
+length of input lines; however, if your terminal does not handle
 'wrap-around' automatically, the practical limit is the width of paper.
 
 In addition to <kbd>RUBOUT</kbd>, the <kbd>BACKARROW</kbd> (or
@@ -608,7 +608,7 @@ In addition to <kbd>RUBOUT</kbd>, the <kbd>BACKARROW</kbd> (or
 used to delete all characters to the left, including the line number of
 an indirect command. You may then start over again. It is not necessary
 to hit <kbd>RETURN</kbd> although you may wish to do so to get back to
-the left margin again. Note that <kbd>LINE FEED</kbd> will not echo a
+the left margin again. Note that <kbd>LINE FEED</kbd> will not echo a
 blank link and <kbd>RUBOUT</kbd> will stop echoing a `\` when it reaches
 the beginning of the line.
 
@@ -707,15 +707,15 @@ Note: mistakes made while trying to modify a line often lead to embedded
 control codes, so if you do get confused, just type CTRL/F and try
 again.
 
-| Keystroke                                 | Name | Description                                    |  
-| ----------------------------------------- | ---- | ---------------------------------------------- |
-| <kbd>CTRL/F</kbd>                         | —    | Aborts the command - the line is unchanged     |
-| <kbd>CTRL/G</kbd>                         | BELL | Rings bell and waits for a new search char.    |
-| <kbd>CTRL/J</kbd>                         | LF   | Copies the rest of the line without changes    |  
-| <kbd>CTRL/L</kbd>                         | FF   | Looks for the next occurrence of search char.  |
-| <kbd>CTRL/M</kbd>                         | CR   | Terminates the line at this point              |
-| <kbd>BACKARROW</kbd>/<kbd>UNDERLINE</kbd> | —    | Deletes all chars to the left, except line no. |
-| <kbd>RUBOUT</kbd>/<kbd>DELETE</kbd>       | —    | Deletes previous character, as in command mode |
+| Keystroke                                 | Name | Description                                       |  
+| ----------------------------------------- | ---- | ------------------------------------------------- |
+| <kbd>CTRL/F</kbd>                         | —    | Aborts the command — the line is unchanged        |
+| <kbd>CTRL/G</kbd>                         | BELL | Rings bell and waits for a new search character   |
+| <kbd>CTRL/J</kbd>                         | LF   | Copies the rest of the line without changes       |  
+| <kbd>CTRL/L</kbd>                         | FF   | Looks for the next occurrence of search character |
+| <kbd>CTRL/M</kbd>                         | CR   | Terminates the line at this point                 |
+| <kbd>BACKARROW</kbd>/<kbd>UNDERLINE</kbd> | —    | Deletes all chars to the left, except line number |
+| <kbd>RUBOUT</kbd>/<kbd>DELETE</kbd>       | —    | Deletes previous character, as in command mode    |
 
 The last two operations are similar to those available during command
 mode except that <kbd>BACKARROW</kbd> or <kbd>UNDERLINE</kbd> does not
@@ -753,7 +753,7 @@ method is that not even the `MOVE` commands will be printed so you have
 to operate 'in the dark', but this is still the best way to make such a
 major program change. To restore the keyboard echo just hit CTRL/F.
 
-On video terminals the number of the line being modified is printed out
+On video terminals, the number of the line being modified is printed out
 at the beginning so that the changes will be properly positioned on the
 screen. With a hard-copy terminal, however, the line number is not
 normally printed in order to leave as much room as possible for rubouts
@@ -766,7 +766,7 @@ case.
 
 If your machine has more than 12K of memory, UWF will automatically use
 Fields 3-7 for additional text buffers. This allows such systems to keep
-several different programs in memory at the same time which is obviously
+several different programs in memory at the same time, which is obviously
 a very convenient thing to do. The `LOOK` command is then used to select
 the desired 'area' for editing, program execution, etc. Programs in
 different areas are essentially independent and may use the same line
@@ -788,10 +788,10 @@ converts the value of an arithmetic expression to a string of ASCII
 characters which are then sent to the terminal, or to whatever output
 device has been selected as a result of an appropriate [`OPEN`
 command](#open). Similarly, the `ASK` command is used to input numeric
-values, either from the keyboard, or from another input device. Both of
+values, either from the keyboard or from another input device. Both of
 these commands recognize 6 special operators for controlling the format
 of I/O operations. These operators are, in fact, just the symbols
-previously identified as 'protected variables' and it is because of
+previously identified as 'protected variables', and it is because of
 their special significance in `ASK` / `TYPE` commands that they cannot
 be input or output directly. These operators and their meanings are as
 follows:
@@ -820,9 +820,9 @@ The `!` operator is used to advance to a new line. UWF never performs
 this function automatically, so output on a single line may actually be
 the result of several `ASK` or `TYPE` commands. 'Bang' operators can be
 'piled together' to produce multiple blank lines: `TYPE !!!!!`, for
-example, would advance 5 lines. Note that to produce a single blank line
-may require either 1 or 2 `!`s depending upon whether anything has been
-written on the first line.
+example, would advance 5 lines. Note that to produce a single blank
+line, you may require either 1 or 2 `!`s depending upon whether anything
+has been written on the first line.
 
 
 ### <a id="quote"></a>The Quote `"` Operator
@@ -848,8 +848,8 @@ specifying a different number after the `$`. Thus, `TYPE $5` will change
 the default value to 5, which is convenient on terminals which can print
 up to 132 characters per line. The total number of symbols possible
 depends upon the amount of memory available. In an 8K machine there will
-only be room for about 120 variables while in a 12K machine one can have
-approximately 675. For internal reasons, a Symbol Table Dump always
+only be room for about 120 variables, while in a 12K machine one can
+have approximately 675. For internal reasons, a Symbol Table Dump always
 terminates execution of the command line it is on, hence commands
 following it on the same line will not be executed.
 
@@ -872,7 +872,7 @@ rounded off to this precision), and `OP` is the requested number of
 Decimal Places. `DP` should be smaller than `ND` unless `ND` is zero; if
 `DP` is zero the result will be an 'integer' format and no decimal point
 will be printed. Thus the command `TYPE %2,PI` will produce the result
-'   `3`.
+'   `3`'.
 
 Notice that the form of the format specification is similar to that used
 for line numbers. This may help to explain why it is necessary to use
@@ -941,13 +941,14 @@ position; the command is simply ignored in this case. 'Tabs' are
 recommended in place of a string of spaces so that changes in the output
 format will not affect subsequent columns.
 
-There are two special cases: tabbing to column and tabbing to a negative
-column. Neither is possible since columns are numbered from 1 to 2047,
-but both are useful operations. Expressions which have the value zero
-can be evaluated by the tab operator within a `TYPE` command *without*
-producing any output. This is convenient occasionally, especially for
-calling the [`FOUT` function](#fout). Tabbing to a negative column has
-been given a quite different interpretation, however.
+There are two special cases: tabbing to column 0 and tabbing to a
+negative column. Neither is possible since columns are numbered from 1
+to 2047, but both are useful operations. Expressions which have the
+value zero can be evaluated by the tab operator within a `TYPE` command
+*without* producing any output. This is convenient occasionally,
+especially for calling the [`FOUT` function](#fout). Tabbing to a
+negative column has been given a quite different interpretation,
+however.
 
 Since the current version of UWF can only input numeric values with the
 `ASK` command, there is a need for a method to skip over label fields
@@ -961,7 +962,7 @@ command waiting for input, so the `ASK` command may be used instead:
 to get the program to wait for operator intervention. For example, the
 command `TYPE "TURN ON THE PUNCH":-1` would print the message and then
 wait for any keyboard character to be typed. An `ASK :-2000` command
-will let a visitor type almost anything s-he likes into the computer
+will let a visitor type almost anything s/he likes into the computer
 without danger of destroying a valuable program.
 
 
@@ -989,7 +990,7 @@ operator](#trace) is also useful in `ASK` and `TYPE` commands when one
 is interested in a 'minimal effort' I/O structure.
 
 One other feature of a `TYPE` command should be noted: it is possible to
-save the value of a quantity being `TYPE`ed' just by including a
+save the value of a quantity being `TYPE`d just by including a
 replacement operator in the expression. Thus `TYPE X=5` will output the
 value '5' and also save it as the value of the variable `X`.
 
@@ -1021,7 +1022,7 @@ operators also serve as terminators; in particular, the <kbd>/</kbd> and
 as `1/2` or `1-5` for the values of *two* different variables.
 
 In fact, any character *except* `0`-`9`, `A`-`Z`, <kbd>RUBOUT</kbd> and
-<kbd>LINE-FEED</kbd> or <kbd>FORM-FEED</kbd> can be used to terminate
+<kbd>LINE FEED</kbd> or <kbd>FORM FEED</kbd> can be used to terminate
 the response to an `ASK` command. More to the point, however, is the
 fact that the program can test to see which terminator was used. This
 allows a very simple input loop to read an indefinite number of items
@@ -1032,7 +1033,7 @@ The <kbd>ALTMODE</kbd> or <kbd>ESCAPE</kbd> key is a special case:
 typing either of these keys leaves the previous value of the variable
 unchanged. This allows quick responses to repeated requests for the same
 value. The program, of course, can pre-set the value of the variable so
-that an </kbd>ALTMODE<kbd> response will merely confirm the expected
+that an <kbd>ALTMODE</kbd> response will merely confirm the expected
 value.
 
 
@@ -1064,9 +1065,9 @@ functions for their 'side-effects'.
 Note that the word `SET` (or its abbreviation `S`) is not optional as it
 is in some other languages. The flexible syntax employed by UWF makes it
 mandatory that every command begin with a command letter. One SET
-command, however, will process as many expression as can fit on a single
-line. The expressions should be separated by commas or spaces, for
-instance:
+command, however, will process as many expressions as can fit on a
+single line. The expressions should be separated by commas or spaces;
+for instance:
 
     SET A=1,B=2,C=A+B
 
@@ -1081,7 +1082,7 @@ tricky if the same variable appears several times in a single expression
 on both sides of replacement operators. The rule here is that in each
 instance the variable will have its current value until the entire
 expression to the *right* has been evaluated; then it will be replaced
-with the new value. To give a fairly simple, yet intriguing, example:
+with the new value. To give a fairly simple yet intriguing example:
 
     SET A=B+A-B=A
 
@@ -1258,13 +1259,13 @@ Not all of the branch options need to be specified, and relative line
 numbers are especially useful for those which are. Here are some
 examples of `IF` commands:
 
-| Example                     | Meaning                          |
-| --------------------------- | -------------------------------- |  
-| `IF (D=B^2-4*A*C) .2,.3,.4` | Tests for all 3 possibilities    |
-| `IF (A-5) 5.1, 5.1`         | Branches if A is less than 5     |
-| `IF (-X) .9 or IF (X),,.9`  | Branches if X is greater than 0  |
-| `IF [I-J] , .2`             | Branches only if I equals J      | 
-| `IF <W> .4,,.4`             | Branches only if W is non-zero   |
+| Example                     | Meaning                                  |
+| --------------------------- | ---------------------------------------- |  
+| `IF (D=B^2-4*A*C) .2,.3,.4` | Tests for all 3 possibilities            |
+| `IF (A-5) 5.1, 5.1`         | Branches if A is less than or equal to 5 |
+| `IF (-X) .9 or IF (X),,.9`  | Branches if X is greater than 0          |
+| `IF [I-J] , .2`             | Branches only if I equals J              | 
+| `IF <W> .4,,.4`             | Branches only if W is non-zero           |
 
 These examples illustrate the flexible nature of the `IF` command. In
 commands with only 1 or 2 branch options, if the branch is *not* taken,
@@ -1307,7 +1308,7 @@ there isn't any. This feature is essential in interactive programs which
 allow program flow to be controlled dynamically from operator response.
 For example:
 
-    1.1 YNCR 1; JUMP .1; TYPE I 
+    1.1 YNCR I; JUMP .1; TYPE I 
 
 will hang in a loop incrementing the variable `I` until a key is struck,
 then type the number of cycles. The character used to interrupt the
@@ -2370,13 +2371,14 @@ for a `?`) is all that is required:
 
 These functions allow UWF to use extra memory for data storage and are
 thus of interest only for systems with more that 12<. They may be added
-by setting SvHtch 8 -UP- when UWF is started for the first time (see
-page 3). FBUF is designed to handle 12-bit (signed) integer data while
-`FCOM` may be used for storing either 24- bit integers or 48-bit
-floating-point values. Both functions are called in the same manner: the
-first argument specifies the relative location in the storage area and
-the second argument (if any) is the value to be stored at that location.
-The function always returns the value at the location specified. Thus:
+by setting Switch 8 *UP* when UWF is started for the first time. (See
+[above](#opt-switch).) FBUF is designed to handle 12-bit (signed)
+integer data while `FCOM` may be used for storing either 24-bit integers
+or 48-bit floating-point values. Both functions are called in the same
+manner: the first argument specifies the relative location in the
+storage area and the second argument (if any) is the value to be stored
+at that location. The function always returns the value at the location
+specified. Thus:
 
 | Function    | Description                                   |
 | ----------- | --------------------------------------------- |
@@ -2387,7 +2389,7 @@ The range of the index is typically 0-4095 for FBUF and 0-1023 for
 `FCOM`.  `FCOM` has another mode houever, in which data is stored as
 two-word integers (rather than four-word floating point values) thereby
 doubling the amount of storage available but limiting the range of the
-data to +/- 2"i23. To use `FCOM` in this mode, specify a -negative-
+data to +/- 2"i23. To use `FCOM` in this mode, specify a *negative*
 index (legal range is -1 to -2048). Here is a loop which stores the
 square root of all numbers from 0-1023:
 
@@ -2747,7 +2749,7 @@ clear that this list is not exhaustive.
 | 158  | `Ctrl/^`  | RS   | 190  | `>`     | 222  | `^`  | 254  | `~ PREFIX`  |
 | 159  | `Ctrl/_`  | US   | 191  | `?`     | 223  | `_`  | 255  | `⌑ DELETE`  |
 
-`FOUT(141)` will output a <kbd>RETURN</kbd>/<kbd>LINE-FEED</kbd> while
+`FOUT(141)` will output a <kbd>RETURN</kbd>/<kbd>LINE FEED</kbd> while
 `FOUT(13)` will just do a <kbd>RETURN</kbd>. Codes 225 through 255 are
 lower case letters, some of which serve other functions on keyboards
 without lower case. Many keyboards use <kbd>SHIFT/K</kbd> for `[`,
@@ -2869,7 +2871,17 @@ works and illustrate some of the things it can do:
 
         TYPE MQ=FPAL(,7501,7001,7521) 
 
-    Note that the first argument has been omitted in this example, since no information is being passed *to* the function. The first instruction (`7501=MQA`) reads the `MQ`, the next (`7001=IAC`) increments this value and the third (`7521=SWP`) interchanges the new and old values, saving the new value for a subsequent call, and returning the old value to the program. Machines based on the 6100 microprocessor may not be able to display the `MQ` while UWF is running. Using this function however, the value of the hardware register can be saved in the variable `MQ`, and output by the `TYPE` command as well. So being able to actually 'see' this register is not a necessity. 
+    Note that the first argument has been omitted in this example, since
+    no information is being passed *to* the function. The first
+    instruction (`7501=MQA`) reads the `MQ`, the next (`7001=IAC`)
+    increments this value and the third (`7521=SWP`) interchanges the
+    new and old values, saving the new value for a subsequent call, and
+    returning the old value to the program. Machines based on the 6100
+    microprocessor may not be able to display the `MQ` while UWF is
+    running. Using this function however, the value of the hardware
+    register can be saved in the variable `MQ`, and output by the `TYPE`
+    command as well. So being able to actually 'see' this register is
+    not a necessity.
 
 2.  Several variations of this routine come to mind almost immediately.
     For instance, we could use the hardware `SWP` instruction to
@@ -2877,7 +2889,9 @@ works and illustrate some of the things it can do:
 
         SET MQ=FPAL(AC,7521) 
 
-    or we could take advantage of the `MQA` instruction to perform an 'inclusive OR' between a value in the `MQ` and one in the `AC`: `SET FMQ(A),AB=FPAL(B,7501)`. 
+    or we could take advantage of the `MQA` instruction to perform an
+    'inclusive OR' between a value in the `MQ` and one in the `AC`: `SET
+    FMQ(A),AB=FPAL(B,7501)`.
 
 3.  As a final example, suppose that we have constructed an A/D
     converter interface which uses the same instruction set as the
@@ -2966,14 +2980,16 @@ various times:
 
 **Formatter's Note**
 
-This document is based on the [OCR'd text][ocr] of the [scanned U/W FOCAL Manual V4E from October 1978][scan]. The following edits have been made to the original text as presented here:
+This document is based on the [OCR'd text][ocr] of the [scanned U/W
+FOCAL Manual V4E from October 1978][scan]. The following edits have been
+made to the original text as presented here:
 
 1.  Fixed some grammar, OCR, and heading nesting level errors. Some new
     errors have doubtless been added in this process. [Bug reports][tkt]
     and [patches][hack] are welcome.
 
-2.  "PDP8" and "PDP/8" stylized as "PDP-8", and "Binary loader" changed
-    to "BIN loader" to match DEC documentation.
+2.  "PDP8" and "PDP/8" are stylized as "PDP-8", and "Binary loader"
+    changed to "BIN loader" to match DEC documentation.
 
 3.  Asterisk-marked page notes are now numbered end-notes.
 
