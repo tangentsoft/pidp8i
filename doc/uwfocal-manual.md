@@ -1774,24 +1774,24 @@ to expect that whatever is typed will be printed on the terminal. This
 makes the terminal appear much like a simple typewriter and tends to
 obscure the fact that if UWF were not sending back each character it
 received, *nothing* would be printed! The `ECHO` option must be
-specified when selecting the input device, or *`NO ECHO`* will be
+specified when selecting the input device, or *no echo* will be
 assumed. Thus an `O I` command will select the keyboard for input (it
 may already *be* selected) and effectively turn the echo off. An `O I,E`
 command is necessary to restore the echo under program control. Of
-course any program error, or typing CTRL/F, will also restore the echo.
+course any program error or typing CTRL/F, will also restore the echo.
 
 The ability to disable the input echo is convenient at times since it
 allows a program to read one thing and possibly print something else. An
 example of this mode of operation occurs during command input: when you
 type the <kbd>RUBOUT</kbd> key you do not get this character printed,
 but rather a backslash (`\`), or on a video terminal, a three character
-sequence: 'backspace, space, backspace', which effectively removes the
-character from the screen. UWF programs can also be written to use the
-keyboard for program control, and in such cases it is often desirable to
-have 'silent' input. You can try this out quickly by using a direct
-'O I' command to disable the echo. Now type in <kbd>O</kbd>,
-<kbd>Space</kbd>, <kbd>I</kbd>, <kbd>Comma</kbd> <kbd>E</kbd> and hit
-<kbd>RETURN</kbd> and the echo will return again.
+sequence: <kbd>Backspace</kbd>, <kbd>Space</kbd>, <kbd>Backspace</kbd>,
+which effectively removes the character from the screen. UWF programs
+can also be written to use the keyboard for program control, and in such
+cases it is often desirable to have 'silent' input. You can try this out
+quickly by using a direct `O I` command to disable the echo. Now type in
+<kbd>O</kbd>, <kbd>Space</kbd>, <kbd>I</kbd>, <kbd>Comma</kbd>
+<kbd>E</kbd> and hit <kbd>RETURN</kbd> and the echo will return again.
 
 Another time when you will want to disable the echo is when reading in a
 program tape on the 'low-speed' reader. If you turn off the echo in this
@@ -1824,7 +1824,7 @@ character and then turning it back on to copy some more.
 
 ### <a id="leader-trailer"></a>The Leader/Trailer Option
 
-The 'T' option punches leader/trailer code (ASCII 200). This is
+The `T` option punches leader/trailer code (ASCII 200). This is
 convenient (but not essential) for separating output on paper tape, and
 somewhat more important when using an audio recorder since there is no
 visual indication of breaks in the data. Blank tape may also be used as
@@ -1838,15 +1838,17 @@ also removing any 'garbage' characters which might have been read after
 the last valid input.
 
 The `T` option can be used alone (`O T`) or in conjunction with another
-`OPEN` command. The number of L/T codes punched is determined by an
-optional arithmetic expression following the letter `T` (and separated
-by a space from it) with the previous specification being used as the
-default. The initial value is 512, which is about right for use with an
-audio recorder, but somewhat ridiculous for paper tape. (Over 4 feet of
-leader!) A value of 70 or so is more appropriate in this case. You can
-always just repeat the `T` option to get a slightly longer leader if you
-want to: `O T 100,T` will punch out 200 L/T codes but leave the default
-set at 100. Notice how this option was used in the [example
+`OPEN` command.
+
+The number of L/T codes punched is determined by an optional arithmetic
+expression following the letter `T` (and separated by a space from it)
+with the previous specification being used as the default. The initial
+value is 512, which is about right for use with an audio recorder, but
+somewhat ridiculous for paper tape. (Over 4 feet of leader!) A value of
+70 or so is more appropriate in this case. You can always just repeat
+the `T` option to get a slightly longer leader if you want to:
+`O T 100,T` will punch out 200 L/T codes but leave the default set at
+100. Notice how this option was used in the [example
 above](#write-ascii-tape) for writing out all of the program buffer. The
 length specified by the `T` option is also used by the [`PUNCH`
 command](#punch).
@@ -2712,7 +2714,7 @@ clear that this list is not exhaustive.
 
 ## Appendix Ⅰ
 
-### <a id="character-codes"></a>Decimal Values for All Character Codes
+### <a id="character-codes" name="ascii-table"></a>Decimal Values for All Character Codes
 
 | Code | Character | Name | Code | Char    | Code | Char | Code | Char        |
 | ---- | --------- | ---- | ---- | ------- | ---- | ---- | ---- | ----------- |
