@@ -32,31 +32,31 @@ these:
 To use the example BASIC program, simply transcribe it into OS/8 BASIC:
 
     .R BASIC
-	NEW OR OLD--NEW
-	FILE NAME--PAL001.BA
+    NEW OR OLD--NEW
+    FILE NAME--PAL001.BA
 
-	READY
-	10 FOR I = 1 TO 999
-	10 FOR I = 1 TO 999
-	20 A = I / 3 \ B = I / 5
-	30 IF INT(A) = A GOTO 60
-	40 IF INT(B) = B GOTO 60
-	50 GOTO 70
-	60 T = T + I
-	70 NEXT I
-	80 PRINT "TOTAL: "; T
-	90 END
-	SAVE
+    READY
+    10 FOR I = 1 TO 999
+    10 FOR I = 1 TO 999
+    20 A = I / 3 \ B = I / 5
+    30 IF INT(A) = A GOTO 60
+    40 IF INT(B) = B GOTO 60
+    50 GOTO 70
+    60 T = T + I
+    70 NEXT I
+    80 PRINT "TOTAL: "; T
+    90 END
+    SAVE
 
-	READY
-	RUN
+    READY
+    RUN
 
-	PAL001  BA    4A    
+    PAL001  BA    4A    
 
-	TOTAL:  xxxxxxx
+    TOTAL:  xxxxxxx
 
-	READY
-	BYE
+    READY
+    BYE
 
 If you're SSH'd into the PiDP-8/I, "transcribing" is simply a matter of
 cut-and-paste into the terminal window.
@@ -168,7 +168,7 @@ SSH'd into the PiDP-8/I machine, there is a shortcut for all of the
 above. At the OS/8 command line, say:
 
     .R PIP
-	*ADD.PA<TTY:
+    *ADD.PA<TTY:
 
 Now you can simply copy the assembly language text in your desktop PC's
 text editor, paste it into the SSH window, and then hit Ctrl-Z to tell
