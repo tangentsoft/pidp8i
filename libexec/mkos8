@@ -312,6 +312,11 @@ def make_bin (args):
   k12_copyin    = ['RKA0:', 'subsys/k12.tu56',
                    "Installing Kermit-12...", None]
 
+  focal69_copyin = ['RKA0:', 'subsys/focal69.tu56',
+                   "Installing FOCAL 69...", None]
+  uwfocal_copyin = ['RKA0:', 'subsys/uwfocal-v4e-2.tu56',
+                    "Installing U/W FOCAL...", None]
+
   advent_copyin = ['RKB0:', 'subsys/advent.tu56',
                    "Installing ADVENT...", None]
 
@@ -326,11 +331,16 @@ def make_bin (args):
      "Installing MACREL...", None]
     ]
 
-  if args.enable_music:       bin_copyins.append(music_copyin)
-  if not args.disable_ba:     bin_copyins.append(ba_copyin)
-  if not args.disable_cc8:    bin_copyins.append(cc8_copyin)
-  if not args.disable_k12:    bin_copyins.append(k12_copyin)
-  if not args.disable_advent: bin_copyins.append(advent_copyin)
+  if args.enable_music:        bin_copyins.append(music_copyin)
+  if not args.disable_ba:      bin_copyins.append(ba_copyin)
+  if not args.disable_cc8:     bin_copyins.append(cc8_copyin)
+  if not args.disable_k12:     bin_copyins.append(k12_copyin)
+  if not args.disable_advent:  bin_copyins.append(advent_copyin)
+
+  if not args.disable_focal69 and not args.disable_focal:
+    bin_copyins.append(focal69_copyin)
+  if not args.disable_uwfocal and not args.disable_focal:
+    bin_copyins.append(uwfocal_copyin)
 
   check_exists(special_bin_copyins)
   check_exists(bin_copyins)
