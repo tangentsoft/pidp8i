@@ -16,6 +16,23 @@ This document is [our](#license) attempt to fill these gaps.
 [uwfm]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual.md
 
 
+## Starting U/W FOCAL
+
+The section "Starting the Program" in the [U/W FOCAL Manual][uwfm] is
+entirely concerned with loading U/W FOCAL from paper tape using the
+front panel and the BIN loader.
+
+The PiDP-8/I software project does not currently ship U/W FOCAL in SIMH
+paper tape image form. Instead, it's installed by default on the OS/8
+system disk, which greatly simplifies starting it:
+
+     .R UWF16K
+
+Yes, that's all. You're welcome. `:)`
+
+To get back to OS/8, just hit <kbd>Ctrl-C</kbd>.
+
+
 ## Loading and Saving Programs
 
 When the [U/W FOCAL Manual][uwfm] talks about loading and saving
