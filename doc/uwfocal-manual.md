@@ -2161,6 +2161,9 @@ example, to check that the angle whose tangent is -1 is, in fact, -45°:
     TYPE 180*FATN(-1)/PI 
     -45.00000000 
 
+
+#### Trigonometric Identities
+
 All other trig functions can be derived from these primary functions.
 For example:
 
