@@ -171,10 +171,19 @@ The `ADDR LOAD` switch on a PDP-8/e does the same thing as the
 ### Switch Direction
 
 DEC reversed the meaning of switch direction between the PDP-8/I and the
-PDP-8/e, and the U/W FOCAL Manual follows the 8/e convention: on the
-8/I, up=0=off, whereas on the 8/e, up=1=on. Keep this in mind when
+PDP-8/e, and the [U/W FOCAL Manual][uwfm] follows the 8/e convention: on
+the 8/I, up=0=off, whereas on the 8/e, up=1=on. Keep this in mind when
 reading the U/W FOCAL Manual's references to front panel switch
 settings.
+
+
+### Switch Ordering
+
+When the [U/W FOCAL Manual][uwfm] talks about the switch register (SR),
+it numbers the switches left to right, not by their logical bit number
+in the switch register. That is, "Switch 0" is the leftmost (high order
+bit) SR switch, not "bit 0" in the SR, which would be the rightmost SR
+switch.
 
 
 ## <a id="license"></a>License
