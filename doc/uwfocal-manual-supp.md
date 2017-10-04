@@ -16,7 +16,7 @@ This document is [our](#license) attempt to fill these gaps.
 [uwfm]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual.md
 
 
-## Starting U/W FOCAL
+## Starting and Stopping U/W FOCAL
 
 The section "Starting the Program" in the [U/W FOCAL Manual][uwfm] is
 entirely concerned with loading U/W FOCAL from paper tape using the
@@ -130,9 +130,9 @@ here, I can say that it just means to load the starting address and hit
 ### `EXTD. ADDR LOAD`
 
 The PDP-8/e has many fewer switches on its front panel than the PDP-8/I,
-yet it is a more functional machine. One of the ways they achieved this
-is by removing the IF and DF switch groups and adding the
-`EXTD. ADDR LOAD` switch, which lets you set the IF and DF registers
+yet it is a more functional machine. One of the ways DEC achieved this
+is by removing the `IF` and `DF` switch groups and adding the
+`EXTD. ADDR LOAD` switch, which lets you set the `IF` and `DF` registers
 using the same 12-bit switch register used by the `ADDR LOAD` switch.
 
 The `ADDR LOAD` switch on a PDP-8/e does the same thing as the
@@ -143,7 +143,9 @@ The `ADDR LOAD` switch on a PDP-8/e does the same thing as the
 
 DEC reversed the meaning of switch direction between the PDP-8/I and the
 PDP-8/e, and the U/W FOCAL Manual follows the 8/e convention: on the
-8/I, up=0=off, whereas on the 8/e, up=1=on.
+8/I, up=0=off, whereas on the 8/e, up=1=on. Keep this in mind when
+reading the U/W FOCAL Manual's references to front panel switch
+settings.
 
 
 ## <a id="license"></a>License
