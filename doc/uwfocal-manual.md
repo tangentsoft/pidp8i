@@ -1934,7 +1934,7 @@ indicates 'operator missing or illegal use of an equal sign' in line
 15.13.
 
 The program `QUIT`s whenever an error occurs, thus all pending
-operations are cancelled and in general it is impossible to resume
+operations are canceled, and in general it is impossible to resume
 *precisely* at the point of interruption, but it is often possible to
 make the necessary changes, perhaps update a few variables with direct
 commands, and then restart from a point close to where the error
@@ -2018,24 +2018,24 @@ repertoire.
 | Command            | Form                                             | Example              | 
 | ------------------ | ------------------------------------------------ | -------------------- |  
 | `@`                | a not implemented in this version                |                      |
-| `ASK`              | list of Variables, "prompts", formatting options | `A X,Y(I),Z(J,K)`    |
+| `ASK`              | list of variables, "prompts", formatting options | `A X,Y(I),Z(J,K)`    |
 | `BREAK`            | line number                                      | `B` or `B 11.45`     |
 | `COMMENT`          | your programs whenever possible                  | `C FOR COMMENTS`     |
 | `DO`               | list of lines, groups, or sub-groups             | `D .7, -9.5, 10`     |
 | `ERASE`            | line, group, sub-group, or 'all'                 | `E 5 or E 9.1`       |
-| `FOR`              | Var = start, increment, finish                   | `F I=1,5;F J=I,-1,0` |
+| `FOR`              | var = start, increment, finish                   | `F I=1,5;F J=I,-1,0` |
 | `GOTO`             | line number                                      | `G 11.8 or G .3`     |
 | `HESTATE`          | time delay desired                               | `H 1000`             |
-| `IF`               | (Arithmetic expression) negative, zero, positive | `I (K=I-J), .5`      |
+| `IF`               | (arithmetic expression) negative, zero, positive | `I (K=I-J), .5`      |
 | `JUMP`             | line number                                      | `J .3;C WAIT LOOP`   |
-| `JUMP`             | (Arithmetic expression) one, two, three, four... | `J (N) 1, .2, -3.4`  |
+| `JUMP`             | (arithmetic expression) one, two, three, four... | `J (N) 1, .2, -3.4`  |
 | `KONTROL`          | bit positions                                    | `K 1,(-1,2,3),=X`    |
 | `LOOK`             | program area                                     | `L 1`                |
 | `LOOK`             | program area, subroutine pointer                 | `L 2,4.1 or L,10`    |
 | `MODIFY`           | line number                                      | `M 5.1`              |
 | `MOVE`             | old line number, new line number                 | `M 3.3,6.3`          |
 | `NEXT`             | line number                                      | `F I=1,10;N;T PI`    |
-| `ON`               | (Arithmetic expression) negative, zero, positive | `O (A-5) -9.2, 9`    |
+| `ON`               | (arithmetic expression) negative, zero, positive | `O (A-5) -9.2, 9`    |
 | `PUNCH`            | punches program and variables in binary format   | `P`                  |
 | `QUIT`             | line number                                      | `Q or Q 5.1`         |
 | `RETURN`           | line number                                      | `R or R .2`          |
@@ -2096,18 +2096,18 @@ argument. An error occurs if `X` is zero since the theoretical result is
 infinite. No error occurs if `X` is negative, although the log function
 is, in fact, only defined for positive arguments. This implementation
 facilitates the use of `FLOG` for extracting roots and raising values to
-non-integer powers. The Common (base-10) logarithm is easily obtained
+non-integer powers. The common (base-10) logarithm is easily obtained
 from the `FLOG` function just by dividing by `FLOG(10)`. Example:
 
-    TYPE %,"NATURAL LN (PI)="FLOG(PI) :45"COMMON LOG(PI)="FLOG(PI)/FLOG(10)! 
+    TYPE %,"NATURAL LN(PI)="FLOG(PI) :45"COMMON LOG(PI)="FLOG(PI)/FLOG(10)! 
     NATURAL LN(PI)=  1.114729886E+00         COMMON LOG(PI)= 4.971498727E-01
 
 
 #### <a id="fexp"></a>`FEXP` 
 
-`FEXP(X)` returns the value of e<sup>X</sup> where e=2.718281828... The
-value of 'e' is always available as `FEXP(1)`. This function is often
-used to extract roots and compute non-integer powers. For example,
+`FEXP(x)` returns the value of *e<sup>x</sup>* where *e*=2.718281828...
+The value of 'e' is always available as `FEXP(1)`. This function is
+often used to extract roots and compute non-integer powers. For example,
 X<sup>3.5</sup> is found from the expression: `FEXP(3.5*FLOG(X))`.
 Similarly, the cube root of 27 may be found from the expression:
 `FEXP(FLOG(27)/3)`. The absolute value of the argument must be less than
@@ -2119,7 +2119,7 @@ approximately 1400 in order to avoid numeric overflow.
 `FSIN(A)` and `FCOS(A)` return the value of the sine and cosine of the
 angle `A` when `A` is measured in *radians*. A radian is a unit of
 angular measure preferred for scientific and engineering work because it
-eliminates factors of π in many formulae. One radian is
+eliminates factors of π in many formul&aelig;. One radian is
 <sup>1</sup>/<sub>2π</sub> of a full circle, or approximately 60°.
 
 To convert angles from degrees to radians you simply multiply by
