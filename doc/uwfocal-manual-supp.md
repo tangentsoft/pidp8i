@@ -94,8 +94,25 @@ The following gives incorrect output because of a violation of rule 1:
      0.000000000E+00*
 
 The correct answer is 1. It fails because there is no built-in function
-called `fsin` nor a built-in constant `pi`, but there *is* a `FSIN`
-function and a `PI` constant, so you must say this instead:
+called `fsin` nor a built-in constant `pi`.
+
+FOCAL gives an answer here instead of detecting our failure to call
+things by their right names because it is falling back to its rule to
+use a value of 0 where no value or function is available to do what you
+asked. Zero divided by 2 is 0; then it tries to subscript a nonexistent
+`fsin` variable with index 0, so it punts and gives the answer you see
+above, zero.
+
+A better language would have detected your errors and given a
+diagnostic, but U/W FOCAL is implemented in less than a page of PDP-8
+core memory, roughly the same number of bytes as
+[Clang](http://clang.llvm.org/) gives when compiling an empty C program
+on the machine I'm typing this on. The fact that U/W FOCAL detects
+errors *at all* is somewhat impressive.
+
+To get the expected result, call the `FSIN` function and use the `PI`
+constant, which are very much not the same thing as `fsin` and `pi` to
+FOCAL:
 
     *type FSIN(PI/2)!
      1.000000000E+00
