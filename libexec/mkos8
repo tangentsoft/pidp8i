@@ -312,10 +312,17 @@ def make_bin (args):
   k12_copyin    = ['RKA0:', 'subsys/k12.tu56',
                    "Installing Kermit-12...", None]
 
+  focal69_files  = [['RKB0:', 'FOCAL.BN'], ['RKB0:','4WORD.BN'],
+                    ['RKB0:', '4KVT.BN'], ['RKB0:', '8KVT.BN'],
+                    ['RKB0:', '8KNOVT.BN']
+  ] 
   focal69_copyin = ['RKA0:', 'subsys/focal69.tu56',
-                   "Installing FOCAL 69...", None]
+                    "Installing FOCAL 69...", focal69_files]
+
+  uwfocal_files  = [['SYS:', 'UWF16K.SV']]
+  
   uwfocal_copyin = ['RKA0:', 'subsys/uwfocal-v4e-2.tu56',
-                    "Installing U/W FOCAL...", None]
+                    "Installing U/W FOCAL...", uwfocal_files]
 
   advent_copyin = ['RKB0:', 'subsys/advent.tu56',
                    "Installing ADVENT...", None]
