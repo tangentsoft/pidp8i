@@ -63,30 +63,77 @@ TODO
 ## Lowercase Input
 
 The version of U/W FOCAL we include by default on the PiDP-8/I's OS/8
-system disk copes gracefully with lowercase input. This is probably
-because the version we ship was released late in the commercial life of
-OS/8, by which time lowercase terminals were much more common than at
-the beginning of OS/8's lifetime.
+system disk copes with lowercase input only within a fairly narrow
+scope. The fact that it copes with lowercase input at all is likely due
+to the fact that the version we ship was released late in the commercial
+life of OS/8, by which time lowercase terminals were much more common
+than at the beginning of OS/8's lifetime.
 
 The examples in the [U/W FOCAL Manual][uwfm] are given in all-uppercase,
-however, which means there is no reason you would immediately understand
-how U/W FOCAL deals with lowercase input, having no examples to build a
-mental model from.
+which means there is no reason you would immediately understand how U/W
+FOCAL deals with lowercase input, having no examples to build a mental
+model from. If you just guess, chances are that you will be wrong sooner
+or later, because U/W FOCAL's behavior in this area can be surprising!
 
-The main rule is that U/W FOCAL is case-sensitive for variable and
-built-in function names but case-insensitive for command names.
-Therefore, this will not work:
+The two main rules to keep in mind are:
+
+1.  U/W FOCAL is case-sensitive for variable and built-in function
+    names, but it is case-insensitive for command names.
+
+2.  U/W FOCAL doesn't support lowercase variable and function names. It
+    may sometimes appear to work, but internally, U/W FOCAL isn't doing
+    what you want it to.
+
+This doesn't work:
 
     *type fsin(3.14)!
      0.000000000E+00*
 
-It fails because there is no built-in function called `fsin`, but
-there is one called `FSIN`, so you must say instead:
+It fails because there is no built-in function called `fsin`, but there
+*is* one called `FSIN`, so you must say instead:
 
     *type FSIN(3.14)!
      1.592652638E-03
 
-Similarly, `x` and `X` are different variable names.
+U/W FOCAL doesn't care that you gave the `type` command in lowercase,
+but it *does* care about the case of the built-in function name.
+
+Violating rule 2 can be even more surpring:
+
+    .R UWF16K               # We need a fresh environment for this demo.
+    *s a=1                  # What, no error?  I thought you said...
+    *s b=2
+    *s c=3
+    *type $ !
+    *
+
+No, that transcript isn't cut off at the end: the `TYPE` command simply
+doesn't give any output! Why?
+
+The reason is that U/W FOCAL can't \[currently\] cope with lowercase
+variable names.
+
+But wait, it gets weird:
+
+    *s A=1
+    *s foo=42
+    *type $ !
+    A (+00) 1.000000000E+00
+    &/(+00) 4.200000001E+01
+
+We now see output for our uppercased `A` variable, but what is that `&/`
+noise? For some reason, U/W FOCAL has chosen to use one of the so-called
+"secret variables" to hold the value we tried to asssign to `foo`. Why
+now and not above with `a`, `b`, and `c`?
+
+We have not yet tried to investigate the reason for this because the
+workaround is simple: keep <kbd>CAPS LOCK</kbd> engaged while typing
+FOCAL programs except when typing text you want FOCAL to send back out
+to the terminal:
+
+    *1.1 TYPE "Hello, world!"!
+    *G
+    Hello, world!
 
 
 ## ASCII Character & Key Names
