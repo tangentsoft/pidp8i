@@ -44,6 +44,7 @@ options {
     os8-cc8=1         => "leave the native OS/8 CC8 compiler off the built OS/8 RK05 disk image"
     os8-crt=1         => "set CRT-style rubout processing in built OS/8 KR05 image"
     os8-chess=1       => "leave the CHECKMO-II game of chess off built OS/8 RK05 image"
+    os8-dcp=1	      => "install DCP Disassembler executables to built OS/8 RK05 image"
     os8-focal=1       => "leave FOCAL 69 and U/W FOCAL off the built OS/8 RK05 image"
     os8-focal69       => "add FOCAL 69 to the built OS/8 RK05 image"
     os8-k12=1         => "leave 12-bit Kermit off built OS/8 RK05 disk image"
@@ -109,6 +110,10 @@ if {![opt-bool os8-chess]} {
 if {![opt-bool os8-crt]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-crt"
+}
+if {![opt-bool os8-dcp]} {
+    msg-result "Will not add DCP disassembler to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-dcp"
 }
 
 if {![opt-bool os8-focal]} {

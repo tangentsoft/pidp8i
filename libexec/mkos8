@@ -350,9 +350,15 @@ def make_bin (args):
     local_files.append(['RKA0:', 'CHESS.*'])
 
   if args.enable_vtedit:
-    local_stat_str += "    TECO VTEDIT setup..."
+    local_stat_str += "    TECO VTEDIT setup...\n"
     local_files.append(['RKA0:', 'VTEDIT.*'])
     local_files.append(['RKA0:', 'TECO.IN'])
+
+  if not args.disable_dcp:
+    # Should we also install DCP.WU on RKB0:?
+    local_stat_str += "    DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV.\n"
+    local_files.append(['RKA0:', 'DCP24.SV'])
+    local_files.append(['RKA0:DCP.SV', 'DCP16.SV'])
 
   if args.enable_music:        bin_copyins.append(music_copyin)
   if not args.disable_ba:      bin_copyins.append(ba_copyin)

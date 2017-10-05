@@ -45,6 +45,8 @@ class ArgParser (argparse.ArgumentParser):
             help = 'leave BASIC games and demos off binary disk')
     self.add_bool ('--disable-cc8',
             help = 'leave CC8 off binary disk')
+    self.add_bool ('--disable-dcp',
+            help = 'leave DCP disassembler off binary disk')
     self.add_bool ('--disable-focal',
             help = 'leave FOCAL 69 and U/W FOCAL off binary disk')
     self.add_bool ('--enable-focal69',
