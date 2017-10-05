@@ -12,7 +12,7 @@ there are gaps:
     they are not properly within its scope.
 
 1.  It is written somewhat generically for the whole PDP-8 family as of
-    late 1978, where the PiDP-8/I project is focused on a single model
+    late 1978, whereas the PiDP-8/I project is focused on a single model
     from 1968.
 
 This document is [our](#license) attempt to fill these gaps.
