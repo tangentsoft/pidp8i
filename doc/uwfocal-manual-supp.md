@@ -18,7 +18,7 @@ This document is [our](#license) attempt to fill these gaps.
 [uwfm]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual.md
 
 
-## Starting and Stopping U/W FOCAL
+## <a id="starting" name="stopping"></a>Starting and Stopping U/W FOCAL
 
 The section "Starting the Program" in the [U/W FOCAL Manual][uwfm] is
 entirely concerned with loading U/W FOCAL from paper tape using the
@@ -35,7 +35,7 @@ Yes, that's all. You're welcome. `:)`
 To get back to OS/8, just hit <kbd>Ctrl-C</kbd>.
 
 
-## Pasting Text in from a Terminal Emulator
+## <a id="pasting"></a>Pasting Text in from a Terminal Emulator
 
 If you are SSHing into your PiDP-8/I, you might think to write your
 FOCAL programs in your favorite text editor out in the host OS then copy
@@ -50,7 +50,7 @@ problem is fixed, this section will go away.
 Meanwhile, the next section tells how to get around this problem.
 
 
-## Loading and Saving Programs
+## <a id="loading" name="saving"></a>Loading and Saving Programs
 
 When the [U/W FOCAL Manual][uwfm] talks about loading and saving
 programs, it is almost entirely concerned with paper tapes, but in the
@@ -60,7 +60,7 @@ many more choices for getting programs into and out of U/W FOCAL.
 TODO
 
 
-## Lowercase Input
+## <a id="lowercase"></a>Lowercase Input
 
 The version of U/W FOCAL we include by default on the PiDP-8/I's OS/8
 system disk copes with lowercase input only within a fairly narrow
@@ -136,7 +136,7 @@ to the terminal:
     Hello, world!
 
 
-## ASCII Character & Key Names
+## <a id="ascii"></a>ASCII Character & Key Names
 
 Many of the common names for keys and their ASCII character equivalents
 have shifted over the years, and indeed they shifted considerably even
@@ -175,7 +175,7 @@ keyboards:
 | `FORM FEED`  | <kbd>Ctrl-L</kbd> |
 
 
-## Front Panel Differences
+## <a id="front-panel"></a>Front Panel Differences
 
 Whenever the [U/W FOCAL Manual][uwfm] refers to the PDP-8's front panel,
 it is speaking generically of all the models it ran on as of October
@@ -197,7 +197,7 @@ upgrade for an 8/e/f style front panel. These three models are therefore
 interchangeable for our purposes here.
 
 
-### `START` vs. `CLEAR` + `CONTINUE` vs. `RESET`
+### <a id="clear-regs"></a>`START` vs. `CLEAR` + `CONTINUE` vs. `RESET`
 
 With the PDP-8/e, DEC replaced the `START` front panel switch of the
 preceding PDP-8/I with a `CLEAR` switch. Why did they do this?
@@ -220,7 +220,7 @@ here, I can say that it just means to load the starting address and hit
 `START` on a PDP-8/I.
 
 
-### `EXTD. ADDR LOAD`
+### <a id="if-df"></a>`EXTD. ADDR LOAD`
 
 The PDP-8/e has many fewer switches on its front panel than the PDP-8/I,
 yet it is a more functional machine. One of the ways DEC achieved this
@@ -232,7 +232,7 @@ The `ADDR LOAD` switch on a PDP-8/e does the same thing as the
 `Load Add` switch on a PDP-8/I.
 
 
-### Switch Direction
+### <a id="sw-dir"></a>Switch Direction
 
 DEC reversed the meaning of switch direction between the PDP-8/I and the
 PDP-8/e, and the [U/W FOCAL Manual][uwfm] follows the 8/e convention: on
@@ -241,7 +241,7 @@ reading the U/W FOCAL Manual's references to front panel switch
 settings.
 
 
-### Switch Ordering
+### <a id="sw-order"></a>Switch Ordering
 
 When the [U/W FOCAL Manual][uwfm] talks about the switch register (SR),
 it numbers the switches left to right, not by their logical bit number
