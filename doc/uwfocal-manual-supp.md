@@ -3,13 +3,17 @@
 The [U/W FOCAL Manual][uwfm] is well written as far as it goes, but
 there are gaps:
 
-1.  It inspires questions in the reader's mind without providing an answer.
+1.  It inspires questions in the reader's mind without providing an
+    answer.  While that is actually a hallmark of a good book, the U/W
+    FOCAL manual sometimes does it for topics that are properly within
+    its scope and so should be answered within.
+
+1.  It omits coverage for some topics we wish it would cover, though
+    they are not properly within its scope.
 
 1.  It is written somewhat generically for the whole PDP-8 family as of
     late 1978, where the PiDP-8/I project is focused on a single model
     from 1968.
-
-1.  It doesn't cover all of the topics we wish it would.
 
 This document is [our](#license) attempt to fill these gaps.
 [Extensions and corrections][hack] are welcome.
