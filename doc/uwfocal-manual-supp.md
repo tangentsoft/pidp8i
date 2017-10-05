@@ -188,18 +188,6 @@ bit) SR switch, not "bit 0" in the SR, which would be the rightmost SR
 switch.
 
 
-## Known Bugs
-
-These bugs are under investigation and will be removed from this
-document when we fix them. [Patches welcome][hack]. `:)`
-
-| Bug ID          | Brief Description
-| --------------- | ------------------------------------------------------
-| [b672f3581][b2] | The `$` function (dump symbol table) does not appear to work.
-
-[b2]:   https://tangentsoft.com/pidp8i/tktview/b672f3581
-
-
 ## <a id="license"></a>License
 
 Copyright © 2017 by Warren Young. This document is licensed under
