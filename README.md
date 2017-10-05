@@ -272,13 +272,15 @@ following options:
     FOCAL implementation to install by default.
 
     You should know that the reason we made this choice is that the
-    version of FOCAL 69 we are currently shipping is fairly minimal.
-    Indeed, we believe it to be the original DEC version of FOCAL 69, or
-    something close to it. There are many patches and overlays available
-    on the Internet for FOCAL 69, none of which we are currently
-    shipping. Thus our choice: we want to provide the most functional
-    version of FOCAL by default, and within the limitations of the time
-    we have chosen to spend on this, that is U/W FOCAL today.
+    version of FOCAL 69 we are currently shipping is fairly minimal: we
+    believe we are shipping the original DEC version of FOCAL 69 plus a
+    few carefully-selected overlays. There are many more overlays and
+    patches available on the Internet for FOCAL 69, but we have not had
+    time to sort through these and make choices of which ones to ship or
+    how to manage which ones get installed. Thus our choice: we want to
+    provide the most functional version of FOCAL by default, and within
+    the limitations of the time we have chosen to spend on this, that is
+    U/W FOCAL today.
 
     It is possible that we will eventually add enough patches and
     overlays to FOCAL 69 that it will become more powerful than U/W
