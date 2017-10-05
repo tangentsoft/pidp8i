@@ -89,9 +89,9 @@ This doesn't work:
     *type fsin(pi/2)!
      0.000000000E+00*
 
-It fails because there is no built-in function called `fsin` nor a
-built-in constant `pi`, but there *is* a `FSIN` function and a `PI`
-constant, so you must say this instead:
+The correct answer is 1. It fails because there is no built-in function
+called `fsin` nor a built-in constant `pi`, but there *is* a `FSIN`
+function and a `PI` constant, so you must say this instead:
 
     *type FSIN(PI/2)!
      1.000000000E+00
