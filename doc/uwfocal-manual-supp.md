@@ -204,7 +204,7 @@ gives similar output with a shorter command:
          1     0    -1
 
 That tells it to use 5 significant digits with zero decimal digits.
-Since the answers have only one significatn digit, it right-justifies
+Since the answers have only one significant digit, FOCAL right-justifies
 each output with 4 spaces. There are 5 spaces between the `1` and `0`
 outputs because of that pesky implicit `+` sign, though.
 
