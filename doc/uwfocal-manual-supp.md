@@ -186,6 +186,9 @@ As for the third question, the default output format is in scientific
 notation with full precision displayed: 4.5&times;10¹ = 45 degrees, the
 correct answer.
 
+
+### Improvements
+
 The following changes to the examples as given in the manual show how
 you can get output more suitable to your purposes:
 
@@ -193,7 +196,19 @@ you can get output more suitable to your purposes:
      1    0    -1
 
 That sets the output precision to 1 significant digit, which is all we
-need for the expected {-1, 0, -1} ouptut set.
+need for the expected {-1, 0, -1} ouptut set. The tabstop formatting
+options (`:5`) put space between the answers, but there is a trick which
+gives similar output with a shorter command:
+
+    %TYPE %5.0, FSGN(PI), FSGN(PI-PI), FSGN(-PI)!
+         1     0    -1
+
+That tells it to use 5 significant digits with zero decimal digits.
+Since the answers have only one significatn digit, it right-justifies
+each output with 4 spaces. There are 5 spaces between the `1` and `0`
+outputs because of that pesky implicit `+` sign, though.
+
+The second example above can be improved thus:
 
     *TYPE %3.2, 180*FATN(-1)/PI !
     -45.0
