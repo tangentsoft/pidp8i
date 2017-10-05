@@ -195,7 +195,6 @@ document when we fix them. [Patches welcome][hack]. `:)`
 | --------------- | ------------------------------------------------------
 | [b672f3581][b2] | The `$` function (dump symbol table) does not appear to work.
 
-[b1]:   https://tangentsoft.com/pidp8i/tktview/ef3493ee2
 [b2]:   https://tangentsoft.com/pidp8i/tktview/b672f3581
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 
