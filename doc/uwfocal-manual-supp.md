@@ -101,8 +101,8 @@ but it *does* care about the case of the function and variable names.
 
 Violating rule 2 can be even more surprising:
 
-    .R UWF16K               # We need a fresh environment for this demo.
-    *s a=1                  # What, no error?  I thought you said...
+    .R UWF16K               ⇠ We need a fresh environment for this demo.
+    *s a=1                  ⇠ What, no error?  I thought you said...
     *s b=2
     *s c=3
     *type $ !
