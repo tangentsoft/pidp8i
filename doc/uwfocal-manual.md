@@ -2099,8 +2099,8 @@ facilitates the use of `FLOG` for extracting roots and raising values to
 non-integer powers. The common (base-10) logarithm is easily obtained
 from the `FLOG` function just by dividing by `FLOG(10)`. Example:
 
-    TYPE %,"NATURAL LN(PI)="FLOG(PI) :45"COMMON LOG(PI)="FLOG(PI)/FLOG(10)! 
-    NATURAL LN(PI)=  1.114729886E+00         COMMON LOG(PI)= 4.971498727E-01
+    *TYPE %,"NATURAL LN(PI)="FLOG(PI) :45"COMMON LOG(PI)="FLOG(PI)/FLOG(10)! 
+    NATURAL LN(PI)= 1.144729886E+00              COMMON LOG(PI)= 4.971498727E-01
 
 
 #### <a id="fexp"></a>`FEXP` 
@@ -2128,20 +2128,17 @@ available. Here is a short table of the values of `FSIN` and `FCOS` over
 the first quadrant as produced by the command shown. Notice how the
 radian value was saved for use in the second function call:
 
-    FOR A=0,10,90; TYPE %2,A %15.1, FSIN(R=A*PI/180), FCOS(R)! 
-
-| Angle | Sine         | Cosine       |  
-| ----: | ------------ | ------------ |  
-|    0° | 0.0000000000 | 1.0000000000 |
-|   10° | 0.1736481776 | 0.9848077530 |  
-|   20° | 0.3420201433 | 0.9396926207 |
-|   30° | 0.5000000001 | 0.8660254037 |
-|   40° | 0.6427876096 | 0.7660444431 |
-|   50° | 0.7660444431 | 0.6427876096 |
-|   60° | 0.8660254037 | 0.5000000001 |  
-|   70° | 0.9396926207 | 0.3420201433 |
-|   80° | 0.9848077530 | 0.1736481778 |
-|   90° | 1.0000000000 | 0.0000000000 |
+    *FOR A=0,10,90; TYPE %2,A %15.1, FSIN(R=A*PI/180), FCOS(R)! 
+      0     0.0000000000     1.0000000000
+     10     0.1736481776     0.9848077530
+     20     0.3420201433     0.9396926207
+     30     0.5000000001     0.8660254037
+     40     0.6427876096     0.7660444431
+     50     0.7660444431     0.6427876096
+     60     0.8660254037     0.5000000001
+     70     0.9396926207     0.3420201433
+     80     0.9848077530     0.1736481778
+     90     1.0000000000     0.0000000000
 
 
 #### <a id="ftan" name="fatn"></a>`FTAN`/`FATN`
@@ -2158,8 +2155,8 @@ radians) which would give that tangent. The range of answers is from
 To convert from radians to degrees, just multiply by `180/PI`. For
 example, to check that the angle whose tangent is -1 is, in fact, -45°:
 
-    TYPE 180*FATN(-1)/PI 
-    -45.00000000 
+    *TYPE 180*FATN(-1)/PI !
+    -4.500000000E+01
 
 
 #### Trigonometric Identities
@@ -2186,25 +2183,25 @@ The `FSQT` function computes the square root of the argument using an
 iterative approximation which guarantees that no more than the last bit
 will be in error. Example:
 
-    TYPE FSQT(2), FSQT(2)^2!
-    1.414213562         2.000000000 
+    *TYPE FSQT(2), FSQT(2)^2!
+     1.414213562E+00 2.000000000E+00
 
 
 #### <a id="fabs"></a>`FABS` 
 
 `FABS` returns the absolute value of the argument: 
 
-    TYPE FABS(-1), FABS(1) 
-    1.00000000          1.000000000 
+    *TYPE FABS(-1), FABS(1)!
+     1.000000000E+00 1.000000000E+00
 
 
 #### <a id="fsgn"></a>`FSGN` 
 
-`FSGN` returns -1, or +1 depending upon whether the argument was
+`FSGN` returns -1, 0, or +1 depending upon whether the argument was
 negative, zero or positive. Example:
 
-    TYPE FSGN(PI), FSGN(PI-PI), FSGN(-PI) 
-    1.000000000         0.000000000         -1.000000000 
+    *TYPE FSGN(PI), FSGN(PI-PI), FSGN(-PI) !
+     1.000000000E+00 0.000000000E+00-1.000000000E+00
 
 
 #### <a id="fitr"></a>`FITR` 
@@ -3022,6 +3019,22 @@ made to the original text as presented here:
 
     -   Removed hard hyphenation and primitive line justification; that is
         done by the Markdown renderer, if at all
+
+7.  Due to the differences between documents made on and transmitted in
+    paper form as compared to Markdown with HTML rendering, several of
+    the input commands and their resulting outputs are presented
+    differently in this versino of the manual.
+
+    A good example is the documentation for the [`FATN`](#fatn)
+    function, where in the original, the example input was given inline
+    in the prose, and the output was shown centered on the page. I've
+    chosen instead to present it as a terminal transcript, with the
+    command and its output shown just as you'd see it on your terminal.
+
+    This in turn means that in some places I've added the `*` FOCAL
+    prompt to make it clearer which line(s) are input and which are
+    output. I've also added `!` operators where necessary to avoid
+    questions about why you get `*` prompts at the end of program ouput.
 
 — [Warren Young][wy], September 2017, Aztec, NM, USA
 
