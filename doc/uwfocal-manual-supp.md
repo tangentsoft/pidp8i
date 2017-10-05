@@ -99,7 +99,7 @@ function and a `PI` constant, so you must say this instead:
 U/W FOCAL doesn't care that you gave the `type` command in lowercase,
 but it *does* care about the case of the function and variable names.
 
-Violating rule 2 can be even more surpring:
+Violating rule 2 can be even more surprising:
 
     .R UWF16K               # We need a fresh environment for this demo.
     *s a=1                  # What, no error?  I thought you said...
