@@ -84,7 +84,7 @@ The two main rules to keep in mind are:
     may sometimes appear to work, but internally, U/W FOCAL isn't doing
     what you want it to.
 
-This doesn't work:
+The following gives incorrect output because of a violation of rule 1:
 
     *type fsin(pi/2)!
      0.000000000E+00*
