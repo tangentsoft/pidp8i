@@ -295,7 +295,6 @@ def make_bin (args):
   special_bin_copyins = [
     ["", ro_boot_tape,  "", None],
     ['RKA0:', driver_tape, "Device Drivers...", None],
-    ["", local_tape, "", None]
   ]
 
   music_copyin  = ['RKB0:', 'subsys/music.tu56',
@@ -338,11 +337,32 @@ def make_bin (args):
      "Installing MACREL...", None]
     ]
 
+  local_files = []
+  local_stat_str = "Performing copyins from " + local_tape + ":\n"
+
+  # Case Conversion scripts from local.tu56.
+  local_stat_str += "    Case Conversion batch scripts.\n"
+  local_files.append(['RKA0:', '?CSYS.BI'])
+  local_files.append(['RKA0:', '?CBAS.BI'])
+
+  if not args.disable_chess:
+    local_stat_str += "    CHESS.SV binary and CHESS.TX documentation...\n"
+    local_files.append(['RKA0:', 'CHESS.*'])
+
+  if args.enable_vtedit:
+    local_stat_str += "    TECO VTEDIT setup..."
+    local_files.append(['RKA0:', 'VTEDIT.*'])
+    local_files.append(['RKA0:', 'TECO.IN'])
+
   if args.enable_music:        bin_copyins.append(music_copyin)
   if not args.disable_ba:      bin_copyins.append(ba_copyin)
   if not args.disable_cc8:     bin_copyins.append(cc8_copyin)
   if not args.disable_k12:     bin_copyins.append(k12_copyin)
   if not args.disable_advent:  bin_copyins.append(advent_copyin)
+
+  if local_files != []:
+    local_copyins = ['RKA0:', local_tape, local_stat_str, local_files]
+    bin_copyins.append(local_copyins)
 
   if args.enable_focal69 and not args.disable_focal:
     bin_copyins.append(focal69_copyin)
@@ -431,51 +451,23 @@ def make_bin (args):
   do_all_copyins(bin_copyins)
 
   # Any further initialization of installed software is done here.
-  simh_send("attach -r dt0 " + local_tape_path)
   simh_send("boot rk0")
 
-  if progmsg: print "Installing lower case and uppercase config batch scripts..."
-  os8_pmt_send("\.", "COPY RKA0:<DTA0:LC??S.BI")
-  os8_pmt_send("\.", "COPY RKA0:<DTA0:UC??S.BI")
-  
   if not args.disable_crt:
     # NO SCOPE mode is the default on distribution tapes.
     if progmsg: print "Configuring scope-style rubout processing..."
     os8_pmt_send("\.", "SET TTY SCOPE")
   
-  if not args.disable_chess:
-    if progmsg: print "Installing CHESS.SV binary and CHESS.TX documentation..."
-    os8_pmt_send("\.", "COPY RKA0:<DTA0:CHESS.*")
-
-  if args.enable_vtedit:
-    if progmsg: print "Installing TECO VTEDIT setup..."
-    os8_pmt_send("\.", "COPY RKA0:<DTA0:VTEDIT.*")
-    os8_pmt_send("\.", "COPY RKA0:<DTA0:TECO.IN")
-
+  # Make sure Scripts are included in local_files array!
+  # Or this will fail.
   if not args.disable_lcmod:
     if progmsg: print "Patching OS/8 to upcase commands only; SIMH is set not to auto-upcase."
     os8_pmt_send("\.", "SUBMIT SYS:LCSYS.BI")
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
     os8_pmt_send("\.", "SUBMIT SYS:LCBAS.BI")
 
-  # Not needed with new file_copyin data structure
-  """
-  if not args.disable_cc8:
-    if progmsg: print "Moving CC SV files from RKB0 to SYS"
-    os8_pmt_send("\.", "COPY SYS:<RKB0:CC?.SV")
-    os8_pmt_send("\.", "DEL RKB0:CC?.SV ")
-
-    # Currently we de-fragment RKB0 only if cc8 is installed.
-    # Later on, if other activites fragment RKB0, we can
-    # do SQUISH more broadly.
-    if progmsg: print "Running SQUISH to de-fragment RKB0"
-    os8_pmt_send("\.", "SQUISH RKB0:")
-    os8_pmt_send("ARE YOU SURE\?\r\n", "Y") 
-  """
-
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
-  simh_send("detach dt0")
   simh_send("detach rk0")
 
 
