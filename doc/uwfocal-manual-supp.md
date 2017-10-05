@@ -86,14 +86,15 @@ The two main rules to keep in mind are:
 
 This doesn't work:
 
-    *type fsin(3.14)!
+    *type fsin(pi/2)!
      0.000000000E+00*
 
-It fails because there is no built-in function called `fsin`, but there
-*is* one called `FSIN`, so you must say instead:
+It fails because there is no built-in function called `fsin` nor a
+built-in constant `pi`, but there *is* a `FSIN` function and a `PI`
+constant, so you must say this instead:
 
-    *type FSIN(3.14)!
-     1.592652638E-03
+    *type FSIN(PI/2)!
+     1.000000000E+00
 
 U/W FOCAL doesn't care that you gave the `type` command in lowercase,
 but it *does* care about the case of the built-in function name.
