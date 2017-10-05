@@ -144,11 +144,11 @@ But wait, it gets weird:
     &/(+00) 4.200000001E+01
 
 We now see output for our uppercased `A` variable, but what is that `&/`
-noise? For some reason, U/W FOCAL has chosen to use one of the so-called
-"secret variables" to hold the value we tried to asssign to `foo`. Why
-now and not above with `a`, `b`, and `c`?
+noise? Apparently "`foo`" somehow gets mangled into `&/` by FOCAL's
+command parser.
 
-We have not yet tried to investigate the reason for this because the
+We have not yet tried to investigate the reason `foo` gets saved into a
+mangled variable name and `a`, `b`, and `c` above do not because the
 workaround is simple: keep <kbd>CAPS LOCK</kbd> engaged while typing
 FOCAL programs except when typing text you want FOCAL to send back out
 to the terminal:
