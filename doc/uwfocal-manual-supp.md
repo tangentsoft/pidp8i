@@ -192,7 +192,7 @@ correct answer.
 The following changes to the examples as given in the manual show how
 you can get output more suitable to your purposes:
 
-    %TYPE %1, FSGN(PI):5, FSGN(PI-PI):5, FSGN(-PI)!
+    *TYPE %1, FSGN(PI):5, FSGN(PI-PI):5, FSGN(-PI)!
      1    0    -1
 
 That sets the output precision to 1 significant digit, which is all we
@@ -200,7 +200,7 @@ need for the expected {-1, 0, -1} ouptut set. The tabstop formatting
 options (`:5`) put space between the answers, but there is a trick which
 gives similar output with a shorter command:
 
-    %TYPE %5.0, FSGN(PI), FSGN(PI-PI), FSGN(-PI)!
+    *TYPE %5.0, FSGN(PI), FSGN(PI-PI), FSGN(-PI)!
          1     0    -1
 
 That tells it to use 5 significant digits with zero decimal digits.
