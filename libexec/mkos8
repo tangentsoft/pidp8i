@@ -344,7 +344,7 @@ def make_bin (args):
   if not args.disable_k12:     bin_copyins.append(k12_copyin)
   if not args.disable_advent:  bin_copyins.append(advent_copyin)
 
-  if not args.disable_focal69 and not args.disable_focal:
+  if args.enable_focal69 and not args.disable_focal:
     bin_copyins.append(focal69_copyin)
   if not args.disable_uwfocal and not args.disable_focal:
     bin_copyins.append(uwfocal_copyin)

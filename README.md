@@ -219,6 +219,20 @@ options IF=0 and IF=7 can be left out to save space and build time:
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
+*   **--disable-os8-uwfocal** - Leave out the U/W FOCAL V4E programming
+    environment normally installed to `RKA0:`.
+    
+    Note that the default installation only installs `UWF16K.SV`, not
+    the rest of the files on `media/os8/subsys/uwfocal*.tu56`. There is
+    much more to explore here, but we cannot include it in the default
+    installation set because that would overrun OS/8's limitation on the
+    number of files on a volume.
+
+*   **--disable-os8-focal** - Do not install FOCAL on the OS/8 system
+    disk at all. This option acts as an alias for
+    `--disable-os8-uwfocal`, and it overrides `--enable-os8-focal69`,
+    discussed below.
+
 
 <a name="enable-os8"></a>
 #### --enable-os8-\*
@@ -249,6 +263,27 @@ following options:
     other hand, people don't go to a ren fair and expect to experience
     the historical ubiquity of typhoid fever either, so we might change
     our mind on this.
+
+*   **--enable-os8-focal69** — Because the default installation includes
+    U/W FOCAL, we have chosen to leave FOCAL 69 out by default to save
+    space on the O/S 8 system disk. You can give this option to install
+    this implementation alongside U/W FOCAL, or you can couple this
+    option with `--disable-os8-uwfocal` to reverse our choice of which
+    FOCAL implementation to install by default.
+
+    You should know that the reason we made this choice is that the
+    version of FOCAL 69 we are currently shipping is fairly minimal.
+    Indeed, we believe it to be the original DEC version of FOCAL 69, or
+    something close to it. There are many patches and overlays available
+    on the Internet for FOCAL 69, none of which we are currently
+    shipping. Thus our choice: we want to provide the most functional
+    version of FOCAL by default, and within the limitations of the time
+    we have chosen to spend on this, that is U/W FOCAL today.
+
+    It is possible that we will eventually add enough patches and
+    overlays to FOCAL 69 that it will become more powerful than U/W
+    FOCAL, so we might then choose to switch the defaults, but that is
+    just speculation at the time of this writing.
 
 
 #### --help
