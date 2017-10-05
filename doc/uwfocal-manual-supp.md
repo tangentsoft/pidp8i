@@ -97,7 +97,7 @@ function and a `PI` constant, so you must say this instead:
      1.000000000E+00
 
 U/W FOCAL doesn't care that you gave the `type` command in lowercase,
-but it *does* care about the case of the built-in function name.
+but it *does* care about the case of the function and variable names.
 
 Violating rule 2 can be even more surpring:
 
