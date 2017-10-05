@@ -141,6 +141,71 @@ to the terminal:
     Hello, world!
 
 
+## <a id="output-format"></a>Default Output Format
+
+FOCAL is primarily a scientific programming language. That, coupled with
+the small memory size of the PDP-8 family and the slow terminals of the
+day mean its default output format might not be what you initially
+expect. Consider these two examples pulled from the [U/W FOCAL
+Manual][uwfm]:
+
+    *TYPE FSGN(PI), FSGN(PI-PI), FSGN(-PI) !
+     1.000000000E+00 0.000000000E+00-1.000000000E+00
+    *TYPE 180*FATN(-1)/PI !
+    -4.500000000E+01
+
+This may raise several questions in your mind, such as:
+
+1.  Why is there no space between the second and third outputs of the
+    first command?
+
+2.  Why does the ouptut of the first command begin in the second column
+    and the second begin at the left margin?
+
+3.  Is the second command giving an answer of -4.5°?
+
+If you've read the U/W FOCAL Manual carefully, you know the answer to
+all three of these questions, but those used to modern programming
+environments might have skimmed those sections and thus be surprised by
+the above outputs.
+
+The first two qustions have the same answer: U/W FOCAL reserves space
+for the sign in its numeric outputs even if it doesn't end up being
+needed. This was done, no doubt, so that columns of positive and
+negative numbers line up nicely. It might help to see what's going on if
+you mentally replace the spaces in that first output line above with `+`
+signs.
+
+This then explains the discrepancy between the first and second
+commands' outputs raised by the second question above: the first output
+of the first command is positive, while the second command's output is
+negative, so there is a space at the beginning of the first output for
+the implicit `+` sign.
+
+As for the third question, the default output format is in scientific
+notation with full precision displayed: 4.5&times;10¹ = 45 degrees, the
+correct answer.
+
+The following changes to the examples as given in the manual show how
+you can get output more suitable to your purposes:
+
+    %TYPE %1, FSGN(PI):5, FSGN(PI-PI):5, FSGN(-PI)!
+     1    0    -1
+
+That sets the output precision to 1 significant digit, which is all we
+need for the expected {-1, 0, -1} ouptut set.
+
+    *TYPE %3.2, 180*FATN(-1)/PI !
+    -45.0
+
+That tells FOCAL to display 3 significant digits, and to include up to 2
+decimal places even if the traling one(s) would be 0, thus showing all 3
+significant digits in an answer expected in degrees. If you'd wanted 4
+significant digits with any trailing zeroes instead, you'd give `%4.3`
+instead. If you'd given `%3`, the output would be `-45`, the trailing
+zero being deemed unnecessary.
+
+
 ## <a id="ascii"></a>ASCII Character & Key Names
 
 Many of the common names for keys and their ASCII character equivalents
