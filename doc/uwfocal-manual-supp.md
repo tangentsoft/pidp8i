@@ -35,6 +35,21 @@ Yes, that's all. You're welcome. `:)`
 To get back to OS/8, just hit <kbd>Ctrl-C</kbd>.
 
 
+## Pasting Text in from a Terminal Emulator
+
+If you are SSHing into your PiDP-8/I, you might think to write your
+FOCAL programs in your favorite text editor out in the host OS then copy
+and paste that text into U/W FOCAL via the terminal emulator connected
+to the PiDP-8/I running it. Currently, that won't work. (2017.10.05) We
+believe it is because of the way U/W FOCAL handles terminal I/O and
+interrupts.
+
+The result is that you get trash input when you try this. When the
+problem is fixed, this section will go away.
+
+Meanwhile, the next section tells how to get around this problem.
+
+
 ## Loading and Saving Programs
 
 When the [U/W FOCAL Manual][uwfm] talks about loading and saving
