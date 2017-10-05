@@ -12,7 +12,9 @@ there are gaps:
 1.  It doesn't cover all of the topics we wish it would.
 
 This document is [our](#license) attempt to fill these gaps.
+[Extensions and corrections][hack] are welcome.
 
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 [uwfm]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual.md
 
 
@@ -196,7 +198,6 @@ document when we fix them. [Patches welcome][hack]. `:)`
 | [b672f3581][b2] | The `$` function (dump symbol table) does not appear to work.
 
 [b2]:   https://tangentsoft.com/pidp8i/tktview/b672f3581
-[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 
 
 ## <a id="license"></a>License
