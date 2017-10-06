@@ -61,10 +61,91 @@ programs, it is almost entirely concerned with paper tapes, but in the
 PiDP-8/I world — and more broadly, the simulated PDP-8 world — we have
 many more choices for getting programs into and out of U/W FOCAL.
 
-Here is a summary of the commands available for interacting
+Below is a summary of the commands available for interacting
 with the OS/8 operating system and the filesystem.  This summary is
 taken from the file CARD2.DA in the archive from which this
 distribution obtained U/W FOCAL v4E.
+
+### Important Caveat on Program Save / Call
+
+U/W FOCAL (and OMSI FOCAL as well) do not save programs as interchangable
+text files. Instead they output the raw contents of the text buffer memory
+inside the running FOCAL image.
+
+Page 8 of the documentation for OMSI FOCAL (DECUS FOCAL8-177) provides a good
+description of thie issue, and how to work-around it to place a text version
+of a program on the disk:
+
+> ... FOCAL assumes `.FC` and `.FD` as name extensions for program and
+> data files respectively. Data files are saved in standard [...] ASCII
+> format and are compatible with EDIT and TECO-8.  Program files are
+> saved in core image format and may be transferred by PIP only with
+> the '/I' option.  to produce an ASCII file containing a FOCAL program,
+> `OPEN` an `OUTFILE`; `WRITE ALL` then `OUTPUT CLOSE`.
+
+The resulting file contains the `WRITE ALL` command at the beginning and
+the `OUTPUT CLOSE` command at the end.  Removing those lines enables the
+file to be read back in as a program using the `OPEN INPUT` command.
+For example, here we type in a simple program; save it as ASCII on disk;
+edit out the superfluous lines; read the file back in; and run it:
+
+    .R UWF16K
+    *1.10 T "HELLO",!
+    *G
+    HELLO
+    *OPEN OUTPUT TEST.FC,ECHO
+    *W
+    C U/W-FOCAL:  16K-V4  NO/DA/TE
+    
+    01.10 T "HELLO",!
+    *OUTPUT CLOSE
+    *^C
+    .TYPE TEST.FC
+    *W
+    C U/W-FOCAL:  16K-V4  NO/DA/TE
+    
+    01.10 T "HELLO",!
+    *OUTPUT CLOSE
+    
+    .R EDIT
+    *TEST.FC<TEST.FC
+    #R
+    ?
+    #1L
+    *W
+    
+    #1D
+    
+    #/L
+    *OUTPUT CLOSE
+    
+    #/D
+    
+    #L
+    C U/W-FOCAL:  16K-V4  NO/DA/TE
+    
+    01.10 T "HELLO",!
+    
+    #E
+    
+    .R UWF16K
+    *W
+    C U/W-FOCAL:  16K-V4  NO/DA/TE
+    *OPEN INPUT TEST.FC,ECHO
+    *C U/W-FOCAL:  16K-V4  NO/DA/TE
+    *
+    *01.10 T "HELLO",!
+    *
+     _`RETURN`
+    *G
+    HELLO
+    *W
+    C U/W-FOCAL:  16K-V4  NO/DA/TE
+    
+    01.10 T "HELLO",!
+
+The `,ECHO` argument helps show what is being done.
+
 
 In the descriptions below, arguments in square brakets are optional.
 Specify the argument, but don't include the square brakets.
