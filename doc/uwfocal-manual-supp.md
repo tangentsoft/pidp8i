@@ -57,55 +57,69 @@ Meanwhile, the next section tells how to get around this problem.
 ## <a id="loading" name="saving"></a>Loading and Saving Programs
 
 When the [U/W FOCAL Manual][uwfm] talks about loading and saving
-programs, it is almost entirely concerned with paper tapes, but in the
-PiDP-8/I world — and more broadly, the simulated PDP-8 world — we have
-many more choices for getting programs into and out of U/W FOCAL.
+programs, it is in terms of the `PUNCH` command, which has two serious
+problems from our perspective:
 
-Below is a summary of the commands available for interacting
-with the OS/8 operating system and the filesystem.  This summary is
-taken from the file CARD2.DA in the archive from which this
-distribution obtained U/W FOCAL v4E.
+1.  It was designed for use with paper tapes, which are somewhat more
+    clumsy to use in their emulated form within SIMH than actual paper
+    tapes. We're faced with either documenting the non-obvious method
+    for working with simulated paper tapes via SIMH or documenting a
+    non-obvious alternative that doesn't use simulated paper tapes at
+    all. We chose the latter.
 
-### Important Caveat on Program Save / Call
+2.  When you use the `PUNCH` format, it dumps the raw contents of the
+    memory buffers, which are not relocateable. This means you have to
+    remember which memory page the program was saved from in order to
+    load it back up again. If you have two programs you want to load at
+    once and they both came from page 3, you've got a problem.
 
-U/W FOCAL (and OMSI FOCAL as well) do not save programs as interchangable
-text files. Instead they output the raw contents of the text buffer memory
-inside the running FOCAL image.
+Our alternative method solves both of these problems.
 
-Page 8 of the documentation for OMSI FOCAL (DECUS FOCAL8-177) provides a good
-description of thie issue, and how to work-around it to place a text version
-of a program on the disk:
+Page 8 of the [DECUS documentation for OMSI FOCAL][domsi] provides a
+good description of this issue and how to work around it to place a text
+version of a program on the disk:
 
 > ... FOCAL assumes `.FC` and `.FD` as name extensions for program and
 > data files respectively. Data files are saved in standard [...] ASCII
 > format and are compatible with EDIT and TECO-8.  Program files are
 > saved in core image format and may be transferred by PIP only with
-> the '/I' option.  to produce an ASCII file containing a FOCAL program,
+> the `/I` option. To produce an ASCII file containing a FOCAL program,
 > `OPEN` an `OUTFILE`; `WRITE ALL` then `OUTPUT CLOSE`.
 
 The resulting file contains the `WRITE ALL` command at the beginning and
 the `OUTPUT CLOSE` command at the end.  Removing those lines enables the
 file to be read back in as a program using the `OPEN INPUT` command.
-For example, here we type in a simple program; save it as ASCII on disk;
-edit out the superfluous lines; read the file back in; and run it:
+
+Let's see how to do this, step by step. First, let's enter a simple
+program:
 
     .R UWF16K
     *1.10 T "HELLO",!
     *G
     HELLO
+
+Now let's save it to an ASCII text file on the OS/8 disk:
+
     *OPEN OUTPUT TEST.FC,ECHO
     *W
     C U/W-FOCAL:  16K-V4  NO/DA/TE
     
     01.10 T "HELLO",!
     *OUTPUT CLOSE
-    *^C
+
+Next, we'll break out of the U/W FOCAL environment to get back to OS/8
+and show that the file is there, but with lines we don't want:
+
+    *^C                                        ⇠ that is, hit Ctrl-C
     .TYPE TEST.FC
     *W
     C U/W-FOCAL:  16K-V4  NO/DA/TE
     
     01.10 T "HELLO",!
     *OUTPUT CLOSE
+
+So, let's fix it. We'll use OS/8's `EDIT` program for this, but you
+could just as well use `TECO` or another text editor you like better:
     
     .R EDIT
     *TEST.FC<TEST.FC
@@ -127,29 +141,41 @@ edit out the superfluous lines; read the file back in; and run it:
     01.10 T "HELLO",!
     
     #E
-    
+
+It's ugly, but that's `EDIT` for you.
+
+Now let's load it back up into U/W FOCAL and try to run it:
+
     .R UWF16K
-    *W
-    C U/W-FOCAL:  16K-V4  NO/DA/TE
     *OPEN INPUT TEST.FC,ECHO
     *C U/W-FOCAL:  16K-V4  NO/DA/TE
     *
     *01.10 T "HELLO",!
-    *
-     _`RETURN`
+    *                                          ⇠ hit Enter
     *G
     HELLO
-    *W
-    C U/W-FOCAL:  16K-V4  NO/DA/TE
-    
-    01.10 T "HELLO",!
 
-The `,ECHO` argument helps show what is being done.
+Success!
 
+We added the `,ECHO` bits in the commands above only to make U/W FOCAL
+echo what it's doing to the terminal to make the transcripts clearer.
+In your own work, you might want to leave this off.
+
+[domsi]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
+
+
+## Command Summary (`CARD2.DA`)
+
+Below is a summary of the commands available for interacting with the
+OS/8 operating system and the filesystem. This summary is taken from
+the file `CARD2.DA` contained within the distribution of U/W FOCAL V4E
+which we used in building the version currently shipping with the
+PiDP-8/I software distribution.
 
 In the descriptions below, arguments in square brakets are optional.
-Specify the argument, but don't include the square brakets.
-If a space is in the square brakets, a space is required to provide the argument.
+Specify the argument, but don't include the square brakets. If a space
+is in the square brackets, a space is required to provide the argument.
+
 
 ### Miscellaneous Commands
 
@@ -157,6 +183,7 @@ If a space is in the square brakets, a space is required to provide the argument
 | `L E`   | Logical Exit          | Returns to the OS/8 keyboard monitor       |
 | `L B`   | Logical Branch _L1_   | Branches to _L1_ if -no- input from TTY    |
 | `J  `   | Jump _L1_.            | Equivalent to the Logical Branch command   |
+
 
 ### Filesystem Directory Commands
 
@@ -812,7 +839,11 @@ To rubout the last character on the PDP12/LAB8e display `FOUT(92)`
 
 ## <a id="license"></a>License
 
-Copyright © 2017 by Warren Young, and Bill Cattey. This document is
-licensed under the terms of [the SIMH license][sl].
+Portions copyright © 2017 by Warren Young and Bill Cattey, whose
+contributions are licensed under the terms of [the SIMH license][sl].
+
+The sections referencing `CARD[1-4].DA` are reformatted versions of
+material from the U/W FOCAL distribution and are copyrighted by their
+authors.
 
 [sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
