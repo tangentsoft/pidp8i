@@ -460,7 +460,7 @@ switch.
 
 ## <a id="license"></a>License
 
-Portions copyright © 2017 by Warren Young and Bill Cattey, whose
-contributions are licensed under the terms of [the SIMH license][sl].
+Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
+terms of [the SIMH license][sl].
 
-[sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
