@@ -351,10 +351,95 @@ in the switch register. That is, "Switch 0" is the leftmost (high order
 bit) SR switch, not "bit 0" in the SR, which would be the rightmost SR
 switch.
 
+## Error Code Table
+
+For extreme economy of memory, FOCAL does not print error message strings.
+Instead, an error routine prints a question mark followed by a four digit
+fixed point number corresponding to where in the FOCAL runtime executable
+the error was encountered.
+
+I.E. If an error was encountered in the FOCAL interpreter's parsing
+of a variable name, the error message prints out the error message
+traceable to that parser within FOCAL.
+
+This means that an error table must be produced, and every time code shifts
+around, the error table must be updated.
+
+The U/W FOCAL manual contains an error table, but it is incomplete.
+Here is a complete one:
+
+Errors appearing in bold face denotes an error from a command with an
+optional error return.
+
+|  Error   |        Meaning                                                |
+| -------- | ------------------------------------------------------------- |
+| ?01.00   | . . . . . . Keyboard interrupt or restart from location 10200 |
+| _?01.03_  | . . . . . . . . . . . . . . . . .Secondary input file missing |
+| ?01.11*  | . . . . . . . . . . . . . . No secondary input file to resume |
+| ?01.50   | . . . . . . . . . . . . . . . . .Group number greater than 31 |
+| ?01.93   | . . . . .Non-existent line number in a MODIFY or MOVE command |
+| ?03.10   | . . . .Line called by GO, IF, J, R, Q, L B, or L R is missing |
+| ?03.30   | . . . . . . . . . . . . . . . . . . . . . . . Illegal command |
+| ?03.47   | . . . Line or group missing in DO, ON, JUMP, L GOSUB or a FSF |
+|          |   	   	   	 	    	    	    	       	   |  
+| ?04.35   | . . . . . . .Bad syntax in a FOR command (missing semicolon?) |
+| ?06.03   | . . Illegal use of a function or number: ASK, YNCREMENT, ZERO |
+| ?06.41   | . . . . . . . . . .Too many variables (ZERO unnecessary ones) |
+| ?07.44   | . . . . . . .Operator missing or illegal use of an equal sign |
+| ?07.67   | . . . Variable name begins with 'F' or improper function call |
+| ?07.76   | . . . . . . . . . . . Double operators or an unknown function |
+| ?08.10   | . . . . . . . . . . . . . . . . . . . Parentheses don't match |
+| ?10.50   | . . . . . . . . . . . . . . . . . . . . . . Program too large |
+| 	   |								   |
+| ?12.10   | . . . . . . . . . . . .Error detected in the BATCH input file |
+| ?12.40   | . . . . Keyboard buffer overflow (eliminated in 8/e versions) |
+| ?13.65   | . . . . . . . . . . . Insufficient memory for BATCH operation |
+| ?14.15   | . . . . . . . . . . . . . . . . . . . Display buffer overflow |
+| ?14.50   | . . . . . . Bad Sense Switch number on a PDP12 (range is 0-5) |
+| ?14.56   | . . . . . . Illegal external sense line (PDP12 range is 0-11) |
+| ?17.22   | . . . . . . . . . . . . . . . . . . . . . FRA not initialized |
+| ?17.33   | . . . . . . . . . . . FRA index too large (exceeds file area) |
+| ?17.62   | . . . . . . . . . .FRA mode error: only modes 0,1,2,4 allowed |
+| 	   |                        	                                   |
+| ?18.42   | . . . . . . . . . . FCOM index too large: reduce program size |
+| ?19.72   | . . . . . . . . . . . . . . . . . . . . . . Logarithm of zero |
+| ?21.57   | . . . . . . . . . . . . . . .Square root of a negative number |
+| ?22.65   | . . . . . . . . Numeric overflow: too many digits in a string |
+| ?23.18   | . . . . . . . .OUTPUT ABORT or CLOSE requested too much space |
+| ?23.37   | . . . Output file overflow: recover with: O O name;O A FLEN() |
+| ?23.82*  | . . . Cannot open output file (file open, too big or no name) |
+| ?24.05*  | . . . . . . . . . . . . . . . . . . .No output file to resume |
+| 	   |                                                               |
+| ?24.25   | . . . . . . . . . . . . . . . . . . . . .Illegal OPEN command |
+| ?24.35   | . . . . . . . . . . . . . . . . . . . .Illegal RESUME command |
+| ?24.40*  | . . . . . . .Input file not found (wrong name? wrong device?) |
+| ?24.47   | . . . . . . . . . . . . . . . . . . .No input file to restart |
+| ?24.52*  | . . . . . . . . . . . . . . . . . . . No input file to resume |
+| ?25.02   | . . Stack overflow: reduce nested subroutines and expressions |
+| ?25.60*  | . . . . . . . Device does not exist or illegal 2-page handler |
+| ?26.07   | . . . . . . . . . . . . . . . . . . . Illegal LIBRARY command |
+| ?26.32   | . . . . .File specified is already deleted (wrong extension?) |
+| 	   |                                                               |
+| ?26.39   | . . . File loaded is not a FOCAL program - better reload UWF! |
+| ?26.56   | . . . . . . . . .Program requested is missing (wrong device?) |
+| ?26.66   | . . LIBRARY SAVE error: no name, device full, or no directory |
+| ?27.18   | . Attempted LIBRARY operation on a device without a directory |
+| ?27.75   | . . . . . . . . No length specified in a LIBRARY ZERO command |
+| ?27.90   | . . . . . . . . . . . . . . . . . . . . . . . . .Zero divisor |
+| ?29.25   | . . . . . . Cannot use the '<>' construction with OPEN OUTPUT |
+| ?29.38   | . .Device error (write-lock, bad checksum or illegal request) |
+
+
+
+     _   Indicates EOF detected in input - I/O continues from terminal
+
+ ?....?   TRACE feature: Text enclosed by '?' marks (not inside quotes)
+          is typed during execution to help find the source of an error
+          The value of each expression in a SET command is also printed
 
 ## <a id="license"></a>License
 
-Copyright © 2017 by Warren Young. This document is licensed under
-the terms of [the SIMH license][sl].
+Copyright © 2017 by Warren Young, and Bill Cattey. This document is
+licensed under the terms of [the SIMH license][sl].
 
 [sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
