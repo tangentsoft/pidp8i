@@ -40,62 +40,15 @@
 int main()
 {
 	int i,j,k,switchscan[2], tmp;
-	struct bcm2835_peripheral gpio;
-	
-	// ------------ Find gpio address (different for Pi 2) -------------
 
-	gpio.addr_p = bcm_host_get_peripheral_address() + 0x200000;
-
-	if (gpio.addr_p== 0x20200000) printf("scanswitch - RPi Plus\n");
-	else printf("scanswitch - RPi 2\n");
-
-	if (map_peripheral(&gpio, 0) != 0)
-	{	printf("Failed to map the physical GPIO registers into the virtual memory space.\n");
+	extern struct bcm2835_peripheral gpio;
+    if (map_gpio_for_pidp8i (1) != 0)
+	{	printf("Failed to map the GPIO SoC peripheral into our VM space.\n");
 		return -1;
 	}
+    init_pidp8i_gpio();
 
-	// initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
-	for (i=0;i<NLEDROWS;i++)	// Define ledrows as input
-		INP_GPIO(ledrows[i]);
-	for (i=0;i<NCOLS;i++)		// Define cols as input
-		INP_GPIO(cols[i]);
-	for (i=0;i<NROWS;i++)		// Define rows as input
-		INP_GPIO(rows[i]);
-
-	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-	GPIO_PULL = 2;				// pull-up
-	short_wait();       		// must wait 150 cycles
-	GPIO_PULLCLK0 = 0x0fff0; 	// selects GPIO pins 4..15 (assumes we avoid pins 2 and 3!)
-	short_wait();
-	GPIO_PULL = 0;  			// reset GPPUD register
-	short_wait();
-	GPIO_PULLCLK0 = 0; 			// remove clock
-	short_wait(); 	        	// probably unnecessary
-
-	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-	GPIO_PULL = 0;				// no pull-up no pull-down just float
-	short_wait();	        	// must wait 150 cycles
-	GPIO_PULLCLK0 = 0x0ff00000;	// selects GPIO pins 20..27
-	short_wait();
-	GPIO_PULL = 0; 				// reset GPPUD register
-	short_wait();
-	GPIO_PULLCLK0 = 0; 			// remove clock
-	short_wait();       		// probably unnecessary
-
-	// BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-	GPIO_PULL = 0;				// no pull-up no pull down just float
-	short_wait();	        	// must wait 150 cycles
-	GPIO_PULLCLK0 = 0x070000; 	// selects GPIO pins 16..18
-	short_wait();
-	GPIO_PULL = 0; 				// reset GPPUD register
-	short_wait();
-	GPIO_PULLCLK0 = 0; 			// remove clock
-	short_wait();       		// probably unnecessary
-	// --------------------------------------------------
-
-
-	// prepare for reading switches		
-
+	// Read the switches
 	for (uint8_t row=1;row<=2;row++)		// do rows 2 (for IF switches) and 3 (for STOP switch)
 	{		
 		INP_GPIO(rows[row]);
