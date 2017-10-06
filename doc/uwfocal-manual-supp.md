@@ -61,7 +61,75 @@ programs, it is almost entirely concerned with paper tapes, but in the
 PiDP-8/I world — and more broadly, the simulated PDP-8 world — we have
 many more choices for getting programs into and out of U/W FOCAL.
 
-TODO
+Here is a summary of the commands available for interacting
+with the OS/8 operating system and the filesystem.  This summary is
+taken from the file CARD2.DA in the archive from which this
+distribution obtained U/W FOCAL v4E.
+
+### Miscellaneous Commands
+
+| O D   | Output Date         | Prints system date in the form DD.MM.YY  |
+| L E   | Logical Exit        | Returns to the OS/8 keyboard monitor     |
+| L B   | Logical Branch L1   | Branches to L1 if -no- input from TTY    |
+| J     | Jump L1.            | Equivalent to the Logical Branch command |
+
+### Filesystem Directory Commands
+
+| L A,E | List All [name][,E]       |   Lists all files after the one specified |
+| L O   | List Only [name]*         | Verifies the existence of one FC file     |
+| O L   | Only List [name]*         | Verifies the existence of one DA file     |
+| L L   | Library List [name]%      | Shows files with the same extension       |
+| L D   | Library Delete name [ L1] | Removes a name from the directory         |
+| L Z   | Library Zero dev:[length] | Zeros directory using length given        |
+
+Notes on Directory Commands:
+
+`E`  Adding the phrase `,E` will list all of the 'empties' too
+
+*  Omitting the name lists all files with the same extension
+
+%  A null extension will list all files having the same name
+
+### Program Commands
+
+| L C   | Library Call name        | Loads a program, then Quits      |
+| L G   | Library Gosub name [ G1] | Calls a program as a subroutine  |
+| L R   | Library Run name [ L1]   | Loads a program and starts at L1 |
+| L N   | Library Name [name]      | Changes the program header       |
+| L S   | Library Save name [ L1]  | Saves the current program        |
+
+`[  G1]` indicates which line or group will be called by 'L G'
+
+`[  L1]` specifies an error return, except for the L R command
+
+### Input / Output Commands
+
+| O A   | Output Abort [E1]                | Terminates output file with length E1  |
+| O B   | Output Buffer                    | Dumps buffer without closing the file  |
+| O C   | Output Close [E1]                | Ends output, saves file with length E1 |
+| O I,E | Open Input [,Echo]               | Selects the terminal for input         |
+| O O   | Open Output                      | Selects the terminal for output        |
+| O S   | Output Scope                     | Selects CRT for output (if available)  |
+| O I - | Open Input name [,E] [ L1]       | Switches input to an OS/8 device       |
+| O S - | Open Second name [,Echo] [ L1]   | Selects a second input file            |
+| O O - | Open Output name [,Echo] [ L1]   | Initiates OS/8 (file) output           |
+| O E - | Output Everything device [,Echo] | Changes error/echo device              |
+| O R R | Open Restart Read [,Echo]        | Restarts from the beginning            |
+| O R I | Open Resume Input [,Echo] [ L1]  | Returns to file input                  |
+| O R O | Open Resume Output [,Echo] [ L1] | Returns to file output                 |
+| O R S | Open Resume Second [,Echo] [ L1] | Returns to second input file           |
+
+The `INPUT ECHO` sends characters to the current OUTPUT device
+
+The `OUTPUT ECHO` sends characters to the current 'O E' device
+
+### Filename Expressions:
+
+Device and filenames may be written explicitly: `RXA1:`, `MYSTUF`, `0123.45`
+Numeric parts can be computed from (expressions): `DTA(N):PROG(X).(A+B)`
+Negative values specify single characters: `F(-201)L(-197,.5,PI)=FILE03`
+An <OS/8 block number> can be substituted for the name: `LTA1:<20*BN+7>`
+Expressions in square brackets indicate the size: `TINY[1]`, `<LOC>[SIZE]`
 
 
 ## <a id="lowercase"></a>Lowercase Input
@@ -156,6 +224,32 @@ to the terminal:
     *1.1 TYPE "Hello, world!"!
     *G
     Hello, world!
+
+The CARD2.DA reference card file that provided the Input / Output summary
+also provides a terse summary of the rules regarding Variable naming:
+
+### Variables
+
+Variable names may be any length but only the first two characters are
+stored; the first character may not be an `F`.  Both single and double
+subscripts are allowed - a subscript of 0 is assumed if none is given.
+The variables `!`,`"`,`#`,`$`,`%` and `PI` are protected from the ZERO command and
+do not appear in table dumps.  `!` is used for double subscripting and
+should be set to the number of rows in the array.  `#`,`$`,`%` are used by
+FOCAL Statement Functions.  The `ZVR` feature permits non-zero variables
+to replace any which are zero.  This includes `FOR` loop indices, so use
+a protected variable if the index runs through zero.  Undefined or re-
+placed variables are automatically set to zero before their first use.
+
+### FOCAL STATEMENT FUNCTIONS
+
+`F(G1,E1,E2,E3)` executes line or group `G1` after first setting the vari-
+bles `#`,`$`,`%` to the values of `E1`,`E2`,`E3` (if any).  The function returns
+with the value of the last arithmetic expression processed by the sub-
+routine, including line number & subscript evaluations.   For example:
+
+    8.1 S FSIN(#)/FCOS(#) is the TANGENT function = F(TAN,A) if 'TA' = 8.1
+    9.1 S FEXP($*FLOG(#)) computes X^Y for any value of Y using F(9.1,X,Y)
 
 
 ## <a id="output-format"></a>Default Output Format
@@ -366,7 +460,8 @@ This means that an error table must be produced, and every time code shifts
 around, the error table must be updated.
 
 The U/W FOCAL manual contains an error table, but it is incomplete.
-Here is a complete one:
+Here is a complete one which comes from the file CARD4.DA in the
+U/W FOCAL archive from which this distribution is taken.
 
 Errors appearing in bold face denotes an error from a command with an
 optional error return.
@@ -436,6 +531,144 @@ optional error return.
 `?....?`   TRACE feature: Text enclosed by `?` marks is typed during execution
 to help find the source of an error. The value of each expression in a SET
 command is also printed
+
+## Summary Command, Operator, and Internal Function Reference Cards
+
+The reference card files CARD1.DA and CARD3.DA provide a helpful overall
+summary:
+
+### Single Letter Commands
+
+| A | Ask ["QUERY",X,:,!]          | Accepts value of X from input device           |
+| B | Break [L1]%                  | Exits from a FOR loop, continuing at L1        |
+| C | Comment                      | Ignores the rest of the line                   |
+| D | Do [G1,G2,G3,etc.]           | Calls a line or a group as a subroutine        |
+| E | Erase [G1]                   | Deletes all or part of the program             |
+| F | For X=E1,[E2,] E3;(commands) | Executes line 1+(E3-E1)/E2 times               |
+| G | Goto [L1]                    | Branches to line L1                            |
+| H | Hesitate [E1]*               | Delays (or synchronizes) the program           |
+| I | If (E1) [L1,L2,L3]%          | Transfers to L1,L2,L3 on sign of E1            |
+| J | Jump (E1) [G1,G2,G3,G4...]%  |   Calls the subroutine selected by E1          |
+| K | Kontrol [E1,E2,etc]*         | Controls relays or other digital output        |
+| L | Library/List                 | Two-letter commands, see the next page         |
+| M | Modify [L1,L2]               | Edits and/or Moves line L1 - see below         |
+| N | Next [L1]%                   | Ends a FOR loop, branches to L1 when finished  |
+| O | On (E1) [G1,G2,G3]%          | Calls subroutine selected by sign of E1        |
+| P | Plot [X,Y,L,M]*              | Controls an analog or digital plotter          |
+| Q | Quit [L1]%                   | Stops program, allows restart at L1            |
+| R | Return [L1]%                 | Exits from a subroutine call, continuing at L1 |
+| S | Set [E1,E2,E3,etc.]          | Evaluates arithmetic expressions               |
+| T | Type [E1,"TEXT",!,#,:,%,$]   | Generates alphanumeric output                  |
+| U | User                         |                                                |
+| V | View [X,Y,Z]*                | Generates graphic output on a CRT              |
+| W | Write [G1,G2,G3,etc.]        | Lists all or part of a program                 |
+| X | Xecute                       |  Equivalent to SET                             |
+| Y | Yncrement [X,Y-Z]            | Increments or decrements variables             |
+| Z | Zero [X,Y,...]               | Sets some or all of the variables to zero      |
+
+* Indicates a non-standard (installation dependent) feature
+
+% If the line number is omitted (or=0) no branch will occur
+
+`En` are Arithmetic Expressions - - [] Enclose optional items
+       
+`Ln` are Line Numbers from `0.01` to `31.99` - excluding integers
+
+`Gn` are Line or Group Numbers from `0` to `+31` (`0` = next or all)
+
+Line numbers `.01` to `.99` refer to lines in the current group
+Negative or Integer line numbers denote a 'Group' operation
+
+Arithmetic expressions may be used as Line or Group numbers
+
+### Arithmetic Operators
+
+|   | ( )  [ ]  < >           | Three equivalent sets of enclosures     |
+| ' | Character value         | `'A` is the value of the letter `A`     |
+| ^ | Exponentiation          | Positive or negative integer powers     |
+| * | Multiplication          | Note especially that multiplication     |
+| / | Division                | has a higher priority than division     |
+| - | Subtraction or Negation | Example: (to illustrate priorities)     |
+| + | Addition                | `-5^4/3*A=2+1` is `0-<5^4>/[3*(A=2+1)]` |
+| = | Replacement             | May be used anywhere in expressions     |
+
+### Ask/Type Operators
+
+| , | COMMA or SPACE           | Separates variables and/or expressions         |
+| ! | Carriage return/linefeed | Starts a new line for input or output          |
+| " | String delimiter         | Case shift option uses `\`: `"A\B\C"=AbC`      |
+| # | Return or Clear Screen   | Used for plotting or overprinting              |
+| $ | Symbol table listing     | `TYPE $4` prints 4 variables per line          |
+| : | Tabulation               | `ASK :-15`  skips over the next 15 characters  |
+|   | (:0 is ignored)          | `TYPE :15`  spaces to column 15 if not beyond  |
+| % | Format control           | `%3` Produces 3 Digits in an integer format    |
+|   | (for output only)        | `%0.04` =  4 Digits using scientific notation  |
+|   | (input is unformatted)   | `%5.02` =  5 Digits, 2 decimal places maximum  |
+
+Letters (but only one E) are legal numeric input: `YES=25E19`
+
+`ALTMODE` or `ESCAPE` aborts input, with the variable unchanged
+
+`_` deletes all digits during input -- `RUBOUT` is ignored
+
+
+### Modify / Move Operators
+
+CTRL/F . . . . . . . . . Aborts the command leaving the line unchanged
+CTRL/G (bell). . . . . . . . . . . . . .Selects a new search character
+CTRL/L (does not echo) . . . Searches for next occurrence of character
+<- or _ (backarrow or underline). . .Deletes all characters to the left
+RETURN . . . . . . . . . . Terminates the line at the current position
+LINEFEED . . . . . . . . . .Copies the remainder of the line unchanged
+RUBOUT/DELETE. . . . . . . Removes the previous character, echos a '\'
+
+        RUBOUT or DELETE and <- or _ also work during command input
+        LINEFEED retypes the corrected input line for verification
+
+### Internal Functions
+
+  FABS(E1). . . . . . . . Returns the absolute value of the argument
+  FADC(N)*. . . . . .Reads A/D converter channel N (LAB/8e or PDP12)
+  FATN(A) . . . . . .Computes the arctangent of A, result in radians
+  FBLK(). . . . . . . . .OS/8 block number of the current input file
+  FBUF(I,V)*. . . . . . . .Display buffer storage (single-precision)
+  FCOM(I,V) . . . . . . . .Extended data storage in Fields 2 and 4-7
+  FCOS(A) . . . . . . . . Computes the cosine of A (A is in radians)
+  FCTR(N)*. . . . . . . . Reads a frequency counter using timebase N
+  FDAC(N,V)*. . . . . . .Sets D/A converter channel N to the value V
+  FDAY(MONTH*256+DAY*8+YEAR-78) . . .Reads/Sets the OS/8 system date
+  FDIN(B1,B2,...,Bn)*. . Reads selected bits from the input register
+  FDVM(N,R)*. . . . . .Reads a digital voltmeter, channel N, range R
+  FEXP(E1). . . . . . . . . Base 'e' exponential function  |E1|<1420
+  FIN() . . . . . .Reads a single character, returns the ASCII value
+  FIND(C) . . . .Searches for code C, returning C if found, 0 if EOF
+  FITR(E1). . . . . . . . . Returns the integer part of the argument
+  FJOY(I)*. . . . .Places the cursor (joystick) coordinates in XJ,YJ
+  FLEN(I) . . . . File length: I='0' for 'O'utput, I='1' for 'I'nput
+  FLOG(E1). . . . . . .Natural logarithm of the absolute value of E1
+  FLS()*. . . . .Returns unsigned value of the Left Switches (PDP12)
+  FMIN(A,B)/FMAX(A,B) . . . .Returns the minimum or maximum argument
+  FMQ(N). . . . . Displays the lower 12 bits of N in the MQ register
+  FOUT(C) . . . . . . .Outputs character code C, returns the value 0
+  FRA(I,V). . . . . . Reads or writes in a binary file at location I
+  FRAC(E1). . . . . . . .Returns the fractional part of the argument
+  FRAN(). . . . . . . . . . Pseudo-random number function, range 0-1
+  FSAM(N) . . . . . .Samples N channels and stores results in buffer
+  FSGN(E1). . . . . .Returns -1,0,+1 for E1 negative, zero, positive
+  FSIN(A) . . . . . . . . . Computes the sine of A (A is in radians)
+  FSQT(E1). . . . . . . .Finds the square root using Newton's method
+  FSR()/FRS() . . . .Reads the Switch Register or the Right Switches
+  FSS(N)* . . . . . . . . . .Tests Sense Switch N: -1 = OFF, +1 = ON
+  FTIM(N)*. . . . . . Reads, sets or clears the elapsed time counter
+  FTRG(N)*. . . . . . . .Returns status and clears Schmitt trigger N
+  FTRM() . . . . . . . . . . . . . Returns the last input terminator
+  FXL(N)* . . . . .Tests external level N (PDP12) returning -1 or +1
+  And others. . . . .There are a total of 36 possible function names
+
+     Functions indicated by a * are not available in all versions
+     The functions FBLK & FLEN are useful in filename expressions
+     FIN, FOUT, FIND and FTRM use decimal ASCII codes - see below
+
 
 ## <a id="license"></a>License
 
