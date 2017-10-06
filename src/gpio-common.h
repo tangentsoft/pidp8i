@@ -123,6 +123,11 @@ extern display* pdis_update, *pdis_paint;
 #define ledstatus (pdis_update->curr)
 extern int pidp8i_simple_gpio_mode;
 
+// Simplified interface for single-threaded programs that don't use our
+// GPIO thread, but do want to share some our implementation.
+extern void init_pidp8i_gpio (void);
+extern int map_gpio_for_pidp8i (int must_map);
+
 extern uint16_t switchstatus[];
 extern uint8_t cols[];
 extern uint8_t ledrows[];
@@ -138,8 +143,6 @@ extern void update_led_states (const us_time_t delay);
 // single-threaded and do their own GPIO scanning, like scanswitch.
 extern void init_pidp8i_gpio (void);
 
-extern unsigned bcm_host_get_peripheral_address(void);
-extern int map_peripheral(struct bcm2835_peripheral *p, int exclusive);
 extern void unmap_peripheral(struct bcm2835_peripheral *p);
 
 extern void read_switches (ns_time_t delay);

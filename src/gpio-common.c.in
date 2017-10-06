@@ -156,7 +156,7 @@ int resumeFromInstructionLoopExit = 0;
 //// map_peripheral ////////////////////////////////////////////////////
 // Exposes the physical address defined in the passed structure
 
-int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
+static int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
 {
     // Name of GPIO memory-mapped device
     static const char* gpio_mem_dev = "/dev/gpiomem";
@@ -224,7 +224,7 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 //// bcm_host_get_peripheral_address ///////////////////////////////////
 // Find Pi's GPIO base address
 
-unsigned bcm_host_get_peripheral_address(void)
+static unsigned bcm_host_get_peripheral_address(void)
 {
     unsigned address = ~0;
     FILE *fp = fopen("/proc/device-tree/soc/ranges", "rb");
@@ -685,15 +685,12 @@ static void *gpio_thread (void *terminate)
 }
 
 
-//// start/stop_pidp8i_gpio_thread /////////////////////////////////////
-// Start and stop gpio_thread().  We export these functions rather than
-// export gpio_thread() directly so this module's users don't have to
-// know anything about pthreads and such.
+//// map_gpio_for_pidp8i ///////////////////////////////////////////////
+// Wrapper around map_peripheral() taking care of some higher level
+// details.  This is the interface we expose to outsiders.
 
-int start_pidp8i_gpio_thread (const char* must_map)
+int map_gpio_for_pidp8i (int must_map)
 {
-    char errs[100];
-
     // Find GPIO address (it varies by Pi model)
     unsigned int gpio_base_addr = bcm_host_get_peripheral_address();
     gpio.addr_p = gpio_base_addr + 0x200000;
@@ -710,6 +707,23 @@ int start_pidp8i_gpio_thread (const char* must_map)
     gpio2.addr_p = gpio_base_addr + 0x100000;
     gpio2.addr[0x0B] = (gpio2.addr[0x0B] & 0xF7) | (0x5A << 24);
 #endif
+
+    return 0;
+}
+
+
+//// start/stop_pidp8i_gpio_thread /////////////////////////////////////
+// Start and stop gpio_thread().  We export these functions rather than
+// export gpio_thread() directly so this module's users don't have to
+// know anything about pthreads and such.
+
+int start_pidp8i_gpio_thread (const char* must_map)
+{
+    char errs[100];
+    
+    if (map_gpio_for_pidp8i (must_map != 0) != 0) {
+        return EFAULT;
+    }
 
     // Until gpio_core () reads the switches for the first time, we need
     // to mark them as all-open, lest we have a race condition with the
