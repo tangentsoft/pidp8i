@@ -164,12 +164,11 @@ In your own work, you might want to leave this off.
 [domsi]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
 
 
-## Command Summary (`CARD2.DA`)
+## <a id="card2"></a>Command Summary (`CARD2.DA`)
 
-Below is a summary of the commands available for interacting with the
-OS/8 operating system and the filesystem. This summary is taken from
-the file `CARD2.DA` contained within the distribution of U/W FOCAL V4E
-which we used in building the version currently shipping with the
+The sub-sections below are a reformatted version of the text from the
+file `CARD2.DA` contained within the distribution of U/W FOCAL V4E which
+we used in building the version of U/W FOCAL currently shipping with the
 PiDP-8/I software distribution.
 
 In the descriptions below, arguments in square brakets are optional.
@@ -202,6 +201,7 @@ Notes on Directory Commands:
 
 %  A null extension will list all files having the same name
 
+
 ### Program Commands
 
 | `L C`   | Library Call name          | Loads a program, then Quits        |
@@ -213,6 +213,7 @@ Notes on Directory Commands:
 [ _G1_] indicates which line or group will be called by `L G`
 
 [ _L1_] specifies an error return, except for the `L R` command
+
 
 ### Input / Output Commands
 
@@ -235,13 +236,41 @@ The `INPUT ECHO` sends characters to the current `OUTPUT` device
 
 The `OUTPUT ECHO` sends characters to the current 'O E' device
 
-### Filename Expressions:
+
+### Filename Expressions
 
 Device and filenames may be written explicitly: `RXA1:`, `MYSTUF`, `0123.45`
 Numeric parts can be computed from (expressions): `DTA(N):PROG(X).(A+B)`
 Negative values specify single characters: `F(-201)L(-197,.5,PI)=FILE03`
 An <OS/8 block number> can be substituted for the name: `LTA1:<20*BN+7>`
 Expressions in square brackets indicate the size: `TINY[1]`, `<LOC>[SIZE]`
+
+
+### <a id="variables"></a>Variables
+
+Variable names may be any length, but only the first two characters are
+stored; the first character may not be an `F`. Both single and double
+subscripts are allowed - a subscript of 0 is assumed if none is given.
+The variables `!`, `"`, `#`, `$`, `%` and `PI` are protected from the
+`ZERO` command and do not appear in table dumps. `!` is used for double
+subscripting and should be set to the number of rows in the array.  `#`,
+`$`, `%` are used by [FOCAL Statement Functions](#fsf). The `ZVR`
+feature permits non-zero variables to replace any which are zero. This
+includes `FOR` loop indices, so use a protected variable if the index
+runs through zero.  Undefined or replaced variables are automatically
+set to zero before their first use.
+
+
+### <a id="fsf"></a>FOCAL Statement Functions
+
+`F(G1,E1,E2,E3)` executes line or group `G1` after first setting the
+variables `#`,`$`,`%` to the values of `E1`,`E2`,`E3` (if any).  The
+function returun with the value of the last arithmetic expression
+processed by the sub routine, including line number & subscript
+evaluations.   For example:
+
+    8.1 S FSIN(#)/FCOS(#) is the TANGENT function = F(TAN,A) if 'TA' = 8.1
+    9.1 S FEXP($*FLOG(#)) computes X^Y for any value of Y using F(9.1,X,Y)
 
 
 ## <a id="lowercase"></a>Lowercase Input
@@ -337,31 +366,8 @@ to the terminal:
     *G
     Hello, world!
 
-The CARD2.DA reference card file that provided the Input / Output summary
-also provides a terse summary of the rules regarding Variable naming:
-
-### Variables
-
-Variable names may be any length but only the first two characters are
-stored; the first character may not be an `F`.  Both single and double
-subscripts are allowed - a subscript of 0 is assumed if none is given.
-The variables `!`,`"`,`#`,`$`,`%` and `PI` are protected from the ZERO command and
-do not appear in table dumps.  `!` is used for double subscripting and
-should be set to the number of rows in the array.  `#`,`$`,`%` are used by
-FOCAL Statement Functions.  The `ZVR` feature permits non-zero variables
-to replace any which are zero.  This includes `FOR` loop indices, so use
-a protected variable if the index runs through zero.  Undefined or re-
-placed variables are automatically set to zero before their first use.
-
-### FOCAL STATEMENT FUNCTIONS
-
-`F(G1,E1,E2,E3)` executes line or group `G1` after first setting the vari-
-bles `#`,`$`,`%` to the values of `E1`,`E2`,`E3` (if any).  The function returns
-with the value of the last arithmetic expression processed by the sub-
-routine, including line number & subscript evaluations.   For example:
-
-    8.1 S FSIN(#)/FCOS(#) is the TANGENT function = F(TAN,A) if 'TA' = 8.1
-    9.1 S FEXP($*FLOG(#)) computes X^Y for any value of Y using F(9.1,X,Y)
+See the [Variables section](#variables) of [`CARD2.DA`](#card2) for more
+information on variable naming.
 
 
 ## <a id="output-format"></a>Default Output Format
