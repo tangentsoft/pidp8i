@@ -156,7 +156,7 @@ int resumeFromInstructionLoopExit = 0;
 //// map_peripheral ////////////////////////////////////////////////////
 // Exposes the physical address defined in the passed structure
 
-int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
+static int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
 {
     // Name of GPIO memory-mapped device
     static const char* gpio_mem_dev = "/dev/gpiomem";
@@ -224,7 +224,7 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 //// bcm_host_get_peripheral_address ///////////////////////////////////
 // Find Pi's GPIO base address
 
-unsigned bcm_host_get_peripheral_address(void)
+static unsigned bcm_host_get_peripheral_address(void)
 {
     unsigned address = ~0;
     FILE *fp = fopen("/proc/device-tree/soc/ranges", "rb");
@@ -565,49 +565,13 @@ void turn_off_pidp8i_leds ()
 }
 
 
-//// gpio_thread ///////////////////////////////////////////////////////
-// The GPIO thread entry point: initializes GPIO and then calls
-// the gpio_core () implementation linked to this program.
+//// init_pidp8i_gpio //////////////////////////////////////////////////
+// Initialize the GPIO pins to the initial states required by
+// gpio_thread().   It's a separate exported function so that scanswitch
+// can also use it.
 
-static void *gpio_thread (void *terminate)
+void init_pidp8i_gpio (void)
 {
-    // Set thread to real time priority
-    struct sched_param sp;
-    sp.sched_priority = 4;  // not high, just above the minimum of 1
-    int rt = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp) == 0;
-
-    // Tell the user about our configuration, succinctly
-    const char* pt = pi_type();
-    printf(
-        "PiDP-8/I @VERSION@ [%s] [%cls] [%spcb] [%sgpio]"
-#ifdef DEBUG
-        " [debug]"
-#endif
-        "%s",
-        pt,
-        ILS_MODE ? 'i' : 'n',
-        pt[0] == 'p' ? 
-#ifdef PCB_SERIAL_MOD_OV
-            "sermod" : 
-#elif PCB_SERIAL_MOD_JLW
-            "altser" : 
-#else
-            "std" : 
-#endif
-            "no",
-        (pidp8i_gpio_present ? "" : "no"),
-        (rt ? " [rt]" : "")
-    );
-
-    // It's okay for our caller to resume executing, if it's locked
-    // waiting for us to finish the initialization bits that can only
-    // happen in this thread.
-    pthread_mutex_unlock (&gpio_start_mutex);
-
-    // If we didn't map the GPIO peripheral and get here, it was
-    // optional, and we've done all we can without it.
-    if (!pidp8i_gpio_present) return (void*)-1;
-
     // initialise GPIO (all pins used as inputs, with pull-ups enabled on cols)
     int i;
     for (i = 0; i < NLEDROWS; i++) {     // Define ledrows as input
@@ -659,6 +623,54 @@ static void *gpio_thread (void *terminate)
     usleep(1);
     GPIO_PULLCLK0 = 0; // remove clock
     usleep(1); // probably unnecessary
+}
+
+
+//// gpio_thread ///////////////////////////////////////////////////////
+// The GPIO thread entry point: initializes GPIO and then calls
+// the gpio_core () implementation linked to this program.
+
+static void *gpio_thread (void *terminate)
+{
+    // Set thread to real time priority
+    struct sched_param sp;
+    sp.sched_priority = 4;  // not high, just above the minimum of 1
+    int rt = pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp) == 0;
+
+    // Tell the user about our configuration, succinctly
+    const char* pt = pi_type();
+    printf(
+        "PiDP-8/I @VERSION@ [%s] [%cls] [%spcb] [%sgpio]"
+#ifdef DEBUG
+        " [debug]"
+#endif
+        "%s",
+        pt,
+        ILS_MODE ? 'i' : 'n',
+        pt[0] == 'p' ? 
+#ifdef PCB_SERIAL_MOD_OV
+            "sermod" : 
+#elif PCB_SERIAL_MOD_JLW
+            "altser" : 
+#else
+            "std" : 
+#endif
+            "no",
+        (pidp8i_gpio_present ? "" : "no"),
+        (rt ? " [rt]" : "")
+    );
+
+    // It's okay for our caller to resume executing, if it's locked
+    // waiting for us to finish the initialization bits that can only
+    // happen in this thread.
+    pthread_mutex_unlock (&gpio_start_mutex);
+
+    // If we didn't map the GPIO peripheral and get here, it was
+    // optional, and we've done all we can without it.
+    if (!pidp8i_gpio_present) return (void*)-1;
+
+    // Set GPIO pins to initial states
+    init_pidp8i_gpio ();
 
     // Hand off control to the gpio_core () variant linked to this
     // program: either the new incandescent lamp simulator or the old
@@ -673,15 +685,12 @@ static void *gpio_thread (void *terminate)
 }
 
 
-//// start/stop_pidp8i_gpio_thread /////////////////////////////////////
-// Start and stop gpio_thread().  We export these functions rather than
-// export gpio_thread() directly so this module's users don't have to
-// know anything about pthreads and such.
+//// map_gpio_for_pidp8i ///////////////////////////////////////////////
+// Wrapper around map_peripheral() taking care of some higher level
+// details.  This is the interface we expose to outsiders.
 
-int start_pidp8i_gpio_thread (const char* must_map)
+int map_gpio_for_pidp8i (int must_map)
 {
-    char errs[100];
-
     // Find GPIO address (it varies by Pi model)
     unsigned int gpio_base_addr = bcm_host_get_peripheral_address();
     gpio.addr_p = gpio_base_addr + 0x200000;
@@ -698,6 +707,23 @@ int start_pidp8i_gpio_thread (const char* must_map)
     gpio2.addr_p = gpio_base_addr + 0x100000;
     gpio2.addr[0x0B] = (gpio2.addr[0x0B] & 0xF7) | (0x5A << 24);
 #endif
+
+    return 0;
+}
+
+
+//// start/stop_pidp8i_gpio_thread /////////////////////////////////////
+// Start and stop gpio_thread().  We export these functions rather than
+// export gpio_thread() directly so this module's users don't have to
+// know anything about pthreads and such.
+
+int start_pidp8i_gpio_thread (const char* must_map)
+{
+    char errs[100];
+    
+    if (map_gpio_for_pidp8i (must_map != 0) != 0) {
+        return EFAULT;
+    }
 
     // Until gpio_core () reads the switches for the first time, we need
     // to mark them as all-open, lest we have a race condition with the
