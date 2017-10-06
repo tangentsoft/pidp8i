@@ -1,16 +1,34 @@
 # U/W FOCAL V4E Reference Cards
 
+### Introduction
+
 The following material is reformatted from the `CARD[1-4].DA` files
 contained within the U/W FOCAL V4E distribution which we used in
 creating the PiDP-8/I software project's U/W FOCAL feature.
 
+Since these files were likely created [before 1978][cl78] and probably
+did not have their copyright renewed — if it was in fact applied for,
+not an automatic thing at the time in the USA — we believe this text to
+be in the public domain. If the authors of the above text request it, we
+will remove this file from the PiDP-8/I software distribution.
+
+[cl78]: https://en.wikipedia.org/wiki/Copyright_law_of_the_United_States#Works_created_before_1978
+
+<style type="text/css">
+    @media print {
+        h2         { page-break-before: always; }
+        h1, h2, h3 { page-break-after:  avoid; }
+        p          { page-break-before: avoid; }
+
+        div.header, div.mainmenu, div.footer {
+            display:    none;
+            visibility: hidden; 
+        }
+    }
+</style>
+
 
 ## <a id="card1"></a>U/W FOCAL Quick Reference Card (`CARD1.DA`)
-
-The sub-sections below are a reformatted version of the text from the
-file `CARD1.DA` contained within the distribution of U/W FOCAL V4E which
-we used in building the version of U/W FOCAL currently shipping with the
-PiDP-8/I software distribution.
 
 
 ### Single Letter Commands
@@ -42,7 +60,7 @@ PiDP-8/I software distribution.
 | `Y` | Yncrement [_X_,_Y_`-`_Z_]    | Increments or decrements variables                       |
 | `Z` | Zero [_X_,_Y_,...]           | Sets some or all of the variables to zero                |
 
-* Indicates a non-standard (installation dependent) feature
+\* Indicates a non-standard (installation dependent) feature
 
 % If the line number is omitted (or=0) no branch will occur
 
@@ -52,10 +70,9 @@ _Ln_ are Line Numbers from `0.01` to `31.99` - excluding integers
 
 _Gn_ are Line or Group Numbers from `0` to `+31` (`0` = next or all)
 
-Line numbers `.01` to `.99` refer to lines in the current group
-Negative or Integer line numbers denote a 'Group' operation
-
-Arithmetic expressions may be used as Line or Group numbers
+Line numbers `.01` to `.99` refer to lines in the current group Negative
+or Integer line numbers denote a 'Group' operation. Arithmetic
+expressions may be used as Line or Group numbers
 
 
 ### Arithmetic Operators
@@ -83,11 +100,9 @@ Arithmetic expressions may be used as Line or Group numbers
 |   | (for output only)        | `%0.04` =  4 Digits using scientific notation  |
 |   | (input is unformatted)   | `%5.02` =  5 Digits, 2 decimal places maximum  |
 
-Letters (but only one E) are legal numeric input: `YES=25E19`
-
-`ALTMODE` or `ESCAPE` aborts input, with the variable unchanged
-
-`_` deletes all digits during input -- `RUBOUT` is ignored
+Letters (but only one E) are legal numeric input: `YES=25E19`. `ALTMODE`
+or `ESCAPE` aborts input, with the variable unchanged. `_` deletes all
+digits during input — `RUBOUT` is ignored.
 
 
 ### Modify / Move Operators
@@ -176,19 +191,11 @@ The `OUTPUT ECHO` sends characters to the current 'O E' device
 ### Filename Expressions
 
 Device and filenames may be written explicitly: `RXA1:`, `MYSTUF`,
-`0123.45`.
-
-Numeric parts can be computed from (expressions):
-`DTA(N):PROG(X).(A+B)`.
-
-Negative values specify single characters:
-`F(-201)L(-197,.5,PI)=FILE03`.
-
-An \<OS/8 block number\> can be substituted for the name:
-`LTA1:<20*BN+7>`.
-
-Expressions in square brackets indicate the size: `TINY[1]`,
-`<LOC>[SIZE]`.
+`0123.45`. Numeric parts can be computed from (expressions):
+`DTA(N):PROG(X).(A+B)`. Negative values specify single characters:
+`F(-201)L(-197,.5,PI)=FILE03`. An \<OS/8 block number\> can be
+substituted for the name: `LTA1:<20*BN+7>`. Expressions in square
+brackets indicate the size: `TINY[1]`, `<LOC>[SIZE]`.
 
 
 ### <a id="variables"></a>Variables
@@ -263,11 +270,9 @@ evaluations.   For example:
 
 And others. There are a total of 36 possible function names
 
-Functions indicated by a * are not available in all versions
-
-The functions FBLK & FLEN are useful in filename expressions
-
-`FIN`, `FOUT`, `FIND` and `FTRM` use decimal ASCII codes - see below.
+Functions indicated by a * are not available in all versions. The
+functions `FBLK` & `FLEN` are useful in filename expressions. `FIN`,
+`FOUT`, `FIND` and `FTRM` use decimal ASCII codes - see below.
 
 
 ### <a id="ascii"></a>Decimal ASCII Character Codes
@@ -403,15 +408,3 @@ optional error return.
 `?....?`   TRACE feature: Text enclosed by `?` marks is typed during execution
 to help find the source of an error. The value of each expression in a SET
 command is also printed
-
-
-## <a id="copyright"></a>Copyright
-
-The above reference cards were likely created [before 1978][cl78] and
-probably did not have their copyright renewed — if it was in fact
-applied for, not an automatic thing at the time in the USA — we believe
-this text to be in the public domain. If the authors of the above text
-request it, we will remove this file from the PiDP-8/I software
-distribution.
-
-[cl78]: https://en.wikipedia.org/wiki/Copyright_law_of_the_United_States#Works_created_before_1978
