@@ -187,8 +187,8 @@ is in the square brackets, a space is required to provide the argument.
 ### Filesystem Directory Commands
 
 | `L A,E` | List All [name][`,E`]         | Lists all files after the one specified  |
-| `L O`   | List Only [_name_]*           | Verifies the existence of one `.FC` file |
-| `O L`   | Only List [_name_]*           | Verifies the existence of one `.DA` file |
+| `L O`   | List Only [_name_]\*          | Verifies the existence of one `.FC` file |
+| `O L`   | Only List [_name_]\*          | Verifies the existence of one `.DA` file |
 | `L L`   | Library List [_name_]%        | Shows files with the same extension      |
 | `L D`   | Library Delete name [ _L1_]   | Removes a name from the directory        |
 | `L Z`   | Library Zero dev:[_length_]   | Zeros directory using length given       |
@@ -239,11 +239,20 @@ The `OUTPUT ECHO` sends characters to the current 'O E' device
 
 ### Filename Expressions
 
-Device and filenames may be written explicitly: `RXA1:`, `MYSTUF`, `0123.45`
-Numeric parts can be computed from (expressions): `DTA(N):PROG(X).(A+B)`
-Negative values specify single characters: `F(-201)L(-197,.5,PI)=FILE03`
-An <OS/8 block number> can be substituted for the name: `LTA1:<20*BN+7>`
-Expressions in square brackets indicate the size: `TINY[1]`, `<LOC>[SIZE]`
+Device and filenames may be written explicitly: `RXA1:`, `MYSTUF`,
+`0123.45`.
+
+Numeric parts can be computed from (expressions):
+`DTA(N):PROG(X).(A+B)`.
+
+Negative values specify single characters:
+`F(-201)L(-197,.5,PI)=FILE03`.
+
+An \<OS/8 block number\> can be substituted for the name:
+`LTA1:<20*BN+7>`.
+
+Expressions in square brackets indicate the size: `TINY[1]`,
+`<LOC>[SIZE]`.
 
 
 ### <a id="variables"></a>Variables
