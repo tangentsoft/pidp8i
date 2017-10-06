@@ -134,6 +134,10 @@ extern void stop_pidp8i_gpio_thread ();
 extern void turn_off_pidp8i_leds ();
 extern void update_led_states (const us_time_t delay);
 
+// Alternative to start_pidp8i_gpio_thread() for programs that run
+// single-threaded and do their own GPIO scanning, like scanswitch.
+extern void init_pidp8i_gpio (void);
+
 extern unsigned bcm_host_get_peripheral_address(void);
 extern int map_peripheral(struct bcm2835_peripheral *p, int exclusive);
 extern void unmap_peripheral(struct bcm2835_peripheral *p);
