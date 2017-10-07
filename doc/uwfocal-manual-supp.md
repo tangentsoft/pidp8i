@@ -239,6 +239,10 @@ FOCAL:
 U/W FOCAL doesn't care that you gave the `type` command in lowercase,
 but it *does* care about the case of the function and variable names.
 
+U/W FOCAL's tolerance of lowercase in command names doesn't extend to
+arguments. In particular, the `OPEN` command's argument must be
+uppercase: `o o` doesn't work, nor does `O o`, but `o O` does.
+
 Violating rule 2 can be even more surprising:
 
     .R UWF16K               ⇠ We need a fresh environment for this demo.
