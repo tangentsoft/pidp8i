@@ -154,24 +154,28 @@ Now let's load it back up into U/W FOCAL and try to run it:
     *C U/W-FOCAL:  16K-V4  NO/DA/TE
     *
     *01.10 T "HELLO",!
-    *_G
+    *_                                         ⇠ hit Enter
+    *GO
     HELLO
 
 Success!
+
+The `*_` pair above is the asterisk prompt printed by the FOCAL command
+interpreter signifying that it is ready for input followed by the
+underscore printed by the file handler signifying that it hit the end of
+file for `TEST.FC`. The hint above to hit <kbd>Enter</kbd> is optional
+and merely causes FOCAL to print another `*` prompt, which clarifies the
+transcript.
 
 We added the `,ECHO` bits in the commands above only to make U/W FOCAL
 echo what it's doing to the terminal to make the transcripts clearer.
 In your own work, you might want to leave this off.
 
-The character sequence above, `*_G` is asterisk printed by the FOCAL
-command interpreter signifying it is ready for input, the underscore
-printed by the file handler signifying it hit the end of file for
-`TEST.FC` and our typing `G` to tell FOCAL to start the program
-we just loaded.  If you don't use the `,ECHO` option the previous example
-looks like this:
+By skipping both of these optional bits and abbreviating the commands,
+the final terminal transcript above condenses considerably:
 
     .R UWF16K
-    *OPEN INPUT TEST.FC
+    *O I TEST.FC
     *_G
     HELLO
 
