@@ -42,7 +42,7 @@ Yes, that's all. You're welcome. `:)`
 To get back to OS/8, just hit <kbd>Ctrl-C</kbd>.
 
 
-## Getting Program Text into U/W FOCAL
+## <a id="loading"></a>Getting Program Text into U/W FOCAL
 
 There are many ways to get program text into U/W FOCAL other than simply
 typing it in. This section gives several methods, because each may be of
@@ -688,6 +688,19 @@ FOCAL:
 19. `WRITE` doesn't terminate a line; `MODIFY` doesn't echo form feed.
 
 20. U/W FOCAL's starting address is 100 (field 0) or 10200 (field 1).
+
+
+## <a id="converting"></a>Converting Programs from Other Versions of FOCAL
+
+Programs saved by other versions of FOCAL generally don't have the same
+format as the core images used by U/W FOCAL. You must therefore use one
+of the [text based loading methods](#loading) to save your program text
+out of the other FOCAL and load it into U/W FOCAL.
+
+Also, while the `ERASE` command may be used to zero variables in other
+FOCALs, you must use `ZERO` for that in U/W FOCAL. If your program
+starts off with `ERASE` commands to initialize its variables, there's a
+pretty good chance your program will just erase itself under U/W FOCAL.
 
 
 ## <a id="license"></a>License
