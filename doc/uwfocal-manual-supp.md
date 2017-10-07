@@ -281,8 +281,8 @@ By skipping both of these optional bits and abbreviating the commands,
 the final terminal transcript above condenses considerably:
 
     .R UWF16K
-    *O I TEST            ⇠  assumes *.FD, just like O O
-    *_G
+    *O I TEST     ⇠  assumes *.FD, just like O O
+    _G            ⇠  no ECHO this time, so no * prompt, just EOF indicator
     HELLO
 
 [domsi]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
