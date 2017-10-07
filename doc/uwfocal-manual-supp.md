@@ -655,7 +655,12 @@ In the meantime, the following facilities do not work:
 
 *   The `FADC`, `FJOY`, `FLS`, `FRS`, and `FXL` functions don't exist
 
-*   The `PLOT` and `VIEW` commands don't exist
+*   There is no plotter support in SIMH, so the `PLOT` command doesn't
+    exist
+
+*   Although support for the VC8E point-plot display exists in SIMH, the
+    `VIEW` command to drive it is not present in our version of U/W
+    FOCAL.
 
 *   Error code `?14.15` can't happen; we have no "display buffer"
 
