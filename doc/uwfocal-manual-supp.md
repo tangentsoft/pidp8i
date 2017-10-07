@@ -72,12 +72,12 @@ modern paste-through-SSH speeds doesn't affect OS/8 itself, so we'll use
 it as an intermediary:
 
     .R PIP
-    *HELLO.TX<TTY:                  ⇠ *.FC is not a plain-text format; don't use it
+    *HELLO.FD<TTY:                  ⇠ see below for *.FC vs *.FD distinction
     01.10 TYPE "Hello, world!"!
     ^Z                              ⇠ Ctrl-Z is the EOF marker in OS/8
     *^C                             ⇠ return to OS/8 from PIP
     .R UWF16K                       ⇠ run U/W FOCAL
-    *O I HELLO.TX                   ⇠ open text file for input; "types" pgm in for us
+    *O I HELLO.FD                   ⇠ open text file for input; "types" pgm in for us
     _G                              ⇠ EOF seen, program started
     Hello, world!                   ⇠ and it runs!
 
@@ -128,7 +128,7 @@ Briefly, then, I'll show how to use some of these commands:
     *1.10 TYPE "Hello, world!"!         ⇠ input a simple one-line program
     *L S HELLO                          ⇠ write program to disk with LIBRARY SAVE
     *L O HELLO                          ⇠ verify that it's really there
-    HELLO .FC   1                       ⇠ yup, there it is!
+    HELLO .FD   1                       ⇠ yup, there it is!
     *E                                  ⇠ ERASE all our hard work so far
     *W                                  ⇠ is it gone?
     C U/W-FOCAL:  16K-V4  NO/DA/TE      ⇠ goneski
@@ -175,7 +175,7 @@ program:
 
 Now let's save it to an ASCII text file on the OS/8 disk:
 
-    *OPEN OUTPUT TEST.FC,ECHO
+    *OPEN OUTPUT TEST,ECHO                      ⇠ uses *.FD by default
     *W
     C U/W-FOCAL:  16K-V4  NO/DA/TE
     
@@ -186,7 +186,7 @@ Next, we'll break out of the U/W FOCAL environment to get back to OS/8
 and show that the file is there, but with lines we don't want:
 
     *^C                                        ⇠ that is, hit Ctrl-C
-    .TYPE TEST.FC
+    .TYPE TEST.FD
     *W
     C U/W-FOCAL:  16K-V4  NO/DA/TE
     
@@ -197,7 +197,7 @@ So, let's fix it. We'll use OS/8's `EDIT` program for this, but you
 could just as well use `TECO` or another text editor you like better:
     
     .R EDIT
-    *TEST.FC<TEST.FC
+    *TEST.FD<TEST.FD
     #R
     ?
     #1L
@@ -222,7 +222,7 @@ It's ugly, but that's `EDIT` for you.
 Now let's load it back up into U/W FOCAL and try to run it:
 
     .R UWF16K
-    *OPEN INPUT TEST.FC,ECHO
+    *OPEN INPUT TEST.FD,ECHO
     *C U/W-FOCAL:  16K-V4  NO/DA/TE
     *
     *01.10 T "HELLO",!
@@ -235,7 +235,7 @@ Success!
 The `*_` pair above is the asterisk prompt printed by the FOCAL command
 interpreter signifying that it is ready for input followed by the
 underscore printed by the file handler signifying that it hit the end of
-file for `TEST.FC`. The hint above to hit <kbd>Enter</kbd> is optional
+file for `TEST.FD`. The hint above to hit <kbd>Enter</kbd> is optional
 and merely causes FOCAL to print another `*` prompt, which clarifies the
 transcript.
 
@@ -247,7 +247,7 @@ By skipping both of these optional bits and abbreviating the commands,
 the final terminal transcript above condenses considerably:
 
     .R UWF16K
-    *O I TEST.FC
+    *O I TEST.FD
     *_G
     HELLO
 
