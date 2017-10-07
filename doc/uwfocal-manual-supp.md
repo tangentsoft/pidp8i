@@ -528,6 +528,16 @@ There are also some errors I simply have not yet tried to cause:
 `?01.03`, `?01.11`, `?12.10`, `?12.40`.
 
 
+## Video Output
+
+The [U/W FOCAL reference cards][uwfr] imply that there is a version 
+with some kind of video terminal ouptut feature set. Our version
+appears not to have these features:
+
+*   The `VIEW` command doesn't exist
+*   Error code `?14.15` can't happen
+
+
 ## <a id="license"></a>License
 
 Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
