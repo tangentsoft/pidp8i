@@ -42,7 +42,7 @@ Yes, that's all. You're welcome. `:)`
 To get back to OS/8, just hit <kbd>Ctrl-C</kbd>.
 
 
-## <a id="pasting"></a>Pasting Text in from a Terminal Emulator
+## <a id="pasting1"></a>Pasting Programs in from a Terminal Emulator, Part 1
 
 If you are SSHing into your PiDP-8/I, you might think to write your
 FOCAL programs in your favorite text editor out in the host OS then copy
@@ -212,7 +212,7 @@ the final terminal transcript above condenses considerably:
 [domsi]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
 
 
-## Pasting Programs in from a Terminal Emulator, Part 2
+## <a id="pasting2"></a>Pasting Programs in from a Terminal Emulator, Part 2
 
 "But I want to write my FOCAL programs in a *real* text editor and paste
 them into my PiDP-8/I," I hear you say. Dispair not. There is a path.
