@@ -594,7 +594,7 @@ There are also some errors I simply have not yet tried to cause:
 `?01.03`, `?01.11`, `?12.10`, `?12.40`.
 
 
-## Missing Hardware Support
+## <a id="miss-hw"></a>Missing Hardware Support
 
 The [U/W FOCAL reference cards][uwfr] and [DECUS submission][duwf] talk
 about features for hardware we don't have. Either the command/feature
@@ -630,6 +630,61 @@ out what it is supposed to do, it will be documented here.
 
 Until then, the three `?17.XX` error codes listed on the refcard are
 untested.
+
+
+## <a id="diffs"></a>Differences Between U/W FOCAL and FOCAL 69, FOCAL-8, and OMSI PS/8 FOCAL
+
+The [DECUS submission for U/W FOCAL][duwf] lists these advantages over
+FOCAL 69, FOCAL 8, and OMSI PS/8 FOCAL for the 16 kword version of U/W
+FOCAL included with the PiDP-8/I software distribution:
+
+1.  Extended library features with device-independent chaining and
+    subroutine calls between programs.
+
+2.  File reading and writing commands, 10 digit precision, full 32k
+    memory support, 36 possible functions, 26 possible command letters.
+
+3.  Computed line numbers and unlimited line lengths.
+
+4.  Tabulation on output, format control for scientific notation.
+
+5.  Double subscripting allowed.
+
+6.  Negative exponentiation operators permitted.
+
+7.  `FLOG`, `FEXP`, `FATN`, `FSIN`, `FCOS`, `FITR`, and `FSQT` rewritten
+    for 10-digit accuracy.
+
+8.  Character manipulations handled with `FIN`, `FOUT`, and `FIND`.
+
+9.  Function return improvements:
+
+    *   `FSGN(0)=0` in U/W FOCAL; `=1` in FOCAL,1969
+    *   `FOUT(A)=0` in U/W FOCAL; `=A` in PS/8 FOCAL
+
+10. n/a; see [above](#miss-hw)
+
+11. 6 special variables are protected from the `ZERO` command: `PI`,
+    `!`, `"`, `$`, `%`, and `#`. `PI` is initialized as 3.141592654.
+
+12. The limit on the number of variables is 676
+
+13. Text buffer expanded to 15 blocks
+
+14. Two-page handlers permitted
+
+15. Program and file names are wholly programmable. File size may be
+    specified. OS/8 block numbers may be used in place of file names.
+
+16. The `OPEN` and `DELETE` commands can have programmed error returns.
+
+17. Improved distribution and random initialization of `FRAN`.
+
+18. `ERASE`, `MODIFY`, and `MOVE` do not erase variables.
+
+19. `WRITE` doesn't terminate a line; `MODIFY` doesn't echo form feed.
+
+20. U/W FOCAL's starting address is 100 (field 0) or 10200 (field 1).
 
 
 ## <a id="license"></a>License

@@ -282,10 +282,16 @@ following options:
     the limitations of the time we have chosen to spend on this, that is
     U/W FOCAL today.
 
+    (See our [U/W FOCAL manual supplement][suppd] for a list of
+    differences between these versions of FOCAL, which implicitly
+    explains why we chose it.)
+
     It is possible that we will eventually add enough patches and
     overlays to FOCAL 69 that it will become more powerful than U/W
     FOCAL, so we might then choose to switch the defaults, but that is
     just speculation at the time of this writing.
+
+[suppd]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual-supp.md#diffs
 
 
 #### --help
