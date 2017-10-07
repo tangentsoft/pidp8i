@@ -8,9 +8,10 @@ creating the PiDP-8/I software project's U/W FOCAL feature.
 
 Since these files were likely created [before 1978][cl78] and probably
 did not have their copyright renewed — if it was in fact applied for,
-not an automatic thing at the time in the USA — we believe this text to
-be in the public domain. If the authors of the above text request it, we
-will remove this file from the PiDP-8/I software distribution.
+not an automatic thing at the time in the United States — we believe
+this text to be in the public domain. If the authors of the text below
+request it, we will remove this file from the PiDP-8/I software
+distribution.
 
 [cl78]: https://en.wikipedia.org/wiki/Copyright_law_of_the_United_States#Works_created_before_1978
 
