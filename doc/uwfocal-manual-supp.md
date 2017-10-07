@@ -95,32 +95,23 @@ When the [U/W FOCAL Manual][uwfm] talks about loading and saving
 programs, it is in terms of the `PUNCH` command, because the manual is
 focused on the paper tape based version of U/W FOCAL.
 
-TODO: Write up the PUNCH option despite the problems
+The PiDP-8/I software project ships the OS/8 version of U/W FOCAL
+instead, which doesn't even have a `PUNCH` command. There is mention of
+a `PLOT` command on [`CARD1.DA`][uwfr], but that's of no use to us here.
 
-Though it does work in the PiDP-8/I environment, it has two serious
-problems:
-
-1.  It was designed for use with paper tapes, which are somewhat more
-    clumsy to use in their emulated form within SIMH than actual paper
-    tapes.
-
-2.  When you use the `PUNCH` format, it dumps the raw contents of the
-    memory buffers, which are not relocateable. This means you have to
-    remember which memory page the program was saved from in order to
-    load it back up again. If you have two programs you want to load at
-    once and they both came from page 3, you've got a problem.
+Even if it did work, mounting and unmounting simulated paper tapes under
+SIMH is a bit of a hassle. We can do better.
 
 
 ### <a id="ls-library"></a>The `LIBRARY` Command
 
-Because the PiDP-8/I software project is distributing the OS/8 version
-of U/W FOCAL rather than the original paper tape based version, we have
-an easy solution to the problems of using `PUNCH` for saving programs:
-use the `LIBRARY` command instead.
+The effective replacement for `PUNCH` in the OS/8 version of U/W FOCAL
+is the `LIBRARY` command.
 
-In the OS/8 version of U/W FOCAL, the `L` command is not overloaded with
-`LINK` and `LOOK` as documented in [the manual][uwfm], it means
-`LIBRARY` instead, and it is generally used for OS/8 file commands.
+If you've read [the manual][uwfm], you may be wondering if it's
+overloaded with `LINK` and `LOOK`, but no: those commands are apparently
+missing from the OS/8 version. (Open question: how do you use multiple
+fields of core for program code with the OS/8 version, then?)
 
 Briefly, then, I'll show how to use some of these commands:
 
@@ -141,14 +132,13 @@ Briefly, then, I'll show how to use some of these commands:
     *L O HELLO                          ⇠ ...be sure
     *                                   ⇠ Houston, we have no program
 
-See `CARD2` in the [refcards][uwfr] for more examples.
+See `CARD2.DA` in the [refcards][uwfr] for more examples.
 
 
 ### <a id="ls-write"></a>The `WRITE` Command
 
-There is another way to go here which also solves both of the problems
-of the `PUNCH` method, which illustrates practical usage of U/W FOCAL
-along the way.
+There is another way to go here, which illustrates practical usage of
+U/W FOCAL along the way.
 
 Page 8 of the [DECUS documentation for OMSI FOCAL][domsi] provides a
 good description of this issue and how to work around it to place a text
