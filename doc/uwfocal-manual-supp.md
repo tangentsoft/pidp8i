@@ -211,7 +211,7 @@ U/W FOCAL commands, rather than the one-liner we did above:
 
     *OPEN OUTPUT TEST,ECHO                      ⇠ uses *.FD by default
     *W
-    C U/W-FOCAL:  16K-V4  NO/DA/TE
+    C U/W-FOCAL:  TEST    NO/DA/TE
     
     01.10 T "HELLO",!
     *OUTPUT CLOSE
@@ -256,7 +256,7 @@ The [previous method](#ls-write) avoids all of that `EDIT` ugliness.
 Now let's load it back up into U/W FOCAL and try to run it:
 
     .R UWF16K
-    *OPEN INPUT TEST.FD,ECHO
+    *OPEN INPUT TEST,ECHO
     *C U/W-FOCAL:  16K-V4  NO/DA/TE
     *
     *01.10 T "HELLO",!
@@ -281,7 +281,7 @@ By skipping both of these optional bits and abbreviating the commands,
 the final terminal transcript above condenses considerably:
 
     .R UWF16K
-    *O I TEST.FD         ⇠  yes, you must give .FD; default for O O only
+    *O I TEST            ⇠  assumes *.FD, just like O O
     *_G
     HELLO
 
