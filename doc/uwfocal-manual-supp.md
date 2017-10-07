@@ -674,6 +674,13 @@ Until then, the three `?17.XX` error codes listed on the refcard are
 untested.
 
 
+## `ZVR` Command
+
+Some U/W FOCAL documents talk about a `ZVR` command. It is the Zero
+VaRiable command and is thus just another way of spelling `ZERO`, since
+U/W FOCAL only pays attention to the first letter of the command.
+
+
 ## <a id="diffs"></a>Differences Between U/W FOCAL and Other FOCALs
 
 The [DECUS submission for U/W FOCAL][duwf] lists the following
