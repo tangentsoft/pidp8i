@@ -65,10 +65,7 @@ problems from our perspective:
 
 1.  It was designed for use with paper tapes, which are somewhat more
     clumsy to use in their emulated form within SIMH than actual paper
-    tapes. We're faced with either documenting the non-obvious method
-    for working with simulated paper tapes via SIMH or documenting a
-    non-obvious alternative that doesn't use simulated paper tapes at
-    all. We chose the latter.
+    tapes.
 
 2.  When you use the `PUNCH` format, it dumps the raw contents of the
     memory buffers, which are not relocateable. This means you have to
@@ -76,7 +73,40 @@ problems from our perspective:
     load it back up again. If you have two programs you want to load at
     once and they both came from page 3, you've got a problem.
 
-Our alternative method solves both of these problems.
+Because the PiDP-8/I software project is distributing the OS/8 version
+of U/W FOCAL rather than the original paper tape based version, we have
+an easy solution to these problems: use the `LIBRARY` command. As with
+the `O` command, `L` is overloaded in the OS/8 version of U/W FOCAL to
+mean `LINK`, `LOOK` and `LIBRARY`, but the last of these is not
+documented at all in the U/W FOCAL Manual, since it is focused on the
+paper tape version of UWF.
+
+Briefly, then, I'll show how to use these commands:
+
+    .R UWF16K                           ⇠ start fresh
+    *1.10 TYPE "Hello, world!"!         ⇠ input a simple one-line program
+    *L S HELLO                          ⇠ write program to disk with LIBRARY SAVE
+    *L O HELLO                          ⇠ verify that it's really there
+    HELLO .FC   1                       ⇠ yup, there it is!
+    *E                                  ⇠ ERASE all our hard work so far
+    *W                                  ⇠ is it gone?
+    C U/W-FOCAL:  16K-V4  NO/DA/TE      ⇠ goneski
+    *L C HELLO                          ⇠ load it back in with LIBRARY CALL
+    *W                                  ⇠ did it come back?
+    C U/W-FOCAL:  HELLO   NO/DA/TE
+
+    01.10 TYPE "Hello, world!"!         ⇠ yay, there it is!
+    *L D HELLO                          ⇠ nuke it on disk; it's the only way to
+    *L O HELLO                          ⇠ ...be sure
+    *                                   ⇠ Houston, we have no program
+
+
+
+### Alternative Method
+
+There is another way to go here which also solves both of the problems
+at the top of this section, which illustrates practical usage of U/W
+FOCAL along the way.
 
 Page 8 of the [DECUS documentation for OMSI FOCAL][domsi] provides a
 good description of this issue and how to work around it to place a text
