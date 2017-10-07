@@ -564,8 +564,9 @@ not know which code is correct for our current version of FOCAL.
 
 ### `?31.<7` — Non-existent program area called by `LOOK` or `LINK`
 
-Our current implementation of U/W FOCAL gives code `?26.07` for this
-case instead.
+Our current implementation of U/W FOCAL removed those commands in favor
+of `LIBRARY`, so you can't make this one happen. An error in a `LIBRARY`
+command is most likely to give `?26.07` instead.
 
 
 ### Irreproducible Errors
