@@ -2877,11 +2877,11 @@ works and illustrate some of the things it can do:
     no information is being passed *to* the function. The first
     instruction (`7501=MQA`) reads the `MQ`, the next (`7001=IAC`)
     increments this value and the third (`7521=SWP`) interchanges the
-    new and old values, saving the new value for a subsequent call, and
+    new and old values, saving the new value for a subsequent call and
     returning the old value to the program. Machines based on the 6100
     microprocessor may not be able to display the `MQ` while UWF is
     running. Using this function however, the value of the hardware
-    register can be saved in the variable `MQ`, and output by the `TYPE`
+    register can be saved in the variable `MQ` and output by the `TYPE`
     command as well. So being able to actually 'see' this register is
     not a necessity.
 
@@ -2892,8 +2892,9 @@ works and illustrate some of the things it can do:
         SET MQ=FPAL(AC,7521) 
 
     or we could take advantage of the `MQA` instruction to perform an
-    'inclusive OR' between a value in the `MQ` and one in the `AC`: `SET
-    FMQ(A),AB=FPAL(B,7501)`.
+    'inclusive OR' between a value in the `MQ` and one in the `AC`:
+    
+        SET FMQ(A),AB=FPAL(B,7501)
 
 3.  As a final example, suppose that we have constructed an A/D
     converter interface which uses the same instruction set as the
@@ -2934,10 +2935,10 @@ again.
 ### Advanced Considerations
 
 While it is clearly possible to use `FPAL` to implement patches to UWF
-itself, this practice is *strongly* discouraged (and no help with such
-folly will be offered) since this makes programs 'version dependent'. On
-the other hand, there *are* a few 'tricks' which could prove useful at
-various times:
+itself, this practice is *strongly* discouraged — and no help with such
+folly will be offered — since this makes programs 'version dependent'.
+On the other hand, there *are* a few 'tricks' which could prove useful
+at various times:
 
 1.  The value of the first parameter is actually converted into a 24-bit
     integer, of which only the lower 12-bits are loaded into the `AC` at
@@ -3021,9 +3022,9 @@ made to the original text as presented here:
         done by the Markdown renderer, if at all
 
 7.  Due to the differences between documents made on and transmitted in
-    paper form as compared to Markdown with HTML rendering, several of
-    the input commands and their resulting outputs are presented
-    differently in this versino of the manual.
+    paper form — as compared to Markdown with HTML rendering — several
+    of the input commands and their resulting outputs are presented
+    differently in this version of the manual.
 
     A good example is the documentation for the [`FATN`](#fatn)
     function, where in the original, the example input was given inline
@@ -3036,7 +3037,7 @@ made to the original text as presented here:
     output. I've also added `!` operators where necessary to avoid
     questions about why you get `*` prompts at the end of program ouput.
 
-— [Warren Young][wy], September 2017, Aztec, NM, USA
+— [Warren Young][wy], September & October 2017, Aztec, NM, USA
 
 [hack]:  https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 [ocr]:   https://archive.org/stream/bitsavers_decpdp8focct78_4144912/UW_FOCAL_Manual_V4E_Oct78_djvu.txt
