@@ -42,7 +42,7 @@ Yes, that's all. You're welcome. `:)`
 To get back to OS/8, just hit <kbd>Ctrl-C</kbd>.
 
 
-## <a id="loading"></a>Getting Program Text into U/W FOCAL
+## <a id="loading" name="saving"></a>Loading and Saving Programs
 
 There are many ways to get program text into U/W FOCAL other than simply
 typing it in. This section gives several methods, because each may be of
@@ -51,14 +51,14 @@ use to you, but may open your eyes to techniques that may be useful to
 you in other contexts, so we encourage you to read this entire section.
 
 
-### <a id="ls-pasting"></a>Na&iuml;ve Way: Pasting Text in from a Terminal Emulator
+### <a id="ls-pasting"></a>Pasting Text in from a Terminal Emulator: The Na&iuml;ve Way
 
 If you are SSHing into your PiDP-8/I, you might think to write your
-FOCAL programs in your favorite text editor out in the host OS then copy
-and paste that text into U/W FOCAL via the terminal emulator connected
-to the PiDP-8/I running it. Currently, that won't work. (2017.10.05) We
-believe it is because of the way U/W FOCAL handles terminal I/O and
-interrupts. If you try, the input ends up trashed in FOCAL.
+FOCAL programs in your favorite text editor on your client PC then copy
+and paste that text into U/W FOCAL over SSH. Currently, that won't work.
+(2017.10.05) We believe it is because of the way U/W FOCAL handles
+terminal I/O and interrupts. If you try, the input ends up trashed in
+FOCAL.
 
 
 ### <a id="ls-pip"></a>Pasting Text in from a Terminal Emulator: The Way That Works
@@ -72,12 +72,12 @@ modern paste-through-SSH speeds doesn't affect OS/8 itself, so we'll use
 it as an intermediary:
 
     .R PIP
-    *HELLO.FD<TTY:                  ⇠ see below for *.FC vs *.FD distinction
+    *HELLO.DA<TTY:                  ⇠ use default extension for O I
     01.10 TYPE "Hello, world!"!
     ^Z                              ⇠ Ctrl-Z is the EOF marker in OS/8
     *^C                             ⇠ return to OS/8 from PIP
     .R UWF16K                       ⇠ run U/W FOCAL
-    *O I HELLO.FD                   ⇠ open text file for input; "types" pgm in for us
+    *O I HELLO                      ⇠ open text file for input; "types" pgm in for us
     _G                              ⇠ EOF seen, program started
     Hello, world!                   ⇠ and it runs!
 
