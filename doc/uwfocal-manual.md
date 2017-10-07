@@ -2290,7 +2290,7 @@ returns the numerical value of that character. A list of character
 values may be found in Appendix I, and the value of any character can be
 obtained within the program simply by preceding it with a single quote
 mark. Thus the expression `('A)` will have the value of the letter `A`
-(193) while (`A-'Z`) will be the difference of the codes for `A` and
+(193) while `('A-'Z`)` will be the difference of the codes for `A` and
 `Z`. Character strings can be read with the `FIN` function and later
 output with `FOUT`; this is a bit slow, but it does provide UWF with a
 limited string-handling facility.
@@ -2369,10 +2369,10 @@ for a `?`) is all that is required:
     4.2 ASK G(N=N+1); IF (FTRM()-'?) .2,,.2; TYPE %2"THERE WERE"N "GRADES"! 
 
 
-### <a id="fbuf" name="fcom"></a>`FBUF`/`FCGM` 
+### <a id="fbuf" name="fcom"></a>`FBUF`/`FCOM` 
 
 These functions allow UWF to use extra memory for data storage and are
-thus of interest only for systems with more that 12<. They may be added
+thus of interest only for systems with more than 12K. They may be added
 by setting Switch 8 *UP* when UWF is started for the first time. (See
 [above](#opt-switch).) FBUF is designed to handle 12-bit (signed)
 integer data while `FCOM` may be used for storing either 24-bit integers
@@ -2388,18 +2388,18 @@ specified. Thus:
 | `FBUF(I,V)` | stores the value of `V` in the `I`th location |
 
 The range of the index is typically 0-4095 for FBUF and 0-1023 for
-`FCOM`.  `FCOM` has another mode houever, in which data is stored as
+`FCOM`.  `FCOM` has another mode however, in which data is stored as
 two-word integers (rather than four-word floating point values) thereby
 doubling the amount of storage available but limiting the range of the
-data to +/- 2"i23. To use `FCOM` in this mode, specify a *negative*
-index (legal range is -1 to -2048). Here is a loop which stores the
-square root of all numbers from 0-1023:
+data to &plusmn;2<sup>23</sup>. To use `FCOM` in this mode, specify a
+*negative* index. (The legal range is -1 to -2048.) Here is a loop which
+stores the square root of all numbers from 0-1023:
 
-     FOR 1=0,1023; SET FCOM(I,FSQT(I)) 
+     FOR I=0,1023; SET FCOM(I,FSQT(I)) 
 
 Although `FBUF` and `FCOM` share the same field, FBUF starts from the
-'bottom up' while `FCOM` stores from the 'top down", so both functions
-may be used simultaneously. Furthermore both functions are fully
+'bottom up' while `FCOM` stores from the 'top down', so both functions
+may be used simultaneously. Furthermore, both functions are fully
 recursive, so calls such as `FCOM(I,FCOM(J))` may be used to move data
 from one location to another.
 
@@ -2407,8 +2407,8 @@ from one location to another.
 ### <a id="fsr"></a>`FSR` 
 
 The FSR function reads the value of the Switch Register. This may be
-used to control program options. The value is treated as a signed number
-so the range is from -2048 (4000 octal) to +2047 (3777 octal).
+used to control program options. The value is treated as a signed
+number, so the range is from -2048 (4000 octal) to +2047 (3777 octal).
 
 
 ### <a id="fmq">`FMQ`</a> 
@@ -2441,8 +2441,8 @@ on. Any bits which are read by the `FDIN` function will be reset if they
 are resettable, i.e. if they are wired for 'pulse' input. This ensures
 that only one occurrence of an event will be detected by the program.
 
-`FDIN` can be made to respond to only a single bit, or to a collection
-of bits, by including various arguments as the programmer desires. For
+`FDIN` can be made to respond to only a single bit — or to a collection
+of bits — by including various arguments as the programmer desires. For
 instance, `FDIN(1)` will only sense the state of bit '1'. If bit 1 is
 on, `FDIN` will have the value 2048, while if it is off, the value 0
 will be returned, regardless of the setting of any other bits.
@@ -2755,7 +2755,7 @@ clear that this list is not exhaustive.
 `FOUT(13)` will just do a <kbd>RETURN</kbd>. Codes 225 through 255 are
 lower case letters, some of which serve other functions on keyboards
 without lower case. Many keyboards use <kbd>SHIFT/K</kbd> for `[`,
-<kbd>SHIFT/L</kbd> for `\`, and <kbd>SHIFT/M</kbd> for ']' and
+<kbd>SHIFT/L</kbd> for `\`, and <kbd>SHIFT/M</kbd> for `]` and
 corresponding combinations for the control codes following
 <kbd>CTRL/Z</kbd>. These symbols are often not printed on the key tops.
 Codes 0-127 are the same as codes 128-255 except for the parity bit. UWF
@@ -2800,7 +2800,7 @@ be added *before* UWF is started the first time.
 
 `14503/ 62X1 62Y1` — Change the data field used by `FCOM` (`X`,`Y` may be 2-7) 
 
-`14545/ 62X1 62Y1` — Ditto for the `FBUF` function `X` is set at startup) 
+`14545/ 62X1 62Y1` — Ditto for the `FBUF` function (`X` is set at startup) 
 
 `10033/ 4566 5200` — Remove the `FLOG`, `FEXP` and `FATN` functions to increase the<br>
 `12371/ 5020 1754; 1754; 1754` — size of the symbol table in the 8K version
