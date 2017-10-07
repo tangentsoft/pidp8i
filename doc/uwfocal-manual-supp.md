@@ -18,8 +18,11 @@ there are gaps:
 This document is [our](#license) attempt to fill these gaps.
 [Extensions and corrections][hack] are welcome.
 
+You might also find the [U/W FOCAL reference cards][uwfr] helpful.
+
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 [uwfm]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual.md
+[uwfr]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-refcards.md
 
 
 ## <a id="starting" name="stopping"></a>Starting and Stopping U/W FOCAL
