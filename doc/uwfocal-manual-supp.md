@@ -538,6 +538,17 @@ appears not to have these features:
 *   Error code `?14.15` can't happen
 
 
+## PDP-12 Support
+
+The [U/W FOCAL reference cards][uwfr] list some features that only exist
+in the PDP-12 version. The PiDP-8/I doesn't have the additional hardware
+necessary to simulate a PDP-12, and our version of SIMH doesn't
+understand the opcodes needed to address it if it existed.
+
+As a result, error codes `?14.50` and `?14.56` cannot happen in our
+version of U/W FOCAL.
+
+
 ## <a id="license"></a>License
 
 Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
