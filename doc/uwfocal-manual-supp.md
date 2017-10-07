@@ -42,26 +42,63 @@ Yes, that's all. You're welcome. `:)`
 To get back to OS/8, just hit <kbd>Ctrl-C</kbd>.
 
 
-## <a id="pasting1"></a>Pasting Programs in from a Terminal Emulator, Part 1
+## Getting Program Text into U/W FOCAL
+
+There are many ways to get program text into U/W FOCAL other than simply
+typing it in. This section gives several methods, because each may be of
+use to you in different circumstances. Some of them may not be of direct
+use to you, but may open your eyes to techniques that may be useful to
+you in other contexts, so we encourage you to read this entire section.
+
+
+### <a id="ls-pasting"></a>Na&iuml;ve Way: Pasting Text in from a Terminal Emulator
 
 If you are SSHing into your PiDP-8/I, you might think to write your
 FOCAL programs in your favorite text editor out in the host OS then copy
 and paste that text into U/W FOCAL via the terminal emulator connected
 to the PiDP-8/I running it. Currently, that won't work. (2017.10.05) We
 believe it is because of the way U/W FOCAL handles terminal I/O and
-interrupts.
-
-The result is that you get trash input when you try this. When the
-problem is fixed, this section will go away.
-
-Meanwhile, the next section tells how to get around this problem.
+interrupts. If you try, the input ends up trashed in FOCAL.
 
 
-## <a id="loading" name="saving"></a>Loading and Saving Programs
+### <a id="ls-pip"></a>Pasting Text in from a Terminal Emulator: The Way That Works
+
+"But I really really want to write my FOCAL programs in [my favorite
+text editor][mfte] and paste them into my PiDP-8/I," I hear you say.
+Dispair not. There is a path.  Follow.
+
+The problem affecting U/W FOCAL which prevents it from handling input at
+modern paste-through-SSH speeds doesn't affect OS/8 itself, so we'll use
+it as an intermediary:
+
+    .R PIP
+    *HELLO.TX<TTY:                  ⇠ *.FC is not a plain-text format; don't use it
+    01.10 TYPE "Hello, world!"!
+    ^Z                              ⇠ Ctrl-Z is the EOF marker in OS/8
+    *^C                             ⇠ return to OS/8 from PIP
+    .R UWF16K                       ⇠ run U/W FOCAL
+    *O I HELLO.TX                   ⇠ open text file for input; "types" pgm in for us
+    _G                              ⇠ EOF seen, program started
+    Hello, world!                   ⇠ and it runs!
+
+That is, we use OS/8's `PIP` command to accept text input from the
+terminal (a.k.a. TTY = teletype) and write it to a text file. Then we
+load that text in as program input using commands we'll explain in
+detail [below](#ls-write).
+
+[mfte]: https://duckduckgo.com/?q=%22my+favorite+text+editor%22
+
+
+### <a id="ls-punch"></a>The `PUNCH` Command
 
 When the [U/W FOCAL Manual][uwfm] talks about loading and saving
-programs, it is in terms of the `PUNCH` command, which has two serious
-problems from our perspective:
+programs, it is in terms of the `PUNCH` command, because the manual is
+focused on the paper tape based version of U/W FOCAL.
+
+TODO: Write up the PUNCH option despite the problems
+
+Though it does work in the PiDP-8/I environment, it has two serious
+problems:
 
 1.  It was designed for use with paper tapes, which are somewhat more
     clumsy to use in their emulated form within SIMH than actual paper
@@ -73,15 +110,19 @@ problems from our perspective:
     load it back up again. If you have two programs you want to load at
     once and they both came from page 3, you've got a problem.
 
+
+### <a id="ls-library"></a>The `LIBRARY` Command
+
 Because the PiDP-8/I software project is distributing the OS/8 version
 of U/W FOCAL rather than the original paper tape based version, we have
-an easy solution to these problems: use the `LIBRARY` command. As with
-the `O` command, `L` is overloaded in the OS/8 version of U/W FOCAL to
-mean `LINK`, `LOOK` and `LIBRARY`, but the last of these is not
-documented at all in the U/W FOCAL Manual, since it is focused on the
-paper tape version of UWF.
+an easy solution to the problems of using `PUNCH` for saving programs:
+use the `LIBRARY` command instead.
 
-Briefly, then, I'll show how to use these commands:
+In the OS/8 version of U/W FOCAL, the `L` command is not overloaded with
+`LINK` and `LOOK` as documented in [the manual][uwfm], it means
+`LIBRARY` instead, and it is generally used for OS/8 file commands.
+
+Briefly, then, I'll show how to use some of these commands:
 
     .R UWF16K                           ⇠ start fresh
     *1.10 TYPE "Hello, world!"!         ⇠ input a simple one-line program
@@ -100,13 +141,14 @@ Briefly, then, I'll show how to use these commands:
     *L O HELLO                          ⇠ ...be sure
     *                                   ⇠ Houston, we have no program
 
+See `CARD2` in the [refcards][uwfr] for more examples.
 
-### <a id="altls"></a>Alternative Method for Loading & Saving Programs
+
+### <a id="ls-write"></a>The `WRITE` Command
 
 There is another way to go here which also solves both of the problems
-at the top of this section, which illustrates practical usage of U/W
-FOCAL along the way. Please read through it: even if you never use this
-method in detail, it will pay off in the next section.
+of the `PUNCH` method, which illustrates practical usage of U/W FOCAL
+along the way.
 
 Page 8 of the [DECUS documentation for OMSI FOCAL][domsi] provides a
 good description of this issue and how to work around it to place a text
@@ -210,33 +252,6 @@ the final terminal transcript above condenses considerably:
     HELLO
 
 [domsi]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
-
-
-## <a id="pasting2"></a>Pasting Programs in from a Terminal Emulator, Part 2
-
-"But I want to write my FOCAL programs in a *real* text editor and paste
-them into my PiDP-8/I," I hear you say. Dispair not. There is a path.
-Follow.
-
-The problem affecting U/W FOCAL which prevents it from handling input at
-modern paste-through-SSH speeds doesn't affect OS/8 itself, so we'll use
-it as an intermediary:
-
-    .R PIP
-    *HELLO.TX<TTY:                  ⇠ *.FC is not a plain-text format; don't use it
-    01.10 TYPE "Hello, world!"!
-    ^Z                              ⇠ Ctrl-Z is the EOF marker in OS/8
-    *^C                             ⇠ return to OS/8 from PIP
-
-    .R UWF16K                       ⇠ run U/W FOCAL
-    *O I HELLO.TX                   ⇠ open text file for input; "types" pgm in for us
-    _G                              ⇠ EOF seen, program started
-    Hello, world!                   ⇠ and it runs!
-
-That is, we use OS/8's `PIP` command to accept text input from the
-terminal (a.k.a. TTY = teletype) and write it to a text file. Then we
-load that text in as program input using commands from the tail end of
-the [alternative method](#altls) above.
 
 
 ## <a id="lowercase"></a>Lowercase Input
