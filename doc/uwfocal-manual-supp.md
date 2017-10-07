@@ -267,7 +267,7 @@ noise? Apparently "`foo`" somehow gets mangled into `&/` by FOCAL's
 command parser.
 
 We have not yet tried to investigate the reason `foo` gets saved into a
-mangled variable name and `a`, `b`, and `c` above do not because the
+mangled variable name and `a`, `b`, and `c` above do not, because the
 workaround is simple: keep <kbd>CAPS LOCK</kbd> engaged while typing
 FOCAL programs except when typing text you want FOCAL to send back out
 to the terminal:
@@ -318,11 +318,10 @@ negative numbers line up nicely. It might help to see what's going on if
 you mentally replace the spaces in that first output line above with `+`
 signs.
 
-This then explains the discrepancy between the first and second
-commands' outputs raised by the second question above: the first output
-of the first command is positive, while the second command's output is
-negative, so there is a space at the beginning of the first output for
-the implicit `+` sign.
+This then explains the apparent discrepancy between the first and second
+commands' outputs: the first output of the first command is positive,
+while the second command's output is negative, so there is a space at
+the beginning of the first output for the implicit `+` sign.
 
 As for the third question, the default output format is in scientific
 notation with full precision displayed: 4.5&times;10¹ = 45 degrees, the
