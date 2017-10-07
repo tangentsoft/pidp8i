@@ -247,7 +247,7 @@ By skipping both of these optional bits and abbreviating the commands,
 the final terminal transcript above condenses considerably:
 
     .R UWF16K
-    *O I TEST.FD
+    *O I TEST.FD         ⇠  yes, you must give .FD; default for O O only
     *_G
     HELLO
 
