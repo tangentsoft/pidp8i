@@ -596,19 +596,29 @@ There are also some errors I simply have not yet tried to cause:
 
 ## Missing Hardware Support
 
-The [U/W FOCAL reference cards][uwfr] talks about features for hardware
-we don't have. Either the command/feature doesn't exist at all in the
-version of U/W FOCAL we distribute or it doesn't do anything useful,
-lacking support within the version of SIMH we distribute.
+The [U/W FOCAL reference cards][uwfr] and [DECUS submission][duwf] talk
+about features for hardware we don't have. Either the command/feature
+doesn't exist at all in the version of U/W FOCAL we distribute or it
+doesn't do anything useful, lacking support within the version of SIMH
+we distribute.
 
-*   The `FADC`, `FLS`, `FRS`, and `FXL` functions don't exist
+Broadly, these features are for the PDP-12, the LAB-8/e, Tektronix
+terminals, and pen plotters. Should anyone extend SIMH with a way to
+control such hardware (or emulations of it) we may consider putting
+these features back into our distribution of U/W FOCAL.
+
+In the meantime, the following facilities do not work:
+
+*   The `FADC`, `FJOY`, `FLS`, `FRS`, and `FXL` functions don't exist
 
 *   The `PLOT` and `VIEW` commands don't exist
 
 *   Error code `?14.15` can't happen; we have no "display buffer"
 
 *   Error codes `?14.50` and `?14.56` can't happen; SIMH doesn't
-    simulate a PDP-12
+    simulate a PDP-12 or a LAB-8/e
+
+[duwf]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 
 
 ## `FRA` Built-In Function
