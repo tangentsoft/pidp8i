@@ -594,25 +594,21 @@ There are also some errors I simply have not yet tried to cause:
 `?01.03`, `?01.11`, `?12.10`, `?12.40`.
 
 
-## Video Output
+## Missing Hardware Support
 
-The [U/W FOCAL reference cards][uwfr] imply that there is a version 
-with some kind of video terminal ouptut feature set. Our version
-appears not to have these features:
+The [U/W FOCAL reference cards][uwfr] talks about features for hardware
+we don't have. Either the command/feature doesn't exist at all in the
+version of U/W FOCAL we distribute or it doesn't do anything useful,
+lacking support within the version of SIMH we distribute.
 
-*   The `VIEW` command doesn't exist
-*   Error code `?14.15` can't happen
+*   The `FADC`, `FLS`, `FRS`, and `FXL` functions don't exist
 
+*   The `PLOT` and `VIEW` commands don't exist
 
-## PDP-12 Support
+*   Error code `?14.15` can't happen; we have no "display buffer"
 
-The [U/W FOCAL reference cards][uwfr] list some features that only exist
-in the PDP-12 version. The PiDP-8/I doesn't have the additional hardware
-necessary to simulate a PDP-12, and our version of SIMH doesn't
-understand the opcodes needed to address it if it existed.
-
-As a result, error codes `?14.50` and `?14.56` cannot happen in our
-version of U/W FOCAL.
+*   Error codes `?14.50` and `?14.56` can't happen; SIMH doesn't
+    simulate a PDP-12
 
 
 ## `FRA` Built-In Function
