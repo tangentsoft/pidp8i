@@ -544,9 +544,9 @@ switch.
 ## Error Codes
 
 The [U/W FOCAL Manual][uwfm] gives a somewhat different error code table
-than the one in the [U/W FOCAL reference cards][uwfr]. For the most
-part, the latter is just a simple superset of the former, and both
-apply. In some cases, though, the two tables differ, or one of them
+than the one on `CARD4.DA` of the [U/W FOCAL reference cards][uwfr]. For
+the most part, the latter is just a simple superset of the former, and
+both apply. In some cases, though, the two tables differ, or one of them
 differs from the `UWF16K` program we ship on the OS/8 system disk.
 
 
@@ -613,10 +613,10 @@ lacking support within the version of SIMH we distribute.
 
 ## `FRA` Built-In Function
 
-The [U/W FOCAL reference cards][uwfr] refer to a `FRA` built-in function
-which the [manual][uwfm] does not document. Lacking documentation, I
-have not been able to test it. Once we figure out what it is supposed to
-do, it will be documented here.
+`CARD3.DA` and `CARD4.DA` in the [U/W FOCAL reference cards][uwfr] refer
+to a `FRA` built-in function which the [manual][uwfm] does not document.
+Lacking documentation, we have not been able to test it. Once we figure
+out what it is supposed to do, it will be documented here.
 
 Until then, the three `?17.XX` error codes listed on the refcard are
 untested.
