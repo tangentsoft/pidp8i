@@ -476,6 +476,58 @@ bit) SR switch, not "bit 0" in the SR, which would be the rightmost SR
 switch.
 
 
+## Error Codes
+
+The [U/W FOCAL Manual][uwfm] gives a somewhat different error code table
+than the one in the [U/W FOCAL reference cards][uwfr]. For the most
+part, the latter is just a simple superset of the former, and both
+apply. In some cases, though, the two tables differ, or one of them
+differs from the `UWF16K` program we ship on the OS/8 system disk.
+
+
+### `?` vs `?01.00` — Keyboard interrupt or restart from location 10200
+
+Our current version of FOCAL gives `?` for this condition, not `?01.00`.
+
+
+### `?18.32` vs `?18.42` — `FCOM` index out of range
+
+The two error code tables give different error codes for this condition.
+However, since I have not been able to get this error to happen, I do
+not know which code is correct for our current version of FOCAL.
+
+
+### `?31.<7` — Non-existent program area called by `LOOK` or `LINK`
+
+Our current implementation of U/W FOCAL gives code `?26.07` for this
+case instead.
+
+
+### Irreproducible Errors
+
+There are some errors listed in one or both tables that I have been
+unable to cause, though I have tried:
+
+| Code   | Meaning 
+| ------ | -------
+| ?07.44 | Operator missing or illegal use of an equal sign
+| ?18.32 | `FCOM` index out of range (value given in the manual)
+| ?18.42 | `FCOM` index out of range (value given on the refcard)
+| ?27.90 | Zero divisor
+
+
+### Untested Error Cases
+
+I have not yet created programs large enough to test the "out of space"
+codes `?06.41` (too many variables), `?10.50` (program too large),
+`?13.65` (insufficient memory for `BATCH` operation), `?23.18` (too much
+space requested in `OUTPUT ABORT` or `CLOSE`), `?23.37` (output file
+overflow), and `?25.02` (stack overflow).
+
+There are also some errors I simply have not yet tried to cause:
+`?01.03`, `?01.11`, `?12.10`, `?12.40`.
+
+
 ## <a id="license"></a>License
 
 Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
