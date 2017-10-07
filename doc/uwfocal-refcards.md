@@ -6,6 +6,9 @@ The following material is reformatted from the `CARD[1-4].DA` files
 contained within the U/W FOCAL V4E distribution which we used in
 creating the PiDP-8/I software project's U/W FOCAL feature.
 
+Some minimal effort has been made to make this document print well,
+though it doesn't paginate the same as the original material.
+
 Since these files were likely created [before 1978][cl78] and probably
 did not have their copyright renewed — if it was in fact applied for,
 not an automatic thing at the time in the United States — we believe
