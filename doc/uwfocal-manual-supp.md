@@ -18,8 +18,10 @@ there are gaps:
 This document is [our](#license) attempt to fill these gaps.
 [Extensions and corrections][hack] are welcome.
 
-You might also find the [U/W FOCAL reference cards][uwfr] helpful.
+You might also find the [DECUS submission for U/W FOCAL][duwf] and the
+[U/W FOCAL reference cards][uwfr] helpful.
 
+[duwf]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 [uwfm]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual.md
 [uwfr]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-refcards.md
@@ -96,8 +98,10 @@ programs, it is in terms of the `PUNCH` command, because the manual is
 focused on the paper tape based version of U/W FOCAL.
 
 The PiDP-8/I software project ships the OS/8 version of U/W FOCAL
-instead, which doesn't even have a `PUNCH` command. There is mention of
-a `PLOT` command on [`CARD1.DA`][uwfr], but that's of no use to us here.
+instead, which doesn't even have a `PUNCH` command. (It appears to have
+been replaced by the `PLOT` command, mentioned on [`CARD1.DA`][uwfr],
+but that's of no use to us here, since SIMH doesn't support pen
+plotters. (Yet.))
 
 Even if it did work, mounting and unmounting simulated paper tapes under
 SIMH is a bit of a hassle. We can do better.
@@ -132,13 +136,52 @@ Briefly, then, I'll show how to use some of these commands:
     *L O HELLO                          ⇠ ...be sure
     *                                   ⇠ Houston, we have no program
 
-See `CARD2.DA` in the [refcards][uwfr] for more examples.
+See the [DECUS submission][duwf] and `CARD2.DA` in the [refcards][uwfr]
+for more examples.
 
 
 ### <a id="ls-write"></a>The `WRITE` Command
 
-There is another way to go here, which illustrates practical usage of
-U/W FOCAL along the way.
+One problem with using U/W FOCAL's `LIBRARY` command for this is that
+it saves programs as core images, which are a) non-relocatable; and b)
+non-portable to other versions of FOCAL. We can fix both of these
+programs by saving the program to an ASCII text file instead.
+
+With a program already typed in or loaded from disk:
+
+    *O O HELLO; W; O C
+
+All of that has to be on a single line, with the semicolons. (See
+[below](#ls-hard-way) for what you must go through if you do not!)
+
+What this does is opens a data output file (extension `.DA`) and makes
+it the output destination, so that the following `WRITE` command sends
+its text there, and then it is immediately closed with `O C`, returning
+control back to the terminal.
+
+You can then load that program back into U/W FOCAL with the same command
+we used above with the `PIP` solution:
+
+    *O I HELLO
+
+If you `TYPE` that file from OS/8, you might be wondering why the banner
+line doesn't cause a problem on loading the file back in:
+
+    C U/W-FOCAL:  HELLO   NO/DA/TE
+
+That leading `C` causes U/W FOCAL to treat it as a comment. Since we're
+in "direct mode" at that point, the comment is simply eaten.
+
+
+### <a id="ls-hard-way"></a>The Hard Way
+
+You might be wondering why we needed to put the `O O` command on a
+single line with 3 other commands [above](#ls-write). It is because if
+we don't, the `WRITE` and `OUTPUT CLOSE` commands get added as the first
+and last lines of our output file, and then we must edit them out before
+we can read that file back into U/W FOCAL. As an exercise in practical
+use of U/W FOCAL and OS/8's `EDIT` program, we will now show what it
+takes to recover from that.
 
 Page 8 of the [DECUS documentation for OMSI FOCAL][domsi] provides a
 good description of this issue and how to work around it to place a text
@@ -163,7 +206,8 @@ program:
     *G
     HELLO
 
-Now let's save it to an ASCII text file on the OS/8 disk:
+Now let's save it to an ASCII text file on the OS/8 disk using separate
+U/W FOCAL commands, rather than the one-liner we did above:
 
     *OPEN OUTPUT TEST,ECHO                      ⇠ uses *.FD by default
     *W
@@ -207,7 +251,7 @@ could just as well use `TECO` or another text editor you like better:
     
     #E
 
-It's ugly, but that's `EDIT` for you.
+The [previous method](#ls-write) avoids all of that `EDIT` ugliness.
 
 Now let's load it back up into U/W FOCAL and try to run it:
 
@@ -617,8 +661,6 @@ In the meantime, the following facilities do not work:
 
 *   Error codes `?14.50` and `?14.56` can't happen; SIMH doesn't
     simulate a PDP-12 or a LAB-8/e
-
-[duwf]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 
 
 ## `FRA` Built-In Function
