@@ -549,6 +549,17 @@ As a result, error codes `?14.50` and `?14.56` cannot happen in our
 version of U/W FOCAL.
 
 
+## `FRA` Built-In Function
+
+The [U/W FOCAL reference cards][uwfr] refer to a `FRA` built-in function
+which the [manual][uwfm] does not document. Lacking documentation, I
+have not been able to test it. Once we figure out what it is supposed to
+do, it will be documented here.
+
+Until then, the three `?17.XX` error codes listed on the refcard are
+untested.
+
+
 ## <a id="license"></a>License
 
 Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
