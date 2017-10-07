@@ -311,7 +311,7 @@ all three of these questions, but those used to modern programming
 environments might have skimmed those sections and thus be surprised by
 the above outputs.
 
-The first two qustions have the same answer: U/W FOCAL reserves space
+The first two questions have the same answer: U/W FOCAL reserves space
 for the sign in its numeric outputs even if it doesn't end up being
 needed. This was done, no doubt, so that columns of positive and
 negative numbers line up nicely. It might help to see what's going on if
