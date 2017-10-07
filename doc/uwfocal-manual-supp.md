@@ -596,11 +596,11 @@ There are also some errors I simply have not yet tried to cause:
 
 ## <a id="miss-hw"></a>Missing Hardware Support
 
-The [U/W FOCAL reference cards][uwfr] and [DECUS submission][duwf] talk
-about features for hardware we don't have. Either the command/feature
-doesn't exist at all in the version of U/W FOCAL we distribute or it
-doesn't do anything useful, lacking support within the version of SIMH
-we distribute.
+The [U/W FOCAL reference cards][uwfr] and the [DECUS submission][duwf]
+talk about features for hardware we don't have. Either the
+command/feature doesn't exist at all in the version of U/W FOCAL we
+distribute or it doesn't do anything useful, lacking support within the
+version of SIMH we distribute.
 
 Broadly, these features are for the PDP-12, the LAB-8/e, Tektronix
 terminals, and pen plotters. Should anyone extend SIMH with a way to
@@ -632,11 +632,12 @@ Until then, the three `?17.XX` error codes listed on the refcard are
 untested.
 
 
-## <a id="diffs"></a>Differences Between U/W FOCAL and FOCAL 69, FOCAL-8, and OMSI PS/8 FOCAL
+## <a id="diffs"></a>Differences Between U/W FOCAL and Other FOCALs
 
-The [DECUS submission for U/W FOCAL][duwf] lists these advantages over
-FOCAL 69, FOCAL 8, and OMSI PS/8 FOCAL for the 16 kword version of U/W
-FOCAL included with the PiDP-8/I software distribution:
+The [DECUS submission for U/W FOCAL][duwf] lists the following
+advantages for the version of U/W FOCAL included with the PiDP-8/I
+software distribution as compared to FOCAL,1969, FOCAL-8, and OMSI PS/8
+FOCAL:
 
 1.  Extended library features with device-independent chaining and
     subroutine calls between programs.
@@ -665,7 +666,9 @@ FOCAL included with the PiDP-8/I software distribution:
 10. n/a; see [above](#miss-hw)
 
 11. 6 special variables are protected from the `ZERO` command: `PI`,
-    `!`, `"`, `$`, `%`, and `#`. `PI` is initialized as 3.141592654.
+    `!`, `"`, `$`, `%`, and `#`.
+
+    `PI` is initialized as 3.141592654.
 
 12. The limit on the number of variables is 676
 
