@@ -101,12 +101,12 @@ Briefly, then, I'll show how to use these commands:
     *                                   ⇠ Houston, we have no program
 
 
-
-### Alternative Method
+### <a id="altls"></a>Alternative Method for Loading & Saving Programs
 
 There is another way to go here which also solves both of the problems
 at the top of this section, which illustrates practical usage of U/W
-FOCAL along the way.
+FOCAL along the way. Please read through it: even if you never use this
+method in detail, it will pay off in the next section.
 
 Page 8 of the [DECUS documentation for OMSI FOCAL][domsi] provides a
 good description of this issue and how to work around it to place a text
@@ -209,8 +209,34 @@ the final terminal transcript above condenses considerably:
     *_G
     HELLO
 
-
 [domsi]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
+
+
+## Pasting Programs in from a Terminal Emulator, Part 2
+
+"But I want to write my FOCAL programs in a *real* text editor and paste
+them into my PiDP-8/I," I hear you say. Dispair not. There is a path.
+Follow.
+
+The problem affecting U/W FOCAL which prevents it from handling input at
+modern paste-through-SSH speeds doesn't affect OS/8 itself, so we'll use
+it as an intermediary:
+
+    .R PIP
+    *HELLO.TX<TTY:                  ⇠ *.FC is not a plain-text format; don't use it
+    01.10 TYPE "Hello, world!"!
+    ^Z                              ⇠ Ctrl-Z is the EOF marker in OS/8
+    *^C                             ⇠ return to OS/8 from PIP
+
+    .R UWF16K                       ⇠ run U/W FOCAL
+    *O I HELLO.TX                   ⇠ open text file for input; "types" pgm in for us
+    _G                              ⇠ EOF seen, program started
+    Hello, world!                   ⇠ and it runs!
+
+That is, we use OS/8's `PIP` command to accept text input from the
+terminal (a.k.a. TTY = teletype) and write it to a text file. Then we
+load that text in as program input using commands from the tail end of
+the [alternative method](#altls) above.
 
 
 ## <a id="lowercase"></a>Lowercase Input
