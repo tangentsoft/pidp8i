@@ -166,6 +166,7 @@ def check_exists (image_copyins):
         child.expect(pexpect.EOF)
         exit (-1)
     # else: print "Found " + image_path
+
    
 #### Data Structures ##################################################
 #
@@ -274,12 +275,12 @@ def do_all_copyins (copyins):
 # If there is already an RK05 binary destination image, moves it aside
 # to a ".save" instance, overwriting the previous .save if it exists.
 #
-# One of the input images is used as a bootable Dectape.
-# That Dectape gets written on.
+# One of the input images is used as a bootable DECtape.
+# That DECtape gets written on.
 # It needs stuff from tape #2
-# So the first two Dectapes
+# So the first two DECtapes
 # are treated separately and specially.
-# All the other Dectape images used are read only.
+# All the other DECtape images used are read only.
 
 def make_bin (args):
 
@@ -432,9 +433,9 @@ def make_bin (args):
   # There are not enough directory entries to put everything
   # Including all device drivers on the running packs.
   # So we DONT copy in the device drivers, nor TDINIT.SV,
-  # nor the two TD8E-based Dectape system area files.
+  # nor the two TD8E-based DECtape system area files.
   # CCL.PA and KL8E.PA will be on the source disk.
-  # However Dectape 2 has HELP.HL and .RL files that ARE needed.
+  # However DECtape 2 has HELP.HL and .RL files that ARE needed.
   # if progmsg: print "Copying in system tape 2 of 2..."
   # os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
 
