@@ -135,6 +135,7 @@ INFILES = \
 	@srcdir@/boot/7.script.in \
 	@srcdir@/etc/pidp8i-init.in \
 	@srcdir@/etc/sudoers.in \
+	@srcdir@/media/os8/init.tx.in \
 	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
 	@srcdir@/tools/simh-update.in \

@@ -500,7 +500,9 @@ def make_bin (args):
   if progmsg: print "Setting INIT message..."
   os8_pmt_send("\.", "CREATE INIT.TX")
   os8_pmt_send("#", "A")        # append text to file
-  os8_send_line("Hello, world!")
+  with open(dirs.media + "/init.tx", "r") as f:
+    for line in f:
+      os8_send_line(line)
   os8_send_ctrl('L')            # return to EDIT command mode
   os8_pmt_send("#", "E")        # save and exit
   os8_pmt_send("\.", "CREATE INIT.CM")
