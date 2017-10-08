@@ -594,11 +594,6 @@ both apply. In some cases, though, the two tables differ, or one of them
 differs from the `UWF16K` program we ship on the OS/8 system disk.
 
 
-### `?` vs `?01.00` — Keyboard interrupt or restart from location 10200
-
-Our current version of FOCAL gives `?` for this condition, not `?01.00`.
-
-
 ### `?18.32` vs `?18.42` — `FCOM` index out of range
 
 The two error code tables give different error codes for this condition.

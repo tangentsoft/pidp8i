@@ -351,7 +351,7 @@ optional error return.
 
 |     Error     |        Meaning                                                |
 | ------------- | ------------------------------------------------------------- |
-|   `?01.00`    | Keyboard interrupt or restart from location 10200             |
+|   `?`         | Keyboard interrupt or restart from location 10200             |
 | __`?01.03`__  | Secondary input file missing                                  |
 | __`?01.11`__  | No secondary input file to resume                             |
 |   `?01.50`    | Group number greater than 31                                  |
