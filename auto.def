@@ -334,7 +334,7 @@ define VERSION $version
 catch {exec hostname} host
 set user $::env(USER)
 define BUILDUSER "$user@$host"
-define BUILDDATE [clock format [clock seconds] -format "%Y.%m.%d %T %Z"]
+define BUILDTS [clock format [clock seconds] -format "%Y.%m.%d at %T %Z"]
 
 # The mkos8 script requires Python and some non-core modules.
 set status [catch {exec python -c exit} result]

@@ -291,6 +291,7 @@ simh-update simh-update-f:
 
 # Build the OS/8 binary media needed by 0.script
 OS8_BIN_SRCS = $(MKOS8_SRCS) \
+	@srcdir@/media/os8/init.tx \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 $(OS8_BIN_RK05): $(OS8_BIN_SRCS)
