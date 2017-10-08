@@ -1,5 +1,5 @@
 ; This script initializes a populated OS/8 environment on an
-; RK05 cartridge disk pack.  That's 10 whole megabytes, so big 
+; RK05 cartridge disk pack.  That's 2.5 whole megabytes, so big 
 ; the OS requires that you split it into two partitions in order
 ; to address the whole disk!  Thus the "RKB0:" references you
 ; will find in tutorials, as that refers to the second half ("B")
@@ -27,5 +27,19 @@ set cpu 32k
 set cpu noidle
 set df disabled
 @SET_THROTTLE@
-att rk0 @MEDIADIR@/os8/os8.rk05
+
+@if SIMH_PASS_LOWERCASE
+; The software was configured with either --lowercase=auto or =pass,
+; so send all text input to the simulator as 7-bit ASCII, including
+; lowercase.  Lowercase output from the simulator will be sent to the
+; console unchanged, as will non-printing chars.
+set tti 7b
+@else
+; The software was configured with --lowercase=upper, meaning the user
+; wants lowercase text to be forced to uppercase.  This is bidirectional,
+; affecting both input to the simulated PDP-8 and output from it.
+set tti ksr
+@endif
+
+att rk0 @MEDIADIR@/os8/os8v3d-bin.rk05
 boot rk0

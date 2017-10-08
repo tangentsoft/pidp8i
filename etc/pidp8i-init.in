@@ -105,7 +105,7 @@ do_start() {
     # We want SIMH to have a sensible working directory: somewhere the
     # user can write files and which makes sense when giving SIMH
     # commands involving file paths.  This default is chosen because it
-    # satisfies both criteria, plus it makes tools/mk-os8-rk05s happy.
+    # satisfies both criteria, plus it makes tools/mkos8 happy.
     # If you change the default here, change that script as well.
     cd "$prefix/share/media"
 

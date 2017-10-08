@@ -68,7 +68,7 @@
     [as `tony`][thcomm].
 
 *   **[Jonathan Trites](mailto:tritesnikov@gmail.com)** wrote the
-    initial version of the script now called `tools/mkos8.in`, which
+    initial version of the script now called `libexec/mkos8`, which
     builds the OS/8 disk images from source tapes.
 
 *   **[Bill Cattey](mailto:bill.cattey@gmail.com)** is the project lead

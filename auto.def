@@ -35,31 +35,135 @@ use cc
 use cc-lib
 
 options {
-	debug-mode        => "create a debug build (default is release)"
-	no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
-	serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
-	alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
-	throttle:         => "override the throttle values in the boot scripts"
+    alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
+    debug-mode        => "create a debug build (default is release)"
+    lowercase:        => "select how lowercase input is to be handled"
+    no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
+    os8-advent=1      => "add the game of ADVENT to built OS/8 RK05 image"
+    os8-ba=1          => "leave *.BA BASIC games and demos off built OS/8 RK05 disk image"
+    os8-cc8=1         => "leave the native OS/8 CC8 compiler off the built OS/8 RK05 disk image"
+    os8-crt=1         => "set CRT-style rubout processing in built OS/8 KR05 image"
+    os8-chess=1       => "leave the CHECKMO-II game of chess off built OS/8 RK05 image"
+    os8-dcp=1	      => "install DCP Disassembler executables to built OS/8 RK05 image"
+    os8-focal=1       => "leave FOCAL 69 and U/W FOCAL off the built OS/8 RK05 image"
+    os8-focal69       => "add FOCAL 69 to the built OS/8 RK05 image"
+    os8-init=1        => "suppress the OS/8 INIT message on boot: start with a bare . prompt"
+    os8-k12=1         => "leave 12-bit Kermit off built OS/8 RK05 disk image"
+    os8-music         => "add *.MU files to built OS/8 RK05 disk image"
+    os8-uwfocal=1     => "leave U/W FOCAL (only) off the built OS/8 RK05 image"
+    os8-vtedit        => "add the TECO VTEDIT setup to built OS/8 RK05 image"
+    serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+    throttle:         => "override the throttle values in the boot scripts"
 }
 
 if {[opt-bool alt-serial-mod]} {
-	msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
-	define PCB_SERIAL_MOD_JLW
-	define PCB_SERIAL_MOD_ANY
+    msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
+    define PCB_SERIAL_MOD_JLW
+    define PCB_SERIAL_MOD_ANY
 }
 
 if {[opt-bool serial-mod]} {
-	msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
-	define PCB_SERIAL_MOD_OV
-	define PCB_SERIAL_MOD_ANY
+    msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
+    define PCB_SERIAL_MOD_OV
+    define PCB_SERIAL_MOD_ANY
 }
 
 if {[opt-bool debug-mode]} {
-	msg-result "Creating a debuggable build."
-	define BUILDMODE {-O0 -g}
+    msg-result "Creating a debuggable build."
+    define BUILDMODE {-O0 -g}
 } else {
-	msg-result "Creating a release build."
-	define BUILDMODE {-O2}
+    msg-result "Creating a release build."
+    define BUILDMODE {-O2}
+}
+
+set mkos8_opts ""
+
+set lv [opt-val lowercase]
+if {$lv == ""} { set lv "auto" }
+if {$lv == "auto"} {
+    define SIMH_PASS_LOWERCASE
+} elseif {$lv == "pass"} {
+    define SIMH_PASS_LOWERCASE
+    append mkos8_opts " --disable-lcmod"
+} elseif {$lv == "upper"} {
+    append mkos8_opts " --disable-lcmod"
+} else {
+    user-error "Legal values for --lowercase are {auto,pass,upper}."
+}
+msg-result "Lowercase handling set to '$lv' mode."
+
+if {![opt-bool os8-advent]} {
+    msg-result "Will not add game of ADVENT to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-advent"
+}
+if {![opt-bool os8-ba]} {
+    msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-ba"
+}
+if {![opt-bool os8-cc8]} {
+    msg-result "Will not add CC8 to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-cc8"
+}
+if {![opt-bool os8-chess]} {
+    msg-result "Will not add game of CHESS to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-chess"
+}
+if {![opt-bool os8-crt]} {
+    msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-crt"
+}
+if {![opt-bool os8-dcp]} {
+    msg-result "Will not add DCP disassembler to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-dcp"
+}
+
+if {![opt-bool os8-focal]} {
+    msg-result "Will not add FOCAL 69 or U/W FOCAL to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-focal"
+} elseif {[opt-bool os8-focal69] && ![opt-bool os8-uwfocal]} {
+    msg-result "Adding FOCAL 69 to the OS/8 RK05 disk image instead of U/W FOCAL."
+    append mkos8_opts " --enable-focal69 --disable-uwfocal"
+} elseif {[opt-bool os8-focal69] && [opt-bool os8-uwfocal]} {
+    msg-result "Adding both FOCAL 69 and U/W FOCAL to the OS/8 RK05 disk image."
+    append mkos8_opts " --enable-focal69"   ;# default --enable-uwfocal 
+} else {
+    msg-result "Adding U/W FOCAL to the OS/8 RK05 disk image instead of FOCAL 69."
+}
+
+if {![opt-bool os8-init]} {
+    msg-result "Suppressing the INIT message on OS/8 boot."
+    append mkos8_opts " --disable-init"
+}
+if {![opt-bool os8-k12]} {
+    msg-result "Will not add Kermit-12 to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-k12"
+}
+if {[opt-bool os8-music]} {
+    msg-result "Will add music files to the OS/8 RK05 disk image."
+    append mkos8_opts " --enable-music"
+} else {
+    msg-result "Will not add music files to the OS/8 RK05 disk image."
+}
+if {[opt-bool os8-vtedit]} {
+    msg-result "Will add VTEDIT setup to the OS/8 RK05 disk image."
+    append mkos8_opts " --enable-vtedit"
+}
+define MKOS8_OPTS $mkos8_opts
+
+# Force a rebuild of the OS/8 media if the option set changed.
+if {![file exists "obj"]} { file mkdir "obj" }
+set ofile "obj/mkos8.opts"
+set old_mkos8_opts "IMPOSSIBLE"
+if {[file exists $ofile]} {
+    set fp [open $ofile r]
+    gets $fp old_mkos8_opts
+    close $fp
+}
+if {$old_mkos8_opts != $mkos8_opts} {
+    file delete -force bin/os8v3d-bin.rk05
+    set fp [open $ofile w]
+    puts $fp $mkos8_opts
+    close $fp
 }
 
 # High-level definitions
@@ -71,39 +175,39 @@ set cores [exec $srcdir/tools/corecount]
 set tv [opt-val throttle]
 set tvsl [string length $tv]
 if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
-	define SET_THROTTLE {set nothrottle}
-	set tv "unlimited"
+    define SET_THROTTLE {set nothrottle}
+    set tv "unlimited"
 } else {
-	# Rewrite symbolic values with values SIMH can understand.  See
-	# README-throttle.md for the justification of these values.
-	if {$tv == "single-core" || $tvsl == 0} {
-		# It's a single-core Pi board, so just tell SIMH to take half
+    # Rewrite symbolic values with values SIMH can understand.  See
+    # README-throttle.md for the justification of these values.
+    if {$tv == "single-core" || $tvsl == 0} {
+        # It's a single-core Pi board, so just tell SIMH to take half
         # the host CPU power, leaving the rest left for background
         # tasks.  We can't use an IPS value here for several reasons.
         # See README-throttle.md for details.
         set tv "50%"
-	} elseif {$tv == "pdp8e"} {
-		set tv "416k"
-	} elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
-		set tv "333k"
-	} elseif {$tv == "pdp8l" || $tv == "pdp8"} {
-		set tv "313k"
-	} elseif {$tv == "ha6120"} {
-		set tv "182k"
-	} elseif {$tv == "im6100a"} {
-		set tv "200k"
-	} elseif {$tv == "im6100"} {
-		set tv "100k"
-	} elseif {$tv == "im6100c"} {
-		set tv "83k"
-	} elseif {$tv == "pdp8s"} {
-		set tv "63k"
-	} elseif {$tv == "human"} {
-		set tv "1/100"
-	} elseif {$tv == "trace"} {
-		set tv "1/1000"
-	}
-	# else, assume --throttle was given a legal SIMH throttle value
+    } elseif {$tv == "pdp8e"} {
+        set tv "416k"
+    } elseif {$tv == "pdp8i" || $tv == "pdp8a"} {
+        set tv "333k"
+    } elseif {$tv == "pdp8l" || $tv == "pdp8"} {
+        set tv "313k"
+    } elseif {$tv == "ha6120"} {
+        set tv "182k"
+    } elseif {$tv == "im6100a"} {
+        set tv "200k"
+    } elseif {$tv == "im6100"} {
+        set tv "100k"
+    } elseif {$tv == "im6100c"} {
+        set tv "83k"
+    } elseif {$tv == "pdp8s"} {
+        set tv "63k"
+    } elseif {$tv == "human"} {
+        set tv "1/100"
+    } elseif {$tv == "trace"} {
+        set tv "1/1000"
+    }
+    # else, assume --throttle was given a legal SIMH throttle value
     
     if {[string first "/" $tv] > -1} {
         # Assume the ratio given will push us below 1 kIPS, where ILS
@@ -112,7 +216,7 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
         set cores 1
     }
 
-	define SET_THROTTLE "set throttle $tv"
+    define SET_THROTTLE "set throttle $tv"
 }
 msg-result "Simulator CPU throttle set to $tv"
 
@@ -120,13 +224,13 @@ msg-result "Simulator CPU throttle set to $tv"
 # driving method on single-core hosts.  The user can force this on
 # multi-core hosts via --no-lamp-simulator.
 if {($cores < 2) || [opt-bool no-lamp-simulator]} {
-	msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
-	define LED_DRIVER_MODULE n
-	define ILS_MODE 0
+    msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
+    define LED_DRIVER_MODULE n
+    define ILS_MODE 0
 } else {
-	msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
-	define LED_DRIVER_MODULE i
-	define ILS_MODE 1
+    msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
+    define LED_DRIVER_MODULE i
+    define ILS_MODE 1
 }
 
 # Check for headers, functions, etc. whose absence we can work around
@@ -138,9 +242,9 @@ cc-check-functions sched_yield
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
 if {![cc-check-includes curses.h]} {
-	user-error "Could not find curses.h.  Try installing libncurses-dev."
+    user-error "Could not find curses.h.  Try installing libncurses-dev."
 } elseif {![cc-check-function-in-lib initscr ncurses]} {
-	user-error "Could not find initscr() in libncurses."
+    user-error "Could not find initscr() in libncurses."
 }
 
 # We need to find an install(1) type program that supports -D.  The
@@ -150,15 +254,15 @@ if {![cc-check-includes curses.h]} {
 # ginstall name is typical on non-Linux systems where GNU Coreutils was
 # installed alongside the core OS utilities.
 if {[cc-check-progs ginstall]} {
-	define INSTALL ginstall
+    define INSTALL ginstall
 } elseif {[cc-check-progs install]} {
-	if {[catch {exec install -D -d . >& /dev/null} result] == 0} {
-		define INSTALL install
-	} else {
-		user-error "install(1) does not support -D; install GNU Coreutils."
-	}
+    if {[catch {exec install -D -d . >& /dev/null} result] == 0} {
+        define INSTALL install
+    } else {
+        user-error "install(1) does not support -D; install GNU Coreutils."
+    }
 } else {
-	user-error "No install(1) type program found; install GNU Coreutils."
+    user-error "No install(1) type program found; install GNU Coreutils."
 }
 msg-result "Found GNU install(1) program as [get-define INSTALL]."
 
@@ -176,8 +280,8 @@ define MEDIADIR "[get-define ABSPREFIX]/share/media"
 set instgrp [exec id -grn]
 set instusr [exec id -urn]
 if {$instusr == "root"} {
-	msg-result "Error: This software will not install and run as root."
-	user-error "Reconfigure without sudo!"
+    msg-result "Error: This software will not install and run as root."
+    user-error "Reconfigure without sudo!"
 }
 define INSTGRP $instgrp
 define INSTUSR $instusr
@@ -192,14 +296,14 @@ msg-result "Owner of screen(1) session will be $instusr."
 # to fool autosetup.
 cc-check-standards c99
 if {![opt-bool debug-mode]} {
-	cc-check-flags -fipa-cp-clone
-	cc-check-flags -fno-strict-overflow
-	cc-check-flags -fpredictive-commoning
-	if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
-		cc-check-flags -fgcse-after-reload
-		cc-check-flags -finline-functions
-		cc-check-flags -fno-unsafe-loop-optimizations
-	}
+    cc-check-flags -fipa-cp-clone
+    cc-check-flags -fno-strict-overflow
+    cc-check-flags -fpredictive-commoning
+    if ([get-define HAVE_CFLAG_FIPA_CP_CLONE]) {
+        cc-check-flags -fgcse-after-reload
+        cc-check-flags -finline-functions
+        cc-check-flags -fno-unsafe-loop-optimizations
+    }
 }
 
 # Embed this software's Fossil-based version string into gpio-common.c.
@@ -226,10 +330,45 @@ if {$status != 0} {
 }
 define VERSION $version
 
+# Get host, user, and date info for use by media/os8/init.tx.
+set host [info hostname]
+set user $::env(USER)
+define BUILDUSER "$user@$host"
+define BUILDDATE [clock format [clock seconds] -format "%Y.%m.%d %T %Z"]
+
+# The mkos8 script requires Python and some non-core modules.
+set status [catch {exec python -c exit} result]
+if {$status != 0} {
+    user-error "Python does not appear to be installed here.  It is required."
+}
+msg-result "Python is installed here."
+set status [catch {exec python -c "import pexpect" 2> /dev/null} result]
+if {$status != 0} {
+    set msg "The Python pexpect module is not installed here.  Fix with\n"
+    append msg "\n    sudo pip install pexpect\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo easy_install pexpect\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo apt install python-pexpect\n"
+    user-error $msg
+}
+msg-result "Python module pexpect is installed here."
+set status [catch {exec python -c "import pkg_resources" 2> /dev/null} result]
+if {$status != 0} {
+    set msg "The Python pkg_resources module is not installed here.  Fix with\n"
+    append msg "\n    sudo pip install pkg_resources\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo easy_install pkg_resources\n"
+    append msg "\nOR:\n"
+    append msg "\n    sudo apt install python-pkg-resources\n"
+    user-error $msg
+}
+msg-result "Python module pkg_resources is installed here."
+
 # Build Deeper Thought if we find it here
 if {[file exists "[get-define srcdir]/src/deeper.c"]} {
     set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
-	msg-result "Found Deeper Thought; building it against $ls GPIO module"
+    msg-result "Found Deeper Thought; building it against $ls GPIO module"
     define BUILD_DEEPER_THOUGHT 1
 }
 
@@ -238,8 +377,8 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # NOTE: If you change the list of files here, change INFILES in
 # Makefile.in, too.
 make-config-header src/config.h \
-	-auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
-	-bare {ILS_MODE PCB_*}
+    -auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
+    -bare {ILS_MODE PCB_*}
 make-template Makefile.in
 make-template bin/pidp8i.in
 make-template boot/0.script.in
@@ -251,6 +390,8 @@ make-template boot/7.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
 make-template examples/Makefile.in
+make-template lib/mkos8/dirs.py.in
+make-template media/os8/init.tx.in
 make-template src/Makefile.in
 make-template src/gpio-common.c.in
 make-template src/PDP8/Makefile.in
