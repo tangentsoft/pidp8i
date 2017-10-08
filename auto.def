@@ -331,7 +331,7 @@ if {$status != 0} {
 define VERSION $version
 
 # Get host, user, and date info for use by media/os8/init.tx.
-set host [info hostname]
+catch {exec hostname} host
 set user $::env(USER)
 define BUILDUSER "$user@$host"
 define BUILDDATE [clock format [clock seconds] -format "%Y.%m.%d %T %Z"]
