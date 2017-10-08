@@ -179,7 +179,7 @@ distclean: clean
 		src/config.h
 
 ctags tags:
-	@ctags -R @srcdir@
+	@ctags -R @srcdir@ @srcdir@/libexec/mkos8
 ifeq (@HAVE_PROG_CSCOPE@, 1)
 	@cscope -bR -s@srcdir@
 endif
