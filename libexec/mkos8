@@ -99,6 +99,19 @@ def os8_kbd_delay():
   time.sleep(_kbd_delay)
 
 
+#### os8_send_line #####################################################
+# Core of os8_pmt_send.  Also used by code that needs to send text
+# "blind" to OS/8, without expecting a prompt, as when driving EDIT.
+
+def os8_send_line (send_line):
+  global child
+
+  for i in xrange(0, len (send_line)):
+    child.send (send_line[i])
+    os8_kbd_delay ()
+  child.send ("\r")
+
+
 #### os8_pmt_send ######################################################
 # Wait for an OS/8 command prompt running within SIMH, then send the
 # given line.
@@ -109,11 +122,19 @@ def os8_kbd_delay():
 def os8_pmt_send (prompt, send_line):
   global child
 
-  child.expect("\n%s$" % prompt)
-  for i in xrange(0, len(send_line)):
-    child.send(send_line[i])
-    os8_kbd_delay()
-  child.send("\r")
+  child.expect ("\n%s$" % prompt)
+  os8_send_line (send_line)
+
+
+#### os8_send_ctrl #####################################################
+# Send a control character to OS/8 corresponding to the ASCII letter
+# given.  We precede it with the OS/8 keyboard delay, since we're
+# probably following a call to os8_send_line or os8_pmt_send.
+
+def os8_send_ctrl (char):
+  global child
+  os8_kbd_delay ()
+  child.send (chr (ord (char[0].upper ()) - ord ('@')))
 
 
 #### os8_restart #######################################################
@@ -403,7 +424,7 @@ def make_bin (args):
 
   if progmsg: print "Performing config with BUILD..."
   simh_send("boot dt0")
-  os8_pmt_send("\.", "SET SYS NO INIT")   # For Safety's Sake
+  os8_pmt_send("\.", "SET SYS NO INIT")   # initially, don't run INIT.CM 
   os8_pmt_send("\.", "RUN SYS BUILD")
   os8_pmt_send("\$", "LOAD DTA1:RK8ESY.BN")
   os8_pmt_send("\$", "LOAD DTA1:PT8E.BN")
@@ -473,6 +494,27 @@ def make_bin (args):
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
     os8_pmt_send("\.", "SUBMIT SYS:LCBAS.BI")
 
+  # Create a banner message and optionally set it to show on boot.
+  # This message is always upcased, even if you do this before calling
+  # LCSYS.BI.  Is it a limitation of EDIT?
+  if progmsg: print "Setting INIT message..."
+  os8_pmt_send("\.", "CREATE INIT.TX")
+  os8_pmt_send("#", "A")        # append text to file
+  os8_send_line("Hello, world!")
+  os8_send_ctrl('L')            # return to EDIT command mode
+  os8_pmt_send("#", "E")        # save and exit
+  os8_pmt_send("\.", "CREATE INIT.CM")
+  os8_pmt_send("#", "A")
+  os8_send_line("TYPE INIT.TX")
+  os8_send_ctrl('L')
+  os8_pmt_send("#", "E")
+  if not args.disable_init:
+    # Set the message to display only if the user did not suppress it.
+    # We do it this way so the user can turn it on later without
+    # rebuilding their OS/8 media.
+    os8_pmt_send("\.", "SET SYS INIT")
+
+  # Finish up
   if progmsg: print "Cleaning up..."
   back_to_simh("\.")
   simh_send("detach rk0")
