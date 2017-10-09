@@ -310,6 +310,27 @@ following options:
 [suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
 
 
+#### --os8-minimal
+
+If you set this flag, it sets all `--enable-os8-*` flags to false and
+all `--disable-os8-*` flags to true. If you explicitly give any of these
+flags to the `configure` script, this flag overrides them.
+
+This flag only affects the optional installs made after the `BUILD`
+step: it does not remove optional features of OS/8 itself, such as its
+BASIC interpreter.
+
+Giving this option therefore gets you an empty OS/8 `DSK:` device and
+nothing in `SYS:` beyond what was left after the OS/8 `BUILD` step.
+
+There is one exception: this option does not affect the `--lowercase`
+option because that affects only OS/8's command interpreter and OS/8's
+BASIC implementation, so we deem it to be orthogonal to the purpose of
+the `--os8-minimal` flag, which only affects the optional post-`BUILD`
+features. If you want a *truly* pristime OS/8 disk, you should therefore
+also give `--lowercase=none`.
+
+
 #### --help
 
 Run `./configure --help` for more information on your options here.

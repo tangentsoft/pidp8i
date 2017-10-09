@@ -50,6 +50,7 @@ options {
     os8-focal69       => "add FOCAL 69 to the built OS/8 RK05 image"
     os8-init=1        => "suppress the OS/8 INIT message on boot: start with a bare . prompt"
     os8-k12=1         => "leave 12-bit Kermit off built OS/8 RK05 disk image"
+    os8-minimal       => "disable all --enable-os8-* options, giving minimal OS/8 bin disk"
     os8-music         => "add *.MU files to built OS/8 RK05 disk image"
     os8-uwfocal=1     => "leave U/W FOCAL (only) off the built OS/8 RK05 image"
     os8-vtedit        => "add the TECO VTEDIT setup to built OS/8 RK05 image"
@@ -100,32 +101,33 @@ if {$lv == "auto"} {
 }
 msg-result "Lowercase handling set to '$lv' mode."
 
-if {![opt-bool os8-advent]} {
+set os8min [opt-bool os8-minimal]
+if {$os8min || ![opt-bool os8-advent]} {
     msg-result "Will not add game of ADVENT to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-advent"
 }
-if {![opt-bool os8-ba]} {
+if {$os8min || ![opt-bool os8-ba]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-ba"
 }
-if {![opt-bool os8-cc8]} {
+if {$os8min || ![opt-bool os8-cc8]} {
     msg-result "Will not add CC8 to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-cc8"
 }
-if {![opt-bool os8-chess]} {
+if {$os8min || ![opt-bool os8-chess]} {
     msg-result "Will not add game of CHESS to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-chess"
 }
-if {![opt-bool os8-crt]} {
+if {$os8min || ![opt-bool os8-crt]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-crt"
 }
-if {![opt-bool os8-dcp]} {
+if {$os8min || ![opt-bool os8-dcp]} {
     msg-result "Will not add DCP disassembler to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-dcp"
 }
 
-if {![opt-bool os8-focal]} {
+if {$os8min || ![opt-bool os8-focal]} {
     msg-result "Will not add FOCAL 69 or U/W FOCAL to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-focal"
 } elseif {[opt-bool os8-focal69] && ![opt-bool os8-uwfocal]} {
@@ -138,23 +140,24 @@ if {![opt-bool os8-focal]} {
     msg-result "Adding U/W FOCAL to the OS/8 RK05 disk image instead of FOCAL 69."
 }
 
-if {![opt-bool os8-init]} {
-    msg-result "Suppressing the INIT message on OS/8 boot."
-    append mkos8_opts " --disable-init"
-}
-if {![opt-bool os8-k12]} {
+if {$os8min || ![opt-bool os8-k12]} {
     msg-result "Will not add Kermit-12 to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-k12"
 }
-if {[opt-bool os8-music]} {
+if {!$os8min && [opt-bool os8-music]} {
     msg-result "Will add music files to the OS/8 RK05 disk image."
     append mkos8_opts " --enable-music"
 } else {
     msg-result "Will not add music files to the OS/8 RK05 disk image."
 }
-if {[opt-bool os8-vtedit]} {
+if {!$os8min && [opt-bool os8-vtedit]} {
     msg-result "Will add VTEDIT setup to the OS/8 RK05 disk image."
     append mkos8_opts " --enable-vtedit"
+}
+
+if {$os8min || ![opt-bool os8-init]} {
+    msg-result "Suppressing the INIT message on OS/8 boot."
+    append mkos8_opts " --disable-init"
 }
 define MKOS8_OPTS $mkos8_opts
 
