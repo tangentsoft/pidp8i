@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2017.10.eh?
+## Version 2017.10.eh? — The "Languages and Custom OS/8 Disk Packs" release
 
 *   All prior versions were shipping `os8.rk05`, a "Field Service
     Diagnostic" OS/8 disk pack image with uncertain provenance,
@@ -241,7 +241,7 @@
     `README-throttle.md` for details.
 
 
-## Version 2017.04.01 The "I May Be a Fool, but I am *Your* Fool" Release
+## Version 2017.04.01 — The "I May Be a Fool, but I am *Your* Fool" release
 
 *   Added the `configure --alt-serial-mod` option to change the GPIO
     code to work with [James L-W's alternative serial mod][sm2].
@@ -751,7 +751,7 @@
     numbers or our Fossil checkin IDs.)
 
 
-## Version 2016.12.26 (The Boxing Day release)
+## Version 2016.12.26 — The Boxing Day release
 
 *   Tony Hill updated SIMH to the latest upstream version.
 
