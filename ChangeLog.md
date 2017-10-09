@@ -199,9 +199,6 @@
     handling methods.  Now it shares the same code used by `pidp8i-sim`
     and `pidp8i-test`, so it works properly again.
 
-*   Updated for Raspbian Squeeze, released in September 2017.  It should
-    still run on Raspbian Jessie, however.
-
 *   The SysV init script that starts `pidp8i-sim` under GNU Screen on
     the PiDP-8/I now sets the working directory to `$prefix/share/media`
     on start, so relative paths given to SIMH commands (e.g. `ATTACH`)
@@ -209,7 +206,10 @@
     generally had to give absolute paths to attach media and such
     because CWD would be set somewhere unhelpful.
 
-*   Other assorted portability improvements.
+*   Updated for Raspbian Squeeze, released in September 2017.  It should
+    still run on Raspbian Jessie, however.
+
+*   Assorted portability improvements.
 
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/cc8/README.md
