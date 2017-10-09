@@ -216,6 +216,11 @@ options IF=0 and IF=7 can be left out to save space and build time:
     to your PiDP-8/I, and thus do not want video terminal style rubout
     processing.
 
+*   **--disable-os8-init** - Generate `SYS:INIT.TX` but do not display
+    it on OS/8 boot.  Rather than disable the default on-boot init
+    message, you may want to edit `media/os8/init.tx.in` to taste and
+    rebuild.
+
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
