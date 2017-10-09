@@ -97,11 +97,11 @@
         was corrupted, causing several of these BASIC programs to not
         run properly.
 
-    -   Removed the `VTEDIT` macro pack for TECO by default.  Although
-        some may enjoy this mode, it was decided that we should offer
-        stock TECO by default for its historical value.  If you want
-        VTEDIT back, it can be re-enabled with a `configure` script
-        option.
+    -   No longer installing the `VTEDIT` macros for TECO by default.
+        Although some may enjoy this alternative way of running TECO, it
+        was decided that we should offer stock TECO by default for its
+        historical value.  If you want VTEDIT back, it can be re-enabled
+        with a `configure` script option.
 
     -   Added configure-time options to disable all of the above new
         features and most of the features that were present on the
@@ -166,8 +166,9 @@
     This automatic OS/8 media build feature was suggested by Jonathan
     Trites who wrote the initial version of the script that is now
     called `libexec/mkos8`.  That script was then extended and factored
-    into its current form by Bill Cattey and Warren Young.  Warren
-    thinks Bill did most of the hard work.
+    into its current form by Bill Cattey and Warren Young.
+
+    Warren thinks Bill did most of the hard work in the items above.
 
     The source media used by the `mkos8` script comes from many sources
     and was curated for the PiDP-8/I project by Bill Cattey.  See the
