@@ -1,5 +1,222 @@
 # PiDP-8/I Changes
 
+## Version 2017.10.eh?
+
+*   All prior versions were shipping `os8.rk05`, a "Field Service
+    Diagnostic" OS/8 disk pack image with uncertain provenance,
+    configuration, and modification history.  We have replaced that with
+    a script run at build time that programmatically assembles a set of
+    clean OS/8 RK05 disk images from original DEC source tapes, other
+    primary source media, and the user's chosen configuration options.
+
+    This provides the following features and benefits as compared to the
+    old `os8.rk05`:
+
+    -   U/W FOCAL V4E is installed on SYS: by default. Start with our
+        [U/W FOCAL Manual Supplement for the PiDP-8/I][uwfs], then
+        follow links from there to further information.
+        
+        The primary linked source is the [U/W FOCAL Manual][uwfm] by Jim
+        van Zee (creator of U/W FOCAL) converted from scanned and OCR'd
+        PDF form to Markdown format, which Fossil renders nicely for us
+        on the web.
+
+        This is a fascinating programming language, well worth studying!
+
+    -   Ian Schofield's CC8 OS/8 C compiler is installed on `SYS:` by
+        default.  Also merged in his `cc8` cross-compiler and his
+        hand-rolled OS/8 distribution, `media/os8/cc8.rk05`.  See [the
+        CC8 `README`][cc8rm] for details.
+
+    -   MACREL macro assembler is installed by default.
+
+    -   DCP disassembler is installed by default.
+
+    -   John Comeau's CHECKMO-II chess program is installed by default.
+
+    -   By default, SIMH no longer folds lowercase input and output to
+        uppercase.  Instead, we apply patches to OS/8's command
+        processor and its BASIC implementation to up-case input, since
+        neither OS/8 nor BASIC can cope with lowercase input.
+
+        All other programs are left to fend for themselves, which often
+        works out fine. U/W FOCAL, Adventure, TECO, etc. all handle
+        lowercase input to some extent, and all can emit lowercase text
+        if given it.  With the prior SIMH settting, you could not use
+        lowercase at all.
+
+        This change has been slightly controversial, so we have two
+        alternative modes that can be selected at `configure` time:
+
+        -   No patches and no case-folding in SIMH.  Lowercase I/O is
+            allowed, but neither SIMH nor OS/8 nor its programs will
+            second-guess your input, even if that means some programs
+            will fail when given lowercase input. If you need to engage
+            CAPS LOCK to make the program do the right thing, you are
+            expected to be aware enough to do this.
+            
+            The argument in favor of this approach is that this is what
+            a real PDP-8 system running this software would have done if
+            sent lowercase input.
+
+        -   Revert to the prior releases' behavior: no patches, and SIMH
+            does automatic case-folding for you, so you only get
+            uppercase, even when you type lowercase text.  Programs that
+            emit lowercase text (e.g. Adventure) appear to be sending
+            uppercase instead.
+
+            This option is in fact historically accurate. Essentially,
+            this configuration makes SIMH pretend that your terminal is
+            only capable of uppercase text, which was very common in the
+            PDP-8's day: the uppercase-only Teletype Model 33 ASR was
+            the most common terminal type on PDP-8s.
+
+        Our new default is historically inaccurate, but we think it the
+        new behavior is the least likely to unpleasantly surprise end
+        users.  Pick your poison.
+
+    -   The `INIT.TX` message displayed by default on OS/8 boot is now
+        more informative than the old `FIELD SERVICE PDP-8 DIAGNOSTIC
+        SYSTEM` message.  Those that do not want any boot message can
+        disable it at configuration time.
+
+    -   Replaced the mismatched FORTRAN compiler and runtime with
+        matched versions from the DEC source tapes, and ensured that
+        Adventure runs under this version of the FORTRAN Run Time System
+        (FRTS). At various points in the past, either FORTRAN or
+        Adventure has been broken.
+
+    -   The `*.MU` and music player files are left off of `RKB0:` by
+        default, since they apparently do not cause sufficient RFI on
+        the PiDP-8/I hardware to be picked up by normal AM radios.  This
+        saves space for things that *do* work.
+
+    -   Repaired several broken BASIC programs on RKB0: by going back to
+        primary sources.  Either the `os8.rk05` disk image was corrupted
+        at some point or it is an image of a real RK05 disk pack that
+        was corrupted, causing several of these BASIC programs to not
+        run properly.
+
+    -   Removed the `VTEDIT` macro pack for TECO by default.  Although
+        some may enjoy this mode, it was decided that we should offer
+        stock TECO by default for its historical value.  If you want
+        VTEDIT back, it can be re-enabled with a `configure` script
+        option.
+
+    -   Added configure-time options to disable all of the above new
+        features and most of the features that were present on the
+        original `os8.rk05` disk as well.  You can create a completely
+        stripped-down OS/8 disk image, one with all features enabled, or
+        anything in between.
+
+    -   In the old `os8.rk05` disk image, both `SYS:` and `DSK:` were
+        set to `RKA0:`, which meant that to address anything on `RKB0:`, you
+        had to specify the device path explicitly or manually change the
+        default in OS/8 with an `ASSIGN RKB0 DSK` command or similar.
+
+        In the new disk pack, programs you run with `R` and similar
+        commands are installed on `RKA0:` which is the `SYS:` disk, and
+        user data files, FOCAL and BASIC programs, etc. are on `RKB0:`
+        which is assigned as `DSK:`. This means OS/8 and its programs
+        are now far more likely to find files without an explicit device
+        name, because files are installed where OS/8 looks for them by
+        default.  Example:
+
+            .R FRTS                   ⇠ loads FRTS from SYS: (RKA0:)
+            *ADVENT                   ⇠ loads ADVENT.LD from DSK: (RKB0:)
+            *[Esc]
+            Welcome to Adventure!!
+
+        Notice that no device names had to be specified.  OS/8 did the
+        right thing by default here, even though the files involved are
+        on two separate OS/8 devices.
+
+        To a very rough approximation, `SYS:` on these new RK05 disk
+        packs acts like the Unix `PATH` and `DSK:` acts like your user's
+        home directory.
+
+        The idea for this came from Ian Schofield's `cc8.rk05` disk
+        image, which we are also shipping in this release.
+
+    -   OS/8 has a limit on the number of devices it can support, and we
+        made different choices than the creator of `os8.rk05`.
+
+        Briefly, we replaced the second floppy (`RXA1:`) with a third
+        RK05 disk, that being deemed a more useful configuration for
+        this hard disk based OS/8 configuration.  A dual-floppy
+        configuration implies that you are booting from floppy and need
+        the second one for user files and such.  In our RK05 based
+        configuration, users should need floppy disk support rarely, and
+        then primarily to get data on and off of the attached hard
+        disk(s).
+
+        We chose to stick with the dual TU56 tape drive setup of the
+        prior version as we found the ability to mount two tapes very
+        helpful, particularly during the `mkos8` build process.
+
+        The difference in the `RESORC` output between the versions is:
+
+            Old: RKA0,RKB0,RKA1,RKB1,          RXA0,RXA1,DTA0,DTA1,TTY,LPT,PTP,PTR
+            New: RKA0,RKB0,RKA1,RKB1,RKA2,RKB2,RXA0,     DTA0,DTA1,TTY,LPT,PTP,PTR
+
+    -   TODO: Added the `os8` script to add and remove features from the
+        built OS/8 binary disk image after it is initially built.  In a
+        primitive sort of way, this is "[apt][apt] for OS/8."
+
+    This automatic OS/8 media build feature was suggested by Jonathan
+    Trites who wrote the initial version of the script that is now
+    called `libexec/mkos8`.  That script was then extended and factored
+    into its current form by Bill Cattey and Warren Young.  Warren
+    thinks Bill did most of the hard work.
+
+    The source media used by the `mkos8` script comes from many sources
+    and was curated for the PiDP-8/I project by Bill Cattey.  See the
+    [OS/8 media README][os8rm] for more details.
+
+    See the [the top-level `README`][tlrm] for information on modifying
+    the default OS/8 configuration.  Pretty much everything above can be
+    disabled if it's enabled by default, and vice versa.
+
+*   We now build an OS/8 RK05 source code disk image containing the
+    contents of the OS/8 source tapes for the convenience of those who would
+    like to work with the OS/8 source code in a more convenient fashion
+    than attaching and detaching the 7 TU56 tape image files.
+
+*   Added Bill Cattey's `ptp2txt` and `txt2ptp` filters, which translate
+    files between SIMH paper tape format and plain POSIX ASCII text
+    files.  This program was written to ease the movement of FOCAL
+    program text between SIMH and its host OS, but they should prove
+    useful for other similar tasks.
+
+*   Fixed the order of initialization in the GPIO setup code for the
+    James L-W serial mod case.  Fix by Dylan McNamee.
+
+*   The helper program that selects which boot script to run when the
+    PiDP-8/I boots based on the IF switch settings broke at some point
+    in the past, apparently because it was using its own idiosyncratic
+    GPIO handling code, and thus did not track our evolving GPIO
+    handling methods.  Now it shares the same code used by `pidp8i-sim`
+    and `pidp8i-test`, so it works properly again.
+
+*   Updated for Raspbian Squeeze, released in September 2017.  It should
+    still run on Raspbian Jessie, however.
+
+*   The SysV init script that starts `pidp8i-sim` under GNU Screen on
+    the PiDP-8/I now sets the working directory to `$prefix/share/media`
+    on start, so relative paths given to SIMH commands (e.g. `ATTACH`)
+    are more likely to do what you want.  In prior releases, you
+    generally had to give absolute paths to attach media and such
+    because CWD would be set somewhere unhelpful.
+
+*   Other assorted portability improvements.
+
+[apt]:   https://linux.die.net/man/8/apt
+[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/cc8/README.md
+[os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
+[uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
+[uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
+
+
 ## Version 2017.04.04
 
 *   Removed the PDP-8 CPU idle detection feature.  Oscar Vermeulen
@@ -739,7 +956,7 @@
 
 *   Added an intelligent, powerful build system, replacing the
     bare-bones `Makefile` based build system in the upstream version.
-    See [`README.md`][readme] for more info on this.
+    See [`README.md`][tlrm] for more info on this.
 
 *   The installation is now completely relocatable via `./configure
     --prefix=/some/other/place`. The upstream version would not work if
@@ -810,7 +1027,7 @@
 
 *   Fixed a bunch of bugs!
 
-[readme]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+[tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
 [dupatch]: https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA
 [dudis]:   https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936
 [wiki]:    https://tangentsoft.com/pidp8i/wcontent
