@@ -387,6 +387,8 @@ make-template boot/3.script.in
 make-template boot/4.script.in
 make-template boot/6.script.in
 make-template boot/7.script.in
+make-template boot/cc8.script.in
+make-template cc8/Makefile.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
 make-template examples/Makefile.in

@@ -1,3 +1,7 @@
+cc8/*.[ch]
+cc8/*.pa
+cc8/*.sb
+
 src/*.[ch]
 src/*.in
 

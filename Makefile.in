@@ -44,8 +44,9 @@ CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-D_GNU_SOURCE -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
 
+CC8 = bin/cc8
 SIM = bin/pidp8i-sim
-BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch
+BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch $(CC8)
 
 MKOS8      = @srcdir@/libexec/mkos8
 MKOS8_LIB  = lib/mkos8
@@ -67,7 +68,7 @@ BUILDDIRS = bin libexec obj/PDP8
 
 INSTDIRS = bin etc libexec share/boot share/media share/man/man1
 
-OBJS = \
+SIM_OBJS = \
 	obj/gpio-common.o \
 	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_cpu.o \
@@ -99,6 +100,22 @@ OBJS = \
 	obj/sim_timer.o \
 	obj/sim_tmxr.o \
 	obj/sim_video.o
+
+CC8_OBJS = \
+	obj/code8.o \
+	obj/data.o \
+	obj/error.o \
+	obj/expr.o \
+	obj/function.o \
+	obj/gen.o \
+	obj/io.o \
+	obj/lex.o \
+	obj/main.o \
+	obj/preproc.o \
+	obj/primary.o \
+	obj/stmt.o \
+	obj/sym.o \
+	obj/while.o
 
 ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
@@ -133,6 +150,7 @@ INFILES = \
 	@srcdir@/boot/4.script.in \
 	@srcdir@/boot/6.script.in \
 	@srcdir@/boot/7.script.in \
+	@srcdir@/boot/cc8.script.in \
 	@srcdir@/etc/pidp8i-init.in \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/media/os8/init.tx.in \
@@ -142,6 +160,7 @@ INFILES = \
 	$(MKOS8_DIN)
 PRECIOUS_INFILES = \
 	@srcdir@/Makefile.in \
+	@srcdir@/cc8/Makefile.in \
 	@srcdir@/examples/Makefile.in \
 	@srcdir@/src/Makefile.in \
 	@srcdir@/src/PDP8/Makefile.in
@@ -163,8 +182,9 @@ all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LIST
 	@chmod 755 bin/pidp8i
 
 clean:
-	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(EX_PTS) $(LISTINGS) $(OBJS) $(OUTFILES) \
-		$(OS8_RK05S) bin/*.save \
+	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(EX_PTS) $(LISTINGS) \
+		$(OUTFILES) $(OS8_RK05S) \
+		bin/*.save \
 		tags \
 		obj/*.d \
 		obj/*.o \
@@ -247,6 +267,10 @@ install: all
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
 	) || true
 
+	@# Install CC8 stuff
+	@INSTALL@ -m 755 bin/cc8 @prefix@/bin
+	@INSTALL@ -m 755 cc8/include/* @prefix@/share/include
+
 	@# Install palbart stuff
 	@INSTALL@ -m 755 bin/palbart @prefix@/bin
 	@INSTALL@ -m 644 @srcdir@/palbart/palbart.1 @prefix@/share/man/man1
@@ -322,9 +346,9 @@ $(OS8_SRC_RK05): $(OS8_SRC_SRCS) $(OS8_BIN_RK05)
 # Explained at http://scottmcpeak.com/autodepend/autodepend.html
 #
 # Reflect any changes here into near-duplicate below!
-obj/%.o: @srcdir@/src/%.c
+obj/%.o: @srcdir@/src/%.c @srcdir@/cc8/cross/%.c
 	$(CC)  -c $(CFLAGS) @srcdir@/src/$*.c -o obj/$*.o
-	$(CC) -MM $(CFLAGS) @srcdir@/src/$*.c > obj/$*.d
+	$(CC) -MM $(CFLAGS) @srcdir@/src/$*.c  > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
 	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
@@ -335,7 +359,17 @@ obj/%.o: @srcdir@/src/%.c
 # files in the srcdir.  Needed when building out-of-tree.
 obj/%.o: src/%.c
 	$(CC)  -c $(CFLAGS) src/$*.c -o obj/$*.o
-	$(CC) -MM $(CFLAGS) src/$*.c > obj/$*.d
+	$(CC) -MM $(CFLAGS) src/$*.c  > obj/$*.d
+	@mv -f obj/$*.d obj/$*.d.tmp
+	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
+		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
+	@rm -f obj/$*.d.tmp
+
+# Another near-duplicate for CC8, since it's off in a different subdir
+obj/%.o: @srcdir@/cc8/cross/%.c
+	$(CC)  -c -w $(CFLAGS) @srcdir@/cc8/cross/$*.c -o obj/$*.o
+	$(CC) -MM -w $(CFLAGS) @srcdir@/cc8/cross/$*.c  > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
 	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
@@ -373,7 +407,10 @@ bin/palbart: @srcdir@/palbart/palbart.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(SIM): $(OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
+$(SIM): $(SIM_OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
+	$(CC) -o $@ $^ $(LIBS)
+
+$(CC8): $(CC8_OBJS)
 	$(CC) -o $@ $^ $(LIBS)
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
@@ -416,5 +453,5 @@ endif
 # may have changed.
 src/gpio-common.c: @srcdir@/tools/version
 
--include $(OBJS:.o=.d) obj/scanswitch.d
+-include $(SIM_OBJS:.o=.d) $(CC8_OBJS:.o=.d) obj/scanswitch.d
 
