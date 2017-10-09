@@ -65,7 +65,7 @@ MKOS8_SRCS = $(MKOS8) $(MKOS8_DIN) $(MKOS8_PYSRC)
 
 BUILDDIRS = bin libexec obj/PDP8
 
-INSTDIRS = bin etc libexec share/boot share/media share/man/man1
+INSTDIRS = bin etc libexec share/boot share/media share/include share/man/man1
 
 SIM_OBJS = \
 	obj/gpio-common.o \
