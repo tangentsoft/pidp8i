@@ -57,7 +57,9 @@ use to you, but may open your eyes to techniques that may be useful to
 you in other contexts, so we encourage you to read this entire section.
 
 
-### <a id="ls-pasting"></a>Pasting Text in from a Terminal Emulator: The Na&iuml;ve Way
+### <a id="ls-pasting"></a>Pasting Text in from a Terminal Emulator
+
+#### The Na&iuml;ve Way
 
 If you are SSHing into your PiDP-8/I, you might think to write your
 FOCAL programs in your favorite text editor on your client PC then copy
@@ -67,7 +69,7 @@ terminal I/O and interrupts. If you try, the input ends up trashed in
 FOCAL.
 
 
-### <a id="ls-pip"></a>Pasting Text in from a Terminal Emulator: The Way That Works
+#### <a id="ls-pip"></a>The Way That Works
 
 "But I really really want to write my FOCAL programs in [my favorite
 text editor][mfte] and paste them into my PiDP-8/I," I hear you say.
