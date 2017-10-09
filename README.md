@@ -187,6 +187,17 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
+#### --disable-cc8-cross
+
+Give this option if you do not want to build Ian Schofield's `cc8` C
+cross-compiler on the host.
+
+Note that this is different from `--disable-os8-cc8`, which disables the
+*native OS/8* C compiler. They are two different C compilers: one runs
+outside the SIMH PDP-8 simulator and the other runs inside the simulator
+under OS/8.
+
+
 <a name="disable-os8"></a>
 #### --disable-os8-\*
 

@@ -44,9 +44,8 @@ CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-D_GNU_SOURCE -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
 
-CC8 = bin/cc8
 SIM = bin/pidp8i-sim
-BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch $(CC8)
+BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch @CC8_CROSS@
 
 MKOS8      = @srcdir@/libexec/mkos8
 MKOS8_LIB  = lib/mkos8
@@ -267,9 +266,10 @@ install: all
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
 	) || true
 
-	@# Install CC8 stuff
-	@INSTALL@ -m 755 bin/cc8 @prefix@/bin
-	@INSTALL@ -m 755 cc8/include/* @prefix@/share/include
+	@# Install CC8 stuff if built
+	test -n "@CC8_CROSS@" && \
+		@INSTALL@ -m 755 bin/cc8 @prefix@/bin && \
+		@INSTALL@ -m 755 cc8/include/* @prefix@/share/include
 
 	@# Install palbart stuff
 	@INSTALL@ -m 755 bin/palbart @prefix@/bin
@@ -410,7 +410,7 @@ $(BUILDDIRS):
 $(SIM): $(SIM_OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ $^ $(LIBS)
 
-$(CC8): $(CC8_OBJS)
+bin/cc8: $(CC8_OBJS)
 	$(CC) -o $@ $^ $(LIBS)
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o

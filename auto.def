@@ -36,6 +36,7 @@ use cc-lib
 
 options {
     alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
+    cc8-cross=1       => "do not build the cc8 cross-compiler on the host"
     debug-mode        => "create a debug build (default is release)"
     lowercase:        => "select how lowercase input is to be handled"
     no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
@@ -66,6 +67,13 @@ if {[opt-bool serial-mod]} {
     msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
     define PCB_SERIAL_MOD_OV
     define PCB_SERIAL_MOD_ANY
+}
+
+if {[opt-bool cc8-cross]} {
+    define CC8_CROSS bin/cc8
+} else {
+    define CC8_CROSS {}
+    msg-result "Will not build the cc8 cross-compiler."
 }
 
 if {[opt-bool debug-mode]} {
