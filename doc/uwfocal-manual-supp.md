@@ -15,6 +15,10 @@ there are gaps:
     late 1978, whereas the PiDP-8/I project is focused on a single model
     from 1968.
 
+1.  There are multiple versions of U/W FOCAL; the version covered by
+    that manual isn't the one we actually ship.  Our two other primary
+    sources also do not cover exactly the version of U/W FOCAL we ship.
+
 This document is [our](#license) attempt to fill these gaps.
 [Extensions and corrections][hack] are welcome.
 
