@@ -23,8 +23,8 @@ You might also find the [DECUS submission for U/W FOCAL][duwf] and the
 
 [duwf]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
-[uwfm]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual.md
-[uwfr]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-refcards.md
+[uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
+[uwfr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-refcards.md
 
 
 ## <a id="starting" name="stopping"></a>Starting and Stopping U/W FOCAL

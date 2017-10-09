@@ -291,7 +291,7 @@ following options:
     FOCAL, so we might then choose to switch the defaults, but that is
     just speculation at the time of this writing.
 
-[suppd]: https://tangentsoft.com/pidp8i/doc/clean-os8-packs/doc/uwfocal-manual-supp.md#diffs
+[suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
 
 
 #### --help
