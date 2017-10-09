@@ -424,7 +424,15 @@ def make_bin (args):
 
   if progmsg: print "Performing config with BUILD..."
   simh_send("boot dt0")
-  os8_pmt_send("\.", "SET SYS NO INIT")   # initially, don't run INIT.CM 
+
+  # By default, we're going to have an INIT.CM script, but we don't want
+  # to set it up this early for two reasons.  First, we don't want the
+  # "boot rk0" commands below to emit this message, since its text
+  # varies depending on the host system, which would create unnecessary
+  # differences in our output over time.  Second, OS/8 is alleged not to
+  # always build properly if INIT is enabled in these early stages.
+  os8_pmt_send("\.", "SET SYS NO INIT")
+
   os8_pmt_send("\.", "RUN SYS BUILD")
   os8_pmt_send("\$", "LOAD DTA1:RK8ESY.BN")
   os8_pmt_send("\$", "LOAD DTA1:PT8E.BN")
