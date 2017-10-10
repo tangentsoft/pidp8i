@@ -6,8 +6,9 @@
     Diagnostic" OS/8 disk pack image with uncertain provenance,
     configuration, and modification history.  We have replaced that with
     a script run at build time that programmatically assembles a set of
-    clean OS/8 RK05 disk images from original DEC source tapes, other
-    primary source media, and the user's chosen configuration options.
+    clean OS/8 RK05 disk images from original DEC binary distribution
+    DECtapes, other primary source media, and the user's chosen
+    configuration options.
 
     This provides the following features and benefits as compared to the
     old `os8.rk05`:
@@ -89,7 +90,7 @@
         disable it at configuration time.
 
     -   Replaced the mismatched FORTRAN compiler and runtime with
-        matched versions from the DEC source tapes, and ensured that
+        matched versions from the distribution DECtapes, and ensured that
         Adventure runs under this version of the FORTRAN Run Time System
         (FRTS). At various points in the past, either FORTRAN or
         Adventure has been broken.
@@ -187,9 +188,10 @@
     disabled if it's enabled by default, and vice versa.
 
 *   We now build an OS/8 RK05 source code disk image containing the
-    contents of the OS/8 source tapes for the convenience of those who would
-    like to work with the OS/8 source code in a more convenient fashion
-    than attaching and detaching the 7 TU56 tape image files.
+    contents of the OS/8 source distribution DECtapes for the convenience
+    of those who would like to work with the OS/8 source code in a more
+    convenient fashion than attaching and detaching the 7 TU56 tape image
+    files.
 
 *   Added Bill Cattey's `ptp2txt` and `txt2ptp` filters, which translate
     files between SIMH paper tape format and plain POSIX ASCII text
