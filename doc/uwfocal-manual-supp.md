@@ -213,8 +213,10 @@ off.
 First we must create that paper tape. If you place your FOCAL source
 code in `examples/*.fc`, you can simply type `make` at the top level of
 the PiDP-8/I source tree to have it translated to `bin/*.pt` with the
-same base name. We'll work with `examples/tratbl.fc`, which gets
-translated to `bin/tratbl.pt`.
+same base name. (This is done by Bill Cattey's `txt2ptp` program; there
+is also the inverse filter, `ptp2txt`.) We'll work with the provided
+`examples/tratbl.fc` example program, which got translated to
+`bin/tratbl.pt` when the PiDP-8/I software was built.
 
 To attach that paper tape to SIMH's paper tape reader device, hit
 <kbd>Ctrl-E</kbd> to get to the SIMH command prompt, then:
