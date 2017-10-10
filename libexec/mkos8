@@ -502,21 +502,6 @@ def make_bin (args):
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
     os8_pmt_send("\.", "SUBMIT SYS:LCBAS.BI")
 
-  """  
-  # Set up Adventure for the first time.  (We could leave it to the
-  # user, but they're likely to screw it up.)
-  if not args.disable_advent:
-    os8_pmt_send("\.", "R FRTS")
-    os8_pmt_send("\*", "ADVENT")
-    os8_send_ctrl('[')                              # ALTMODE/ESC
-    os8_pmt_send("LOCATION.*> ", "DSK:ATEXT.DA")    # ADVENT text database
-    os8_pmt_send("LOCATION.*> ", "DSK:AINDX.DA")    # ADVENT text index
-    os8_pmt_send("LOCATION.*> ", "DSK:ASAVE.DA")    # ADVENT savegame file
-    os8_pmt_send("LOCATION.*> ", "DSK:ADVENT.TX")   # ADVENT text input file
-    os8_pmt_send("> ", "N")                         # reject offer of instructions
-    os8_send_ctrl('C')                              # back to OS/8
-  """
-
   # Create a banner message and optionally set it to show on boot.
   # This message is always upcased, even if you do this before calling
   # LCSYS.BI.  Is it a limitation of EDIT?
