@@ -152,10 +152,10 @@ for more examples.
 
 ### <a id="ls-write"></a>The `WRITE` Command
 
-One problem with using U/W FOCAL's `LIBRARY` command for this is that
-it saves programs as core images, which are a) non-relocatable; and b)
-non-portable to other versions of FOCAL. We can fix both of these
-programs by saving the program to an ASCII text file instead.
+U/W FOCAL's `LIBRARY` command saves programs as core images, which are
+a) non-relocatable; and b) non-portable to other versions of FOCAL. We
+can fix both of these problems by saving the program to an ASCII text
+file instead.
 
 With a program already typed in or loaded from disk:
 
