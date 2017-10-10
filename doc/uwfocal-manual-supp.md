@@ -37,7 +37,7 @@ the [DEC FOCAL-8 Manual][df8], even though they will not apply
 completely to U/W FOCAL.
 
 [df8]:  http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/FOCL69%20Files/DEC-08-AJAD-D.pdf
-[f71]:  http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
+[f71]:  http://svn.so-much-stuff.com/svn/trunk/pdp8/src/decus/focal8-177/
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
 [uwfd]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
