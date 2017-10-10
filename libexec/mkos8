@@ -160,6 +160,17 @@ def os8_restart ():
   simh_send("go 7600")
 
 
+#### os8_squish ########################################################
+# Wraps the OS/8 SQUISH command for a given device.
+
+def os8_squish (device):
+  global child
+
+  os8_pmt_send("\.", "SQUISH " + device + ":")
+  os8_kbd_delay()
+  child.send("Y\r");
+
+
 #### back_to_simh ######################################################
 # Go back to SIMH when the passed prompt string is encountered
 
@@ -541,6 +552,8 @@ def make_bin (args):
 
   # Finish up
   if progmsg: print "Cleaning up..."
+  os8_squish ("SYS")
+  os8_squish ("DSK")
   back_to_simh("\.")
   simh_send("detach rk0")
 
