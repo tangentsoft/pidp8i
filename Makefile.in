@@ -175,11 +175,10 @@ OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
 
 CLTXT = /boot/cmdline.txt
 
-.PHONY: tags
+.PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
 all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(EX_PTS) $(OS8_RK05S)
-	@chmod 755 bin/pidp8i
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(EX_PTS) $(LISTINGS) \
@@ -427,26 +426,10 @@ bin/deeper: obj/deeper.o obj/gpio-@LED_DRIVER_MODULE@ls.o obj/gpio-common.o
 libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
+# Reconfigure whenever one of the *.in or autosetup files changes unless
+# this is "make clean".
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-Makefile: @srcdir@/Makefile.in @srcdir@/auto.def $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
-	@AUTOREMAKE@ && $(MAKE)
-
-# Rebuild simulator whenever one of its *.in files change.
-#
-# This is trickier than it appears.  If you simply make $(OUTFILES)
-# depend on $(INFILES), make(1) thinks it can build all of $(OUTFILES)
-# in parallel if given -jN, which causes ./configure --args to run N
-# times in parallel, which blows the build system up right good and
-# proper; bits everywhere.  We purposely list only the first file in
-# $(INFILES) here to prevent that.  The other files in $(INFILES) will
-# also be built, which confuses make(1) somewhat, but it figures things
-# out on the subsequent $(MAKE) call.
-#
-# We also list files like tools/version which, when they change, trigger
-# a rebuild of $(OUTFILES) because their change may affect what gets
-# generated.  This happened when we moved from 8 to 10 character Fossil
-# artifact IDs in the version string to match Fossil timeline's default.
-bin/pidp8i: @srcdir@/bin/pidp8i.in @srcdir@/tools/version
+media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 endif
 
