@@ -30,6 +30,14 @@ This document is [our](#license) attempt to fill these gaps and to
 supplement those other documents.  [Extensions and corrections][hack]
 are welcome.
 
+I've mentioned the three primary sources for this document above.
+([\[1\]][uwfm] [\[2\]][uwfr] [\[3\]][uwfd]) You might also find the
+[DECUS and OMSI manuals for PS/8 FOCAL, 1971][f71] helpful as well as
+the [DEC FOCAL-8 Manual][df8], even though they will not apply
+completely to U/W FOCAL.
+
+[df8]:  http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/FOCL69%20Files/DEC-08-AJAD-D.pdf
+[f71]:  http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
 [uwfd]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
