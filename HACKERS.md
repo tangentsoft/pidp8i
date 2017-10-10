@@ -67,13 +67,13 @@ To clone the code repository anonymously, say:
     $ fossil open ~/museum/pidp8i.fossil
 
 The `clone` command gets you a file called `pidp8i.fossil` containing
-the full history of PiDP-8/I from the upstream 2015.12.15 release
-onward.  You can call that clone file anything you like and put it in
-any directory you like.  Even the `.fossil` extension is largely a
-convention, not a requirement.
+the full history of the PiDP-8/I software project from the upstream
+2015.12.15 release onward.  You can call that clone file anything you
+like and put it in any directory you like.  Even the `.fossil` extension
+is largely a convention, not a requirement.
 
 
-Working With Existing Tags and Branches
+Working with Existing Tags and Branches
 ----
 
 The directory structure shown in the commands above is more complicated
@@ -113,10 +113,10 @@ This directory scheme shows an important difference between Fossil and
 Git: with Git, the checkout and the clone are intermingled in the same
 directory tree, but in Fossil, they are strictly separate.  Git can
 emulate Fossil's normal working style through its [worktree][gitwt]
-feature, but it's a kind of lash-up using symlinks and such, whereas
-with Fossil, there is no confusion: the repository clone is a single
-SQLite database file — here, `pidp8i.fossil` — and the checkouts are
-made from the contents of that database.
+feature, but it employs some trickery that causes some unwanted side
+effects that don't affect Fossil by design: the repository clone is a
+single SQLite database file — here, `pidp8i.fossil` — and the checkouts
+are made from the contents of that database.
 
 Another important difference relative to Git is that with Fossil, local
 checkins attempt to automatically sync checked-in changes back to the
@@ -160,8 +160,8 @@ working with an anonymous clone, except that on checkin, your changes
 will be sync'd back to the repository on tangentsoft.com if you're
 online at the time.
 
-If you're working offline, Fossil will still do the checkin, but you'll
-be able to sync with the central repoisitory once you get back online.
+If you're working offline, Fossil will still do the checkin locally, and
+it will sync up with the central repoisitory after you get back online.
 It is best to work on a branch when unable to use Fossil's autosync
 feature, as you are less likely to have a sync conflict when attempting
 to send a new branch to the central server than in attempting to merge
@@ -176,7 +176,7 @@ Until you re-enable it (`autosync 1`) Fossil will stop trying to sync
 your local changes back to the central repo.  In this mode, Fossil works
 more like Git's default mode, buying you many of the same problems that
 go along with that working style.  I recommend disabling autosync mode
-only when you are truly going to be offline, and don't want Fossil
+only when you are truly going to be offline and don't want Fossil
 attempting to sync when you know it will fail.
 
 
@@ -262,16 +262,18 @@ The [autosetup build system][asbs] is composed of these files and
 directories:
 
      auto.def
-     autosetup/
+     autosetup/*
      configure
      Makefile.in
 
 Unlike with GNU Autoconf, which you may be familiar with, the
 `configure` script is not output from some other tool.  It is just a
-driver for the Tcl and C code under the `autosetup` directory.  If you
-have to modify any of these files to get some needed effect, you should
-try to get that change into the upstream project, then merge that change
-down into the local copy when it lands upstream.
+driver for the Tcl and C code under the `autosetup` directory.
+
+If you have to modify any of the files in `autosetup/` to get some
+needed effect, you should try to get that change into the upstream
+[Autosetup][asbs] project, then merge that change down into the local
+copy when it lands upstream.
 
 The bulk of the customization to the build system is in `auto.def`,
 which is a Tcl script run by `autosetup` via the `configure` script.
@@ -288,14 +290,13 @@ not vice versa.  If you have Tcl installed and don't really need it,
 consider uninstalling it to force `autosetup` to build and use `jimsh0`.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
-excepting only that it has variables substituted into it by
-[`autosetup`][asbs] using its `@VARIABLE@` syntax.  At this time, we do
-not attempt to achieve compatibility with other `make` programs, though
-in the future we may need it to work with [BSD `make`][bmake] as well,
-so if you are adding features, you might want to stick to the common
-subset of features implemented by both the GNU and BSD flavors of
-`make`.  We do not anticpate any need to support any other `make`
-flavors.
+excepting only that it has variables substituted into it by `autosetup`
+using its `@VARIABLE@` syntax.  At this time, we do not attempt to
+achieve compatibility with other `make` programs, though in the future
+we may need it to work with [BSD `make`][bmake] as well, so if you are
+adding features, you might want to stick to the common subset of
+features implemented by both the GNU and BSD flavors of `make`.  We do
+not anticpate any need to support any other `make` flavors.
 
 (This, by the way, is why we're not using some heavy-weight build system
 such as the GNU Autotools, CMake, etc.  The primary advantage of GNU
