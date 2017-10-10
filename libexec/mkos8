@@ -492,7 +492,7 @@ def make_bin (args):
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.HL")
 
   if args.disable_fortran_ii:
-    os8_pmt_send("\.", "DEL FORT.SV")
+    os8_pmt_send("\.", "DEL RKA0:FORT.SV")
   else:
     if progmsg: print "Installing FORTRAN II libraries..."
     os8_pmt_send("\.", "COPY RKA0:<DTA1:*.RL")
