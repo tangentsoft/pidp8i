@@ -204,11 +204,8 @@ ifeq (@HAVE_PROG_CSCOPE@, 1)
 	@cscope -bR -s@srcdir@
 endif
 
-install: all
+install: all instdirs
 	@echo Installing to @prefix@...
-
-	@# Create any missing install tree directories
-	for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
 
 	@# Install files into those dirs and set their perms
 	for f in $(BINS) ; do @INSTALL@ -m 755 -D -s $$f @prefix@/$$f ; done
@@ -288,7 +285,10 @@ install: all
 		 < $(MKOS8_DIRS) > @prefix@/$(MKOS8_DIRS)
 	@chgrp @INSTGRP@ @prefix@/$(MKOS8_DIRS)
 
-mediainstall:
+instdirs:
+	for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
+
+mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
 	@cd @srcdir@ ; \
 	find media \( \
