@@ -169,7 +169,7 @@ PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
 PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 
 OS8_BIN_RK05 = bin/os8v3d-bin.rk05
-OS8_SRC_RK05 = bin/os8v3d-src.rk05
+OS8_SRC_RK05 = @OS8_SRC_RK05@
 OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
 
 CLTXT = /boot/cmdline.txt

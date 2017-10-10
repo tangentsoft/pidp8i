@@ -235,6 +235,10 @@ options IF=0 and IF=7 can be left out to save space and build time:
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
+*   **--disable-os8-src** - Do not build the `os8v3d-src.rk05` disk
+    image from the OS/8 source tapes.  This is not controlled by
+    `--os8-minimal` because that only affects `os8v3d-bin.rk05`.
+
 *   **--disable-os8-uwfocal** - Leave out the U/W FOCAL V4E programming
     environment normally installed to `RKA0:`.
     
@@ -323,12 +327,18 @@ BASIC interpreter.
 Giving this option therefore gets you an empty OS/8 `DSK:` device and
 nothing in `SYS:` beyond what was left after the OS/8 `BUILD` step.
 
-There is one exception: this option does not affect the `--lowercase`
-option because that affects only OS/8's command interpreter and OS/8's
-BASIC implementation, so we deem it to be orthogonal to the purpose of
-the `--os8-minimal` flag, which only affects the optional post-`BUILD`
-features. If you want a *truly* pristime OS/8 disk, you should therefore
-also give `--lowercase=none`.
+There are a few exceptions:
+
+1.  This option does not affect the `--lowercase` option because that
+    affects only OS/8's command interpreter and OS/8's BASIC
+    implementation, so we deem it to be orthogonal to the purpose of the
+    `--os8-minimal` flag, which only affects the optional post-`BUILD`
+    features. If you want a *truly* pristime OS/8 disk, you should
+    therefore also give `--lowercase=none`.
+
+2.  This option does not affect `--disable-os8-src`, because it only
+    suppresses optional features in the "bin" media.  If you want a
+    minimal OS/8 bin disk and no src disk, give that option as well.
 
 
 #### --help
