@@ -26,7 +26,7 @@ You might also find the [DECUS submission for U/W FOCAL][duwf] and the
 [U/W FOCAL reference cards][uwfr] helpful.
 
 [duwf]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
-[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
 [uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-refcards.md
 

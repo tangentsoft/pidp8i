@@ -317,7 +317,7 @@ our purposes here.)
 [tcldoc]: http://wiki.tcl.tk/11485
 
 
-Submitting Patches
+<a id="patches"></a>Submitting Patches
 ----
 
 If you do not have a developer login on the PiDP-8/I software
