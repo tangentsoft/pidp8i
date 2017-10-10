@@ -51,6 +51,7 @@ options {
     os8-fortran-iv=1  => "leave FORTRAN IV off the built OS/8 RK05 image"
     os8-init=1        => "suppress the OS/8 INIT message on boot: start with a bare . prompt"
     os8-k12=1         => "leave 12-bit Kermit off built OS/8 RK05 disk image"
+    os8-macrel=1      => "leave MACREL assembler off the build OS/8 RK05 image"
     os8-minimal       => "disable all --enable-os8-* options, giving minimal OS/8 bin disk"
     os8-music         => "add *.MU files to built OS/8 RK05 disk image"
     os8-src=1         => "don't build os8v3d-src.rk05 from OS/8 source tapes"
@@ -149,6 +150,10 @@ if {$os8min || ![opt-bool os8-fortran-iv]} {
 if {$os8min || ![opt-bool os8-k12]} {
     msg-result "Will not add Kermit-12 to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-k12"
+}
+if {$os8min || ![opt-bool os8-macrel]} {
+    msg-result "Will not add MACREL assembler to the OS/8 RK05 disk image."
+    append mkos8_opts " --disable-macrel"
 }
 if {!$os8min && [opt-bool os8-music]} {
     msg-result "Will add music files to the OS/8 RK05 disk image."

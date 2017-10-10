@@ -241,6 +241,8 @@ options IF=0 and IF=7 can be left out to save space and build time:
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
+*   **--disable-os8-macrel** - Leave the MACREL assembler out.
+
 *   **--disable-os8-src** - Do not build the `os8v3d-src.rk05` disk
     image from the OS/8 source tapes.  This is not controlled by
     `--os8-minimal` because that only affects `os8v3d-bin.rk05`.

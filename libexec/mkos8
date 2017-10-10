@@ -350,6 +350,9 @@ def make_bin (args):
      "Installing FORTRAN IV (part 2 of 2)...", None],
   ]
 
+  macrel_copyin = ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56",
+                   "Installing MACREL...", None]
+
   uwfocal_files  = [['SYS:', 'UWF16K.SV']]
   
   uwfocal_copyin = ['RKA0:', 'subsys/uwfocal-v4e-2.tu56',
@@ -361,8 +364,6 @@ def make_bin (args):
   bin_copyins = [
     ['RKA0:', "al-4761c-ba-os8-v3d-ext.1978.tu56",
      "Copying in OS/8 V3D extensions...", None],
-    ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56",
-     "Installing MACREL...", None]
     ]
 
   local_files = []
@@ -395,6 +396,7 @@ def make_bin (args):
   if not args.disable_cc8:        bin_copyins.append(cc8_copyin)
   if not args.disable_k12:        bin_copyins.append(k12_copyin)
   if not args.disable_fortran_iv: bin_copyins = bin_copyins + fiv_copyins
+  if not args.disable_macrel:     bin_copyins.append(macrel_copyin)
 
   if local_files != []:
     local_copyins = ['RKA0:', local_tape, local_stat_str, local_files]

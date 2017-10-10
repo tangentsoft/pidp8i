@@ -59,6 +59,8 @@ class ArgParser (argparse.ArgumentParser):
             help = 'suppress display of the INIT message on OS/8 boot')
     self.add_bool ('--disable-k12',
             help = 'leave 12-bit Kermit off binary disk')
+    self.add_bool ('--disable-macrel',
+            help = 'leave MACREL assembler off binary disk')
     self.add_bool ('--enable-vtedit',
             help = 'install and enable TECO VTEDIT mode')
     self.add_bool ('--disable-crt',
