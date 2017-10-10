@@ -227,6 +227,10 @@ options IF=0 and IF=7 can be left out to save space and build time:
     to your PiDP-8/I, and thus do not want video terminal style rubout
     processing.
 
+*   **--disable-os8-focal** - Do not install any version of FOCAL on the
+    OS/8 system disk. This option sets `--disable-os8-uwfocal` and
+    overrides `--enable-os8-focal69`, both discussed below.
+
 *   **--disable-os8-init** - Generate `SYS:INIT.TX` but do not display
     it on OS/8 boot.  Rather than disable the default on-boot init
     message, you may want to edit `media/os8/init.tx.in` to taste and
@@ -247,11 +251,6 @@ options IF=0 and IF=7 can be left out to save space and build time:
     much more to explore here, but we cannot include it in the default
     installation set because that would overrun OS/8's limitation on the
     number of files on a volume.
-
-*   **--disable-os8-focal** - Do not install FOCAL on the OS/8 system
-    disk at all. This option acts as an alias for
-    `--disable-os8-uwfocal`, and it overrides `--enable-os8-focal69`,
-    discussed below.
 
 
 <a name="enable-os8"></a>
