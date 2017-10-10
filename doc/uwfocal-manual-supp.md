@@ -1,5 +1,7 @@
 # U/W FOCAL Manual Supplement for the PiDP-8/I
 
+## Rationale
+
 The [U/W FOCAL Manual][uwfm] is well written as far as it goes, but
 there are gaps:
 
@@ -13,20 +15,23 @@ there are gaps:
 
 1.  It is written somewhat generically for the whole PDP-8 family as of
     late 1978, whereas the PiDP-8/I project is focused on a single model
-    from 1968.
+    from 1968. Those not familiar with the differences can therefore be
+    confused by some of its directions.
+
+1.  There are considerations in our simulated PiDP-8/I world that simply
+    did not apply to those running U/W FOCAL on the real hardware.
 
 1.  There are multiple versions of U/W FOCAL; the version covered by
-    that manual isn't the one we actually ship.  Our two other primary
-    sources also do not cover exactly the version of U/W FOCAL we ship.
+    [that manual][uwfm] isn't the one we actually ship.  Our two
+    [other][uwfr] primary [sources][uwfd] also do not cover exactly the
+    version of U/W FOCAL we ship.
 
-This document is [our](#license) attempt to fill these gaps.
-[Extensions and corrections][hack] are welcome.
+This document is [our](#license) attempt to fill these gaps and to
+supplement those other documents.  [Extensions and corrections][hack]
+are welcome.
 
-You might also find the [DECUS submission for U/W FOCAL][duwf] and the
-[U/W FOCAL reference cards][uwfr] helpful.
-
-[duwf]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
+[uwfd]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-refcards.md
 
@@ -142,7 +147,7 @@ Briefly, then, I'll show how to use some of these commands:
     *L O HELLO                          ⇠ ...be sure
     *                                   ⇠ Houston, we have no program
 
-See the [DECUS submission][duwf] and `CARD2.DA` in the [refcards][uwfr]
+See the [DECUS submission][uwfd] and `CARD2.DA` in the [refcards][uwfr]
 for more examples.
 
 
@@ -641,7 +646,7 @@ There are also some errors I simply have not yet tried to cause:
 
 ## <a id="miss-hw"></a>Missing Hardware Support
 
-The [U/W FOCAL reference cards][uwfr] and the [DECUS submission][duwf]
+The [U/W FOCAL reference cards][uwfr] and the [DECUS submission][uwfd]
 talk about features for hardware we don't have. Either the
 command/feature doesn't exist at all in the version of U/W FOCAL we
 distribute or it doesn't do anything useful, lacking support within the
@@ -689,7 +694,7 @@ U/W FOCAL only pays attention to the first letter of the command.
 
 ## <a id="diffs"></a>Differences Between U/W FOCAL and Other FOCALs
 
-The [DECUS submission for U/W FOCAL][duwf] lists the following
+The [DECUS submission for U/W FOCAL][uwfd] lists the following
 advantages for the version of U/W FOCAL included with the PiDP-8/I
 software distribution as compared to FOCAL,1969, FOCAL-8, and OMSI PS/8
 FOCAL:
