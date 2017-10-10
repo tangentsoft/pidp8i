@@ -333,12 +333,22 @@ def make_bin (args):
   k12_copyin    = ['RKA0:', 'subsys/k12.tu56',
                    "Installing Kermit-12...", None]
 
-  focal69_files  = [['RKB0:', 'FOCAL.BN'], ['RKB0:','4WORD.BN'],
-                    ['RKB0:', '4KVT.BN'], ['RKB0:', '8KVT.BN'],
-                    ['RKB0:', '8KNOVT.BN']
+  focal69_files  = [
+    ['RKB0:', 'FOCAL.BN'],
+    ['RKB0:', '4WORD.BN'],
+    ['RKB0:', '4KVT.BN'],
+    ['RKB0:', '8KVT.BN'],
+    ['RKB0:', '8KNOVT.BN']
   ] 
   focal69_copyin = ['RKA0:', 'subsys/focal69.tu56',
                     "Installing FOCAL 69...", focal69_files]
+
+  fiv_copyins = [
+    ['RKA0:', "al-4549d-ba-fr4-v3d-1.1978.tu56",
+     "Installing FORTRAN IV (part 1 of 2)...", None],
+    ['RKA0:', "al-5596d-ba-fr4-v3d-2.1978.tu56",
+     "Installing FORTRAN IV (part 2 of 2)...", None],
+  ]
 
   uwfocal_files  = [['SYS:', 'UWF16K.SV']]
   
@@ -351,10 +361,6 @@ def make_bin (args):
   bin_copyins = [
     ['RKA0:', "al-4761c-ba-os8-v3d-ext.1978.tu56",
      "Copying in OS/8 V3D extensions...", None],
-    ['RKA0:', "al-4549d-ba-fr4-v3d-1.1978.tu56",
-     "Copying in FORTRAN IV tape 1 of 2...", None],
-    ['RKA0:', "al-5596d-ba-fr4-v3d-2.1978.tu56",
-     "Copying in FORTRAN IV tape 2 of 2...", None],
     ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56",
      "Installing MACREL...", None]
     ]
@@ -382,11 +388,13 @@ def make_bin (args):
     local_files.append(['RKA0:', 'DCP24.SV'])
     local_files.append(['RKA0:DCP.SV', 'DCP16.SV'])
 
-  if args.enable_music:        bin_copyins.append(music_copyin)
-  if not args.disable_ba:      bin_copyins.append(ba_copyin)
-  if not args.disable_cc8:     bin_copyins.append(cc8_copyin)
-  if not args.disable_k12:     bin_copyins.append(k12_copyin)
-  if not args.disable_advent:  bin_copyins.append(advent_copyin)
+  if args.enable_music:           bin_copyins.append(music_copyin)
+
+  if not args.disable_advent:     bin_copyins.append(advent_copyin)
+  if not args.disable_ba:         bin_copyins.append(ba_copyin)
+  if not args.disable_cc8:        bin_copyins.append(cc8_copyin)
+  if not args.disable_k12:        bin_copyins.append(k12_copyin)
+  if not args.disable_fortran_iv: bin_copyins = bin_copyins + fiv_copyins
 
   if local_files != []:
     local_copyins = ['RKA0:', local_tape, local_stat_str, local_files]
@@ -468,7 +476,7 @@ def make_bin (args):
   # if progmsg: print "Copying in system tape 2 of 2..."
   # os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
 
-  if progmsg: print "Copying in Fortran II libraries and help files from tape 2 of 2"
+  if progmsg: print "Copying in FORTRAN II libraries and help files from tape 2 of 2"
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.RL")
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.HL")
   os8_pmt_send("\.", "ZERO RKB0:")      # must precede subsys/* copies

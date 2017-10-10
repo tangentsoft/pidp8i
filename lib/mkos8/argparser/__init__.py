@@ -53,6 +53,8 @@ class ArgParser (argparse.ArgumentParser):
             help = 'install FOCAL 69 on the binary disk')
     self.add_bool ('--disable-uwfocal',
             help = 'leave U/W FOCAL (only) off binary disk')
+    self.add_bool ('--disable-fortran-iv',
+            help = 'leave FORTRAN IV compiler off binary disk')
     self.add_bool ('--disable-init',
             help = 'suppress display of the INIT message on OS/8 boot')
     self.add_bool ('--disable-k12',
