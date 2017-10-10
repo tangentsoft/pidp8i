@@ -105,14 +105,13 @@ detail [below](#ls-write).
 ### <a id="ls-punch"></a>The `PUNCH` Command
 
 When the [U/W FOCAL Manual][uwfm] talks about loading and saving
-programs, it is in terms of the `PUNCH` command, because the manual is
-focused on the paper tape based version of U/W FOCAL.
+programs, it is in terms of the `PUNCH` command, which punches the
+current program out on paper tape, because the manual was written for
+the paper tape based version of U/W FOCAL.
 
 The PiDP-8/I software project ships the OS/8 version of U/W FOCAL
-instead, which doesn't even have a `PUNCH` command. (It appears to have
-been replaced by the `PLOT` command, mentioned on [`CARD1.DA`][uwfr],
-but that's of no use to us here, since SIMH doesn't support pen
-plotters. (Yet.))
+instead, which doesn't even have a `PUNCH` command. (We get the [`PLOT`
+command](#miss-hw) instead.)
 
 Even if it did work, mounting and unmounting simulated paper tapes under
 SIMH is a bit of a hassle. We can do better.
