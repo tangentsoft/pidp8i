@@ -188,12 +188,11 @@
     disabled if it's enabled by default, and vice versa.
 
 *   We now build an OS/8 RK05 source code disk image containing the
-    contents of the OS/8 source distribution DECtapes for the convenience
-    of those who would like to work with the OS/8 source code in a more
-    convenient fashion than attaching and detaching the 7 TU56 tape image
-    files.
+    contents of the OS/8 source distribution DECtapes for the
+    convenience of those who would like to work with the OS/8 source
+    code in a more convenient fashion than attaching and detaching the
+    *ten* TU56 tape image files.
 
-*   Added Bill Cattey's `ptp2txt` and `txt2ptp` filters, which translate
     files between SIMH paper tape format and plain POSIX ASCII text
     files.  This program was written to ease the movement of FOCAL
     program text between SIMH and its host OS, but they should prove
