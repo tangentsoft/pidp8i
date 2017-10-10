@@ -34,6 +34,14 @@
 
     -   John Comeau's CHECKMO-II chess program is installed by default.
 
+    -   The FORTRAN II and FORTRAN IV compilers, runtimes, and libraries
+        can be disabled if not wanted.
+
+    -   Kermit-12 can be left off the disk if not wanted.
+
+    -   The OS/8 BASIC games and demo programs (`*.BA`) can be left off
+        if not wanted.
+
     -   By default, SIMH no longer folds lowercase input and output to
         uppercase.  Instead, we apply patches to OS/8's command
         processor and its BASIC implementation to up-case input, since
@@ -114,12 +122,12 @@
         had to specify the device path explicitly or manually change the
         default in OS/8 with an `ASSIGN RKB0 DSK` command or similar.
 
-        In the new disk pack, programs you run with `R` and similar
-        commands are installed on `RKA0:` which is the `SYS:` disk, and
-        user data files, FOCAL and BASIC programs, etc. are on `RKB0:`
-        which is assigned as `DSK:`. This means OS/8 and its programs
-        are now far more likely to find files without an explicit device
-        name, because files are installed where OS/8 looks for them by
+        In the new disk pack, programs run with the OS/8 `R` command are
+        installed on `RKA0:` which is the `SYS:` disk, and user data
+        files, FOCAL and BASIC programs, etc. are on `RKB0:` which is
+        assigned as `DSK:`. This means OS/8 and its programs are now far
+        more likely to find files without an explicit device name,
+        because files are installed where OS/8 looks for them by
         default.  Example:
 
             .R FRTS                   ⇠ loads FRTS from SYS: (RKA0:)
