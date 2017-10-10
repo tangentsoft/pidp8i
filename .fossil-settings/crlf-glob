@@ -2,6 +2,8 @@ cc8/*.[ch]
 cc8/*.pa
 cc8/*.sb
 
+examples/*.fc
+
 src/*.[ch]
 src/*.in
 

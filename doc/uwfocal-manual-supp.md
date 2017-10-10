@@ -195,6 +195,84 @@ That leading `C` causes U/W FOCAL to treat it as a comment. Since we're
 in "direct mode" at that point, the comment is simply eaten.
 
 
+### <a id="ls-ptr"></a>The Paper Tape Reader
+
+Above, I warned you off trying to save programs to simulated paper tape
+via the `PUNCH` command, but what about *reading* programs back in? You
+can do that, but it's trickier than you might guess.
+
+First, if you've read [the manual][uwfm], you may think to attach a
+paper tape to SIMH then use U/W FOCAL's `OPEN READER` command, but as
+with `PUNCH`, that command has been replaced in this version of U/W
+FOCAL. With the removal of paper tape support in U/W FOCAL proper, they
+felt free to reassign `O R` to `OPEN RESTART/RESUME`.
+
+Thus, we again have to pop back out to OS/8 and use PIP to pull this
+off.
+
+First we must create that paper tape. If you place your FOCAL source
+code in `examples/*.fc`, you can simply type `make` at the top level of
+the PiDP-8/I source tree to have it translated to `bin/*.pt` with the
+same base name. We'll work with `examples/tratbl.fc`, which gets
+translated to `bin/tratbl.pt`.
+
+To attach that paper tape to SIMH's paper tape reader device, hit
+<kbd>Ctrl-E</kbd> to get to the SIMH command prompt, then:
+
+    sim> att ptr bin/tratbl.pt
+    sim> c
+
+On re-entering the simulator with the `c` ("continue") command, we can
+read that tape into OS/8:
+
+    .R PIP
+    *TRATBL.DA<PTR:                    ⇠ hit Esc *then* Enter
+    .TYPE TRATBL.DA
+
+If the final command doesn't show you the program text you expect,
+something went wrong in the process above. There are several likely
+possibilities:
+
+1.  You hit <kbd>Enter</kbd> at the end of the PIP command, either
+    instead of <kbd>Esc</kbd> or *before* hitting <kbd>Esc</kbd>.
+    
+    If you do it right, it should appear on screen as:
+
+        *TRATBL.DA<PTR:$^
+
+    with the `$^` appearing when you hit <kbd>Esc</kbd>, signifying that
+    it has read the paper tape and hit the end. Hitting <kbd>Enter</kbd>
+    should then drop you back to the OS/8 prompt, not leave you in
+    `PIP`. If you get another `*` prompt from `PIP` on hitting
+    <kbd>Enter</kbd>, you fat-fingered something. Try again.
+
+2.  Every time you cause the PDP-8 to read the paper tape, you must
+    re-attach it to SIMH to read it again.  Neither SIMH nor OS/8 warns
+    you if you try to read from the paper tape reader with nothing
+    attached; you just get no input.
+
+    This mimics what happens with real paper tapes: once the reader has
+    read the tape, it falls out of the machine and needs to be fed back
+    in to be read again. The difference between the real paper tape
+    reader and SIMH is that that repeated sequence is much more of a
+    hassle than just sticking the tape back in the reader:
+
+        .<Ctrl-E>
+        sim> ATT PTR ...
+        sim> C
+
+    That `TTY:` based `PIP` method above will start to look awfully
+    attractive after a while...
+
+3.  You saved the FOCAL text out on the host side with Unix line
+    endings, so on `TYPE`ing it at the OS/8 command prompt to check it,
+    you got stair-stepped output. Fix the line endings then say "make"
+    to rebuild the `*.pt` file, then reattach the tape and try again.
+
+Once you make it through that gauntlet, loading the ASCII program text
+into U/W FOCAL is just as above: `O I TRATBL`.
+
+
 ## <a id="lowercase"></a>Lowercase Input
 
 The version of U/W FOCAL we include by default on the PiDP-8/I's OS/8

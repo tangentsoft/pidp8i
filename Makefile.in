@@ -125,10 +125,13 @@ LIBS = -lm -ldl -lpthread
 ASM_PTS     := $(wildcard @srcdir@/asm/*.pal)
 ASM_PTS     := $(subst @srcdir@/asm,bin,$(ASM_PTS))
 ASM_PTS     := $(ASM_PTS:.pal=.pt)
-EX_PTS      := $(wildcard @srcdir@/examples/*.pal)
-EX_PTS      := $(subst @srcdir@/examples,bin,$(EX_PTS))
-EX_PTS      := $(EX_PTS:.pal=.pt)
-LISTINGS    := $(ASM_PTS:.pt=.lst) $(EX_PTS:.pt=.lst)
+FC_EX_PTS   := $(wildcard @srcdir@/examples/*.fc)
+FC_EX_PTS   := $(subst @srcdir@/examples,bin,$(FC_EX_PTS))
+FC_EX_PTS   := $(FC_EX_PTS:.fc=.pt)
+PAL_EX_PTS  := $(wildcard @srcdir@/examples/*.pal)
+PAL_EX_PTS  := $(subst @srcdir@/examples,bin,$(PAL_EX_PTS))
+PAL_EX_PTS  := $(PAL_EX_PTS:.pal=.pt)
+LISTINGS    := $(ASM_PTS:.pt=.lst) $(PAL_EX_PTS:.pt=.lst)
 LISTINGS    := $(subst bin/,obj/,$(LISTINGS))
 BOOTSCRIPTS := $(LISTINGS:.lst=.script)
 BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
@@ -178,10 +181,10 @@ CLTXT = /boot/cmdline.txt
 .PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(EX_PTS) $(OS8_RK05S)
+all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S)
 
 clean:
-	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(EX_PTS) $(LISTINGS) \
+	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
 		$(OUTFILES) $(OS8_RK05S) \
 		bin/*.save \
 		tags \
@@ -387,6 +390,10 @@ obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
 	bin/palbart -lr $< || cat obj/$*.err
 	mv @srcdir@/examples/$*.lst obj
 	mv @srcdir@/examples/$*.rim bin/$*.pt
+
+# Rule for converting ASCII FOCAL examples in examples/*.fc to bin/*.pt.
+bin/%.pt: @srcdir@/examples/%.fc bin/txt2ptp
+	bin/txt2ptp < $< > bin/$*.pt
 
 # Rule for translating PAL assembly language program listings to SIMH
 # boot scripts.
