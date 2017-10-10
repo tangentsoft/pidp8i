@@ -161,8 +161,12 @@ With a program already typed in or loaded from disk:
 
     *O O HELLO; W; O C
 
-All of that has to be on a single line, with the semicolons. (See
-[below](#ls-hard-way) for what you must go through if you do not!)
+All of that has to be on a single line, with the semicolons. If you give
+these three commands separately, you end up with the `WRITE` command as
+the first line in the output file and the `OUTPUT CLOSE` command as the
+last; you must then either edit those commands out of the output file or
+tolerate having FOCAL run those two commands again every time you load
+the program from disk.
 
 What this does is opens a data output file (extension `.DA`) and makes
 it the output destination, so that the following `WRITE` command sends
@@ -181,121 +185,6 @@ line doesn't cause a problem on loading the file back in:
 
 That leading `C` causes U/W FOCAL to treat it as a comment. Since we're
 in "direct mode" at that point, the comment is simply eaten.
-
-
-### <a id="ls-hard-way"></a>The Hard Way
-
-You might be wondering why we needed to put the `O O` command on a
-single line with 3 other commands [above](#ls-write). It is because if
-we don't, the `WRITE` and `OUTPUT CLOSE` commands get added as the first
-and last lines of our output file, and then we must edit them out before
-we can read that file back into U/W FOCAL. As an exercise in practical
-use of U/W FOCAL and OS/8's `EDIT` program, we will now show what it
-takes to recover from that.
-
-Page 8 of the [DECUS documentation for OMSI FOCAL][domsi] provides a
-good description of this issue and how to work around it to place a text
-version of a program on the disk:
-
-> ... FOCAL assumes `.FC` and `.FD` as name extensions for program and
-> data files respectively. Data files are saved in standard [...] ASCII
-> format and are compatible with EDIT and TECO-8.  Program files are
-> saved in core image format and may be transferred by PIP only with
-> the `/I` option. To produce an ASCII file containing a FOCAL program,
-> `OPEN` an `OUTFILE`; `WRITE ALL` then `OUTPUT CLOSE`.
-
-The resulting file contains the `WRITE ALL` command at the beginning and
-the `OUTPUT CLOSE` command at the end.  Removing those lines enables the
-file to be read back in as a program using the `OPEN INPUT` command.
-
-Let's see how to do this, step by step. First, let's enter a simple
-program:
-
-    .R UWF16K
-    *1.10 T "HELLO",!
-    *G
-    HELLO
-
-Now let's save it to an ASCII text file on the OS/8 disk using separate
-U/W FOCAL commands, rather than the one-liner we did above:
-
-    *OPEN OUTPUT TEST,ECHO                      ⇠ uses *.FD by default
-    *W
-    C U/W-FOCAL:  TEST    NO/DA/TE
-    
-    01.10 T "HELLO",!
-    *OUTPUT CLOSE
-
-Next, we'll break out of the U/W FOCAL environment to get back to OS/8
-and show that the file is there, but with lines we don't want:
-
-    *^C                                        ⇠ that is, hit Ctrl-C
-    .TYPE TEST.FD
-    *W
-    C U/W-FOCAL:  16K-V4  NO/DA/TE
-    
-    01.10 T "HELLO",!
-    *OUTPUT CLOSE
-
-So, let's fix it. We'll use OS/8's `EDIT` program for this, but you
-could just as well use `TECO` or another text editor you like better:
-    
-    .R EDIT
-    *TEST.FD<TEST.FD
-    #R
-    ?
-    #1L
-    *W
-    
-    #1D
-    
-    #/L
-    *OUTPUT CLOSE
-    
-    #/D
-    
-    #L
-    C U/W-FOCAL:  16K-V4  NO/DA/TE
-    
-    01.10 T "HELLO",!
-    
-    #E
-
-The [previous method](#ls-write) avoids all of that `EDIT` ugliness.
-
-Now let's load it back up into U/W FOCAL and try to run it:
-
-    .R UWF16K
-    *OPEN INPUT TEST,ECHO
-    *C U/W-FOCAL:  16K-V4  NO/DA/TE
-    *
-    *01.10 T "HELLO",!
-    *_                                         ⇠ hit Enter
-    *GO
-    HELLO
-
-Success!
-
-The `*_` pair above is the asterisk prompt printed by the FOCAL command
-interpreter signifying that it is ready for input followed by the
-underscore printed by the file handler signifying that it hit the end of
-file for `TEST.FD`. The hint above to hit <kbd>Enter</kbd> is optional
-and merely causes FOCAL to print another `*` prompt, which clarifies the
-transcript.
-
-We added the `,ECHO` bits in the commands above only to make U/W FOCAL
-echo what it's doing to the terminal to make the transcripts clearer.
-In your own work, you might want to leave this off.
-
-By skipping both of these optional bits and abbreviating the commands,
-the final terminal transcript above condenses considerably:
-
-    .R UWF16K
-    *O I TEST     ⇠  assumes *.FD, just like O O
-    _G            ⇠  no ECHO this time, so no * prompt, just EOF indicator
-    HELLO
-
-[domsi]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=366
 
 
 ## <a id="lowercase"></a>Lowercase Input
