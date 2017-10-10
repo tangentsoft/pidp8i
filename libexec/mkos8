@@ -477,10 +477,15 @@ def make_bin (args):
   # However DECtape 2 has HELP.HL and .RL files that ARE needed.
   # if progmsg: print "Copying in system tape 2 of 2..."
   # os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
-
-  if progmsg: print "Copying in FORTRAN II libraries and help files from tape 2 of 2"
-  os8_pmt_send("\.", "COPY RKA0:<DTA1:*.RL")
+  if progmsg: print "Copying in help files..."
   os8_pmt_send("\.", "COPY RKA0:<DTA1:*.HL")
+
+  if args.disable_fortran_ii:
+    os8_pmt_send("\.", "DEL FORT.SV")
+  else:
+    if progmsg: print "Installing FORTRAN II libraries..."
+    os8_pmt_send("\.", "COPY RKA0:<DTA1:*.RL")
+
   os8_pmt_send("\.", "ZERO RKB0:")      # must precede subsys/* copies
 
   back_to_simh("\.")

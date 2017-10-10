@@ -231,6 +231,8 @@ options IF=0 and IF=7 can be left out to save space and build time:
     OS/8 system disk. This option sets `--disable-os8-uwfocal` and
     overrides `--enable-os8-focal69`, both discussed below.
 
+*   **--disable-os8-fortran-ii** - Leave the FORTRAN II compiler out.
+
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 
 *   **--disable-os8-init** - Generate `SYS:INIT.TX` but do not display
