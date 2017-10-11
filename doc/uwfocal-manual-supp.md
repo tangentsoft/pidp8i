@@ -247,8 +247,12 @@ possibilities:
 
 3.  You saved the FOCAL text out on the host side with Unix line
     endings, so on `TYPE`ing it at the OS/8 command prompt to check it,
-    you got stair-stepped output. Fix the line endings then say "make"
-    to rebuild the `*.pt` file, then reattach the tape and try again.
+    you got stair-stepped output. OS/8 expects CR+LF line endings, also
+    called DOS line endings, though OS/8 long precedes MS-DOS, and the
+    teletype based design of ASCII that made CR+LF a sensible way of
+    ending lines in a text file long precedes *OS/8*. Fix the line
+    endings, then say "make" to rebuild the `*.pt` file, then reattach
+    the tape, and try again.
 
 Once you make it through that gauntlet, loading the ASCII program text
 into U/W FOCAL is just as above: `O I TRATBL`.
