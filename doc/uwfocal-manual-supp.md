@@ -1,54 +1,33 @@
 # U/W FOCAL Manual Supplement for the PiDP-8/I
 
-## Rationale
+## Introduction
 
-The [U/W FOCAL Manual][uwfm] is well written as far as it goes, but
-there are gaps:
+This document is a supplement to the [U/W FOCAL Manual][uwfm]. ("The
+Manual") Although it is not a complete FOCAL tutorial — much less a
+reference guide! — we suggest that you start learning about our
+distribution of FOCAL by skimming through this document *first*, then
+proceeding to [the Manual][uwfm], since this document will alert you to
+the areas of the Manual that are simply incorrect for the PiDP-8/I
+distribution of U/W FOCAL. Having gotten through the Manual, come back
+here and re-read this supplement more carefully; you will get more out
+of this supplement on that second pass with the context from the Manual.
 
-1.  It inspires questions in the reader's mind without providing an
-    answer.  While that is actually a hallmark of a good book, the U/W
-    FOCAL manual sometimes does it for topics that are properly within
-    its scope and so should be answered within.
+Other helpful sources are the [U/W FOCAL reference cards][uwfr], the
+[U/W FOCAL DECUS submission][uwfd], the [DECUS and OMSI manuals for PS/8
+FOCAL, 1971][f71], and the [DEC FOCAL-8 Manual][df8]. To a first
+approximation, those are ordered in decreasing degree of application to
+our distribution of U/W FOCAL. The final document in that series is
+still quite useful for understanding U/W FOCAL, however.
 
-1.  It omits coverage for some topics we wish it would cover, though
-    they are not properly within its scope.
-
-1.  It is written somewhat generically for the whole PDP-8 family as of
-    late 1978, whereas the PiDP-8/I project is focused on a single model
-    from 1968. Those not familiar with the differences can therefore be
-    confused by some of its directions.
-
-1.  There are considerations in our simulated PiDP-8/I world that simply
-    did not apply to those running U/W FOCAL on the real hardware.
-
-1.  There are multiple versions of U/W FOCAL; the version covered by
-    [that manual][uwfm] isn't the one we actually ship.  Our two
-    [other][uwfr] primary [sources][uwfd] also do not cover exactly the
-    version of U/W FOCAL we ship.
-
-This document is [our](#license) attempt to fill these gaps and to
-supplement those other documents.  [Extensions and corrections][hack]
-are welcome.
-
-I've mentioned the three primary sources for this document above.
-([\[1\]][uwfm] [\[2\]][uwfr] [\[3\]][uwfd]) You might also find the
-[DECUS and OMSI manuals for PS/8 FOCAL, 1971][f71] helpful as well as
-the [DEC FOCAL-8 Manual][df8], even though they will not apply
-completely to U/W FOCAL.
-
-[df8]:  http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/FOCL69%20Files/DEC-08-AJAD-D.pdf
-[f71]:  http://svn.so-much-stuff.com/svn/trunk/pdp8/src/decus/focal8-177/
-[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
-[uwfd]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
-[uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
-[uwfr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-refcards.md
+See [below](#rationale) for the reasons why we felt it was necessary to
+write this document.
 
 
 ## <a id="starting" name="stopping"></a>Starting and Stopping U/W FOCAL
 
-The section "Starting the Program" in the [U/W FOCAL Manual][uwfm] is
-entirely concerned with loading U/W FOCAL from paper tape using the
-front panel and the BIN loader.
+The section "Starting the Program" in [the Manual][uwfm] is entirely
+concerned with loading U/W FOCAL from paper tape using the front panel
+and the BIN loader.
 
 The PiDP-8/I software project does not currently ship U/W FOCAL in SIMH
 paper tape image form. Instead, it's installed by default on the OS/8
@@ -112,10 +91,10 @@ detail [below](#ls-write).
 
 ### <a id="ls-punch"></a>The `PUNCH` Command
 
-When the [U/W FOCAL Manual][uwfm] talks about loading and saving
-programs, it is in terms of the `PUNCH` command, which punches the
-current program out on paper tape, because the manual was written for
-the paper tape based version of U/W FOCAL.
+When [the Manual][uwfm] talks about loading and saving programs, it is
+in terms of the `PUNCH` command, which punches the current program out
+on paper tape, because the Manual was written for the paper tape based
+version of U/W FOCAL.
 
 The PiDP-8/I software project ships the OS/8 version of U/W FOCAL
 instead, which doesn't even have a `PUNCH` command. (We get the [`PLOT`
@@ -130,7 +109,7 @@ SIMH is a bit of a hassle. We can do better.
 The effective replacement for `PUNCH` in the OS/8 version of U/W FOCAL
 is the `LIBRARY` command.
 
-If you've read [the manual][uwfm], you may be wondering if it's
+If you've read [the Manual][uwfm], you may be wondering if it's
 overloaded with `LINK` and `LOOK`, but no: those commands are apparently
 missing from the OS/8 version. (Open question: how do you use multiple
 fields of core for program code with the OS/8 version, then?)
@@ -201,7 +180,7 @@ Above, I warned you off trying to save programs to simulated paper tape
 via the `PUNCH` command, but what about *reading* programs back in? You
 can do that, but it's trickier than you might guess.
 
-First, if you've read [the manual][uwfm], you may think to attach a
+First, if you've read [the Manual][uwfm], you may think to attach a
 paper tape to SIMH then use U/W FOCAL's `OPEN READER` command, but as
 with `PUNCH`, that command has been replaced in this version of U/W
 FOCAL. With the removal of paper tape support in U/W FOCAL proper, they
@@ -284,11 +263,11 @@ to the fact that the version we ship was released late in the commercial
 life of OS/8, by which time lowercase terminals were much more common
 than at the beginning of OS/8's lifetime.
 
-The examples in the [U/W FOCAL Manual][uwfm] are given in all-uppercase,
-which means there is no reason you would immediately understand how U/W
-FOCAL deals with lowercase input, having no examples to build a mental
-model from. If you just guess, chances are that you will be wrong sooner
-or later, because U/W FOCAL's behavior in this area can be surprising!
+The examples in [the Manual][uwfm] are given in all-uppercase, which
+means there is no reason you would immediately understand how U/W FOCAL
+deals with lowercase input, having no examples to build a mental model
+from. If you just guess, chances are that you will be wrong sooner or
+later, because U/W FOCAL's behavior in this area can be surprising!
 
 The two main rules to keep in mind are:
 
@@ -424,10 +403,10 @@ notation with full precision displayed: 4.5&times;10¹ = 45 degrees, the
 correct answer.
 
 
-### Improvements
+### Improving the Output Format
 
-The following changes to the examples as given in the manual show how
-you can get output more suitable to your purposes:
+The following changes to the examples as given in [the Manual][uwfm]
+show how you can get output more suitable to your purposes:
 
     *TYPE %1, FSGN(PI):5, FSGN(PI-PI):5, FSGN(-PI)!
      1    0    -1
@@ -463,8 +442,8 @@ zero being deemed unnecessary.
 Many of the common names for keys and their ASCII character equivalents
 have shifted over the years, and indeed they shifted considerably even
 during the time when the PDP-8 was a commercially viable machine. The
-following table maps names used in the [U/W FOCAL Manual][uwfm] to their
-decimal ASCII codes and their common meaning today.
+following table maps names used in [the Manual][uwfm] to their decimal
+ASCII codes and their common meaning today.
 
 | Old Name    | ASCII | Current Name  |
 | ----------- | ----- | ------------- |
@@ -499,13 +478,13 @@ keyboards:
 
 ## <a id="front-panel"></a>Front Panel Differences
 
-Whenever the [U/W FOCAL Manual][uwfm] refers to the PDP-8's front panel,
-it is speaking generically of all the models it ran on as of October
-1978. The PDP-8 models introduced in the decade following the
-introduction of the PDP-8/I differ in many ways, and one of the greatest
-areas of difference is in their front panel controls and indicators. We
-do not intend to fully document all of the differences here, but only to
-clarify the differences brought up by the U/W FOCAL Manual.
+Whenever [the Manual][uwfm] refers to the PDP-8's front panel, it is
+speaking generically of all the models it ran on as of October 1978. The
+PDP-8 models introduced in the decade following the introduction of the
+PDP-8/I differ in many ways, and one of the greatest areas of difference
+is in their front panel controls and indicators. We do not intend to
+fully document all of the differences here, but only to clarify the
+differences brought up by the U/W FOCAL Manual.
 
 You normally will not need to use the front panel with the OS/8 version
 of U/W FOCAL we distribute with the PiDP-8/I software distribution since
@@ -557,19 +536,17 @@ The `ADDR LOAD` switch on a PDP-8/e does the same thing as the
 ### <a id="sw-dir"></a>Switch Direction
 
 DEC reversed the meaning of switch direction between the PDP-8/I and the
-PDP-8/e, and the [U/W FOCAL Manual][uwfm] follows the 8/e convention: on
-the 8/I, up=0=off, whereas on the 8/e, up=1=on. Keep this in mind when
-reading the U/W FOCAL Manual's references to front panel switch
-settings.
+PDP-8/e, and [the Manual][uwfm] follows the 8/e convention: on the 8/I,
+up=0=off, whereas on the 8/e, up=1=on. Keep this in mind when reading
+the U/W FOCAL Manual's references to front panel switch settings.
 
 
 ### <a id="sw-order"></a>Switch Ordering
 
-When the [U/W FOCAL Manual][uwfm] talks about the switch register (SR),
-it numbers the switches left to right, not by their logical bit number
-in the switch register. That is, "Switch 0" is the leftmost (high order
-bit) SR switch, not "bit 0" in the SR, which would be the rightmost SR
-switch.
+When [the Manual][uwfm] talks about the switch register (SR), it numbers
+the switches left to right, not by their logical bit number in the
+switch register. That is, "Switch 0" is the leftmost (high order bit) SR
+switch, not "bit 0" in the SR, which would be the rightmost SR switch.
 
 
 ## Error Codes
@@ -739,7 +716,71 @@ starts off with `ERASE` commands to initialize its variables, there's a
 pretty good chance your program will just erase itself under U/W FOCAL.
 
 
-## <a id="license"></a>License
+------------------------------------------------------------------------
+
+## Coccyges
+
+### <a id="rationale"></a>Why Did We Write This?
+
+[The Manual][uwfm] is well written as far as it goes, but there are
+gaps:
+
+1.  It inspires questions in the reader's mind without providing an
+    answer.  While that is actually a hallmark of a good book, the U/W
+    FOCAL manual sometimes does it for topics that are properly within
+    its scope and so should be answered within.
+
+1.  It omits coverage for some topics we wish it would cover, though
+    they are not properly within its scope.
+
+1.  It is written somewhat generically for the whole PDP-8 family as of
+    late 1978, whereas the PiDP-8/I project is focused on a single model
+    from 1968. Those not familiar with the differences can therefore be
+    confused by some of its directions.
+
+1.  There are considerations in our simulated PiDP-8/I world that simply
+    did not apply to those running U/W FOCAL on the real hardware.
+
+1.  There are multiple versions of U/W FOCAL; the version covered by
+    [the Manual][uwfm] isn't the one we actually ship.  Our two
+    [other][uwfr] primary [sources][uwfd] also do not cover exactly the
+    version of U/W FOCAL we ship.
+
+This document is our attempt to fill these gaps and to supplement those
+other documents.  [Extensions and corrections][hack] are welcome.
+
+
+### <a id="references"></a>References
+
+The primary sources for this supplement are:
+
+*   [U/W FOCAL Manual][uwfm], October 1978, by Jim van Zee of the
+    University of Washington.
+
+*   [U/W FOCAL reference cards][uwfr] from the U/W FOCAL distribution,
+    approximately contemporaneous with the Manual, but clearly for a
+    different version of U/W FOCAL than is documented in the Manual.
+
+*   [DECUS Submission for U/W FOCAL][uwfd], also by van Zee, from August
+    1978.
+    
+    This document describes the OS/8 version of U/W FOCAL rather than
+    the paper tape version described by the Manual.  We chose to convert
+    the Manual to Markdown rather than this DECUS submission because the
+    scan is terrible, resulting in nearly worthless OCR output; we
+    *really* did not want to retype the whole thing! On balance, we
+    think the Manual is a better tutorial than the DECUS submission,
+    though the DECUS submission is perhaps a better reference text.
+
+[df8]:  http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/FOCL69%20Files/DEC-08-AJAD-D.pdf
+[f71]:  http://svn.so-much-stuff.com/svn/trunk/pdp8/src/decus/focal8-177/
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
+[uwfd]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
+[uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
+[uwfr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-refcards.md
+
+
+### <a id="license"></a>License
 
 Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
 terms of [the SIMH license][sl].
