@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+########################################################################
+# teco-pi-demo - Starts the simulator with the OS/8, sends one of the
+#   famous TECO "calculate pi" program to it, and starts it running at
+#   a very slow rate of speed to act as a blinkenlights demo.
+#
+# Copyright © 2017 by Warren Young.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+import time
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+
+# Our local modules
+from pidp8i import *
+from simh   import *
+
+
+#### main ##############################################################
+
+def main ():
+  # Start TECO in the simulator
+  s = simh (dirs.build)
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+  s.send_cmd ("att rk0 bin/os8v3d-bin.rk05")
+  s.send_cmd ("boot rk0")
+  s.os8_send_cmd ('\.', "R TECO")
+
+  # The macro we'll send: http://www.iwriteiam.nl/HaPi_TECO_macro.html
+  macro = [
+    'GZ0J\UNQN"E 40UN \' BUH BUV HK',
+    'QN< J BUQ QN*10/3UI',
+    'QI< \+2*10+(QQ*QI)UA B L K QI*2-1UJ QA/QJUQ',
+    'QA-(QQ*QJ)-2\ 10@I// -1%I >',
+    'QQ/10UT QH+QT+48UW QW-58"E 48UW %V \' QV"N QV^T \' QWUV QQ-(QT*10)UH >',
+    'QV^T @^A/',
+    '/HKEX',
+  ]
+
+  # First and last lines are handled specially, so slice them off.
+  first = macro.pop(0)
+  last  = macro.pop()
+
+  # Send the first line of the macro; implicitly awaits 1st TECO prompt
+  s.os8_send_cmd ('\*', first)
+
+  # Blindly send core lines of the macro; TECO gives no prompts for 'em.
+  for line in macro: 
+    s.os8_send_line (line)
+
+  # Send last line of macro sans CR, followed by two Esc characters to
+  # start it running.
+  s.os8_send_str (last)     # not os8_send_line!
+  s.os8_send_ctrl ('[')
+  s.os8_send_ctrl ('[')
+
+  # Let macro run for a bit, then pop out to SIMH and throttle it down
+  # to a rate suitable for a blinkenlights demo and let it go.
+  time.sleep(0.1)
+  s.os8_send_ctrl ('e')
+  s.send_cmd ('set throttle 1/17')
+  s.send_cmd ('cont')
+  s.spin ()                     # never exits
+
+
+if __name__ == "__main__":
+    main()

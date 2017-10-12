@@ -112,10 +112,19 @@ class simh:
   # "blind" to OS/8, without expecting a prompt, as when driving EDIT.
 
   def os8_send_line (self, line):
-    for i in xrange (0, len (line)):
-      self._child.send (line[i])
-      self.os8_kbd_delay ()
+    self.os8_send_str (line)
     self._child.send ("\r")
+
+
+  #### os8_send_str ########################################################
+  # Core of os8_send_line.  Also used by code that needs to send text
+  # "blind" to OS/8, without expecting a prompt and without a CR, as
+  # when driving TECO.
+
+  def os8_send_str (self, str):
+    for i in xrange (0, len (str)):
+      self._child.send (str[i])
+      self.os8_kbd_delay ()
 
 
   #### os8_restart #######################################################
@@ -166,7 +175,21 @@ class simh:
     self._child.sendline (cmd)
 
 
+  #### send_line #######################################################
+  # Sends the given line "blind", without waiting for a prompt.
+
+  def send_line (self, line):
+    self._child.sendline (line)
+
+
   #### set_logfile #####################################################
 
   def set_logfile (self, lf):
     self._child.logfile = lf
+
+
+  #### spin ############################################################
+  # Let child run indefinitely without asking anything more from it.
+
+  def spin (self):
+    self._child.expect (pexpect.EOF, timeout = None)
