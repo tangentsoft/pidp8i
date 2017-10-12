@@ -510,6 +510,11 @@ There are other examples of this, such as `LIBRARY` and `LIST`. It is
 the first letter of the first argument to these commands that determines
 what FOCAL does.
 
+In at least one case, you can see this feature of FOCAL used to talk
+about a single command under different names. Some FOCAL documents talk
+about a `ZVR` command, meaning Zero VaRiable. It's just another way of
+spelling the `ZERO` command: it does the same thing.
+
 FOCAL *only* checks the first letter of the command and any necessary
 disambiguating arguments. The following is therefore a perfectly legal
 FOCAL program:
@@ -579,13 +584,6 @@ Another addition to our version of U/W FOCAL as compared to the version
 documented in [the Manual][uwfm] is `LOGICAL EXIT` which immediately
 exits U/W FOCAL and returns you to OS/8, just as if you had hit
 <kbd>Ctrl-C</kbd>.
-
-
-## `ZVR` Command
-
-Some U/W FOCAL documents talk about a `ZVR` command. It is the Zero
-VaRiable command and is thus just another way of spelling `ZERO`, since
-U/W FOCAL only pays attention to the first letter of the command.
 
 
 ## `FRA` Built-In Function
