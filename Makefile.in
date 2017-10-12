@@ -62,7 +62,7 @@ MKOS8        = @srcdir@/libexec/mkos8
 MKOS8_LIB    = lib/mkos8
 MKOS8_PY     = \
 	$(MKOS8_LIB)/__init__.py \
-	$(MKOS8_LIB)/argparser/__init__.py
+	$(MKOS8_LIB)/argparser.py
 MKOS8_PY_SRC = $(addprefix @srcdir@/,$(MKOS8_PY))
 MKOS8_BINS   = $(MKOS8_PY_SRC:.py=.pyc)
 MKOS8_SRCS   = $(MKOS8) $(PIDP8I_DIN) $(MKOS8_PY_SRC) $(SIMH_SRCS)
