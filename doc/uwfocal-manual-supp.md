@@ -524,7 +524,7 @@ FOCAL program:
     01.30 LOOGIE BRAIN 1.2 ; TARPIT I !
 
 It does exactly the same thing as a program we will encounter
-[later](#lbranch).
+[shortly](#lbranch).
 
 
 ## <a id="library"></a>`LIBRARY`
@@ -544,18 +544,18 @@ Coverage of this begins on page 34 of [the DECUS submission][uwfd].
 These commands allow you to get OS/8 directory listings from within U/W
 FOCAL:
 
-*    **`LIST ALL`** — Same as `DIR` under OS/8. Accepts an optional OS/8
-     device name, e.g. `L A SYS:` to show the contents of the `SYS:`
-     device.
+*    **<code>LIST ALL</code>** — Same as `DIR` under OS/8. Accepts an
+     optional OS/8 device name, e.g. `L A SYS:` to show the contents of the
+     `SYS:` device.
 
-*    **`LIST ONLY`** — Same as `DIR *.FC` under OS/8. You can also give
-     a device name, a file name, or both to be more specific. For
+*    **<code>LIST ONLY</code>** — Same as `DIR *.FC` under OS/8. You can
+     also give a device name, a file name, or both to be more specific. For
      example, you could check for the existence of a `FOO.FC` file on
      the first half of the second RK05 device with `L O RKA1:FOO`.
 
-*    **`ONLY LIST`** — Same as `LIST ONLY` except for FOCAL data files,
-     `*.DA`. The [DECUS submission][uwfd] says it looks for `*.FD`, but
-     that does not appear to be correct in my testing.
+*    **<code>ONLY LIST</code>** — Same as `LIST ONLY` except for FOCAL
+     data files, `*.DA`. The [DECUS submission][uwfd] says it looks for
+     `*.FD`, but that does not appear to be correct in my testing.
 
 
 ## <a id="lbranch"></a>`LOGICAL BRANCH`
