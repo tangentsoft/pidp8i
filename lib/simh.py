@@ -60,9 +60,9 @@ class simh:
   # down at the SIMH layer instead.
 
   def back_to_cmd (self, prompt):
-    self._child.expect("\n%s$" % prompt)
-    self.os8_kbd_delay()
-    self._child.sendcontrol('e')
+    self._child.expect ("\n%s$" % prompt)
+    self.os8_kbd_delay ()
+    self._child.sendcontrol ('e')
 
 
   #### os8_kbd_delay ###################################################
@@ -92,9 +92,9 @@ class simh:
   # The prompt string is passed in because OS/8 has several different
   # prompt types.
 
-  def os8_send_cmd (self, prompt, send_line):
+  def os8_send_cmd (self, prompt, line):
     self._child.expect ("\n%s$" % prompt)
-    self.os8_send_line (send_line)
+    self.os8_send_line (line)
 
 
   #### os8_send_ctrl #####################################################
@@ -111,9 +111,9 @@ class simh:
   # Core of os8_send_cmd.  Also used by code that needs to send text
   # "blind" to OS/8, without expecting a prompt, as when driving EDIT.
 
-  def os8_send_line (self, send_line):
-    for i in xrange(0, len (send_line)):
-      self._child.send (send_line[i])
+  def os8_send_line (self, line):
+    for i in xrange (0, len (line)):
+      self._child.send (line[i])
       self.os8_kbd_delay ()
     self._child.send ("\r")
 
@@ -155,7 +155,7 @@ class simh:
 
   def quit (self):
     self.send_cmd ("q")
-    self._child.expect(pexpect.EOF)
+    self._child.expect (pexpect.EOF)
 
 
   #### send_cmd ########################################################
