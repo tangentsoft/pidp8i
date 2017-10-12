@@ -35,8 +35,10 @@
 # Bring in just the basics so we can bring in our local modules
 import os
 import sys
-import time
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+
+# Other core modules we need
+import time
 
 # Our local modules
 from pidp8i import *
@@ -65,8 +67,8 @@ def main ():
   ]
 
   # First and last lines are handled specially, so slice them off.
-  first = macro.pop(0)
-  last  = macro.pop()
+  first = macro.pop (0)
+  last  = macro.pop ()
 
   # Send the first line of the macro; implicitly awaits 1st TECO prompt
   s.os8_send_cmd ('\*', first)
@@ -83,7 +85,7 @@ def main ():
 
   # Let macro run for a bit, then pop out to SIMH and throttle it down
   # to a rate suitable for a blinkenlights demo and let it go.
-  time.sleep(0.1)
+  time.sleep (0.1)
   s.os8_send_ctrl ('e')
   s.send_cmd ('set throttle 1/17')
   s.send_cmd ('cont')
