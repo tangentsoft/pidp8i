@@ -452,7 +452,7 @@ def make_src (s, args):
     ["RKA1:", "al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3...", None],
   ]
   
-  check_exists(src_copyins)
+  check_exists (s, src_copyins)
 
   print "Generating " + _src_rk05 + " from " + str(len(src_copyins)) + \
         " source tapes..."
