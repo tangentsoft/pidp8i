@@ -590,13 +590,14 @@ U/W FOCAL only pays attention to the first letter of the command.
 
 ## `FRA` Built-In Function
 
-`CARD3.DA` and `CARD4.DA` in the [U/W FOCAL reference cards][uwfr] refer
-to a `FRA` built-in function which the [manual][uwfm] does not document.
-Lacking documentation, we have not been able to test it. Once we figure
-out what it is supposed to do, it will be documented here.
+This function is not documented in [the Manual][uwfm], but it is
+documented on page 60 of [the DECUS submission][uwfd]. It allows you to
+set up random access to a file, storing numbers in various raw binary
+formats directly to the file as if it were a large in-memory array.
 
-Until then, the three `?17.XX` error codes listed on the refcard are
-untested.
+If you've been trying to use the `FCOM` function but have run into the
+limit on the size of a PDP-8 core memory field, switching to `FRA` is
+the logical next step.
 
 
 ## <a id="front-panel"></a>Front Panel Differences
