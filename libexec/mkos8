@@ -42,6 +42,7 @@ import subprocess
 
 # Our local modules
 from mkos8 import *
+from pidp8i import *
 from simh import *
 
 

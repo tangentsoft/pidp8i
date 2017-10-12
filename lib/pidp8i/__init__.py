@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ########################################################################
-# __init__.py - mkos8 module initialization
+# __init__.py - pidp8i module initialization
 #
 # Copyright © 2017 by Warren Young
 #
@@ -29,4 +29,4 @@
 # authorization from those authors.
 ########################################################################
 
-__all__ = [ 'argparser' ]
+__all__ = [ 'dirs' ]

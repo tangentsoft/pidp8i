@@ -427,7 +427,7 @@ make-template cc8/Makefile.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
 make-template examples/Makefile.in
-make-template lib/mkos8/dirs.py.in
+make-template lib/pidp8i/dirs.py.in
 make-template media/os8/init.tx.in
 make-template src/Makefile.in
 make-template src/gpio-common.c.in
