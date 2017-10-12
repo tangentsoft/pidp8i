@@ -480,6 +480,125 @@ keyboards:
 | `FORM FEED`  | <kbd>Ctrl-L</kbd> |
 
 
+## <a id="overloading"></a>Command Overloading
+
+[The Manual][uwfm] tells you right up front that U/W FOCAL only pays
+attention to the first letter of each command when trying to decide what
+you're asking it to do, which is why we have strange commands like
+`YNCREMENT`: `I` was already taken by `IF`.
+
+What it *doesn't* make as clear is how the creators of U/W FOCAL began
+adding a second layer of overloading to this scheme after they began
+running out of letters in the English alphabet.
+
+Early examples of FOCAL's command overloading scheme are the `ON`,
+`OPEN` and `OUTPUT` commands. By looking at the first argument to the
+command, FOCAL can tell which of the three you mean. If you give a valid
+FOCAL expression in parentheses, it is clearly an `ON` command. If you
+give anything beginning with a letter, FOCAL decides whether it's an
+`OPEN` or `OUTPUT` command based on which letter that is; you will
+notice that the first letter of no `OPEN` sub-command is the same as the
+first letter of any `OUTPUT` sub-command.
+
+In later versions of U/W FOCAL, they added a third level to some
+commands. We have `OPEN RESTART READ` and `OPEN RESUME INPUT`, for
+example. It may help to abbreviate the commands, as the first letter of
+each word is all that really matter: `O R R` is clearly not the same as
+`O R I`.
+
+There are other examples of this, such as `LIBRARY` and `LIST`. It is
+the first letter of the first argument to these commands that determines
+what FOCAL does.
+
+FOCAL *only* checks the first letter of the command and any necessary
+disambiguating arguments. The following is therefore a perfectly legal
+FOCAL program:
+
+    01.10 SPEW I = 0
+    01.20 YGGDRASIL I
+    01.30 LOOGIE BRAIN 1.2 ; TARPIT I !
+
+It does exactly the same thing as a program we will encounter
+[later](#lbranch).
+
+
+## <a id="library"></a>`LIBRARY`
+
+The OS/8 version of U/W FOCAL includes a "library" feature modeled on a
+similar feature in OMSI PS/8 FOCAL. These features collectively allow
+the user access to FOCAL program files stored in the OS/8 file system
+from within a U/W FOCAL program or as immediate commands to U/W FOCAL.
+
+We showed how you can use some of these commands to save and load
+programs to disk [above](#ls-library), but there's a lot more to it.
+Coverage of this begins on page 34 of [the DECUS submission][uwfd].
+
+
+## `LIST ALL`, `LIST ONLY`, `ONLY LIST`
+
+These commands allow you to get OS/8 directory listings from within U/W
+FOCAL:
+
+*    **`LIST ALL`** — Same as `DIR` under OS/8. Accepts an optional OS/8
+     device name, e.g. `L A SYS:` to show the contents of the `SYS:`
+     device.
+
+*    **`LIST ONLY`** — Same as `DIR *.FC` under OS/8. You can also give
+     a device name, a file name, or both to be more specific. For
+     example, you could check for the existence of a `FOO.FC` file on
+     the first half of the second RK05 device with `L O RKA1:FOO`.
+
+*    **`ONLY LIST`** — Same as `LIST ONLY` except for FOCAL data files,
+     `*.DA`. The [DECUS submission][uwfd] says it looks for `*.FD`, but
+     that does not appear to be correct in my testing.
+
+
+## <a id="lbranch"></a>`LOGICAL BRANCH`
+
+Our distribution of U/W FOCAL includes the `LOGICAL BRANCH` feature,
+which is not documented in [the Manual][uwfm], but it *is* documented on
+page 37 of [the DECUS submission][uwfd]. Briefly, it acts like a `GOTO`
+command where the jump is only made if keyboard input is detected.
+
+The following program counts upward continuously until a key is pressed,
+then it prints how many iterations it ran:
+
+    01.10 SET I = 0
+    01.20 YNCR I
+    01.30 LOGICAL BRANCH 01.20 ; TYPE I !
+
+The DECUS document suggests using this feature to turn the keyboard into
+a giant "switch register," allowing the user to control the behavior of
+a long-running program without stopping to wait for user input. Can you
+say "video games"?
+
+
+## <a id="lexit"></a>`LOGICAL EXIT`
+
+Another addition to our version of U/W FOCAL as compared to the version
+documented in [the Manual][uwfm] is `LOGICAL EXIT` which immediately
+exits U/W FOCAL and returns you to OS/8, just as if you had hit
+<kbd>Ctrl-C</kbd>.
+
+
+## `ZVR` Command
+
+Some U/W FOCAL documents talk about a `ZVR` command. It is the Zero
+VaRiable command and is thus just another way of spelling `ZERO`, since
+U/W FOCAL only pays attention to the first letter of the command.
+
+
+## `FRA` Built-In Function
+
+`CARD3.DA` and `CARD4.DA` in the [U/W FOCAL reference cards][uwfr] refer
+to a `FRA` built-in function which the [manual][uwfm] does not document.
+Lacking documentation, we have not been able to test it. Once we figure
+out what it is supposed to do, it will be documented here.
+
+Until then, the three `?17.XX` error codes listed on the refcard are
+untested.
+
+
 ## <a id="front-panel"></a>Front Panel Differences
 
 Whenever [the Manual][uwfm] refers to the PDP-8's front panel, it is
@@ -629,24 +748,6 @@ In the meantime, the following facilities do not work:
 
 *   Error codes `?14.50` and `?14.56` can't happen; SIMH doesn't
     simulate a PDP-12 or a LAB-8/e
-
-
-## `FRA` Built-In Function
-
-`CARD3.DA` and `CARD4.DA` in the [U/W FOCAL reference cards][uwfr] refer
-to a `FRA` built-in function which the [manual][uwfm] does not document.
-Lacking documentation, we have not been able to test it. Once we figure
-out what it is supposed to do, it will be documented here.
-
-Until then, the three `?17.XX` error codes listed on the refcard are
-untested.
-
-
-## `ZVR` Command
-
-Some U/W FOCAL documents talk about a `ZVR` command. It is the Zero
-VaRiable command and is thus just another way of spelling `ZERO`, since
-U/W FOCAL only pays attention to the first letter of the command.
 
 
 ## <a id="diffs"></a>Differences Between U/W FOCAL and Other FOCALs
