@@ -138,7 +138,7 @@ class simh:
   # things in a single OS/8 session, which rebooting would screw up.
 
   def os8_restart (self):
-    self.send("go 7600")
+    self.send_cmd ("go 7600")
 
 
   #### os8_squish ########################################################
@@ -154,16 +154,16 @@ class simh:
   # Quits the simulator and waits for it to exit
 
   def quit (self):
-    self.send("q")
+    self.send_cmd ("q")
     self._child.expect(pexpect.EOF)
 
 
-  #### send ############################################################
-  # Wait for a SIMH command prompt and then send the given line
+  #### send_cmd ########################################################
+  # Wait for a SIMH command prompt and then send the given command
 
-  def send (self, line):
-    self._child.expect("sim> $")
-    self._child.sendline(line)
+  def send_cmd (self, cmd):
+    self._child.expect ("sim> $")
+    self._child.sendline (cmd)
 
 
   #### set_logfile #####################################################
