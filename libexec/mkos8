@@ -36,22 +36,16 @@ import os
 import sys
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 
-# Our local modules
-from mkos8 import *
-
-# 3rd party dependencies
-import pkg_resources
-import pexpect
-
 # Remaining Python core modules
 from shutil import copyfile
 import subprocess
-import time
+
+# Our local modules
+from mkos8 import *
+from simh import *
 
 
 #### globals and constants #############################################
-
-child = None
 
 # Flag set when -v is *not* given.  Causes make_*() and the functions
 # called thereby to print progress messages to the console since SIMH
@@ -62,140 +56,21 @@ progmsg = True
 # kludgy flag to add more verbose debug output.
 debug = False
 
+# Name of the RK05 disk image files we create
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
-
-
-#### simh_send #########################################################
-# Wait for a SIMH command prompt and then send the given line
-
-def simh_send (send_line):
-  global child
-
-  child.expect("sim> $")
-  child.sendline(send_line)
-
-
-#### os8_kbd_delay #####################################################
-# Artificially delay the media generation process to account for the
-# fact that OS/8 lacks a modern multi-character keyboard input buffer.
-# It is unsafe to send text faster than a contemporary terminal could.
-#
-# The constant is expanded to show that it comes from the 2400 bps of
-# the VT05s used by some well-heeled PDP-8 users divided by 7-bit ASCII
-# plus necessary start, stop, and parity bits.  The constant is inverted
-# to get seconds per character instead of characters per second.  OS/8
-# must be at least this fast, being contemporary with the VT05.
-#
-# You might think to try and speed this up by increasing the 2400 bps
-# value below.  For one thing, the 9600 bps VT52 was probably used with
-# some later OS/8 systems.  Also, the higher IPS rate of our simulated
-# PDP-8 must help here.  However, if you actually time doing so, it
-# doesn't help, presumably because other I/O overheads (e.g. the TU56
-# reading time) swamp any improvement you can get here.
-
-_kbd_delay = 1 / (2400 / (7 + 1 + 1 + 1))
-def os8_kbd_delay():
-  time.sleep(_kbd_delay)
-
-
-#### os8_send_line #####################################################
-# Core of os8_pmt_send.  Also used by code that needs to send text
-# "blind" to OS/8, without expecting a prompt, as when driving EDIT.
-
-def os8_send_line (send_line):
-  global child
-
-  for i in xrange(0, len (send_line)):
-    child.send (send_line[i])
-    os8_kbd_delay ()
-  child.send ("\r")
-
-
-#### os8_pmt_send ######################################################
-# Wait for an OS/8 command prompt running within SIMH, then send the
-# given line.
-#
-# The prompt string is passed in because OS/8 has several different
-# prompt types.
-
-def os8_pmt_send (prompt, send_line):
-  global child
-
-  child.expect ("\n%s$" % prompt)
-  os8_send_line (send_line)
-
-
-#### os8_send_ctrl #####################################################
-# Send a control character to OS/8 corresponding to the ASCII letter
-# given.  We precede it with the OS/8 keyboard delay, since we're
-# probably following a call to os8_send_line or os8_pmt_send.
-
-def os8_send_ctrl (char):
-  global child
-  os8_kbd_delay ()
-  child.send (chr (ord (char[0].upper ()) - ord ('@')))
-
-
-#### os8_restart #######################################################
-# Called while in the SIMH command prompt, this restarts OS/8.
-#
-# This one-line function exists to abstract the method we use and to
-# document the reason we do it this way.
-#
-# Currently we do this by calling the OS/8 command entry point, which
-# has the virtue that it forces another . prompt, which keeps the send/
-# expect sequencing simple when switching between OS/8 and SIMH command 
-# modes.
-#
-# That is why we don't use "cont" here instead: it requires that the
-# caller always be aware of when the . prompt went out; complicated.
-#
-# Another simple alternative is "boot rk0", which actually benchmarks a
-# smidge faster here.  We choose this method instead because we expect
-# that some of our callers will want to do several different things in
-# a single OS/8 session, which rebooting would screw up.
-
-def os8_restart ():
-  simh_send("go 7600")
-
-
-#### os8_squish ########################################################
-# Wraps the OS/8 SQUISH command for a given device.
-
-def os8_squish (device):
-  global child
-
-  os8_pmt_send("\.", "SQUISH " + device + ":")
-  os8_kbd_delay()
-  child.send("Y\r");
-
-
-#### back_to_simh ######################################################
-# Go back to SIMH when the passed prompt string is encountered
-
-def back_to_simh (prompt):
-  global child
-
-  child.expect("\n%s$" % prompt)
-  os8_kbd_delay()
-  child.sendcontrol('e')
 
 
 #### check_exists ######################################################
 # Check existence of all files needed
 
-def check_exists (image_copyins):
-  global child
-
-  # Confirm necessary media images exist.
+def check_exists (s, image_copyins):
   for copyin in image_copyins:
     image = copyin[1]
     image_path = dirs.media + image
     if (not os.path.isfile(image_path)):
         print "Required file: " + image_path + " not found."
-        simh_send("q")
-        child.expect(pexpect.EOF)
+        s.quit ()
         exit (-1)
     # else: print "Found " + image_path
 
@@ -247,7 +122,7 @@ def check_exists (image_copyins):
 # copyin0 mounts on dt0.  copyin1 mounts on dt1.
 # Either copyin or both can be None
 
-def copyin_pair (copyin0, copyin1):
+def copyin_pair (s, copyin0, copyin1):
   if debug:
     if copyin0:
       print "Copying: " + copyin0[1] + " to: " + copyin0[0] + "from dt0"
@@ -262,43 +137,43 @@ def copyin_pair (copyin0, copyin1):
   # to use both DECtape drives but also
   # switch between SIMH and OS/8 as infrequently as possible.
 
-  if copyin0: simh_send("attach -r dt0 " + dirs.media + copyin0[1])
-  if copyin1: simh_send("attach -r dt1 " + dirs.media + copyin1[1])
+  if copyin0: s.send("attach -r dt0 " + dirs.media + copyin0[1])
+  if copyin1: s.send("attach -r dt1 " + dirs.media + copyin1[1])
 
-  os8_restart()
+  s.os8_restart()
 
   if copyin0:
     if progmsg: print copyin0[2]
     if copyin0[3]:                    # We have specific files to do.
       for file_copyin in copyin0[3]:
-        os8_pmt_send("\.", "COPY " + file_copyin[0] + "<DTA0:" + file_copyin[1])
+        s.os8_send_cmd("\.", "COPY " + file_copyin[0] + "<DTA0:" + file_copyin[1])
     else:
-      os8_pmt_send("\.", "COPY " + copyin0[0] + "<DTA0:*.*")
+      s.os8_send_cmd("\.", "COPY " + copyin0[0] + "<DTA0:*.*")
 
   if copyin1:
     if progmsg: print copyin1[2]
     if copyin1[3]:                    # We have specific files to do.
       for file_copyin in copyin1[3]:
-        os8_pmt_send("\.", "COPY " + file_copyin[0] + "<DTA1:" + file_copyin[1])
+        s.os8_send_cmd("\.", "COPY " + file_copyin[0] + "<DTA1:" + file_copyin[1])
     else:
-      os8_pmt_send("\.", "COPY " + copyin1[0] + "<DTA1:*.*")
+      s.os8_send_cmd("\.", "COPY " + copyin1[0] + "<DTA1:*.*")
 
-  back_to_simh("\.")
+  s.back_to_cmd("\.")
 
-  if copyin0: simh_send("detach dt0")
-  if copyin1: simh_send("detach dt1")
+  if copyin0: s.send("detach dt0")
+  if copyin1: s.send("detach dt1")
 
 
 #### do_all_copyins ####################################################
 
-def do_all_copyins (copyins):
+def do_all_copyins (s, copyins):
   pair_idx = 0
   pair_ct = int(len(copyins) / 2)
   while pair_idx < pair_ct:
-    copyin_pair(copyins[pair_idx * 2], copyins[pair_idx * 2 + 1])
+    copyin_pair(s, copyins[pair_idx * 2], copyins[pair_idx * 2 + 1])
     pair_idx += 1
   if pair_ct * 2 < len(copyins):
-    copyin_pair(copyins[len(copyins) - 1], None)
+    copyin_pair(s, copyins[len(copyins) - 1], None)
 
   
 #### make_bin ##########################################################
@@ -314,8 +189,7 @@ def do_all_copyins (copyins):
 # are treated separately and specially.
 # All the other DECtape images used are read only.
 
-def make_bin (args):
-
+def make_bin (s, args):
   ro_boot_tape =       "al-4711c-ba-os8-v3d-1.1978.tu56"
   ro_boot_tape_path =  dirs.media + ro_boot_tape
   driver_tape =        "al-4712c-ba-os8-v3d-2.1978.tu56"
@@ -418,8 +292,8 @@ def make_bin (args):
   if not args.disable_uwfocal and not args.disable_focal:
     bin_copyins.append(uwfocal_copyin)
 
-  check_exists(special_bin_copyins)
-  check_exists(bin_copyins)
+  check_exists(s, special_bin_copyins)
+  check_exists(s, bin_copyins)
 
   print "Generating " + _bin_rk05 + " from " + str(len(bin_copyins) + 2) + \
         " source tapes..."
@@ -439,12 +313,12 @@ def make_bin (args):
   if progmsg: print "Making a writeable copy of boot DECtape..."
   copyfile(ro_boot_tape_path, boot_dt_path)
   
-  simh_send("attach rk0 " + image_path)
-  simh_send("attach dt0 " + boot_dt_path)
-  simh_send("attach -r dt1 " + driver_tape_path)
+  s.send("attach rk0 " + image_path)
+  s.send("attach dt0 " + boot_dt_path)
+  s.send("attach -r dt1 " + driver_tape_path)
 
   if progmsg: print "Performing config with BUILD..."
-  simh_send("boot dt0")
+  s.send("boot dt0")
 
   # By default, we're going to have an INIT.CM script, but we don't want
   # to set it up this early for two reasons.  First, we don't want the
@@ -452,33 +326,33 @@ def make_bin (args):
   # varies depending on the host system, which would create unnecessary
   # differences in our output over time.  Second, OS/8 is alleged not to
   # always build properly if INIT is enabled in these early stages.
-  os8_pmt_send("\.", "SET SYS NO INIT")
+  s.os8_send_cmd("\.", "SET SYS NO INIT")
 
-  os8_pmt_send("\.", "RUN SYS BUILD")
-  os8_pmt_send("\$", "LOAD DTA1:RK8ESY.BN")
-  os8_pmt_send("\$", "LOAD DTA1:PT8E.BN")
-  os8_pmt_send("\$", "DELETE SYS")
-  os8_pmt_send("\$", "SYSTEM RK8E")
-  os8_pmt_send("\$", "DELETE RXA1")
-  os8_pmt_send("\$", "INSERT PT8E,PTR")
-  os8_pmt_send("\$", "INSERT PT8E,PTP")
-  os8_pmt_send("\$", "DELETE RKA0")
-  os8_pmt_send("\$", "DELETE RKB0")
-  os8_pmt_send("\$", "INSERT RK8E,RKA0,RKB0")
-  os8_pmt_send("\$", "INSERT RK05,RKA2,RKB2")
-  os8_pmt_send("\$", "DELETE DTA0")
-  os8_pmt_send("\$", "INSERT TC,DTA0")
-  os8_pmt_send("\$", "DSK RK8E:RKB0")
-  os8_pmt_send("\$", "PRINT")
-  os8_pmt_send("\$", "BOOT")
-  os8_pmt_send("WRITE ZERO DIRECT\?", "Y")
-  os8_pmt_send("\.", "SAVE SYS BUILD")
-  back_to_simh("\.")
+  s.os8_send_cmd("\.", "RUN SYS BUILD")
+  s.os8_send_cmd("\$", "LOAD DTA1:RK8ESY.BN")
+  s.os8_send_cmd("\$", "LOAD DTA1:PT8E.BN")
+  s.os8_send_cmd("\$", "DELETE SYS")
+  s.os8_send_cmd("\$", "SYSTEM RK8E")
+  s.os8_send_cmd("\$", "DELETE RXA1")
+  s.os8_send_cmd("\$", "INSERT PT8E,PTR")
+  s.os8_send_cmd("\$", "INSERT PT8E,PTP")
+  s.os8_send_cmd("\$", "DELETE RKA0")
+  s.os8_send_cmd("\$", "DELETE RKB0")
+  s.os8_send_cmd("\$", "INSERT RK8E,RKA0,RKB0")
+  s.os8_send_cmd("\$", "INSERT RK05,RKA2,RKB2")
+  s.os8_send_cmd("\$", "DELETE DTA0")
+  s.os8_send_cmd("\$", "INSERT TC,DTA0")
+  s.os8_send_cmd("\$", "DSK RK8E:RKB0")
+  s.os8_send_cmd("\$", "PRINT")
+  s.os8_send_cmd("\$", "BOOT")
+  s.os8_send_cmd("WRITE ZERO DIRECT\?", "Y")
+  s.os8_send_cmd("\.", "SAVE SYS BUILD")
+  s.back_to_cmd("\.")
   
   if progmsg: print "Copying OS/8 system files from TU56 source to RK05 image..."
   if progmsg: print "Copying in system tape 1 of 2..."
-  simh_send("boot dt0")
-  os8_pmt_send("\.", "COPY RKA0:<DTA0:*.*")
+  s.send("boot dt0")
+  s.os8_send_cmd("\.", "COPY RKA0:<DTA0:*.*")
 
   # There are not enough directory entries to put everything
   # Including all device drivers on the running packs.
@@ -487,82 +361,82 @@ def make_bin (args):
   # CCL.PA and KL8E.PA will be on the source disk.
   # However DECtape 2 has HELP.HL and .RL files that ARE needed.
   # if progmsg: print "Copying in system tape 2 of 2..."
-  # os8_pmt_send("\.", "COPY RKA0:<DTA1:*.*")
+  # s.os8_send_cmd("\.", "COPY RKA0:<DTA1:*.*")
   if progmsg: print "Copying in help files..."
-  os8_pmt_send("\.", "COPY RKA0:<DTA1:*.HL")
+  s.os8_send_cmd("\.", "COPY RKA0:<DTA1:*.HL")
 
   if args.disable_fortran_ii:
-    os8_pmt_send("\.", "DEL RKA0:FORT.SV")
+    s.os8_send_cmd("\.", "DEL RKA0:FORT.SV")
   else:
     if progmsg: print "Installing FORTRAN II libraries..."
-    os8_pmt_send("\.", "COPY RKA0:<DTA1:*.RL")
+    s.os8_send_cmd("\.", "COPY RKA0:<DTA1:*.RL")
 
-  os8_pmt_send("\.", "ZERO RKB0:")      # must precede subsys/* copies
+  s.os8_send_cmd("\.", "ZERO RKB0:")      # must precede subsys/* copies
 
-  back_to_simh("\.")
+  s.back_to_cmd("\.")
   
   if progmsg: print "Deleting bootable copy of DECtape image and"
   if progmsg: print "rebooting into freshly-built RK05 OS/8 system..."
-  simh_send("detach dt0")
-  simh_send("detach dt1")
-  simh_send("boot rk0")     # must do: boot media just went away
-  back_to_simh("\.")
+  s.send("detach dt0")
+  s.send("detach dt1")
+  s.send("boot rk0")     # must do: boot media just went away
+  s.back_to_cmd("\.")
   os.remove(boot_dt_path)
 
   if progmsg: print "Performing remaining copies/installs..."
-  do_all_copyins(bin_copyins)
+  do_all_copyins (s, bin_copyins)
 
   # Any further initialization of installed software is done here.
-  simh_send("boot rk0")
+  s.send("boot rk0")
 
   if not args.disable_crt:
     # NO SCOPE mode is the default on distribution tapes.
     if progmsg: print "Configuring scope-style rubout processing..."
-    os8_pmt_send("\.", "SET TTY SCOPE")
+    s.os8_send_cmd("\.", "SET TTY SCOPE")
   
   # Make sure Scripts are included in local_files array!
   # Or this will fail.
   if not args.disable_lcmod:
     if progmsg: print "Patching OS/8 to upcase commands only; SIMH is set not to auto-upcase."
-    os8_pmt_send("\.", "SUBMIT SYS:LCSYS.BI")
+    s.os8_send_cmd("\.", "SUBMIT SYS:LCSYS.BI")
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
-    os8_pmt_send("\.", "SUBMIT SYS:LCBAS.BI")
+    s.os8_send_cmd("\.", "SUBMIT SYS:LCBAS.BI")
 
   # Create a banner message and optionally set it to show on boot.
   # This message is always upcased, even if you do this before calling
   # LCSYS.BI.  Is it a limitation of EDIT?
   if progmsg: print "Setting INIT message..."
-  os8_pmt_send("\.", "CREATE INIT.TX")
-  os8_pmt_send("#", "A")        # append text to file
+  s.os8_send_cmd("\.", "CREATE INIT.TX")
+  s.os8_send_cmd("#", "A")        # append text to file
   with open(dirs.media + "/init.tx", "r") as f:
     for line in f:
-      os8_send_line(line)
-  os8_send_ctrl('L')            # return to EDIT command mode
-  os8_pmt_send("#", "E")        # save and exit
-  os8_pmt_send("\.", "CREATE INIT.CM")
-  os8_pmt_send("#", "A")
-  os8_send_line("TYPE INIT.TX")
-  os8_send_ctrl('L')
-  os8_pmt_send("#", "E")
+      s.os8_send_line(line)
+  s.os8_send_ctrl('L')            # return to EDIT command mode
+  s.os8_send_cmd("#", "E")        # save and exit
+  s.os8_send_cmd("\.", "CREATE INIT.CM")
+  s.os8_send_cmd("#", "A")
+  s.os8_send_line("TYPE INIT.TX")
+  s.os8_send_ctrl('L')
+  s.os8_send_cmd("#", "E")
   if not args.disable_init:
     # Set the message to display only if the user did not suppress it.
     # We do it this way so the user can turn it on later without
     # rebuilding their OS/8 media.
-    os8_pmt_send("\.", "SET SYS INIT")
+    s.os8_send_cmd("\.", "SET SYS INIT")
 
   # Finish up
   if progmsg: print "Cleaning up..."
-  os8_squish ("SYS")
-  os8_squish ("DSK")
-  back_to_simh("\.")
-  simh_send("detach rk0")
+  s.os8_squish ("SYS")
+  s.os8_squish ("DSK")
+  s.back_to_cmd("\.")
+  s.send("detach rk0")
 
 
 
 #### make_src ##########################################################
 # Source-disk version of make_bin() above.
 
-def make_src (args):
+def make_src (s, args):
   src_copyins = [
     ["RKA1:", "al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7...", None],
     ["RKA1:", "al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7...", None],
@@ -597,21 +471,21 @@ def make_src (args):
     os.rename(src_path, save_path)
     
   if progmsg: print "Copying OS/8 source distribution:"
-  simh_send("attach rk0 " + bin_path)
-  simh_send("attach rk1 " + src_path)
+  s.send("attach rk0 " + bin_path)
+  s.send("attach rk1 " + src_path)
 
-  simh_send("boot rk0")
+  s.send("boot rk0")
   
-  os8_pmt_send("\.", "ZERO RKA1:")
-  os8_pmt_send("\.", "ZERO RKB1:")
+  s.os8_send_cmd("\.", "ZERO RKA1:")
+  s.os8_send_cmd("\.", "ZERO RKB1:")
 
-  back_to_simh("\.")
+  s.back_to_cmd("\.")
 
-  do_all_copyins(src_copyins)
+  do_all_copyins (s, src_copyins)
 
   if progmsg: print "Cleaning up..."
-  simh_send("detach rk0")
-  simh_send("detach rk1")
+  s.send("detach rk0")
+  s.send("detach rk1")
 
 
 #### main ##############################################################
@@ -642,28 +516,18 @@ def main ():
         acts[this] = True
       break
     acts[act] = True
-  
-  # Start the simulator instance we'll use to build the media images
-  global child
-  child = pexpect.spawn(dirs.build + '/bin/pidp8i-sim')
-
-  # Turn off pexpect's default inter-send() delay.  We add our own as
-  # necessary.  The conditional is due to an API change between 3 and 4.
-  pev4 = (pkg_resources.get_distribution("pexpect").parsed_version >
-          pkg_resources.parse_version("4.0"))
-  child.delaybeforesend = None if pev4 else 0
 
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
-  child.logfile = open(dirs.log + 'mkos8-' + first_act + '.log', 'w') \
-    if progmsg else os.fdopen(sys.stdout.fileno(), 'w', 0)
+  s = simh (dirs.build)
+  s.set_logfile (open (dirs.log + 'mkos8-' + first_act + '.log', 'w') \
+      if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
-  if acts["bin"]: make_bin (ap.args)
-  if acts["src"]: make_src (ap.args)
+  if acts["bin"]: make_bin (s, ap.args)
+  if acts["src"]: make_src (s, ap.args)
   
-  simh_send("q")
-  child.expect(pexpect.EOF)
+  s.quit ()
   if progmsg: print "Done!"
 
 
