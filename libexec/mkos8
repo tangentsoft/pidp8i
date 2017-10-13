@@ -37,6 +37,7 @@ import sys
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 
 # Remaining Python core modules
+import re
 from shutil import copyfile
 import subprocess
 
@@ -44,7 +45,6 @@ import subprocess
 from mkos8 import *
 from pidp8i import *
 from simh import *
-import re
 
 
 #### globals and constants #############################################
@@ -489,6 +489,9 @@ def make_src (s, args):
   s.send_cmd ("detach rk0")
   s.send_cmd ("detach rk1")
 
+
+#### parse_odt #########################################################
+
 def parse_odt (line):
   odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
   odt_parse = re.compile(odt_parse_str)
@@ -504,6 +507,9 @@ def parse_odt (line):
   if not old_val.isdigit(): old_val = "*"
 
   print "Loc: " + match.group(1) + ", old_val: " + old_val + ", new_val: " + match.group(3)
+
+
+#### do_patch_file #####################################################
 
 def do_patch_file (filename):
   try:
@@ -542,6 +548,7 @@ def do_patch_file (filename):
         the_command = special_commands[com]
 
       
+#### make_patch ########################################################
 
 def make_patch (args):
   manifest_filename = "patch_list.txt"
@@ -552,6 +559,7 @@ def make_patch (args):
     filename = line.strip()
     print filename
     do_patch_file (filename)
+
 
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.

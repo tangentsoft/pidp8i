@@ -1,5 +1,6 @@
 # Problem: EDIT sometimes loses its TAB characters in multi-page files
-# if file is exited on other ~han the last page.
+# if file is exited on other than the last page.
+#
 # Solution: Make the following patch to OS/8 V3D of EDIT.SV.
 # This raises the patch level to V12B
 
