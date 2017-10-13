@@ -35,15 +35,6 @@
 
     -   John Comeau's CHECKMO-II chess program is installed by default.
 
-    -   All of the above features can be disabled if not wanted, as well
-        as several features present on the old `os8.rk05` disk: FORTRAN
-        IV, FORTRAN II, Kermit-12, and the BASIC game and demo programs.
-
-        You can disable these features individually or you can disable
-        all of them with the new `configure --os8-minimal` feature,
-        which gets you a nearly bare-bones OS/8 installation with lots
-        of spare disk space with which you can do what *you* want.
-
     -   By default, SIMH no longer folds lowercase input and output to
         uppercase.  Instead, we apply patches to OS/8's command
         processor and its BASIC implementation to up-case input, since
@@ -90,22 +81,32 @@
         SYSTEM` message.  Those that do not want any boot message can
         disable it at configuration time.
 
+    -   All of the above features can be disabled if not wanted, as can
+        several features present on the old `os8.rk05` disk: Adventure,
+        FORTRAN IV, FORTRAN II, Kermit-12, and the BASIC game and demo
+        programs.
+
+        You can disable these features individually or you can disable
+        all of them with the new `configure --os8-minimal` feature,
+        which gets you a nearly bare-bones OS/8 installation with lots
+        of spare disk space with which you can do what *you* want.
+
     -   Replaced the mismatched FORTRAN compiler and runtime with
         matched versions from the distribution DECtapes, and ensured that
         Adventure runs under this version of the FORTRAN Run Time System
         (FRTS). At various points in the past, either FORTRAN or
         Adventure has been broken.
 
-    -   The `*.MU` and music player files are left off of `RKB0:` by
-        default, since they apparently do not cause sufficient RFI on
-        the PiDP-8/I hardware to be picked up by normal AM radios.  This
-        saves space for things that *do* work.
-
     -   Repaired several broken BASIC programs on RKB0: by going back to
         primary sources.  Either the `os8.rk05` disk image was corrupted
         at some point or it is an image of a real RK05 disk pack that
         was corrupted, causing several of these BASIC programs to not
         run properly.
+
+    -   The `*.MU` and music player files are left off of `RKB0:` by
+        default, since they apparently do not cause sufficient RFI on
+        the PiDP-8/I hardware to be picked up by normal AM radios.  This
+        saves space for things that *do* work.
 
     -   No longer installing the `VTEDIT` macros for TECO by default.
         Although some may enjoy this alternative way of running TECO, it
