@@ -44,6 +44,7 @@ import subprocess
 from mkos8 import *
 from pidp8i import *
 from simh import *
+import re
 
 
 #### globals and constants #############################################
@@ -488,13 +489,78 @@ def make_src (s, args):
   s.send_cmd ("detach rk0")
   s.send_cmd ("detach rk1")
 
+def parse_odt (line):
+  odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
+  odt_parse = re.compile(odt_parse_str)
+
+  print line
+  
+  if line == "\\c": return "break"
+  match = odt_parse.match(line)
+  if match == None:
+    print "Skipping bad ODT line: " + line
+    return "cont"
+  old_val = match.group(2)
+  if not old_val.isdigit(): old_val = "*"
+
+  print "Loc: " + match.group(1) + ", old_val: " + old_val + ", new_val: " + match.group(3)
+
+def do_patch_file (filename):
+  try:
+    patch_file = open(dirs.media + "patches/" + filename, "r")
+  except IOError:
+    print filename + " not found. Skipping."
+    return
+
+  com_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
+  com_parse = re.compile(com_parse_str)
+
+  special_commands = {"ODT": parse_odt}
+
+  inside_a_command = False
+  the_command = None
+  
+  for line in patch_file:
+    line = line.rstrip()
+    if line == "": continue
+    elif line[0] == '#': print line
+    elif inside_a_command:
+      retval = the_command (line)
+      if retval == "break":
+        inside_a_command = False
+    elif line[0] == '.':        # New OS/8 Command
+      match = com_parse.match(line)
+      if match == None:
+        print "Failed OS/8 command parse of: " + line
+        continue
+      com = match.group(1)
+      rest = match.group(2)
+      print "Command: " + com + ", Args: " + rest
+
+      if com in special_commands:
+        inside_a_command = True
+        the_command = special_commands[com]
+
+      
+
+def make_patch (args):
+  manifest_filename = "patch_list.txt"
+  manifest = open (dirs.media + "patches/" + manifest_filename, "r")
+  
+  for line in manifest:
+    if line == "": continue
+    filename = line.strip()
+    print filename
+    do_patch_file (filename)
 
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 
 def main ():
   # Parse the command line
-  allowed_acts = ["all", "bin", "src"]
+  allowed_acts = ["all", "bin", "src", "patch"]
+  do_all_acts = ["bin", "src"]    # Just do bin and src if act is "all".
+  
   ap = argparser.ArgParser (allowed_acts)
   global progmsg
   progmsg = not ap.args.verbose
@@ -513,7 +579,7 @@ def main ():
     if first_act == None: first_act = act
 
     if act == "all":
-      for this in allowed_acts:
+      for this in do_all_acts:
         acts[this] = True
       break
     acts[act] = True
@@ -527,6 +593,7 @@ def main ():
 
   if acts["bin"]: make_bin (s, ap.args)
   if acts["src"]: make_src (s, ap.args)
+  if acts["patch"]: make_patch (ap.args)
   
   s.quit ()
   if progmsg: print "Done!"
