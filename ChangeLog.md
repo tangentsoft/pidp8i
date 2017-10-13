@@ -35,13 +35,30 @@
 
     -   John Comeau's CHECKMO-II chess program is installed by default.
 
-    -   The FORTRAN II and FORTRAN IV compilers, runtimes, and libraries
-        can be disabled if not wanted.
+    -   All of the above features can be disabled if not wanted, as well
+        as several features present on the old `os8.rk05` disk: FORTRAN
+        IV, FORTRAN II, Kermit-12, and the BASIC game and demo programs.
 
-    -   Kermit-12 can be left off the disk if not wanted.
+        You can disable these features individually or you can disable
+        all of them with the new `configure --os8-minimal` feature,
+        which gets you a nearly bare-bones OS/8 installation with lots
+        of spare disk space with which you can do what *you* want.
 
-    -   The OS/8 BASIC games and demo programs (`*.BA`) can be left off
-        if not wanted.
+    -   Added a new "blinkenlights" demo program that drives SIMH from
+        the outside, running a TECO macro under OS/8 which calculates
+        *pi* to about 20 digits at a very slow rate, producing a display
+        that manages to land somewhere between the random display of
+        [Deeper Thought][dt2vk] while still varying considerably more
+        than simple demos like our preexisting IF=5 demo script.
+
+        This script, called `bin/teco-pi-demo`, is also included as a
+        demonstration of how an end-user program can reuse the
+        technology that we developed to automatically build the custom
+        OS/8 disk images described above to achieve different ends.
+        Perhaps you have some other program you'd like to run within
+        SIMH in an automated fashion?  This shows one way how, and
+        demonstrates a pre-built and tested set of tools for achieving
+        it.
 
     -   By default, SIMH no longer folds lowercase input and output to
         uppercase.  Instead, we apply patches to OS/8's command
@@ -222,6 +239,7 @@
 
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/cc8/README.md
+[dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
 [os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
 [uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
