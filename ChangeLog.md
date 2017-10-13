@@ -44,22 +44,6 @@
         which gets you a nearly bare-bones OS/8 installation with lots
         of spare disk space with which you can do what *you* want.
 
-    -   Added a new "blinkenlights" demo program that drives SIMH from
-        the outside, running a TECO macro under OS/8 which calculates
-        *pi* to about 20 digits at a very slow rate, producing a display
-        that manages to land somewhere between the random display of
-        [Deeper Thought][dt2vk] while still varying considerably more
-        than simple demos like our preexisting IF=5 demo script.
-
-        This script, called `bin/teco-pi-demo`, is also included as a
-        demonstration of how an end-user program can reuse the
-        technology that we developed to automatically build the custom
-        OS/8 disk images described above to achieve different ends.
-        Perhaps you have some other program you'd like to run within
-        SIMH in an automated fashion?  This shows one way how, and
-        demonstrates a pre-built and tested set of tools for achieving
-        it.
-
     -   By default, SIMH no longer folds lowercase input and output to
         uppercase.  Instead, we apply patches to OS/8's command
         processor and its BASIC implementation to up-case input, since
@@ -214,6 +198,21 @@
     files.  This program was written to ease the movement of FOCAL
     program text between SIMH and its host OS, but they should prove
     useful for other similar tasks.
+
+*   Added a new "blinkenlights" demo program that drives SIMH from the
+    outside, running a TECO macro under OS/8 which calculates *pi* to
+    about 20 digits at a very slow rate, producing a display that
+    manages to land somewhere between the random default display of
+    [Deeper Thought][dt2vk] and the clear, boring patterns of our
+    preexisting IF=5 demo script.
+
+    This script, called `bin/teco-pi-demo`, is also included as a
+    demonstration of how an end-user program can reuse the technology
+    that we developed to automatically build the custom OS/8 disk images
+    described above to achieve different ends.  Perhaps you have some
+    other program you'd like to run within SIMH in an automated fashion?
+    This shows one way how, and demonstrates a pre-built and tested set
+    of tools for achieving it.
 
 *   Fixed the order of initialization in the GPIO setup code for the
     James L-W serial mod case.  Fix by Dylan McNamee.
