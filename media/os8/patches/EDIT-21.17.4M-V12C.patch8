@@ -1,0 +1,14 @@
+# EDIT.SV   "V"   OPTION   WILL   NOT   WORK   WITH   LPT   (RY)
+# 
+# The "V" option of EDIT.SV will not work when the LPT interface is the
+# parallel port of the DKC8-AA I/O option board. Install the following patch
+# and   EDIT   will   be   upgraded   from  V12B   to   V12C.
+
+.GET SYS EDIT
+.ODT
+2713/6666 5374
+2774/xxxx 7040;6574;5314
+2714/6661 6570
+2372/0302 0303
+\c
+.SAVE SYS EDIT.SV
