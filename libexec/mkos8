@@ -384,7 +384,7 @@ def make_bin (s, args):
   s.send_cmd ("detach dt1")
   s.send_cmd ("boot rk0")     # must do: boot media just went away
   s.back_to_cmd("\.")
-  os.remove(boot_dt_path)
+  if os.path.isfile(boot_dt_path): os.remove(boot_dt_path)
 
   if progmsg: print "Performing remaining copies/installs..."
   do_all_copyins (s, bin_copyins)
