@@ -592,6 +592,17 @@ exits U/W FOCAL and returns you to OS/8, just as if you had hit
 <kbd>Ctrl-C</kbd>.
 
 
+## <a id="fsf"></a>FOCAL Statement Functions
+
+This appears to be the same thing [the Manual][uwfm] calls Program
+Defined Functions. Therefore, you may look on the material beginning on
+page 63 of [the DECUS submission][uwfd] as just another take on the same
+issue. Some of the examples are more enlightening than the one in the
+manual. The first example in the DECUS submission, `F(EXP)`, is more
+robustly coded than the same function in the Manual; comparing the two
+is instructive.
+
+
 ## `FRA` Built-In Function
 
 This function is not documented in [the Manual][uwfm], but it is
