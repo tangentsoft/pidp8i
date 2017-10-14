@@ -240,7 +240,6 @@
 *   **TODO**
 
     *   Re-test out-of-tree build
-    *   Finish merging info from the [UWFD][uwfd]
     *   Write `PEP001.FC` and wiki article explaining it
     *   Write `PEP001.F4` and wiki article explaining it
     *   Write `PEP001.F2` and wiki article explaining it
@@ -254,7 +253,6 @@
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/cc8/README.md
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
 [os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
-[uwfd]:  http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
 
