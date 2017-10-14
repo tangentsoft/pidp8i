@@ -49,12 +49,13 @@ use Digest::SHA qw(sha256_hex);
 use File::Compare;
 use File::Copy;
 
+# Perl::Critic rules we're willing to bend
+## no critic (InputOutput::RequireBriefOpen)
+
 
 #### GLOBALS ###########################################################
 
-mkdir 'test';
-open my $testsMF, '>>', 'test/tests-manifest.txt'
-        or die "Cannot append to test manifest: $!\n";
+my $testsMF;
 my $currdsk = 'bin/os8v3d-bin.rk05';
 my $currdlz = 'bin/os8v3d-bin.rklz';
 my $currlog = 'obj/mkos8-bin.log';
@@ -90,6 +91,8 @@ sub sanitize_log
 
     close $if;
     close $of;
+
+    return;
 }
 
 
@@ -146,6 +149,8 @@ sub test
         system "diff -wu $testlog $faillog > $fdiff";
         print "MKOS8 ", uc($optdesc), " DIFFERS!  See $fdiff.\n";
     }
+
+    return;
 }
 
 
@@ -171,6 +176,11 @@ open my $opts, '-|', join('|', @cmd) or die "Failed to get os8 option set: $!\n"
 my @opts = <$opts>;
 close $opts;
 chomp @opts;
+
+# Init global resources
+mkdir 'test';
+open $testsMF, '>>', 'test/tests-manifest.txt'
+        or die "Cannot append to test manifest: $!\n";
 
 # Test all possible permutations of those options.
 subsets \&test, @opts;
