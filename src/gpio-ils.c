@@ -142,8 +142,8 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
         }
 
         // Light up LEDs
-        extern int swStop, swSingInst;
-        if (swStop || swSingInst) {
+        extern int swStop, swSingInst, suppressILS;
+        if (swStop || swSingInst || suppressILS) {
             // The CPU is in STOP mode, so show the current LED states
             // full-brightness using the same mechanism NLS uses.
             update_led_states (intervl * 60);
