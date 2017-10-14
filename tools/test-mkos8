@@ -50,7 +50,7 @@ use File::Compare;
 use File::Copy;
 
 # Perl::Critic rules we're willing to bend
-## no critic (InputOutput::RequireBriefOpen)
+## no critic (InputOutput::RequireBriefOpen )
 
 
 #### GLOBALS ###########################################################
@@ -75,16 +75,16 @@ sub sanitize_log
     while (<$if>) {
         # Don't care about the simulator's configuration line: as
         # far as we know, it doesn't affect the OS/8 disks.
-        s{^PiDP-8/I .*}{PiDP-8/I [test-mkos8]};
+        s{^PiDP-8/I .*}{PiDP-8/I [test-mkos8]}x;
 
         # These tend to happen during OS/8's keyboard busy-wait
         # loop, which means there's a 50/50 chance of which
         # instruction will happen to be running at the time of the
         # interrupt.  Doesn't matter which.
-        s{Simulation stopped, .*}{Simulation stopped.};
+        s{Simulation stopped, .*}{Simulation stopped.}x;
 
         # Squish configuration line in the INIT.TX output.
-        s{CONFIGURED BY .*}{CONFIGURED BY tester\@mkos8};
+        s{CONFIGURED BY .*}{CONFIGURED BY tester\@mkos8}x;
 
         print $of $_;
     }
