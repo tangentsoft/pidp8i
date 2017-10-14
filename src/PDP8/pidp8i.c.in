@@ -225,7 +225,8 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
                 case SIM_THROT_MCYC: ips = *pval * 1e6; break;
                 case SIM_THROT_KCYC: ips = *pval * 1e3; break;
                 case SIM_THROT_SPC: {
-                    extern int suppressILS = 1;
+                    extern int suppressILS;
+                    suppressILS = 1;
                     break;
                 }
             }
