@@ -146,6 +146,14 @@ static const ms_time_t debounce_ms = 50;    // time switch state must remain sta
 // these two flags stay 0.
 int swStop = 0, swSingInst = 0;
 
+// Flag to override ILS mode, forcing fallback to NLS mode.  Set when
+// the PDP-8 instruction decoding loop detects that we're using the
+// ratio form of SET THROTTLE, which prevents the use of ILS due to the
+// way instructions are executed in that mode.  Defined here rather than
+// in gpio-ils.c because we don't want to make code that sets this
+// conditional based on whether ILS is in fact actually enabled.
+int suppressILS = 0;
+
 // Flag set when sim_instr() exits due to some SIMH event like Ctrl-E,
 // which lets us resume from our imposed "pause" display state.
 int resumeFromInstructionLoopExit = 0;
