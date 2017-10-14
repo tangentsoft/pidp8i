@@ -314,6 +314,9 @@ run: $(OS8_BIN_RK05) $(SIM)
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
+test-mkos8:
+	tools/test-mkos8
+
 
 # Build the OS/8 binary media needed by 0.script.
 #
