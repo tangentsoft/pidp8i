@@ -71,14 +71,14 @@ OS/8 Handbook for a decoding guide.
 
 ## How to Use the Assembly Language Examples
 
-For each PAL8 assembly program in `examples/*.pal`, there are two
-additional files:
+For each PAL8 assembly program in `asm/*.pal` or `examples/*.pal`,
+there are two additional files:
 
 | Extension | Meaning
 -----------------------------
-| `*.pal`   | the PAL8 assembly source code for the program
-| `*.lst`   | the human-readable assembler output
-| `*.pt`    | the machine-readable assembler output (RIM format)
+| `*.pal`        | the PAL8 assembly source code for the program
+| `obj/*.lst`    | the human-readable assembler output
+| `bin/*-pal.pt` | the machine-readable assembler output (RIM format)
 
 There are three ways to run these on your PiDP-8/I, each starting with
 one of the above three files:
@@ -89,7 +89,7 @@ one of the above three files:
 2.  Toggle the program in from the front panel. I can recommend this
     method only for very short programs.
 
-3.  Copy the `*.pt` file to a USB stick and use the PiDP-8/I's
+3.  Copy the `*-pal.pt` file to a USB stick and use the PiDP-8/I's
     [automatic media mounting feature][howto]. This is the fastest method.
 
 I cover each of these options below, in the same order as the list
@@ -242,7 +242,7 @@ the last value you entered via SR above, 0206. That is the source of the
 ## Option 3: Loading a Program from Paper Tape
 
 The `palbart` assembly process described above also produces paper tape
-output files in RIM format in `bin/*.pt`.
+output files in RIM format in `bin/-pal*.pt`.
 
 The simplest way to load these assembly examples into your PiDP-8/I is
 to copy each such file to a USB stick, one file per stick.  Then, load
@@ -257,7 +257,7 @@ section of the PiDP-8/I documentation:
     will achieve the same end as toggling `Sing Step` while it's
     running. Reset the IF switches to 0.
 
-2.  Insert the USB stick containing the `*.pt` file you want to load
+2.  Insert the USB stick containing the `*-pal.pt` file you want to load
     into the Pi.
 
 3.  Set the DF switches (first brown group) to 001, then toggle `Sing

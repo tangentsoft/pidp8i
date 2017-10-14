@@ -123,14 +123,14 @@ LIBS = -lm -ldl -lpthread
 
 ASM_PTS     := $(wildcard @srcdir@/asm/*.pal)
 ASM_PTS     := $(subst @srcdir@/asm,bin,$(ASM_PTS))
-ASM_PTS     := $(ASM_PTS:.pal=.pt)
+ASM_PTS     := $(ASM_PTS:.pal=-pal.pt)
 FC_EX_PTS   := $(wildcard @srcdir@/examples/*.fc)
 FC_EX_PTS   := $(subst @srcdir@/examples,bin,$(FC_EX_PTS))
-FC_EX_PTS   := $(FC_EX_PTS:.fc=.pt)
+FC_EX_PTS   := $(FC_EX_PTS:.fc=-focal.pt)
 PAL_EX_PTS  := $(wildcard @srcdir@/examples/*.pal)
 PAL_EX_PTS  := $(subst @srcdir@/examples,bin,$(PAL_EX_PTS))
-PAL_EX_PTS  := $(PAL_EX_PTS:.pal=.pt)
-LISTINGS    := $(ASM_PTS:.pt=.lst) $(PAL_EX_PTS:.pt=.lst)
+PAL_EX_PTS  := $(PAL_EX_PTS:.pal=-pal.pt)
+LISTINGS    := $(ASM_PTS:-pal.pt=.lst) $(PAL_EX_PTS:-pal.pt=.lst)
 LISTINGS    := $(subst bin/,obj/,$(LISTINGS))
 BOOTSCRIPTS := $(LISTINGS:.lst=.script)
 BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
@@ -382,20 +382,21 @@ obj/%.o: @srcdir@/cc8/cross/%.c
 	@rm -f obj/$*.d.tmp
 
 # Rule for building PAL assembly language programs in asm/*.pal.
-obj/%.lst bin/%.pt: @srcdir@/asm/%.pal bin/palbart
+obj/%.lst bin/%-pal.pt: @srcdir@/asm/%.pal bin/palbart
 	bin/palbart -lr $< || cat obj/$*.err
 	mv @srcdir@/asm/$*.lst obj
-	mv @srcdir@/asm/$*.rim bin/$*.pt
+	mv @srcdir@/asm/$*.rim bin/$*-pal.pt
 
 # Ditto for those in examples/*.pal.
-obj/%.lst bin/%.pt: @srcdir@/examples/%.pal bin/palbart
+obj/%.lst bin/%-pal.pt: @srcdir@/examples/%.pal bin/palbart
 	bin/palbart -lr $< || cat obj/$*.err
 	mv @srcdir@/examples/$*.lst obj
-	mv @srcdir@/examples/$*.rim bin/$*.pt
+	mv @srcdir@/examples/$*.rim bin/$*-pal.pt
 
-# Rule for converting ASCII FOCAL examples in examples/*.fc to bin/*.pt.
-bin/%.pt: @srcdir@/examples/%.fc bin/txt2ptp
-	bin/txt2ptp < $< > bin/$*.pt
+# Rule for converting ASCII FOCAL examples in examples/*.fc to
+# bin/*-focal.pt.
+bin/%-focal.pt: @srcdir@/examples/%.fc bin/txt2ptp
+	bin/txt2ptp < $< > bin/$*-focal.pt
 
 # Rule for translating PAL assembly language program listings to SIMH
 # boot scripts.

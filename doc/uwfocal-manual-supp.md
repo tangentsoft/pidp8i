@@ -191,16 +191,22 @@ off.
 
 First we must create that paper tape. If you place your FOCAL source
 code in `examples/*.fc`, you can simply type `make` at the top level of
-the PiDP-8/I source tree to have it translated to `bin/*.pt` with the
-same base name. (This is done by Bill Cattey's `txt2ptp` program; there
-is also the inverse filter, `ptp2txt`.) We'll work with the provided
-`examples/tratbl.fc` example program, which got translated to
-`bin/tratbl.pt` when the PiDP-8/I software was built.
+the PiDP-8/I source tree to have it translated to `bin/*-focal.pt` with
+the same base name.
+
+(This is done by Bill Cattey's `txt2ptp` program; there is also the
+inverse filter, `ptp2txt`. We include the `-focal` tag to distinguish
+these files from `*-pal.pt` files produced from `*.pal` source files by
+a similar process.)
+
+We'll work with the provided `examples/tratbl.fc` example program,
+which got translated to `bin/tratbl-focal.pt` when the PiDP-8/I software
+was built.
 
 To attach that paper tape to SIMH's paper tape reader device, hit
 <kbd>Ctrl-E</kbd> to get to the SIMH command prompt, then:
 
-    sim> att ptr bin/tratbl.pt
+    sim> att ptr bin/tratbl-focal.pt
     sim> c
 
 On re-entering the simulator with the `c` ("continue") command, we can
@@ -247,12 +253,12 @@ possibilities:
 
 3.  You saved the FOCAL text out on the host side with Unix line
     endings, so on `TYPE`ing it at the OS/8 command prompt to check it,
-    you got stair-stepped output. OS/8 expects CR+LF line endings, also
-    called DOS line endings, though OS/8 long precedes MS-DOS, and the
-    teletype based design of ASCII that made CR+LF a sensible way of
-    ending lines in a text file long precedes *OS/8*. Fix the line
-    endings, then say "make" to rebuild the `*.pt` file, then reattach
-    the tape, and try again.
+    you got stair-stepped output. OS/8 expects CR+LF line endings,
+    also called DOS line endings, though OS/8 long precedes MS-DOS,
+    and the teletype based design of ASCII that made CR+LF a sensible
+    way of ending lines in a text file long precedes *OS/8*. Fix the
+    line endings, then say "make" to rebuild the `*-focal.pt` file,
+    then reattach the tape, and try again.
 
 Once you make it through that gauntlet, loading the ASCII program text
 into U/W FOCAL is just as above: `O I TRATBL`.
