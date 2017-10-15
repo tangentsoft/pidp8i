@@ -354,7 +354,7 @@ $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
 # Explained at http://scottmcpeak.com/autodepend/autodepend.html
 #
 # Reflect any changes here into near-duplicate below!
-obj/%.o: @srcdir@/src/%.c @srcdir@/cc8/cross/%.c
+obj/%.o: @srcdir@/src/%.c
 	$(CC)  -c $(CFLAGS) @srcdir@/src/$*.c -o obj/$*.o
 	$(CC) -MM $(CFLAGS) @srcdir@/src/$*.c  > obj/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
@@ -368,6 +368,17 @@ obj/%.o: @srcdir@/src/%.c @srcdir@/cc8/cross/%.c
 obj/%.o: src/%.c
 	$(CC)  -c $(CFLAGS) src/$*.c -o obj/$*.o
 	$(CC) -MM $(CFLAGS) src/$*.c  > obj/$*.d
+	@mv -f obj/$*.d obj/$*.d.tmp
+	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
+		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
+	@rm -f obj/$*.d.tmp
+
+# Another near-duplicate for the PDP-8 simulator.  First set above
+# doesn't catch these.
+obj/PDP8/%.o: @srcdir@/src/PDP8/%.c
+	$(CC)  -c -w $(CFLAGS) @srcdir@/src/PDP8/$*.c -o obj/PDP8/$*.o
+	$(CC) -MM -w $(CFLAGS) @srcdir@/src/PDP8/$*.c  > obj/PDP8/$*.d
 	@mv -f obj/$*.d obj/$*.d.tmp
 	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
 	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
