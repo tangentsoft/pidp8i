@@ -447,6 +447,9 @@ bin/ptp2txt: obj/ptp2txt.o
 	$(CC) -o $@ $^
 	ln -f bin/ptp2txt bin/txt2ptp
 
+bin/txt2ptp: bin/ptp2txt
+	ln -f bin/ptp2txt bin/txt2ptp
+
 bin/deeper: obj/deeper.o obj/gpio-@LED_DRIVER_MODULE@ls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
