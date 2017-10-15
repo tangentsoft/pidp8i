@@ -302,6 +302,12 @@ mediainstall: instdirs
 	@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
 	@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
+# No-dependencies version of the bin/os8v3d-bin.rk05 target used by
+# tools/test-mkos8, because there's no profit in it rebuilding the
+# simulator on each iteration.
+os8-bin:
+	$(MKOS8)@MKOS8_OPTS@ bin
+
 reconfig:
 	@AUTOREMAKE@
 
