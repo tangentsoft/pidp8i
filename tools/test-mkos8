@@ -56,13 +56,13 @@ use Getopt::Std;
 
 #### GLOBALS ###########################################################
 
-my $testsMF;
+my $tests_mf;
 my $currdsk = 'bin/os8v3d-bin.rk05';
 my $currdlz = 'bin/os8v3d-bin.rklz';
 my $currlog = 'obj/mkos8-bin.log';
 
 # Command line option values
-my ($dryRun, $generateOnly);
+my ($dry_run, $generate_only);
 
 
 #### sanitize_log ######################################################
@@ -118,7 +118,7 @@ sub test
     my $testdlz = "$hdir/last.rklz";
 
     # Skip this one if it already exists and we're in -g mode.
-    if ($generateOnly && -e $hdir) {
+    if ($generate_only && -e $hdir) {
         print "Skipping $hash; already done.\n";
         return;
     }
@@ -126,7 +126,7 @@ sub test
     # Do the test
     my $optdesc = $optstr || "default media";
     print "Configuring $optdesc...\n";
-    return if $dryRun;
+    return if $dry_run;
     mkdir $hdir;
     system "./configure $optstr > test/cfg.log 2>&1"
             and die "Failed to configure $optdesc!\n";
@@ -148,7 +148,7 @@ sub test
 
         # Log the mapping between the hash and the options it
         # represents, so the user can reverse it.
-        print $testsMF "$hash  $optdesc\n";
+        print $tests_mf "$hash  $optdesc\n";
     }
     elsif (compare ($currdlz, $testdlz) == 0) {
         print "mkos8 $optdesc test passed.\n";
@@ -170,8 +170,8 @@ sub test
 # Parse command line
 my %clopts;
 getopts('gn', \%clopts) or die "Failed to parse command line!\n";
-$dryRun = $clopts{n};
-$generateOnly = $clopts{g};
+$dry_run = $clopts{n};
+$generate_only = $clopts{g};
 
 # Get all current --*-os8-* options, filtering out those we know should
 # not be tried for this:
@@ -196,7 +196,7 @@ chomp @cfgOpts;
 
 # Init global resources
 mkdir 'test';
-open $testsMF, '>>', 'test/tests-manifest.txt'
+open $tests_mf, '>>', 'test/tests-manifest.txt'
         or die "Cannot append to test manifest: $!\n";
 
 # Test all possible permutations of those options.
