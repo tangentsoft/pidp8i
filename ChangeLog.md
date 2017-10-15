@@ -239,7 +239,6 @@
 
 *   **TODO**
 
-    *   Re-test out-of-tree build
     *   Write `PEP001.FC` and wiki article explaining it
     *   Write `PEP001.F4` and wiki article explaining it
     *   Write `PEP001.F2` and wiki article explaining it

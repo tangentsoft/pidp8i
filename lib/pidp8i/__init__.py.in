@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 ########################################################################
-# __init__.py - pidp8i module initialization
+# __init__.py.in - pidp8i module initialization
+#
+# This file is a *.in file only because dirs.py.in is in this directory,
+# and both *.in outputs need to land in the same directory for Python
+# to find it.  That happens naturally when building in-tree, but we
+# need this bit of *.in trickery when building out-of-tree.
 #
 # Copyright © 2017 by Warren Young
 #
