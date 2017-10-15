@@ -213,10 +213,11 @@ install: all instdirs
 	for f in $(BINS) ; do @INSTALL@ -m 755 -D -s $$f @prefix@/$$f ; done
 	( cd @prefix@/bin ; ln -f ptp2txt txt2ptp )
 	@INSTALL@ -m 755 @srcdir@/bin/pidp8i @prefix@/bin
-	test -x /sbin/setcap && \
+	@(test -x /sbin/setcap && \
 		for f in @prefix@/bin/pidp8i-* ; do \
 			/sbin/setcap 'cap_sys_nice=eip' $$f ; \
-		done || true
+		done \
+	) || true
 	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
 
 	@# If this is a Debian-type system, install needed helper programs
@@ -257,7 +258,8 @@ install: all instdirs
 		test -n "$$SUDO_USER" -a -w "/home/$$SUDO_USER/$$p" && \
 			! grep -qF "@ABSPREFIX@/share/man" "/home/$$SUDO_USER/$$p" && \
 			echo "export MANPATH=\$$MANPATH:@ABSPREFIX@/share/man" >> "/home/$$SUDO_USER/$$p" ; \
-	done) || true
+		done \
+	) || true
 
 	@# If serial mod is disabled, turn off serial console and kgdb stuff
 	@# in case they were enabled previously, else they will fight with
