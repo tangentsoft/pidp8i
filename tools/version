@@ -32,8 +32,17 @@
 use strict;
 use warnings;
 
-use Cwd 'abs_path';
+use Cwd qw(abs_path getcwd);
 use File::Basename;
+
+# Give dummy result when run via test-mkos8.  A proper version string
+# isn't helpful, and fossil isn't intended to be run in parallel
+# multiple times in the same directory.  We could retry several times
+# until we succeed, but again, it doesn't really help us to bother.
+my $cwd = getcwd;
+if ($cwd =~ m{/test/tmp/}x) {
+    print "test:id[00000000]\n";
+}
 
 my $topdir = dirname($0) . '/..';
 if (-e "$topdir/.fslckout") {

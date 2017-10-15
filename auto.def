@@ -342,7 +342,7 @@ set status [catch {exec $cmd} version]
 if {$status != 0} {
     # The most likely cause for tools/version to fail is that the repo
     # file has become disassociated from the local checkout directory.
-    set sql "select value from vvar where name=\"repository\""
+    set sql ".timeout 5000 ; select value from vvar where name=\"repository\""
     set cmd "fossil sql --no-repository $srcdir/.fslckout '$sql'"
     set status [catch {exec /bin/sh -c $cmd} path]
     if {$status != 0} {
