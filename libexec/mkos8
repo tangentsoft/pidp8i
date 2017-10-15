@@ -514,22 +514,36 @@ def parse_odt (s, com, line):
   loc = match.group(1)
   old_val = match.group(2)
   new_val = match.group(3)
-  if not old_val.isdigit(): old_val = ".*"
-
-  print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
+  expect_val_str = "[0-7]{4} "
+  
+  if debug: print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
   s.os8_send_str (loc + "/")
-  s._child.expect(old_val)
+  s._child.expect(expect_val_str)
+
+  print "After: " + s._child.after
+
+  if old_val.isdigit():          # We need to check old value
+    found_val = s._child.after.strip()
+    if found_val != old_val:
+      print "Old value: " + found_val + " does not match " + old_val + ". Aborting patch."
+      # Abort out of ODT back to the OS/8 Monitor
+      s.os8_send_ctrl('C')
+      return "err"
+
   s.os8_send_line (new_val)
+  return "cont"
 
 
 #### do_patch_file #####################################################
 
 def do_patch_file (s, filename):
+  global progmsg
+  
   try:
     patch_file = open(dirs.media + "patches/" + filename, "r")
   except IOError:
     print filename + " not found. Skipping."
-    return
+    return -1
 
   com_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
   com_parse = re.compile(com_parse_str)
@@ -543,20 +557,21 @@ def do_patch_file (s, filename):
   for line in patch_file:
     line = line.rstrip()
     if line == "": continue
-    elif line[0] == '#': print line
+    elif line[0] == '#': continue     # Ignore Comments
     elif inside_a_command:
       retval = the_command_parser (s, the_command, line)
       if retval == "break":
         inside_a_command = False
         s.os8_send_ctrl('C')
+      elif retval == "err":
+        return -1
     elif line[0] == '.':        # New OS/8 Command
       match = com_parse.match(line)
       if match == None:
-        print "Failed OS/8 command parse of: " + line
+        print "Ignoring failed OS/8 command parse of: " + line
         continue
       com = match.group(1)
       rest = match.group(2)
-      print "Command: " + com + ", Args: " + rest
 
       if com in special_commands:
         inside_a_command = True
@@ -565,8 +580,11 @@ def do_patch_file (s, filename):
 
       # We carefully separate com and args
       # But don't make much use of that yet.
+      if progmsg: print line
       s.os8_send_cmd ("\.", line[1:])  # Skip Prompt.
 
+  # Done.  Signal success.
+  return 0
       
 #### make_patch ########################################################
 
@@ -596,14 +614,18 @@ def make_patch (s, args):
   
   for line in manifest:
     if line == "": continue
+    if line[0] == '#': continue      # Allow commenting out files
     filename = line.strip()
-    print filename
-    do_patch_file (s, filename)
+    if progmsg:
+      print "Applying patch file: " + filename
+    retval = do_patch_file (s, filename)
+    if retval == 0: print "Success."
+    else: print "Failed."
 
   # Finish up
-  if progmsg: print "Cleaning up..."
-  s.os8_squish ("SYS")
-  s.os8_squish ("DSK")
+  print "Cleaning up..."
+  # s.os8_squish ("SYS")
+  # s.os8_squish ("DSK")
   s.back_to_cmd("\.")
   s.send_cmd ("detach rk0")
 
