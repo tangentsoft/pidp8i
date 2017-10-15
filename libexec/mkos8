@@ -509,8 +509,9 @@ def parse_odt (s, com, line):
   if line == "\\c": return "break"
   match = odt_parse.match(line)
   if match == None:
-    print "Skipping bad ODT line: " + line
-    return "cont"
+    print "Aborting because of bad ODT line: " + line
+    s.os8_send_ctrl('C')
+    return "err"
   loc = match.group(1)
   old_val = match.group(2)
   new_val = match.group(3)
