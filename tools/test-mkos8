@@ -136,7 +136,7 @@ sub test
 
     # Quickly compress the test disk: we don't want to store all the
     # "air" in an RK05 in our test corpus.
-    system("lzma < $currdsk > $currdlz");
+    system("lz4 $currdsk > $currdlz");
 
     if (not -f $testlog or not -f $testdlz) {
         # This test hasn't run here yet, so blindly assume its
