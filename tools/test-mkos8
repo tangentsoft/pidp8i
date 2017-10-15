@@ -48,6 +48,7 @@ use Math::Subsets::List;
 use Digest::SHA qw(sha256_hex);
 use File::Compare;
 use File::Copy;
+use Getopt::Std;
 
 # Perl::Critic rules we're willing to bend
 ## no critic (InputOutput::RequireBriefOpen )
@@ -59,6 +60,9 @@ my $testsMF;
 my $currdsk = 'bin/os8v3d-bin.rk05';
 my $currdlz = 'bin/os8v3d-bin.rklz';
 my $currlog = 'obj/mkos8-bin.log';
+
+# Command line option values
+my ($dryRun, $generateOnly);
 
 
 #### sanitize_log ######################################################
@@ -112,11 +116,18 @@ sub test
     my $hdir = "test/$hash";
     my $testlog = "$hdir/last.log";
     my $testdlz = "$hdir/last.rklz";
-    mkdir $hdir;
+
+    # Skip this one if it already exists and we're in -g mode.
+    if ($generateOnly && -e $hdir) {
+        print "Skipping $hash; already done.\n";
+        return;
+    }
 
     # Do the test
     my $optdesc = $optstr || "default media";
     print "Configuring $optdesc...\n";
+    return if $dryRun;
+    mkdir $hdir;
     system "./configure $optstr > test/cfg.log 2>&1"
             and die "Failed to configure $optdesc!\n";
     print "Building...\n";
@@ -156,6 +167,12 @@ sub test
 
 #### main ##############################################################
 
+# Parse command line
+my %clopts;
+getopts('gn', \%clopts) or die "Failed to parse command line!\n";
+$dryRun = $clopts{n};
+$generateOnly = $clopts{g};
+
 # Get all current --*-os8-* options, filtering out those we know should
 # not be tried for this:
 #
@@ -172,10 +189,10 @@ my @cmd = (
     "cut -f1 -d' '",
     "grep -v -e 'os8-minimal' -e 'os8-src' -e 'os8-focal\$'"
 );
-open my $opts, '-|', join('|', @cmd) or die "Failed to get os8 option set: $!\n";
-my @opts = <$opts>;
-close $opts;
-chomp @opts;
+open my $ocmd, '-|', join('|', @cmd) or die "Failed to get os8 option set: $!\n";
+my @cfgOpts = <$ocmd>;
+close $ocmd;
+chomp @cfgOpts;
 
 # Init global resources
 mkdir 'test';
@@ -183,4 +200,4 @@ open $testsMF, '>>', 'test/tests-manifest.txt'
         or die "Cannot append to test manifest: $!\n";
 
 # Test all possible permutations of those options.
-subsets \&test, @opts;
+subsets \&test, @cfgOpts;
