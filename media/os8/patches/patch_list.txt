@@ -1,3 +1,60 @@
-# Foo
+# All but one of these patches have been verified
+# by reading the source code.
+# The patches that remain commented out are not recommended
+# and the reason why appears in the line above it.
+# Total of 44 of 54 So far.
+BASIC.UF-31.5.1M-V5B.patch8
+BATCH-31.23.1M-v7B.patch8
+BLOAD-31.10.1M-v5B.patch8
+BRTS-31.11.1M-v5B.patch8
+# BRTS 31.11.2O disables 8th bit parity. Recommended.
+BRTS-31.11.2-O.patch8
+# BRTS 31.11.3O enables 132 column output. Recommended.
+BRTS-31.11.3-O.patch8
+BRTS-31.11.5-x.patch8
+CREF-21.15.1M-v5B.patch8
+CREF-21.15.2M-v5C.patch8
 EDIT-21.17.1M-v12B.patch8
 EDIT-21.17.2M-v12C.patch8
+EDIT-21.17.3M-v12D.patch8
+# EDIT 21.17.4 overwrites patch in 21.17.2 and is NOT recommended.
+# EDIT-21.17.4M-V12C.patch8
+F4-21.1.2M-v4B.patch8
+F4-51.3.1M-v4C.patch8
+F4-51.3.2M-v4x.patch8
+FOTP-21.19.1M-V9B.patch8
+# Can't verify FRTS because I don't know how to get a
+# .LS file to verify against.  Nevertheless the patch is recommended.
+FRTS-51.3.3-O.patch8
+FUTIL-31.21.1M-v7B.patch8
+FUTIL-31.21.2M-v7D.patch8
+# FUTIL 31.21.3O switches XS format. Recommend to leave it out.
+# FUTIL-31.21.3O.patch8
+MCPIP-21.21M-v6B.patch8
+MSBAT-31.22.1M-v3B.patch8
+PAL8-21.22.1M-v10B.patch8
+PAL8-21.22.2M-v10C.patch8
+PAL8-21.22.3M-v10D.patch8
+# Will verify this tomorrow
+PIP-21.23.1M-v12B.patch8
+PIP10-21.24.1M-v3B.patch8
+SABR-21.91.1M-v18B.patch8
+SET-21.26.1M-v1C.patch8
+SET-21.26.2M-v1D.patch8
+SET-21.26.3M-v1E.patch8
+# TECO 31.20.1 Unconditional no case flagging. Not recommended
+# TECO-31.20.01O.patch8
+# TECO 31.20.2 Turns off verbose errors. Not recommended.
+# TECO-31.20.02O.patch8
+# TECO 31.20.3 Turns off Yank overwrite warning. Not recommended.
+# TECO-31.20.03O.patch8
+# TECO 31.20.4 Special support for VT05. Not recommended.
+# TECO-31.20.04O.patch8
+TECO-31.20.05M-v5A.patch8
+TECO-31.20.06M-v5B.patch8
+TECO-31.20.07M.v5C.patch8
+TECO-31.20.08M-v5.04.patch8
+TECO-31.20.10M-5.05.patch8
+TECO-31.20.11M-v5.06.patch8
+TECO-31.20.12M-v5.07.patch8
+TECO-31.20.13M-v5.08.patch8

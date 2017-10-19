@@ -521,8 +521,6 @@ def parse_odt (s, com, line):
   s.os8_send_str (loc + "/")
   s._child.expect(expect_val_str)
 
-  print "After: " + s._child.after
-
   if old_val.isdigit():          # We need to check old value
     found_val = s._child.after.strip()
     if found_val != old_val:
