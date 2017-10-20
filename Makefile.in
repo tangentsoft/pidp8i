@@ -102,20 +102,20 @@ SIM_OBJS = \
 	obj/sim_video.o
 
 CC8_OBJS = \
-	obj/code8.o \
-	obj/data.o \
-	obj/error.o \
-	obj/expr.o \
-	obj/function.o \
-	obj/gen.o \
-	obj/io.o \
-	obj/lex.o \
-	obj/main.o \
-	obj/preproc.o \
-	obj/primary.o \
-	obj/stmt.o \
-	obj/sym.o \
-	obj/while.o
+	obj/cc8/cross/code8.o \
+	obj/cc8/cross/data.o \
+	obj/cc8/cross/error.o \
+	obj/cc8/cross/expr.o \
+	obj/cc8/cross/function.o \
+	obj/cc8/cross/gen.o \
+	obj/cc8/cross/io.o \
+	obj/cc8/cross/lex.o \
+	obj/cc8/cross/main.o \
+	obj/cc8/cross/preproc.o \
+	obj/cc8/cross/primary.o \
+	obj/cc8/cross/stmt.o \
+	obj/cc8/cross/sym.o \
+	obj/cc8/cross/while.o
 
 ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
