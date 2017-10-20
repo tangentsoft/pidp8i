@@ -117,6 +117,11 @@ CC8_OBJS = \
 	obj/cc8/cross/sym.o \
 	obj/cc8/cross/while.o
 
+MISC_OBJS = \
+	obj/ptp2txt.o \
+	obj/scanswitch.o \
+	obj/test.o
+
 ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
@@ -191,11 +196,10 @@ clean:
 		$(OUTFILES) $(OS8_RK05S) $(ADF) \
 		bin/*.save \
 		tags \
-		obj/*.d \
-		obj/*.o \
 		obj/*.log \
-		obj/PDP8/*.d \
+		obj/mkos8.opts \
 		@srcdir@/examples/*.err
+	@find obj \( -name \*.o -o -name \*.d \) -delete
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
 
 distclean: clean
@@ -433,5 +437,5 @@ endif
 # may have changed.
 src/gpio-common.c: @srcdir@/tools/version
 
--include $(SIM_OBJS:.o=.d) $(CC8_OBJS:.o=.d) obj/scanswitch.d
+-include $(SIM_OBJS:.o=.d) $(CC8_OBJS:.o=.d) $(MISC_OBJS:.o=.d) 
 -include $(ADF)
