@@ -89,6 +89,7 @@ for my $sdir (@dirs) {
 
     my $odir = 'obj/' . $sdir;
     $odir =~ s{/src}{};
+    mkdir $odir;
 
     my $cflags = uc $sdir;
     $cflags =~ s{SRC}{};
