@@ -38,7 +38,6 @@ use strict;
 use warnings;
 
 use Cwd;
-use File::Path qw(make_path);
 
 # The basic rule set we generate, which is repeatedly modified and
 # written to the output file.
@@ -89,7 +88,6 @@ for my $sdir (@dirs) {
 
     my $odir = 'obj/' . $sdir;
     $odir =~ s{/src}{};
-    make_path $odir;
 
     my $cflags = uc $sdir;
     $cflags =~ s{SRC}{};

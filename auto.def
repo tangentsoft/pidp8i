@@ -184,25 +184,17 @@ if {[opt-bool os8-src]} {
 }
 define MKOS8_OPTS $mkos8_opts
 
-# High-level definitions
-set builddir [get-define builddir]
-set srcdir [get-define srcdir]
-set cores [exec $srcdir/tools/corecount]
-
-# Generate autodependency Makefile rule sets.  Implicitly creates obj/*
-# subtree, if it doesn't already exist.  That is why we do this early.
-set status [catch {exec $srcdir/tools/mkadrules $srcdir src src/PDP8 cc8/cross} result]
-if {$status == 0} {
-    msg-result $result
-} else {
-    user-error "Failed to generate autodependency rules: $result!"
-}
-
 # Force a rebuild of the OS/8 media if the option set changed.
+if {![file exists "obj"]} { file mkdir "obj" }
 write-if-changed "obj/mkos8.opts" $mkos8_opts {
     file delete -force bin/os8v3d-bin.rk05
     msg-result "mkos8 options changed; will rebuild OS/8 disk images."
 }
+
+# High-level definitions
+set builddir [get-define builddir]
+set srcdir [get-define srcdir]
+set cores [exec $srcdir/tools/corecount]
 
 # Translate --throttle value to a SIMH command
 set tv [opt-val throttle]
@@ -403,6 +395,15 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
     set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
     msg-result "Found Deeper Thought; building it against $ls GPIO module"
     define BUILD_DEEPER_THOUGHT 1
+}
+
+# Generate autodependency Makefile rule sets.
+# subtree, if it doesn't already exist.  That is why we do this early.
+set status [catch {exec $srcdir/tools/mkadrules $srcdir src src/PDP8 cc8/cross} result]
+if {$status == 0} {
+    msg-result $result
+} else {
+    user-error "Failed to generate autodependency rules: $result!"
 }
 
 # Write outputs.
