@@ -82,7 +82,6 @@ else {
     $rule =~ s{SRCDIR/}{}g;
     print $ad $rule, "\n";
 }
-$template =~ s{SRCDIR}{$srcdir}g;
 
 # Write rule set for each dir passed
 for my $sdir (@dirs) {
@@ -101,6 +100,7 @@ for my $sdir (@dirs) {
     $rule =~ s{obj/}{$odir/}g;
     $rule =~ s{src/}{$sdir/}g;
     $rule =~ s{CFLAGS}{$cflags}g;
+    $rule =~ s{SRCDIR}{$srcdir}g;
     $rule =~ s{ \./}{ }g;
     print $ad $rule, "\n";
 }
