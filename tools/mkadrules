@@ -59,7 +59,7 @@ my $srcdir = shift @ARGV;
 die "Source tree $srcdir does not exist!\n" unless -d $srcdir;
 my @dirs = @ARGV;
 for (@dirs) {
-    die "Source subdir $_ does not exist!\n" unless -d;
+    die "Source subdir $_ does not exist!\n" unless -d "$srcdir/$_";
 }
 
 # Create the output file
