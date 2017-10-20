@@ -17,7 +17,7 @@
 # The following patch corrects this problem, by causing
 # only a warning bell to ring. This patch upgrades TECO to V5C.
 
-. GET SYS TECO
+.GET SYS TECO
 .ODT
 0365/ 4521 4552
 4573/ 0766 0767
