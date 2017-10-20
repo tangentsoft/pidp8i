@@ -384,11 +384,11 @@ obj/%.o: src/%.c
 obj/PDP8/%.o: @srcdir@/src/PDP8/%.c
 	$(CC)  -c -w $(CFLAGS) @srcdir@/src/PDP8/$*.c -o obj/PDP8/$*.o
 	$(CC) -MM -w $(CFLAGS) @srcdir@/src/PDP8/$*.c  > obj/PDP8/$*.d
-	@mv -f obj/$*.d obj/$*.d.tmp
-	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
-	@rm -f obj/$*.d.tmp
+	@mv -f obj/PDP8/$*.d obj/PDP8/$*.d.tmp
+	@sed -e 's|.*:|obj/PDP8/$*.o:|' < obj/PDP8/$*.d.tmp > obj/PDP8/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < obj/PDP8/$*.d.tmp | fmt -1 | \
+		sed -e 's/^ *//' -e 's/$$/:/' >> obj/PDP8/$*.d
+	@rm -f obj/PDP8/$*.d.tmp
 
 # Another near-duplicate for CC8, since it's off in a different subdir
 obj/%.o: @srcdir@/cc8/cross/%.c
