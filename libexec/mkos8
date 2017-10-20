@@ -500,14 +500,6 @@ def make_src (s, args):
   s.send_cmd ("detach rk1")
 
 
-#### parse_cd ##########################################################
-
-def parse_cd (com, line, debug):
-  # Send args to Command decoder first.
-  # Then perform com-specific parse.
-  return
-
-  
 #### parse_odt #########################################################
 
 def parse_odt (s, com, line, debug):
@@ -653,7 +645,7 @@ def do_patch_file (s, filename, debug):
 
       if com in special_commands:
         if com == "R":
-          # Run command is special Take arg as the command and run it.
+          # Run command is special.  Take arg as the command and run it.
           com = rest
         inside_a_command = True
         the_command = com
@@ -663,7 +655,9 @@ def do_patch_file (s, filename, debug):
       # But don't make much use of that yet.
       if progmsg and debug: print line
       s.os8_send_cmd ("\.", line[1:])  # Skip Prompt.
+
   patch_file.close()
+
   # Done.  Signal success.
   return 0
 
