@@ -38,11 +38,13 @@
 # that has been merged into this source base.
 SGCID=17903827bdb294f7e60d4c7f172bd6a1a71dfbd5
 
-CFLAGS = @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
+CFLAGS := @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
 	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
 	-D_GNU_SOURCE -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
+CC8_CROSS_CFLAGS = -w $(CFLAGS)
+PDP8_CFLAGS = -w $(CFLAGS)
 
 SIM = bin/pidp8i-sim
 BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch @CC8_CROSS@
@@ -177,6 +179,8 @@ OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
 
 CLTXT = /boot/cmdline.txt
 
+ADF := adrules.mk
+
 .PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
@@ -184,7 +188,7 @@ all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LIST
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
-		$(OUTFILES) $(OS8_RK05S) \
+		$(OUTFILES) $(OS8_RK05S) $(ADF) \
 		bin/*.save \
 		tags \
 		obj/*.d \
@@ -355,51 +359,6 @@ OS8_SRC_SRCS = $(MKOS8_SRCS) \
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
 	$(MKOS8)@MKOS8_OPTS@ src
 
-# Rule for compiling *.c to *.o and autogenerating dependency info.
-# Explained at http://scottmcpeak.com/autodepend/autodepend.html
-#
-# Reflect any changes here into near-duplicate below!
-obj/%.o: @srcdir@/src/%.c
-	$(CC)  -c $(CFLAGS) @srcdir@/src/$*.c -o obj/$*.o
-	$(CC) -MM $(CFLAGS) @srcdir@/src/$*.c  > obj/$*.d
-	@mv -f obj/$*.d obj/$*.d.tmp
-	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
-	@rm -f obj/$*.d.tmp
-
-# Near-duplicate of above rule for those *.c files generated from *.c.in
-# files in the srcdir.  Needed when building out-of-tree.
-obj/%.o: src/%.c
-	$(CC)  -c $(CFLAGS) src/$*.c -o obj/$*.o
-	$(CC) -MM $(CFLAGS) src/$*.c  > obj/$*.d
-	@mv -f obj/$*.d obj/$*.d.tmp
-	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
-	@rm -f obj/$*.d.tmp
-
-# Another near-duplicate for the PDP-8 simulator.  First set above
-# doesn't catch these.
-obj/PDP8/%.o: @srcdir@/src/PDP8/%.c
-	$(CC)  -c -w $(CFLAGS) @srcdir@/src/PDP8/$*.c -o obj/PDP8/$*.o
-	$(CC) -MM -w $(CFLAGS) @srcdir@/src/PDP8/$*.c  > obj/PDP8/$*.d
-	@mv -f obj/PDP8/$*.d obj/PDP8/$*.d.tmp
-	@sed -e 's|.*:|obj/PDP8/$*.o:|' < obj/PDP8/$*.d.tmp > obj/PDP8/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < obj/PDP8/$*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> obj/PDP8/$*.d
-	@rm -f obj/PDP8/$*.d.tmp
-
-# Another near-duplicate for CC8, since it's off in a different subdir
-obj/%.o: @srcdir@/cc8/cross/%.c
-	$(CC)  -c -w $(CFLAGS) @srcdir@/cc8/cross/$*.c -o obj/$*.o
-	$(CC) -MM -w $(CFLAGS) @srcdir@/cc8/cross/$*.c  > obj/$*.d
-	@mv -f obj/$*.d obj/$*.d.tmp
-	@sed -e 's|.*:|obj/$*.o:|' < obj/$*.d.tmp > obj/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < obj/$*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> obj/$*.d
-	@rm -f obj/$*.d.tmp
-
 # Rule for building PAL assembly language programs in asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/asm/%.pal bin/palbart
 	bin/palbart -lr $< || cat obj/$*.err
@@ -463,6 +422,11 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
+
+# Also do it if the autodep tool is newer than its output, suggesting
+# that if re-run, it would generate different output.
+$(ADF): @srcdir@/tools/mkadrules
+	@AUTOREMAKE@ && $(MAKE)
 endif
 
 # Rebuild simulator if the version string tool changes, since its output
@@ -470,4 +434,4 @@ endif
 src/gpio-common.c: @srcdir@/tools/version
 
 -include $(SIM_OBJS:.o=.d) $(CC8_OBJS:.o=.d) obj/scanswitch.d
-
+-include $(ADF)
