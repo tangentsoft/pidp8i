@@ -499,17 +499,19 @@ def make_src (s, args):
   s.send_cmd ("detach rk0")
   s.send_cmd ("detach rk1")
 
-#### parse_r #########################################################
 
-def parse_cd (com, line):
+#### parse_cd ##########################################################
+
+def parse_cd (com, line, debug):
   # Send args to Command decoder first.
   # Then perform com-specific parse.
   return
+
   
 #### parse_odt #########################################################
 
-def parse_odt (s, com, line):
-  print line
+def parse_odt (s, com, line, debug):
+  if debug: print line
   
   if line == "\\c": return "break"
   match = _odt_parse.match(line)
@@ -537,9 +539,15 @@ def parse_odt (s, com, line):
   s.os8_send_line (new_val)
   return "cont"
 
+
+#### futil_exit ########################################################
+
 def futil_exit (s, com, line):
   s.os8_send_line(line)
   return "break"
+
+
+#### futil_file ########################################################
 
 def futil_file (s, com, line):
   # Redundant re-parse of line but nobody else wants args right now.
@@ -577,7 +585,7 @@ def futil_file (s, com, line):
 #
 # When we encounter the EXIT command, we return success.
 
-def parse_futil (s, com, line):
+def parse_futil (s, com, line, debug):
   futil_specials = {
     "EXIT": futil_exit,
     "FILE": futil_file
@@ -585,7 +593,7 @@ def parse_futil (s, com, line):
 
   if line[0].isdigit():
     # Treat the line as ODT
-    return parse_odt(s, com, line)
+    return parse_odt(s, com, line, debug)
   else:
     match = _com_split_parse.match(line)
     if match == None:
@@ -601,9 +609,10 @@ def parse_futil (s, com, line):
     else:
       return futil_specials[fcom](s, fcom, line)
 
+
 #### do_patch_file #####################################################
 
-def do_patch_file (s, filename):
+def do_patch_file (s, filename, debug):
   global progmsg
   
   try:
@@ -627,7 +636,7 @@ def do_patch_file (s, filename):
     if line == "": continue
     elif line[0] == '#': continue     # Ignore Comments
     elif inside_a_command:
-      retval = the_command_parser (s, the_command, line)
+      retval = the_command_parser (s, the_command, line, debug)
       if retval == "break":
         inside_a_command = False
         s.os8_send_ctrl('C')
@@ -652,11 +661,12 @@ def do_patch_file (s, filename):
 
       # We carefully separate com and args
       # But don't make much use of that yet.
-      if progmsg: print line
+      if progmsg and debug: print line
       s.os8_send_cmd ("\.", line[1:])  # Skip Prompt.
   patch_file.close()
   # Done.  Signal success.
   return 0
+
       
 #### make_patch ########################################################
 
@@ -688,14 +698,16 @@ def make_patch (s, args):
     if line == "": continue
     if line[0] == '#': continue      # Allow commenting out files
     filename = line.strip()
+    if progmsg: print "Applying patch file: " + filename + "...",
+    success = do_patch_file (s, filename, args.debug) == 0
     if progmsg:
-      print "Applying patch file: " + filename
-    retval = do_patch_file (s, filename)
-    if retval == 0: print "Success."
-    else: print "Failed."
+      if success:
+        print "success."
+      else:
+        print "FAILED!"
 
   # Finish up
-  print "Cleaning up..."
+  if progmsg: print "Cleaning up..."
   # s.os8_squish ("SYS")
   # s.os8_squish ("DSK")
   s.back_to_cmd("\.")
