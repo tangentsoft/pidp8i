@@ -2,7 +2,7 @@
 # by reading the source code.
 # The patches that remain commented out are not recommended
 # and the reason why appears in the line above it.
-# Total of 44 of 54 So far.
+# Total of 45 of 54 So far.
 BASIC.UF-31.5.1M-V5B.patch8
 BATCH-31.23.1M-v7B.patch8
 BLOAD-31.10.1M-v5B.patch8
@@ -35,7 +35,7 @@ MSBAT-31.22.1M-v3B.patch8
 PAL8-21.22.1M-v10B.patch8
 PAL8-21.22.2M-v10C.patch8
 PAL8-21.22.3M-v10D.patch8
-# Will verify this tomorrow
+PAL8-21.22.4M.patch8
 PIP-21.23.1M-v12B.patch8
 PIP10-21.24.1M-v3B.patch8
 SABR-21.91.1M-v18B.patch8

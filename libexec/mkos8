@@ -64,6 +64,14 @@ _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
 _patched_rk05 = "os8v3d-patched.rk05"
 
+# Parser regexps used in patcher
+_com_os8_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
+_com_os8_parse = re.compile(_com_os8_parse_str)
+_com_split_str = "^([a-zA-Z]+)\s?(.*)$"
+_com_split_parse = re.compile(_com_split_str)
+_odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
+_odt_parse = re.compile(_odt_parse_str)
+
 
 #### check_exists ######################################################
 # Check existence of all files needed
@@ -493,7 +501,7 @@ def make_src (s, args):
 
 #### parse_r #########################################################
 
-def parse_r (com, line):
+def parse_cd (com, line):
   # Send args to Command decoder first.
   # Then perform com-specific parse.
   return
@@ -501,13 +509,10 @@ def parse_r (com, line):
 #### parse_odt #########################################################
 
 def parse_odt (s, com, line):
-  odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
-  odt_parse = re.compile(odt_parse_str)
-
   print line
   
   if line == "\\c": return "break"
-  match = odt_parse.match(line)
+  match = _odt_parse.match(line)
   if match == None:
     print "Aborting because of bad ODT line: " + line
     s.os8_send_ctrl('C')
@@ -515,7 +520,7 @@ def parse_odt (s, com, line):
   loc = match.group(1)
   old_val = match.group(2)
   new_val = match.group(3)
-  expect_val_str = "[0-7]{4} "
+  expect_val_str = "\s?[0-7]{4} "
   
   if debug: print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
   s.os8_send_str (loc + "/")
@@ -532,6 +537,69 @@ def parse_odt (s, com, line):
   s.os8_send_line (new_val)
   return "cont"
 
+def futil_exit (s, com, line):
+  s.os8_send_line(line)
+  return "break"
+
+def futil_file (s, com, line):
+  # Redundant re-parse of line but nobody else wants args right now.
+  match = _com_split_parse.match(line)
+  if match == None:
+    print "Aborting because of mal-formed FUTIL FILE command: " + line
+    s.os8_send_ctrl('C')
+    return "err"
+  fname = match.group(2)
+  expect_futil_file_str = "\n" + fname + "\s+(.*)$"
+  s.os8_send_line (line)
+  s._child.expect(expect_futil_file_str)
+  result = s._child.after.strip()
+  match = _com_split_parse.match(result)
+  if match == None:
+    print "Aborting because unexpected return status: " + result + " from: " + line
+    s.os8_send_ctrl('C')
+    return "err"
+  if match.group(2).strip() == "LOOKUP FAILED":
+    print "Aborting because of FUTIL lookup failure on: " + fname
+    s.os8_send_ctrl('C')
+    return "err"
+  else:
+    return "cont"
+  
+  
+#### parse_futil #########################################################
+#
+# Very simple minded:
+# If first char on line is an alpha, run the command.
+# If the first char on line is number, do the substitute command.
+#
+# Substitute command acts like ODT.
+# Future version should support the IF construct.
+#
+# When we encounter the EXIT command, we return success.
+
+def parse_futil (s, com, line):
+  futil_specials = {
+    "EXIT": futil_exit,
+    "FILE": futil_file
+  }
+
+  if line[0].isdigit():
+    # Treat the line as ODT
+    return parse_odt(s, com, line)
+  else:
+    match = _com_split_parse.match(line)
+    if match == None:
+      print "Ignoring failed FUTIL command parse of: " + line
+      return "cont"
+    fcom = match.group(1)
+    rest = match.group(2)
+
+    if fcom not in futil_specials:
+      # Blind faith and no error checking.
+      s.os8_send_line(line)
+      return "cont"
+    else:
+      return futil_specials[fcom](s, fcom, line)
 
 #### do_patch_file #####################################################
 
@@ -544,10 +612,11 @@ def do_patch_file (s, filename):
     print filename + " not found. Skipping."
     return -1
 
-  com_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
-  com_parse = re.compile(com_parse_str)
-
-  special_commands = {"ODT": parse_odt}
+  special_commands = {
+    "ODT": parse_odt,
+    "R": None,               # Get next parser.
+    "FUTIL": parse_futil
+  }
 
   inside_a_command = False
   the_command = ""
@@ -563,9 +632,10 @@ def do_patch_file (s, filename):
         inside_a_command = False
         s.os8_send_ctrl('C')
       elif retval == "err":
+        patch_file.close()
         return -1
     elif line[0] == '.':        # New OS/8 Command
-      match = com_parse.match(line)
+      match = _com_os8_parse.match(line)
       if match == None:
         print "Ignoring failed OS/8 command parse of: " + line
         continue
@@ -573,6 +643,9 @@ def do_patch_file (s, filename):
       rest = match.group(2)
 
       if com in special_commands:
+        if com == "R":
+          # Run command is special Take arg as the command and run it.
+          com = rest
         inside_a_command = True
         the_command = com
         the_command_parser = special_commands[com]
@@ -581,7 +654,7 @@ def do_patch_file (s, filename):
       # But don't make much use of that yet.
       if progmsg: print line
       s.os8_send_cmd ("\.", line[1:])  # Skip Prompt.
-
+  patch_file.close()
   # Done.  Signal success.
   return 0
       
