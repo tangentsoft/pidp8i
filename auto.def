@@ -55,6 +55,7 @@ options {
     os8-macrel=1      => "leave MACREL assembler off the build OS/8 RK05 image"
     os8-minimal       => "disable all --enable-os8-* options, giving minimal OS/8 bin disk"
     os8-music         => "add *.MU files to built OS/8 RK05 disk image"
+    os8-patches=1     => "apply DEC patches to built OS/8 RK05 bin disk image"
     os8-src=1         => "don't build os8v3d-src.rk05 from OS/8 source tapes"
     os8-uwfocal=1     => "leave U/W FOCAL (only) off the built OS/8 RK05 image"
     os8-vtedit        => "add the TECO VTEDIT setup to built OS/8 RK05 image"
@@ -182,7 +183,15 @@ if {[opt-bool os8-src]} {
     msg-result "Will not build os8v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 {}
 }
+
 define MKOS8_OPTS $mkos8_opts
+if {$os8min || ![opt-bool os8-patches]} {
+    msg-result "Will not patch OS/8 on the RK05 bin disk."
+    define MKOS8_BIN_PATCHES {}
+} else {
+    msg-result "Will apply OS/8 V3D patches to the RK05 bin disk."
+    define MKOS8_BIN_PATCHES patch
+}
 
 # Force a rebuild of the OS/8 media if the option set changed.
 if {![file exists "obj"]} { file mkdir "obj" }

@@ -351,7 +351,7 @@ OS8_BIN_SRCS = $(MKOS8_SRCS) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM)
-	$(MKOS8)@MKOS8_OPTS@ bin
+	$(MKOS8)@MKOS8_OPTS@ bin @MKOS8_BIN_PATCHES@
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
 # need to mount up the 7 source tapes in succession.
