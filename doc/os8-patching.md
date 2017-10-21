@@ -4,15 +4,16 @@ Between major updates to distribution media, DEC would send out important
 information and patches to customers through its publication _PDP-8 Digital Software
 News_ (DSN for short).
 
-Many issues of DSN can be found on bitsavers.org.
+Many issues of DSN can be found on bitsavers.org under [pdf/dec/pdp8/softwarenews][dsn].
 
 To help customers keep track of which patches to apply, DSN added a Cumulative Index.
 
-Using the _PDP-8 DIGITAL Software News Cumulative Index_ found in the latest available
-issue of DSN, October/November 1980, I created a spreadsheet of all patches relevant
-to the OS/8 V3D packs under construction.  That spreadsheet enabled me to go to
-the particular issues containing the patches, and keep track of what action
-I took with them.
+Using the _PDP-8 DIGITAL Software News Cumulative Index_ found in the
+latest available issue of DSN, [October/November 1980][dsn-1980-10], I
+created a spreadsheet of all patches relevant to the OS/8 V3D packs
+under construction.  That spreadsheet enabled me to go to the
+particular issues containing the patches, and keep track of what
+action I took with them.
 
 I reviewed all the patches and came up with a list of the mandatory patches,
 using OCR of the DSN issues, I created a file per patch.  Then I reviewed the
@@ -34,7 +35,7 @@ working along with some notes about:
 * What functionality is not recommended for patch enablement.
 * What conflicts arise to dis-recommend a patch.
 
-Details:
+## Review of Recommendations:
 
 `BRTS 31.11.2 O` Is an optional patch disables 8th bit parity. It is
 recommended because sometimes we may want to allow output that does
@@ -82,6 +83,8 @@ it upgrades ABSLDR from version 6B to version 6C.
 Version 6 of ABSLDR was part of the OS/8 V3D Device Extensions kit.  I
 want to digress into a bit of history of this kit because it's
 important to understanding OS/8 versions going forward.
+
+## OS/8 V3D Device Extensions:
 
 The OS/8 V3D Device Extensions kit (product QF026.) was created to
 support the newest PDP-8 hardware:
@@ -132,7 +135,7 @@ overlays that ODT does not understand, or it may be because the FUTIL
 patch does not work.  I'd labeled the FUTIL patch "plausable", because
 I didn't understand the nuance of `CD` modules embodied in the patch.
 
-Then there's MACREL.
+## Then there's `MACREL`:
 
 MACREL was a late development, an attempt to replace PAL8 with a Macro
 assembler capable of producing relocatable modules.  When MACREL first
@@ -174,6 +177,8 @@ them as options.
 For now, I am in the process of doing what validation I can of the
 V1 MACREL/LINK patches.
 
+## Unfinished business:
+
 There remain the following patches that are still under development,
 because they are not simple binary overlays on executables that could
 be applied with simple scripts driving ODT or FUTIL.  Instead they are
@@ -199,11 +204,8 @@ Below is the latest snapshot of the tracking spreadsheet:
 
 |  **Component** | **Issue** | **Sequence** | Mon/Yr | **Notes** | Status |
 |  ------ | ------ | ------ | ------ | ------ | ------ |
-|  **OS/8 V3D** |  |  |  |  |  |
+|  | **OS/8 V3D** |  |  |  |  |
 |  HANDLER | CTRL/Z AND NULL | 01 0* | Oct 77 | Optional. Not going to apply. |  |
-|  **OS/8 FORTRAN IV V3D** |  |  |  |  |  |
-|  F4.SV V4A | EQUIVALENCE STATEMENT | 02 M / 21.1.2 M | Dec/Jan 1980 | F4-21.1.2M-v4B.patch8 (Note clarified Oct 77: F4 not FRTS, PASS3 too.) | Applies; src plausable |
-|  **OS/8 V3D** |  |  |  |  |  |
 |  CREF | BUG WITH FIXTAB | 21.15.1 M | Apr/May 78 | CREF-21.15.1-v2B.patch8 Corrects bad patch | Applies |
 |   | INPUT AND OUTPUT FILE SPECIFICATIONS | 21.15.2 M | Feb/Mar 80 | CREF-21.15.2-v2C.patch8 | Applies |
 |  EDIT | EDIT PROBLEM WITH NO FORMFEED AT END OF THE INPUT FILE | 21.17.1 M | Mar 78<br/> | EDIT-21.17.1M-v12B.patch8 | Applies; Src verified |
@@ -223,6 +225,8 @@ Below is the latest snapshot of the tracking spreadsheet:
 |   | PARSING OF = IN TTY WIDTH OPTION | 21.26.3 M | Aug/Sep 78 | SET-21.26.3M-v1E.patch8 | Applies; Src verified |
 |  LPQ | LDP01 HANDLER FAILS TO RECOGNIZE TABS | 21.49.1 M | Dec/Jan 1980 | LQP-21.49.1M-vB.patch8 (supercedes Mar 1978) | OCR* Comments \n |
 |  TM8E | WRITE PROTECT PATCH TO TM8E.PA | 21.61.1 H | Feb/Mar 80 | New TM8E Source.  Too hard to correct. |  |
+|  **OS/8 FORTRAN IV V3D** |  |  |  |  |  |
+|  F4.SV V4A | EQUIVALENCE STATEMENT | 02 M / 21.1.2 M | Dec/Jan 1980 | F4-21.1.2M-v4B.patch8 (Note clarified Oct 77: F4 not FRTS, PASS3 too.) | Applies; src plausable |
 |  **OS/8 EXTENSION KIT V3D** |  |  |  |  |  |
 |  SABR | LINE BUFFER PROBLEM IN SABR | 21.91.1 M | Oct/Nov 79 | SABR-21.91.1M-v18B.patch8 | Applies; Src verified |
 |  BASIC.UF | BASIC.UF INCOMPATIBLE FROM OS/8 V3C | 31.5.1 M | Aug/Sep 78 | BASIC.UF-31.5.1M-V5B.patch8 Source also in DSN. | Applies; Src verified |
@@ -251,20 +255,21 @@ Below is the latest snapshot of the tracking spreadsheet:
 |   | FUTIL PATCH TO MACREL/LINK OVERLAYS | 31.21.4 N | Jun/Jul 79 | Documentation Only |  |
 |  MSBAT | DIM STATEMENT NOT WORKING IN MSBAT | 31.22.1 M | Dec 78/Jan 79 | MSBAT-31.22.1M-v3B.patch8 | Applies; Src verified |
 |  BATCH | MANUAL INTERVENTION REQUIRED ERRONEOUSLY | 31.23.1 M | Aug/Sep 78 | BATCH-31.23.1M-v7B.patch8 | Applies; Src verified |
-|  **OS/8 FORTRAN IV V3D** |  |  |  |  |  |
+|   | **OS/8 FORTRAN IV V3D** |  |  |  |
 |  F4 | FORTRAN COMPILER FAILS TO RECOGNIZE " AS AN ERROR | 51.3-1 M<br/> | Jun/Jul 78 | F4-51.3.1M-v4C.patch8 (Corrects March 1978) | Applies; src plausable |
 |   | FORTRAN COMPILER NOT RECOGNIZING SYNTAX ERROR | 51.3.2 M | Jun/Jul 78 | F4-51.3.2M-v4x.patch8 | Applies; src plausable |
 |   | FORTRAN RUNTIME SYSTEM 2-PAGE HANDLER | 51.3-3 0 | Oct/Nov 78 | FRTS-51.3.3-O.patch8 Needed for RL02. (Corrected from Aug/Sep 78) | Applies; build of FRTS a mystery |
 |   | RESTRICTION WITH SUBSCRIPTED VARIABLES | 51.3-4 R | Aug/Sep 80 | Documentation: FIV FORTRAN IV will not allow subscripting to be used on both sides of an arithmetic expression. |  |
 |  FORLIB | FORTRAN IV DLOG PATCH | 51.10.1 M | Feb/Mar 80 | FORLIB-51.10.1M.patch8 (apply to DLOG.RA) | OCR* Comments \c |
-|  **OS/8 MACREL/LINKER V1A** |  |  |  |  |  |
+|   | **OS/8 MACREL/LINKER V1A** |  |  |  |
 |  LINK | PATCH V1D TO LINK | 40.2.1 M | Apr/May 78 | LINK-40.2.1M-v1D.patch8 | OCR* Comments \n |
 |   | PATCH VIE TO LINK | 40.2.2 M | Apr/May 78 | LINK-40.2.2M-v1E.patch8 | OCR* Comments \n |
 |   | LINK CORRECTIONS | 40.2.3 M | Apr/May 78 | LINK-40.2.3M-v1F.patch8 | OCR* Comments \n |
 |  MACREL | PATCH V1D TO MACREL | 40.5.1 M | Apr/May 78 | MACREL-40.5.1M-v1D.patch8 | Needs Verify |
 |   | PATCH V1E TO MACREL | 40.5.2 M | Apr/May 78 | MACREL-40.5.2M-v1E.patch8 | Needs Verify |
 |  OVRDRV | PATCH V1B TO OVRDRV.MA | 40.6.1 M | Apr/May 78 | OVRDRV-40.6.1M-v1B-8srccom | OCR matches scan |
-|  **OS/8 V3D DEVICE EXTENSIONS December 1978<br/>DO NOT USE THIS KIT WITHOUT FIRST CONSULTING APR/MAY 79 DSN!<br/>Not doing these patches lacking a distribution.** |  |  |  | **This kit upgraded the Monitor from V3R to V3S; ABSLDR from v4 to v6; gave RL02 support, ability to run BUILD under BATCH, and 128K memory.** |  |
+|   | **OS/8 V3D DEVICE EXTENSIONS December 1978 |  |  |  |  |  |
+|   | DO NOT USE THIS KIT WITHOUT FIRST CONSULTING APR/MAY 79 DSN |  |  |  |  |
 |  FRTS | FRTS PATCH | 35.1.3  M | Apr/May 79 |  |  |
 |  MONITOR | MONITOR V3S PATCH | 35.2.1     M | Apr/May 79 |  |  |
 |  FUTIL | FUTIL UNDER BATCH PATCH | 35.13.1   M | Apr/May 79 |  |  |
@@ -272,9 +277,7 @@ Below is the latest snapshot of the tracking spreadsheet:
 |  ABSLDR | LOADER PROBLEM WITH SAVE IMAGE FILES | 21.29.1 M | Oct/Nov 80 | ABSLDR-21.29.1M-v6C.patch8 (Supercedes June/July 1980 (which didn't have old contents of memory.)) | Wrong. v6B was with OS/8 Device Extensions. |
 |  ABSLDR | ABSLDR PATCH | 35.18.1   M | Apr/May 79 |  |  |
 |  BLOAD | BLOAD WILL NOT BUILD CCB PROPERLY | 35.51.1   M | Feb/Mar 80 | BLOAD-35.51.1M-v5C.patch8<br/>Use BLOAD-31 epoch instead. | OCR* Comments \n |
-|   | **http://vandermark.ch/pdp8/local/zread_dir.php?v=OS8&f=OS8-Latest/new-20-sv-1.1981.pxg** |  |  |  |  |
-|   | **https://www.pdp8.net/pdp8cgi/os8_html/OVRDRV.MA?act=file;fn=images/misc_floppy/macrel_v2c_2.rx02;blk=7,17,0;to=auto** |  |  |  |  |
-|  **OS/8 MACREL/LINKER V2A<br/>Not doing these patches lacking a distribution.** |  |  |  |  |  |
+|   | **OS/8 MACREL/LINKER V2A<br/>Not doing these patches lacking a distribution.** |  |  |  |
 |   | EXPUNGE DOCUMENTATION ERROR | 41.1.1 N | Jun/Jul 79 |  |  |
 |   | MACREL VERSION NUMBERS | 41.1.2 N | Jun/Jul 79 |  |  |
 |   | MACRO RESTRICTION IN MACREL | 41.1.3 N | Aug/Sep 79 |  |  |
@@ -291,7 +294,9 @@ Below is the latest snapshot of the tracking spreadsheet:
 
 ### <a id="license"></a>License
 
-Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
-terms of [the SIMH license][sl].
+Copyright © 2017 by Bill Cattey. Licensed under the terms of [the SIMH
+license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[dsn]: http://bitsavers.org/pdf/dec/pdp8/softwarenews/
+[dsn-1980-10]: http://bitsavers.org/pdf/dec/pdp8/softwarenews/198010_PDP8swNews_AA-K629A-BA.pdf
