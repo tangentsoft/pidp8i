@@ -19,7 +19,7 @@ I reviewed all the patches and came up with a list of the mandatory patches,
 using OCR of the _DSN_ issues, I created a file per patch.  Then I reviewed the
 scanned PDF versions to correct OCR errors.
 
-Then the mkos8 script was enhanced to apply the patches in an automated way.
+Then our `mkos8` script was enhanced to apply the patches in an automated way.
 Most of the patches were for programs available in source form.  So I built the
 programs from source, and then bench checked the patch against the source.
 In a few cases the code was too obscure, and I marked the patch as "plausable"
@@ -52,13 +52,13 @@ want to wait to see the long error messages they already knew.  It is
 not recommended because we expect a majority of users to be on high
 speed terminals needing the verbose errors.
 
-`TECO 31.20.3 O` Turns off a warning that you are using the `YANK`
+`TECO 31.20.3O` Turns off a warning that you are using the `YANK`
 command to completely overwrite a buffer full of text.  Issuing the
 command a second time succeeds.  It was again to avoid experienced
 users.  It is not recommended because we expect fewer advanced users
 who would be annoyed by the protection.
 
-`TECO 31.20.4 O` Implements rubout support specifically and uniquely
+`TECO 31.20.4O` Implements rubout support specifically and uniquely
 for the `VT05` terminal in a way that breaks it for all other video
 terminals.  It is not recommended because there are VERY few `VT05`
 deployments that would use it.
@@ -67,16 +67,27 @@ It is at this point that I began to notice that in later years,
 patches became less carefully produced, and more prone to errors. Some
 not correctable, even today.
 
-`BASIC.UF-31.5.1M` shows changing location `4044` from `4514` to `4556`.
-Such a change would be consisten with the stated purpose of the patch,
+`BASIC.UF-31.5.1M` shows:
+
+    4044/4514 4556
+
+changing location `4044` from `4514` to `4556`.
+Such a change would be consistent with the stated purpose of the patch,
 to correct references to page zero literals that moved with the `V3D`
-version of `BRTS`.  But location `4044` contains `1273`.  In my judgment
-the `TAD NSAM` to get the subscript into the `AC` should be retained,
-and a call to `UNSFIX` to truncate the value of the Floating Point
-Accumulator should NOT be inserted.  I modified the patch to leave out
-that change.  It remains to be seen if calls to User Functions in OS/8
-`BASIC` will ever be run to test this code.  Here at least is an
-analysis to later explorers.
+version of `BRTS`.  The source around location '4044' looks like this:
+
+    04043  4775          JMS I   (BUFCDF /SET UP USER BUF
+    04044  1273          TAD     NSAM
+    04045  7041          CIA
+    04046  3276          DCA     NCTR    /-#OF BOARDS TO CLAR
+
+
+In my judgment the `TAD NSAM` to get the subscript into the `AC`
+should be retained, and the `4556` call to `UNSFIX` to truncate the
+value of the Floating Point Accumulator should NOT be inserted.  I
+modified the patch to leave out that change.  It remains to be seen if
+calls to User Functions in OS/8 `BASIC` will ever be run to test this
+code.  Here at least is an analysis to later explorers.
 
 `EDIT 21.17.4 M` Is supposedly a mandatory patch.  It fixes a problem
 with line printer output through a specific parall interface card.
@@ -206,7 +217,7 @@ are either batch scripts, or are applied to source code that is
 rebuilt either with an assembler or high level language compiler.
 
 `FORLIB 51.10.1 M` requires crafting a batch script that changes
-DLOG.RA and then rebulds `FORLIB.RL` with the new component.
+`DLOG.RA` and then rebulds `FORLIB.RL` with the updated component.
 
 `LQP 21.49.1 M` patches a device driver `.BN` file, then using `BUILD`
 to insert it into the system.  At the present time the OS/8 V3D packs
@@ -222,8 +233,6 @@ have been deemed safe and recommended.
 
 Below is the latest snapshot of the tracking spreadsheet.
 
-Status is abbreviated with combination of the following Keys:
-
 | A | Patch Applies Successfully                                   |
 | V | Patch Source Verified                                        |
 | K | Patch Source Probably Ok. Weaker confidence than "Verified". |
@@ -232,95 +241,96 @@ Status is abbreviated with combination of the following Keys:
 | O | OCR Cleaned up. No other verification or application done.   |
 | D | Does not apply.                                              |
 
+For better readability of the table, status is abbreviated with combination of the above keys.
 
 |  **Component** | **Issue** | **Sequence** | Mon/Yr | **Notes** | Status |
-|  ------ | ------ | ------ | ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ | ------ | ------ |
 |  | **OS/8 V3D** |  |  |  |  |
-|  `HANDLER` | `CTRL/Z` AND NULL | `01 O *` | Oct 77 | Optional. Not going to apply. |  |
-|  `CREF` | Bug with `FIXTAB` | `21.15.1M` | Apr/May 78 | `CREF-21.15.1-v2B.patch8` Corrects bad patch | A |
-|   | Input and output file specifications | `21.15.2M` | Feb/Mar 80 | `CREF-21.15.2-v2C.patch8` | A |
-|  `EDIT` | `EDIT` Problem with no `FORMFEED` at end of the input file | `21.17.1M` | Mar 78 | `EDIT-21.17.1M-v12B.patch8` | AV |
-|   | `EDIT` `Q` command after `L` command | `21.17.2M` | Jun/Jul 79 | `EDIT-21.17.2M-v12C.patch8` | AV |
-|   | `EDIT` `Q` command patch | `21.17.3M` | Jun/Jul 79 | `EDIT-21.17.3M-v12D.patch8` | AV |
-|   | `EDIT.SV` `V` option will not work with `LPT DKC8-AA` | `21.17.4M` | Feb/Mar 80 | `EDIT-21.17.4M-v12C.patch8` Overwrites patch `21.12.2M` | AVN  |
-|  `FOTP` | Incorrect directory validation | `21.19.1M` | Jun/Jul 79 | `FOTP-21.19.1M-v9B.patch8` (Corrected from Aug/Sep 1978, Detailed in Apr/May 79) | AV |
-|  `MCPIP` | `DATE-78` Patch for `MCPIP` | `21.21.1M` | Mar 78 | `MCPIP-21.21.1M-v6B.patch8` | AV |
-|  `PAL8` | Incorrect core size routine | `21.22.1M` | Aug/Sep  78 | `PAL8-21.22.1M-v10B.patch8` | AV |
-|   | Erroneous `LINK` generation noted on `PAGE` directive | `21.22.2M` | Aug/Sep  78 | `PAL8-21.22.2M-v10C.patch8` | AV |
-|   | `EXPUNGE` patch to `PAL8` | `21.22.3M` | Feb/Mar   80 | `PAL8-21.22.3M-v10D.patch8` | A src probable |
-|   | `TAB`s are translated incorrectly | `21.22.4M` | Oct/Nov 80 | `PAL8-21.22.4M` (Supercedes June/July 1980 (which had wrong contents of memory.)) | AV |
-|  `PIP` | `PIP` `/Y` option does not work properly when transferring a system | `21.23-1M` | Aug/Sep 78 | `PIP-21.23.1M-V12B.patch8` | AK |
-|  `PIP10` | `DATE-78` Patch to `PIP 10` | `21.24.1M` | Jun/Jul 79 | `PIP10-21.24.1M-V3B.patch8` (Corrected from Dec 78/Jan 79) | AV |
-|  `SET` | Using `SET` with two-page system handlers | `21.26.1M` | Apr/May 78 | `SET-21.26.1M-v1C.patch8` | AV |
-|   | `SCOPE` `RUBOUT`s fail in `SET` | `21.26.2M` | Apr/May 78 | `SET-21.26.2M-v1D.patch8` | AV |
-|   | Parsing of = in `TTY WIDTH` option | `21.26.3M` | Aug/Sep 78 | `SET-21.26.3M-v1E.patch8` | AV |
-|  `LPQ` | `LDP01` Handler fails to recognize `TAB`s | `21.49.1M` | Dec/Jan 1980 | `LQP-21.49.1M-vB.patch8` (supercedes Mar 1978) | O |
-|  `TM8E` | Write protect patch to `TM8E.PA` | `21.61.1 H` | Feb/Mar 80 | New `TM8E` Source.  Too hard to correct. |  |
-|  ------ | ------ | ------ | ------ | ------ | ------ |
+|  `HANDLER` | `CTRL/Z` and `NULL` | `01 O *` | Oct-77 | Optional. Not going to apply. |  |
+|  `CREF` | Bug with `FIXTAB` | `21.15.1M` | Apr/May-78 | `CREF-21.15.1-v2B.patch8` Corrects bad patch | A |
+|   | Input and output file specifications | `21.15.2M` | Feb/Mar-80 | `CREF-21.15.2-v2C.patch8` | A |
+|  `EDIT` | `EDIT` Problem with no `FORMFEED` at end of the input file | `21.17.1M` | Mar-78 | `EDIT-21.17.1M-v12B.patch8` | AV |
+|   | `EDIT` `Q` command after `L` command | `21.17.2M` | Jun/Jul-79 | `EDIT-21.17.2M-v12C.patch8` | AV |
+|   | `EDIT` `Q` command patch | `21.17.3M` | Jun/Jul-79 | `EDIT-21.17.3M-v12D.patch8` | AV |
+|   | `EDIT.SV` `V` option will not work with `LPT DKC8-AA` | `21.17.4M` | Feb/Mar-80 | `EDIT-21.17.4M-v12C.patch8` Overwrites patch `21.12.2M` | AVN  |
+|  `FOTP` | Incorrect directory validation | `21.19.1M` | Jun/Jul-79 | `FOTP-21.19.1M-v9B.patch8` (Corrected from Aug/Sep 1978, Detailed in Apr/May 79) | AV |
+|  `MCPIP` | `DATE-78` Patch for `MCPIP` | `21.21.1M` | Mar-78 | `MCPIP-21.21.1M-v6B.patch8` | AV |
+|  `PAL8` | Incorrect core size routine | `21.22.1M` | Aug/Sep-78 | `PAL8-21.22.1M-v10B.patch8` | AV |
+|   | Erroneous `LINK` generation noted on `PAGE` directive | `21.22.2M` | Aug/Sep-78 | `PAL8-21.22.2M-v10C.patch8` | AV |
+|   | `EXPUNGE` patch to `PAL8` | `21.22.3M` | Feb/Mar-80 | `PAL8-21.22.3M-v10D.patch8` | AK |
+|   | `TAB`s are translated incorrectly | `21.22.4M` | Oct/Nov-80 | `PAL8-21.22.4M` (Supercedes June/July 1980 (which had wrong contents of memory.)) | AV |
+|  `PIP` | `PIP` `/Y` option does not work properly when transferring a system | `21.23-1M` | Aug/Sep-78 | `PIP-21.23.1M-V12B.patch8` | AK |
+|  `PIP10` | `DATE-78` Patch to `PIP 10` | `21.24.1M` | Jun/Jul-79 | `PIP10-21.24.1M-V3B.patch8` (Corrected from Dec 78/Jan 79) | AV |
+|  `SET` | Using `SET` with two-page system handlers | `21.26.1M` | Apr/May-78 | `SET-21.26.1M-v1C.patch8` | AV |
+|   | `SCOPE` `RUBOUT`s fail in `SET` | `21.26.2M` | Apr/May-78 | `SET-21.26.2M-v1D.patch8` | AV |
+|   | Parsing of `=` in `TTY WIDTH` option | `21.26.3M` | Aug/Sep-78 | `SET-21.26.3M-v1E.patch8` | AV |
+|  `LPQ` | `LDP01` Handler fails to recognize `TAB`s | `21.49.1M` | Dec/Jan-80 | `LQP-21.49.1M-vB.patch8` (supercedes Mar 1978) | O |
+|  `TM8E` | Write protect patch to `TM8E.PA` | `21.61.1H` | Feb/Mar-80 | New `TM8E` Source.  Too hard to correct. |  |
+| ------ | ------ | ------ | ------ | ------ | ------ |
 |   | **OS/8 EXTENSION KIT V3D** |  |  |  |  |
-|  `SABR` | Line buffer problem in `SABR` | `21.91.1M` | Oct/Nov 79 | `SABR-21.91.1M-v18B.patch8` | AV |
-|  `BASIC.UF` | `BASIC.UF` Incompatible from OS/8 V3C | `31.5.1M` | Aug/Sep 78 | `BASIC.UF-31.5.1M-V5B.patch8` Source also in _DSN_. | AV |
-|  `BLOAD` | `BLOAD` Will not build `CCB` properly | `31.10.1M` | Feb/Mar 80 | `BLOAD-31.10.1M-v5B.patch8` | AV |
-|  `BRTS` | `IOTABLE` Overflow | `31.11.1M` | Mar 78 | `BRTS-31.11.1-M-v5b.patch8` | AV |
-|   | `BASIC` `PNT` Function | `31.11.2O` | Jun/Jul 78 | `BRTS-31.11.2-O.patch8` (superceds/corrects Mar 1978) | AV |
-|   | Line size on output of `BASIC` | `31.11.3O` | Jun/Jul 78 | `BRTS-31.11.3-O.patch8` | AV |
-|   | Change line printer width | `31.11.4 F` | Oct/Nov 79 | Optional change of width to 132 columns |  |
-|   | Patch to `BRTS` for addressing `LAB 8/E` functions | `31.11.5M` | Oct/Nov 79 | `BRTS-31.11.5-x.patch8` (`BASIC.UF` patch is a prerequisite.) | AV |
-|  `TECO` | Changing the default `EU` value for no `case` flagging | `31.20.1O` | Mar 78 | `TECO-31.20.01O.patch8` | AVN |
-|   | Changing the default `EH` value for one line error printouts | `31.20.2O` | Mar 78 | `TECO-31.20.02O.patch8` | AVN |
-|   | Removing `YANK` protection | `31.20.3O` | Mar 78 | `TECO-31.20.03O.patch8` | AVN |
-|   | `SCOPE` Support for `VT05` users | `31.20.4O` | Mar 78 | `TECO-31.20.04O.patch8` | AP N |
-|   | Problem with `AY` command | `31.20.5M` | Mar 78 | `TECO-31.20.05M-v5A.patch8` | AV |
-|   | Conditionals inside iterations | `31.20.6M` | Mar 78 | `TECO-31.20.06M-v5B.patch8` | AV |
-|   | Echoing of warning bells | `31.20.7M` | Mar 78 | `TECO-31.20.07M-v5B.patch8` | AV |
-|   | `CTRL/U` Sometimes fails after `*` | `31.20.8M` | Apr/May 78 | `TECO-31.20.08M-v5.04.patch8` | A Src prob. ok |
-|   | Multiplying by 0 in `TECO` | `31.20.10M` | Apr/May 78 | `TECO-31.20.10M-v5.05.patch8` | AV |
-|   | `Q` registers don't work in 8K | `31.20.11M` | Apr/May 78 | `TECO-31.20.11M-v5.06.patch8` | AV |
-|   | Can't skip over a `W` | `31.20.12M` | Apr/May 78 | `TECO-31.20.12M-v5.07.patch8` | AV |
-|   | Unspecified iterations after inserts | `31.20.13M` | Oct/Nov 78 | `TECO-31.20.13M-v5.08.patch8` (Corrected from Jun/Jul 78) | AV |
-|   | New features in `TECO V5` | `31.20.14` N | Aug/Sep 78 | Documentation Only |  |
-|  `FUTIL` | `FUTIL` Patch | `31.21.1M` | Apr/May 78 | `FUTIL-31.21.1M-v7B.patch8` | AP |
-|   | Fix `SHOW CCB` and mapping of `CD` modules | `31.21.2M` | Oct/Nov 78 | `FUTIL-31.21.2M-v7D.patch8` (Corrected from Aug/Sep 78) | AP |
-|   | Optional: change `XS` format from `excess 240` to `excess 237`. Useful for viewing `COS` data files. | `31.21.3O` | Aug/Sep 78 | `FUTIL-31.21.3O.patch8` | AVN |
-|   | `FUTIL` Patch to `MACREL`/`LINK` overlays | `31.21.4 N` | Jun/Jul 79 | Documentation Only |  |
-|  `MSBAT` | `DIM` Statement not working in `MSBAT` | `31.22.1M` | Dec 78/Jan 79 | `MSBAT-31.22.1M-v3B.patch8` | AV |
-|  `BATCH` | `MANUAL INTERVENTION REQUIRED` Erroneously | `31.23.1M` | Aug/Sep 78 | `BATCH-31.23.1M-v7B.patch8` | AV |
-|  ------ | ------ | ------ | ------ | ------ | ------ |
+|  `SABR` | Line buffer problem in `SABR` | `21.91.1M` | Oct/Nov-79 | `SABR-21.91.1M-v18B.patch8` | AV |
+|  `BASIC.UF` | `BASIC.UF` Incompatible from OS/8 V3C | `31.5.1M` | Aug/Sep-78 | `BASIC.UF-31.5.1M-V5B.patch8` Source also in _DSN_. | AV |
+|  `BLOAD` | `BLOAD` Will not build `CCB` properly | `31.10.1M` | Feb/Mar-80 | `BLOAD-31.10.1M-v5B.patch8` | AV |
+|  `BRTS` | `IOTABLE` Overflow | `31.11.1M` | Mar-78 | `BRTS-31.11.1-M-v5b.patch8` | AV |
+|   | `BASIC` `PNT` Function | `31.11.2O` | Jun/Jul-78 | `BRTS-31.11.2-O.patch8` (superceds/corrects Mar 1978) | AV |
+|   | Line size on output of `BASIC` | `31.11.3O` | Jun/Jul-78 | `BRTS-31.11.3-O.patch8` | AV |
+|   | Change line printer width | `31.11.4F` | Oct/Nov-79 | Optional change of width to 132 columns |  |
+|   | Patch to `BRTS` for addressing `LAB 8/E` functions | `31.11.5M` | Oct/Nov-79 | `BRTS-31.11.5-x.patch8` (`BASIC.UF` patch is a prerequisite.) | AV |
+|  `TECO` | Changing the default `EU` value for no `case` flagging | `31.20.1O` | Mar-78 | `TECO-31.20.01O.patch8` | AVN |
+|   | Changing the default `EH` value for one line error printouts | `31.20.2O` | Mar-78 | `TECO-31.20.02O.patch8` | AVN |
+|   | Removing `YANK` protection | `31.20.3O` | Mar-78 | `TECO-31.20.03O.patch8` | AVN |
+|   | `SCOPE` Support for `VT05` users | `31.20.4O` | Mar-78 | `TECO-31.20.04O.patch8` | AP N |
+|   | Problem with `AY` command | `31.20.5M` | Mar-78 | `TECO-31.20.05M-v5A.patch8` | AV |
+|   | Conditionals inside iterations | `31.20.6M` | Mar-78 | `TECO-31.20.06M-v5B.patch8` | AV |
+|   | Echoing of warning bells | `31.20.7M` | Mar-78 | `TECO-31.20.07M-v5B.patch8` | AV |
+|   | `CTRL/U` Sometimes fails after `*` | `31.20.8M` | Apr/May-78 | `TECO-31.20.08M-v5.04.patch8` | AK |
+|   | Multiplying by `0` in `TECO` | `31.20.10M` | Apr/May-78 | `TECO-31.20.10M-v5.05.patch8` | AV |
+|   | `Q` registers don't work in 8K | `31.20.11M` | Apr/May-78 | `TECO-31.20.11M-v5.06.patch8` | AV |
+|   | Can't skip over `W` | `31.20.12M` | Apr/May-78 | `TECO-31.20.12M-v5.07.patch8` | AV |
+|   | Unspecified iterations after inserts | `31.20.13M` | Oct/Nov-78 | `TECO-31.20.13M-v5.08.patch8` (Corrected from Jun/Jul 78) | AV |
+|   | New features in `TECO V5` | `31.20.14` N | Aug/Sep-78 | Documentation Only |  |
+|  `FUTIL` | `FUTIL` Patch | `31.21.1M` | Apr/May-78 | `FUTIL-31.21.1M-v7B.patch8` | AP |
+|   | Fix `SHOW CCB` and mapping of `CD` modules | `31.21.2M` | Oct/Nov-78 | `FUTIL-31.21.2M-v7D.patch8` (Corrected from Aug/Sep 78) | AP |
+|   | Optional: change `XS` format from `excess-240` to `excess-237`. Useful for viewing `COS` data files. | `31.21.3O` | Aug/Sep-78 | `FUTIL-31.21.3O.patch8` | AVN |
+|   | `FUTIL` Patch to `MACREL`/`LINK` overlays | `31.21.4 N` | Jun/Jul-79 | Documentation Only |  |
+|  `MSBAT` | `DIM` Statement not working in `MSBAT` | `31.22.1M` | Dec 78/Jan-79 | `MSBAT-31.22.1M-v3B.patch8` | AV |
+|  `BATCH` | `MANUAL INTERVENTION REQUIRED` Erroneously | `31.23.1M` | Aug/Sep-78 | `BATCH-31.23.1M-v7B.patch8` | AV |
+| ------ | ------ | ------ | ------ | ------ | ------ |
 |   | **OS/8 FORTRAN IV V3D** |  |  |  |
-|  `F4` | `EQUIVALENCE` Statement | `02M` / `21.1.2M` | Dec/Jan 1980 | `F4-21.1.2M-v4B.patch8` (Revised, Oct 77: `F4` and `PASS3` not `FRTS` patched.) | AP |
-|  `F4` | `FORTRAN` Compiler fails to recognize `"` as an error | `51.3-1M` | Jun/Jul 78 | `F4-51.3.1M-v4C.patch8` (Corrects March 1978) | AP |
-|   | `FORTRAN` Compiler not recognizing syntax error | `51.3.2M` | Jun/Jul 78 | `F4-51.3.2M-v4x.patch8` | AP |
-|   | `FORTRAN` runtime system 2-page handler | `51.3-3O` | Oct/Nov 78 | `FRTS-51.3.3-O.patch8` Needed for RL02. (Corrected from Aug/Sep 78) | A |
-|   | Restriction with subscripted variables | `51.3-4R` | Aug/Sep 80 | Documentation: `FIV` `FORTRAN IV` will not allow subscripting to be used on both sides of an arithmetic expression. |  |
-|  `FORLIB` | `FORTRAN IV` `DLOG` Patch | `51.10.1M` | Feb/Mar 80 | `FORLIB-51.10.1M.patch8` (apply to `DLOG.RA`) | O |
+|  `F4` | `EQUIVALENCE` Statement | `02M` / `21.1.2M` | Dec/Jan-80 | `F4-21.1.2M-v4B.patch8` (Revised, Oct 77: `F4` and `PASS3` not `FRTS` patched.) | AP |
+|  `F4` | `FORTRAN` Compiler fails to recognize `"` as an error | `51.3-1M` | Jun/Jul-78 | `F4-51.3.1M-v4C.patch8` (Corrects March 1978) | AP |
+|   | `FORTRAN` Compiler not recognizing syntax error | `51.3.2M` | Jun/Jul-78 | `F4-51.3.2M-v4x.patch8` | AP |
+|   | `FORTRAN` runtime system 2-page handler | `51.3-3O` | Oct/Nov-78 | `FRTS-51.3.3-O.patch8` Needed for RL02. (Corrected from Aug/Sep 78) | A |
+|   | Restriction with subscripted variables | `51.3-4R` | Aug/Sep-80 | Documentation: `FIV` `FORTRAN IV` will not allow subscripting to be used on both sides of an arithmetic expression. |  |
+|  `FORLIB` | `FORTRAN IV` `DLOG` Patch | `51.10.1M` | Feb/Mar-80 | `FORLIB-51.10.1M.patch8` (apply to `DLOG.RA`) | O |
 |   | **OS/8 MACREL/LINKER V1A** |  |  |  |
-|  `LINK` | Patch `V1D` to `LINK` | `40.2.1M` | Apr/May 78 | `LINK-40.2.1M-v1D.patch8` | O |
-|   | Patch `VIE` to `LINK` | `40.2.2M` | Apr/May 78 | `LINK-40.2.2M-v1E.patch8` | O |
-|   | `LINK` Corrections | `40.2.3M` | Apr/May 78 | `LINK-40.2.3M-v1F.patch8` | O |
-|  `MACREL` | Patch `V1D` to `MACREL` | `40.5.1M` | Apr/May 78 | `MACREL-40.5.1M-v1D.patch8` | OD |
-|   | Patch `V1E` to `MACREL` | `40.5.2M` | Apr/May 78 | `MACREL-40.5.2M-v1E.patch8` | OD |
-|  `OVRDRV` | Patch `V1B` to `OVRDRV.MA` | `40.6.1M` | Apr/May 78 | `OVRDRV-40.6.1M-v1B-8srccom` | O |
-|  ------ | ------ | ------ | ------ | ------ | ------ |
+|  `LINK` | Patch `V1D` to `LINK` | `40.2.1M` | Apr/May-78 | `LINK-40.2.1M-v1D.patch8` | O |
+|   | Patch `VIE` to `LINK` | `40.2.2M` | Apr/May-78 | `LINK-40.2.2M-v1E.patch8` | O |
+|   | `LINK` Corrections | `40.2.3M` | Apr/May-78 | `LINK-40.2.3M-v1F.patch8` | O |
+|  `MACREL` | Patch `V1D` to `MACREL` | `40.5.1M` | Apr/May-78 | `MACREL-40.5.1M-v1D.patch8` | OD |
+|   | Patch `V1E` to `MACREL` | `40.5.2M` | Apr/May-78 | `MACREL-40.5.2M-v1E.patch8` | OD |
+|  `OVRDRV` | Patch `V1B` to `OVRDRV.MA` | `40.6.1M` | Apr/May-78 | `OVRDRV-40.6.1M-v1B-8srccom` | O |
+| ------ | ------ | ------ | ------ | ------ | ------ |
 |   | **OS/8 V3D DEVICE EXTENSIONS December 1978** |  |  |  DO NOT USE THIS KIT WITHOUT FIRST CONSULTING APR/MAY 79 _DSN_ |  |
-|  `FRTS` | `FRTS` Patch | `35.1.3M` | Apr/May 79 |  |  |
-|  `MONITOR` | `MONITOR` `V3S` Patch | `35.2.1M` | Apr/May 79 |  |  |
-|  `FUTIL` | `FUTIL Under `BATCH` | `35.13.1M` | Apr/May 79 |  |  |
-|  `PAL8` | `EXPUNGE` Patch to `PAL8` | `35.14.1M` | Feb/Mar 80 | `PAL8-35.14.1M-v13B.patch8` | AN |
-|  `ABSLDR` | Loader problem with `SAVE` image files | `21.29.1M` | Oct/Nov 80 | `ABSLDR-21.29.1M-v6C.patch8` (Supercedes June/July 1980) Bad: v6B was with OS/8 Device Extensions. | ON |
-|  `ABSLDR` | `ABSLDR` Patch | `35.18.1M` | Apr/May 79 |  |  |
-|  `BLOAD` | `BLOAD` Will not build `CCB` properly | `35.51.1M` | Feb/Mar 80 | `BLOAD-35.51.1M-v5C.patch8` | ON |
+|  `FRTS` | `FRTS` Patch | `35.1.3M` | Apr/May-79 |  |  |
+|  `MONITOR` | `MONITOR` `V3S` Patch | `35.2.1M` | Apr/May-79 |  |  |
+|  `FUTIL` | `FUTIL Under `BATCH` | `35.13.1M` | Apr/May-79 |  |  |
+|  `PAL8` | `EXPUNGE` Patch to `PAL8` | `35.14.1M` | Feb/Mar-80 | `PAL8-35.14.1M-v13B.patch8` | AN |
+|  `ABSLDR` | Loader problem with `SAVE` image files | `21.29.1M` | Oct/Nov-80 | `ABSLDR-21.29.1M-v6C.patch8` (Supercedes June/July 1980) Bad: v6B was with OS/8 Device Extensions. | ON |
+|  `ABSLDR` | `ABSLDR` Patch | `35.18.1M` | Apr/May-79 |  |  |
+|  `BLOAD` | `BLOAD` Will not build `CCB` properly | `35.51.1M` | Feb/Mar-80 | `BLOAD-35.51.1M-v5C.patch8` | ON |
 |   | **OS/8 MACREL/LINKER V2A |  |  |  |
-|   | `EXPUNGE` Documentation error | `41.1.1N` | Jun/Jul 79 |  |  |
-|   | `MACREL` Version numbers: `MACREL` is `V2C` not `V2D`; `LINK` is `V2A` not `V2B`. | `41.1.2N` | Jun/Jul 79 |  |  |
-|   | Macro restriction in `MACREL` | `41.1.3N` | Aug/Sep 79 |  |  |
-|   | Error in `.MCALL` macro example | `41.1.4N` | Feb/Mar 80 |  |  |
-|  `KREF` | Correct printing of numeric local symbols | `41.3.1M` | Apr/May 80 |  |  |
-|  `MACREL` | `EXPUNGE` Patch to `MACREL` | `41.4.1F` | Jun/Jul 79 |  |  |
-|   | Inconsistencies in `MACREL` error reporting | `41.4.2N` | Aug/Sep 79 |  |  |
-|   | Forward reference patch to `MACREL` | `41.4.3M` | Aug/Sep 79 |  |  |
-|   | Correct macro substring problem | `41.4.4M` | Apr/May 80 |  |  |
-|   | Correct printing of numeric local symbols | `41.4.5M` | Apr/May 80 |  |  |
-|  `OVRDRV` | Correct `CDF` problem | `41.5.1M` | Dec/Jan 80 |  |  |
+|   | `EXPUNGE` Documentation error | `41.1.1N` | Jun/Jul-79 |  |  |
+|   | `MACREL` Version numbers: `MACREL` is `V2C` not `V2D`; `LINK` is `V2A` not `V2B`. | `41.1.2N` | Jun/Jul-79 |  |  |
+|   | Macro restriction in `MACREL` | `41.1.3N` | Aug/Sep-79 |  |  |
+|   | Error in `.MCALL` macro example | `41.1.4N` | Feb/Mar-80 |  |  |
+|  `KREF` | Correct printing of numeric local symbols | `41.3.1M` | Apr/May-80 |  |  |
+|  `MACREL` | `EXPUNGE` Patch to `MACREL` | `41.4.1F` | Jun/Jul-79 |  |  |
+|   | Inconsistencies in `MACREL` error reporting | `41.4.2N` | Aug/Sep-79 |  |  |
+|   | Forward reference patch to `MACREL` | `41.4.3M` | Aug/Sep-79 |  |  |
+|   | Correct macro substring problem | `41.4.4M` | Apr/May-80 |  |  |
+|   | Correct printing of numeric local symbols | `41.4.5M` | Apr/May-80 |  |  |
+|  `OVRDRV` | Correct `CDF` problem | `41.5.1M` | Dec/Jan-80 |  |  |
 
 [patchlist]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/patches/patch_list.txt
 
