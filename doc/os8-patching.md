@@ -105,6 +105,12 @@ Version 6 of `ABSLDR` was part of the OS/8 V3D Device Extensions kit.  I
 want to digress into a bit of history of this kit because it's
 important to understanding OS/8 versions going forward.
 
+`PAL8-21.22.4M` is broken and doubly mis-labeled. Mis-label #1: It is
+an optional,not mandatory patch. Mis-label #2: It is for product
+sequence `35.14`, the `V13` codeline of `PAL-8` that, like `ABSLDR
+V6`, is in the Device Extensions Kit.  The breakage: Source listing
+quits working.  *Do not apply this patch!*
+
 ## OS/8 V3D Device Extensions:
 
 The OS/8 V3D Device Extensions kit (product `QF026`.) was created to
@@ -240,6 +246,7 @@ Below is the latest snapshot of the tracking spreadsheet.
 | N | Not recommended                                              |
 | O | OCR Cleaned up. No other verification or application done.   |
 | D | Does not apply.                                              |
+| B | Bad patch. DO NOT APPLY.                                     |
 
 For better readability of the table, status is abbreviated with combination of the above keys.
 
@@ -252,13 +259,13 @@ For better readability of the table, status is abbreviated with combination of t
 |  `EDIT` | `EDIT` Problem with no `FORMFEED` at end of the input file | `21.17.1M` | Mar-78 | `EDIT-21.17.1M-v12B.patch8` | AV |
 |   | `EDIT` `Q` command after `L` command | `21.17.2M` | Jun/Jul-79 | `EDIT-21.17.2M-v12C.patch8` | AV |
 |   | `EDIT` `Q` command patch | `21.17.3M` | Jun/Jul-79 | `EDIT-21.17.3M-v12D.patch8` | AV |
-|   | `EDIT.SV` `V` option will not work with `LPT DKC8-AA` | `21.17.4M` | Feb/Mar-80 | `EDIT-21.17.4M-v12C.patch8` Overwrites patch `21.12.2M` | AVN  |
+|   | `EDIT.SV` `V` option will not work with `LPT DKC8-AA` | `21.17.4M` | Feb/Mar-80 | `EDIT-21.17.4M-v12C.patch8` Overwrites patch `21.12.2M` | AVB |
 |  `FOTP` | Incorrect directory validation | `21.19.1M` | Jun/Jul-79 | `FOTP-21.19.1M-v9B.patch8` (Corrected from Aug/Sep 1978, Detailed in Apr/May 79) | AV |
 |  `MCPIP` | `DATE-78` Patch for `MCPIP` | `21.21.1M` | Mar-78 | `MCPIP-21.21.1M-v6B.patch8` | AV |
 |  `PAL8` | Incorrect core size routine | `21.22.1M` | Aug/Sep-78 | `PAL8-21.22.1M-v10B.patch8` | AV |
 |   | Erroneous `LINK` generation noted on `PAGE` directive | `21.22.2M` | Aug/Sep-78 | `PAL8-21.22.2M-v10C.patch8` | AV |
 |   | `EXPUNGE` patch to `PAL8` | `21.22.3M` | Feb/Mar-80 | `PAL8-21.22.3M-v10D.patch8` | AK |
-|   | `TAB`s are translated incorrectly | `21.22.4M` | Oct/Nov-80 | `PAL8-21.22.4M` (Supercedes June/July 1980 (which had wrong contents of memory.)) | AV |
+|   | `TAB`s are translated incorrectly | `21.22.4M` | Oct/Nov-80 | `PAL8-21.22.4M` (Supercedes June/July 1980 (which had wrong contents of memory.)) Bad! Wrong version of `PAL8`! Breaks list output. | AB |
 |  `PIP` | `PIP` `/Y` option does not work properly when transferring a system | `21.23-1M` | Aug/Sep-78 | `PIP-21.23.1M-V12B.patch8` | AK |
 |  `PIP10` | `DATE-78` Patch to `PIP 10` | `21.24.1M` | Jun/Jul-79 | `PIP10-21.24.1M-V3B.patch8` (Corrected from Dec 78/Jan 79) | AV |
 |  `SET` | Using `SET` with two-page system handlers | `21.26.1M` | Apr/May-78 | `SET-21.26.1M-v1C.patch8` | AV |
@@ -316,7 +323,7 @@ For better readability of the table, status is abbreviated with combination of t
 |  `MONITOR` | `MONITOR` `V3S` Patch | `35.2.1M` | Apr/May-79 |  |  |
 |  `FUTIL` | `FUTIL Under `BATCH` | `35.13.1M` | Apr/May-79 |  |  |
 |  `PAL8` | `EXPUNGE` Patch to `PAL8` | `35.14.1M` | Feb/Mar-80 | `PAL8-35.14.1M-v13B.patch8` | AN |
-|  `ABSLDR` | Loader problem with `SAVE` image files | `21.29.1M` | Oct/Nov-80 | `ABSLDR-21.29.1M-v6C.patch8` (Supercedes June/July 1980) Bad: v6B was with OS/8 Device Extensions. | ON |
+|  `ABSLDR` | Loader problem with `SAVE` image files | `21.29.1M` | Oct/Nov-80 | `ABSLDR-21.29.1M-v6C.patch8` (Supercedes June/July 1980) Bad: v6B was with OS/8 Device Extensions. | OB |
 |  `ABSLDR` | `ABSLDR` Patch | `35.18.1M` | Apr/May-79 |  |  |
 |  `BLOAD` | `BLOAD` Will not build `CCB` properly | `35.51.1M` | Feb/Mar-80 | `BLOAD-35.51.1M-v5C.patch8` | ON |
 |   | **OS/8 MACREL/LINKER V2A |  |  |  |

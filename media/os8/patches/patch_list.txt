@@ -35,7 +35,8 @@ MSBAT-31.22.1M-v3B.patch8
 PAL8-21.22.1M-v10B.patch8
 PAL8-21.22.2M-v10C.patch8
 PAL8-21.22.3M-v10D.patch8
-PAL8-21.22.4M.patch8
+# PAL8 21.22.4M is for V12 PAL8. It BREAKS LS output in V10!
+# PAL8-21.22.4M.patch8
 PIP-21.23.1M-v12B.patch8
 PIP10-21.24.1M-v3B.patch8
 SABR-21.91.1M-v18B.patch8
