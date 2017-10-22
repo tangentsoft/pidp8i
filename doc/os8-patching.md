@@ -106,7 +106,7 @@ want to digress into a bit of history of this kit because it's
 important to understanding OS/8 versions going forward.
 
 `PAL8-21.22.4M` is broken and doubly mis-labeled. Mis-label #1: It is
-an optional,not mandatory patch. Mis-label #2: It is for product
+an optional, not mandatory patch. Mis-label #2: It is for product
 sequence `35.14`, the `V13` codeline of `PAL-8` that, like `ABSLDR
 V6`, is in the Device Extensions Kit.  The breakage: Source listing
 quits working.  *Do not apply this patch!*
@@ -254,8 +254,8 @@ For better readability of the table, status is abbreviated with combination of t
 | ------ | ------ | ------ | ------ | ------ | ------ |
 |  | **OS/8 V3D** |  |  |  |  |
 |  `HANDLER` | `CTRL/Z` and `NULL` | `01 O *` | Oct-77 | Optional. Not going to apply. |  |
-|  `CREF` | Bug with `FIXTAB` | `21.15.1M` | Apr/May-78 | `CREF-21.15.1-v2B.patch8` Corrects bad patch | A |
-|   | Input and output file specifications | `21.15.2M` | Feb/Mar-80 | `CREF-21.15.2-v2C.patch8` | A |
+|  `CREF` | Bug with `FIXTAB` | `21.15.1M` | Apr/May-78 | `CREF-21.15.1-v2B.patch8` Corrects bad patch | AV |
+|   | Input and output file specifications | `21.15.2M` | Feb/Mar-80 | `CREF-21.15.2-v2C.patch8` | AK |
 |  `EDIT` | `EDIT` Problem with no `FORMFEED` at end of the input file | `21.17.1M` | Mar-78 | `EDIT-21.17.1M-v12B.patch8` | AV |
 |   | `EDIT` `Q` command after `L` command | `21.17.2M` | Jun/Jul-79 | `EDIT-21.17.2M-v12C.patch8` | AV |
 |   | `EDIT` `Q` command patch | `21.17.3M` | Jun/Jul-79 | `EDIT-21.17.3M-v12D.patch8` | AV |

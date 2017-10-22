@@ -638,8 +638,8 @@ def do_patch_file (s, filename, debug):
     elif line[0] == '.':        # New OS/8 Command
       match = _com_os8_parse.match(line)
       if match == None:
-        print "Ignoring failed OS/8 command parse of: " + line
-        continue
+        print "Aborting patch on failed OS/8 command parse of: " + line
+        return -1
       com = match.group(1)
       rest = match.group(2)
 
@@ -693,7 +693,7 @@ def make_patch (s, args):
     if line[0] == '#': continue      # Allow commenting out files
     filename = line.strip()
     if progmsg: print "Applying patch file: " + filename + "...",
-    success = do_patch_file (s, filename, args.debug) == 0
+    success = do_patch_file (s, filename, 0) == 0
     if progmsg:
       if success:
         print "success."
