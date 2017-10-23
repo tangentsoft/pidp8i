@@ -69,6 +69,19 @@ the Pi. There are many options:
 [fz]:   https://filezilla-project.org/
 [wscp]: https://winscp.net/eng/
 
+4.  **Clone the Fossil repository** using the instructions in the
+    [`HACKERS.md` file][hack]. (Best for experts or those who wish to
+    become experts.)
+
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
+
+5.  **Switch to the binary OS installation images** available from the
+    [top-level project page][prj]. These are default installations of
+    Raspbian Lite with the PiDP-8/I software already downloaded, built,
+    and installed. These images were produced in part using option #4
+    above, so you can use Fossil to update your software to the current
+    version at any time, as long as the Pi is connected to the Internet.
+
 
 <a name="unpacking"></a>
 ### Unpacking the Software on Your Pi
