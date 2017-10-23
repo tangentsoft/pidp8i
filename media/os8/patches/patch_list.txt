@@ -1,8 +1,13 @@
-# All but one of these patches have been verified
+# Most of these patches have been verified
 # by reading the source code.
 # The patches that remain commented out are not recommended
 # and the reason why appears in the line above it.
-# Total of 45 of 54 So far.
+#
+# ABSLDR-21.29.1M is against v6A but we have v4A.
+# v6A came with OS/8 DEV Extension kit QF026
+# Binary DECtape: AL-H525A-BA, Source not on DECtape
+# DO NOT APPLY THIS PATCH.
+## ABSLDR-21.29.1M-v6C.patch8
 BASIC.UF-31.5.1M-V5B.patch8
 BATCH-31.23.1M-v7B.patch8
 BLOAD-31.10.1M-v5B.patch8
@@ -17,25 +22,36 @@ CREF-21.15.2M-v5C.patch8
 EDIT-21.17.1M-v12B.patch8
 EDIT-21.17.2M-v12C.patch8
 EDIT-21.17.3M-v12D.patch8
-# EDIT 21.17.4 overwrites patch in 21.17.2 and is NOT recommended.
+# EDIT 21.17.4 overwrites patch in 21.17.2. DO NOT APPLY THIS PATCH
 # EDIT-21.17.4M-V12C.patch8
 F4-21.1.2M-v4B.patch8
 F4-51.3.1M-v4C.patch8
 F4-51.3.2M-v4x.patch8
+# FORLIB 51.10.1M requires crafting a batch script.
+# Patch will not apply but is listed here for completeness.
+## FORLIB-51.10.1M.patch8
 FOTP-21.19.1M-V9B.patch8
 # Can't verify FRTS because I don't know how to get a
 # .LS file to verify against.  Nevertheless the patch is recommended.
 FRTS-51.3.3-O.patch8
 FUTIL-31.21.1M-v7B.patch8
+# FUTIL-31.21.2M is currently being applied.  The risk is that it is
+# yet another patch against the Extensions update and is wrong.
+# Viewing ABSLDR under FUTIL and ODT do not agree on memory contents.
 FUTIL-31.21.2M-v7D.patch8
 # FUTIL 31.21.3O switches XS format. Recommend to leave it out.
 # FUTIL-31.21.3O.patch8
+# LQP 21.49.1 consists of commands run in BUILD.
+# The auto-apply system won't apply it.
+# It has not been validated. It uses hardware we don't have.
+## LQP-21.49.1M-vB.patch8
 MCPIP-21.21M-v6B.patch8
 MSBAT-31.22.1M-v3B.patch8
 PAL8-21.22.1M-v10B.patch8
 PAL8-21.22.2M-v10C.patch8
 PAL8-21.22.3M-v10D.patch8
 # PAL8 21.22.4M is for V12 PAL8. It BREAKS LS output in V10!
+# DO NOT APPLY THIS PATCH!
 # PAL8-21.22.4M.patch8
 PIP-21.23.1M-v12B.patch8
 PIP10-21.24.1M-v3B.patch8
@@ -59,3 +75,15 @@ TECO-31.20.10M-5.05.patch8
 TECO-31.20.11M-v5.06.patch8
 TECO-31.20.12M-v5.07.patch8
 TECO-31.20.13M-v5.08.patch8
+#
+# MACREL, LINK, and OVDRV patches have not been validated.
+# The Version numbers dont all match. Some wont apply.
+# More work is needed before they are deemed safe.
+# NOT Recommended.
+## MACREL-40.5.1M-v1D.patch8
+## MACREL-40.5.2M-v1E.patch8
+## LINK-40.2.1M-v1D.patch8
+## LINK-40.2.2M-v1E.patch8
+## LINK-40.2.3M-v1F.patch8
+# OVRDRV 40.6.1 is a source level patch
+## OVRDRV-40.6.1M-v1B-8srccom
