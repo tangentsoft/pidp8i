@@ -76,7 +76,7 @@ the Pi. There are many options:
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 
 5.  **Switch to the binary OS installation images** available from the
-    [top-level project page][prj]. These are default installations of
+    [top-level project page][cprj]. These are default installations of
     Raspbian Lite with the PiDP-8/I software already downloaded, built,
     and installed. These images were produced in part using option #4
     above, so you can use Fossil to update your software to the current
@@ -520,7 +520,7 @@ See [its documentation][test] for more details.
 ## Using the Software
 
 For the most part, this software distribution works like the [old stable
-2015.12.15 distribution][osd]. Its [documentation][prj] therefore
+2015.12.15 distribution][osd]. Its [documentation][oprj] therefore
 describes this software too, for the most part.
 
 The largest user-visible difference between the two software
@@ -563,13 +563,13 @@ Copyright © 2016-2017 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
-[prj]:  https://tangentsoft.com/pidp8i/
+[cprj]: https://tangentsoft.com/pidp8i/
 [sm1]:  http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
 [sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
 [osd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
 [sdoc]: https://tangentsoft.com/pidp8i/uv/doc/simh/main.pdf
-[prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
+[oprj]: http://obsolescence.wixsite.com/obsolescence/pidp-8
 [test]: https://tangentsoft.com/pidp8i/doc/trunk/doc/pidp8i-test.md
 [thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
