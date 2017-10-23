@@ -56,9 +56,6 @@ from simh import *
 # script's progress.
 progmsg = True
 
-# kludgy flag to add more verbose debug output.
-debug = False
-
 # Name of the RK05 disk image files we create
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
@@ -134,7 +131,7 @@ def check_exists (s, image_copyins):
 # copyin0 mounts on dt0.  copyin1 mounts on dt1.
 # Either copyin or both can be None
 
-def copyin_pair (s, copyin0, copyin1):
+def copyin_pair (s, copyin0, copyin1, debug):
   if debug:
     if copyin0:
       print "Copying: " + copyin0[1] + " to: " + copyin0[0] + "from dt0"
@@ -178,14 +175,14 @@ def copyin_pair (s, copyin0, copyin1):
 
 #### do_all_copyins ####################################################
 
-def do_all_copyins (s, copyins):
+def do_all_copyins (s, copyins, debug):
   pair_idx = 0
   pair_ct = int(len(copyins) / 2)
   while pair_idx < pair_ct:
-    copyin_pair(s, copyins[pair_idx * 2], copyins[pair_idx * 2 + 1])
+    copyin_pair(s, copyins[pair_idx * 2], copyins[pair_idx * 2 + 1], debug)
     pair_idx += 1
   if pair_ct * 2 < len(copyins):
-    copyin_pair(s, copyins[len(copyins) - 1], None)
+    copyin_pair(s, copyins[len(copyins) - 1], None, debug)
 
   
 #### make_bin ##########################################################
@@ -396,7 +393,7 @@ def make_bin (s, args):
   os.remove(boot_dt_path)     # don't check error: copyfile() succeeded above
 
   if progmsg: print "Performing remaining copies/installs..."
-  do_all_copyins (s, bin_copyins)
+  do_all_copyins (s, bin_copyins, args.debug)
 
   # Any further initialization of installed software is done here.
   s.send_cmd ("boot rk0")
@@ -493,7 +490,7 @@ def make_src (s, args):
 
   s.back_to_cmd("\.")
 
-  do_all_copyins (s, src_copyins)
+  do_all_copyins (s, src_copyins, args.debug)
 
   if progmsg: print "Cleaning up..."
   s.send_cmd ("detach rk0")
@@ -693,7 +690,7 @@ def make_patch (s, args):
     if line[0] == '#': continue      # Allow commenting out files
     filename = line.strip()
     if progmsg: print "Applying patch file: " + filename + "...",
-    success = do_patch_file (s, filename, 0) == 0
+    success = do_patch_file (s, filename, args.debug) == 0
     if progmsg:
       if success:
         print "success."
