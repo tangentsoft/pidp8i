@@ -1,6 +1,6 @@
 # Getting Started with the PiDP-8/I Software
 
-## Prerequisites
+oldrrerequisites
 
 *   A Raspberry Pi with the 40-pin GPIO connector.  That rules out the
     first-generation Raspberry Pi model A and B boards which had a
@@ -17,7 +17,7 @@
 *   This software distribution, unpacked somewhere convenient within the
     Raspberry Pi filesystem.
 
-    Unlike with the [upstream 2015.12.15 release][upst], this present
+    Unlike with the [old stable 2015.12.15 release][osd], this present
     release of the software should *not* be unpacked into `/opt/pidp8`.
     I recommend that you unpack it into `$HOME/src`, `/usr/local/src` or
     similar, but it really doesn't matter where you put it, as long as
@@ -380,15 +380,15 @@ to reflect into your local configuration.
 
 You have several options here:
 
-1.  If you just want to reflect upstream PDP-8 simulator configuration
+1.  If you just want to reflect the prior PDP-8 simulator configuration
     file changes into your local versions, you can hand-edit the
     installed simulator configuration scripts to match the changes in
     the newly-generated `boot/*.script` files under the build directory.
 
-2.  If the upstream change is to the binary PDP-8 media image files and
-    you're unwilling to overwrite them wholesale, you'll have to mount
-    both versions of the media image files under the PDP-8 simulator and
-    copy the changes over by hand.
+2.  If the change is to the binary PDP-8 media image files and you're
+    unwilling to overwrite your existing ones wholesale, you'll have to
+    mount both versions of the media image files under the PDP-8
+    simulator and copy the changes over by hand.
 
 3.  If your previously installed binary OS media images — e.g. the OS/8
     RK05 disk image that the simulator boots from by default — are
@@ -432,8 +432,8 @@ See [its documentation][test] for more details.
 <a name="using"></a>
 ## Using the Software
 
-For the most part, this software distribution works like the upstream
-[2015.12.15 distribution][usd].  Its [documentation][prj] therefore
+For the most part, this software distribution works like the [old stable
+2015.12.15 distribution][osd]. Its [documentation][prj] therefore
 describes this software too, for the most part.
 
 The largest user-visible difference between the two software
@@ -466,7 +466,7 @@ were renamed to include `pidp8i` in their name:
 
         $ sudo systemctl stop pidp8i
 
-There are [other major differences][mdif] between the upstream
+There are [other major differences][mdif] between the old stable
 distribution and this one.  See that linked wiki article for details.
 
 
@@ -477,10 +477,9 @@ the terms of [the SIMH license][sl].
 
 
 [prj]:  https://tangentsoft.com/pidp8i/
-[upst]: http://obsolescence.wixsite.com/obsolescence/pidp-8
 [sm1]:  http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
 [sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
-[usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
+[osd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
 [sdoc]: https://tangentsoft.com/pidp8i/uv/doc/simh/main.pdf
 [prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
