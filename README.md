@@ -1,6 +1,6 @@
 # Getting Started with the PiDP-8/I Software
 
-oldrrerequisites
+## Prerequisites
 
 *   A Raspberry Pi with the 40-pin GPIO connector.  That rules out the
     first-generation Raspberry Pi model A and B boards which had a
@@ -26,6 +26,80 @@ oldrrerequisites
 *   A working C compiler and other standard Linux build tools, such as
     `make(1)`.  On Debian type systems — including Raspbian — you can
     install such tools with `sudo apt install build-essential`
+
+
+<a name="unpacking"></a>
+## Getting the Software onto Your Pi
+
+This file can be read both [online][this] and as `README.md` within the
+various software distributions. If you are reading this online, then,
+you may not have gotten this software onto your Pi yet.
+
+[this]: https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
+<a name="transferring"></a>
+### Transferring the File to the Pi
+
+The first step is to get the tarball (`*.tar.gz` file) or Zip file onto
+the Pi. There are many options:
+
+1.  **Copy the file to the SD card** you're using to boot the Pi. When
+    inserted into a Mac or Windows PC, typically only the `/boot`
+    partition mounts as a drive your OS can see. (There's a much larger
+    partition on the SD card, but most PCs cannot see it.) There should
+    be enough space in this small partition to copy the file over. When
+    you boot the Pi up with that SD card, you will find the tarball or
+    Zip file in `/boot`.
+
+2.  **Pull the file down to the Pi** over the web. With the Pi connected
+    to the Internet, you can pull the file down directly to the Pi:
+
+        $ wget -O pidp8i.tar.gz https://goo.gl/JowPoC
+
+    That will get you a file called `pidp8i.tar.gz` in the current
+    working directory.
+
+3.  **SCP the file over** to a running Pi. If your Pi has OpenSSH
+    installed and running, you can use [WinSCP][wscp], [Cyberduck][cd],
+    [FileZilla][fz] or other SCP or SFTP-compatible file transfer
+    program to copy the file to the Pi over the network.
+
+[cd]:   https://cyberduck.io/
+[fz]:   https://filezilla-project.org/
+[wscp]: https://winscp.net/eng/
+
+
+<a name="unpacking"></a>
+### Unpacking the Software on Your Pi
+
+Having transferred the distribution file onto your Pi, you can unpack it
+with one of the two following commands.
+
+If you grabbed the tarball:
+
+    $ tar xvf /path/to/pidp8i-VERSION.tar.gz
+
+If you grabbed the Zip file instead:
+
+    $ unzip /path/to/pidp8i-VERSION.zip
+
+
+<a name="help"></a>
+### If You Need More Help
+
+If the above material is not sufficient to get you started, you might
+want to look at [the documentation][rpfd] provided by the Raspberry Pi
+Foundation. In particular, we recommend their [Linux][rpfl] and
+[Raspbian][rpfr] guides. The book "[Make: Linux for Makers][lfm]" by
+Aaron Newcomb is also supposed to be good.
+
+
+[rpfd]: https://www.raspberrypi.org/documentation/
+[rpfl]: https://www.raspberrypi.org/documentation/linux/
+[rpfr]: https://www.raspberrypi.org/documentation/raspbian
+
+[lfm]:  https://www.makershed.com/products/make-linux-for-makers
 
 
 <a name="configuring"></a>
