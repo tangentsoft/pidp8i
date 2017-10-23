@@ -372,17 +372,20 @@ following options:
 *   **--enable-os8-vtedit** — This option installs a default-run macro
     pack called VTEDIT which causes the OS/8 version of TECO to run in
     full-screen mode and to react to [several special keyboard
-    commands](/wiki?name=Using+VTEDIT) not normally recognized by TEDO.
+    commands][uvte] not normally recognized by TECO.
 
-    This feature is currently disabled because it is not yet fully
-    tested by the person in charge of the OS/8 disk building process.
+    This feature is disabled by default because the VTEDIT macro pack
+    changes the way TECO operates, and many people want TECO to behave
+    like *TECO*. VTEDIT was first created during the PDP-8's commercial
+    lifetime, so enabling this option is not an anachronism, but TECO is
+    much older and had a much more wide-reaching impact in history, so
+    we choose to provide unvarnished TECO by default.
 
-    It may remain disabled after that because it changes the behavior of
-    the `TECO` command in OS/8, which violates the expectations of
-    people expecting a historically accurate TECO experience. On the
-    other hand, people don't go to a ren fair and expect to experience
-    the historical ubiquity of typhoid fever either, so we might change
-    our mind on this.
+    That having been said, people don't go to a ren fair and expect to
+    experience the historical ubiquity of typhoid fever, so do not feel
+    guilty if you choose to try this option.
+
+[uvte]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 *   **--enable-os8-focal69** — Because the default installation includes
     U/W FOCAL, we have chosen to leave FOCAL 69 out by default to save
