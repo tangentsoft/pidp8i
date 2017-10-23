@@ -108,6 +108,18 @@ def main ():
   s.os8_send_ctrl ('e')
   s.send_cmd ('set throttle 1/17')
 
+  # Uncomment this line to allow access to the simulator while it runs
+  # the demo.  You can't hit Ctrl-E while running this script in the
+  # foreground, since pexpect takes over the simulator's stdio handles.
+  #
+  # It is commented out by default because SIMH can't be made to listen
+  # on localhost only, so doing this may be a security problem in some
+  # environments.  SIMH disables obviously-unsafe commands like ! on the
+  # remote console, but it is possible some mischief may be possible via
+  # this path anyway.  It could be used to exfiltrate a sensitive file
+  # via ATTACH, for example.  It's also a potential DoS vector.
+  #s.send_cmd ('set remote telnet=3141')
+
   # Let it run.  Never exits.
   s.send_cmd ('cont')
   s.spin ()
