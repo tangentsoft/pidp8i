@@ -97,6 +97,11 @@ If you grabbed the Zip file instead:
 
     $ unzip /path/to/pidp8i-VERSION.zip
 
+The file name will vary somewhat, depending on when and how you
+retrieved the file. After unpacking it, you will have a new directory
+beginning with `pidp8i`. `cd` into that directory, then proceed with the
+[configuration](#configuring) steps below.
+
 
 <a name="help"></a>
 ### If You Need More Help
