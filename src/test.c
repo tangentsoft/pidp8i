@@ -60,10 +60,10 @@ static int auto_advance = 1;
 
 #define KEY_CHECK \
         switch (getch()) { \
-            case key_down: \
-            case key_left:  auto_advance = 0; return step - 1; \
-            case key_up: \
-            case key_right: auto_advance = 0; return step + 1; \
+            case KEY_DOWN: \
+            case KEY_LEFT:  auto_advance = 0; return step - 1; \
+            case KEY_UP: \
+            case KEY_RIGHT: auto_advance = 0; return step + 1; \
             case 'r': \
             case 'R':       auto_advance = 1; return step + 1; \
             case 'x': \
