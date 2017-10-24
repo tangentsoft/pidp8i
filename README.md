@@ -30,10 +30,10 @@
 
     *   The `usbmount` tool
     
-        This is necessary only on stripped-down OSes like Raspbian Lite
-        if you want USB sticks to automount so that the PiDP-8/I panel's
-        `SING_STEP` + `DF` feature can ATTACH PDP-8 media image files on
-        those USB sticks to the simulator.
+        This is necessary only on stripped-down OSes like Raspbian Lite,
+        and then only if you want USB sticks to automount so that the
+        PiDP-8/I panel's `SING_STEP` + `DF` feature can find PDP-8 media
+        image files on those USB sticks.
 
         Full-blown GUI OSes tend to have this set up already, either by
         having `usbmount` already installed or via some similar
