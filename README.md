@@ -21,13 +21,10 @@
     recommend that.
 
 *   A working C compiler and other standard Linux build tools, such as
-    `make(1)`.  On Debian type systems — including Raspbian — you can
-    install such tools with `sudo apt install build-essential`
+    `make(1)`.
 
 *   We require several tools and libraries that are not always
     installed:
-
-    *   `ncurses` development libraries
 
     *   Python's `pexpect` library
 
@@ -44,9 +41,12 @@
         see: if a USB stick automatically mounts, you don't need to
         install `usbmount`.
 
-    To install these on a Raspbian type OS:
+    *   The `ncurses` development libraries
+
+    To install all of this on a Raspbian type OS, say:
 
         $ sudo apt update
+        $ sudo apt install build-essential
         $ sudo apt install libncurses-dev python-pip usbmount
         $ sudo pip install pexpect
 
