@@ -56,9 +56,13 @@
 <a name="unpacking"></a>
 ## Getting the Software onto Your Pi
 
-This file can be read both [online][this] and as `README.md` within the
-various software distributions. If you are reading this online, then,
-you may not have gotten this software onto your Pi yet.
+If you're reading this file within an unpacked distribution of the
+PiDP-8/I software, you should skip this section, because you have
+already achieved its aim.
+
+If you are reading this [online][this] and have not yet downloaded and
+unpacked the software source code onto your Pi, this section will get
+you going.
 
 [this]: https://tangentsoft.com/pidp8i/doc/trunk/README.md
 
