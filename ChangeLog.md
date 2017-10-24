@@ -235,7 +235,7 @@
     generally had to give absolute paths to attach media and such
     because CWD would be set somewhere unhelpful.
 
-*   Updated for Raspbian Squeeze, released in September 2017.  It should
+*   Updated for Raspbian Stretch, released in September 2017.  It should
     still run on Raspbian Jessie, however.
 
 *   Assorted portability and build system improvements.
