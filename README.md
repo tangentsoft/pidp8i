@@ -6,26 +6,51 @@
     first-generation Raspberry Pi model A and B boards which had a
     26-pin GPIO connector.
 
-*   An SD card containing Raspbian or something sufficiently close.
-    This software is currently tested with the Jessie Lite distribution.
-
-    Ideally, you will install a fresh OS image onto an unused SD card
-    rather than use this software to modify an existing OS installation,
-    but there is currently no known hard incompatibilty that prevents
-    you from integrating this software into an existing OS.
+*   An SD card containing [a compatible OS][os].
 
 *   This software distribution, unpacked somewhere convenient within the
-    Raspberry Pi filesystem.
+    filesystem on the Raspberry Pi.
 
-    Unlike with the [old stable 2015.12.15 release][osd], this present
-    release of the software should *not* be unpacked into `/opt/pidp8`.
-    I recommend that you unpack it into `$HOME/src`, `/usr/local/src` or
-    similar, but it really doesn't matter where you put it, as long as
-    your user has full write access to that directory.
+    We recommend that you unpack it somewhere your user has full
+    read/write access like `$HOME/pidp8i` or `$HOME/src/pidp8i`. Since
+    it installs as a system service, you might prefer `/usr/local/src`
+    or `/opt/src`, though you'll have to adjust permissions for that.
+
+    The [old stable 2015.12.15 release][osd] required that you unpack
+    the software into `/opt/pidp8`, but we now neither require nor
+    recommend that.
 
 *   A working C compiler and other standard Linux build tools, such as
     `make(1)`.  On Debian type systems — including Raspbian — you can
     install such tools with `sudo apt install build-essential`
+
+*   We require several tools and libraries that are not always
+    installed:
+
+    *   `ncurses` development libraries
+
+    *   Python's `pexpect` library
+
+    *   The `usbmount` tool
+    
+        This is necessary only on stripped-down OSes like Raspbian Lite
+        if you want USB sticks to automount so that the PiDP-8/I panel's
+        `SING_STEP` + `DF` feature can ATTACH PDP-8 media image files on
+        those USB sticks to the simulator.
+
+        Full-blown GUI OSes tend to have this set up already, either by
+        having `usbmount` already installed or via some similar
+        mechanism.  If you're not running on Raspbian Lite, try it and
+        see: if a USB stick automatically mounts, you don't need to
+        install `usbmount`.
+
+    To install these on a Raspbian type OS:
+
+        $ sudo apt update
+        $ sudo apt install libncurses-dev python-pip usbmount
+        $ sudo pip install pexpect
+
+[os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 
 
 <a name="unpacking"></a>
