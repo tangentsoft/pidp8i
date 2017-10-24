@@ -91,7 +91,7 @@ the Pi. There are many options:
 
 3.  **SCP the file over** to a running Pi. If your Pi has OpenSSH
     installed and running, you can use [WinSCP][wscp], [Cyberduck][cd],
-    [FileZilla][fz] or other SCP or SFTP-compatible file transfer
+    [FileZilla][fz] or another SCP or SFTP-compatible file transfer
     program to copy the file to the Pi over the network.
 
 [cd]:   https://cyberduck.io/
@@ -127,7 +127,7 @@ If you grabbed the Zip file instead:
     $ unzip /path/to/pidp8i-VERSION.zip
 
 The file name will vary somewhat, depending on when and how you
-retrieved the file. After unpacking it, you will have a new directory
+transferred the file. After unpacking it, you will have a new directory
 beginning with `pidp8i`. `cd` into that directory, then proceed with the
 [configuration](#configuring) steps below.
 
@@ -166,7 +166,7 @@ implicitly repaired by the `configure` script.
 <a name="options"></a>
 ### Configure Script Options
 
-You can change a few things about the way the software is built and
+You can change many things about the way the software is built and
 installed by giving options to the `configure` script:
 
 
