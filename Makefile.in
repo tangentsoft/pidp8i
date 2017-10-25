@@ -347,9 +347,12 @@ test-mkos8:
 # the updated init.tx file, not before.  We needn't even make it an
 # order-only prereq because configure and the INFILES rules above ensure
 # that it always exists.
-OS8_BIN_SRCS = $(MKOS8_SRCS) \
+OS8_BIN_SRCS := $(MKOS8_SRCS) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
+ifneq (@MKOS8_BIN_PATCHES@,)
+	OS8_BIN_SRCS += @srcdir@/media/os8/patches/patch_list.txt
+endif
 $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM)
 	$(MKOS8)@MKOS8_OPTS@ bin @MKOS8_BIN_PATCHES@
 
