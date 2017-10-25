@@ -400,7 +400,7 @@ options IF=0 and IF=7 can be left out to save space and build time:
     installation set because that would overrun OS/8's limitation on the
     number of files on a volume.
 
-[os8p]: https://tangentsoft.com/pidp8i/doc/trunk/os8-patching.md
+[os8p]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 
 
 <a name="enable-os8"></a>
