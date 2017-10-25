@@ -6,26 +6,154 @@
     first-generation Raspberry Pi model A and B boards which had a
     26-pin GPIO connector.
 
-*   An SD card containing Raspbian or something sufficiently close.
-    This software is currently tested with the Jessie Lite distribution.
-
-    Ideally, you will install a fresh OS image onto an unused SD card
-    rather than use this software to modify an existing OS installation,
-    but there is currently no known hard incompatibilty that prevents
-    you from integrating this software into an existing OS.
+*   An SD card containing [a compatible OS][os].
 
 *   This software distribution, unpacked somewhere convenient within the
-    Raspberry Pi filesystem.
+    filesystem on the Raspberry Pi.
 
-    Unlike with the [upstream 2015.12.15 release][upst], this present
-    release of the software should *not* be unpacked into `/opt/pidp8`.
-    I recommend that you unpack it into `$HOME/src`, `/usr/local/src` or
-    similar, but it really doesn't matter where you put it, as long as
-    your user has full write access to that directory.
+    We recommend that you unpack it somewhere your user has read/write
+    access like `$HOME/src/pidp8i`. Since it installs as a system
+    service, you might prefer `/usr/local/src` or `/opt/src`, though
+    you'll have to adjust permissions for that.
 
-*   A working C compiler and other standard Linux build tools, such as
-    `make(1)`.  On Debian type systems — including Raspbian — you can
-    install such tools with `sudo apt install build-essential`
+    The [old stable 2015.12.15 release][osd] required that you unpack
+    the software into `/opt/pidp8`, but we now neither require nor
+    recommend that.
+
+*   We require several tools and libraries that aren't always installed:
+
+    *   A working C compiler and other standard Linux build tools,
+        such as `make(1)`.
+
+    *   Python's `pexpect` library
+
+    *   The `usbmount` tool
+    
+        This is provides two things:
+        
+        *   USB stick auto-mounting on stripped-down OSes like Raspbian
+            Lite so you can use the PiDP-8/I `SING_STEP` + `DF` feature
+            without having to manually mount the USB stick first.
+        
+        *   A known directory structure that allows the PiDP-8/I
+            software to find the media image files on those sticks.
+            (`*.pt`, `*.dt`, `*.rk`, etc.)
+
+        Full-blown GUI OSes tend to have USB auto-mounting set up
+        already, though they won't meet the second criteria unless they
+        use the same directory layout as `usbmount`: `/media/usbN`,
+        where `N` is a number from 0 to 7, depending on the order
+        you attached the USB stick.  Many Linuxes use `/media/LABEL`
+        instead, for example, where `LABEL` is the partition's label;
+        the PiDP-8/I software won't find the files on those USB sticks
+        in that case.
+
+    *   The `ncurses` development libraries
+
+    To install all of this on a Raspbian type OS, say:
+
+        $ sudo apt update
+        $ sudo apt install build-essential
+        $ sudo apt install libncurses-dev python-pip usbmount
+        $ sudo pip install pexpect
+
+[os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
+
+
+<a name="unpacking"></a>
+## Getting the Software onto Your Pi
+
+If you're reading this file within an unpacked distribution of the
+PiDP-8/I software, you should skip this section, because you have
+already achieved its aim.
+
+If you are reading this [online][this] and have not yet downloaded and
+unpacked the software source code onto your Pi, this section will get
+you going.
+
+[this]: https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
+<a name="transferring"></a>
+### Transferring the File to the Pi
+
+The first step is to get the tarball (`*.tar.gz` file) or Zip file onto
+the Pi. There are many options:
+
+1.  **Copy the file to the SD card** you're using to boot the Pi.
+    When inserted into a Mac or Windows PC, typically only the `/boot`
+    partition mounts as a drive your OS can see.  (There's a much
+    larger partition on the SD card, but most PCs cannot see it.)
+    There should be enough free space left in this small partition to
+    copy the file over.  When you boot the Pi up with that SD card,
+    you will find the tarball or Zip file in `/boot`.
+
+2.  **Pull the file down to the Pi** over the web, directly to the Pi:
+
+        $ wget -O pidp8i.tar.gz https://goo.gl/JowPoC
+
+    That will get you a file called `pidp8i.tar.gz` in the current
+    working directory.
+
+3.  **SCP the file over** to a running Pi from another machine.
+    If your Pi has OpenSSH installed and running, you can use
+    [WinSCP][wscp], [Cyberduck][cd], [FileZilla][fz] or another SCP
+    or SFTP-compatible file transfer program to copy the file to the
+    Pi over the network.
+
+[cd]:   https://cyberduck.io/
+[fz]:   https://filezilla-project.org/
+[wscp]: https://winscp.net/eng/
+
+4.  **Clone the Fossil repository** using the instructions in the
+    [`HACKERS.md` file][hack]. (Best for experts or those who wish to
+    become experts.)
+
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
+
+5.  **Switch to the binary OS installation images** available from the
+    [top-level project page][cprj].  These are default installations of
+    Raspbian Lite with the PiDP-8/I software already downloaded, built,
+    and installed.  These images were produced in part using option #4
+    above, so you can use Fossil to update your software to the current
+    version at any time, as long as the Pi is connected to the Internet.
+
+
+<a name="unpacking"></a>
+### Unpacking the Software on Your Pi
+
+Having transferred the distribution file onto your Pi, you can unpack it
+with one of the two following commands.
+
+If you grabbed the tarball:
+
+    $ tar xvf /path/to/pidp8i-VERSION.tar.gz
+
+If you grabbed the Zip file instead:
+
+    $ unzip /path/to/pidp8i-VERSION.zip
+
+The file name will vary somewhat, depending on when and how you
+transferred the file.  After unpacking it, you will have a new
+directory beginning with `pidp8i`.  `cd` into that directory, then
+proceed with the [configuration](#configuring) steps below.
+
+
+<a name="help"></a>
+### If You Need More Help
+
+If the above material is not sufficient to get you started, you might
+want to look at [the documentation][rpfd] provided by the Raspberry
+Pi Foundation.  In particular, we recommend their [Linux][rpfl] and
+[Raspbian][rpfr] guides.  The book "[Make: Linux for Makers][lfm]"
+by Aaron Newcomb is also supposed to be good.
+
+
+[rpfd]: https://www.raspberrypi.org/documentation/
+[rpfl]: https://www.raspberrypi.org/documentation/linux/
+[rpfr]: https://www.raspberrypi.org/documentation/raspbian
+
+[lfm]:  https://www.makershed.com/products/make-linux-for-makers
 
 
 <a name="configuring"></a>
@@ -36,16 +164,22 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
 
-If you've checked out a new version of the source code and the `make`
-step fails, try redoing the `configure` step. Sometimes changes made to
-the source code invalidate prior `make` dependencies, which are
-implicitly repaired by the `configure` script.
+The `configure` step is generally needed only the first time you build
+the software in a new directory, but occasionally we make some change
+to the software that invalidates the old `make` dependencies causing
+the second step above to fail.  If that happens, try reconfiguring:
+
+    $ make reconfig
+
+If that doesn't work, call `./configure` directly again.  If you
+can't remember which options you gave last time, they're at the top of
+`config.log`.
 
 
 <a name="options"></a>
 ### Configure Script Options
 
-You can change a few things about the way the software is built and
+You can change many things about the way the software is built and
 installed by giving options to the `configure` script:
 
 
@@ -235,15 +369,23 @@ options IF=0 and IF=7 can be left out to save space and build time:
 
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 
-*   **--disable-os8-init** - Generate `SYS:INIT.TX` but do not display
+*   **--disable-os8-init** - Generate `RKB0:INIT.TX` but do not display
     it on OS/8 boot.  Rather than disable the default on-boot init
-    message, you may want to edit `media/os8/init.tx.in` to taste and
-    rebuild.
+    message, you may want to edit `media/os8/init.tx.in` to taste
+    and rebuild.
+
+    (We still build the file when you give this option in case you
+    later decide you want to enable the boot message, or you need to
+    call up configuration information stored in `INIT.TX`.)
 
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
 *   **--disable-os8-macrel** - Leave the MACREL assembler out.
+
+*   **--disable-os8-patches** - Do not apply any of the OS/8 V3D
+    patches published by DEC.  See the [documentation][os8p] for this
+    option for more information.
 
 *   **--disable-os8-src** - Do not build the `os8v3d-src.rk05` disk
     image from the OS/8 source tapes.  This is not controlled by
@@ -257,6 +399,8 @@ options IF=0 and IF=7 can be left out to save space and build time:
     much more to explore here, but we cannot include it in the default
     installation set because that would overrun OS/8's limitation on the
     number of files on a volume.
+
+[os8p]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 
 
 <a name="enable-os8"></a>
@@ -277,17 +421,20 @@ following options:
 *   **--enable-os8-vtedit** — This option installs a default-run macro
     pack called VTEDIT which causes the OS/8 version of TECO to run in
     full-screen mode and to react to [several special keyboard
-    commands](/wiki?name=Using+VTEDIT) not normally recognized by TEDO.
+    commands][uvte] not normally recognized by TECO.
 
-    This feature is currently disabled because it is not yet fully
-    tested by the person in charge of the OS/8 disk building process.
+    This feature is disabled by default because the VTEDIT macro pack
+    changes the way TECO operates, and many people want TECO to behave
+    like *TECO*. VTEDIT was first created during the PDP-8's commercial
+    lifetime, so enabling this option is not an anachronism, but TECO is
+    much older and had a much more wide-reaching impact in history, so
+    we choose to provide unvarnished TECO by default.
 
-    It may remain disabled after that because it changes the behavior of
-    the `TECO` command in OS/8, which violates the expectations of
-    people expecting a historically accurate TECO experience. On the
-    other hand, people don't go to a ren fair and expect to experience
-    the historical ubiquity of typhoid fever either, so we might change
-    our mind on this.
+    That having been said, people don't go to a ren fair and expect to
+    experience the historical ubiquity of typhoid fever, so do not feel
+    guilty if you choose to try this option.
+
+[uvte]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 *   **--enable-os8-focal69** — Because the default installation includes
     U/W FOCAL, we have chosen to leave FOCAL 69 out by default to save
@@ -377,15 +524,15 @@ to reflect into your local configuration.
 
 You have several options here:
 
-1.  If you just want to reflect upstream PDP-8 simulator configuration
+1.  If you just want to reflect the prior PDP-8 simulator configuration
     file changes into your local versions, you can hand-edit the
     installed simulator configuration scripts to match the changes in
     the newly-generated `boot/*.script` files under the build directory.
 
-2.  If the upstream change is to the binary PDP-8 media image files and
-    you're unwilling to overwrite them wholesale, you'll have to mount
-    both versions of the media image files under the PDP-8 simulator and
-    copy the changes over by hand.
+2.  If the change is to the binary PDP-8 media image files and you're
+    unwilling to overwrite your existing ones wholesale, you'll have to
+    mount both versions of the media image files under the PDP-8
+    simulator and copy the changes over by hand.
 
 3.  If your previously installed binary OS media images — e.g. the OS/8
     RK05 disk image that the simulator boots from by default — are
@@ -429,8 +576,8 @@ See [its documentation][test] for more details.
 <a name="using"></a>
 ## Using the Software
 
-For the most part, this software distribution works like the upstream
-[2015.12.15 distribution][usd].  Its [documentation][prj] therefore
+For the most part, this software distribution works like the [old stable
+2015.12.15 distribution][osd]. Its [documentation][oprj] therefore
 describes this software too, for the most part.
 
 The largest user-visible difference between the two software
@@ -463,7 +610,7 @@ were renamed to include `pidp8i` in their name:
 
         $ sudo systemctl stop pidp8i
 
-There are [other major differences][mdif] between the upstream
+There are [other major differences][mdif] between the old stable
 distribution and this one.  See that linked wiki article for details.
 
 
@@ -473,14 +620,13 @@ Copyright © 2016-2017 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
-[prj]:  https://tangentsoft.com/pidp8i/
-[upst]: http://obsolescence.wixsite.com/obsolescence/pidp-8
+[cprj]: https://tangentsoft.com/pidp8i/
 [sm1]:  http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
 [sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
-[usd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
+[osd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
 [dt2]:  https://github.com/VentureKing/Deeper-Thought-2
 [sdoc]: https://tangentsoft.com/pidp8i/uv/doc/simh/main.pdf
-[prj]:  http://obsolescence.wixsite.com/obsolescence/pidp-8
+[oprj]: http://obsolescence.wixsite.com/obsolescence/pidp-8
 [test]: https://tangentsoft.com/pidp8i/doc/trunk/doc/pidp8i-test.md
 [thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 [mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences

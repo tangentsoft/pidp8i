@@ -37,6 +37,8 @@ class ArgParser (argparse.ArgumentParser):
     argparse.ArgumentParser.__init__ (self,
         description = 'Build OS/8 RK05 disk images')
 
+    self.add_bool ('-d', '--debug',
+            help = 'add extra debugging output, normally suppressed')
     self.add_bool ('-v', '--verbose',
             help = 'verbose SIMH output instead of progress messages')
     self.add_bool ('--enable-music',

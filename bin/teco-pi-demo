@@ -55,9 +55,27 @@ def main ():
   s.send_cmd ("boot rk0")
   s.os8_send_cmd ('\.', "R TECO")
 
-  # The macro we'll send: http://www.iwriteiam.nl/HaPi_TECO_macro.html
+  # The macro comes from http://www.iwriteiam.nl/HaPi_TECO_macro.html
+  #
+  # The 248 preceding "UN" in the first line of the macro is the number
+  # of digits of pi to calculate.  That value was reached by experiment
+  # as the largest value that runs without crashing TECO with a
+  #
+  #    ?MEM  STORAGE CAPACITY EXCEEDED
+  #
+  # error.  You can see that by increasing the value below, commenting
+  # out the throttle setting below, and running the demo.  On a Pi 3, it
+  # should take a bit over an hour to complete, if it doesn't error out.
+  #
+  # With the simulator throttled, generating 248 digits takes 17 years!
+  #
+  # That is based on generating 1 digit every ~16 seconds on a Pi 3 when
+  # running unthrottled, roughly 8 MIPS.  When throttled to 59 IPS — or
+  # 17ms per instruction, as below — you multiply the seconds by the
+  # factor 8 MIPS / 59 IPS = ~136000, giving about 2.2 million seconds
+  # per digit.  Multiplying that by 248 gives ~17 years.
   macro = [
-    'GZ0J\UNQN"E 40UN \' BUH BUV HK',
+    'GZ0J\UNQN"E 248UN \' BUH BUV HK',
     'QN< J BUQ QN*10/3UI',
     'QI< \+2*10+(QQ*QI)UA B L K QI*2-1UJ QA/QJUQ',
     'QA-(QQ*QJ)-2\ 10@I// -1%I >',
@@ -83,13 +101,28 @@ def main ():
   s.os8_send_ctrl ('[')
   s.os8_send_ctrl ('[')
 
-  # Let macro run for a bit, then pop out to SIMH and throttle it down
-  # to a rate suitable for a blinkenlights demo and let it go.
-  time.sleep (0.1)
+  # Pop out to SIMH and throttle it down to a rate suitable for a
+  # blinkenlights demo.  1/17 means SIMH runs one instruction then
+  # waits for 17ms, yielding roughly 59 instructions per second.
+  time.sleep (0.1)      # FIXME: simulator chokes on 'cont' without this
   s.os8_send_ctrl ('e')
   s.send_cmd ('set throttle 1/17')
+
+  # Uncomment this line to allow access to the simulator while it runs
+  # the demo.  You can't hit Ctrl-E while running this script in the
+  # foreground, since pexpect takes over the simulator's stdio handles.
+  #
+  # It is commented out by default because SIMH can't be made to listen
+  # on localhost only, so doing this may be a security problem in some
+  # environments.  SIMH disables obviously-unsafe commands like ! on the
+  # remote console, but it is possible some mischief may be possible via
+  # this path anyway.  It could be used to exfiltrate a sensitive file
+  # via ATTACH, for example.  It's also a potential DoS vector.
+  #s.send_cmd ('set remote telnet=3141')
+
+  # Let it run.  Never exits.
   s.send_cmd ('cont')
-  s.spin ()                     # never exits
+  s.spin ()
 
 
 if __name__ == "__main__":

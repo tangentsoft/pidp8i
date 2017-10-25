@@ -73,12 +73,12 @@ it as an intermediary:
 
     .R PIP
     *HELLO.DA<TTY:                  ⇠ use default extension for O I
-    01.10 TYPE "Hello, world!"!
-    ^Z                              ⇠ Ctrl-Z is the EOF marker in OS/8
-    *^C                             ⇠ return to OS/8 from PIP
+    01.10 TYPE "Hello, world!"!     ⇠ paste your program text here
+    ^Z                              ⇠ hit Ctrl-Z to tell PIP it's reached end-of-file (EOF)
+    *^C                             ⇠ hit Ctrl-C to return to OS/8 from PIP
     .R UWF16K                       ⇠ run U/W FOCAL
     *O I HELLO                      ⇠ open text file for input; "types" pgm in for us
-    _G                              ⇠ EOF seen, program started
+    _G                              ⇠ underscore = EOF seen, G starts program
     Hello, world!                   ⇠ and it runs!
 
 That is, we use OS/8's `PIP` command to accept text input from the

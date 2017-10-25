@@ -13,6 +13,9 @@
     This provides the following features and benefits as compared to the
     old `os8.rk05`:
 
+    -   All of the patches DEC published for OS/8 V3D which are still
+        relevant in our PiDP-8/I world are applied by default.
+
     -   U/W FOCAL V4E is installed on SYS: by default. Start with our
         [U/W FOCAL Manual Supplement for the PiDP-8/I][uwfs], then
         follow links from there to further information.
@@ -232,10 +235,10 @@
     generally had to give absolute paths to attach media and such
     because CWD would be set somewhere unhelpful.
 
-*   Updated for Raspbian Squeeze, released in September 2017.  It should
+*   Updated for Raspbian Stretch, released in September 2017.  It should
     still run on Raspbian Jessie, however.
 
-*   Assorted portability improvements.
+*   Assorted portability and build system improvements.
 
 *   **TODO**
 

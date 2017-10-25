@@ -56,13 +56,18 @@ from simh import *
 # script's progress.
 progmsg = True
 
-# kludgy flag to add more verbose debug output.
-debug = False
-
 # Name of the RK05 disk image files we create
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
 _patched_rk05 = "os8v3d-patched.rk05"
+
+# Parser regexps used in patcher
+_com_os8_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
+_com_os8_parse = re.compile(_com_os8_parse_str)
+_com_split_str = "^([a-zA-Z]+)\s?(.*)$"
+_com_split_parse = re.compile(_com_split_str)
+_odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
+_odt_parse = re.compile(_odt_parse_str)
 
 
 #### check_exists ######################################################
@@ -126,7 +131,7 @@ def check_exists (s, image_copyins):
 # copyin0 mounts on dt0.  copyin1 mounts on dt1.
 # Either copyin or both can be None
 
-def copyin_pair (s, copyin0, copyin1):
+def copyin_pair (s, copyin0, copyin1, debug):
   if debug:
     if copyin0:
       print "Copying: " + copyin0[1] + " to: " + copyin0[0] + "from dt0"
@@ -170,14 +175,14 @@ def copyin_pair (s, copyin0, copyin1):
 
 #### do_all_copyins ####################################################
 
-def do_all_copyins (s, copyins):
+def do_all_copyins (s, copyins, debug):
   pair_idx = 0
   pair_ct = int(len(copyins) / 2)
   while pair_idx < pair_ct:
-    copyin_pair(s, copyins[pair_idx * 2], copyins[pair_idx * 2 + 1])
+    copyin_pair(s, copyins[pair_idx * 2], copyins[pair_idx * 2 + 1], debug)
     pair_idx += 1
   if pair_ct * 2 < len(copyins):
-    copyin_pair(s, copyins[len(copyins) - 1], None)
+    copyin_pair(s, copyins[len(copyins) - 1], None, debug)
 
   
 #### make_bin ##########################################################
@@ -385,10 +390,10 @@ def make_bin (s, args):
   s.send_cmd ("detach dt1")
   s.send_cmd ("boot rk0")     # must do: boot media just went away
   s.back_to_cmd("\.")
-  if os.path.isfile(boot_dt_path): os.remove(boot_dt_path)
+  os.remove(boot_dt_path)     # don't check error: copyfile() succeeded above
 
   if progmsg: print "Performing remaining copies/installs..."
-  do_all_copyins (s, bin_copyins)
+  do_all_copyins (s, bin_copyins, args.debug)
 
   # Any further initialization of installed software is done here.
   s.send_cmd ("boot rk0")
@@ -485,56 +490,131 @@ def make_src (s, args):
 
   s.back_to_cmd("\.")
 
-  do_all_copyins (s, src_copyins)
+  do_all_copyins (s, src_copyins, args.debug)
 
   if progmsg: print "Cleaning up..."
   s.send_cmd ("detach rk0")
   s.send_cmd ("detach rk1")
 
-#### parse_r #########################################################
 
-def parse_r (com, line):
-  # Send args to Command decoder first.
-  # Then perform com-specific parse.
-  return
-  
 #### parse_odt #########################################################
 
-def parse_odt (s, com, line):
-  odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
-  odt_parse = re.compile(odt_parse_str)
-
-  print line
+def parse_odt (s, com, line, debug):
+  if debug: print line
   
   if line == "\\c": return "break"
-  match = odt_parse.match(line)
+  match = _odt_parse.match(line)
   if match == None:
-    print "Skipping bad ODT line: " + line
-    return "cont"
+    print "Aborting because of bad ODT line: " + line
+    s.os8_send_ctrl('C')
+    return "err"
   loc = match.group(1)
   old_val = match.group(2)
   new_val = match.group(3)
-  if not old_val.isdigit(): old_val = ".*"
-
-  print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
+  expect_val_str = "\s?[0-7]{4} "
+  
+  if debug: print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
   s.os8_send_str (loc + "/")
-  s._child.expect(old_val)
+  s._child.expect(expect_val_str)
+
+  if old_val.isdigit():          # We need to check old value
+    found_val = s._child.after.strip()
+    if found_val != old_val:
+      print "Old value: " + found_val + " does not match " + old_val + ". Aborting patch."
+      # Abort out of ODT back to the OS/8 Monitor
+      s.os8_send_ctrl('C')
+      return "err"
+
   s.os8_send_line (new_val)
+  return "cont"
+
+
+#### futil_exit ########################################################
+
+def futil_exit (s, com, line):
+  s.os8_send_line(line)
+  return "break"
+
+
+#### futil_file ########################################################
+
+def futil_file (s, com, line):
+  # Redundant re-parse of line but nobody else wants args right now.
+  match = _com_split_parse.match(line)
+  if match == None:
+    print "Aborting because of mal-formed FUTIL FILE command: " + line
+    s.os8_send_ctrl('C')
+    return "err"
+  fname = match.group(2)
+  expect_futil_file_str = "\n" + fname + "\s+(.*)$"
+  s.os8_send_line (line)
+  s._child.expect(expect_futil_file_str)
+  result = s._child.after.strip()
+  match = _com_split_parse.match(result)
+  if match == None:
+    print "Aborting because unexpected return status: " + result + " from: " + line
+    s.os8_send_ctrl('C')
+    return "err"
+  if match.group(2).strip() == "LOOKUP FAILED":
+    print "Aborting because of FUTIL lookup failure on: " + fname
+    s.os8_send_ctrl('C')
+    return "err"
+  else:
+    return "cont"
+  
+  
+#### parse_futil #########################################################
+#
+# Very simple minded:
+# If first char on line is an alpha, run the command.
+# If the first char on line is number, do the substitute command.
+#
+# Substitute command acts like ODT.
+# Future version should support the IF construct.
+#
+# When we encounter the EXIT command, we return success.
+
+def parse_futil (s, com, line, debug):
+  futil_specials = {
+    "EXIT": futil_exit,
+    "FILE": futil_file
+  }
+
+  if line[0].isdigit():
+    # Treat the line as ODT
+    return parse_odt(s, com, line, debug)
+  else:
+    match = _com_split_parse.match(line)
+    if match == None:
+      print "Ignoring failed FUTIL command parse of: " + line
+      return "cont"
+    fcom = match.group(1)
+    rest = match.group(2)
+
+    if fcom not in futil_specials:
+      # Blind faith and no error checking.
+      s.os8_send_line(line)
+      return "cont"
+    else:
+      return futil_specials[fcom](s, fcom, line)
 
 
 #### do_patch_file #####################################################
 
-def do_patch_file (s, filename):
+def do_patch_file (s, filename, debug):
+  global progmsg
+  
   try:
     patch_file = open(dirs.media + "patches/" + filename, "r")
   except IOError:
     print filename + " not found. Skipping."
-    return
+    return -1
 
-  com_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
-  com_parse = re.compile(com_parse_str)
-
-  special_commands = {"ODT": parse_odt}
+  special_commands = {
+    "ODT": parse_odt,
+    "R": None,               # Get next parser.
+    "FUTIL": parse_futil
+  }
 
   inside_a_command = False
   the_command = ""
@@ -543,29 +623,40 @@ def do_patch_file (s, filename):
   for line in patch_file:
     line = line.rstrip()
     if line == "": continue
-    elif line[0] == '#': print line
+    elif line[0] == '#': continue     # Ignore Comments
     elif inside_a_command:
-      retval = the_command_parser (s, the_command, line)
+      retval = the_command_parser (s, the_command, line, debug)
       if retval == "break":
         inside_a_command = False
         s.os8_send_ctrl('C')
+      elif retval == "err":
+        patch_file.close()
+        return -1
     elif line[0] == '.':        # New OS/8 Command
-      match = com_parse.match(line)
+      match = _com_os8_parse.match(line)
       if match == None:
-        print "Failed OS/8 command parse of: " + line
-        continue
+        print "Aborting patch on failed OS/8 command parse of: " + line
+        return -1
       com = match.group(1)
       rest = match.group(2)
-      print "Command: " + com + ", Args: " + rest
 
       if com in special_commands:
+        if com == "R":
+          # Run command is special.  Take arg as the command and run it.
+          com = rest
         inside_a_command = True
         the_command = com
         the_command_parser = special_commands[com]
 
       # We carefully separate com and args
       # But don't make much use of that yet.
+      if progmsg and debug: print line
       s.os8_send_cmd ("\.", line[1:])  # Skip Prompt.
+
+  patch_file.close()
+
+  # Done.  Signal success.
+  return 0
 
       
 #### make_patch ########################################################
@@ -596,14 +687,20 @@ def make_patch (s, args):
   
   for line in manifest:
     if line == "": continue
+    if line[0] == '#': continue      # Allow commenting out files
     filename = line.strip()
-    print filename
-    do_patch_file (s, filename)
+    if progmsg: print "Applying patch file: " + filename + "...",
+    success = do_patch_file (s, filename, args.debug) == 0
+    if progmsg:
+      if success:
+        print "success."
+      else:
+        print "FAILED!"
 
   # Finish up
   if progmsg: print "Cleaning up..."
-  s.os8_squish ("SYS")
-  s.os8_squish ("DSK")
+  # s.os8_squish ("SYS")
+  # s.os8_squish ("DSK")
   s.back_to_cmd("\.")
   s.send_cmd ("detach rk0")
 
