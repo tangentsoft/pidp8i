@@ -11,35 +11,42 @@
 *   This software distribution, unpacked somewhere convenient within the
     filesystem on the Raspberry Pi.
 
-    We recommend that you unpack it somewhere your user has full
-    read/write access like `$HOME/pidp8i` or `$HOME/src/pidp8i`. Since
-    it installs as a system service, you might prefer `/usr/local/src`
-    or `/opt/src`, though you'll have to adjust permissions for that.
+    We recommend that you unpack it somewhere your user has read/write
+    access like `$HOME/src/pidp8i`. Since it installs as a system
+    service, you might prefer `/usr/local/src` or `/opt/src`, though
+    you'll have to adjust permissions for that.
 
     The [old stable 2015.12.15 release][osd] required that you unpack
     the software into `/opt/pidp8`, but we now neither require nor
     recommend that.
 
-*   A working C compiler and other standard Linux build tools, such as
-    `make(1)`.
+*   We require several tools and libraries that aren't always installed:
 
-*   We require several tools and libraries that are not always
-    installed:
+    *   A working C compiler and other standard Linux build tools,
+        such as `make(1)`.
 
     *   Python's `pexpect` library
 
     *   The `usbmount` tool
     
-        This is necessary only on stripped-down OSes like Raspbian Lite,
-        and then only if you want USB sticks to automount so that the
-        PiDP-8/I panel's `SING_STEP` + `DF` feature can find PDP-8 media
-        image files on those USB sticks.
+        This is provides two things:
+        
+        *   USB stick auto-mounting on stripped-down OSes like Raspbian
+            Lite so you can use the PiDP-8/I `SING_STEP` + `DF` feature
+            without having to manually mount the USB stick first.
+        
+        *   A known directory structure that allows the PiDP-8/I
+            software to find the media image files on those sticks.
+            (`*.pt`, `*.dt`, `*.rk`, etc.)
 
-        Full-blown GUI OSes tend to have this set up already, either by
-        having `usbmount` already installed or via some similar
-        mechanism.  If you're not running on Raspbian Lite, try it and
-        see: if a USB stick automatically mounts, you don't need to
-        install `usbmount`.
+        Full-blown GUI OSes tend to have USB auto-mounting set up
+        already, though they won't meet the second criteria unless they
+        use the same directory layout as `usbmount`: `/media/usbN`,
+        where `N` is a number from 0 to 7, depending on the order
+        you attached the USB stick.  Many Linuxes use `/media/LABEL`
+        instead, for example, where `LABEL` is the partition's label;
+        the PiDP-8/I software won't find the files on those USB sticks
+        in that case.
 
     *   The `ncurses` development libraries
 
@@ -73,26 +80,26 @@ you going.
 The first step is to get the tarball (`*.tar.gz` file) or Zip file onto
 the Pi. There are many options:
 
-1.  **Copy the file to the SD card** you're using to boot the Pi. When
-    inserted into a Mac or Windows PC, typically only the `/boot`
-    partition mounts as a drive your OS can see. (There's a much larger
-    partition on the SD card, but most PCs cannot see it.) There should
-    be enough space in this small partition to copy the file over. When
-    you boot the Pi up with that SD card, you will find the tarball or
-    Zip file in `/boot`.
+1.  **Copy the file to the SD card** you're using to boot the Pi.
+    When inserted into a Mac or Windows PC, typically only the `/boot`
+    partition mounts as a drive your OS can see.  (There's a much
+    larger partition on the SD card, but most PCs cannot see it.)
+    There should be enough free space left in this small partition to
+    copy the file over.  When you boot the Pi up with that SD card,
+    you will find the tarball or Zip file in `/boot`.
 
-2.  **Pull the file down to the Pi** over the web. With the Pi connected
-    to the Internet, you can pull the file down directly to the Pi:
+2.  **Pull the file down to the Pi** over the web, directly to the Pi:
 
         $ wget -O pidp8i.tar.gz https://goo.gl/JowPoC
 
     That will get you a file called `pidp8i.tar.gz` in the current
     working directory.
 
-3.  **SCP the file over** to a running Pi. If your Pi has OpenSSH
-    installed and running, you can use [WinSCP][wscp], [Cyberduck][cd],
-    [FileZilla][fz] or another SCP or SFTP-compatible file transfer
-    program to copy the file to the Pi over the network.
+3.  **SCP the file over** to a running Pi from another machine.
+    If your Pi has OpenSSH installed and running, you can use
+    [WinSCP][wscp], [Cyberduck][cd], [FileZilla][fz] or another SCP
+    or SFTP-compatible file transfer program to copy the file to the
+    Pi over the network.
 
 [cd]:   https://cyberduck.io/
 [fz]:   https://filezilla-project.org/
@@ -105,9 +112,9 @@ the Pi. There are many options:
 [hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
 
 5.  **Switch to the binary OS installation images** available from the
-    [top-level project page][cprj]. These are default installations of
+    [top-level project page][cprj].  These are default installations of
     Raspbian Lite with the PiDP-8/I software already downloaded, built,
-    and installed. These images were produced in part using option #4
+    and installed.  These images were produced in part using option #4
     above, so you can use Fossil to update your software to the current
     version at any time, as long as the Pi is connected to the Internet.
 
@@ -127,19 +134,19 @@ If you grabbed the Zip file instead:
     $ unzip /path/to/pidp8i-VERSION.zip
 
 The file name will vary somewhat, depending on when and how you
-transferred the file. After unpacking it, you will have a new directory
-beginning with `pidp8i`. `cd` into that directory, then proceed with the
-[configuration](#configuring) steps below.
+transferred the file.  After unpacking it, you will have a new
+directory beginning with `pidp8i`.  `cd` into that directory, then
+proceed with the [configuration](#configuring) steps below.
 
 
 <a name="help"></a>
 ### If You Need More Help
 
 If the above material is not sufficient to get you started, you might
-want to look at [the documentation][rpfd] provided by the Raspberry Pi
-Foundation. In particular, we recommend their [Linux][rpfl] and
-[Raspbian][rpfr] guides. The book "[Make: Linux for Makers][lfm]" by
-Aaron Newcomb is also supposed to be good.
+want to look at [the documentation][rpfd] provided by the Raspberry
+Pi Foundation.  In particular, we recommend their [Linux][rpfl] and
+[Raspbian][rpfr] guides.  The book "[Make: Linux for Makers][lfm]"
+by Aaron Newcomb is also supposed to be good.
 
 
 [rpfd]: https://www.raspberrypi.org/documentation/
@@ -157,10 +164,16 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
     $ ./configure && make && sudo make install
 
-If you've checked out a new version of the source code and the `make`
-step fails, try redoing the `configure` step. Sometimes changes made to
-the source code invalidate prior `make` dependencies, which are
-implicitly repaired by the `configure` script.
+The `configure` step is generally needed only the first time you build
+the software in a new directory, but occasionally we make some change
+to the software that invalidates the old `make` dependencies causing
+the second step above to fail.  If that happens, try reconfiguring:
+
+    $ make reconfig
+
+If that doesn't work, call `./configure` directly again.  If you
+can't remember which options you gave last time, they're at the top of
+`config.log`.
 
 
 <a name="options"></a>
@@ -356,18 +369,23 @@ options IF=0 and IF=7 can be left out to save space and build time:
 
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 
-*   **--disable-os8-init** - Generate `SYS:INIT.TX` but do not display
+*   **--disable-os8-init** - Generate `RKB0:INIT.TX` but do not display
     it on OS/8 boot.  Rather than disable the default on-boot init
-    message, you may want to edit `media/os8/init.tx.in` to taste and
-    rebuild.
+    message, you may want to edit `media/os8/init.tx.in` to taste
+    and rebuild.
+
+    (We still build the file when you give this option in case you
+    later decide you want to enable the boot message, or you need to
+    call up configuration information stored in `INIT.TX`.)
 
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
 *   **--disable-os8-macrel** - Leave the MACREL assembler out.
 
-*   **--disable-os8-patches** - Do not apply any of the OS/8 V3D patches
-    published by DEC.
+*   **--disable-os8-patches** - Do not apply any of the OS/8 V3D
+    patches published by DEC.  See the [documentation][os8p] for this
+    option for more information.
 
 *   **--disable-os8-src** - Do not build the `os8v3d-src.rk05` disk
     image from the OS/8 source tapes.  This is not controlled by
@@ -381,6 +399,8 @@ options IF=0 and IF=7 can be left out to save space and build time:
     much more to explore here, but we cannot include it in the default
     installation set because that would overrun OS/8's limitation on the
     number of files on a volume.
+
+[os8p]: https://tangentsoft.com/pidp8i/doc/trunk/os8-patching.md
 
 
 <a name="enable-os8"></a>
