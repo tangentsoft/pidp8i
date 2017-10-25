@@ -211,7 +211,7 @@ Macro assembler capable of producing relocatable modules.  When
 their next major upgrade to `MACREL` from `PAL8`.  `MACREL` was so
 buggy that everybody basically had to revert to `PAL8` and back-port
 all the new code originally intended for the new major upgrade.  This
-situation befell `ETOS` Version 5.
+situation befell ETOS Version 5.
 
 We have a binary distribution DECtape of `MACREL` version 1, DEC part
 number `AL-5642A-BA`.  We have no source distribution, so the patches
@@ -219,7 +219,7 @@ cannot be verified against source.  Furthermore, the version numbers
 don't match, even though the memory contents do.
 
 Version number mismatches sometimes do occur with patches. For
-Example, `TECO 31.20.11 M` says that it upgrades `TECO` to version
+example, `TECO 31.20.11 M` says that it upgrades `TECO` to version
 `5.06`, but got the bits wrong.  Instead of changing contents from
 `0771` to `0772`, it looked to change from `0772` to `0773`.  `772`
 octal is `506` decimal, and the `TECO` version number is represented
