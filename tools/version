@@ -42,6 +42,7 @@ use File::Basename;
 my $cwd = getcwd;
 if ($cwd =~ m{/test/tmp/}x) {
     print "test:id[00000000]\n";
+    exit 0;
 }
 
 my $topdir = dirname($0) . '/..';
