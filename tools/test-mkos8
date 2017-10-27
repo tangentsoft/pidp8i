@@ -148,7 +148,7 @@ sub build_test
 
 sub do_test
 {
-    # Set up working and output directories
+    # Set up working directory
     my $test = $_;
     print "Configuring $test->{name}, PID $PID...\n";
     return if $dry_run;
@@ -162,7 +162,7 @@ sub do_test
     system "../../../configure $test->{optstr} > cfg.log 2>&1"
             and die "Failed to configure $test->{name}!\n";
     link "../../../bin/pidp8i-sim", "bin/pidp8i-sim";  # no sense rebuilding it
-    print "Building...\n";
+    print "Building (PID $PID)...\n";
     system "make os8-bin > make.log 2>&1"
             and die "Failed to build $currdsk!\n";
 
@@ -174,6 +174,7 @@ sub do_test
         # This test hasn't run here yet, so blindly assume its
         # output is correct, and thus that it should be our exemplar
         # henceforth.  Store in LZ4 format 
+        mkdir $test->{hdir};
         move ($currdlz, $test->{rklz});
 
         sanitize_log ($currlog, $test->{log});
@@ -193,7 +194,7 @@ sub do_test
         print "MKOS8 ", uc($test->{name}), " DIFFERS!  See $fdiff.\n";
     }
 
-    system("cd .. ; rm -r $PID");
+    system("cd .. ; rm -fr $PID");      # -f because there are read-only files
 
     return;
 }
