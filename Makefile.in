@@ -335,8 +335,8 @@ install: all instdirs
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
 	  done \
 	)
-	@sed -e 's#^build =.*$$#build = "@ABSPREFIX@"#' \
-	     -e 's#^src   =.*$$#src   = "@ABSPREFIX@"#' \
+	@sed -e 's#^build =.*#build = "@ABSPREFIX@"#' \
+	     -e 's#^os8   =.*#os8   = "@ABSPREFIX@/share/media/os8/"#' \
 		 < $(PIDP8I_DIRS) > @prefix@/$(PIDP8I_DIRS)
 	@chgrp @INSTGRP@ @prefix@/$(PIDP8I_DIRS)
 
