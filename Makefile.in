@@ -38,13 +38,22 @@
 # that has been merged into this source base.
 SGCID=17903827bdb294f7e60d4c7f172bd6a1a71dfbd5
 
-CFLAGS := @CFLAGS@ -Wno-unused-result -Wno-parentheses @BUILDMODE@ \
+# C build flags for src/*.c and PDP8/*.c, containing the SIMH core
+# modules and the SIMH PDP-8 simulator, respectively.  We turn off
+# warnings for the PDP-8 simulator because it's a little quick-and-dirty
+# in places, causing complaints from more modern compilers.
+TOP_CFLAGS := @CFLAGS@ @BUILDMODE@ -Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
 	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
 	-D_GNU_SOURCE -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
-CC8_CROSS_CFLAGS = -w $(CFLAGS)
-PDP8_CFLAGS = -w $(CFLAGS)
+PDP8_CFLAGS = -w $(TOP_CFLAGS)
+
+# Greatly stripped-down build options for the cc8 cross-compiler
+# primarily because it's K&R C.  Building under TOP_CFLAGS spews
+# pages of warnings.  The only thing we share is whether to build
+# a debug or optimized version, from BUILDMODE, set by auto.def.
+CC8_CROSS_CFLAGS = -w @BUILDMODE@
 
 SIM = bin/pidp8i-sim
 BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch @CC8_CROSS@

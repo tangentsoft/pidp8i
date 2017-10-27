@@ -106,7 +106,7 @@ for my $sdir (@dirs) {
     $cflags =~ s{SRC}{};
     $cflags =~ s{^/}{};
     $cflags =~ s{/}{_}g;
-    $cflags = $cflags ? "${cflags}_CFLAGS" : 'CFLAGS';
+    $cflags = $cflags ? "${cflags}_CFLAGS" : 'TOP_CFLAGS';
 
     $rule =~ s{obj/}{$odir/}g;
     $rule =~ s{src/}{$sdir/}g;
