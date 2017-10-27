@@ -41,5 +41,5 @@ set tti 7b
 set tti ksr
 @endif
 
-att rk0 @MEDIADIR@/os8/os8v3d-patched.rk05
+att rk0 @MEDIADIR@/os8/@OS8_BOOT_DISK@
 boot rk0

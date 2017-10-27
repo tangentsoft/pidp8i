@@ -15,5 +15,5 @@ set tti 7b
 set tti ksr
 @endif
 
-att rk0 bin/os8v3d-bin.rk05
+att rk0 bin/@OS8_BOOT_DISK@
 boot rk0

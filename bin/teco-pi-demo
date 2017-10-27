@@ -49,18 +49,20 @@ from simh   import *
 #### main ##############################################################
 
 def main ():
-  # Find the built OS/8 media
+  # Create the SIMH child instance and tell it where to send log output
+  s = simh (dirs.build)
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+
+  # Find and boot the built OS/8 bin disk
   rk = os.path.join (dirs.os8mo, 'os8v3d-bin.rk05')
   if not os.path.isfile (rk):
     print "Could not find " + rk + "; OS/8 media not yet built?"
     exit (1)
   print "Booting " + rk + "..."
-
-  # Start TECO8 in the simulator under OS/8
-  s = simh (dirs.build)
-  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
   s.send_cmd ("att rk0 " + rk)
   s.send_cmd ("boot rk0")
+
+  # Start TECO8 in the simulator under OS/8
   s.os8_send_cmd ('\.', "R TECO")
 
   # The macro comes from http://www.iwriteiam.nl/HaPi_TECO_macro.html

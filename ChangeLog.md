@@ -6,15 +6,48 @@
     Diagnostic" OS/8 disk pack image with uncertain provenance,
     configuration, and modification history.  We have replaced that with
     a script run at build time that programmatically assembles a set of
-    clean OS/8 RK05 disk images from original DEC binary distribution
-    DECtapes, other primary source media, and the user's chosen
-    configuration options.
+    clean OS/8 RK05 disk images from curated, pristine, tested sources
+    based on the user's chosen configuration options.
 
     This provides the following features and benefits as compared to the
     old `os8.rk05`:
 
-    -   All of the patches DEC published for OS/8 V3D which are still
-        relevant in our PiDP-8/I world are applied by default.
+    -   The PiDP-8/I software build process now builds up to three RK05
+        disk images:
+
+        -   `os8v3d-bin.rk05` is a bootable OS/8 V3D disk configured
+            according to your chosen configuration options, which are
+            described below and in [`README.md`][tlrm].  It is made from
+            the pristine DECtape images shipped by DEC for OS/8 V3D plus
+            several third-party tapes curated for and built by the
+            project's maintainers.  See [the OS/8 media `README.md`
+            file][os8rm] for more details.
+
+        -   `os8v3d-patched.rk05` is a copy of the `bin` disk with
+            [most][os8p] of the patches DEC published over the years for
+            OS/8 V3D applied.  That set of patches was hand-chosen for
+            their applicability to our modern PiDP-8/I world and for
+            mutual compatibility.
+
+            This is the boot disk used for the IF=0 and IF=7 cases
+            unless you give `--disable-os8-patches` to the `configure`
+            script, in which case it falls back to the `bin` disk.
+
+        -   `os8v3d-src.rk05` is a non-bootable disk containing the
+            contents of the seven OS/8 V3D source code tapes plus the
+            contents of the three tapes of extensions to OS/8 V3D.  It
+            is built as a convenience for those who would like to
+            explore the OS/8 source code, since it's easier to do that
+            with an RK05 disk than with a pile of DECtape images.  You
+            can suppress building this with `--disable-os8-src`.
+
+        Default versions of these disk images are also now published on
+        the project's home page for the benefit of those not running our
+        PiDP-8/I software.  There are quite a few OS/8 RK05 disk images
+        floating around on the Internet these days, and many of them
+        have bugs and breakage in them that we've fixed.  It would
+        completely fail to break our hearts if these images were used by
+        many people outside the PiDP-8/I project.
 
     -   U/W FOCAL V4E is installed on SYS: by default. Start with our
         [U/W FOCAL Manual Supplement for the PiDP-8/I][uwfs], then
@@ -28,9 +61,9 @@
         This is a fascinating programming language, well worth studying!
 
     -   Ian Schofield's CC8 OS/8 C compiler is installed on `SYS:` by
-        default.  Also merged in his `cc8` cross-compiler and his
-        hand-rolled OS/8 distribution, `media/os8/cc8.rk05`.  See [the
-        CC8 `README`][cc8rm] for details.
+        default.  We have also merged in his `cc8` cross-compiler and
+        his hand-rolled OS/8 distribution, `media/os8/cc8.rk05`.  See
+        [the CC8 `README`][cc8rm] for details.
 
     -   MACREL macro assembler is installed by default.
 
@@ -89,10 +122,11 @@
         FORTRAN IV, FORTRAN II, Kermit-12, and the BASIC game and demo
         programs.
 
-        You can disable these features individually or you can disable
-        all of them with the new `configure --os8-minimal` feature,
-        which gets you a nearly bare-bones OS/8 installation with lots
-        of spare disk space with which you can do what *you* want.
+        You can disable each feature above with a `--disable-os8-*`
+        option to the `configure` script, or you can disable all of them
+        collectively with the `--os8-minimal` option, which gets you a
+        nearly bare-bones OS/8 installation with lots of spare disk
+        space with which you can do what *you* want.
 
     -   Replaced the mismatched FORTRAN compiler and runtime with
         matched versions from the distribution DECtapes, and ensured that
@@ -100,8 +134,8 @@
         (FRTS). At various points in the past, either FORTRAN or
         Adventure has been broken.
 
-    -   Repaired several broken BASIC programs on RKB0: by going back to
-        primary sources.  Either the `os8.rk05` disk image was corrupted
+    -   Repaired several broken BASIC programs on `RKB0:` by going back
+        to primary sources.  Either the `os8.rk05` disk image was corrupted
         at some point or it is an image of a real RK05 disk pack that
         was corrupted, causing several of these BASIC programs to not
         run properly.
@@ -116,12 +150,6 @@
         was decided that we should offer stock TECO by default for its
         historical value.  If you want VTEDIT back, it can be re-enabled
         with a `configure` script option.
-
-    -   Added configure-time options to disable all of the above new
-        features and most of the features that were present on the
-        original `os8.rk05` disk as well.  You can create a completely
-        stripped-down OS/8 disk image, one with all features enabled, or
-        anything in between.
 
     -   In the old `os8.rk05` disk image, both `SYS:` and `DSK:` were
         set to `RKA0:`, which meant that to address anything on `RKB0:`, you
@@ -192,31 +220,41 @@
     the default OS/8 configuration.  Pretty much everything above can be
     disabled if it's enabled by default, and vice versa.
 
-*   We now build an OS/8 RK05 source code disk image containing the
-    contents of the OS/8 source distribution DECtapes for the
-    convenience of those who would like to work with the OS/8 source
-    code in a more convenient fashion than attaching and detaching the
-    *ten* TU56 tape image files.
+*   Added Bill Cattey's `txt2ptp` program which converts plain ASCII
+    text files files to the paper tape format used by SIMH, which eases
+    transfer of text data into the simulator.  That program is also
+    linked to `ptp2txt`, which makes it perform the inverse function:
+    given a SIMH paper tape image file, produce an ASCII text file on
+    the host machine with its contents.
 
-    files between SIMH paper tape format and plain POSIX ASCII text
-    files.  This program was written to ease the movement of FOCAL
-    program text between SIMH and its host OS, but they should prove
-    useful for other similar tasks.
+    This program was written to ease the movement of FOCAL program text
+    between SIMH and its host OS, but they should prove useful for other
+    similar tasks.
 
-*   Added a new "blinkenlights" demo program that drives SIMH from the
-    outside, running a TECO macro under OS/8 which calculates *pi* to
-    about 20 digits at a very slow rate, producing a display that
-    manages to land somewhere between the random default display of
-    [Deeper Thought][dt2vk] and the clear, boring patterns of our
-    preexisting IF=5 demo script.
+*   Added a new "blinkenlights" demo program called `bin/teco-pi-demo`
+    which drives SIMH from the outside, running a TECO macro under OS/8
+    to calculate *pi* to 248 digits at a very slow rate, producing a
+    display that manages to land somewhere between the random default
+    display of [Deeper Thought][dt2vk] and the clear, boring patterns of
+    our preexisting IF=5 demo script.
 
-    This script, called `bin/teco-pi-demo`, is also included as a
-    demonstration of how an end-user program can reuse the technology
-    that we developed to automatically build the custom OS/8 disk images
-    described above to achieve different ends.  Perhaps you have some
-    other program you'd like to run within SIMH in an automated fashion?
-    This shows one way how, and demonstrates a pre-built and tested set
-    of tools for achieving it.
+    Why 248 digits?  Because at 249, TECO8 runs out of memory, aborting
+    the demo early.  At the default execution rate, it would take over
+    17 years to complete this demo, making it a good choice to run on
+    PiDP-8/I units primarily being used as *objets d'art*.  The demo has
+    a finite run time, but your Raspberry Pi is likely to die before it
+    completes. `;)`
+
+    This script is also included as a demonstration of how the end user
+    can reuse the technology that we developed to automatically build
+    the custom OS/8 disk images described above to achieve different
+    ends.  Perhaps you have some other program you'd like to run within
+    SIMH in an automated fashion?  This shows one way how, and
+    demonstrates a pre-built and tested set of tools for achieving it.
+
+    We have also written [a tutorial][csd] explaining how
+    `bin/teco-pi-demo` works and how to reuse the components it is built
+    atop for your own ends.
 
 *   Fixed the order of initialization in the GPIO setup code for the
     James L-W serial mod case.  Fix by Dylan McNamee.
@@ -238,7 +276,7 @@
 *   Updated for Raspbian Stretch, released in September 2017.  It should
     still run on Raspbian Jessie, however.
 
-*   Assorted portability and build system improvements.
+*   Assorted portability, build system, and documentation improvements.
 
 *   **TODO**
 
@@ -246,14 +284,19 @@
     *   Write `PEP001.F4` and wiki article explaining it
     *   Write `PEP001.F2` and wiki article explaining it
     *   Write `PEP001.C`  and wiki article explaining it
-    *   Write a doc explaining how `teco-pi-demo` works, and by
-        extension, how to use `class simh`.
+    *   Componentize mkos8:
+        *   Move "add" steps to lib/mkos8/components/*.py
+        *   Create "mkos8 add" feature to run those steps after build
+        *   Add inverse "remove" feature
+        *   Write "os8" script to call above; remove TODO tag above
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
     *   Implement all Immediate and High priority [Features](/features)
 
 [apt]:   https://linux.die.net/man/8/apt
-[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/cc8/README.md
+[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
+[csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
+[os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 [os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
 [uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
@@ -1069,7 +1112,7 @@
 
 *   Fixed a bunch of bugs!
 
-[tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+[tlrm]:    https://tangentsoft.com/pidp8i/doc/trunk/README.md
 [dupatch]: https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA
 [dudis]:   https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936
 [wiki]:    https://tangentsoft.com/pidp8i/wcontent

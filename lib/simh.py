@@ -4,6 +4,8 @@
 # simh/__init__.py - A wrapper class around pexpect for communicating
 #   with an instance of the PiDP-8/I SIMH simulator running OS/8.
 #
+#   See ../doc/class-simh.md for a usage tutorial.
+#
 # Copyright © 2017 by Jonathan Trites, William Cattey, and Warren Young.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
