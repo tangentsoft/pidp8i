@@ -67,7 +67,7 @@ my $currdlz = 'bin/os8v3d-bin.rklz';
 my $currlog = 'obj/mkos8-bin.log';
 
 # Command line option values
-my ($dry_run, $generate_only, $single_core);
+my ($dry_run, $generate_only, $single_core, $verbose);
 
 
 #### sanitize_log ######################################################
@@ -130,14 +130,33 @@ sub build_test
     };
 
     # Skip this one if it already exists and we're in -g mode.
-    if ($generate_only && -d $hdir &&
-            -f "$hdir/last.log" && 
-            -f "$hdir/last.rklz") {
-        print "Skipping $hash; already done.\n";
+    if ($generate_only) {
+        if (-d $hdir) {
+            if (-f "$hdir/last.log") {
+                if (-f "$hdir/last.rklz") {
+                    print "Skipping $hash: already done.\n";
+                    return;
+                }
+                elsif ($verbose) {
+                    print "Must re-gen $hash despite -g: rklz missing!\n";
+                }
+            }
+            elsif ($verbose) {
+                print "Must re-gen $hash despite -g: log missing!\n";
+            }
+        }
+        elsif ($verbose) {
+            print "Will generate $hash.\n";
+        }
     }
-    else {
-        push @tests, $test;
+    elsif (-d $hdir) {
+        print "Will test $optstr against $hash.\n" if $verbose;
     }
+    elsif ($verbose) {
+        print "Must generate missing test set $hash.\n";
+    }
+
+    push @tests, $test;
 
     return;
 }
@@ -204,10 +223,11 @@ sub do_test
 
 # Parse command line
 my %clopts;
-getopts('gns', \%clopts) or die "Failed to parse command line!\n";
+getopts('gnsv', \%clopts) or die "Failed to parse command line!\n";
 $dry_run = $clopts{n};
 $generate_only = $clopts{g};
 $single_core = $clopts{s};
+$verbose = $clopts{v};
 
 # Init global resources
 mkdir 'test';
