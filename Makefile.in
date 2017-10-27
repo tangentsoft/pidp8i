@@ -55,6 +55,11 @@ PDP8_CFLAGS = -w $(TOP_CFLAGS)
 # a debug or optimized version, from BUILDMODE, set by auto.def.
 CC8_CROSS_CFLAGS = -w @BUILDMODE@
 
+# Palbart doesn't need much in the way of options.  It builds without
+# warnings on all compilers we test on and doesn't require any
+# nonstandard options.  We just apply the debug/optimized setting.
+PALBART_CFLAGS = @BUILDMODE@
+
 SIM = bin/pidp8i-sim
 BINS = bin/palbart $(SIM) bin/pidp8i-test bin/ptp2txt libexec/scanswitch @CC8_CROSS@
 
