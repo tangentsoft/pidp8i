@@ -80,7 +80,7 @@ there are two additional files:
 | `obj/*.lst`    | the human-readable assembler output
 | `bin/*-pal.pt` | the machine-readable assembler output (RIM format)
 
-There are three ways to run these on your PiDP-8/I, each starting with
+There are several ways to run these on your PiDP-8/I, each starting with
 one of the above three files:
 
 1.  Transcribe the assembly program text to a file within a PDP-8
@@ -92,11 +92,13 @@ one of the above three files:
 3.  Copy the `*-pal.pt` file to a USB stick and use the PiDP-8/I's
     [automatic media mounting feature][howto]. This is the fastest method.
 
+4.  Boot SIMH with the example in core, running the program immediately.
+
 I cover each of these options below, in the same order as the list
 above.
 
 
-## Option 1: Transcribing the Assembly Code into an OS/8 Session
+### Option 1: Transcribing the Assembly Code into an OS/8 Session
 
 To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
 PiDP-8/I:
@@ -178,7 +180,7 @@ also avoids a certain limitation of `EDIT` that starts to bite you once
 your program text exceeds about 5,600 characters.
 
 
-## Option 2: Toggling Programs in Via the Front Panel
+### Option 2: Toggling Programs in Via the Front Panel
 
 After building the PiDP-8/I software, each of the `examples/*.pal` files
 is assembled by `palbart` which writes out a human-readable listing file
@@ -239,7 +241,7 @@ the last value you entered via SR above, 0206. That is the source of the
 "07" in the lower two digits of the fourth instruction, 3207.
 
 
-## Option 3: Loading a Program from Paper Tape
+### Option 3: Loading a Program from Paper Tape
 
 The `palbart` assembly process described above also produces paper tape
 output files in RIM format in `bin/-pal*.pt`.
@@ -275,6 +277,19 @@ There is an SVG template for USB stick labels in the distribution under
 the [`labels/`][label] directory, for use if you find yourself creating
 long-lived USB sticks. See [`labels/README.md`][lread] for more
 information.
+
+
+### Option 4: Booting SIMH with the Example in Core
+
+As part of the PiDP-8/I software build process, a `boot/*.script` file
+for each `examples/*.pal` file is created by translating `obj/*.lst`
+into a series of "deposit" commands to SIMH. You can thus load and run
+each example at the Linux command line with a command like this:
+
+    $ bin/pidp8i-sim boot/add.script
+
+That runs the `examples/add.pal` program's assembled binary code under
+the simulator, just as if you'd loaded it there with option #3 above.
 
 
 ## License
