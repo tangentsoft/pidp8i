@@ -33,7 +33,7 @@ To use the example BASIC program, simply transcribe it into OS/8 BASIC:
 
     .R BASIC
     NEW OR OLD--NEW
-    FILE NAME--PAL001.BA
+    FILE NAME--PEP001.BA
 
     READY
     10 FOR I = 1 TO 999
@@ -51,7 +51,7 @@ To use the example BASIC program, simply transcribe it into OS/8 BASIC:
     READY
     RUN
 
-    PAL001  BA    4A    
+    PEP001  BA    5A
 
     TOTAL:  xxxxxxx
 
