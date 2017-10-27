@@ -171,9 +171,9 @@ INFILES = \
 	$(PIDP8I_DIN)
 PRECIOUS_INFILES = \
 	@srcdir@/Makefile.in \
-	@srcdir@/cc8/Makefile.in \
 	@srcdir@/examples/Makefile.in \
 	@srcdir@/src/Makefile.in \
+	@srcdir@/src/cc8/Makefile.in \
 	@srcdir@/src/PDP8/Makefile.in
 OUTFILES := $(subst @srcdir@/,,$(INFILES))
 OUTFILES := $(subst .in,,$(OUTFILES))
