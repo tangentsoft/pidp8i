@@ -283,6 +283,11 @@
     *   Write `PEP001.F4` and wiki article explaining it
     *   Write `PEP001.F2` and wiki article explaining it
     *   Write `PEP001.C`  and wiki article explaining it
+    *   Componentize mkos8:
+        *   Move "add" steps to lib/mkos8/components/*.py
+        *   Create "mkos8 add" feature to run those steps after build
+        *   Add inverse "remove" feature
+        *   Write "os8" script to call above; remove TODO tag above
     *   Write a doc explaining how `teco-pi-demo` works, and by
         extension, how to use `class simh`.
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
