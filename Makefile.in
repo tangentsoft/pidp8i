@@ -252,13 +252,17 @@ install: all instdirs
 		echo "Installing script $$dest..." ; \
 		@INSTALL@ -m 755 -D $$f $$dest ; \
 	done
-	( cd @prefix@/bin ; ln -f ptp2txt txt2ptp )
+	@( cd @prefix@/bin ; \
+	   echo "Installing txt2ptp symlink..." ; \
+	   ln -f ptp2txt txt2ptp ; \
+    )
 	@(test -x /sbin/setcap && \
 		for f in @prefix@/bin/pidp8i-* ; do \
+			echo "Setting real-time priority capabilities on $$(basename $$f)..." ; \
 			/sbin/setcap 'cap_sys_nice=eip' $$f ; \
 		done \
 	) || true
-	test -e @MEDIADIR@/os8/os8.rk05 || $(MAKE) mediainstall
+	@test -e @MEDIADIR@/os8/os8.rk05 || echo "Installing media..." && $(MAKE) mediainstall
 
 	@# If this is a Debian-type system, install needed helper programs
 	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
@@ -269,7 +273,7 @@ install: all instdirs
 	@(test -x /bin/systemctl && /bin/systemctl disable pidp8  || true)
 
 	@# Install the init script if this system is systemd based.
-	@INSTALL@ -m 755 @srcdir@/etc/pidp8i-init @prefix@/etc
+	@@INSTALL@ -m 755 @srcdir@/etc/pidp8i-init @prefix@/etc
 	@(  test -w /etc/init.d -a -x /bin/systemctl && \
 		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
 		/bin/systemctl enable pidp8i \
@@ -311,13 +315,14 @@ install: all instdirs
 	) || true
 
 	@# Install CC8 stuff if built
-	test -n "@CC8_CROSS@" && \
+	@test -n "@CC8_CROSS@" && \
+		echo "Installing cc8 cross-compiler..." ; \
 		@INSTALL@ -m 755 bin/cc8 @prefix@/bin && \
 		@INSTALL@ -m 644 @srcdir@/src/cc8/include/* @prefix@/share/include
 
 	@# Install palbart stuff
-	@INSTALL@ -m 755 bin/palbart @prefix@/bin
-	@INSTALL@ -m 644 @srcdir@/src/palbart/palbart.1 @prefix@/share/man/man1
+	@@INSTALL@ -m 755 bin/palbart @prefix@/bin
+	@@INSTALL@ -m 644 @srcdir@/src/palbart/palbart.1 @prefix@/share/man/man1
 
 	@# Install mkos8 and its dependencies
 	@echo "Installing mkos8..."
@@ -336,7 +341,8 @@ install: all instdirs
 	@chgrp @INSTGRP@ @prefix@/$(PIDP8I_DIRS)
 
 instdirs:
-	for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
+	@echo "Creating installation directory tree..."
+	@for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
 
 mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
@@ -347,8 +353,8 @@ mediainstall: instdirs
 		-name \*.rk05 -o \
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
-	@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
-	@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
+	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
+	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
 reconfig:
 	@AUTOREMAKE@
