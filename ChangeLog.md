@@ -122,10 +122,11 @@
         FORTRAN IV, FORTRAN II, Kermit-12, and the BASIC game and demo
         programs.
 
-        You can disable these features individually or you can disable
-        all of them with the new `configure --os8-minimal` feature,
-        which gets you a nearly bare-bones OS/8 installation with lots
-        of spare disk space with which you can do what *you* want.
+        You can disable each feature above with a `--disable-os8-*`
+        option to the `configure` script, or you can disable all of them
+        collectively with the `--os8-minimal` option, which gets you a
+        nearly bare-bones OS/8 installation with lots of spare disk
+        space with which you can do what *you* want.
 
     -   Replaced the mismatched FORTRAN compiler and runtime with
         matched versions from the distribution DECtapes, and ensured that
@@ -149,12 +150,6 @@
         was decided that we should offer stock TECO by default for its
         historical value.  If you want VTEDIT back, it can be re-enabled
         with a `configure` script option.
-
-    -   Added configure-time options to disable all of the above new
-        features and most of the features that were present on the
-        original `os8.rk05` disk as well.  You can create a completely
-        stripped-down OS/8 disk image, one with all features enabled, or
-        anything in between.
 
     -   In the old `os8.rk05` disk image, both `SYS:` and `DSK:` were
         set to `RKA0:`, which meant that to address anything on `RKB0:`, you
