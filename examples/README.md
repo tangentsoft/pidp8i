@@ -178,7 +178,7 @@ also avoids a certain limitation of `EDIT` that starts to bite you once
 your program text exceeds about 5,600 characters.
 
 
-## Option 2: Toggling a Programs in Via the Front Panel
+## Option 2: Toggling Programs in Via the Front Panel
 
 After building the PiDP-8/I software, each of the `examples/*.pal` files
 is assembled by `palbart` which writes out a human-readable listing file
@@ -202,16 +202,16 @@ the value stored at that address.
 To toggle the `add` program in, press `Stop` to halt the processor, then
 twiddle the switches like so:
 
-| Set SR Switches To... | Then Toggle...
-|------------------------------------------------
-| 000 010 000 000       | `Load Add`
-| 111 011 000 000       | `Dep`
-| 001 010 000 101       | `Dep`
-| 001 010 000 110       | `Dep`
-| 011 010 000 111       | `Dep`
-| 111 100 000 010       | `Dep`
-| 000 000 000 010       | `Dep`
-| 000 000 000 011       | `Dep`
+| Set SR Switches To... | Then Toggle... | Because...
+|--------------------------------------- | ----------
+| 000 010 000 000       | `Load Add`     | 000010000000 is binary for octal 0200, the program's start address
+| 111 011 000 000       | `Dep`          | the first instruction, 7300 octal, is 111011000000 in binary
+| 001 010 000 101       | `Dep`          | 1205 octal in binary
+| 001 010 000 110       | `Dep`          | etc, etc.
+| 011 010 000 111       | `Dep`          |
+| 111 100 000 010       | `Dep`          |
+| 000 000 000 010       | `Dep`          |
+| 000 000 000 011       | `Dep`          |
 
 To run it, repeat the first step in the table above, loading the
 program's starting address (0200) first into the switch register (SR)
