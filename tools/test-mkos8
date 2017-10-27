@@ -118,8 +118,8 @@ sub build_test
     # multiple lines long.
     my $optstr = join ' ', @opts;
     my $hash = sha256_hex($optstr);
-    my $hdir = "test/$hash";  # test hash dir relative to our CWD
-    my $rhdir = "../$hash";   # $hdir relative to builddir test/tmp/$PID
+    my $hdir = "test/$hash";    # test hash dir relative to our CWD
+    my $rhdir = "../../$hash";  # $hdir relative to builddir test/tmp/$PID
     my $test = { 
         hash   => $hash,
         hdir   => $rhdir,
