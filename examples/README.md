@@ -216,7 +216,7 @@ twiddle the switches like so:
 To run it, repeat the first step in the table above, loading the
 program's starting address (0200) first into the switch register (SR)
 and then into the PDP-8's program counter (PC) via `Load Add`. Then
-toggle `Start` to run the program. If you then:
+toggle `Start` to run the program.
 
 If you then toggle 000 010 000 111 into SR, press `Load Add` followed by
 `Exam`, you should see 000 000 000 101 in the third row of lights, the
