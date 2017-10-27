@@ -64,11 +64,11 @@ MKOS8_PY     = \
 MKOS8_PY_SRC = $(addprefix @srcdir@/,$(MKOS8_PY))
 MKOS8_SRCS   = $(MKOS8) $(MKOS8_PY_SRC) $(PIDP8I_DIN) $(SIMH_PY_SRC)
 
-BUILDDIRS = bin libexec obj/cc8/cross obj/PDP8
+BUILDDIRS := bin libexec obj/cc8/cross obj/palbart obj/PDP8
 
-INSTDIRS = bin etc lib/mkos8 lib/pidp8i libexec share/boot share/media share/include share/man/man1
+INSTDIRS := bin etc lib/mkos8 lib/pidp8i libexec share/boot share/media share/include share/man/man1
 
-SIM_OBJS = \
+SIM_OBJS := \
 	obj/gpio-common.o \
 	obj/PDP8/pdp8_df.o \
 	obj/PDP8/pdp8_cpu.o \
@@ -101,7 +101,7 @@ SIM_OBJS = \
 	obj/sim_tmxr.o \
 	obj/sim_video.o
 
-CC8_OBJS = \
+CC8_OBJS := \
 	obj/cc8/cross/code8.o \
 	obj/cc8/cross/data.o \
 	obj/cc8/cross/error.o \
@@ -117,10 +117,12 @@ CC8_OBJS = \
 	obj/cc8/cross/sym.o \
 	obj/cc8/cross/while.o
 
-MISC_OBJS = \
+MISC_OBJS := \
 	obj/ptp2txt.o \
 	obj/scanswitch.o \
 	obj/test.o
+
+PALBART_OBJS := obj/palbart/palbart.o
 
 ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
@@ -285,7 +287,7 @@ install: all instdirs
 
 	@# Install palbart stuff
 	@INSTALL@ -m 755 bin/palbart @prefix@/bin
-	@INSTALL@ -m 644 @srcdir@/palbart/palbart.1 @prefix@/share/man/man1
+	@INSTALL@ -m 644 @srcdir@/src/palbart/palbart.1 @prefix@/share/man/man1
 
 	@# Install mkos8 and its dependencies
 	@INSTALL@ -m 775 -g @INSTGRP@ $(MKOS8) @prefix@/libexec
@@ -395,10 +397,6 @@ boot/1.script: boot/hs-rim-loader.script
 boot/5.script: boot/ac-mq-blinker.script
 	ln -f $< $@
 
-bin/palbart: @srcdir@/palbart/palbart.c
-	$(CC) -Wall -Wno-strict-prototypes @BUILDMODE@ $< -o $@
-	$(CC) -MM $< -o obj/palbart.d
-
 $(BUILDDIRS):
 	mkdir -p $@
 
@@ -407,6 +405,9 @@ $(SIM): $(SIM_OBJS) obj/gpio-@LED_DRIVER_MODULE@ls.o
 
 bin/cc8: $(CC8_OBJS)
 	$(CC) -o $@ $^ $(LIBS)
+
+bin/palbart: $(PALBART_OBJS)
+	$(CC) -o $@ $^
 
 bin/pidp8i-test: obj/test.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS) -lncurses
@@ -440,5 +441,5 @@ endif
 # may have changed.
 src/gpio-common.c: @srcdir@/tools/version
 
--include $(SIM_OBJS:.o=.d) $(CC8_OBJS:.o=.d) $(MISC_OBJS:.o=.d) 
+-include $(SIM_OBJS:.o=.d) $(CC8_OBJS:.o=.d) $(MISC_OBJS:.o=.d) $(PALBART_OBJS:.o=.d)
 -include $(ADF)
