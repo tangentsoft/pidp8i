@@ -68,6 +68,7 @@ however.
 
 [md]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=media
 [ed]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=examples
+[pdp8pd]: http://mailman.trailing-edge.com/pipermail/simh/2017-January/016164.html
 
 
 ## ETOS License
