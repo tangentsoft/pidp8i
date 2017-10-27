@@ -206,7 +206,7 @@ def make_bin (s, args):
   local_tape =         "local.tu56"
   local_tape_path =    dirs.os8mi + local_tape
   
-  boot_dt_path = dirs.os8mi + "bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
+  boot_dt_path = dirs.os8mo + "bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
 
   special_bin_copyins = [
     ["", ro_boot_tape,  "", None],
