@@ -6,8 +6,8 @@
     Diagnostic" OS/8 disk pack image with uncertain provenance,
     configuration, and modification history.  We have replaced that with
     a script run at build time that programmatically assembles a set of
-    clean OS/8 RK05 disk images from curated, pristine sources based on
-    the user's chosen configuration options.
+    clean OS/8 RK05 disk images from curated, pristine, tested sources
+    based on the user's chosen configuration options.
 
     This provides the following features and benefits as compared to the
     old `os8.rk05`:
@@ -45,8 +45,9 @@
         the project's home page for the benefit of those not running our
         PiDP-8/I software.  There are quite a few OS/8 RK05 disk images
         floating around on the Internet these days, and many of them
-        have bugs and breakage in them that we've fixed by building ours
-        from pristine, curated, tested sources.
+        have bugs and breakage in them that we've fixed.  It would
+        completely fail to break our hearts if these images were used by
+        many people outside the PiDP-8/I project.
 
     -   U/W FOCAL V4E is installed on SYS: by default. Start with our
         [U/W FOCAL Manual Supplement for the PiDP-8/I][uwfs], then
@@ -293,7 +294,7 @@
     *   Implement all Immediate and High priority [Features](/features)
 
 [apt]:   https://linux.die.net/man/8/apt
-[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/cc8/README.md
+[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
 [os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 [os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
