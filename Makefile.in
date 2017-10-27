@@ -336,7 +336,8 @@ install: all instdirs
 	  done \
 	)
 	@sed -e 's#^build =.*#build = "@ABSPREFIX@"#' \
-	     -e 's#^os8   =.*#os8   = "@ABSPREFIX@/share/media/os8/"#' \
+	     -e 's#^media =.*#media = os.path.join (build, "share/media/")#' \
+	     -e 's#^os8mo =.*#os8mo = os8mi#' \
 		 < $(PIDP8I_DIRS) > @prefix@/$(PIDP8I_DIRS)
 	@chgrp @INSTGRP@ @prefix@/$(PIDP8I_DIRS)
 

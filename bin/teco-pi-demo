@@ -49,9 +49,7 @@ from simh   import *
 
 def main ():
   # Find the built OS/8 media
-  rkbase = 'os8v3d-bin.rk05'
-  rkdir = 'bin' if os.path.isfile ('bin') else dirs.os8
-  rk = os.path.join (rkdir, rkbase)
+  rk = os.path.join (dirs.os8mo, 'os8v3d-bin.rk05')
   if not os.path.isfile (rk):
     print "Could not find " + rk + "; OS/8 media not yet built?"
     exit (1)
