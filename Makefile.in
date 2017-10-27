@@ -296,7 +296,7 @@ install: all instdirs
 	@# Install CC8 stuff if built
 	test -n "@CC8_CROSS@" && \
 		@INSTALL@ -m 755 bin/cc8 @prefix@/bin && \
-		@INSTALL@ -m 644 cc8/include/* @prefix@/share/include
+		@INSTALL@ -m 644 src/cc8/include/* @prefix@/share/include
 
 	@# Install palbart stuff
 	@INSTALL@ -m 755 bin/palbart @prefix@/bin
