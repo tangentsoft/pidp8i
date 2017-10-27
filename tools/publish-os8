@@ -1,0 +1,4 @@
+#!/bin/sh -e
+cd bin
+fossil uv add os8v3d-*.rk05
+fossil uv sync
