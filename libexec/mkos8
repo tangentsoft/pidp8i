@@ -76,7 +76,7 @@ _odt_parse = re.compile(_odt_parse_str)
 def check_exists (s, image_copyins):
   for copyin in image_copyins:
     image = copyin[1]
-    image_path = dirs.media + image
+    image_path = dirs.os8mi + image
     if (not os.path.isfile(image_path)):
         print "Required file: " + image_path + " not found."
         s.quit ()
@@ -146,8 +146,8 @@ def copyin_pair (s, copyin0, copyin1, debug):
   # to use both DECtape drives but also
   # switch between SIMH and OS/8 as infrequently as possible.
 
-  if copyin0: s.send_cmd ("attach -r dt0 " + dirs.media + copyin0[1])
-  if copyin1: s.send_cmd ("attach -r dt1 " + dirs.media + copyin1[1])
+  if copyin0: s.send_cmd ("attach -r dt0 " + dirs.os8mi + copyin0[1])
+  if copyin1: s.send_cmd ("attach -r dt1 " + dirs.os8mi + copyin1[1])
 
   s.os8_restart()
 
@@ -200,13 +200,13 @@ def do_all_copyins (s, copyins, debug):
 
 def make_bin (s, args):
   ro_boot_tape =       "al-4711c-ba-os8-v3d-1.1978.tu56"
-  ro_boot_tape_path =  dirs.media + ro_boot_tape
+  ro_boot_tape_path =  dirs.os8mi + ro_boot_tape
   driver_tape =        "al-4712c-ba-os8-v3d-2.1978.tu56"
-  driver_tape_path =   dirs.media + driver_tape
+  driver_tape_path =   dirs.os8mi + driver_tape
   local_tape =         "local.tu56"
-  local_tape_path =    dirs.media + local_tape
+  local_tape_path =    dirs.os8mi + local_tape
   
-  boot_dt_path = dirs.media + "bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
+  boot_dt_path = dirs.os8mi + "bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
 
   special_bin_copyins = [
     ["", ro_boot_tape,  "", None],
@@ -307,7 +307,7 @@ def make_bin (s, args):
   print "Generating " + _bin_rk05 + " from " + str(len(bin_copyins) + 2) + \
         " source tapes..."
 
-  image_path = dirs.os8 + _bin_rk05
+  image_path = dirs.os8mo + _bin_rk05
   if os.path.isfile(image_path):
     save_path = dirs.bin + _bin_rk05 + ".save"
     print "Pre-existing " + _bin_rk05 + " found.  Saving as " + _bin_rk05 + ".save"
@@ -417,7 +417,7 @@ def make_bin (s, args):
   if progmsg: print "Setting INIT message..."
   s.os8_send_cmd ("\.", "CREATE INIT.TX")
   s.os8_send_cmd ("#", "A")        # append text to file
-  with open(dirs.media + "/init.tx", "r") as f:
+  with open(dirs.os8mi + "/init.tx", "r") as f:
     for line in f:
       s.os8_send_line(line)
   s.os8_send_ctrl('L')             # return to EDIT command mode
@@ -465,12 +465,12 @@ def make_src (s, args):
   print "Generating " + _src_rk05 + " from " + str(len(src_copyins)) + \
         " source tapes..."
 
-  bin_path = dirs.os8 + _bin_rk05
+  bin_path = dirs.os8mo + _bin_rk05
   if (not os.path.isfile(bin_path)):
     print _bin_rk05 + " is needed to build src.  Creating..."
     make_bin(args)
 
-  src_path = dirs.os8 + _src_rk05
+  src_path = dirs.os8mo + _src_rk05
   if os.path.isfile(src_path):
     save_path = src_path + ".save"
     print "Pre-existing " + _src_rk05 + " found.  Saving as " + _src_rk05 + ".save"
@@ -605,7 +605,7 @@ def do_patch_file (s, filename, debug):
   global progmsg
   
   try:
-    patch_file = open(dirs.media + "patches/" + filename, "r")
+    patch_file = open(dirs.os8mi + "patches/" + filename, "r")
   except IOError:
     print filename + " not found. Skipping."
     return -1
@@ -668,7 +668,7 @@ def make_patch (s, args):
 
   print "Generating " + _patched_rk05 + " from " + _bin_rk05
 
-  image_path = dirs.os8 + _patched_rk05
+  image_path = dirs.os8mo + _patched_rk05
   if os.path.isfile(image_path):
     save_path = dirs.bin + _patched_rk05 + ".save"
     print "Pre-existing " + _patched_rk05 + " found.  Saving as " + _patched_rk05 + ".save"
@@ -678,12 +678,12 @@ def make_patch (s, args):
     os.rename(image_path, save_path)
 
   if progmsg: print "Copying original " +  _bin_rk05 + " to " + _patched_rk05
-  copyfile(dirs.os8 + _bin_rk05, image_path)
+  copyfile(dirs.os8mo + _bin_rk05, image_path)
 
   s.send_cmd ("attach rk0 " + image_path)
   s.send_cmd ("boot rk0")         # We're running OS/8. Let's patch!
   
-  manifest = open (dirs.media + "patches/" + manifest_filename, "r")
+  manifest = open (dirs.os8mi + "patches/" + manifest_filename, "r")
   
   for line in manifest:
     if line == "": continue

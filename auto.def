@@ -407,8 +407,12 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 }
 
 # Generate autodependency Makefile rule sets.
+#
+# It is important to list "src" last, because GNU make takes the first
+# one that matches, and the wildcards in the generated rules for "src"
+# match all "src/*" subdirs.
 set status [catch {
-    exec $srcdir/tools/mkadrules $srcdir src src/palbart src/PDP8 cc8/cross
+    exec $srcdir/tools/mkadrules $srcdir src/cc8/cross src/palbart src/PDP8 src
 } result]
 if {$status == 0} {
     msg-result $result
@@ -433,7 +437,6 @@ make-template boot/6.script.in
 make-template boot/7.script.in
 make-template boot/cc8.script.in
 make-template boot/run.script.in
-make-template cc8/Makefile.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
 make-template examples/Makefile.in
@@ -441,6 +444,7 @@ make-template lib/pidp8i/__init__.py.in
 make-template lib/pidp8i/dirs.py.in
 make-template media/os8/init.tx.in
 make-template src/Makefile.in
+make-template src/cc8/Makefile.in
 make-template src/gpio-common.c.in
 make-template src/PDP8/Makefile.in
 make-template src/PDP8/pidp8i.c.in

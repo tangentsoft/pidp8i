@@ -36,6 +36,7 @@
 import os
 import sys
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
 
 # Other core modules we need
 import time
@@ -48,10 +49,17 @@ from simh   import *
 #### main ##############################################################
 
 def main ():
-  # Start TECO in the simulator
+  # Find the built OS/8 media
+  rk = os.path.join (dirs.os8mo, 'os8v3d-bin.rk05')
+  if not os.path.isfile (rk):
+    print "Could not find " + rk + "; OS/8 media not yet built?"
+    exit (1)
+  print "Booting " + rk + "..."
+
+  # Start TECO8 in the simulator under OS/8
   s = simh (dirs.build)
   s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
-  s.send_cmd ("att rk0 bin/os8v3d-bin.rk05")
+  s.send_cmd ("att rk0 " + rk)
   s.send_cmd ("boot rk0")
   s.os8_send_cmd ('\.', "R TECO")
 

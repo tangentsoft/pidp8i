@@ -46,10 +46,11 @@ src   = "@abs_top_srcdir@"
 
 # Derived directories.  Where it matters, these are the development tree
 # paths, overridden or adjusted below if we're installed.
-bin   = build + "/bin/"
-log   = build + "/obj/"
-media = src + "/media/os8/"
-os8   = bin
+bin   = os.path.join (build, "bin/")
+log   = os.path.join (build, "obj/")
+media = os.path.join (src, "media/")
+os8mi = os.path.join (media, "os8/")    # mkos8 inputs
+os8mo = bin                             # mkos8 outputs
 
 # Adjust paths for the "installed" case
 if not os.path.exists(log):
