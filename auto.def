@@ -34,6 +34,13 @@ define defaultprefix /opt/pidp8i
 use cc
 use cc-lib
 
+# Canonicalize some paths which may be relative and generate others from them
+set abspfx [file-normalize [get-define prefix]]
+define ABSPREFIX $abspfx
+define BOOTDIR  "$abspfx/share/boot"
+define MEDIADIR "$abspfx/share/media"
+
+# Define command line options
 options {
     alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
     cc8-cross=1       => "do not build the cc8 cross-compiler on the host"
@@ -63,6 +70,7 @@ options {
     throttle:         => "override the throttle values in the boot scripts"
 }
 
+# React to chosen command line options
 if {[opt-bool alt-serial-mod]} {
     msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
     define PCB_SERIAL_MOD_JLW
@@ -187,9 +195,11 @@ if {[opt-bool os8-src]} {
 define MKOS8_OPTS $mkos8_opts
 if {$os8min || ![opt-bool os8-patches]} {
     msg-result "Will not patch OS/8 on the RK05 bin disk."
+    define OS8_BOOT_DISK "os8v3d-bin.rk05"
     define MKOS8_BIN_PATCHES {}
 } else {
     msg-result "Will apply OS/8 V3D patches to the RK05 bin disk."
+    define OS8_BOOT_DISK "os8v3d-patched.rk05"
     define MKOS8_BIN_PATCHES patch
 }
 
@@ -302,11 +312,6 @@ msg-result "Found GNU install(1) program as [get-define INSTALL]."
 
 # If we have cscope here, we'll use it in the "tags" target
 define HAVE_PROG_CSCOPE [cc-check-progs cscope]
-
-# Canonicalize some paths which may be relative and generate others from them
-define ABSPREFIX [file-normalize [get-define prefix]]
-define BOOTDIR  "[get-define ABSPREFIX]/share/boot"
-define MEDIADIR "[get-define ABSPREFIX]/share/media"
 
 # Remember the name and primary group of the user who installed this, since
 # we want to give that group write privileges to some files when they're
