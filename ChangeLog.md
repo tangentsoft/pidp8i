@@ -252,8 +252,9 @@
     SIMH in an automated fashion?  This shows one way how, and
     demonstrates a pre-built and tested set of tools for achieving it.
 
-    See the inline comments in `bin/teco-pi-demo` for more information
-    about the demo and how to modify it to suit your needs.
+    We have also written [a tutorial][csd] explaining how
+    `bin/teco-pi-demo` works and how to reuse the components it is built
+    atop for your own ends.
 
 *   Fixed the order of initialization in the GPIO setup code for the
     James L-W serial mod case.  Fix by Dylan McNamee.
@@ -288,13 +289,12 @@
         *   Create "mkos8 add" feature to run those steps after build
         *   Add inverse "remove" feature
         *   Write "os8" script to call above; remove TODO tag above
-    *   Write a doc explaining how `teco-pi-demo` works, and by
-        extension, how to use `class simh`.
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
     *   Implement all Immediate and High priority [Features](/features)
 
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
+[csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
 [os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 [os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
