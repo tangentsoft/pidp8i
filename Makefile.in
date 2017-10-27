@@ -39,15 +39,14 @@
 SGCID=17903827bdb294f7e60d4c7f172bd6a1a71dfbd5
 
 # C build flags for src/*.c and PDP8/*.c, containing the SIMH core
-# modules and the SIMH PDP-8 simulator, respectively.  We turn off
-# warnings for the PDP-8 simulator because it's a little quick-and-dirty
-# in places, causing complaints from more modern compilers.
-TOP_CFLAGS := @CFLAGS@ @BUILDMODE@ -Wno-unused-result -Wno-parentheses \
+# modules and the SIMH PDP-8 simulator, respectively.
+TOP_CFLAGS := @CFLAGS@ @BUILDMODE@ \
+	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
 	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
 	-D_GNU_SOURCE -U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
-PDP8_CFLAGS = -w $(TOP_CFLAGS)
+PDP8_CFLAGS = $(TOP_CFLAGS)
 
 # Greatly stripped-down build options for the cc8 cross-compiler
 # primarily because it's K&R C.  Building under TOP_CFLAGS spews
