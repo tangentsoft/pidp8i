@@ -72,13 +72,14 @@ OS/8 Handbook for a decoding guide.
 ## How to Use the Assembly Language Examples
 
 For each PAL8 assembly program in `asm/*.pal` or `examples/*.pal`,
-there are two additional files:
+there are three additional files:
 
-| Extension | Meaning
------------------------------
-| `*.pal`        | the PAL8 assembly source code for the program
-| `obj/*.lst`    | the human-readable assembler output
-| `bin/*-pal.pt` | the machine-readable assembler output (RIM format)
+| Extension       | Meaning
+| --------------- | ---------------
+| `*.pal`         | the PAL8 assembly source code for the program
+| `obj/*.lst`     | the human-readable assembler output
+| `bin/*-pal.pt`  | the machine-readable assembler output (RIM format)
+| `boot/*.script` | a SIMH-readable version of the assembled code
 
 There are several ways to run these on your PiDP-8/I, each starting with
 one of the above three files:
