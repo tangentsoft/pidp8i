@@ -43,9 +43,9 @@ released under the FreeBSD license given in [`autosetup/LICENSE`][as].
 ## palbart License
 
 The `palbart` program and its manual page are released under the terms
-of the license given in [`palbart/LICENSE.md`][pl].
+of the license given in [`src/palbart/LICENSE.md`][pl].
 
-[pl]: https://tangentsoft.com/pidp8i/doc/trunk/palbart/LICENSE.md
+[pl]: https://tangentsoft.com/pidp8i/doc/trunk/src/palbart/LICENSE.md
 
 
 ## OS/8 License
@@ -68,6 +68,7 @@ however.
 
 [md]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=media
 [ed]: https://tangentsoft.com/pidp8i/dir?ci=trunk&name=examples
+[pdp8pd]: http://mailman.trailing-edge.com/pipermail/simh/2017-January/016164.html
 
 
 ## ETOS License

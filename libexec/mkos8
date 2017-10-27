@@ -309,7 +309,7 @@ def make_bin (s, args):
 
   image_path = dirs.os8 + _bin_rk05
   if os.path.isfile(image_path):
-    save_path = dirs.media + _bin_rk05 + ".save"
+    save_path = dirs.bin + _bin_rk05 + ".save"
     print "Pre-existing " + _bin_rk05 + " found.  Saving as " + _bin_rk05 + ".save"
     if os.path.isfile(save_path):
       print "Overwriting old " + _bin_rk05 + ".save"
@@ -420,7 +420,7 @@ def make_bin (s, args):
   with open(dirs.media + "/init.tx", "r") as f:
     for line in f:
       s.os8_send_line(line)
-  s.os8_send_ctrl('L')            # return to EDIT command mode
+  s.os8_send_ctrl('L')             # return to EDIT command mode
   s.os8_send_cmd ("#", "E")        # save and exit
   s.os8_send_cmd ("\.", "CREATE INIT.CM")
   s.os8_send_cmd ("#", "A")
@@ -670,7 +670,7 @@ def make_patch (s, args):
 
   image_path = dirs.os8 + _patched_rk05
   if os.path.isfile(image_path):
-    save_path = dirs.media + _patched_rk05 + ".save"
+    save_path = dirs.bin + _patched_rk05 + ".save"
     print "Pre-existing " + _patched_rk05 + " found.  Saving as " + _patched_rk05 + ".save"
     if os.path.isfile(save_path):
       print "Overwriting old " + _patched_rk05 + ".save"

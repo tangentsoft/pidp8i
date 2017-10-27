@@ -4,6 +4,23 @@ This documents the process for producing release versions of the
 software.
 
 
+## Update SIMH
+
+If `tools/simh-update` hasn't been run recently, you might want to do
+that and re-test before publishing a new version.
+
+
+## Publish OS/8 RK05s
+
+Re-configure the software with default settings, remove `bin/*.rk05`,
+rebuild, and run `tools/publish-os8` to send the "final" OS/8 disk
+images for this version of the software up to tangentsoft.com as
+unversioned assets.
+
+Update the date stamp in the "OS/8 RK05 Media" section of the project
+home page.
+
+
 ## Update ChangeLog.md
 
 Trawl the Fossil timeline for user-visible changes since the last
