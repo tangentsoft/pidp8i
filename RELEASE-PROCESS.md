@@ -4,6 +4,29 @@ This documents the process for producing release versions of the
 software.
 
 
+## *Can* You Release Yet?
+
+Before release, you must:
+
+*   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
+*   Implement all Immediate and High priority [Features](/features)
+
+Or reclassify them, of course.
+
+Most of the bug levels simply aid scheduling: Immediate priority bugs
+should be fixed before High, etc. Low priority bugs are "someone should
+fix this someday" type of problems, so they can move from release to
+release.
+
+The Features levels may be read as:
+
+*   **Immediate**: ASAP, or sooner. :)
+*   **High**: Features for this release.
+*   **Medium**: Features we'll look at lifting individually to High for
+    the next release.
+*   **Low**: "Wouldn't it be nice if..."
+
+
 ## Update SIMH
 
 If `tools/simh-update` hasn't been run recently, you might want to do
