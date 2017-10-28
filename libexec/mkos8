@@ -699,8 +699,8 @@ def make_patch (s, args):
 
   # Finish up
   if progmsg: print "Cleaning up..."
-  # s.os8_squish ("SYS")
-  # s.os8_squish ("DSK")
+  s.os8_squish ("SYS")
+  s.os8_squish ("DSK")
   s.back_to_cmd("\.")
   s.send_cmd ("detach rk0")
 
