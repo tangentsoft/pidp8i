@@ -280,15 +280,41 @@
 
 *   **TODO**
 
-    *   Write `PEP001.FC` and wiki article explaining it
-    *   Write `PEP001.F4` and wiki article explaining it
-    *   Write `PEP001.F2` and wiki article explaining it
-    *   Write `PEP001.C`  and wiki article explaining it
+    *   Write Project Euler Problem #1 examples for new languages in
+        this release and wiki articles explaining each one:
+
+        *   CC8
+        *   U/W FOCAL
+        *   FORTRAN II
+        *   FORTRAN IV
+        *   MACREL port of PEP001.PA?
+
     *   Componentize mkos8:
+
         *   Move "add" steps to lib/mkos8/components/*.py
         *   Create "mkos8 add" feature to run those steps after build
         *   Add inverse "remove" feature
         *   Write "os8" script to call above; remove TODO tag above
+
+    *   test-mkos8 enhancements:
+
+        *   Rename -s to -1 (single core) and make -s shuffle the set of
+            tests to perform, for easy Monte Carlo testing with an
+            existing test corpus
+        
+        *   Add -e: test using existing test results only.  Kind of the
+            inverse of -g, which builds only missing test results.
+
+        Beteween those two, we can investigate new ideas without having
+        a complete test corpus while still having a statistically good
+        chance of avoiding testing bias.  We need that for:
+
+        *   Reducing OS/8 keyboard delay ahead of test corpus completion
+
+        *   Testing build reliability on Pi 1, which won't have room for
+            the complete test corpus, nor sufficient CPU time to re-test
+            all possible configurations anyway.
+
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
     *   Implement all Immediate and High priority [Features](/features)
 
