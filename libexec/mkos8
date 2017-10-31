@@ -238,10 +238,8 @@ def make_bin (s, args):
                     "Installing FOCAL 69...", focal69_files]
 
   fiv_copyins = [
-    ['RKA0:', "al-4549d-ba-fr4-v3d-1.1978.tu56",
-     "Installing FORTRAN IV (part 1 of 2)...", None],
-    ['RKA0:', "al-5596d-ba-fr4-v3d-2.1978.tu56",
-     "Installing FORTRAN IV (part 2 of 2)...", None],
+    ['RKA0:', "subsys/al-4549d-ba-fr4-v3d-1.1978.tu56",
+     "Installing FORTRAN IV ...", None],
   ]
 
   macrel_copyin = ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56",
