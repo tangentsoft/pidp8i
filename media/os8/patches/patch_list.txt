@@ -27,8 +27,9 @@ EDIT-21.17.3M-v12D.patch8
 F4-21.1.2M-v4B.patch8
 F4-51.3.1M-v4C.patch8
 F4-51.3.2M-v4x.patch8
-# FORLIB 51.10.1M requires crafting a batch script.
-# Patch will not apply but is listed here for completeness.
+# FORLIB 51.10.1M is hard-coded into mkos8 to copy a new
+# FORLIB.RL made with instructions from the patch.
+# So the patch will not apply but is listed here for completeness.
 ## FORLIB-51.10.1M.patch8
 FOTP-21.19.1M-V9B.patch8
 # Can't verify FRTS because I don't know how to get a

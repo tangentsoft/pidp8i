@@ -248,6 +248,21 @@ For now, I am in the process of doing what validation I can of the
 V1 `MACREL`/`LINK` patches.
 
 
+## One-off Patches
+
+Most of the patches are parsed and applied in an automated manner
+by mkos8.  However some are one-offs.
+
+`FORLIB 51.10.1 M` is a one line source change to `DLOG.RA`. The patch
+file provides that line. It also provides instructions on how to use
+`RALF` to assemble the source and on how to to use `LIBRA` to replace
+the old version of `DLOG` with the new one in `FORLIB.RL`.  I followed
+the instructions to hand-tool a patched `FORLIB.RL` which I then put
+in the `local.tu56` DECtape image along with the other local hacks.
+The `patch` routine `mkos8` has in-line code to replace `FORLIB.RL` on
+`SYS:` if installation of FORTRAN IV is enabled.
+
+
 ## Unfinished Business
 
 There remain the following patches that are still under development,
@@ -255,9 +270,6 @@ because they are not simple binary overlays on executables that could
 be applied with simple scripts driving `ODT` or `FUTIL`.  Instead they
 are either batch scripts, or are applied to source code that is
 rebuilt either with an assembler or high level language compiler.
-
-`FORLIB 51.10.1 M` requires crafting a batch script that changes
-`DLOG.RA` and then rebulds `FORLIB.RL` with the updated component.
 
 `LQP 21.49.1 M` patches a device driver `.BN` file, then using `BUILD`
 to insert it into the system.  At the present time the OS/8 V3D packs
@@ -354,7 +366,7 @@ Status column key:
 |   | `FORTRAN` Compiler not recognizing syntax error | `51.3.2M` | Jun/Jul-78 | `F4-51.3.2M-v4x.patch8` | AP |
 |   | `FORTRAN` runtime system 2-page handler | `51.3-3O` | Oct/Nov-78 | `FRTS-51.3.3-O.patch8` Needed for RL02. (Corrected from Aug/Sep 78) | A |
 |   | Restriction with subscripted variables | `51.3-4R` | Aug/Sep-80 | Documentation: `FIV` `FORTRAN IV` will not allow subscripting to be used on both sides of an arithmetic expression. |  |
-|  `FORLIB` | `FORTRAN IV` `DLOG` Patch | `51.10.1M` | Feb/Mar-80 | `FORLIB-51.10.1M.patch8` (apply to `DLOG.RA`) | O |
+|  `FORLIB` | `FORTRAN IV` `DLOG` Patch | `51.10.1M` | Feb/Mar-80 | `FORLIB-51.10.1M.patch8` (apply to `DLOG.RA`) | AV |
 
 
 ### OS/8 MACREL/LINKER V1A Patches

@@ -682,7 +682,7 @@ def make_patch (s, args):
   s.send_cmd ("boot rk0")         # We're running OS/8. Let's patch!
   
   manifest = open (dirs.os8mi + "patches/" + manifest_filename, "r")
-  
+
   for line in manifest:
     if line == "": continue
     if line[0] == '#': continue      # Allow commenting out files
@@ -694,7 +694,27 @@ def make_patch (s, args):
         print "success."
       else:
         print "FAILED!"
-
+  
+  # If we have installed FORTRAN IV, install the patched FORLIB.RL
+  # to be found on local.tu56
+  if not args.disable_fortran_iv:
+    forlib_tape =         "local.tu56"
+    forlib_tape_path =    dirs.os8mi + forlib_tape
+    if progmsg: print "FORLIB 51.10.1M: Replacing FORLIB.RL with patched version from " + forlib_tape + "..."
+    # Normally we'd use check_exists, but failure to find the file is fatal.
+    # With a patch, we abort but keep going.
+    if (not os.path.isfile(forlib_tape_path)):
+      print "Can't find tape with patch FORLIB.RL.  FAILED!"
+    else:
+      s.back_to_cmd("\.")         # return to simh and mount the tape.
+      s.send_cmd ("attach -r dt0 " + forlib_tape_path)
+      s.os8_restart ()            # return to OS/8
+      s.os8_send_cmd ("\.", "DEL SYS:FORLIB.RL")
+      s.os8_send_cmd ("\.", "COPY SYS:<DTA0:FORLIB.RL")
+      s.back_to_cmd("\.")         # return to simh and mount the tape.
+      s.send_cmd ("detach dt0")
+      s.os8_restart ()            # return to OS/8
+      
   # Finish up
   if progmsg: print "Cleaning up..."
   s.os8_squish ("SYS")
