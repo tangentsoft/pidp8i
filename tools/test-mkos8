@@ -62,8 +62,6 @@ use Getopt::Std;
 
 my @tests;
 my $tests_mf;
-my $currdsk = 'bin/os8v3d-bin.rk05';
-my $currdlz = 'bin/os8v3d-bin.rklz';
 my $currlog = 'obj/mkos8-bin.log';
 
 # Command line option values
@@ -177,12 +175,19 @@ sub do_test
     mkdir $PID;
     chdir $PID;
 
+    # Are we building the -patched disk or the -bin disk?
+    my $patched = $test->{optstr} !~ m{--disable-os8-patches}x;
+    my $typestr = $patched ? 'patched' : 'bin';
+    my $currdsk = "bin/os8v3d-$typestr.rk05";
+    my $currdlz = substr ($currdsk, 0, length ($currdsk) - 2) . 'lz';
+    my $target  = 'os8-' . $typestr;
+
     # Build the test disk image
     system "../../../configure $test->{optstr} > cfg.log 2>&1"
             and die "Failed to configure $test->{name}!\n";
     link "../../../bin/pidp8i-sim", "bin/pidp8i-sim";  # no sense rebuilding it
-    print "Building (PID $PID)...\n";
-    system "make os8-bin > make.log 2>&1"
+    print "Building $currdsk for $test->{hash} (PID $PID)...\n";
+    system "make $target > make.log 2>&1"
             and die "Failed to build $currdsk!\n";
 
     # Quickly compress the test disk: we don't want to store all the
@@ -203,14 +208,14 @@ sub do_test
         print $tests_mf "$test->{hash}  $test->{name}\n";
     }
     elsif (compare ($currdlz, $test->{rklz}) == 0) {
-        print "mkos8 $test->{name} test passed.\n";
+        print "mkos8 $test->{hash} test passed.\n";
     }
     else {
         my $fdiff = "$test->{hdir}/fail.diff";
         my $faillog = "$test->{hdir}/fail.log";
         sanitize_log ($currlog, $faillog);
         system "diff -wu $test->{log} $faillog > $fdiff";
-        print "MKOS8 ", uc($test->{name}), " DIFFERS!  See $fdiff.\n";
+        print "MKOS8 ", uc($test->{hash}), " DIFFERS!  See $fdiff.\n";
     }
 
     system("cd .. ; rm -fr $PID");      # -f because there are read-only files
