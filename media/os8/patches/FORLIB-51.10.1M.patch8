@@ -5,10 +5,11 @@
 # 
 # Make a source change to DLOG.RA using either EDIT or TECO.   Replace
 # this line:
-# 
+#
+# Published patch has a typo.  There is no "EADD" function. It is "FADD".
 # DALA,     EADD      DAL1      /ADD BACK
 #     with :
-# DALA,     FLDA$     BPDAL     /GET ARGUMENT BACK
+# DALA,     FLDA%     BPDAL     /GET ARGUMENT BACK
 # .R RALF
 # *DLOG.RL<DLOG.RA
 # .R LIBRA
