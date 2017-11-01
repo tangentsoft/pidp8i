@@ -690,7 +690,7 @@ def make_patch (s, args):
     os.rename(image_path, save_path)
 
   if progmsg: print "Copying original " +  _bin_rk05 + " to " + _patched_rk05
-  copyfile(dirs.os8mo + _bin_rk05, image_path)
+  shutil.copyfile(dirs.os8mo + _bin_rk05, image_path)
 
   s.send_cmd ("attach rk0 " + image_path)
   s.send_cmd ("boot rk0")         # We're running OS/8. Let's patch!
