@@ -328,9 +328,6 @@
         Beteween those two, we can copy a subset of the tests over to
         various RPis and do probablisitic testing on them.
 
-    *   Hardcoded "4" constant in pidp8i.ips is probably merely close
-        for a Pi 1.  Find actual value and substitute.
-
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
 
     *   Implement all Immediate and High priority [Features](/features)

@@ -48,12 +48,12 @@
 # Thus, this value is the inverted cycle time divided by 2.
 pdp8i = 333333
 
-# A Raspberry Pi B+ running pidp8i-sim executes instructions about
-# 4 times faster than a PDP-8/I when the simulator is unthrottled.
-# That being the slowest Pi we must support, this gives us the lowest
-# possible IPS value short of throttling the sim, underclocking the
-# Pi, or starving the simulator of CPU power.
-raspberry_pi_b_plus = pdp8i * 4
+# A Raspberry Pi B+ running pidp8i-sim unthrottled executes PDP-8 code
+# faster than a real PDP-8/I by the factor given, so that running the
+# teco-pi-demo benchmkark (-b) it shows a factor of about 1.0.  This
+# gives us the lowest possible IPS value short of throttling the sim,
+# underclocking the Pi, or starving the simulator of CPU power.
+raspberry_pi_b_plus = pdp8i * 5.6
 
 # Initial value; teco-pi-demo -b appends overrides for this
 current = raspberry_pi_b_plus
