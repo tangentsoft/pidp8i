@@ -71,6 +71,7 @@ PIDP8I_DIRS := lib/pidp8i/dirs.py
 PIDP8I_DIN  := @srcdir@/$(PIDP8I_DIRS).in
 GENNED_PY   := \
 	lib/pidp8i/__init__.py \
+	lib/pidp8i/ips.py \
 	$(PIDP8I_DIRS)
 
 SIMH_PY     := lib/simh.py
@@ -180,6 +181,7 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 # rule near the end of the file, on purpose.  See defense there.
 MKOS8_INFILES = \
 	@srcdir@/lib/pidp8i/__init__.py.in \
+	@srcdir@/lib/pidp8i/ips.py.in \
 	@srcdir@/media/os8/init.tx.in \
 	@srcdir@/src/PDP8/pidp8i.c.in \
 	$(PIDP8I_DIN)

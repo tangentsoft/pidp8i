@@ -169,6 +169,14 @@ class simh:
     self._child.expect (pexpect.EOF)
 
 
+  #### read_tail #######################################################
+  # Watch for a literal string, then get what follows on that line.
+
+  def read_tail (self, head, timeout = -1):
+    self._child.expect_exact ([head], timeout)
+    return self._child.readline ()
+
+
   #### send_cmd ########################################################
   # Wait for a SIMH command prompt and then send the given command
 
@@ -191,7 +199,8 @@ class simh:
 
 
   #### spin ############################################################
-  # Let child run indefinitely without asking anything more from it.
+  # Let child run without asking anything more from it, with an optional
+  # timeout value.  If no value is given, lets child run indefinitely.
 
-  def spin (self):
-    self._child.expect (pexpect.EOF, timeout = None)
+  def spin (self, timeout = None):
+    self._child.expect (pexpect.EOF, timeout = timeout)

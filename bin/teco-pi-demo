@@ -39,6 +39,7 @@ sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 sys.path.insert (0, os.getcwd () + '/lib')
 
 # Other core modules we need
+from datetime import datetime
 import time
 
 # Our local modules
@@ -49,6 +50,9 @@ from simh   import *
 #### main ##############################################################
 
 def main ():
+  # Check for command line flags
+  benchmark = len (sys.argv) > 1 and sys.argv[1] == '-b'
+
   # Create the SIMH child instance and tell it where to send log output
   s = simh (dirs.build)
   s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
@@ -111,28 +115,48 @@ def main ():
   s.os8_send_ctrl ('[')
   s.os8_send_ctrl ('[')
 
-  # Pop out to SIMH and throttle it down to a rate suitable for a
-  # blinkenlights demo.  1/17 means SIMH runs one instruction then
-  # waits for 17ms, yielding roughly 59 instructions per second.
-  time.sleep (0.1)      # FIXME: simulator chokes on 'cont' without this
-  s.os8_send_ctrl ('e')
-  s.send_cmd ('set throttle 1/17')
+  if benchmark:
+    # Run demo long enough to get a good sense of the simulator's
+    # execution rate while unthrottled on this host hardware.  If
+    # you don't run it long enough, the IPS value is untrustworthy.
+    try:
+      s.spin (10)
+    except pexpect.TIMEOUT:
+      # Find out how many IPS was executing
+      s.os8_send_ctrl ('e')
+      s.send_cmd ('show clocks')
+      line = s.read_tail ('Execution Rate:')
+      curr_ips = int (line.strip().replace(',', '').split(' ')[0])
+      pf = open ('lib/pidp8i/ips.py', 'a')
+      pf.write ('current = ' + str (curr_ips) + '    # ' + \
+            str (datetime.today ()))
+      pf.close ()
+      s.send_cmd ('quit')
+      print "\nYour system is " + str (curr_ips / ips.baseline) + \
+          " times faster than the baseline.\n"
+  else:
+    # Normal mode.  Pop out to SIMH and throttle it down to a rate
+    # suitable for a blinkenlights demo.  1/17 means SIMH runs one
+    # instruction then waits for 17ms, yielding ~59 IPS.
+    time.sleep (0.01)   # FIXME: simulator chokes on 'cont' without this
+    s.os8_send_ctrl ('e')
+    s.send_cmd ('set throttle 1/17')
 
-  # Uncomment this line to allow access to the simulator while it runs
-  # the demo.  You can't hit Ctrl-E while running this script in the
-  # foreground, since pexpect takes over the simulator's stdio handles.
-  #
-  # It is commented out by default because SIMH can't be made to listen
-  # on localhost only, so doing this may be a security problem in some
-  # environments.  SIMH disables obviously-unsafe commands like ! on the
-  # remote console, but it is possible some mischief may be possible via
-  # this path anyway.  It could be used to exfiltrate a sensitive file
-  # via ATTACH, for example.  It's also a potential DoS vector.
-  #s.send_cmd ('set remote telnet=3141')
+    # Uncomment the send_cmd call below to accept simulator commands via
+    # telnet while the demo runs.  You can't hit Ctrl-E while running
+    # this script in the foreground since pexpect takes over stdio.
+    #
+    # It's disabled by default because SIMH can't be made to listen only
+    # on localhost, so doing this may be a security risk.  SIMH disables
+    # obviously-unsafe commands like ! on the remote console, but it is
+    # possible some mischief may be possible via this path anyway.  It
+    # could be used to exfiltrate a sensitive file via ATTACH, for one
+    # thing.  For another, it's a potential DoS vector.
+    #s.send_cmd ('set remote telnet=3141')
 
-  # Let it run.  Never exits.
-  s.send_cmd ('cont')
-  s.spin ()
+    # Let it run.  Never exits.
+    s.send_cmd ('cont')
+    s.spin ()
 
 
 if __name__ == "__main__":
