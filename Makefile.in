@@ -171,10 +171,20 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 # List of *.in files from auto.def file, except for this present file
 # (Makefile.in) which is handled separately.  This list should only
 # change when the list of "make-template" calls in auto.def changes.
+# 
+# The first set of files are those which, if changed, require rebuilding
+# the OS/8 media.  Touching the combined set merely causes a reconfig
+# and build.
 #
-# If the first file listed below changes, change the AUTOREBUILD rule
-# near the end of this file to match!
+# Only one output from this set of inputs is listed in the AUTOREMAKE
+# rule near the end of the file, on purpose.  See defense there.
+MKOS8_INFILES = \
+	@srcdir@/lib/pidp8i/__init__.py.in \
+	@srcdir@/media/os8/init.tx.in \
+	@srcdir@/src/PDP8/pidp8i.c.in \
+	$(PIDP8I_DIN)
 INFILES = \
+	@srcdir@/Makefile.in \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
 	@srcdir@/boot/2.script.in \
@@ -186,17 +196,13 @@ INFILES = \
 	@srcdir@/boot/run.script.in \
 	@srcdir@/etc/pidp8i-init.in \
 	@srcdir@/etc/sudoers.in \
-	@srcdir@/media/os8/init.tx.in \
-	@srcdir@/src/gpio-common.c.in \
-	@srcdir@/src/PDP8/pidp8i.c.in \
-	@srcdir@/tools/simh-update.in \
-	$(PIDP8I_DIN)
-PRECIOUS_INFILES = \
-	@srcdir@/Makefile.in \
 	@srcdir@/examples/Makefile.in \
 	@srcdir@/src/Makefile.in \
+	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/src/cc8/Makefile.in \
-	@srcdir@/src/PDP8/Makefile.in
+	@srcdir@/src/PDP8/Makefile.in \
+	@srcdir@/tools/simh-update.in \
+	$(MKOS8_INFILES)
 OUTFILES := $(subst @srcdir@/,,$(INFILES))
 OUTFILES := $(subst .in,,$(OUTFILES))
 PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
@@ -475,8 +481,13 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 
 # Reconfigure whenever one of the *.in or autosetup files changes unless
 # this is "make clean".
+#
+# Only one of the outputs of MKOS8_INFILES is on the left hand side: to
+# list all of them would permit make(1) to try rebuilding them all in
+# parallel, which would re-run configure that many times in parallel;
+# disaster!  We list just one to cause a single AUTOREMAKE call.
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
+media/os8/init.tx: $(MKOS8_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
 # Also do it if the autodep tool is newer than its output, suggesting
