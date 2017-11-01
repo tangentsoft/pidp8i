@@ -402,7 +402,7 @@ def make_bin (s, args):
   s.send_cmd ("detach dt1")
   s.send_cmd ("boot rk0")     # must do: boot media just went away
   s.back_to_cmd("\.")
-  os.remove(boot_dt_path)     # don't check error: copyfile() succeeded above
+  os.remove(boot_dt_path)
 
   if progmsg: print "Performing remaining copies/installs..."
   do_all_copyins (s, bin_copyins, args.debug)
@@ -690,7 +690,14 @@ def make_patch (s, args):
     os.rename(image_path, save_path)
 
   if progmsg: print "Copying original " +  _bin_rk05 + " to " + _patched_rk05
-  shutil.copyfile(dirs.os8mo + _bin_rk05, image_path)
+  try:
+    shutil.copyfile(dirs.os8mo + _bin_rk05, image_path)
+  except shutil.Error as e:
+    print "Creation of " + _patched_rk05 + " failed with error: " + e
+    mkos8_abort(s)
+  except IOError as e:
+    print "Creation of " + _patched_rk05 + " failed with IOError: " + e
+    mkos8_abort(s)
 
   s.send_cmd ("attach rk0 " + image_path)
   s.send_cmd ("boot rk0")         # We're running OS/8. Let's patch!
