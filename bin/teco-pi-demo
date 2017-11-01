@@ -129,7 +129,7 @@ def main ():
       curr_ips = int (line.strip().replace(',', '').split(' ')[0])
       pf = open ('lib/pidp8i/ips.py', 'a')
       pf.write ('current = ' + str (curr_ips) + '    # ' + \
-            str (datetime.today ()))
+            str (datetime.today ()) + '\n')
       pf.close ()
       s.send_cmd ('quit')
       ratio = float (curr_ips) / ips.raspberry_pi_b_plus
