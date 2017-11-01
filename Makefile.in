@@ -186,7 +186,6 @@ MKOS8_INFILES = \
 	@srcdir@/src/PDP8/pidp8i.c.in \
 	$(PIDP8I_DIN)
 INFILES = \
-	@srcdir@/Makefile.in \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
 	@srcdir@/boot/2.script.in \
@@ -482,14 +481,12 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
 # Reconfigure whenever one of the *.in or autosetup files changes unless
-# this is "make clean".
-#
-# Only one of the outputs of MKOS8_INFILES is on the left hand side: to
-# list all of them would permit make(1) to try rebuilding them all in
-# parallel, which would re-run configure that many times in parallel;
-# disaster!  We list just one to cause a single AUTOREMAKE call.
+# this is "make clean".  The use of | causes all but the first prereq to
+# be considered order-only prerequisites, a GNU Make feature we're using
+# here to prevent parallel make from running configure in parallel, once
+# for each prerequisite.
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-media/os8/init.tx: $(MKOS8_INFILES) @AUTODEPS@
+$(OUTFILES): | @srcdir@/Makefile.in $(INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
 # Also do it if the autodep tool is newer than its output, suggesting
