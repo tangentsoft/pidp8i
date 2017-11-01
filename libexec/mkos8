@@ -39,7 +39,7 @@ sys.path.insert (0, os.getcwd () + '/lib')
 
 # Remaining Python core modules
 import re
-from shutil import copyfile
+import shutil
 import subprocess
 
 # Our local modules
@@ -69,6 +69,14 @@ _com_split_parse = re.compile(_com_split_str)
 _odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
 _odt_parse = re.compile(_odt_parse_str)
 
+#### mkos8_abort  ######################################################
+# Fatal error. Abort mkos8
+
+def mkos8_abort (s):
+  print "Fatal Error.  Cannot proceed."
+  s.quit ()
+  exit (-1)
+
 
 #### check_exists ######################################################
 # Check existence of all files needed
@@ -79,8 +87,7 @@ def check_exists (s, image_copyins):
     image_path = dirs.os8mi + image
     if (not os.path.isfile(image_path)):
         print "Required file: " + image_path + " not found."
-        s.quit ()
-        exit (-1)
+        mkos8_abort(s)
     # else: print "Found " + image_path
 
    
@@ -318,8 +325,15 @@ def make_bin (s, args):
   if progmsg: print "Building initial OS/8 system..."
   
   if progmsg: print "Making a writeable copy of boot DECtape..."
-  copyfile(ro_boot_tape_path, boot_dt_path)
-  
+  try:
+    shutil.copyfile(ro_boot_tape_path, boot_dt_path)
+  except shutil.Error as e:
+    print "Bootable DECtape copy failed with error: " + e
+    mkos8_abort (s)
+  except IOError as e:
+    print "Bootable DECtape copy failed with IOError: " + e
+    mkos8_abort (s)
+
   s.send_cmd ("attach rk0 " + image_path)
   s.send_cmd ("attach dt0 " + boot_dt_path)
   s.send_cmd ("attach -r dt1 " + driver_tape_path)
