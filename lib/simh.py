@@ -37,9 +37,53 @@ import pexpect
 import pkg_resources
 import time
 
+import pidp8i
+
 class simh: 
   # pexpect object instance, set by ctor
   _child = None
+
+  # Constant used by os8_kbd_delay, assembled in stages:
+  #
+  # 1. PDP-8 RS-232 bits per character: 7-bit ASCII plus necessary
+  #    start, stop, and parity bits.
+  #
+  # 2. The ratio of the instructions per second ratios of a PDP-8/I to
+  #    that of the host hardware running the simulator.  The former is
+  #    an approximate value; see lib/pidp8i/ips.py.in for the value and
+  #    its defense.  The latter is either the IPS rate for:
+  #
+  #    a) a Raspberry Pi Model B+, that being the slowest host system
+  #       we run this simulator on; or
+  #
+  #    b) the IPS rate of the actual host hardware if you have run the
+  #       "bin/teco-pi-demo -b" benchmark on it.
+  #
+  # 2. The fact that real PDP-8s ran OS/8 reliably at 300 bps, and have
+  #    been claimed to get flaky as early as 600 bps by some.  (Others
+  #    claim to have run them up to 9,600 bps.)
+  #
+  # 3. The "safe BPS" value is the fastest bit per second speed actual
+  #    PDP-8 hardware was known to run OS/8 terminal I/O at.  In this
+  #    case, it is the high-speed tape reader.
+  #
+  #    TODO: We may be able to increase this.
+  #
+  #    We have one report that OS/8 was tested with terminals up to
+  #    about ~600 bps before becoming unreliable.
+  #
+  #    We have another report that OS/8 could run under ETOS with
+  #    9,600 bps terminals, but we don't know if that tells us anything
+  #    about OS/8 running without the ETOS multitasking hardware.
+  #
+  # 4. Given above, calculate safe characters per second for host HW.
+  #
+  # 5. Invert to get seconds per character, that being the delay value.
+  _bpc = 7 + 1 + 1 + 1                                       # [1]
+  _ips_ratio = float (pidp8i.ips.current) / pidp8i.ips.pdp8i # [2]
+  _pdp8i_safe_bps = 300                                      # [3]
+  _host_safe_cps = _pdp8i_safe_bps * _ips_ratio / _bpc       # [4]
+  _os8_kbd_delay = 1 / _host_safe_cps                        # [5]
 
 
   #### ctor ############################################################
@@ -70,21 +114,11 @@ class simh:
   #### os8_kbd_delay ###################################################
   # Artificially delay the media generation process to account for the
   # fact that OS/8 lacks a modern multi-character keyboard input buffer.
-  # It is unsafe to send text faster than a contemporary terminal could.
-  #
-  # The constant is based on advice we received that OS/8 would begin to
-  # become unreliable when run with a terminal speaking more than about
-  # 600 bps.  We divide that by 7-bit ASCII plus necessary start, stop,
-  # and parity bits to get characters per second.  Then we multiply that
-  # by 4, the minimum number of times faster our SIMH instance runs as
-  # compared to a real PDP-8.  (Keep in mind that we initially run the
-  # simulator without any throttling.)  Finally, we invert that value to
-  # get secs per character instead of characters per second.  OS/8 must
-  # be able to accept input at least this fast on our simulator.
-
-  _kbd_delay = 1 / (600 / (7 + 1 + 1 + 1) * 4)
+  # It is unsafe to send text faster than a contemporary terminal could,
+  # though we can scale it based on how much faster this host is than a
+  # real PDP-8.  See the constants above for the calculation.
   def os8_kbd_delay (self):
-    time.sleep (self._kbd_delay)
+    time.sleep (self._os8_kbd_delay)
 
 
   #### os8_send_cmd ######################################################
