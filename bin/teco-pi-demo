@@ -132,8 +132,9 @@ def main ():
             str (datetime.today ()))
       pf.close ()
       s.send_cmd ('quit')
-      print "\nYour system is " + str (curr_ips / ips.baseline) + \
-          " times faster than the baseline.\n"
+      ratio = float (curr_ips) / ips.raspberry_pi_b_plus
+      print "\nYour system is " + format (ratio, '.1f') + \
+          " times faster than a Raspberry Pi Model B+.\n"
   else:
     # Normal mode.  Pop out to SIMH and throttle it down to a rate
     # suitable for a blinkenlights demo.  1/17 means SIMH runs one

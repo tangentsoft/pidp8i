@@ -33,22 +33,26 @@
 # authorization from those authors.
 ########################################################################
 
-# This default is based on one fact and two assumptions:
+# Approximate IPS rate for a PDP-8/I based on one assumption & one fact:
 #
-# 1. The core cycle time of a PDP-8/I is 1.5 µs; this is the fact.
+# 1. The core cycle time of a PDP-8/I is 1.5 µs.
 #
-# 2. The average number of cycles per instruction is 2; some PDP-@8
-#    instructions take more cycles than this, some less, and we're
-#    guessing they average out to about this in real-world PDP-8 code.
+# 2. PDP-8 systems execute instructions at varying rates from roughly 1
+#    core cycle time up to many core cycle times.  Pure arithmetic tends
+#    to take 2 cycles, so we assume that the average for typical real
+#    world PDP-8 code will average to 2 cycles per instruction.
 #
-# 3. A Raspberry Pi B+ executing pidp8i-sim executes instructions about
-#    4 times faster than a PDP-8/I when the simulator is unthrottled.
-#    That being the slowest Pi we must support, this gives us the lowest
-#    possible IPS value short of throttling the sim, underclocking the
-#    Pi, or starving the simulator of CPU power.
-baseline = 333333 * 4
+# Thus, this value is the inverted cycle time divided by 2.
+pdp8i = 333333
+
+# A Raspberry Pi B+ running pidp8i-sim executes instructions about
+# 4 times faster than a PDP-8/I when the simulator is unthrottled.
+# That being the slowest Pi we must support, this gives us the lowest
+# possible IPS value short of throttling the sim, underclocking the
+# Pi, or starving the simulator of CPU power.
+raspberry_pi_b_plus = pdp8i * 4
 
 # Initial value; teco-pi-demo -b appends overrides for this
-current = baseline
+current = raspberry_pi_b_plus
 
 # Benchmark results:
