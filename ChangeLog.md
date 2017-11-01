@@ -256,6 +256,26 @@
     `bin/teco-pi-demo` works and how to reuse the components it is built
     atop for your own ends.
 
+    This demo also has a benchmark mode (command line option `-b`) which
+    has two purposes:
+
+    1.  It lets you see how much faster your host system runs PDP-8 code
+        than a Raspberry Pi Model B+ running the PiDP-8/I simulator.
+
+    2.  Given that information, the benchmark overrides a hardcoded
+        timing value in the source code as distributed which prevents
+        programs like `teco-pi-demo` from spamming the OS/8 terminal
+        input handler.  The default is for the slowest host we support
+        this software on, that same Model B+ referred to above, but if
+        we know you're running on a faster host, we can shorten this
+        delay and remain reliable.
+        
+    If you run the demo in benchmark mode twice, you'll notice that the
+    TECO script is input nearly instantaneously the second time, whereas
+    you can see the demo "type" the script in very quickly the first
+    time.  (Remove `lib/pidp8i/ips.py`, say `make reconfig` and run the
+    demo again to see the difference.)
+
 *   Fixed the order of initialization in the GPIO setup code for the
     James L-W serial mod case.  Fix by Dylan McNamee.
 
@@ -305,17 +325,14 @@
         *   Add -e: test using existing test results only.  Kind of the
             inverse of -g, which builds only missing test results.
 
-        Beteween those two, we can investigate new ideas without having
-        a complete test corpus while still having a statistically good
-        chance of avoiding testing bias.  We need that for:
+        Beteween those two, we can copy a subset of the tests over to
+        various RPis and do probablisitic testing on them.
 
-        *   Reducing OS/8 keyboard delay ahead of test corpus completion
-
-        *   Testing build reliability on Pi 1, which won't have room for
-            the complete test corpus, nor sufficient CPU time to re-test
-            all possible configurations anyway.
+    *   Hardcoded "4" constant in pidp8i.ips is probably merely close
+        for a Pi 1.  Find actual value and substitute.
 
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
+
     *   Implement all Immediate and High priority [Features](/features)
 
 [apt]:   https://linux.die.net/man/8/apt
