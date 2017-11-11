@@ -216,6 +216,7 @@ sub do_test
         my $fdiff = "$test->{hdir}/fail.diff";
         my $faillog = "$test->{hdir}/fail.log";
         sanitize_log ($currlog, $faillog);
+        system "mv $currdlz $test->{hdir}/fail.rklz";
         system "diff -wu $test->{log} $faillog > $fdiff";
         print "MKOS8 ", uc($test->{hash}), " DIFFERS!  See $fdiff.\n";
     }
