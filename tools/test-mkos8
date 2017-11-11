@@ -53,6 +53,7 @@ use File::Basename;
 use File::Compare;
 use File::Copy;
 use Getopt::Std;
+use List::Util qw(shuffle);
 
 # Perl::Critic rules we're willing to bend
 ## no critic (InputOutput::RequireBriefOpen )
@@ -65,7 +66,8 @@ my $tests_mf;
 my $currlog = 'obj/mkos8-bin.log';
 
 # Command line option values
-my ($dry_run, $generate_only, $single_core, $verbose);
+my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
+        $verbose);
 
 
 #### sanitize_log ######################################################
@@ -224,15 +226,53 @@ sub do_test
 }
 
 
+#### remove_missing ####################################################
+# Implements -e: given a list of mkos8 options, returns only those for
+# which we have a valid test set.
+
+sub remove_missing
+{
+    my (@tests) = @_;
+    my $all = @tests;
+
+    # First read in the set of prebuilt tests, filtering out those that
+    # refer to output files that do not exist here.  (This happens when
+    # copying over the manifest file but only a subset of the actual
+    # test output files.)
+    my %existing;
+    my $genned = 0;
+    my $mff = 'test/tests-manifest.txt';
+    open my $mf, '<', $mff or die "Could not read from $mff: $!\n";
+    while (<$mf>) {
+        chomp;
+        my ($hash, @opts) = split ' ';
+        my $dir = 'test/' . $hash;
+        if (-d $dir and -f "$dir/last.rklz" and -f "$dir/last.log") {
+            $existing{join ' ', @opts} = $hash;
+        }
+        ++$genned;
+    }
+    close $mf;
+
+    # Now filter the test set to remove those that do not exist
+    my @filtered = grep { $existing{$_->{optstr}} } @tests;
+    print "Filtered $genned of $all tests down to ", scalar(@filtered),
+            " for -e.\n";
+    return @filtered;
+}
+
+
 #### main ##############################################################
 
 # Parse command line
 my %clopts;
-getopts('gnsv', \%clopts) or die "Failed to parse command line!\n";
+getopts('egnsv1', \%clopts) or die "Failed to parse command line!\n";
 $dry_run = $clopts{n};
+$existing_only = $clopts{e};
 $generate_only = $clopts{g};
-$single_core = $clopts{s};
+$shuffle = $clopts{s};
 $verbose = $clopts{v};
+$single_core = $clopts{1};
 
 # Init global resources
 mkdir 'test';
@@ -264,8 +304,11 @@ my @cfgOpts = <$ocmd>;
 close $ocmd;
 chomp @cfgOpts;
 
-# Generate all possible permutations of those options.
+# Generate all possible permutations of those options.  Shuffle them if
+# requested.
 subsets \&build_test, @cfgOpts;
+@tests = remove_missing(@tests) if $existing_only;
+@tests = shuffle @tests if $shuffle;
 
 # Run the tests
 my $tdir = abs_path(dirname($0));
