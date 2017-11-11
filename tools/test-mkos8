@@ -184,10 +184,15 @@ sub do_test
     my $currdlz = substr ($currdsk, 0, length ($currdsk) - 2) . 'lz';
     my $target  = 'os8-' . $typestr;
 
-    # Build the test disk image
+    # Configure the test disk image
     system "../../../configure $test->{optstr} > cfg.log 2>&1"
             and die "Failed to configure $test->{name}!\n";
     link "../../../bin/pidp8i-sim", "bin/pidp8i-sim";  # no sense rebuilding it
+    open my $itf, '>', 'media/os8/init.tx'             # avoid a pointless diff
+            or die "Cannot overwrite init.tx with neutral version: $!\n";
+    print $itf "TEST-MKOS8 BUILT THIS DISK IMAGE.\n\n";
+
+    # Build the test disk image
     print "Building $currdsk for $test->{hash} (PID $PID)...\n";
     system "make $target > make.log 2>&1"
             and die "Failed to build $currdsk!\n";
