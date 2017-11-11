@@ -95,7 +95,7 @@ class simh:
   # move on.  This tolerant mode is appropriate for programs that need
   # the simulator alone, not actually the PiDP-8/I front panel display.
   
-  def __init__ (self, basedir, ignore_gpio_lock):
+  def __init__ (self, basedir, ignore_gpio_lock = False):
     # Start the simulator instance
     self._child = pexpect.spawn(basedir + '/bin/pidp8i-sim')
 
