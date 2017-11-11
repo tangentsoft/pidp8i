@@ -24,6 +24,8 @@
 #define	TAG_KONSTANT	0x0200				// can be changed from Caaaa -> Kvvvv
 #define	TAG_INDIRECTFC	0x0400				// target of an indirect flow control (JMS I / JMP I) (only meaningful if not writable)
 
+#include <stdint.h>
+
 // segment info
 
 typedef struct
