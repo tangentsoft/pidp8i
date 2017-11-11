@@ -98,6 +98,11 @@ class simh:
             pkg_resources.parse_version("4.0"))
     self._child.delaybeforesend = None if pev4 else 0
 
+    # Wait for either an error or the status line
+    if not self.try_wait ('^PiDP-8/I [a-z].*\[.*\]', \
+        'Failed to lock /dev/gpiomem'):
+      raise RuntimeError ('GPIO locked')
+
 
   #### back_to_cmd ######################################################
   # Pause the simulation and return to the SIMH command prompt when the
@@ -238,3 +243,11 @@ class simh:
 
   def spin (self, timeout = None):
     self._child.expect (pexpect.EOF, timeout = timeout)
+
+
+  #### try_wait ########################################################
+  # Wait for one of two strings to come back from SIMH, returning true
+  # if we get the first, else false.
+
+  def try_wait (self, success, failure):
+    return self._child.expect ([success, failure]) == 0

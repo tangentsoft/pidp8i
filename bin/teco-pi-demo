@@ -54,7 +54,11 @@ def main ():
   benchmark = len (sys.argv) > 1 and sys.argv[1] == '-b'
 
   # Create the SIMH child instance and tell it where to send log output
-  s = simh (dirs.build)
+  try:
+    s = simh (dirs.build)
+  except (RuntimeError) as e:
+    print "Could not start simulator: " + e.message + '!'
+    exit (1)
   s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
 
   # Find and boot the built OS/8 bin disk

@@ -778,7 +778,12 @@ def main ():
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
-  s = simh (dirs.build)
+  try:
+    s = simh (dirs.build)
+  except (RuntimeError):
+    # This is probably a complaint about GPIO being locked, but we don't
+    # need the display to work, so just log the complaint.
+    print "WARNING: simulator did not start cleanly: " + e.message
   s.set_logfile (open (dirs.log + 'mkos8-' + first_act + '.log', 'w') \
       if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
