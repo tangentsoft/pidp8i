@@ -87,8 +87,15 @@ class simh:
 
 
   #### ctor ############################################################
+  # The first parameter must be given as the parent of bin/pidp8i-sim.
+  #
+  # The second defaults to false, meaning that a failure to lock the
+  # GPIO for the caller's exclusive use is a fatal error.  If you pass
+  # True instead, we just complain if the GPIO is already locked and
+  # move on.  This tolerant mode is appropriate for programs that need
+  # the simulator alone, not actually the PiDP-8/I front panel display.
   
-  def __init__ (self, basedir):
+  def __init__ (self, basedir, ignore_gpio_lock):
     # Start the simulator instance
     self._child = pexpect.spawn(basedir + '/bin/pidp8i-sim')
 
@@ -98,10 +105,13 @@ class simh:
             pkg_resources.parse_version("4.0"))
     self._child.delaybeforesend = None if pev4 else 0
 
-    # Wait for either an error or the status line
-    if not self.try_wait ('^PiDP-8/I [a-z].*\[.*\]', \
-        'Failed to lock /dev/gpiomem'):
-      raise RuntimeError ('GPIO locked')
+    # Wait for either an error or the simulator's configuration line.
+    if self.try_wait ('^PiDP-8/I [a-z].*\[.*\]', \
+        'Failed to lock /dev/gpiomem') != 0:
+      if ignore_gpio_lock:
+        print "WARNING: Failed to lock GPIO for exclusive use.  Won't use front panel."
+      else:
+        raise RuntimeError ('GPIO locked')
 
 
   #### back_to_cmd ######################################################
