@@ -410,6 +410,9 @@ def make_bin (s, args):
   # Any further initialization of installed software is done here.
   s.send_cmd ("boot rk0")
 
+  if progmsg: print "Configuring for 3-column DIRECT listings..."
+  s.os8_send_cmd ("\.", "SET TTY COL 3")
+
   if not args.disable_crt:
     # NO SCOPE mode is the default on distribution tapes.
     if progmsg: print "Configuring scope-style rubout processing..."
