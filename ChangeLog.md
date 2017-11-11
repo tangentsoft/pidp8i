@@ -231,6 +231,11 @@
     between SIMH and its host OS, but they should prove useful for other
     similar tasks.
 
+*   Integrated Robert Krten's `d8tape` PDP-8 host-side disassembler.
+    This is distinct from the OS/8 DCP disassembler, which runs inside
+    the simulator.  It is intended as a companion to `palbart`, which we
+    integrated last year.
+
 *   Added a new "blinkenlights" demo program called `bin/teco-pi-demo`
     which drives SIMH from the outside, running a TECO macro under OS/8
     to calculate *pi* to 248 digits at a very slow rate, producing a

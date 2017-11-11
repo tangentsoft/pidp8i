@@ -48,6 +48,14 @@ of the license given in [`src/palbart/LICENSE.md`][pl].
 [pl]: https://tangentsoft.com/pidp8i/doc/trunk/src/palbart/LICENSE.md
 
 
+## d8tape License
+
+The `d8tape` program is distributed under the license given in
+[`src/d8tape/LICENSE.md`][d8tl].
+
+[d8tl]: https://tangentsoft.com/pidp8i/doc/trunk/src/d8tape/LICENSE.md
+
+
 ## OS/8 License
 
 The OS/8 media images included with this software distribution are
