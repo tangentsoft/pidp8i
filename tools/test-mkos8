@@ -172,10 +172,10 @@ sub do_test
     print "Configuring $test->{name}, PID $PID...\n";
     return if $dry_run;
     chdir "test/tmp" or die "Could not CD to tmp dir: $!\n";
-    die "Could not mkdir $test->{hdir}: $!\n"
-            unless -d $test->{hdir} || mkdir($test->{hdir});
     mkdir $PID;
     chdir $PID;
+    die "Could not mkdir $test->{hdir}: $!\n"
+            unless -d $test->{hdir} || mkdir($test->{hdir});
 
     # Are we building the -patched disk or the -bin disk?
     my $patched = $test->{optstr} !~ m{--disable-os8-patches}x;
@@ -191,6 +191,7 @@ sub do_test
     open my $itf, '>', 'media/os8/init.tx'             # avoid a pointless diff
             or die "Cannot overwrite init.tx with neutral version: $!\n";
     print $itf "TEST-MKOS8 BUILT THIS DISK IMAGE.\n\n";
+    close $itf;
 
     # Build the test disk image
     print "Building $currdsk for $test->{hash} (PID $PID)...\n";
@@ -202,12 +203,9 @@ sub do_test
     system("lz4 $currdsk > $currdlz");
 
     if (not -f $test->{log} or not -f $test->{rklz}) {
-        # This test hasn't run here yet, so blindly assume its
-        # output is correct, and thus that it should be our exemplar
-        # henceforth.  Store in LZ4 format 
-        mkdir $test->{hdir};
+        # This test hasn't run here yet, so save it as our exemplar for
+        # this optstr, to be compared to future builds.
         move ($currdlz, $test->{rklz});
-
         sanitize_log ($currlog, $test->{log});
 
         # Log the mapping between the hash and the options it
@@ -215,9 +213,13 @@ sub do_test
         print $tests_mf "$test->{hash}  $test->{name}\n";
     }
     elsif (compare ($currdlz, $test->{rklz}) == 0) {
+        # We had this test examplar here already and on re-doing it we
+        # got the same result.
         print "mkos8 $test->{hash} test passed.\n";
     }
     else {
+        # This build resulted in a difference, so yell and save the
+        # results for manual comparison.
         my $fdiff = "$test->{hdir}/fail.diff";
         my $faillog = "$test->{hdir}/fail.log";
         sanitize_log ($currlog, $faillog);
