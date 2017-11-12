@@ -63,6 +63,7 @@ use Term::ANSIColor;
 
 my @tests;
 my $tests_mf;
+my (%generated, %tested);
 my $currlog = 'obj/mkos8-bin.log';
 my $cmplz = abs_path (dirname ($0)) . '/cmplz';
 
@@ -121,10 +122,10 @@ sub sanitize_log
 }
 
 
-#### build_test ########################################################
-# Build test for a single permutation
+#### construct_test ####################################################
+# Assembles a test record for a single permutation
 
-sub build_test
+sub construct_test
 {
     my @opts = @_;
 
@@ -140,7 +141,7 @@ sub build_test
         hash   => $hash,
         hdir   => $rhdir,
         log    => "$rhdir/last.log",
-        name   => '{' . substr($hash, 12) . '}',
+        name   => '{' . substr ($hash, 0, 12) . '}',
         optstr => $optstr,
         rklz   => "$rhdir/last.rklz",
     };
@@ -226,7 +227,7 @@ sub do_test
     close $itf;
 
     # Build the test disk image
-    print "Building $currdsk for $test->{name} (PID $PID)...\n";
+    print "Building $currdsk for test $test->{name} (PID $PID)...\n";
     system "make $target > make.log 2>&1"
             and die "Failed to build $currdsk!\n";
 
@@ -243,11 +244,13 @@ sub do_test
         # Log the mapping between the hash and the options it
         # represents, so the user can reverse it.
         print $tests_mf "$test->{hash}  $test->{optstr}\n";
+        $generated{$test->{hash}} = 1;
     }
     elsif (compare_rklz ($currdlz, $test->{rklz})) {
         # We had this test examplar here already and on re-doing it we
         # got the same result.
         print colored(['green'], "mkos8 $test->{name} test passed."), "\n";
+        $tested{$test->{hash}} = 1;
     }
     else {
         # This build resulted in a difference, so yell and save the
@@ -259,6 +262,7 @@ sub do_test
         system "diff -wu $test->{log} $faillog > $fdiff";
         print colored(['bold red'], 'RESULT DIFFERS!  See test/',
                 substr($fdiff, 6)), "\n";
+        $tested{$test->{hash}} = 0;
     }
 
     system("cd .. ; rm -fr $PID");      # -f because there are read-only files
@@ -303,6 +307,41 @@ sub remove_missing
 }
 
 
+#### report* ###########################################################
+# Print on-exit status report.
+
+sub report_part
+{
+    my ($partref, $kind) = @_;
+
+    return unless keys %$partref;
+
+    my ($successes, $tries) = (0, 0);
+    for my $s (values %$partref) {
+        ++$tries;
+        ++$successes if $s;
+    }
+
+    print colored ([
+                $successes == 0 ? 'bold red' :
+                    $successes != $tries ?
+                        'bold yellow' :
+                        'green'
+            ],
+            "Successfully $kind $successes of $tries tests.\n");
+}
+
+sub report
+{
+    print "\n", '=' x 79, "\n";
+    report_part (\%generated, 'generated');
+    report_part (\%tested,    'built');
+    print "\n";
+
+    return;
+}
+
+
 #### main ##############################################################
 
 # Parse command line
@@ -321,7 +360,7 @@ system("rm -rf test/tmp");
 mkdir 'test/tmp';
 open $tests_mf, '>>', 'test/tests-manifest.txt'
         or die "Cannot append to test manifest: $!\n";
-$SIG{INT} = $SIG{TERM} = sub { exit 1 };
+$SIG{INT} = $SIG{TERM} = sub { report; exit 1 };
 $SIG{PIPE} = 'IGNORE';
 
 # Get all current --*-os8-* options, filtering out those we know should
@@ -347,7 +386,7 @@ chomp @cfgOpts;
 
 # Generate all possible permutations of those options.  Shuffle them if
 # requested.
-subsets \&build_test, @cfgOpts;
+subsets \&construct_test, @cfgOpts;
 @tests = remove_missing(@tests) if $existing_only;
 @tests = shuffle @tests if $shuffle;
 
@@ -355,4 +394,7 @@ subsets \&build_test, @cfgOpts;
 my $tdir = abs_path(dirname($0));
 my $cores = $single_core ? 1 : int(`$tdir/corecount`);
 my $pl = Parallel::Loops->new($cores);
+$pl->share (\%generated, \%tested);
 $pl->foreach ( \@tests, \&do_test);
+
+report;
