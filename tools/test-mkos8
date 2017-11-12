@@ -102,15 +102,13 @@ sub sanitize_log
             (-r\ )?              # optional flag
             ([a-z0-9]+\ )        # SIMH device name
             (.*test/tmp/[0-9]+/) # noise parts of image file name thru PID
-            ([a-z0-9./-]+/)      # meaningful part of image file name
-        }{$1$3.../$5}x;
+        }{$1$3.../}x;
         s{
             (attach\ )
             (-r\ )?
             ([a-z0-9]+\ )
-            (.*)(media/os8/)     # also squish this noise
-            ([a-z0-9./-]+/)
-        }{$1$3.../$5$6}x;
+            (.*/(media/os8)/)    # also squish this noise
+        }{$1$3.../$5/}x;
 
         # Add cleaned line to ofile
         print $of $_;
