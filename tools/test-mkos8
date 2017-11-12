@@ -50,7 +50,6 @@ use Cwd qw(getcwd abs_path);
 use Digest::SHA qw(sha256_hex);
 use English;
 use File::Basename;
-use File::Compare;
 use File::Copy;
 use Getopt::Std;
 use List::Util qw(shuffle);
@@ -65,6 +64,7 @@ use Term::ANSIColor;
 my @tests;
 my $tests_mf;
 my $currlog = 'obj/mkos8-bin.log';
+my $cmplz = abs_path (dirname ($0)) . '/cmplz';
 
 # Command line option values
 my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
@@ -178,6 +178,22 @@ sub build_test
 }
 
 
+#### compare_rklz ######################################################
+# Compare two lz4-compressed RK05 disk images, returning true if they
+# are the same.  If they are different, also outputs a binary difference
+# report.
+#
+# We call a separate shell script instead of use inline shell code here
+# because the helper code uses a Bash feature, and /bin/sh might not be
+# bash, as on a Raspbian box.
+
+sub compare_rklz
+{
+    my ($r1, $r2) = @_;
+    return system("$cmplz '$r1' '$r2'") == 0;
+}
+
+
 #### do_test ###########################################################
 # Test a single permutation
 
@@ -228,7 +244,7 @@ sub do_test
         # represents, so the user can reverse it.
         print $tests_mf "$test->{hash}  $test->{name}\n";
     }
-    elsif (compare ($currdlz, $test->{rklz}) == 0) {
+    elsif (compare_rklz ($currdlz, $test->{rklz})) {
         # We had this test examplar here already and on re-doing it we
         # got the same result.
         print colored(['green'], "mkos8 $test->{hash} test passed."), "\n";
