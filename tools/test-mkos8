@@ -151,7 +151,7 @@ sub construct_test
         if (-d $hdir) {
             if (-f "$hdir/last.log") {
                 if (-f "$hdir/last.rklz") {
-                    print "Skipping $hash: already done.\n";
+                    print "Skipping $test->{name}: already done.\n";
                     return;
                 }
                 elsif ($verbose) {
@@ -322,13 +322,14 @@ sub report_part
         ++$successes if $s;
     }
 
+    my $extra = $successes == $tries ? '' : " of $tries";
     print colored ([
                 $successes == 0 ? 'bold red' :
                     $successes != $tries ?
                         'bold yellow' :
                         'green'
             ],
-            "Successfully $kind $successes of $tries tests.\n");
+            "Successfully $kind $successes$extra tests.\n");
 }
 
 sub report
