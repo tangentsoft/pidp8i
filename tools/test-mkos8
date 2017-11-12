@@ -54,6 +54,7 @@ use File::Compare;
 use File::Copy;
 use Getopt::Std;
 use List::Util qw(shuffle);
+use Term::ANSIColor;
 
 # Perl::Critic rules we're willing to bend
 ## no critic (InputOutput::RequireBriefOpen )
@@ -215,7 +216,7 @@ sub do_test
     elsif (compare ($currdlz, $test->{rklz}) == 0) {
         # We had this test examplar here already and on re-doing it we
         # got the same result.
-        print "mkos8 $test->{hash} test passed.\n";
+        print colored(['green'], "mkos8 $test->{hash} test passed."), "\n";
     }
     else {
         # This build resulted in a difference, so yell and save the
@@ -225,7 +226,8 @@ sub do_test
         sanitize_log ($currlog, $faillog);
         system "mv $currdlz $test->{hdir}/fail.rklz";
         system "diff -wu $test->{log} $faillog > $fdiff";
-        print "MKOS8 ", uc($test->{hash}), " DIFFERS!  See $fdiff.\n";
+        print colored(['bold red'], "MKOS8 " . uc($test->{hash}) .
+                " DIFFERS!  See $fdiff."), "\n";
     }
 
     system("cd .. ; rm -fr $PID");      # -f because there are read-only files
