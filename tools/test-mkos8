@@ -83,20 +83,29 @@ sub sanitize_log
     open my $of, '>', $ofile or die "Cannot write $ofile: $!\n";
 
     while (<$if>) {
-        # Don't care about the simulator's configuration line: as far as
-        # we know, it doesn't affect the OS/8 disks.
-        s{^PiDP-8/I .*}{PiDP-8/I [test-mkos8]}x;
+        # Strip all the CRs out.  We only need the LFs.
+        s{\r}{}gs;
+        my $original = $_;      # save it post-strip
 
-        # These tend to happen during OS/8's keyboard busy-wait loop,
-        # which means there's a 50/50 chance of which instruction will
-        # happen to be running at the time of the interrupt.  Doesn't
-        # matter which.
-        s{Simulation stopped, .*}{Simulation stopped.}x;
+        # Strip variable parts of SIMH line following each Ctrl-E:
+        #
+        # "Simulation stopped, PC: 01210 (JMP 1207)"
+        s{
+            (Simulation\ stopped)           # bit to preserve
+            ,\ PC:\ \d+\ \([A-Z]+( \d+)?\)  # variable bit
+        }{$1.}x;
 
         # Rewrite SIMH ATTACH commands to remove pointless differences
         # in absolute paths between machines or Fossil checkouts.
-        s{(Attach [a-z0-9]+ ).*test/tmp/[0-9]+/}{$1 .../}x;
+        s{
+            (attach\ )           # SIMH command
+            (-r\ )?              # optional flag
+            ([a-z0-9]+\ )        # SIMH device name
+            (.*test/tmp/[0-9]+/) # noise parts of image file name thru PID
+            ([a-z0-9./-]+/)      # meaningful part of image file name
+        }{$1$3.../$5}x;
 
+        # Add cleaned line to ofile
         print $of $_;
     }
 
@@ -207,8 +216,8 @@ sub do_test
     if (not -f $test->{log} or not -f $test->{rklz}) {
         # This test hasn't run here yet, so save it as our exemplar for
         # this optstr, to be compared to future builds.
-        move ($currdlz, $test->{rklz});
         sanitize_log ($currlog, $test->{log});
+        move ($currdlz, $test->{rklz});
 
         # Log the mapping between the hash and the options it
         # represents, so the user can reverse it.
@@ -225,7 +234,7 @@ sub do_test
         my $fdiff = "$test->{hdir}/fail.diff";
         my $faillog = "$test->{hdir}/fail.log";
         sanitize_log ($currlog, $faillog);
-        system "mv $currdlz $test->{hdir}/fail.rklz";
+        move ($currdlz, $test->{hdir} . '/fail.rklz');
         system "diff -wu $test->{log} $faillog > $fdiff";
         print colored(['bold red'], 'RESULT DIFFERS!  See test/',
                 substr($fdiff, 6)), "\n";
