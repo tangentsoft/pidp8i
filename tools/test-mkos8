@@ -140,7 +140,7 @@ sub build_test
         hash   => $hash,
         hdir   => $rhdir,
         log    => "$rhdir/last.log",
-        name   => ($optstr || 'default media'),
+        name   => '{' . substr($hash, 12) . '}',
         optstr => $optstr,
         rklz   => "$rhdir/last.rklz",
     };
@@ -201,7 +201,7 @@ sub do_test
 {
     # Set up working directory
     my $test = $_;
-    print "Configuring $test->{name}, PID $PID...\n";
+    print "Configuring test $test->{name}, PID $PID...\n";
     return if $dry_run;
     chdir "test/tmp" or die "Could not CD to tmp dir: $!\n";
     mkdir $PID;
@@ -226,13 +226,13 @@ sub do_test
     close $itf;
 
     # Build the test disk image
-    print "Building $currdsk for $test->{hash} (PID $PID)...\n";
+    print "Building $currdsk for $test->{name} (PID $PID)...\n";
     system "make $target > make.log 2>&1"
             and die "Failed to build $currdsk!\n";
 
     # Quickly compress the test disk: we don't want to store all the
     # "air" in an RK05 in our test corpus.
-    system("lz4 $currdsk > $currdlz");
+    system("lz4 -q $currdsk > $currdlz");
 
     if (not -f $test->{log} or not -f $test->{rklz}) {
         # This test hasn't run here yet, so save it as our exemplar for
@@ -242,12 +242,12 @@ sub do_test
 
         # Log the mapping between the hash and the options it
         # represents, so the user can reverse it.
-        print $tests_mf "$test->{hash}  $test->{name}\n";
+        print $tests_mf "$test->{hash}  $test->{optstr}\n";
     }
     elsif (compare_rklz ($currdlz, $test->{rklz})) {
         # We had this test examplar here already and on re-doing it we
         # got the same result.
-        print colored(['green'], "mkos8 $test->{hash} test passed."), "\n";
+        print colored(['green'], "mkos8 $test->{name} test passed."), "\n";
     }
     else {
         # This build resulted in a difference, so yell and save the
