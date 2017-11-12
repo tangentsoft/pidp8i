@@ -53,6 +53,7 @@ use File::Basename;
 use File::Compare;
 use File::Copy;
 use Getopt::Std;
+use List::Util qw(shuffle);
 
 # Perl::Critic rules we're willing to bend
 ## no critic (InputOutput::RequireBriefOpen )
@@ -65,7 +66,8 @@ my $tests_mf;
 my $currlog = 'obj/mkos8-bin.log';
 
 # Command line option values
-my ($dry_run, $generate_only, $single_core, $verbose);
+my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
+        $verbose);
 
 
 #### sanitize_log ######################################################
@@ -170,10 +172,10 @@ sub do_test
     print "Configuring $test->{name}, PID $PID...\n";
     return if $dry_run;
     chdir "test/tmp" or die "Could not CD to tmp dir: $!\n";
-    die "Could not mkdir $test->{hdir}: $!\n"
-            unless -d $test->{hdir} || mkdir($test->{hdir});
     mkdir $PID;
     chdir $PID;
+    die "Could not mkdir $test->{hdir}: $!\n"
+            unless -d $test->{hdir} || mkdir($test->{hdir});
 
     # Are we building the -patched disk or the -bin disk?
     my $patched = $test->{optstr} !~ m{--disable-os8-patches}x;
@@ -182,10 +184,16 @@ sub do_test
     my $currdlz = substr ($currdsk, 0, length ($currdsk) - 2) . 'lz';
     my $target  = 'os8-' . $typestr;
 
-    # Build the test disk image
+    # Configure the test disk image
     system "../../../configure $test->{optstr} > cfg.log 2>&1"
             and die "Failed to configure $test->{name}!\n";
     link "../../../bin/pidp8i-sim", "bin/pidp8i-sim";  # no sense rebuilding it
+    open my $itf, '>', 'media/os8/init.tx'             # avoid a pointless diff
+            or die "Cannot overwrite init.tx with neutral version: $!\n";
+    print $itf "TEST-MKOS8 BUILT THIS DISK IMAGE.\n\n";
+    close $itf;
+
+    # Build the test disk image
     print "Building $currdsk for $test->{hash} (PID $PID)...\n";
     system "make $target > make.log 2>&1"
             and die "Failed to build $currdsk!\n";
@@ -195,12 +203,9 @@ sub do_test
     system("lz4 $currdsk > $currdlz");
 
     if (not -f $test->{log} or not -f $test->{rklz}) {
-        # This test hasn't run here yet, so blindly assume its
-        # output is correct, and thus that it should be our exemplar
-        # henceforth.  Store in LZ4 format 
-        mkdir $test->{hdir};
+        # This test hasn't run here yet, so save it as our exemplar for
+        # this optstr, to be compared to future builds.
         move ($currdlz, $test->{rklz});
-
         sanitize_log ($currlog, $test->{log});
 
         # Log the mapping between the hash and the options it
@@ -208,12 +213,17 @@ sub do_test
         print $tests_mf "$test->{hash}  $test->{name}\n";
     }
     elsif (compare ($currdlz, $test->{rklz}) == 0) {
+        # We had this test examplar here already and on re-doing it we
+        # got the same result.
         print "mkos8 $test->{hash} test passed.\n";
     }
     else {
+        # This build resulted in a difference, so yell and save the
+        # results for manual comparison.
         my $fdiff = "$test->{hdir}/fail.diff";
         my $faillog = "$test->{hdir}/fail.log";
         sanitize_log ($currlog, $faillog);
+        system "mv $currdlz $test->{hdir}/fail.rklz";
         system "diff -wu $test->{log} $faillog > $fdiff";
         print "MKOS8 ", uc($test->{hash}), " DIFFERS!  See $fdiff.\n";
     }
@@ -224,15 +234,53 @@ sub do_test
 }
 
 
+#### remove_missing ####################################################
+# Implements -e: given a list of mkos8 options, returns only those for
+# which we have a valid test set.
+
+sub remove_missing
+{
+    my (@tests) = @_;
+    my $all = @tests;
+
+    # First read in the set of prebuilt tests, filtering out those that
+    # refer to output files that do not exist here.  (This happens when
+    # copying over the manifest file but only a subset of the actual
+    # test output files.)
+    my %existing;
+    my $genned = 0;
+    my $mff = 'test/tests-manifest.txt';
+    open my $mf, '<', $mff or die "Could not read from $mff: $!\n";
+    while (<$mf>) {
+        chomp;
+        my ($hash, @opts) = split ' ';
+        my $dir = 'test/' . $hash;
+        if (-d $dir and -f "$dir/last.rklz" and -f "$dir/last.log") {
+            $existing{join ' ', @opts} = $hash;
+        }
+        ++$genned;
+    }
+    close $mf;
+
+    # Now filter the test set to remove those that do not exist
+    my @filtered = grep { $existing{$_->{optstr}} } @tests;
+    print "Filtered $genned of $all tests down to ", scalar(@filtered),
+            " for -e.\n";
+    return @filtered;
+}
+
+
 #### main ##############################################################
 
 # Parse command line
 my %clopts;
-getopts('gnsv', \%clopts) or die "Failed to parse command line!\n";
+getopts('egnsv1', \%clopts) or die "Failed to parse command line!\n";
 $dry_run = $clopts{n};
+$existing_only = $clopts{e};
 $generate_only = $clopts{g};
-$single_core = $clopts{s};
+$shuffle = $clopts{s};
 $verbose = $clopts{v};
+$single_core = $clopts{1};
 
 # Init global resources
 mkdir 'test';
@@ -264,8 +312,11 @@ my @cfgOpts = <$ocmd>;
 close $ocmd;
 chomp @cfgOpts;
 
-# Generate all possible permutations of those options.
+# Generate all possible permutations of those options.  Shuffle them if
+# requested.
 subsets \&build_test, @cfgOpts;
+@tests = remove_missing(@tests) if $existing_only;
+@tests = shuffle @tests if $shuffle;
 
 # Run the tests
 my $tdir = abs_path(dirname($0));

@@ -321,18 +321,6 @@
         *   Add inverse "remove" feature
         *   Write "os8" script to call above; remove TODO tag above
 
-    *   test-mkos8 enhancements:
-
-        *   Rename -s to -1 (single core) and make -s shuffle the set of
-            tests to perform, for easy Monte Carlo testing with an
-            existing test corpus
-        
-        *   Add -e: test using existing test results only.  Kind of the
-            inverse of -g, which builds only missing test results.
-
-        Beteween those two, we can copy a subset of the tests over to
-        various RPis and do probablisitic testing on them.
-
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
 
     *   Implement all Immediate and High priority [Features](/features)
