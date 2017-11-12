@@ -226,8 +226,8 @@ sub do_test
         sanitize_log ($currlog, $faillog);
         system "mv $currdlz $test->{hdir}/fail.rklz";
         system "diff -wu $test->{log} $faillog > $fdiff";
-        print colored(['bold red'], "MKOS8 " . uc($test->{hash}) .
-                " DIFFERS!  See $fdiff."), "\n";
+        print colored(['bold red'], 'RESULT DIFFERS!  See test/',
+                substr($fdiff, 6)), "\n";
     }
 
     system("cd .. ; rm -fr $PID");      # -f because there are read-only files
