@@ -429,10 +429,17 @@ def make_bin (s, args):
   # Create a banner message and optionally set it to show on boot.
   # This message is always upcased, even if you do this before calling
   # LCSYS.BI.  Is it a limitation of EDIT?
+  #
+  # Note that we do not read this file from dirs.os8mi: it is either an
+  # output of autosetup or overwritten by test-mkos8 in the *build*
+  # tree, so that when building out of tree, reading from os8mi would
+  # either give an empty file if the source tree was "clean" or a
+  # mismatched version of the file from the soruce tree rather than the
+  # one we want, which is in the *build* tree.
   if progmsg: print "Setting INIT message..."
   s.os8_send_cmd ("\.", "CREATE INIT.TX")
   s.os8_send_cmd ("#", "A")        # append text to file
-  with open(dirs.os8mi + "/init.tx", "r") as f:
+  with open("media/os8/init.tx", "r") as f:
     for line in f:
       s.os8_send_line(line)
   s.os8_send_ctrl('L')             # return to EDIT command mode
