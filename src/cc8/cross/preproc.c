@@ -37,8 +37,6 @@ fixiname ()
 {
 	char	c1, c2, *p, *ibp;
 	char buf[20];
-	FILE *fp;
-	char buf2[100];
 
 	ibp = &buf[0];
 
@@ -52,13 +50,8 @@ fixiname ()
 		return (NULL);
 	}
 	*(--ibp) = 0;
-	fp = NULL;
-	if (c1 == '<' || !(fp = fopen(buf, "r"))) {
-		strcpy(buf2, DEFLIB);
-		strcat(buf2, buf);
-		fp = fopen(buf2, "r");
-	}
-	return(fp);
+
+    return c1 == '<' ? fopen(buf, "r") : NULL;
 }
 
 /*

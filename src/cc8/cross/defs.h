@@ -122,5 +122,3 @@
 #define	STDO	8
 #define	STFOR	9
 #define	STSWITCH	10
-
-#define	DEFLIB	inclib()

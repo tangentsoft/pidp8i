@@ -1014,15 +1014,6 @@ guge ()
 	ol("\tIAC");
 }
 
-inclib() {
-#ifdef	cpm
-	return("B:");
-#endif
-#ifdef	unix
-	return("");
-#endif
-}
-
 /*	Squirrel away argument count in a register that modstk
 	doesn't touch.
 */
