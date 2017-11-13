@@ -451,6 +451,7 @@ make-template lib/pidp8i/ips.py.in
 make-template media/os8/init.tx.in
 make-template src/Makefile.in
 make-template src/cc8/Makefile.in
+make-template src/cc8/os8/Makefile.in
 make-template src/gpio-common.c.in
 make-template src/PDP8/Makefile.in
 make-template src/PDP8/pidp8i.c.in
