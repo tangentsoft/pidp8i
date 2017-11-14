@@ -13,7 +13,7 @@ file into a paper tape to be loaded into OS/8:
 
     $ txt2ptp < calc.s > calc.pt
     $ pidp8i             ⇠ ...start PDP-8 sim somehow, then hit Ctrl-E
-    sim> att -r calc.pt
+    sim> att -r dt0 calc.pt
     sim> cont
     .R PIP
     *CALC.SB<PTR:        ⇠ hit Enter, Ctrl-Z, then Escape
@@ -27,7 +27,7 @@ on the OS/8 side with:
 
     .COMP CALC.SB
     .R LOADER
-    *CALC,LIBC/G/I/O
+    *CALC,LIBC/G/I/O     ⇠ press Esc to execute command and exit LOADER
 
 The `/I/O` flags say this program does both input and output. Each of
 these flags you add costs 3 pages of core, so specify only what you
@@ -57,7 +57,7 @@ method shown in the [top level `README.md` file][tlrm] involving the
     .COMP CC.SB
 
     .R LOADER
-    *CC,LIBC/M
+    *CC,LIBC/M/I/O
 
 Notice that the front-end processor produces `CC.SB`, not `CALC.SB` as
 you might be expecting. This is where the `CC` comes from in the `COMP`
