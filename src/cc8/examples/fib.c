@@ -11,5 +11,5 @@ int main()
 {
         int i;
         for (i=0;i<10;i++)
-                printf("Fib#:%d = %d\r\n",fib(i));
+                printf("Fib#:%d = %d\r\n", i, fib(i));
 }
