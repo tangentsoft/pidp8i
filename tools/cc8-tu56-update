@@ -114,7 +114,7 @@ def main ():
 
   # Create the SIMH child instance and tell it where to send log output
   try:
-    s = simh (dirs.build)
+    s = simh (dirs.build, True)
   except (RuntimeError) as e:
     print "Could not start simulator: " + e.message + '!'
     exit (1)
