@@ -190,7 +190,7 @@ optproc (int argc, char **argv)
 
 		tape = calloc (1, statbuf.st_size);
 		if (tape == NULL) {
-			fprintf (stderr, "%s:  can't allocate %lld bytes during processing of %s, errno %d (%s)\n", progname, statbuf.st_size, tapename, errno, strerror (errno));
+			fprintf (stderr, "%s:  can't allocate %zu bytes during processing of %s, errno %d (%s)\n", progname, statbuf.st_size, tapename, errno, strerror (errno));
 			exit (EXIT_FAILURE);
 		}
 
