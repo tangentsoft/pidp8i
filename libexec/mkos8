@@ -387,8 +387,11 @@ def make_bin (s, args):
   s.os8_send_cmd ("\.", "COPY RKA0:<DTA1:*.HL")
 
   if args.disable_fortran_ii:
-    for f in [ 'FORT', 'LIBSET', 'SABR' ]:
-      s.os8_send_cmd ("\.", "DEL RKA0:" + f + ".SV")
+    files = [ 'RKA0:{0}.SV'.format(f) for f in [
+        'FORT', 'LIBSET', 'SABR'
+      ]
+    ]
+    s.os8_send_cmd ("\.", 'DEL ' + ','.join (files))
   else:
     if progmsg: print "Installing FORTRAN II libraries..."
     s.os8_send_cmd ("\.", "COPY RKA0:<DTA1:*.RL")
