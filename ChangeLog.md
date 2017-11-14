@@ -61,9 +61,11 @@
         This is a fascinating programming language, well worth studying!
 
     -   Ian Schofield's CC8 OS/8 C compiler is installed on `SYS:` by
-        default.  We have also merged in his `cc8` cross-compiler and
-        his hand-rolled OS/8 distribution, `media/os8/cc8.rk05`.  See
-        [the CC8 `README`][cc8rm] for details.
+        default, and its examples and other files are on `DSK:`.  We have
+        also merged in his `cc8` cross-compiler and his hand-rolled OS/8
+        distribution, `media/os8/cc8.rk05`.  See [the CC8 `README`][cc8rm]
+        for details.  This is an improved version of the compiler relative
+        to what was distributed on the mailing list.
 
     -   MACREL macro assembler is installed by default.
 
@@ -303,6 +305,8 @@
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
 
     *   Implement all Immediate and High priority [Features](/features)
+
+    *   Keep `cc8.rk05`?
 
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
