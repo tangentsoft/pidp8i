@@ -29,7 +29,7 @@ int Lb[BMAX];
 int lm[CMAX];		/* Auto symbol table */
 int fstk[BMAX];		/* Push down stack for For etc. */
 int inproc,addr,cbrk;
-int izf,ixf,idf,ieq,ssz,icd;
+int izf,ixf,idf,ssz,icd;
 
 
 getsym()
@@ -47,14 +47,20 @@ getsym()
 
 chkpsh()
 {
-	switch (*p) {
+	q=p;
+	switch (*q++) {
+		case ' ':
+			p++;
 		case 0:
 		case ',':
 		case ')':
-		case '=':
 		case ']':
-		case ' ':
 			return;
+		case '=':
+			if (*q-'=')
+				return;
+			else
+				*p='$';
 	}
 	stri(19);
 	stkp++;
@@ -79,12 +85,6 @@ S(  ) {
 	default: 
 		p--;
 	}
-		if (ieq) {
-			ieq=0;
-			S();
-			stri(24);
-			stkp--;
-		}
 	return 0;
 } /* end S */
 
@@ -92,20 +92,23 @@ J(  ) {
 
 	K( );
 	switch(*p++){
-	case '&': J( ); stri(20); stkp--; break;
-	case '|': J( ); stri(-20); stkp--; break;
-	default: p--;
+	case '&': J( ); stri(20); break;
+	case '|': J( ); stri(-20); break;
+	default: p--; return;
 	}
+	stkp--;
 } /* end J */
 
 K(  ) {
 
 	V( );
 	switch(*p++){
-	case '<': K( ); stri(11); stkp--; break;
-	case '>': K( ); stri(-11); stkp--; break;
-	default: p--;
+	case '<': K( ); stri(11); break;
+	case '>': K( ); stri(-11); break;
+	case '$': p++; K( ); stri(24); break;
+	default: p--; return;
 	}
+	stkp--;
 } /* end K */
 
 V(  ) {
@@ -130,10 +133,11 @@ W(  ) {
 	Y( );
 	chkpsh();
 	switch(*p++) {
-	case '*': W( ); stri(13); stkp--; break;
-	case '/': W( ); stri(14); stkp--; break;
-	default: p--;
+	case '*': W( ); stri(13); break;
+	case '/': W( ); stri(14); break;
+	default: p--; return;
 	}
+	stkp--;
 } /* end W */
 
 
@@ -149,7 +153,7 @@ Y(  ) {
 	if (*p=='"') {
 		stri(10);
 		stri(ltpt-ltbf);
-		while (*++p!='"') {
+		while (*++p-'"') {
 			if (*p=='\\')
 				switch (*++p) {
 				case 'r':
@@ -181,7 +185,7 @@ Y(  ) {
 		p+=2;
 		return;
 	}
-	ixf=izf=idf=ieq=icd=0;
+	ixf=izf=idf=icd=0;
 	if (!getsym()) {
 		switch (*p++) {
 			case '&':
@@ -243,10 +247,6 @@ Y(  ) {
 			idf=-tmp;
 			p+=2;
 			break;
-		case '=':
-			ieq=-tmp;
-			p=q+1;
-			break;
 	}
 
 	o=fndlcl(tkbf);
@@ -278,11 +278,13 @@ Y(  ) {
 			tmp=-17;
 			break;
 		case '=':
+			if (*q-'=') {
 			tmp=8;
 			if (ixf)
 				tmp=-8;
 			ixf=0;
 			stkp++;
+			}
 		default:
 			break;
 	}
@@ -516,7 +518,7 @@ next()
 				stri(lctr-2);
 				stri(5);
 				stri(lctr++);
-				lctr++;
+				cbrk=lctr++;
 				tm=0;
 				break;
 			default:
