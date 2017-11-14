@@ -68,7 +68,7 @@ Note that `CC0` tolerates lowercase input.
 
 [aerm]: /doc/trunk/examples/README.md
 [tlrm]: /doc/trunk/src/cc8/README.md
-[uwfm]: /doc/trunk/doc/uwfocal-manual-supp.md
+[uwfs]: /doc/trunk/doc/uwfocal-manual-supp.md
 
 
 # The Examples
