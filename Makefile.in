@@ -399,7 +399,7 @@ reconfig:
 release: all
 	@srcdir@/tools/mkrel
 
-run: $(OS8_BIN_RK05) $(SIM)
+run: $(SIM)
 	$(SIM) boot/run.script
 
 simh-update simh-update-f:
