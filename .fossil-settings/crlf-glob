@@ -4,8 +4,6 @@ cc8/*.sb
 
 examples/*.fc
 
-media/os8/init.tx.in
-
 src/*.[ch]
 src/*.in
 

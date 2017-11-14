@@ -114,8 +114,14 @@
 
     -   The `INIT.TX` message displayed by default on OS/8 boot is now
         more informative than the old `FIELD SERVICE PDP-8 DIAGNOSTIC
-        SYSTEM` message.  Those that do not want any boot message can
-        disable it at configuration time.
+        SYSTEM` message.  It also now uses lowercase unless you built
+        the simulator to force uppercase with `--lowercase=upper`.
+
+        Those that do not want any boot message can disable it at
+        configuration time with the `--disable-os8-init` flag.
+
+        The message can be modified by editing `media/os8/init.tx.in`
+        and saying `make`, which will rebuild the OS/8 media.
 
     -   All of the above features can be disabled if not wanted, as can
         several features present on the old `os8.rk05` disk: Adventure,

@@ -113,7 +113,7 @@ void make_lt (FILE *fpout)
 
 void make_ptp (FILE *fpin, FILE *fpout)
 {
-    int inchar, outchar;
+    int inchar, outchar, prior = '\0';
     int read_ct, n;
     char *obuffp;
     char ibuff[BLOCK_SIZE], obuff[BLOCK_SIZE];
@@ -124,7 +124,11 @@ void make_ptp (FILE *fpin, FILE *fpout)
         obuffp = obuff;
         for (n = 0; n < read_ct; n++) {
             inchar = *(ibuff + n);
+            if (inchar == '\n' && prior != '\r') {
+                *obuffp++ = (char)('\r' | 0200);
+            }
             *obuffp++ = inchar | 0200;
+            prior = inchar;
         }
         fwrite (obuff, sizeof(char), obuffp - obuff, fpout);
     }
