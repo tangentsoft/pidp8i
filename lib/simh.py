@@ -177,6 +177,8 @@ class simh:
     with open (source, 'r') as f:
       for line in f:
         self.os8_send_line(line)
+    self.os8_send_ctrl ('L')
+    self.os8_send_cmd ("#", "E")        # save and exit
 
 
   #### os8_send_line ###################################################
