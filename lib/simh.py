@@ -36,6 +36,7 @@
 import os.path
 import pexpect
 import pkg_resources
+import subprocess
 import time
 
 import pidp8i
@@ -168,17 +169,37 @@ class simh:
   #
   # If the destination file name is not given, it is taken as the
   # basename of the source file name.
+  #
+  # The file is sent as a paper tape image rather than being send
+  # character by character via EDIT, PIP, etc. for two reasons:
+  #
+  # 1. It's faster.  It runs as fast as the simulator can process the
+  #    I/O instructions, without any os8_kbd_delay() hooey.
+  #
+  # 2. It allows lowercase input regardless of the way the simulator is
+  #    configured.  ASCII is ASCII.
 
   def os8_send_file (self, source, dest = None):
-    if dest == None: dest = os.path.basename (source)
+    # Create path and file names not given
+    bns = os.path.basename (source)
+    if dest == None: dest = bns
+    dest = dest.upper ()
 
-    self.os8_send_cmd ('\.', 'CREATE ' + dest.upper())
-    self.os8_send_cmd ("#", "A")        # append text to file
-    with open (source, 'r') as f:
-      for line in f:
-        self.os8_send_line(line)
-    self.os8_send_ctrl ('L')
-    self.os8_send_cmd ("#", "E")        # save and exit
+    # Convert text file to SIMH paper tape format
+    bdir = pidp8i.dirs.build
+    pt   = os.path.join (bdir, 'obj', bns + '.pt')
+    tool = os.path.join (bdir, 'bin', 'txt2ptp')
+    subprocess.call (tool + ' < ' + source + ' > ' + pt, shell = True)
+
+    # Paper tape created, so attach it read-only and slurp it in
+    self.back_to_cmd ('\.')
+    self.send_cmd ('attach -r ptr ' + pt)
+    self.os8_restart ()
+    self.os8_send_cmd ('\.', 'R PIP')
+    self.os8_send_cmd ('\*', dest + '<PTR:')
+    self._child.expect ('^')
+    self.os8_send_ctrl ('Z')      # EOF
+    self.os8_send_ctrl ('[')      # exit PIP
 
 
   #### os8_send_line ###################################################
