@@ -686,6 +686,14 @@ def make_patch (s, args):
   
   manifest_filename = "patch_list.txt"
 
+  # Declare which patches to skip based on command line options.  All of
+  # the other patches are for files always present.
+  skips = {
+    'F4':   args.disable_fortran_iv,
+    'FRTS': args.disable_fortran_iv,
+    'SABR': args.disable_fortran_ii,
+  }
+
   print "Generating " + _patched_rk05 + " from " + _bin_rk05
 
   image_path = dirs.os8mo + _patched_rk05
@@ -715,14 +723,19 @@ def make_patch (s, args):
   for line in manifest:
     if line == "": continue
     if line[0] == '#': continue      # Allow commenting out files
+
     filename = line.strip()
-    if progmsg: print "Applying patch file: " + filename + "...",
-    success = do_patch_file (s, filename, args.debug) == 0
-    if progmsg:
-      if success:
-        print "success."
-      else:
-        print "FAILED!"
+    kind = filename.split('-')[0]
+    if kind in skips and skips[kind]:
+      if progmsg: print "Skipping patch file: " + filename + "."
+    else:
+      if progmsg: print "Applying patch file: " + filename + "...",
+      success = do_patch_file (s, filename, args.debug) == 0
+      if progmsg:
+        if success:
+          print "success."
+        else:
+          print "FAILED!"
   
   # If we have installed FORTRAN IV, install the patched FORLIB.RL
   # to be found on local.tu56
