@@ -76,41 +76,14 @@
         processor and its BASIC implementation to up-case input, since
         neither OS/8 nor BASIC can cope with lowercase input.
 
-        All other programs are left to fend for themselves, which often
-        works out fine. U/W FOCAL, Adventure, TECO, etc. all handle
-        lowercase input to some extent, and all can emit lowercase text
-        if given it.  With the prior SIMH settting, you could not use
-        lowercase at all.
+        All other programs are left to fend for themselves, which
+        often works out fine.  U/W FOCAL, Adventure, and TECO all handle
+        lowercase input to some extent, for example, and all three can
+        emit lowercase text if given it.  With the prior SIMH setting,
+        you could not use lowercase in these programs at all.
 
-        This change has been slightly controversial, so we have two
-        alternative modes that can be selected at `configure` time:
-
-        -   No patches and no case-folding in SIMH.  Lowercase I/O is
-            allowed, but neither SIMH nor OS/8 nor its programs will
-            second-guess your input, even if that means some programs
-            will fail when given lowercase input. If you need to engage
-            CAPS LOCK to make the program do the right thing, you are
-            expected to be aware enough to do this.
-            
-            The argument in favor of this approach is that this is what
-            a real PDP-8 system running this software would have done if
-            sent lowercase input.
-
-        -   Revert to the prior releases' behavior: no patches, and SIMH
-            does automatic case-folding for you, so you only get
-            uppercase, even when you type lowercase text.  Programs that
-            emit lowercase text (e.g. Adventure) appear to be sending
-            uppercase instead.
-
-            This option is in fact historically accurate. Essentially,
-            this configuration makes SIMH pretend that your terminal is
-            only capable of uppercase text, which was very common in the
-            PDP-8's day: the uppercase-only Teletype Model 33 ASR was
-            the most common terminal type on PDP-8s.
-
-        Our new default is historically inaccurate, but we think it the
-        new behavior is the least likely to unpleasantly surprise end
-        users.  Pick your poison.
+        This default can be overridden.  See the documentation for the
+        new `--lowercase` configuration option in `README.md`.
 
     -   The `INIT.TX` message displayed by default on OS/8 boot is now
         more informative than the old `FIELD SERVICE PDP-8 DIAGNOSTIC
