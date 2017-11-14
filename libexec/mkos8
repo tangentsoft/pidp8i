@@ -709,10 +709,10 @@ def make_patch (s, args):
   try:
     shutil.copyfile(dirs.os8mo + _bin_rk05, image_path)
   except shutil.Error as e:
-    print "Creation of " + _patched_rk05 + " failed with error: " + e
+    print "Creation of " + _patched_rk05 + " failed with error: " + str(e)
     mkos8_abort(s)
   except IOError as e:
-    print "Creation of " + _patched_rk05 + " failed with IOError: " + e
+    print "Creation of " + _patched_rk05 + " failed with IOError: " + str(e)
     mkos8_abort(s)
 
   s.send_cmd ("attach rk0 " + image_path)
