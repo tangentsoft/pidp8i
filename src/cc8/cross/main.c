@@ -99,7 +99,6 @@ char** argv;        /* OS/8 CC8 can't cope, but bootstrapping CC8 doesn't work, 
 			fclose (output);
 			pl ("");
 			errs = errs || errfile;
-			getchar();
 #ifndef	NOASLD
 		}
 		if (!errfile && !sflag)
