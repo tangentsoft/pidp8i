@@ -437,11 +437,7 @@ def make_bin (s, args):
   # mismatched version of the file from the soruce tree rather than the
   # one we want, which is in the *build* tree.
   if progmsg: print "Setting INIT message..."
-  s.os8_send_cmd ("\.", "CREATE INIT.TX")
-  s.os8_send_cmd ("#", "A")        # append text to file
-  with open("media/os8/init.tx", "r") as f:
-    for line in f:
-      s.os8_send_line(line)
+  s.os8_send_file ('media/os8/init.tx')
   s.os8_send_ctrl('L')             # return to EDIT command mode
   s.os8_send_cmd ("#", "E")        # save and exit
   s.os8_send_cmd ("\.", "CREATE INIT.CM")

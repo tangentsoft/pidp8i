@@ -33,6 +33,7 @@
 # authorization from those authors.
 ########################################################################
 
+import os.path
 import pexpect
 import pkg_resources
 import time
@@ -137,7 +138,7 @@ class simh:
     time.sleep (self._os8_kbd_delay)
 
 
-  #### os8_send_cmd ######################################################
+  #### os8_send_cmd ####################################################
   # Wait for an OS/8 command prompt running within SIMH, then send the
   # given line.
   #
@@ -149,7 +150,7 @@ class simh:
     self.os8_send_line (line)
 
 
-  #### os8_send_ctrl #####################################################
+  #### os8_send_ctrl ###################################################
   # Send a control character to OS/8 corresponding to the ASCII letter
   # given.  We precede it with the OS/8 keyboard delay, since we're
   # probably following a call to os8_send_line or os8_send_cmd.
@@ -159,7 +160,26 @@ class simh:
     self._child.sendcontrol (char[0].lower ())
 
 
-  #### os8_send_line #####################################################
+  #### os8_send_file ###################################################
+  # Send a copy of a local text file to OS/8.  The local path may
+  # contain directory components, but the remote must not, of course.
+  #
+  # If the destination file name is not uppercase, it will be so forced.
+  #
+  # If the destination file name is not given, it is taken as the
+  # basename of the source file name.
+
+  def os8_send_file (self, source, dest = None):
+    if dest == None: dest = os.path.basename (source)
+
+    self.os8_send_cmd ('\.', 'CREATE ' + dest.upper())
+    self.os8_send_cmd ("#", "A")        # append text to file
+    with open (source, 'r') as f:
+      for line in f:
+        self.os8_send_line(line)
+
+
+  #### os8_send_line ###################################################
   # Core of os8_send_cmd.  Also used by code that needs to send text
   # "blind" to OS/8, without expecting a prompt, as when driving EDIT.
 
