@@ -172,10 +172,12 @@ def main ():
   # PS    .CC   1  
   s.os8_send_cmd ('\.', 'ZERO DTA0:')
   s.os8_send_cmd ('\.', 'COPY DTA0:<SYS:CC?.SV')
-  s.os8_send_cmd ('\.', 'COPY DTA0:<DSK:HEADER.SB,INIT.PA,LIBC.*,*.CC')
+  s.os8_send_cmd ('\.', 'DEL DTA0:CCL.SV') # weak glob handling grabs it
+  s.os8_send_cmd ('\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:INIT.PA')
+  s.os8_send_cmd ('\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.CC')
 
   # Exit simulator nicely so that tape detaches cleanly
-  s.os8_send_ctrl ('E')
+  s.back_to_cmd ('\.')
   s.send_cmd ('quit')
 
 
