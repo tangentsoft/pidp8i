@@ -1,0 +1,182 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+########################################################################
+# cc8-tu56-update - Rebuilds cc8.tu56 from source code.
+#
+# It is intended to be be called manually whenever a file in src/cc8/os8
+# changes.  It is not called automatically from the top-level Makefile
+# because not all end user systems will be able to run it, since our
+# dependencies (host-side cc8 and SABR) are not always present.
+#
+# Copyright © 2017 by Warren Young.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
+
+# Our local modules
+from pidp8i import *
+from simh   import *
+
+# Other global Python modules
+import glob
+import subprocess
+
+
+#### GLOBALS AND CONSTANTS #############################################
+
+# Path to the cross-compiler version of cc8.
+cc8_cross = os.path.join (dirs.build, 'bin', 'cc8')
+
+# Path to the CC8 sources
+cc8_src = os.path.join (dirs.src, 'src', 'cc8')
+
+
+#### cross_compile #####################################################
+# Cross-compile a *.c file on the local machine to a *.s file we can
+# send into the OS/8 instance.  The parameter should have no extension.
+
+def cross_compile (module):
+  inf  = module + '.c'
+  outf = module + '.s'
+
+  if os.path.exists (outf) and \
+      os.path.getmtime (inf) <= os.path.getmtime (outf):
+    print outf + " up-to-date."
+  else:
+    print "Building " + outf + "..."
+    rc = subprocess.call ([cc8_cross, inf])
+    if rc == 0:
+      print inf + " -> " + outf
+    else:
+      print "Failed to cross-compile the " + module.upper() + " module!"
+      exit (1)
+
+
+#### link ##############################################################
+# Use the OS/8 linking loader to create runnable binaries from assembled
+# *.RL outputs written by SABR.
+
+def link (s, rl, sv, extra_flags = ''):
+  s.os8_send_cmd ('\.', 'R LOADER')
+  s.os8_send_cmd ('\*', rl + ',LIBC/I' + extra_flags)
+  s.os8_send_ctrl ('[')
+  s.os8_send_cmd ('\.', 'SAVE SYS ' + sv)
+
+
+#### main ##############################################################
+
+def main ():
+  # We have to do much of the following from within the CC8 source dir
+  # since the same source code is used for both versions of CC8, so the
+  # compiler assumes a flat filesystem, hence no "include path", hence
+  # all headers and such must be symlinked or copied into the same
+  # directory as our primary inputs.
+  os.chdir (os.path.join (cc8_src, 'os8'))
+
+  # Cross-compile the OS/8 version of CC8's C sources to SABR.  We send
+  # LIBC first because the others depend on it at link time.  As of this
+  # writing, the code doesn't depend on it, but we might as well operate
+  # on these files in the safest order.
+  modules = [ 'libc', 'c8', 'n8', 'p8' ]
+  try:
+    for m in modules: cross_compile (m)
+  except OSError as e:
+    print "Cross-compilation steps failed: " + e.strerror + '!'
+    exit (1)
+
+  # Create the SIMH child instance and tell it where to send log output
+  try:
+    s = simh (dirs.build)
+  except (RuntimeError) as e:
+    print "Could not start simulator: " + e.message + '!'
+    exit (1)
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+
+  # Attach a clean version of the DECtape image to the simulator
+  tape = os.path.join (dirs.os8mi, 'subsys', 'cc8.tu56')
+  if os.path.exists (tape): os.remove (tape)
+  s.send_cmd ("att dt0 " + tape)
+
+  # Find and boot the bootable OS/8 disk.  Use the "patched" version
+  # because that is what "make run" uses; we use that command to
+  # inspect this script's work.
+  rk = os.path.join (dirs.os8mo, 'os8v3d-patched.rk05')
+  if not os.path.isfile (rk):
+    print "Could not find " + rk + "; OS/8 media not yet built?"
+    exit (1)
+  print "Booting " + rk + "..."
+  s.send_cmd ("att rk0 " + rk)
+  s.send_cmd ("boot rk0")
+
+  # Send the SABR files into the OS/8 instance and assemble them
+  for m in modules:
+    source = m + '.s'
+    dest = m.upper() + '.SB'
+    s.os8_send_file (source, dest)
+    s.os8_send_cmd ('\.', 'COMP ' + dest)
+
+  # Link the OS/8 compiler binaries.  The /O flags are for the stages
+  # that produce output files; CC1 chains to CC2, thus no "output" as
+  # far as the linker/loader is concerned.
+  link (s, 'C8', 'CC0', '/O')
+  link (s, 'N8', 'CC1')
+  link (s, 'P8', 'CC2', '/O')
+
+  # Get rid of intermediary files.
+  s.os8_send_cmd ('\.', 'DEL ?8.RL,*.SB')
+
+  # Insert CC8 header files and such
+  for src in [ 'header.sb', 'init.pa', 'libc.h' ]: s.os8_send_file (src)
+
+  # Insert example programs.  We have to modify the destination file
+  # name because the OS/8 version of CC8 currently uses *.CC as its
+  # extension for some reason.
+  for src in glob.glob ('../examples/*.c'):
+    dest = os.path.basename (src.upper ()) + 'C'
+    s.os8_send_file (src, dest)
+
+  # Save all the remaining involved files to the cc8.tu56 tape, giving
+  # DIR DTA0: output approximately like this:
+  #
+  # CC0   .SV  27          CC1   .SV  40          CC2   .SV  40
+  # HEADER.SB   4          INIT  .PA   1          LIBC  .H    3          
+  # BASIC .CC   4          CALC  .CC   3          FIB   .CC   1
+  # PS    .CC   1  
+  s.os8_send_cmd ('\.', 'ZERO DTA0:')
+  s.os8_send_cmd ('\.', 'COPY DTA0:<SYS:CC?.SV')
+  s.os8_send_cmd ('\.', 'COPY DTA0:<DSK:HEADER.SB,INIT.PA,LIBC.*,*.CC')
+
+  # Exit simulator nicely so that tape detaches cleanly
+  s.os8_send_ctrl ('E')
+  s.send_cmd ('quit')
+
+
+if __name__ == "__main__": main()
