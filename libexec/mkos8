@@ -294,7 +294,7 @@ def make_bin (s, args):
   if not args.disable_ba:         bin_copyins.append(ba_copyin)
   if not args.disable_cc8:        bin_copyins.append(cc8_copyin)
   if not args.disable_k12:        bin_copyins.append(k12_copyin)
-  if not args.disable_fortran_iv: bin_copyins = bin_copyins + fiv_copyins
+  if not args.disable_fortran_iv: bin_copyins.extend(fiv_copyins)
   if not args.disable_macrel:     bin_copyins.append(macrel_copyin)
 
   if local_files != []:
