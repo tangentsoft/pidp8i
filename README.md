@@ -353,7 +353,10 @@ options IF=0 and IF=7 can be left out to save space and build time:
     implementation.
 
 *   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
-    compiler normally installed to `RKA0:`
+    compiler normally installed to `SYS:`.  This option is implicitly
+    given if you give `--disable-os8-fortran-ii` because the output of
+    the OS/8 CC8 compiler is a SABR file, and SABR is part of the
+    FORTRAN II subsystem.
 
 *   **--disable-os8-crt** — Suppress the [console rubout behavior][tty]
     enabled while building the OS/8 binary RK05 disk image. You
@@ -365,7 +368,9 @@ options IF=0 and IF=7 can be left out to save space and build time:
     OS/8 system disk. This option sets `--disable-os8-uwfocal` and
     overrides `--enable-os8-focal69`, both discussed below.
 
-*   **--disable-os8-fortran-ii** - Leave the FORTRAN II compiler out.
+*   **--disable-os8-fortran-ii** - Leaves out the FORTRAN II compiler,
+    SABR, the linking loader (`LOADER`), the `LIBSET` tool, and the
+    `*.RL` library files.
 
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 

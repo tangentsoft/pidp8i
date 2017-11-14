@@ -123,7 +123,7 @@ if {$os8min || ![opt-bool os8-ba]} {
     msg-result "Will not add BASIC games and demos to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-ba"
 }
-if {$os8min || ![opt-bool os8-cc8]} {
+if {$os8min || ![opt-bool os8-cc8] || ![opt-bool os8-fortran-ii]} {
     msg-result "Will not add CC8 to the OS/8 RK05 disk image."
     append mkos8_opts " --disable-cc8"
 }
