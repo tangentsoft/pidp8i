@@ -150,9 +150,17 @@ def main ():
     s.os8_send_ctrl ('e')
     s.send_cmd ('set throttle 1/17')
 
-    # Uncomment the send_cmd call below to accept simulator commands via
-    # telnet while the demo runs.  You can't hit Ctrl-E while running
-    # this script in the foreground since pexpect takes over stdio.
+    # You can't hit Ctrl-E while running this script in the foreground
+    # since pexpect takes over stdio.  Therefore, if you want to be able
+    # to send commands to the simulator while the demo is running,
+    # uncomment the line below, which will let you send commands to the
+    # simulator via telnet.  From another terminal or SSH session:
+    #
+    #     $ telnet localhost 3141
+    #
+    # or from a remote machine:
+    #
+    #     $ telnet 192.168.1.2 3141
     #
     # It's disabled by default because SIMH can't be made to listen only
     # on localhost, so doing this may be a security risk.  SIMH disables
