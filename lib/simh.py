@@ -170,8 +170,8 @@ class simh:
   # If the destination file name is not given, it is taken as the
   # basename of the source file name.
   #
-  # The file is sent as a paper tape image rather than being send
-  # character by character via EDIT, PIP, etc. for two reasons:
+  # The file is sent via the SIMH paper tape device through PIP in its
+  # default ASCII mode, rather than character by character for two reasons:
   #
   # 1. It's faster.  It runs as fast as the simulator can process the
   #    I/O instructions, without any os8_kbd_delay() hooey.
@@ -191,7 +191,7 @@ class simh:
     tool = os.path.join (bdir, 'bin', 'txt2ptp')
     subprocess.call (tool + ' < ' + source + ' > ' + pt, shell = True)
 
-    # Paper tape created, so attach it read-only and slurp it in
+    # Paper tape created, so attach it read-only and copy it in
     self.back_to_cmd ('\.')
     self.send_cmd ('attach -r ptr ' + pt)
     self.os8_restart ()
