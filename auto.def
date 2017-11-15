@@ -417,7 +417,7 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # one that matches, and the wildcards in the generated rules for "src"
 # match all "src/*" subdirs.
 set status [catch {
-    exec $srcdir/tools/mkadrules $srcdir src/cc8/cross src/palbart src/PDP8 src
+    exec $srcdir/tools/mkadrules $srcdir src/cc8/cross src/d8tape src/palbart src/PDP8 src
 } result]
 if {$status == 0} {
     msg-result $result

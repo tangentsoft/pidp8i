@@ -55,9 +55,10 @@ PDP8_CFLAGS = $(TOP_CFLAGS)
 CC8_CROSS_CFLAGS = -w @BUILDMODE@
 
 # Krten's d8tape doesn't need much in the way of options.  It builds
-# without warnings on all compilers we test on and doesn't require any
-# nonstandard options.  We just apply the debug/optimized setting.
-D8TAPE_CFLAGS = @BUILDMODE@
+# without warnings under the supported version of Raspbian.  On some
+# other OS types, it complains about one of the printf() format
+# specifiers, which we cannot fix portably, so we suppress that one.
+D8TAPE_CFLAGS = -Wno-format @BUILDMODE@
 
 # Ditto palbart.
 PALBART_CFLAGS = @BUILDMODE@
