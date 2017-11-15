@@ -301,15 +301,22 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
         set_pidp8i_led (pd, 5, 1);
     }
 
-    // Row 5c: The Fetch LED is bumped once per CPU instruction, as is
-    // Execute while we're not in STOP state.  They're set at different
-    // times, but they're twiddled so rapidly that they both just become
-    // a 50% blur in normal operation, so we don't make the CPU core set
-    // these "on-time."  It just doesn't matter.
+    // Row 5c: The Fetch & Execute LEDs are pulsed once per instruction.
+    // On real hardware, the pulses don't happen at exactly the same
+    // time, but we can't simulate that because SIMH handles each CPU
+    // instruction "whole."  When running real code, all we care about
+    // is that both LEDs are twiddled so rapidly that they both just
+    // become a 50% blur, mimicking the hardware closely enough.
+    //
+    // The exception is that when the CPU is stopped, both LEDs are off,
+    // because the pulses happen "outside" the STOP state: Fetch before
+    // and Execute after resuming from STOP.
     extern int swStop, swSingInst;
     int running = !swStop && !swSingInst;
-    if (running) set_pidp8i_led (pd, 5, 2);    // Execute
-    set_pidp8i_led (pd, 5, 3);                 // Fetch
+    if (running) {
+        set_pidp8i_led (pd, 5, 2);    // Execute
+        set_pidp8i_led (pd, 5, 3);    // Fetch
+    }
 
     // Row 6a: Remaining LEDs in upper right block
     pd->curr[6] = 0;
