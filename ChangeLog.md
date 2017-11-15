@@ -279,6 +279,12 @@
     generally had to give absolute paths to attach media and such
     because CWD would be set somewhere unhelpful.
 
+*   The Fetch LED is no longer lit when in STOP or single-step mode.
+    The prior behavior was incorrect according to the PDP-8/I
+    maintenance manual.  The prior behavior was intuited to be wrong,
+    but it was Bill Cattey's investigation giving chapter-and-verse
+    that proved it, thus the change now.
+
 *   Updated for Raspbian Stretch, released in September 2017.  It should
     still run on Raspbian Jessie, however.
 
