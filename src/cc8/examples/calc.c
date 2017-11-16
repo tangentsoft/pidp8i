@@ -4,10 +4,22 @@ int main()
     int choice;
     int bfr[10];
 
-    ans = 'Y';
+    /* CC8 doesn't let you initialize variables at declaration time. */
+    ans = 'Y';                            
 
-    while (1)
-    {
+    /* This would be clearer as a do/while loop, but CC8 doesn't support
+     * that yet. */
+    while (1) {
+        /* Force answer from tail end of loop to uppercase since CC8
+         * doesn't know the || operator yet.  CC8's libc doesn't have
+         * toupper(), and I can't seem to get its cupper() alternative
+         * to work.  Don't rewrite with the -= operator: that doesn't
+         * work yet, either. */
+        if (ans > 'Z') ans = ans - 32;
+
+        /* You might be tempted to write "if (ans != 'Y') break;" and
+         * then do away with one indent level for the main body of code
+         * that follows, but CC8 doesn't know the != operator yet. */
         if (ans == 'Y') {
             printf("\r\nENTER ANY TWO NUMBERS.\r\n");
 
