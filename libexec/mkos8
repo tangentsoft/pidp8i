@@ -367,7 +367,8 @@ def make_bin (s, args):
   s.os8_send_cmd ("\$", "PRINT")
   s.os8_send_cmd ("\$", "BOOT")
   s.os8_send_cmd ("WRITE ZERO DIRECT\?", "Y")
-  s.os8_send_cmd ("\\.", "SAVE SYS BUILD")
+  # SYS is now RK0; if we SAVE SYS we will overwrite with wrong BUILD.SV
+  s.os8_send_cmd ("\\.", "SAVE DTA0 BUILD")
   s.back_to_cmd("\\.")
   
   if progmsg: print "Copying OS/8 system files from TU56 source to RK05 image..."
