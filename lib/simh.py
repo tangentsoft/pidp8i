@@ -192,13 +192,14 @@ class simh:
     subprocess.call (tool + ' < ' + source + ' > ' + pt, shell = True)
 
     # Paper tape created, so attach it read-only and copy it in
-    self.back_to_cmd ('\.')
+    self.back_to_cmd ('\\.')
     self.send_cmd ('attach -r ptr ' + pt)
     self.os8_restart ()
-    self.os8_send_cmd ('\.', 'R PIP')
+    self.os8_send_cmd ('\\.', 'R PIP')
     self.os8_send_cmd ('\*', dest + '<PTR:')
     self._child.expect ('^')
     self.os8_send_ctrl ('Z')      # EOF
+    self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
 
 

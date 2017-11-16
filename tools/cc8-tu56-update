@@ -85,10 +85,10 @@ def cross_compile (module):
 # *.RL outputs written by SABR.
 
 def link (s, rl, sv, extra_flags = ''):
-  s.os8_send_cmd ('\.', 'R LOADER')
+  s.os8_send_cmd ('\\.', 'R LOADER')
   s.os8_send_cmd ('\*', rl + ',LIBC/I' + extra_flags)
   s.os8_send_ctrl ('[')
-  s.os8_send_cmd ('\.', 'SAVE SYS ' + sv)
+  s.os8_send_cmd ('\\.', 'SAVE SYS ' + sv)
 
 
 #### main ##############################################################
@@ -141,7 +141,7 @@ def main ():
     source = m + '.s'
     dest = m.upper() + '.SB'
     s.os8_send_file (source, dest)
-    s.os8_send_cmd ('\.', 'COMP ' + dest)
+    s.os8_send_cmd ('\\.', 'COMP ' + dest)
 
   # Link the OS/8 compiler binaries.  The /O flags are for the stages
   # that produce output files; CC1 chains to CC2, thus no "output" as
@@ -152,7 +152,7 @@ def main ():
 
   # Get rid of intermediary files on DSK: so the subsequent COPY
   # commands don't add them to the DECtape image.
-  s.os8_send_cmd ('\.', 'DEL ?8.RL,*.SB,CC.*')
+  s.os8_send_cmd ('\\.', 'DEL ?8.RL,*.SB,CC.*')
 
   # Insert CC8 header files and such
   for src in [ 'header.sb', 'init.pa', 'libc.h' ]: s.os8_send_file (src)
@@ -176,13 +176,13 @@ def main ():
   # LIBC  .H    3               FIB   .CC   1               CALC  .CC   3
   # CC1   .SV  40               CC0   .SV  27               CC2   .SV  40
   # LIBC  .RL  22               BASIC .CC  13               PS    .CC   1
-  s.os8_send_cmd ('\.', 'ZERO DTA0:')
-  s.os8_send_cmd ('\.', 'COPY DTA0:<' + cc_copies)
-  s.os8_send_cmd ('\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:INIT.PA')
-  s.os8_send_cmd ('\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.CC')
+  s.os8_send_cmd ('\\.', 'ZERO DTA0:')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<' + cc_copies)
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:INIT.PA')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.CC')
 
   # Exit simulator nicely so that tape detaches cleanly
-  s.back_to_cmd ('\.')
+  s.back_to_cmd ('\\.')
   s.send_cmd ('quit')
 
 

@@ -71,7 +71,7 @@ def main ():
   s.send_cmd ("boot rk0")
 
   # Start TECO8 in the simulator under OS/8
-  s.os8_send_cmd ('\.', "R TECO")
+  s.os8_send_cmd ('\\.', "R TECO")
 
   # The macro comes from http://www.iwriteiam.nl/HaPi_TECO_macro.html
   #

@@ -162,19 +162,19 @@ def copyin_pair (s, copyin0, copyin1, debug):
     if progmsg: print copyin0[2]
     if copyin0[3]:                    # We have specific files to do.
       for file_copyin in copyin0[3]:
-        s.os8_send_cmd ("\.", "COPY " + file_copyin[0] + "<DTA0:" + file_copyin[1])
+        s.os8_send_cmd ("\\.", "COPY " + file_copyin[0] + "<DTA0:" + file_copyin[1])
     else:
-      s.os8_send_cmd ("\.", "COPY " + copyin0[0] + "<DTA0:*.*")
+      s.os8_send_cmd ("\\.", "COPY " + copyin0[0] + "<DTA0:*.*")
 
   if copyin1:
     if progmsg: print copyin1[2]
     if copyin1[3]:                    # We have specific files to do.
       for file_copyin in copyin1[3]:
-        s.os8_send_cmd ("\.", "COPY " + file_copyin[0] + "<DTA1:" + file_copyin[1])
+        s.os8_send_cmd ("\\.", "COPY " + file_copyin[0] + "<DTA1:" + file_copyin[1])
     else:
-      s.os8_send_cmd ("\.", "COPY " + copyin1[0] + "<DTA1:*.*")
+      s.os8_send_cmd ("\\.", "COPY " + copyin1[0] + "<DTA1:*.*")
 
-  s.back_to_cmd("\.")
+  s.back_to_cmd("\\.")
 
   if copyin0: s.send_cmd ("detach dt0")
   if copyin1: s.send_cmd ("detach dt1")
@@ -347,9 +347,9 @@ def make_bin (s, args):
   # varies depending on the host system, which would create unnecessary
   # differences in our output over time.  Second, OS/8 is alleged not to
   # always build properly if INIT is enabled in these early stages.
-  s.os8_send_cmd ("\.", "SET SYS NO INIT")
+  s.os8_send_cmd ("\\.", "SET SYS NO INIT")
 
-  s.os8_send_cmd ("\.", "RUN SYS BUILD")
+  s.os8_send_cmd ("\\.", "RUN SYS BUILD")
   s.os8_send_cmd ("\$", "LOAD DTA1:RK8ESY.BN")
   s.os8_send_cmd ("\$", "LOAD DTA1:PT8E.BN")
   s.os8_send_cmd ("\$", "DELETE SYS")
@@ -367,13 +367,13 @@ def make_bin (s, args):
   s.os8_send_cmd ("\$", "PRINT")
   s.os8_send_cmd ("\$", "BOOT")
   s.os8_send_cmd ("WRITE ZERO DIRECT\?", "Y")
-  s.os8_send_cmd ("\.", "SAVE SYS BUILD")
-  s.back_to_cmd("\.")
+  s.os8_send_cmd ("\\.", "SAVE SYS BUILD")
+  s.back_to_cmd("\\.")
   
   if progmsg: print "Copying OS/8 system files from TU56 source to RK05 image..."
   if progmsg: print "Copying in system tape 1 of 2..."
   s.send_cmd ("boot dt0")
-  s.os8_send_cmd ("\.", "COPY RKA0:<DTA0:*.*")
+  s.os8_send_cmd ("\\.", "COPY RKA0:<DTA0:*.*")
 
   # There are not enough directory entries to put everything
   # Including all device drivers on the running packs.
@@ -382,30 +382,30 @@ def make_bin (s, args):
   # CCL.PA and KL8E.PA will be on the source disk.
   # However DECtape 2 has HELP.HL and .RL files that ARE needed.
   # if progmsg: print "Copying in system tape 2 of 2..."
-  # s.os8_send_cmd ("\.", "COPY RKA0:<DTA1:*.*")
+  # s.os8_send_cmd ("\\.", "COPY RKA0:<DTA1:*.*")
   if progmsg: print "Copying in help files..."
-  s.os8_send_cmd ("\.", "COPY RKA0:<DTA1:*.HL")
+  s.os8_send_cmd ("\\.", "COPY RKA0:<DTA1:*.HL")
 
   if args.disable_fortran_ii:
     files = [ 'RKA0:{0}.SV'.format(f) for f in [
         'FORT', 'LIBSET', 'SABR'
       ]
     ]
-    s.os8_send_cmd ("\.", 'DEL ' + ','.join (files))
+    s.os8_send_cmd ("\\.", 'DEL ' + ','.join (files))
   else:
     if progmsg: print "Installing FORTRAN II libraries..."
-    s.os8_send_cmd ("\.", "COPY RKA0:<DTA1:*.RL")
+    s.os8_send_cmd ("\\.", "COPY RKA0:<DTA1:*.RL")
 
-  s.os8_send_cmd ("\.", "ZERO RKB0:")      # must precede subsys/* copies
+  s.os8_send_cmd ("\\.", "ZERO RKB0:")      # must precede subsys/* copies
 
-  s.back_to_cmd("\.")
+  s.back_to_cmd("\\.")
   
   if progmsg: print "Deleting bootable copy of DECtape image and"
   if progmsg: print "rebooting into freshly-built RK05 OS/8 system..."
   s.send_cmd ("detach dt0")
   s.send_cmd ("detach dt1")
   s.send_cmd ("boot rk0")     # must do: boot media just went away
-  s.back_to_cmd("\.")
+  s.back_to_cmd("\\.")
   os.remove(boot_dt_path)
 
   if progmsg: print "Performing remaining copies/installs..."
@@ -415,20 +415,20 @@ def make_bin (s, args):
   s.send_cmd ("boot rk0")
 
   if progmsg: print "Configuring for 3-column DIRECT listings..."
-  s.os8_send_cmd ("\.", "SET TTY COL 3")
+  s.os8_send_cmd ("\\.", "SET TTY COL 3")
 
   if not args.disable_crt:
     # NO SCOPE mode is the default on distribution tapes.
     if progmsg: print "Configuring scope-style rubout processing..."
-    s.os8_send_cmd ("\.", "SET TTY SCOPE")
+    s.os8_send_cmd ("\\.", "SET TTY SCOPE")
   
   # Make sure Scripts are included in local_files array!
   # Or this will fail.
   if not args.disable_lcmod:
     if progmsg: print "Patching OS/8 to upcase commands only; SIMH is set not to auto-upcase."
-    s.os8_send_cmd ("\.", "SUBMIT SYS:LCSYS.BI")
+    s.os8_send_cmd ("\\.", "SUBMIT SYS:LCSYS.BI")
     if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
-    s.os8_send_cmd ("\.", "SUBMIT SYS:LCBAS.BI")
+    s.os8_send_cmd ("\\.", "SUBMIT SYS:LCBAS.BI")
 
   # Create a banner message and optionally set it to show on boot.
   # This message is always upcased, even if you do this before calling
@@ -442,7 +442,7 @@ def make_bin (s, args):
   # one we want, which is in the *build* tree.
   if progmsg: print "Setting INIT message..."
   s.os8_send_file ('media/os8/init.tx')
-  s.os8_send_cmd ("\.", "CREATE INIT.CM")
+  s.os8_send_cmd ("\\.", "CREATE INIT.CM")
   s.os8_send_cmd ("#", "A")
   s.os8_send_line("TYPE INIT.TX")
   s.os8_send_ctrl('L')
@@ -451,13 +451,13 @@ def make_bin (s, args):
     # Set the message to display only if the user did not suppress it.
     # We do it this way so the user can turn it on later without
     # rebuilding their OS/8 media.
-    s.os8_send_cmd ("\.", "SET SYS INIT")
+    s.os8_send_cmd ("\\.", "SET SYS INIT")
 
   # Finish up
   if progmsg: print "Cleaning up..."
   s.os8_squish ("SYS")
   s.os8_squish ("DSK")
-  s.back_to_cmd("\.")
+  s.back_to_cmd("\\.")
   s.send_cmd ("detach rk0")
 
 
@@ -505,10 +505,10 @@ def make_src (s, args):
 
   s.send_cmd ("boot rk0")
   
-  s.os8_send_cmd ("\.", "ZERO RKA1:")
-  s.os8_send_cmd ("\.", "ZERO RKB1:")
+  s.os8_send_cmd ("\\.", "ZERO RKA1:")
+  s.os8_send_cmd ("\\.", "ZERO RKB1:")
 
-  s.back_to_cmd("\.")
+  s.back_to_cmd("\\.")
 
   do_all_copyins (s, src_copyins, args.debug)
 
@@ -671,7 +671,7 @@ def do_patch_file (s, filename, debug):
       # We carefully separate com and args
       # But don't make much use of that yet.
       if progmsg and debug: print line
-      s.os8_send_cmd ("\.", line[1:])  # Skip Prompt.
+      s.os8_send_cmd ("\\.", line[1:])  # Skip Prompt.
 
   patch_file.close()
 
@@ -748,12 +748,12 @@ def make_patch (s, args):
     if (not os.path.isfile(forlib_tape_path)):
       print "Can't find tape with patch FORLIB.RL.  FAILED!"
     else:
-      s.back_to_cmd("\.")         # return to simh and mount the tape.
+      s.back_to_cmd("\\.")         # return to simh and mount the tape.
       s.send_cmd ("attach -r dt0 " + forlib_tape_path)
       s.os8_restart ()            # return to OS/8
-      s.os8_send_cmd ("\.", "DEL SYS:FORLIB.RL")
-      s.os8_send_cmd ("\.", "COPY SYS:<DTA0:FORLIB.RL")
-      s.back_to_cmd("\.")         # return to simh and mount the tape.
+      s.os8_send_cmd ("\\.", "DEL SYS:FORLIB.RL")
+      s.os8_send_cmd ("\\.", "COPY SYS:<DTA0:FORLIB.RL")
+      s.back_to_cmd("\\.")         # return to simh and mount the tape.
       s.send_cmd ("detach dt0")
       s.os8_restart ()            # return to OS/8
       
@@ -761,7 +761,7 @@ def make_patch (s, args):
   if progmsg: print "Cleaning up..."
   s.os8_squish ("SYS")
   s.os8_squish ("DSK")
-  s.back_to_cmd("\.")
+  s.back_to_cmd("\\.")
   s.send_cmd ("detach rk0")
 
 
