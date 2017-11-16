@@ -136,11 +136,27 @@ def main ():
   s.send_cmd ("att rk0 " + rk)
   s.send_cmd ("boot rk0")
 
-  # Send the SABR files into the OS/8 instance and assemble them
+  # Insert example programs.  We have to modify the destination file
+  # name because the OS/8 version of CC8 currently uses *.CC as its
+  # extension for some reason.
+  for src in glob.glob ('../examples/*.c'):
+    dest = os.path.basename (src.upper ()) + 'C'
+    s.os8_send_file (src, dest)
+
+  # Insert CC8 header files and such
+  for src in [ 'header.sb', 'init.pa', 'libc.h' ]: s.os8_send_file (src)
+
+  # Insert the SABR files produced by the host-side cross-compiler
+  dml = [ ]
   for m in modules:
     source = m + '.s'
     dest = m.upper() + '.SB'
+    dml.append (dest)
     s.os8_send_file (source, dest)
+
+  # Assemble sent SABR files.  We wait until now because we don't want
+  # to do this interleaved with OS/8 restarts.
+  for dest in dml:
     s.os8_send_cmd ('\\.', 'COMP ' + dest)
 
   # Link the OS/8 compiler binaries.  The /O flags are for the stages
@@ -152,17 +168,7 @@ def main ():
 
   # Get rid of intermediary files on DSK: so the subsequent COPY
   # commands don't add them to the DECtape image.
-  s.os8_send_cmd ('\\.', 'DEL ?8.RL,*.SB,CC.*')
-
-  # Insert CC8 header files and such
-  for src in [ 'header.sb', 'init.pa', 'libc.h' ]: s.os8_send_file (src)
-
-  # Insert example programs.  We have to modify the destination file
-  # name because the OS/8 version of CC8 currently uses *.CC as its
-  # extension for some reason.
-  for src in glob.glob ('../examples/*.c'):
-    dest = os.path.basename (src.upper ()) + 'C'
-    s.os8_send_file (src, dest)
+  s.os8_send_cmd ('\\.', 'DEL ?8.RL,?8.SB,CC.*,LIBC.SB')
 
   # Assemble COPY command source list for CC?.SV.  Can't use a file name
   # pattern because that grabs CCL.SV as well, and we don't want to make
