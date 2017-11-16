@@ -1,22 +1,27 @@
 /* 
- * Program to convert between linux ASCII txt files
+ * Program to convert between POSIX ASCII text files
  * and the output of OS/8 PIP to the Paper Tape Punch.
 
  * The OS/8 paper tape punch format is:
- * leader: a bunch of ASCII NUL chars to be ignored.
- * ASCII with the 8th bit set.
- * trailer: a bunch of ASCII NUL chars to be ignored.
+ *
+ *     leader: a bunch of ASCII NUL chars to be ignored.
+ *     ASCII with the 8th bit set, CR+LF line endings.
+ *     trailer: a bunch of ASCII NUL chars to be ignored.
 
  * This program can be used as a filter from stdin to stdout or
- * it will create a new file with name ending in .txt if going to linux txt
- * or .ptp if going to OS/8 PIP Paper Tape format.
+ * it will create a new file with name ending in .txt if going to
+ * POSIX text or .ptp if going to OS/8 PIP Paper Tape format.
 
- * If the program is called with the name "txt2ptp"
- * 100 bytes of leader trailer is prepended and appended to the file,
- * and the 8th bit of every character is set.
+ * If the program is called with the name "txt2ptp" then
+ * LTCOUNT (default 100) bytes of leader is prepended to the
+ * output file and LTCOUNT bytes of leader are appended.
+ * The 8th bit of every output character is set, and LF-only
+ * input is turned into CR+LF output.  CR+LF input is passed
+ * as-is.
  
  * If called by any other name, the ASCII NUL character is
  * ignored anywhere in the file, and the 8th bit is cleared.
+ * Line endings are untouched in this case.
 
  * This program helps work around the issue that the 
  * OS/8 Paper Tape reader handler assumes the last
