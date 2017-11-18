@@ -278,13 +278,13 @@ Y(  ) {
 			tmp=-17;
 			break;
 		case '=':
-			if (*q-'=') {
+			if (*q=='=')
+				break;
 			tmp=8;
 			if (ixf)
 				tmp=-8;
 			ixf=0;
 			stkp++;
-			}
 		default:
 			break;
 	}
