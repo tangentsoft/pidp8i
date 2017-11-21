@@ -184,6 +184,14 @@ The proffered patch for `ABSLDR` is mis-labeled. It applies to a
 version of `ABSLDR` I cannot find, and for which I do not have source.
 It's definitely not recommended.
 
+Patch `FRTS-51.3.3-O.patch8` is to enable 2-page system drivers like
+RL01.  Except that the RL01 driver is only available in the Extensions
+kit.  The patch overwrites existing code that makes `FRTS` able to
+function with the TD8E 2-page system handler.  I've read the code but
+don't fully understand it. Perhaps it generalizes the TD8E support.
+But if you happen to be using this setup under TD8E and `FRTS` doesn't
+work, then back out this patch.
+
 
 ## Patch Application Order
 
@@ -362,10 +370,10 @@ Status column key:
 | Component | Issue | Sequence | Mon/Yr | Notes | Status |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 |  `F4` | `EQUIVALENCE` Statement | `02M` / `21.1.2M` | Dec/Jan-80 | `F4-21.1.2M-v4B.patch8` (Revised, Oct 77: `F4` and `PASS3` not `FRTS` patched.) | AP |
-|   | `FORTRAN` Compiler fails to recognize `"` as an error | `51.3-1M` | Jun/Jul-78 | `F4-51.3.1M-v4C.patch8` (Corrects March 1978) | AP |
+|   | `FORTRAN` Compiler fails to recognize `"` as an error | `51.3.1M` | Jun/Jul-78 | `F4-51.3.1M-v4C.patch8` (Corrects March 1978) | AP |
 |   | `FORTRAN` Compiler not recognizing syntax error | `51.3.2M` | Jun/Jul-78 | `F4-51.3.2M-v4x.patch8` | AP |
-|   | `FORTRAN` runtime system 2-page handler | `51.3-3O` | Oct/Nov-78 | `FRTS-51.3.3-O.patch8` Needed for RL02. (Corrected from Aug/Sep 78) | A |
-|   | Restriction with subscripted variables | `51.3-4R` | Aug/Sep-80 | Documentation: `FIV` `FORTRAN IV` will not allow subscripting to be used on both sides of an arithmetic expression. |  |
+|   | `FORTRAN` runtime system 2-page handler | `51.3.3O` | Oct/Nov-78 | `FRTS-51.3.3-O.patch8` Needed for RL02. (Corrected from Aug/Sep 78) | A |
+|   | Restriction with subscripted variables | `51.3.4R` | Aug/Sep-80 | Documentation: `FIV` `FORTRAN IV` will not allow subscripting to be used on both sides of an arithmetic expression. |  |
 |  `FORLIB` | `FORTRAN IV` `DLOG` Patch | `51.10.1M` | Feb/Mar-80 | `FORLIB-51.10.1M.patch8` (apply to `DLOG.RA`) | AV |
 
 

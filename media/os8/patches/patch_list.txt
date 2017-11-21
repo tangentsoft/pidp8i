@@ -4,7 +4,7 @@
 # and the reason why appears in the line above it.
 #
 # ABSLDR-21.29.1M is against v6A but we have v4A.
-# v6A came with OS/8 DEV Extension kit QF026
+# v6A came with OS/8 Devices Extension kit QF026
 # Binary DECtape: AL-H525A-BA, Source not on DECtape
 # DO NOT APPLY THIS PATCH.
 ## ABSLDR-21.29.1M-v6C.patch8
@@ -32,8 +32,13 @@ F4-51.3.2M-v4x.patch8
 # So the patch will not apply but is listed here for completeness.
 ## FORLIB-51.10.1M.patch8
 FOTP-21.19.1M-V9B.patch8
-# Can't verify FRTS because I don't know how to get a
-# .LS file to verify against.  Nevertheless the patch is recommended.
+# FRTS-51.3.3-O is to enable FRTS to work with 2-page system
+# handlers.  I've read the code but do not fully understand it.
+# It is plausable that it generalizes on the code that makes
+# the 2-page TD8E handler work.  But it could also be a
+# patch tha tONLY works with the OS/8 Devices Extension kit QF026.
+# We are enabling the patch for not.  If further testing shows
+# that it breaks TD8E support, we will turn it off.
 FRTS-51.3.3-O.patch8
 FUTIL-31.21.1M-v7B.patch8
 # FUTIL-31.21.2M is currently being applied.  The risk is that it is
