@@ -182,10 +182,6 @@
             Old: RKA0,RKB0,RKA1,RKB1,          RXA0,RXA1,DTA0,DTA1,TTY,LPT,PTP,PTR
             New: RKA0,RKB0,RKA1,RKB1,RKA2,RKB2,RXA0,     DTA0,DTA1,TTY,LPT,PTP,PTR
 
-    -   TODO: Added the `os8` script to add and remove features from the
-        built OS/8 binary disk image after it is initially built.  In a
-        primitive sort of way, this is "[apt][apt] for OS/8."
-
     This automatic OS/8 media build feature was suggested by Jonathan
     Trites who wrote the initial version of the script that is now
     called `libexec/mkos8`.  That script was then extended and factored
@@ -300,13 +296,6 @@
         *   FORTRAN II
         *   FORTRAN IV
         *   MACREL port of PEP001.PA?
-
-    *   Componentize mkos8:
-
-        *   Move "add" steps to lib/mkos8/components/*.py
-        *   Create "mkos8 add" feature to run those steps after build
-        *   Add inverse "remove" feature
-        *   Write "os8" script to call above; remove TODO tag above
 
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
 
