@@ -75,7 +75,7 @@ it as an intermediary:
     *HELLO.DA<TTY:                  ⇠ use default extension for O I
     01.10 TYPE "Hello, world!"!     ⇠ paste your program text here
     ^Z                              ⇠ hit Ctrl-Z to tell PIP it's reached end-of-file (EOF)
-    *^C                             ⇠ hit Ctrl-C to return to OS/8 from PIP
+    *$                              ⇠ hit Escape to return to OS/8 from PIP ($ = Esc)
     .R UWF16K                       ⇠ run U/W FOCAL
     *O I HELLO                      ⇠ open text file for input; "types" pgm in for us
     _G                              ⇠ underscore = EOF seen, G starts program
