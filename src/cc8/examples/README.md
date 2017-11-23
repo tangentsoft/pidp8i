@@ -16,11 +16,13 @@ file into a paper tape to be loaded into OS/8:
     sim> att -r dt0 calc.pt
     sim> cont
     .R PIP
-    *CALC.SB<PTR:        ⇠ hit Enter, Ctrl-Z, then Escape
+    *CALC.SB<PTR:        ⇠ hit Enter, then Escape twice
 
-The <kbd>Enter</kbd> key starts the transfer in the final command;
-<kbd>Ctrl-Z</kbd> signals EOF to PIP, completing the transfer; and
-<kbd>Escape</kbd> exits PIP, returning you to the OS/8 command prompt.
+The <kbd>Enter</kbd> key starts the transfer in the final command. The
+transfer stops when `PIP` sees the <kbd>Ctrl-Z</kbd> EOF marker added to
+the end of the paper tape by `txt2ptp`. The first <kbd>Escape</kbd>
+finalizes the transfer and the second exits PIP, returning you to the
+OS/8 command prompt.
 
 See the [assembly examples' `README.md` file][aerm] or the [U/W FOCAL
 manual supplement][uwfs] for more ideas on how to get text files like
