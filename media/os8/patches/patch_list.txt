@@ -40,9 +40,10 @@ FOTP-21.19.1M-V9B.patch8
 # We are enabling the patch for not.  If further testing shows
 # that it breaks TD8E support, we will turn it off.
 FRTS-51.3.3-O.patch8
-# The two FUTIL patches below do not apply to v8, which comes with
-# MACREL v2.  mkos8 will correctly recognize whether or not they
-# should be applied.
+# The two FUTIL patches only get applied to FUTIL V7 which comes with
+# OS/8 V3D to bring it up to V7D.  MACREL V2 comes with FUTIL V8B, so
+# these patches are skipped by mkos8 using an RE match on the file name
+# when the user does not pass --disable-os8-macrel to configure.
 FUTIL-31.21.1M-v7B.patch8
 FUTIL-31.21.2M-v7D.patch8
 # FUTIL 31.21.3O switches XS format. Recommend to leave it out.

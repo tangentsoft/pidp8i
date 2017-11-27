@@ -689,6 +689,17 @@ def do_patch_file (s, filename, debug):
   # Done.  Signal success.
   return 0
 
+
+#### skip_patch ########################################################
+# Returns true if the given filename matches one of the regex string
+# keys of the given skips dict and the flag value for that key is set.
+# See skips definition in make_patch, which calls this.
+
+def skip_patch (fn, skips):
+    for p in skips:
+        if re.search (p, fn) and skips[p]: return True
+    return False
+
       
 #### make_patch ########################################################
 
@@ -697,12 +708,14 @@ def make_patch (s, args):
   
   manifest_filename = "patch_list.txt"
 
-  # Declare which patches to skip based on command line options.  All of
-  # the other patches are for files always present.
+  # Declare which patches to skip based on patch file name RE patterns
+  # and command line options.  All patches not matching these patterns
+  # apply to OS/8 files that always get installed.
   skips = {
-    'F4':   args.disable_fortran_iv,
-    'FRTS': args.disable_fortran_iv,
-    'SABR': args.disable_fortran_ii,
+    '^F4':            args.disable_fortran_iv,
+    '^FRTS':          args.disable_fortran_iv,
+    '^FUTIL.*v7': not args.disable_macrel,     # MACREL includes FUTIL V8B
+    '^SABR':          args.disable_fortran_ii,
   }
 
   print "Generating " + _patched_rk05 + " from " + _bin_rk05
@@ -736,8 +749,7 @@ def make_patch (s, args):
     if line[0] == '#': continue      # Allow commenting out files
 
     filename = line.strip()
-    kind = filename.split('-')[0]
-    if kind in skips and skips[kind]:
+    if skip_patch (filename, skips):
       if progmsg: print "Skipping patch file: " + filename + "."
     else:
       if progmsg: print "Applying patch file: " + filename + "...",
