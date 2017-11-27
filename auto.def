@@ -121,6 +121,7 @@ foreach opt [lsort -dictionary [dict keys $::autosetup(optdefault)]] {
     }
 }
 append os "}\n"
+if {![file exists "lib/mkos8"]} { file mkdir "lib/mkos8" }
 write-if-changed "lib/mkos8/opts.py" $os
 
 # Handle the OS/8 options not passed to mkos8 generically by above.
