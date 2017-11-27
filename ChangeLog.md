@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2017.10.eh? — The "Languages and Custom OS/8 Disk Packs" release
+## Version 2017.11.eh? — The "Languages and Custom OS/8 Disk Packs" release
 
 *   All prior versions were shipping `os8.rk05`, a "Field Service
     Diagnostic" OS/8 disk pack image with uncertain provenance,
@@ -67,7 +67,11 @@
         for details.  This is an improved version of the compiler relative
         to what was distributed on the mailing list.
 
-    -   MACREL macro assembler is installed by default.
+    -   The MACREL v2 macro assembler and its associated FUTIL V8B tool
+        are installed by default.  Not only is this new functionality
+        relative to prior releases of the PiDP-8/I software, it is a
+        considerable upgrade over to the original MACREL and FUTIL V7
+        that are more commonly found on the net.
 
     -   DCP disassembler is installed by default.
 

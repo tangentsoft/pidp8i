@@ -386,7 +386,8 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
-*   **--disable-os8-macrel** - Leave the MACREL assembler out.
+*   **--disable-os8-macrel** - Leave the MACREL v2 assembler and its
+    associated FUTIL V8B tool out.
 
 *   **--disable-os8-patches** - Do not apply any of the OS/8 V3D
     patches published by DEC.  See the [documentation][os8p] for this
@@ -602,7 +603,7 @@ files][os8mf]. From these files and your configuration options, the
 `mkos8` script creates the baseline `os8v3d-bin.rk05` disk image.
 
 The default build creates a complete OS/8 system including `BUILD`
-support, FORTRAN IV, MACREL, and more.
+support, FORTRAN IV, MACREL v2, and more.
 
 
 ## Subtractions
