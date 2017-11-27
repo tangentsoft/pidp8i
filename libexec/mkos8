@@ -249,8 +249,18 @@ def make_bin (s, args):
      "Installing FORTRAN IV ...", None],
   ]
 
-  macrel_copyin = ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56",
-                   "Installing MACREL...", None]
+  # Specify files explicitly. There's a README.TX we don't want copied.
+  # We may decide to leave FUTIL.SV out.
+  macrel_files = [
+    ['SYS:', 'MACREL.SV'],
+    ['SYS:', 'LINK.SV'],
+    ['SYS:', 'KREF.SV'],
+    ['SYS:', 'OVRDRV.MA'],
+    ['SYS:', 'FUTIL.SV']
+  ]
+
+  macrel_copyin = ['RKA0:', "al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56",
+                   "Installing MACREL V2 and new FUTIL V8B ...", macrel_files]
 
   uwfocal_files  = [['SYS:', 'UWF16K.SV']]
   

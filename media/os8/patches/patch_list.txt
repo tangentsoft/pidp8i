@@ -40,10 +40,10 @@ FOTP-21.19.1M-V9B.patch8
 # We are enabling the patch for not.  If further testing shows
 # that it breaks TD8E support, we will turn it off.
 FRTS-51.3.3-O.patch8
+# The two FUTIL patches below do not apply to v8, which comes with
+# MACREL v2.  mkos8 will correctly recognize whether or not they
+# should be applied.
 FUTIL-31.21.1M-v7B.patch8
-# FUTIL-31.21.2M is currently being applied.  The risk is that it is
-# yet another patch against the Extensions update and is wrong.
-# Viewing ABSLDR under FUTIL and ODT do not agree on memory contents.
 FUTIL-31.21.2M-v7D.patch8
 # FUTIL 31.21.3O switches XS format. Recommend to leave it out.
 # FUTIL-31.21.3O.patch8
