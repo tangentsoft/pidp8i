@@ -42,9 +42,10 @@ SGCID=17903827bdb294f7e60d4c7f172bd6a1a71dfbd5
 # modules and the SIMH PDP-8 simulator, respectively.
 TOP_CFLAGS := @CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
-	-DUSE_READER_THREAD -DHAVE_DLOPEN=so -DPIDP8I -DSIM_ASYNCH_IO \
-	-DHAVE_REGEX_H -DHAVE_GLOB -DSIM_GIT_COMMIT_ID=$(SGCID) \
-	-D_GNU_SOURCE -U__STRICT_ANSI__ \
+	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) -DPIDP8I \
+	-DSIM_ASYNCH_IO -DHAVE_REGEX_H -DHAVE_GLOB \
+	-DSIM_GIT_COMMIT_ID=$(SGCID) -D_GNU_SOURCE \
+	-U__STRICT_ANSI__ \
 	-I @srcdir@/src -I @srcdir@/src/PDP8 -I src
 PDP8_CFLAGS = $(TOP_CFLAGS)
 
@@ -87,13 +88,12 @@ SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
 MKOS8         := @srcdir@/libexec/mkos8
-MKOS8_LIB     := lib/mkos8
+MKOS8_LIB     := @srcdir@/lib/mkos8
 MKOS8_PY      := \
 	$(MKOS8_LIB)/__init__.py \
-	$(MKOS8_LIB)/argparser.py
-MKOS8_PY_SRC  := $(addprefix @srcdir@/,$(MKOS8_PY))
-MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY_SRC) $(SIMH_PY_SRC)
-MKOS8_PY_BASE := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY)
+	$(MKOS8_LIB)/argparser.py \
+	lib/mkos8/opts.py
+MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY_SRC)
 MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
 BUILDDIRS := bin libexec obj/cc8/cross obj/d8tape obj/palbart obj/PDP8
@@ -223,7 +223,7 @@ INFILES = \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
-	$(MKOS8_INFILES) $(PRECIOUS_INFILES)
+	$(MKOS8_INFILES)
 MKOS8_OUTFILES := $(subst @srcdir@/,,$(MKOS8_INFILES))
 MKOS8_OUTFILES := $(subst .in,,$(MKOS8_OUTFILES))
 PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
@@ -242,7 +242,7 @@ ADF := adrules.mk
 .PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S)
+all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
@@ -257,6 +257,7 @@ clean:
 
 distclean: clean
 	@rm -f \
+		$(PRECIOUS_OUTFILES) \
 		config.log \
 		autosetup/jimsh0 \
 		src/config.h
@@ -356,9 +357,9 @@ install: all instdirs
 	@# Install mkos8 and its dependencies
 	@echo "Installing mkos8..."
 	@@INSTALL@ -m 775 -g @INSTGRP@ $(MKOS8) @prefix@/libexec
-	@( for src in $(MKOS8_PY_BASE) ; do \
+	@( for src in $(MKOS8_PY_ALL) ; do \
 		test -e $$src || src=@srcdir@/$$src ; \
-		dest=@prefix@/$$src ; \
+		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
@@ -514,7 +515,7 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 # files in INFILES, whichever is lower.  Order-only prerequisites can't
 # help here (|) as that only affects the right hand side.
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-media/os8/init.tx: $(INFILES) @AUTODEPS@
+media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
 # Also do it if the autodep tool is newer than its output, suggesting

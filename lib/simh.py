@@ -191,14 +191,16 @@ class simh:
     tool = os.path.join (bdir, 'bin', 'txt2ptp')
     subprocess.call (tool + ' < ' + source + ' > ' + pt, shell = True)
 
-    # Paper tape created, so attach it read-only and copy it in
+    # Paper tape created, so attach it read-only and copy it in.  We're
+    # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
+    # the file.
     self.back_to_cmd ('\\.')
     self.send_cmd ('attach -r ptr ' + pt)
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
     self.os8_send_cmd ('\*', dest + '<PTR:')
-    self._child.expect ('^')
-    self.os8_send_ctrl ('Z')      # EOF
+    self._child.expect ('\\^')
+    self.os8_send_ctrl ('[')      # finish transfer
     self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
 

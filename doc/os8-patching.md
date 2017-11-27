@@ -1,12 +1,14 @@
 # OS/8 System Patches
 
-Between major updates to distribution media, DEC would send out important
-information and patches to customers through its publication _PDP-8 Digital Software
-News_ (_DSN_ for short).
+Between major updates to distribution media, DEC would send out
+important information and patches to customers through its publication
+_PDP-8 Digital Software News_ (_DSN_ for short).
 
-Many issues of _DSN_ can be found on bitsavers.org under [pdf/dec/pdp8/softwarenews][dsn].
+Many issues of _DSN_ can be found on bitsavers.org under
+[pdf/dec/pdp8/softwarenews][dsn].
 
-To help customers keep track of which patches to apply, _DSN_ added a Cumulative Index.
+To help customers keep track of which patches to apply, _DSN_ added a
+Cumulative Index.
 
 Using the _PDP-8 DIGITAL Software News Cumulative Index_ found in the
 latest available issue of _DSN_, [October/November 1980][dsn8010], I
@@ -28,10 +30,11 @@ obscure, and I marked the patch as "plausable" rather than "verified"
 in my spreadsheet.
 
 The file [patch_list.txt][pl] lists all of the patch files in
-`media/os8/patches`.  Comments in that file begin with `#` and are used
-to disable patches we have rejected for one reason or another.  Each
-rejected patch also has a comment that explains why that particular
-patch was rejected from the default set.  Typical reasons are:
+`media/os8/patches`.  Comments in that file begin with `#` and are
+used to disable patches we have rejected for one reason or another.
+Each rejected patch also has a comment that explains why that
+particular patch was rejected from the default set.  Typical reasons
+are:
 
 *   The patch requires hardware our simulator doesn't have.
 *   The patch conflicts with another patch we deem more important.
@@ -111,78 +114,34 @@ with line printer output through a specific parall interface card.
 Unfortunately, the patch overwrites mandatory patch in 21.17.2 and is
 NOT recommended.
 
-`ABSLDR 21.29.1 M` is a mandatory patch that enables `ABSLDR` to work
-with `SAVE` image files.  Normally `ABSLDR` only loads `BIN` format
-files. The patch sequence number, `21.29` identifies the patch as
-being for the OS/8 V3D version of `ABSLDR`.  But the patch changes
-locations that are not used by `ABSLDR.SV`.  Furthermore, the patch says
-it upgrades `ABSLDR` from version `6B` to version `6C`.
+`ABSLDR 21.29.1 M` is supposedly a mandatory patch that enables
+`ABSLDR` to work with `SAVE` image files.  Normally `ABSLDR` only
+loads `BIN` format files. The patch sequence number, `21.29`
+identifies the patch as being for the OS/8 V3D version of `ABSLDR`.
+But the patch changes locations that are not used by `ABSLDR.SV`.
+Furthermore, the patch says it upgrades `ABSLDR` from version 6B to
+version 6C.
 
 Version 6 of `ABSLDR` was part of the OS/8 V3D Device Extensions kit.
-I want to digress into a bit of history of this kit because it's
-important to understanding OS/8 versions going forward.
+See [our documention on the OS/8 V3D Device Extensions][os8ext].
+Verification of this now seems within reach, with the expectation that
+it is mis-labeled, and is properly applied to the version with the
+Extensions kit. Until it is verified, applying this patch is *not*
+recommended.
 
 `PAL8-21.22.4M` is broken and doubly mis-labeled. Mis-label #1: It is
 an optional, not mandatory patch. Mis-label #2: It is for product
 sequence `35.14`, the `V13` codeline of `PAL-8` that, like `ABSLDR
-V6`, is in the Device Extensions Kit.  The breakage: Source listing
+V6`, is in the Device Extensions kit.  The breakage: Source listing
 quits working.  *Do not apply this patch!*
 
-
-## OS/8 V3D Device Extensions
-
-The OS/8 V3D Device Extensions kit (product QF026) was created to
-support the newest PDP-8 hardware:
-
-*   The `KT8A` Memory Management option which enables addressing by a
-    factor of four beyond the previous maximum of 32K to a whopping
-    128K of memory.
-
-*   RL01 disk supporting 4 times the previous usual disk capacity, now
-    up to nearly 5 Meg.
-
-*   RX02 double-density floppy disks.
-
-This distribution contained software updates:
-
-*   A version of `BUILD` the system builder that could run under
-    `BATCH`.  The previous version would just hang.
-
-*   An update to the OS/8 system including `Monitor` version `3S`.
-
-*   `ABSLDR` version `6A` supports loading into memory fields  greater than 7.
-
-*   `PAL8` version `13A` uses memory fields greater than 7.
-
-*   `CCL` version `7A` memory command recognizes up to 128K words of memory.
-
-*   `PIP` version `14A` works with new devices and Monitor.
-
-*   `RESORC` version `4A` includes new devices.
-
-*   `BOOT` version `5A` boots new devices.
-
-*   `RXCOPY` version `5A` formats and copies single and double density floppies.
-
-*   `FUTIL` version `8A` recognizes new core control block in extended memory.
-
-
-When reference is made to `PAL8` version 13, that version originally came
-from this kit.
-
-Unfortunately, the distribution DECtape for this kit, part number
-AL-H525A-BA has not been found.  Furthermore, the PDP-8 Software
-Components Catalog July 1979 gives no part number for a Source DECtape
-distribution of this kit.  There is an RK05 source distribution,
-part number AN-H529A-SA.
-
-This kit is desirable in both binary and source form, but we don't
-have it, and patches to `ABSLDR` that only work with this version
-are mis-labeled as being for the non-Extension version.
-
-The proffered patch for `ABSLDR` is mis-labeled. It applies to a
-version of `ABSLDR` I cannot find, and for which I do not have source.
-It's definitely not recommended.
+Patch `FRTS-51.3.3-O.patch8` is to enable 2-page system drivers like
+`RL01`.  Except that the `RL01` driver is only available in the
+Extensions kit.  The patch overwrites existing code that makes `FRTS`
+able to function with the `TD8E` 2-page system handler.  I've read the
+code but don't fully understand it. Perhaps it generalizes the `TD8E`
+support.  But if you happen to be using this setup under `TD8E` and
+`FRTS` doesn't work, then back out this patch.
 
 
 ## Patch Application Order
@@ -195,28 +154,22 @@ order.
 For example, if the `ABSLDR` patch actually did work, it needs the
 `FUTIL 31.21.2 M` in order to patch into the `ABSLDR` overlay bits.
 
-Side note: I am a bit skeptical of that `FUTIL` patch because, when I
+I was skeptical of `FUTIL 31.21.2M` because, when I
 load `ABSLDR.SV` into core with GET, the contents of memory showed by
-`ODT` are *DIFFERENT* from those shown by `FUTIL`.  This may be because of
-overlays that `ODT` does not understand, or it may be because the `FUTIL`
-patch does not work.  I'd labeled the `FUTIL` patch "plausable", because
-I didn't understand the nuance of `CD` modules embodied in the patch.
-
+`ODT` are *DIFFERENT* from those shown by `FUTIL`. With deeper
+understanding of the OS/8 Device Extensions kit, I see that the patch
+was incorporated into the version 8 `FUTIL` source, and also that
+`ODT` is expected to be updated in version 3S of the Keyboard Monitor.
 
 ## Then There's `MACREL`
 
-`MACREL` was a late development, an attempt to replace `PAL8` with a
-Macro assembler capable of producing relocatable modules.  When
-`MACREL` first came on the scene, several companies decided to port
-their next major upgrade to `MACREL` from `PAL8`.  `MACREL` was so
-buggy that everybody basically had to revert to `PAL8` and back-port
-all the new code originally intended for the new major upgrade.  This
-situation befell ETOS Version 5.
+I've gone into detail on the explorations and understandings with
+regard to `MACREL` in a [sister document to this one][macreldoc].
 
-We have a binary distribution DECtape of `MACREL` version 1, DEC part
-number `AL-5642A-BA`.  We have no source distribution, so the patches
-cannot be verified against source.  Furthermore, the version numbers
-don't match, even though the memory contents do.
+Originally I reviewed the patches for `MACREL` v1, because that's all
+we had.  But the version numbers of the patches did not match the
+version numbers of the executables.  A little diversion into the guess
+work surrounding patch verification:
 
 Version number mismatches sometimes do occur with patches. For
 example, `TECO 31.20.11 M` says that it upgrades `TECO` to version
@@ -226,32 +179,54 @@ octal is `506` decimal, and the `TECO` version number is represented
 with a 12 bit number.  It's called "5.06" but it's represented as
 `0772` octal, or `506` decimal.
 
-I simply changed the version amendment line in that `TECO` patch,
-because the rest was correct.  Whoever published the patch got the
-version number wrong, and nobody complained.
+With that TECO patch, I simply changed the version amendment line in
+that `TECO` patch, because the rest was correct.  Whoever published
+the patch got the version number wrong, and nobody complained.
 
-However, with the `MACREL` V1 patches, I need to do more research
-before I feel confident recommending application of the patches.
-Ideally I'd find binary and source distributions of `MACREL V2`.
-That's DEC Part number `AL-5642B-BA` for the binary DECtape and the 4
-source DECtapes have part numbers: `AL-5643B-SA`, `AL-5644B-SA`,
-`AL-H602B-SA`, and `AL-H602B-SA`.  I don't hold out much hope for
-finding these tapes.
+With no `MACREL` v1 source verification was not really possible, so
+applying those patches was postponed.  But then we found both binary
+and source of `MACREL` v2!
 
-I don't know if the failed `MACREL` ports happened with pre-release
-versions of `MACREL` or with `V1`. I have found `V2` `MACREL`, `LINK`,
-and `KREF` on disk packs imaged from running systems, and the `V2`
-`OVERDRV.MA` overlay source code on Dave Gesswein's site.  I plan to
-dig them out and offer them as options.
+In the interests of shipping out system packs in finite time, we will
+integrate `MACREL` v2 into the system packs, and verify/apply `MACREL`
+v2 patches as follow-on work.
 
-For now, I am in the process of doing what validation I can of the
-V1 `MACREL`/`LINK` patches.
+After further testing of 'MACREL' I have concluded that integrating
+the source-level patch `41.5.1M` will reduce uncertainty.  So I have
+hand-integrated that patch into the `MACREL` tu56 image as well.
 
+[macreldoc]:https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-macrel.md
+
+## `FUTIL`:
+
+I was dubious of some of the `FUTIL` patches, but with finding source
+to version 8A, I gained confidence in the version 7 patches, and
+understood how seriously important the first patch was to version 8.
+
+The `MACREL` v2 tape shipped with version 8A of `FUTIL`. That was
+necessary because V2 of `MACREL` supported the latest memory expansion,
+and so the OS/8 Core Control Block needed to change.
+
+Unfortunately, the `FUTIL.SV` distributed as version 8A had the wrong
+starting address and Job Status Word settings. It *hangs* when run
+under `BATCH`.  Our automated pack builder and patcher `mkos8` run
+`FUTIL` under `BATCH`.
+
+The `MACREL` v2 DECtape image we use with `mkos8` contains a
+hand-applied patch `35.13.1M` that fixes this problem.
+
+Currently if you opt in to having `MACREL` on the system packs, you
+get `FUTIL` version 8B. If not, you get `FUTIL` version 7 and `mkos8`
+applies the relevant patches. If `FUTIL` version 8 is installed, the
+automated patch applier recognizes the version 7 patches don't fit and
+fails to install them.
 
 ## One-off Patches
 
 Most of the patches are parsed and applied in an automated manner
 by mkos8.  However some are one-offs.
+
+See the `FUTIL` section above with regards to patch `35.13.1M`.
 
 `FORLIB 51.10.1 M` is a one line source change to `DLOG.RA`. The patch
 file provides that line. It also provides instructions on how to use
@@ -275,11 +250,6 @@ rebuilt either with an assembler or high level language compiler.
 to insert it into the system.  At the present time the OS/8 V3D packs
 we build do not use the `LPQ` driver.  (We ran out of device ID space
 and so we don't have anywhere to put an active `LPQ` driver.)
-
-`OVRDRV 40.6.1` is a source level patch for the `MACREL V1 OVRDRV.MA`
-file.  Applying `LINK 40.2.2 M` appears to be a prerequisite.
-Work to validate this patch won't begin until the patches to LINK
-have been deemed safe and recommended.
 
 
 ## The Tracking Spreadsheet
@@ -349,8 +319,8 @@ Status column key:
 |   | Can't skip over `W` | `31.20.12M` | Apr/May-78 | `TECO-31.20.12M-v5.07.patch8` | AV |
 |   | Unspecified iterations after inserts | `31.20.13M` | Oct/Nov-78 | `TECO-31.20.13M-v5.08.patch8` (Corrected from Jun/Jul 78) | AV |
 |   | New features in `TECO V5` | `31.20.14` N | Aug/Sep-78 | Documentation Only |  |
-|  `FUTIL` | `FUTIL` Patch | `31.21.1M` | Apr/May-78 | `FUTIL-31.21.1M-v7B.patch8` | AP |
-|   | Fix `SHOW CCB` and mapping of `CD` modules | `31.21.2M` | Oct/Nov-78 | `FUTIL-31.21.2M-v7D.patch8` (Corrected from Aug/Sep 78) | AP |
+|  `FUTIL` | `FUTIL` Patch | `31.21.1M` | Apr/May-78 | `FUTIL-31.21.1M-v7B.patch8` | AV |
+|   | Fix `SHOW CCB` and mapping of `CD` modules | `31.21.2M` | Oct/Nov-78 | `FUTIL-31.21.2M-v7D.patch8` (Corrected from Aug/Sep 78) | AV |
 |   | Optional: change `XS` format from `excess-240` to `excess-237`. Useful for viewing `COS` data files. | `31.21.3O` | Aug/Sep-78 | `FUTIL-31.21.3O.patch8` | AVN |
 |   | `FUTIL` Patch to `MACREL`/`LINK` overlays | `31.21.4 N` | Jun/Jul-79 | Documentation Only |  |
 |  `MSBAT` | `DIM` Statement not working in `MSBAT` | `31.22.1M` | Dec 78/Jan-79 | `MSBAT-31.22.1M-v3B.patch8` | AV |
@@ -362,14 +332,18 @@ Status column key:
 | Component | Issue | Sequence | Mon/Yr | Notes | Status |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 |  `F4` | `EQUIVALENCE` Statement | `02M` / `21.1.2M` | Dec/Jan-80 | `F4-21.1.2M-v4B.patch8` (Revised, Oct 77: `F4` and `PASS3` not `FRTS` patched.) | AP |
-|   | `FORTRAN` Compiler fails to recognize `"` as an error | `51.3-1M` | Jun/Jul-78 | `F4-51.3.1M-v4C.patch8` (Corrects March 1978) | AP |
+|   | `FORTRAN` Compiler fails to recognize `"` as an error | `51.3.1M` | Jun/Jul-78 | `F4-51.3.1M-v4C.patch8` (Corrects March 1978) | AP |
 |   | `FORTRAN` Compiler not recognizing syntax error | `51.3.2M` | Jun/Jul-78 | `F4-51.3.2M-v4x.patch8` | AP |
-|   | `FORTRAN` runtime system 2-page handler | `51.3-3O` | Oct/Nov-78 | `FRTS-51.3.3-O.patch8` Needed for RL02. (Corrected from Aug/Sep 78) | A |
-|   | Restriction with subscripted variables | `51.3-4R` | Aug/Sep-80 | Documentation: `FIV` `FORTRAN IV` will not allow subscripting to be used on both sides of an arithmetic expression. |  |
+|   | `FORTRAN` runtime system 2-page handler | `51.3.3O` | Oct/Nov-78 | `FRTS-51.3.3-O.patch8` Needed for RL02. (Corrected from Aug/Sep 78) | A |
+|   | Restriction with subscripted variables | `51.3.4R` | Aug/Sep-80 | Documentation: `FIV` `FORTRAN IV` will not allow subscripting to be used on both sides of an arithmetic expression. |  |
 |  `FORLIB` | `FORTRAN IV` `DLOG` Patch | `51.10.1M` | Feb/Mar-80 | `FORLIB-51.10.1M.patch8` (apply to `DLOG.RA`) | AV |
 
 
 ### OS/8 MACREL/LINKER V1A Patches
+
+These patches are listed for completeness. The version numbers don't
+match.  We lack source so we cannot verify them. we've moved on to
+`MACREL` v2 as canon.  
 
 | Component | Issue | Sequence | Mon/Yr | Notes | Status |
 | ------ | ------ | ------ | ------ | ------ | ------ |
@@ -383,13 +357,14 @@ Status column key:
 
 ### OS/8 V3D Device Extensions December 1978 Patches
 
-**WARNING**: Do not use this kit without first consulting _DSN_ Apr/May 1979.
+**WARNING**: Do not use this kit without first consulting _DSN_  Apr/May 1979.
+See also: [Our OS/8 Device Extensions documentation][os8ext]
 
 | Component | Issue | Sequence | Mon/Yr | Notes | Status |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 |  `FRTS` | `FRTS` Patch | `35.1.3M` | Apr/May-79 |  |  |
 |  `MONITOR` | `MONITOR` `V3S` Patch | `35.2.1M` | Apr/May-79 |  |  |
-|  `FUTIL` | `FUTIL Under `BATCH` | `35.13.1M` | Apr/May-79 |  |  |
+|  `FUTIL` | `FUTIL` hangs under `BATCH` | `35.13.1M` CRITICAL! | Apr/May-79 |  | AV |
 |  `PAL8` | `EXPUNGE` Patch to `PAL8` | `35.14.1M` | Feb/Mar-80 | `PAL8-35.14.1M-v13B.patch8` | AN |
 |  `ABSLDR` | Loader problem with `SAVE` image files | `21.29.1M` | Oct/Nov-80 | `ABSLDR-21.29.1M-v6C.patch8` (Supercedes June/July 1980) Bad: v6B was with OS/8 Device Extensions. | OB |
 |  `ABSLDR` | `ABSLDR` Patch | `35.18.1M` | Apr/May-79 |  |  |
@@ -398,11 +373,14 @@ Status column key:
 
 ### OS/8 MACREL/LINKER V2A Patches
 
+These patches have not been turned into files.  Armed with newly
+discovered sources verification is possible.  Work on these will begin
+soon.
 
 | Component | Issue | Sequence | Mon/Yr | Notes | Status |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-|   | `EXPUNGE` Documentation error | `41.1.1N` | Jun/Jul-79 |  |  |
-|   | `MACREL` Version numbers: `MACREL` is `V2C` not `V2D`; `LINK` is `V2A` not `V2B`. | `41.1.2N` | Jun/Jul-79 |  |  |
+|  User's |`EXPUNGE` Documentation error | `41.1.1N` | Jun/Jul-79 |  |  |
+|  Guide  | `MACREL` Version numbers: `MACREL` is `V2C` not `V2D`; `LINK` is `V2A` not `V2B`. | `41.1.2N` | Jun/Jul-79 |  |  |
 |   | Macro restriction in `MACREL` | `41.1.3N` | Aug/Sep-79 |  |  |
 |   | Error in `.MCALL` macro example | `41.1.4N` | Feb/Mar-80 |  |  |
 |  `KREF` | Correct printing of numeric local symbols | `41.3.1M` | Apr/May-80 |  |  |
@@ -411,7 +389,8 @@ Status column key:
 |   | Forward reference patch to `MACREL` | `41.4.3M` | Aug/Sep-79 |  |  |
 |   | Correct macro substring problem | `41.4.4M` | Apr/May-80 |  |  |
 |   | Correct printing of numeric local symbols | `41.4.5M` | Apr/May-80 |  |  |
-|  `OVRDRV` | Correct `CDF` problem | `41.5.1M` | Dec/Jan-80 |  |  |
+|  `OVRDRV` | Correct `CDF` problem | `41.5.1M` | Dec/Jan-80 | Source change applied by hand. | AV |
+|  `FUTIL` | `FUTIL` hangs under `BATCH` | `35.13.1M` | Apr/May-79 | Critical to proper operation of our automated builder. Applied by hand to the `MACREL` v2 integration.  | AV |
 
 
 
@@ -421,3 +400,5 @@ Copyright © 2017 by Bill Cattey. Licensed under the terms of
 [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extenaions.md
+

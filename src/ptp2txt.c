@@ -137,6 +137,10 @@ void make_ptp (FILE *fpin, FILE *fpout)
         }
         fwrite (obuff, sizeof(char), obuffp - obuff, fpout);
     }
+    /* If we don't already have an EOF, add one. */
+    if (inchar != '\032') {
+      fwrite ("\232", sizeof(char), 1, fpout);
+    }
     make_lt (fpout);
 }
 

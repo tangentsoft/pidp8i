@@ -16,7 +16,13 @@ file into a paper tape to be loaded into OS/8:
     sim> att -r dt0 calc.pt
     sim> cont
     .R PIP
-    *CALC.SB<PTR:        ⇠ hit Enter, Ctrl-Z, then Escape
+    *CALC.SB<PTR:        ⇠ hit Enter, then Escape twice
+
+The <kbd>Enter</kbd> key starts the transfer in the final command. The
+transfer stops when `PIP` sees the <kbd>Ctrl-Z</kbd> EOF marker added to
+the end of the paper tape by `txt2ptp`. The first <kbd>Escape</kbd>
+finalizes the transfer and the second exits PIP, returning you to the
+OS/8 command prompt.
 
 See the [assembly examples' `README.md` file][aerm] or the [U/W FOCAL
 manual supplement][uwfs] for more ideas on how to get text files like
@@ -27,11 +33,7 @@ on the OS/8 side with:
 
     .COMP CALC.SB
     .R LOADER
-    *CALC,LIBC/G/I/O     ⇠ press Esc to execute command and exit LOADER
-
-The `/I/O` flags say this program does both input and output. Each of
-these flags you add costs 3 pages of core, so specify only what you
-need!
+    *CALC,LIBC/G     ⇠ press Esc to execute command and exit LOADER
 
 The `/G` flag causes the loader to run the linked program immediately,
 but once you're done modifying the program, you probably want to save it
@@ -57,7 +59,7 @@ method shown in the [top level `README.md` file][tlrm] involving the
     .COMP CC.SB
 
     .R LOADER
-    *CC,LIBC/M/I/O
+    *CC,LIBC/M
 
 Notice that the front-end processor produces `CC.SB`, not `CALC.SB` as
 you might be expecting. This is where the `CC` comes from in the `COMP`
@@ -82,7 +84,7 @@ This is a simple 4-function calculator.
 
 ## ps.c
 
-This prints [Pascal's triangle][pt].
+This prints several levels of [Pascal's triangle][pt].
 
 [pt]: https://en.wikipedia.org/wiki/Pascal%27s_triangle
 

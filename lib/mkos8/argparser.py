@@ -31,61 +31,39 @@
 ########################################################################
 
 import argparse
+import opts
 
 class ArgParser (argparse.ArgumentParser):
   def __init__ (self, allowed_acts):
+    # Call parent class ctor to initialize the arg parser
     argparse.ArgumentParser.__init__ (self,
         description = 'Build OS/8 RK05 disk images')
 
+    # Add general-purpose args
     self.add_bool ('-d', '--debug',
             help = 'add extra debugging output, normally suppressed')
     self.add_bool ('-v', '--verbose',
             help = 'verbose SIMH output instead of progress messages')
-    self.add_bool ('--enable-music',
-            help = 'add *.MU files to binary disk')
-    self.add_bool ('--disable-ba',
-            help = 'leave BASIC games and demos off binary disk')
-    self.add_bool ('--disable-cc8',
-            help = 'leave CC8 off binary disk')
-    self.add_bool ('--disable-dcp',
-            help = 'leave DCP disassembler off binary disk')
-    self.add_bool ('--disable-focal',
-            help = 'leave FOCAL 69 and U/W FOCAL off binary disk')
-    self.add_bool ('--enable-focal69',
-            help = 'install FOCAL 69 on the binary disk')
-    self.add_bool ('--disable-uwfocal',
-            help = 'leave U/W FOCAL (only) off binary disk')
-    self.add_bool ('--disable-fortran-ii',
-            help = 'leave FORTRAN II compiler off binary disk')
-    self.add_bool ('--disable-fortran-iv',
-            help = 'leave FORTRAN IV compiler off binary disk')
-    self.add_bool ('--disable-init',
-            help = 'suppress display of the INIT message on OS/8 boot')
-    self.add_bool ('--disable-k12',
-            help = 'leave 12-bit Kermit off binary disk')
-    self.add_bool ('--disable-macrel',
-            help = 'leave MACREL assembler off binary disk')
-    self.add_bool ('--enable-vtedit',
-            help = 'install and enable TECO VTEDIT mode')
-    self.add_bool ('--disable-crt',
-            help = 'console is a printing terminal and does not use ' +
-                   'character overwrite on rubout')
+
+    # Add arguments corresponding to --*-os8-* configure script options
+    for obn, vals in opts.opts.iteritems():
+      od = 'dis' if vals[0] else 'en'
+      self.add_bool ('--' + od + 'able-' + obn, help = vals[1])
+
+    # Add options that do not exactly mirror configuration options
     self.add_bool ('--disable-lcmod',
             help = 'disable the OS/8 command upcasing patch; best set ' +
                    'when SIMH is set to tti ksr mode')
-    self.add_bool ('--disable-advent',
-            help = 'leave game of Adventure off binary disk')
-    self.add_bool ('--disable-chess',
-            help = 'leave CHEKMO-II off binary disk')
 
+    # Add trailing "what do do" argument
     self.add_argument (
         'what',
         choices = allowed_acts,
         help    = 'select which RK05 media gets built; default is "all"',
         nargs   = argparse.REMAINDER)
 
+    # Finish initializing
     self.args = self.parse_args()
-
     if len (self.args.what) == 0: self.args.what = [ 'all' ]
 
 

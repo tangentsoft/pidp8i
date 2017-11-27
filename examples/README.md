@@ -175,10 +175,11 @@ above. At the OS/8 command line, say:
 
 Now you can simply copy the assembly language text in your desktop PC's
 text editor, paste it into the SSH window, and then hit Ctrl-Z to tell
-`PIP` that the text input from the terminal (`TTY:`) is finished. This
-is not only a smidge simpler than doing the same thing via `EDIT`, it
-also avoids a certain limitation of `EDIT` that starts to bite you once
-your program text exceeds about 5,600 characters.
+`PIP` that the text input from the terminal (`TTY:`) is finished, then
+Escape to return to OS/8 from PIP. This is not only a smidge simpler
+than doing the same thing via `EDIT`, it also avoids a certain
+limitation of `EDIT` that starts to bite you once your program text
+exceeds about 5,600 characters.
 
 
 ### Option 2: Toggling Programs in Via the Front Panel

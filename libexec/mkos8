@@ -249,8 +249,18 @@ def make_bin (s, args):
      "Installing FORTRAN IV ...", None],
   ]
 
-  macrel_copyin = ['RKA0:', "al-5642a-ba-macrel-linker.1978.tu56",
-                   "Installing MACREL...", None]
+  # Specify files explicitly. There's a README.TX we don't want copied.
+  # We may decide to leave FUTIL.SV out.
+  macrel_files = [
+    ['SYS:', 'MACREL.SV'],
+    ['SYS:', 'LINK.SV'],
+    ['SYS:', 'KREF.SV'],
+    ['SYS:', 'OVRDRV.MA'],
+    ['SYS:', 'FUTIL.SV']
+  ]
+
+  macrel_copyin = ['RKA0:', "al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56",
+                   "Installing MACREL V2 and new FUTIL V8B ...", macrel_files]
 
   uwfocal_files  = [['SYS:', 'UWF16K.SV']]
   
@@ -301,9 +311,9 @@ def make_bin (s, args):
     local_copyins = ['RKA0:', local_tape, local_stat_str, local_files]
     bin_copyins.append(local_copyins)
 
-  if args.enable_focal69 and not args.disable_focal:
+  if args.enable_focal69:
     bin_copyins.append(focal69_copyin)
-  if not args.disable_uwfocal and not args.disable_focal:
+  if not args.disable_uwfocal:
     bin_copyins.append(uwfocal_copyin)
 
   check_exists(s, special_bin_copyins)

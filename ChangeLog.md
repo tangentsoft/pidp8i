@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2017.10.eh? — The "Languages and Custom OS/8 Disk Packs" release
+## Version 2017.11.eh? — The "Languages and Custom OS/8 Disk Packs" release
 
 *   All prior versions were shipping `os8.rk05`, a "Field Service
     Diagnostic" OS/8 disk pack image with uncertain provenance,
@@ -67,7 +67,11 @@
         for details.  This is an improved version of the compiler relative
         to what was distributed on the mailing list.
 
-    -   MACREL macro assembler is installed by default.
+    -   The MACREL v2 macro assembler and its associated FUTIL V8B tool
+        are installed by default.  Not only is this new functionality
+        relative to prior releases of the PiDP-8/I software, it is a
+        considerable upgrade over to the original MACREL and FUTIL V7
+        that are more commonly found on the net.
 
     -   DCP disassembler is installed by default.
 
@@ -181,10 +185,6 @@
 
             Old: RKA0,RKB0,RKA1,RKB1,          RXA0,RXA1,DTA0,DTA1,TTY,LPT,PTP,PTR
             New: RKA0,RKB0,RKA1,RKB1,RKA2,RKB2,RXA0,     DTA0,DTA1,TTY,LPT,PTP,PTR
-
-    -   TODO: Added the `os8` script to add and remove features from the
-        built OS/8 binary disk image after it is initially built.  In a
-        primitive sort of way, this is "[apt][apt] for OS/8."
 
     This automatic OS/8 media build feature was suggested by Jonathan
     Trites who wrote the initial version of the script that is now
@@ -301,18 +301,13 @@
         *   FORTRAN IV
         *   MACREL port of PEP001.PA?
 
-    *   Componentize mkos8:
-
-        *   Move "add" steps to lib/mkos8/components/*.py
-        *   Create "mkos8 add" feature to run those steps after build
-        *   Add inverse "remove" feature
-        *   Write "os8" script to call above; remove TODO tag above
-
     *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
 
     *   Implement all Immediate and High priority [Features](/features)
 
     *   Keep `cc8.rk05`?
+
+    *   Merge cc8-fixes branch into trunk if Ian doesn't do it first.
 
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
