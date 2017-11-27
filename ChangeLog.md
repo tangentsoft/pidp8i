@@ -279,11 +279,22 @@
     generally had to give absolute paths to attach media and such
     because CWD would be set somewhere unhelpful.
 
-*   The Fetch LED is no longer lit when in STOP or single-step mode.
-    The prior behavior was incorrect according to the PDP-8/I
-    maintenance manual.  The prior behavior was intuited to be wrong,
-    but it was Bill Cattey's investigation giving chapter-and-verse
-    that proved it, thus the change now.
+*   The Fetch LED is no longer lit when in STOP or single-step mode.  In
+    real hardware, it can be either on or off in this mode, depending
+    on various conditions, but it is most often off, so while it is not
+    perfectly correct now, it is less wrong.  Most of the investigation
+    into this issue is by Bill Cattey, with the current partial fix by
+    me.  A more precise fix may come later.  (See ticket [347ae45403] if
+    you care to know the details.)
+
+*   The Pause LED state was over-counted in the LED sub-sampling scheme
+    so that it would tend to be brighter than it should have been.
+    Problem noticed by Ian Schofield.
+
+*   The MB row's state was not showing the right thing.  The problem was
+    noticed in comparison to real PDP-8/I hardware by Vincent Slyngstad
+    and verified by William Cattey.  Ian Schofield suggested the current
+    fix.
 
 *   Updated for Raspbian Stretch, released in September 2017.  It should
     still run on Raspbian Jessie, however.
