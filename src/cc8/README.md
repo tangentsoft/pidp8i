@@ -325,6 +325,12 @@ Don’t expect too much! This compiler will not build this week’s bleeding
 edge kernel. But, it may be used to build any number of useful utility
 programs for OS/8.
 
+Update Nov 2018:
+
+1. The operators % and ~ have been included.
+2. The expression parser now works a lot better with correct operator precedence.
+2. Hopefully, spacing issue have been resolved.
+
 
 ## License
 
