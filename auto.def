@@ -33,6 +33,7 @@ define defaultprefix /opt/pidp8i
 
 use cc
 use cc-lib
+use cc-shared
 
 # Canonicalize some paths which may be relative and generate others from them
 set abspfx [file-normalize [get-define prefix]]
