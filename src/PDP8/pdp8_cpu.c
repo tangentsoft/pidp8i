@@ -1531,7 +1531,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 
         // We need to update the LED data again
         set_pidp8i_leds (PC, MA, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
-        Pause = 0;
 
         // Has it been ~1s since we updated our max_skips value?
         time_t now;
@@ -1545,6 +1544,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             }
         dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
         }
+    Pause = 0;      // it's set outside the "if", so it must be *reset* outside
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 
