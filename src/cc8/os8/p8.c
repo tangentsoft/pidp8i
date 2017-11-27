@@ -109,6 +109,9 @@ main()
 			case 13:
 				fprintf("\tJMSI POP\r\tDCA JLC\r\tSWP\r\tCALL 1,MPY\r\tARG JLC\r\tCDF1\r");
 				break;
+			case -14:
+				fprintf("\tCALL 1,IREM\r\tARG 0\r\tCDF1\r");
+				break;
 			case 14:
 				fprintf("\tJMSI POP\r\tDCA JLC\r\tSWP\r\tCALL 1,DIV\r\tARG JLC\r\tCDF1\r");
 				break;
@@ -134,7 +137,7 @@ main()
 				fprintf("\tANDI STKP\r\tJMSI POP\r");
 				break;
 			case -20:
-				fprintf("\tJMSI POP\r\tMQA\r");
+				fprintf("\tJMSI POP\r\tMQO\r");
 				break;
 			case 21:
 				if (*as>0) 
@@ -160,7 +163,9 @@ main()
 				fprintf("\tMQL\r\tCMA\r\tTADI JLC\r\tDCAI JLC\r\tSWP\r");
 				break;
 			case 26:
-				fprintf("\tSNA CLA\r\tCMA\r");
+				fprintf("\tSNA CLA\r");
+			case -26:
+				fprintf("\tCMA\r");
 				break;
 			case 27:
 				fputs("\tCIA\r");

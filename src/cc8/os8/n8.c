@@ -18,7 +18,7 @@ int xlt[CMAX];
 int gm[CMAX];		/* Global symbol table */
 int tkbf[LMAX];
 int *p,*q,*s,*ltpt;
-int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr;
+int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,cop;
 int glim,*n,ccm;
 int tmp;
 int tkn[BMAX];
@@ -29,41 +29,32 @@ int Lb[BMAX];
 int lm[CMAX];		/* Auto symbol table */
 int fstk[BMAX];		/* Push down stack for For etc. */
 int inproc,addr,cbrk;
-int izf,ixf,idf,ieq,ssz,icd;
+int izf,ixf,idf,ssz,icd;
 
+
+skpsp()
+{
+	while (isspace(*p))
+		p++;
+}
 
 getsym()
 {
 	q=tkbf;
-	while (isspace(*p))
-		p++;
+	skpsp();
 	while (isalnum(*p))
 		*q++=*p++;
 	*q=0;
-	while (isspace(*p))
-		p++;
+	skpsp();
 	return *tkbf;
 }
 
-chkpsh()
-{
-	switch (*p) {
-		case 0:
-		case ',':
-		case ')':
-		case '=':
-		case ']':
-		case ' ':
-			return;
-	}
-	stri(19);
-	stkp++;
-}
 
 /* recursive descent parser for arithmetic/logical expressions */
 
 S(  ) {
 
+	cop=0;
 	J( );
 	switch(*p++){
 	case '=':
@@ -79,12 +70,6 @@ S(  ) {
 	default: 
 		p--;
 	}
-		if (ieq) {
-			ieq=0;
-			S();
-			stri(24);
-			stkp--;
-		}
 	return 0;
 } /* end S */
 
@@ -92,48 +77,51 @@ J(  ) {
 
 	K( );
 	switch(*p++){
-	case '&': J( ); stri(20); stkp--; break;
-	case '|': J( ); stri(-20); stkp--; break;
-	default: p--;
+	case '&': J( ); stri(20); break;
+	case '|': J( ); stri(-20); break;
+	default: p--; return;
 	}
+	stkp--;
 } /* end J */
 
 K(  ) {
 
 	V( );
 	switch(*p++){
-	case '<': K( ); stri(11); stkp--; break;
-	case '>': K( ); stri(-11); stkp--; break;
-	default: p--;
+	case '<': K( ); stri(11); break;
+	case '>': K( ); stri(-11); break;
+	case '$': K( ); stri(24); break;
+	default: p--; return;
 	}
+	stkp--;
 } /* end K */
 
 V(  ) {
 
 	W( );
 	switch(*p++){
-	case '+': 
-		V();
-		stri(2);
-		stkp--;
-		break;
-	case '-':  V( );
-		stri(3);
-		stkp--;
-		break;
-	default: p--;
+	case '+': V(); stri(2); break;
+	case '-': V(); stri(3); break;
+	default: p--; return;
 	}
+	stkp--;
 } /* end V */
 
 W(  ) {
 
 	Y( );
-	chkpsh();
+	skpsp();
+	cop=*p;
 	switch(*p++) {
-	case '*': W( ); stri(13); stkp--; break;
-	case '/': W( ); stri(14); stkp--; break;
-	default: p--;
+	case '*': W( ); stri(13); break;
+	case '/': W( ); stri(14); break;
+	case '%': W( ); stri(14);stri(-14); break;
+	case '=': if (*p=='=') {
+				*p='$';return;
+			  }
+	default: p--; return;
 	}
+	stkp--;
 } /* end W */
 
 
@@ -141,15 +129,20 @@ Y(  ) {
 	int o,ctx;
 	int txbf[10];
 
-	while (*p==' ')
-		p++;
+	skpsp();
+
 	if (!*p)
 		return;
+
+	if (cop) {
+		stri(19);
+		stkp++;
+	}
 
 	if (*p=='"') {
 		stri(10);
 		stri(ltpt-ltbf);
-		while (*++p!='"') {
+		while (*++p-'"') {
 			if (*p=='\\')
 				switch (*++p) {
 				case 'r':
@@ -181,7 +174,7 @@ Y(  ) {
 		p+=2;
 		return;
 	}
-	ixf=izf=idf=ieq=icd=0;
+	ixf=izf=idf=icd=0;
 	if (!getsym()) {
 		switch (*p++) {
 			case '&':
@@ -196,6 +189,10 @@ Y(  ) {
 			case '!':
 				Y();
 				stri(26);
+				return;
+			case '~':
+				Y();
+				stri(-26);
 				return;
 			case '(':
 				S();
@@ -243,10 +240,6 @@ Y(  ) {
 			idf=-tmp;
 			p+=2;
 			break;
-		case '=':
-			ieq=-tmp;
-			p=q+1;
-			break;
 	}
 
 	o=fndlcl(tkbf);
@@ -278,6 +271,8 @@ Y(  ) {
 			tmp=-17;
 			break;
 		case '=':
+			if (*q=='=')
+				break;
 			tmp=8;
 			if (ixf)
 				tmp=-8;
@@ -516,7 +511,7 @@ next()
 				stri(lctr-2);
 				stri(5);
 				stri(lctr++);
-				lctr++;
+				cbrk=lctr++;
 				tm=0;
 				break;
 			default:
