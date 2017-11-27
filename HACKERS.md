@@ -46,12 +46,12 @@ official binaries][fbin] may work on your system.  If you're getting
 binaries from a third party, be sure it is Fossil 2.1 or higher.
 
 
-[fbin]:   http://fossil-scm.org/index.html/uv/download.html
-[dvcs]:   http://en.wikipedia.org/wiki/Distributed_revision_control
-[fbook]:  http://www.fossil-scm.org/schimpf-book/home
-[fml]:    http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/fossil-users
-[fossil]: http://fossil-scm.org/
-[fqsg]:   http://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
+[fbin]:   https://fossil-scm.org/index.html/uv/download.html
+[dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
+[fbook]:  https://www.fossil-scm.org/schimpf-book/home
+[fml]:    https://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/fossil-users
+[fossil]: https://fossil-scm.org/
+[fqsg]:   https://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
 [ggml]:   https://groups.google.com/forum/#!forum/pidp-8
 
 
@@ -151,14 +151,21 @@ Fossil Developer Access
 If you have a developer account on tangentsoft.com's Fossil instance, just
 add your username to the URL like so:
 
-    $ fossil clone http://username@tangentsoft.com/pidp8i pidp8i.fossil
+    $ fossil clone https://username@tangentsoft.com/pidp8i pidp8i.fossil
 
-Fossil will ask you for the password for `username` on the remote Fossil
-instance, and it will offer to remember it for you.  If you let it
-remember the password, operation from then on is scarcely different from
-working with an anonymous clone, except that on checkin, your changes
-will be sync'd back to the repository on tangentsoft.com if you're
-online at the time.
+If you've already cloned anonymously, you don't have to clone again to
+inform Fossil about your developer account.  Just do a manual sync,
+changing the URL to include the user name:
+
+    $ fossil sync https://username@tangentsoft.com/pidp8i
+
+Either way, Fossil will ask you for the password for `username` on the
+remote Fossil instance, and it will offer to remember it for you.  If
+you let it remember the password, operation from then on is scarcely
+different from working with an anonymous clone, except that on checkin,
+your changes will be sync'd back to the repository on tangentsoft.com if
+you're online at the time, and you'll get credit under your developer
+account name for the checkin.
 
 If you're working offline, Fossil will still do the checkin locally, and
 it will sync up with the central repoisitory after you get back online.
@@ -367,7 +374,7 @@ that a patch against a stable release may not apply to the trunk cleanly
 otherwise.
 
 [osil]:  https://opensource.org/licenses
-[repo]:  http://tangentsoft.com/pidp8i/
+[repo]:  https://tangentsoft.com/pidp8i/
 [simhl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
 [viral]: https://en.wikipedia.org/wiki/Viral_license
 
