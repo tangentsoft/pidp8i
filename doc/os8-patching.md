@@ -379,8 +379,8 @@ soon.
 
 | Component | Issue | Sequence | Mon/Yr | Notes | Status |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-|   | `EXPUNGE` Documentation error | `41.1.1N` | Jun/Jul-79 |  |  |
-|   | `MACREL` Version numbers: `MACREL` is `V2C` not `V2D`; `LINK` is `V2A` not `V2B`. | `41.1.2N` | Jun/Jul-79 |  |  |
+|  User's |`EXPUNGE` Documentation error | `41.1.1N` | Jun/Jul-79 |  |  |
+|  Guide  | `MACREL` Version numbers: `MACREL` is `V2C` not `V2D`; `LINK` is `V2A` not `V2B`. | `41.1.2N` | Jun/Jul-79 |  |  |
 |   | Macro restriction in `MACREL` | `41.1.3N` | Aug/Sep-79 |  |  |
 |   | Error in `.MCALL` macro example | `41.1.4N` | Feb/Mar-80 |  |  |
 |  `KREF` | Correct printing of numeric local symbols | `41.3.1M` | Apr/May-80 |  |  |
@@ -389,8 +389,8 @@ soon.
 |   | Forward reference patch to `MACREL` | `41.4.3M` | Aug/Sep-79 |  |  |
 |   | Correct macro substring problem | `41.4.4M` | Apr/May-80 |  |  |
 |   | Correct printing of numeric local symbols | `41.4.5M` | Apr/May-80 |  |  |
-|  `OVRDRV` | Correct `CDF` problem | `41.5.1M` Applied by hand. | Dec/Jan-80 |  | AV |
-|  `FUTIL` | `FUTIL` hangs under `BATCH` | `35.13.1M` CRITICAL! | Apr/May-79 |  | AV |
+|  `OVRDRV` | Correct `CDF` problem | `41.5.1M` | Dec/Jan-80 | Source change applied by hand. | AV |
+|  `FUTIL` | `FUTIL` hangs under `BATCH` | `35.13.1M` | Apr/May-79 | Critical to proper operation of our automated builder. Applied by hand to the `MACREL` v2 integration.  | AV |
 
 
 

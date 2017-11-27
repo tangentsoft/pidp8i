@@ -19,22 +19,22 @@ were for `MACREL` v2.
 
 See: [Willem van der Mark's PDP-8 Manuals archive][vandermarkman] for:
 
-    [OS/8 MACREL/LINK -- Software Support -- Version 2C -- September 1980 AA-J7073-TA][maclinkss]
-    [OS/8 MACREL/LINK -- User Manual -- Version 2D -- January 1979
-    AA-5664B-TA][maclinkuser]
+* [OS/8 MACREL/LINK -- Software Support -- Version 2C -- September 1980 AA-J7073-TA][maclinkss]
+* [OS/8 MACREL/LINK -- User Manual -- Version 2D -- January 1979 AA-5664B-TA][maclinkuser]
 
 Or see the [PDP8 doc tree on ftp.dbit com][dbitdocs] for:
-    [maclkssm.doc -- OS/8 MACREL/LINK V2 Software Support Manual][dbitmacssm]
-    [maclnkum.doc -- OS/8 MACREL/LINK V2 User's Manual.][dbitmacuser]
-    [macrelrn.doc -- OS/8 MACREL/LINK V2 Release Notes][dbitmacrel]
+
+* [maclkssm.doc -- OS/8 MACREL/LINK V2 Software Support Manual][dbitmacssm]
+* [maclnkum.doc -- OS/8 MACREL/LINK V2 User's Manual.][dbitmacuser]
+* [macrelrn.doc -- OS/8 MACREL/LINK V2 Release Notes][dbitmacrel]
 
 Version 2 was the clearly better baseline.  I didn't hold out much
-hope to find binary and source distributions of `MACREL V2`.  (DEC
+hope to find binary and source distributions of `MACREL` v2.  (DEC
 Part numbers `AL-5642B-BA` for the binary DECtape and the 4 source
 DECtapes, `AL-5643B-SA`, `AL-5644B-SA`, `AL-H602B-SA`, and
-`AL-H602B-SA`.
+`AL-H602B-SA`.)
 
-Very recently we found a complete set of MACREL version 2 binaries
+Very recently we found a complete set of `MACREL` version 2 binaries
 as part of a buildable RTS-8 Archive at [ibiblio.org ... pdp-8/rts8/v3/release][rts8rel]
 
 We found a source distribution of `MACREL` v2 in Dave Gesswein's
@@ -47,7 +47,7 @@ have `MACREL` v2 and initial tests look promising.
 
 Baseline `MACREL` v2 will be integrated into the system packs.
 Because we didn't have `MACREL` v2, no work was done to create patch
-files, or to validate them.  With both source and binary for 'MACREL'
+files, or to validate them.  With both source and binary for `MACREL`
 v2 now in hand, this work can proceed.  The plan is to fetch the
 patches, validate them, and install all mandatory patches that can be
 verified. 
@@ -62,7 +62,10 @@ Patch `35.13.1M` fixes this problem and upgrades `FUTIL` to version
 8B.  This patch was applied by hand tested, and grouped with what we
 integrate onto the system packs when we add `MACREL`.
 
-See also: [documentation here on the OS8 Patching][os8patches]
+To reduce uncertainty around the operation of `OVRDRV.MA`, Source
+patch `41.5.1M` has been applied by hand to `OVRDRV.MA`.
+
+See also: [our documentaiton on the OS/8 Patching][os8patches]
 
 [vandermarkman]:   http://vandermark.ch/pdp8/index.php?n=PDP8.Manuals
 [maclinkss]: 	   http://vandermark.ch/pdp8/uploads/PDP8/PDP8.Manuals/AA-J073A-TA.txt

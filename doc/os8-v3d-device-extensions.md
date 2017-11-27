@@ -1,6 +1,6 @@
 # OS/8 V3D Device Extensions
 
-The _OS/8 V3D Device Extensions_ kit (product code QF026) was released
+The _OS/8 V3D Device Extensions_ kit (product code `QF026`) was released
 in December 1978. It was created to support the newest PDP-8 hardware:
 
 *   The `KT8A` Memory Management option which enables addressing by a
@@ -13,8 +13,8 @@ in December 1978. It was created to support the newest PDP-8 hardware:
 
 *   The `RX02` double-density floppy disks.
 
-*   A device driver `VXSY` enables use of `KT8A` extended memory as a
-    system device.
+* Device drivers `VXSY` and `VXNS` enables use of `KT8A` extended
+    memory as a file oriented system or non-system device.
 
 This distribution contains software updates:
 
@@ -37,7 +37,7 @@ This distribution contains software updates:
 *   `PIP` version 14A knows the sizes of the new devices, and has
     updated how it copies in the monitor system head.
 
-*   `RESORC` version 4A includes new devices.
+*   `RESORC` version 5A includes new devices.
 
 *   `BOOT` version 5A boots new devices.
 
@@ -79,9 +79,9 @@ is Johnny Billingquist's site, [ftp.update.uu.se ... dectape1][uuseext1].
 
 Then, however, a self-extracting archive called, `os8v3f.exe` was
 found on a mirror site of ibiblio.org, [rtk.mirrors.pdp-11.ru
-... fromhichols]. Mainline ibiblio.org didn't have it, perhaps it was
-purged because of its .exe extension.  The archive is also available
-directly from [ftp.update.uu.se ... fromnichols][uusenichols], but at slow speed.]
+... fromhichols][rtknicnols]. Mainline ibiblio.org didn't have it, perhaps it was
+purged because of its `.exe` extension.  The archive is also available
+directly from [ftp.update.uu.se ... fromnichols][uusenichols], but at slow speed.
 
 When that archive was extracted, the manifest of source files
 corresponds exactly to the manifest of binaries in the Extensions Kit
@@ -142,7 +142,7 @@ Copyright © 2017 by Bill Cattey. Licensed under the terms of
 [dbitug]: ftp://ftp.dbit.com/pub/pdp8/doc/devextug.doc
 [dbitrn]: ftp://ftp.dbit.com/pub/pdp8/doc/devextrn.doc
 [kt8adoc]: http://www.vandermark.ch/pdp8/uploads/Emulator/Emulator.128KMemory/EK-KT08A-UG_jul78-ocr.pdf
-[dsn1979apr]http://bitsavers.org/pdf/dec/pdp8/softwarenews/198010_PDP8swNews_AA-K629A-BA.pdf
+[dsn1979apr]: http://bitsavers.org/pdf/dec/pdp8/softwarenews/198010_PDP8swNews_AA-K629A-BA.pdf
 [macreldoc]:https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-macrel.md
 [macreldoc]:https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
