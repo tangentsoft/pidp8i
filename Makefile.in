@@ -88,13 +88,12 @@ SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
 MKOS8         := @srcdir@/libexec/mkos8
-MKOS8_LIB     := lib/mkos8
+MKOS8_LIB     := @srcdir@/lib/mkos8
 MKOS8_PY      := \
 	$(MKOS8_LIB)/__init__.py \
-	$(MKOS8_LIB)/argparser.py
-MKOS8_PY_SRC  := $(addprefix @srcdir@/,$(MKOS8_PY))
-MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY_SRC) $(SIMH_PY_SRC)
-MKOS8_PY_BASE := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY)
+	$(MKOS8_LIB)/argparser.py \
+	lib/mkos8/opts.py
+MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY_SRC)
 MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
 BUILDDIRS := bin libexec obj/cc8/cross obj/d8tape obj/palbart obj/PDP8
@@ -358,9 +357,9 @@ install: all instdirs
 	@# Install mkos8 and its dependencies
 	@echo "Installing mkos8..."
 	@@INSTALL@ -m 775 -g @INSTGRP@ $(MKOS8) @prefix@/libexec
-	@( for src in $(MKOS8_PY_BASE) ; do \
+	@( for src in $(MKOS8_PY_ALL) ; do \
 		test -e $$src || src=@srcdir@/$$src ; \
-		dest=@prefix@/$$src ; \
+		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
