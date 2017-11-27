@@ -173,109 +173,234 @@ Then:
     .R LOADER
     *CC,LIBC/G
 
-And hope for the best!!!!
-
 
 ## GOVERNMENT HEALTH WARNING
 
-**You are hereby warned**: the native OS/8 compiler does not contain any
+**You are hereby warned**: The native OS/8 compiler does not contain any
 error checking whatsoever. If the source files contain an error, you
-will either receive a compile time warning while compiling the CC.SB
-file or a runtime crash. Any error will not give you any hint as to the
-cause. It is worth noting that GCC uses some 100’s of K for error
-checking. The app has only 3K to create a token list from CC.CC that
-could run directly in a suitable VM. If your programme does not work,
-check it carefully or test it with gcc in the sure knowledge that you
-would need a roomful of magnetic core memory to do this!
+may get:
 
-The native OS/8 compiler implements a very limited version of C which is
-nonetheless Turing complete. You could see it more as a simple scripting
-system. It is actually typeless in that everything is a 12 bit integer
-and any variable/array can interpreted as `int`, `char` or pointer.
-However, all variables, functions and arrays must be declared `int`.
+*   A runtime crash in the compiler
+*   SABR assembly output that won't assemble
+*   Output that assembles but won't run correctly
 
-1.  There must be an `int main()` which appears as the last function.
+Rarely will any of these failure modes give any kind of sensible hint as
+to the cause. OS/8 CC8 cannot afford the hundreds of kilobytes of error
+checking and text reporting that you get in a modern compiler like GCC
+or Clang. That would have required a roomful of core memory to achive on
+a real PDP-8. Since we're working within the constraints of the old
+PDP-8 architecture, we only have about 3 kWords to construct the parse
+result, for example.
 
-2.  Arrays and variables may be local or global (implied static).
+In addition, the native OS/8 compiler is also severely limited in code
+space, so it does not understand the full C language. It is almost
+certainly less functional in all respects than K&R C 1978; we do not
+have a good benchmark for what it compares to in terms of other early C
+dialects, but we can sum it up in a single word: "primitive."
 
-3.  Arrays may only be single indexed. See `PS.CC` for an example.
+Nontetheless, our highly limited C dialect is Turing complete. It might
+be better to think of it as a high-level assembly language that
+resembles C rather than as "C" proper.
 
-4.  Do not attempt to scope variables within a function. e.g. `for (int
-    i=...`
 
-5.  The only allowed digraphs are `++`, `--` (postfix only) and `==`.
+### Features
 
-6.  Comparison operators compare signed. Result is boolean true = -1.
+Here is what is known to work:
 
-7.  The `&`, &brvbar; and `!` operators are bitwise.
+1.  **Local and global variables**
 
-8.  See `libc.h` for allowed libc functions. There are 31.
+1.  **Pointers,** within limitations given in the following section.
 
-9.  `atoi` is non-standard: `int atoi(char *,int *)`, returning
-        the length of the numeric string.
+1.  **Functions:** Parameter lists must be declared in K&R form:
 
-10. `fopen` is implemented as `void fopen(char *filename, char *mode)`.
-    The filename must be upper case. Mode is either "w" or "r".
+        int foo (a, b)
+        int a, b;
+        {
+            ...
+        }
 
-    *   Only 1 input file and 1 output may be open at any one time
+1.  **Recursion:** See [`FIB.CC`][fib] for an example of this.
 
-    *   `fclose()` only closes the output file.
+[fib]: https://tangentsoft.com/pidp8i/doc/src/cc8/examples/fib.c
 
-    *   Call `fopen` to open a new input file. The current file does not
-        need to be closed.
+1.  **Simple arithmetic operators:** `+`, `-`, `*`, `/`, etc.
 
-    *   `fprintf`, `fputc`, and `fputs` are as expected.
+1.  **Bitwise operators:** `&`, &brvbar;, `~` and `!`
 
-    *   `fgets` is implemented. It will read and retain CR/LF. It returns
-        a null string on EOF.
+1.  **Simple comparison operators:** False expressions evaluate as 0 and
+    true as -1 in twos complement form, meaning all 1's in binary form.
+    See the list of limitations below for the operators excluded by our
+    "simple" qualifier.
 
-    *   `fscanf` is not implemented. Read a line with `fgets()` and then
-        call `sscanf` on it.
+1.  **A few 2-character operators:** `++`, `--` (postfix only) and `==`.
 
-    *   `feof` is not implemented; `fgetc` and `fgets` will return a
-        null on EOF.
+1.  **Limited library:** See `libc.h` for allowed libc functions, of
+    which there are currently 31, including:
+
+    1.  **A subset of stdio:**
+
+        *   `fopen` is implemented as
+        
+                void fopen(char *filename, char *mode)
+                
+            The filename must be upper case. Mode is either "w" or "r".
+
+        *   Only 1 input file and 1 output may be open at any one time
+
+        *   `fclose()` only closes the output file.
+
+        *   Call `fopen` to open a new input file. The current file does
+            not need to be closed.
+
+        *   `fprintf`, `fputc`, and `fputs` are as expected.
+
+        *   `fgets` is implemented. It will read and retain CR/LF. It
+            returns a null string on EOF.
+
+        *   `fscanf` is not implemented. Read a line with `fgets()` and
+            then call `sscanf` on it.
+
+        *   `feof` is not implemented; `fgetc` and `fgets` will return a
+            null on EOF.
+
+    1.  **`printf`:**  See `libc.c` for the allowed format specifiers:
+        `%d`, `%s` etc.  Length and width.precision formatting is supported.
+
+    There are many limitations in this library relative to Standard C or
+    even K&R C, which are documented below.
+
+1.  **Limited structuring constructs:** `if`, `while`, `for`, etc. are
+    supported, but they may not work as expected when deeply nested or
+    in long `if/else if/...` chains.
+
+
+### Known Limitations
+
+Much of what you understand as "C" does not work in our dialect:
+
+1.  The language is typeless in that everything is a 12 bit integer and
+    any variable/array can interpreted as `int`, `char` or pointer.  All
+    variables and arrays must be declared as `int`.  The return type may
+    be left off of a function's definition; it is implicitly `int` in
+    all cases, since `void` is not supported.
+
+2.  There must be an `int main()` which must be the last function in the
+    single input C file.
+
+3.  We do not yet support separate compilation of multiple C modules
+    that get linked together.  You can produce relocatable libraries in
+    OS/8 `*.RL` format and link them with the OS/8 LOADER, but because
+    of the previous limitation, only one of these can be written in C.
+
+4.  Unlike the CC8 cross-compiler, the OS/8 compiler ignores `#include`
+    directives.  (One day, `CC0` may get that ability, but not today.)
+    This means you cannot use `#include` directives to string multiple C
+    modules into a single program.
+
+    If that then makes you wonder how the OS/8 compiler looks up its
+    stock library functions — note that I've resisted using the word
+    "standard" here, for they are anything but that in the Standard C
+    sense — it is that the entry point mappings declared in `libc.h` are
+    hard-coded into the `CC2` compiler stage, implemented in `p8.c`.
+
+    If you have a program that is compiled using both the cross-compiler
+    and the OS/8 compiler, you may wish to use `#include` statements,
+    since the cross-compiler does process them.
+
+5.  Variables are implicitly `static`, even when local.
+
+6.  Arrays may only be single indexed. See `PS.CC` for an example.
+
+7.  We do not even support all of K&R C yet, much less post-C89 features
+    such as statement-scoped variable declarations:
+
+        for (int i = ...
+
+    All variables must either be predeclared at the top of the function
+    they're used in, or they must be global.
+
+8.  The compiler does not yet understand how to assign a variable's
+    initial value as part of its declaration. This:
+
+        int i = 5;
+
+    must instead be:
+
+        int i;
+        i = 5;
+
+9.  There is no `&&` nor &brvbar;&brvbar;.  Neither is there support for
+    complex relational operators like `>=` nor even `!=`.  Abandon all
+    hope for complex assignment operators like `+=`.
+
+    Most of this can be worked around through clever coding. For
+    example, this:
+
+        if (i != 0 || j == 5)
+
+    could be rewritten to avoid both missing operators as:
+
+        if (!(i == 0) | (j == 5))
+
+    because a true result in each subexpression yields -1 per the
+    previous point, which when bitwise OR'd together means you get -1 if
+    either subexpression is true, which means the whole expression
+    evaluates to true if either subexpression is true.
+
+    If the code you were going to write was instead:
+
+        if (i != 0 || j != 5)
+
+    then the rewrite is even simpler owing to the rules of [Boolean
+    algebra](https://en.wikipedia.org/wiki/Boolean_algebra):
+
+        if (!(i == 0 & j == 5))
+
+    These rules mean that if we negate the entire expression, we get the
+    same truth table if we flip the operators around and swap the
+    logical test from OR to AND, which in this case converts the
+    expression to a form that is now legal in our limited C dialect. All
+    of this comes from the Laws section of the linked Wikipedia article;
+    if you learn nothing else about Boolean algebra, you would be well
+    served to memorize those rules.
+
+10. `atoi` is non-standard: `int atoi(char *, int *)`, returning
+     the length of the numeric string.
 
 11. `scanf` is not implemented; use `gets` then `sscanf`
 
-12. `printf` is as expected. See `libc.c` for the allowed format
-    specifiers: `%d`, `%s` etc. Length and width.precision formatting is
-    supported.
+12. Dereferencing parenthesized expressions does not work: `*(<expr>)`
 
-13. Pointers are as expected. Do not try `*(<expr>)`. This does not
-    work.
+13. `struct` is not supported.
 
-14. `struct` is not supported.
+14. Double precision `int`, `float` etc. are not supported. If you need
+    to do heavy duty maths, use FORTRAN, U/W FOCAL, or even OS/8 BASIC.
 
-15. Double precision `int`, `float` etc. are not supported. If you need
-    to do heavy duty maths, use Fortran.
+15. The stack, which includes all globals and literals, is only 4 kwords.
+    Stack overflow is not detected.  Literals are inlcuded in this due
+    to a limitation in the way `COMMON` is implemented in SABR.
 
-16. The stack, which includes all globals and literals, is only 4k.
-    Stack overflow is not detected.
+16. There is no argument list checking, not even for standard library
+    functions.
 
-17. Recursion is implemented. See `FIB.CC`.
-
-18. Literals have to be included in the 4K limit programme area. These
-    are copied into the stack at run time. This is due to the fact that
-    ‘COMMON’ storage cannot be initialised.
-
-19. There is no option for `#include` files. The available Libc
-    functions are implicitly declared and listed in `libc.h` and `p8.c`.
-    As a result, there is no arglist checking. Examine `libc.c` for
-    details.
+17. `do/while` is parsed, but code for it is not properly generated.
 
 
-## OS/8 Specifics
+### Known Bugs
 
-1.  I strongly suggest you limit I/O to text files.
+1.  Binary file I/O is not always reliable.  You are strongly encouraged
+    to limit I/O to text files.
 
-2.  Don’t forget to handle form feed.  See `c8.c`
+2.  Don’t forget to handle form feed.  See `c8.c`.
 
 3.  For some obscure reason, always open the input file first, then the
-    output file. I suspect a fault in `libc.c`. Examine the code!!!!
-    (Every trick in the book.)
+    output file. I suspect a fault in `libc.c`, which you are welcome to
+    fix, keeping in mind that we're using every trick in the book to fit
+    as much functionality in as we currently do.  It may not be possible
+    to make this as reliable as modern C programmers expect.
 
 
-## Preprocessor
+## <a id="pre"></a>Preprocessor
 
 The compiler distribution includes a pre-processor file (`c8.c` &rarr;
 `CC0.SV`). This is a stub and merely asks for a filename and calls the
@@ -325,18 +450,12 @@ Don’t expect too much! This compiler will not build this week’s bleeding
 edge kernel. But, it may be used to build any number of useful utility
 programs for OS/8.
 
-Update Nov 2018:
-
-1. The operators % and ~ have been included.
-2. The expression parser now works a lot better with correct operator precedence.
-2. Hopefully, spacing issue have been resolved.
-
 
 ## License
 
-This document is under the [GNU GPLv3 License][gpl], copyright © May and
-June 2017 by [Ian Schofield][ian], with minor updates by [Warren
-Young][wy] in July 2017.
+This document is under the [GNU GPLv3 License][gpl], copyright © May,
+June, and November 2017 by [Ian Schofield][ian], with minor updates by
+[Warren Young][wy].
 
 [gpl]: https://www.gnu.org/licenses/gpl.html
 [ian]: mailto:Isysxp@gmail.com
