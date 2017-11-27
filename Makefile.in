@@ -224,7 +224,7 @@ INFILES = \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/src/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
-	$(MKOS8_INFILES) $(PRECIOUS_INFILES)
+	$(MKOS8_INFILES)
 MKOS8_OUTFILES := $(subst @srcdir@/,,$(MKOS8_INFILES))
 MKOS8_OUTFILES := $(subst .in,,$(MKOS8_OUTFILES))
 PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
@@ -243,7 +243,7 @@ ADF := adrules.mk
 .PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S)
+all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
@@ -258,6 +258,7 @@ clean:
 
 distclean: clean
 	@rm -f \
+		$(PRECIOUS_OUTFILES) \
 		config.log \
 		autosetup/jimsh0 \
 		src/config.h
@@ -515,7 +516,7 @@ libexec/scanswitch: obj/scanswitch.o obj/gpio-nls.o obj/gpio-common.o
 # files in INFILES, whichever is lower.  Order-only prerequisites can't
 # help here (|) as that only affects the right hand side.
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-media/os8/init.tx: $(INFILES) @AUTODEPS@
+media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
 # Also do it if the autodep tool is newer than its output, suggesting
