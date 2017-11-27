@@ -187,8 +187,8 @@ may get:
 Rarely will any of these failure modes give any kind of sensible hint as
 to the cause. OS/8 CC8 cannot afford the hundreds of kilobytes of error
 checking and text reporting that you get in a modern compiler like GCC
-or Clang. That would have required a roomful of core memory to achive on
-a real PDP-8. Since we're working within the constraints of the old
+or Clang. That would have required a roomful of core memory to achieve
+on a real PDP-8. Since we're working within the constraints of the old
 PDP-8 architecture, we only have about 3 kWords to construct the parse
 result, for example.
 
@@ -198,7 +198,7 @@ certainly less functional in all respects than K&R C 1978; we do not
 have a good benchmark for what it compares to in terms of other early C
 dialects, but we can sum it up in a single word: "primitive."
 
-Nontetheless, our highly limited C dialect is Turing complete. It might
+Nonetheless, our highly limited C dialect is Turing complete. It might
 be better to think of it as a high-level assembly language that
 resembles C rather than as "C" proper.
 
@@ -263,7 +263,7 @@ Here is what is known to work:
         *   `feof` is not implemented; `fgetc` and `fgets` will return a
             null on EOF.
 
-    1.  **`printf`:**  See `libc.c` for the allowed format specifiers:
+    1.  **printf:**  See `libc.c` for the allowed format specifiers:
         `%d`, `%s` etc.  Length and width.precision formatting is supported.
 
     There are many limitations in this library relative to Standard C or
