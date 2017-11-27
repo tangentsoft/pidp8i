@@ -1,7 +1,7 @@
 
 
 #include <libc.h>
-#include <OS8.TM>
+#include <init.pa>
 
 
 #define SMAX 10
