@@ -311,9 +311,9 @@ def make_bin (s, args):
     local_copyins = ['RKA0:', local_tape, local_stat_str, local_files]
     bin_copyins.append(local_copyins)
 
-  if args.enable_focal69 and not args.disable_focal:
+  if args.enable_focal69:
     bin_copyins.append(focal69_copyin)
-  if not args.disable_uwfocal and not args.disable_focal:
+  if not args.disable_uwfocal:
     bin_copyins.append(uwfocal_copyin)
 
   check_exists(s, special_bin_copyins)
