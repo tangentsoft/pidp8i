@@ -335,10 +335,10 @@ under OS/8.
 <a id="disable-os8"></a>
 #### --disable-os8-\*
 
-Several default components of the OS/8 RK05 disk image used by boot
-options IF=0 and IF=7 can be left out to save space and build time:
+Several default components of the [OS/8 RK05 disk image](#os8di) used by
+boot options IF=0 and IF=7 can be left out to save space and build time:
 
-*   **--disable-os8-advent** — Leave out the Adventure game.
+*   **--disable-os8-advent** — Leave out the [Adventure][advent] game.
 
 *   **--disable-os8-ba** - Leave out the BASIC games and demos which
     come from DEC's book "101 BASIC Computer Games." These are normally
@@ -349,8 +349,8 @@ options IF=0 and IF=7 can be left out to save space and build time:
     implies that it is the OS/8 BASIC subsystem that is being left out,
     which is not even currently an option.)
 
-*   **--disable-os8-chess** — Leave out John Comeau's CHECKMO-II chess
-    implementation.
+*   **--disable-os8-chess** — Leave out John Comeau's
+    [CHECKMO-II chess implementation][chess].
 
 *   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
     compiler normally installed to `SYS:`.  This option is implicitly
@@ -405,23 +405,26 @@ options IF=0 and IF=7 can be left out to save space and build time:
     installation set because that would overrun OS/8's limitation on the
     number of files on a volume.
 
-[os8p]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
+[advent]: http://www.rickmurphy.net/advent
+[chess]:  https://chessprogramming.wikispaces.com/CHEKMO-II
+[os8p]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 
 
 <a id="enable-os8"></a>
 #### --enable-os8-\*
 
-There are a few file sets not normally installed to the OS/8 RK05 disk
-image used by boot options IF=0 and IF=7. You can install them with the
-following options:
+There are a few file sets not normally installed to the [OS/8 RK05 disk
+image](#os8di) used by boot options IF=0 and IF=7. You can install them
+with the following options:
 
-*   **--enable-os8-music** — The `*.MU` files and the player program for
-    it are not normally installed to the built OS/8 binary RK05 disk
-    image because the Raspberry Pi reportedly does not emit eufficient
-    RFI at AM radio frequencies when running these programs to cause
-    audible music on a typical AM radio, the very point of these demos.
-    Until a way is found around this problem — what, low RFI is a
-    *problem* now? — this option will default to "off".
+*   **--enable-os8-music** — The `*.MU` music scores and Rich Wilson's
+    associated compiler (`MUSIC.PA`) and player overlay (`PLAYOV.PA`)
+    are not normally installed to the built OS/8 binary RK05 disk image
+    because the Raspberry Pi reportedly does not emit eufficient RFI at
+    AM radio frequencies when running these programs to cause audible
+    music on a typical AM radio, the very point of these demos.  Until a
+    way is found around this problem — what, low RFI is a *problem* now?
+    — this option will default to "off".
 
 *   **--enable-os8-vtedit** — This option installs a default-run macro
     pack called VTEDIT which causes the OS/8 version of TECO to run in
@@ -534,17 +537,19 @@ You have several options here:
     installed simulator configuration scripts to match the changes in
     the newly-generated `boot/*.script` files under the build directory.
 
-2.  If the change is to the binary PDP-8 media image files and you're
-    unwilling to overwrite your existing ones wholesale, you'll have to
-    mount both versions of the media image files under the PDP-8
-    simulator and copy the changes over by hand.
+2.  If the change is to the binary PDP-8 media image files — including
+    the [generated OS/8 disk images](#os8di) — and you're unwilling to
+    overwrite your existing ones wholesale, you'll have to mount both
+    versions of the media image files under the PDP-8 simulator and copy
+    the changes over by hand.
 
-3.  If your previously installed binary OS media images — e.g. the OS/8
-    RK05 disk image that the simulator boots from by default — are
-    precious but the simulator configuration scripts aren't precious,
-    you can just copy the generated `boot/*.script` files from the build
-    directory into the installation directory, `$prefix/share/boot`.
-    (See the `--prefix` option above for the meaning of `$prefix`.)
+3.  If your previously installed binary OS media images — e.g. the
+    [OS/8 RK05 disk image](#os8di) that the simulator boots from by
+    default — are precious but the simulator configuration scripts
+    aren't precious, you can just copy the generated `boot/*.script`
+    files from the build directory into the installation directory,
+    `$prefix/share/boot`.  (See the `--prefix` option above for the
+    meaning of `$prefix`.)
 
 4.  If neither your previously installed simulator configuration files
     nor the binary media images are precious, you can force the
@@ -556,8 +561,102 @@ You have several options here:
     system disks, this option will overwrite those changes!
 
 
+## <a id="os8di"></a>OS/8 Disk Images
+
+For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
+image included with the PiDP-8/I software (called `os8.rk05`) was based
+on an image of a real RK05 disk someone found in a salvaged PDP-8
+system.  Parts of the image were corrupt, and not all of the pieces of
+software on the disk worked properly with the other parts.  It was also
+a reflection of the time it was created and used out in the world, which
+was not always what we would wish to use today.
+
+In late 2017, several of us — see [the ChangeLog][cl] for details —
+created the `mkos8` tool, which takes the `--*-os8-*` options documented
+above and generates the `os8v3d-*.rk05` RK05 disk image files with your
+chosen configuration options.
+
+This set of disk images entirely replaces the old `os8.rk05` disk image,
+in that all features of the old disk image are still available in the
+new disk images, though the default configuration is not a strict
+superset of the old disk image. In some cases, we have made some options
+disabled by default, and in some cases, we have changed default
+behaviors. Mostly, though, the new disk images are simply more
+functional than the old ones.
+
+If you wish to know the full details of how these disk images are
+created, the best documentation so far is [the source code for the
+`mkos8` script][mkos8] and the [documentation for `class simh`][cs].
+
+The remainder of this section describes some aspects of these disk
+images which are not clear from the descriptions of the `--*-os8-*`
+configuration options above.
+
+
+### Baseline
+
+The baseline for the bootable OS/8 disk images comes from a set of
+DECtapes distributed by Digital Equipment Corporation which are now
+included with the PiDP-8/I software; see the [`media/os8/*.tu56`
+files][os8mf]. From these files and your configuration options, the
+`mkos8` script creates the baseline `os8v3d-bin.rk05` disk image.
+
+The default build creates a complete OS/8 system including `BUILD`
+support, FORTRAN IV, MACREL, and more.
+
+
+## Subtractions
+
+It turns out that it's pretty easy to run out of directory space on an
+OS/8 RK05 disk due to a limitation in the number of files on an OS/8
+filesystem.  For this reason, the archive of device drivers and TD8E
+system are left off the system packs.  They can be found in [OS/8
+Binary Distribution DECtape #2][bdt2].
+
+If you do fancy work with `BUILD`, you may need to attach that DECtape
+image and copy files in from it.
+
+
+## Default Additions
+
+The OS/8 RK05 disk image build process normally installs many software
+and data file sets to the disk image.  See the [option descriptions
+above](#disable-os8): the "disable" option set effectively lists those
+packages that `mkos8` installs by default, and the following set of
+["enable" options](#enable-os8) lists those left out by default.
+
+
+## Console Enhancements
+
+The default build [enhances the console](/wiki?name=Console+TTY+Setup),
+adding support for lower case terminals where:
+
+1.  The SIMH PDP-8 simulator and a few select parts of OS/8 are adjusted
+    to cope with lowercase input to [varying degrees](#lowercase).
+
+2.  Rubout/backspace handling is set to assume a video terminal rather
+    than a teletype by default.
+
+
+## Patches
+
+After the baseline disk image is created, `mkos8` makes a copy of it as
+`os8v3d-patched.rk05` and applies a [carefully selected set of official
+DEC patches][os8p] to it unless you give the `--disable-os8-patches`
+configuration option.  The IF=0 and IF=7 boot options boot from the
+patched disk unless you give that option.
+
+
+[bdt2]:  https://tangentsoft.com/pidp8i/file/media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
+[cl]:    https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
+[cs]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
+[mkos8]: https://tangentsoft.com/pidp8i/doc/trunk/libexec/mkos8
+[os8mf]: https://tangentsoft.com/pidp8i/file/media/os8
+[tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
 <a id="testing"></a>
-## Testing
+## Testing Your PiDP-8/I Hardware
 
 You can test your PiDP-8/I LED and switch functions with these commands:
 
