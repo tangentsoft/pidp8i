@@ -37,6 +37,7 @@ import os.path
 import pexpect
 import pkg_resources
 import subprocess
+import tempfile
 import time
 
 import pidp8i
@@ -129,6 +130,43 @@ class simh:
     self._child.sendcontrol ('e')
 
 
+  #### os8_get_file ####################################################
+  # Rough inverse of os8_send_file.
+  #
+  # Both paths must be given and are used literally.  (Contrast our
+  # inverse, where the destinatinon file name is produced from the
+  # source if not given.)
+  #
+  # When this function is called to pull a file sent by our inverse, the
+  # conversion should be lossless except for the transforms done by our
+  # underlying utility tools, such as the LF -> CR+LF done by txt2ptp
+  # but not undone by ptp2txt.
+  #
+  # Entry context should be inside OS/8.  Exit context is inside OS/8.
+
+  def os8_get_file (self, intname, extname):
+    # Attach a blank paper tape to the simulator.
+    ptf = tempfile.NamedTemporaryFile (suffix = '.pt', delete = False)
+    ptf.close ()
+    ptn = ptf.name
+    self.back_to_cmd ('\\.')
+    self.send_cmd ('attach ptp "' + ptn + '"')
+
+    # Punch internal file to external paper tape image
+    self.os8_restart ()
+    self.os8_send_cmd ('\\.', 'PUNCH ' + intname);
+    self.back_to_cmd ('\\.')        # wait for transfer to finish
+
+    # Convert text file from SIMH paper tape format
+    tool = os.path.join (pidp8i.dirs.build, 'bin', 'ptp2txt')
+    self.send_cmd ('detach ptp')
+    subprocess.call (tool + ' < ' +  ptn + ' > ' + extname, shell = True)
+
+    # Return to OS/8, just because that's where we were on entry, so we
+    # should not change that.
+    self.os8_restart ()
+
+
   #### os8_kbd_delay ###################################################
   # Artificially delay the media generation process to account for the
   # fact that OS/8 lacks a modern multi-character keyboard input buffer.
@@ -178,6 +216,8 @@ class simh:
   #
   # 2. It allows lowercase input regardless of the way the simulator is
   #    configured.  ASCII is ASCII.
+  #
+  # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
   def os8_send_file (self, source, dest = None):
     # Create path and file names not given
