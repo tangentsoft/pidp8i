@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
 
 /*
  *	declare a static variable
@@ -132,7 +133,7 @@ char	*sname;
 	return (0);
 }
 
-findloc (sname)
+char* findloc (sname)
 char	*sname;
 {
 	char	*ptr;

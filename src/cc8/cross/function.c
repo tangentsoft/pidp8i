@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
 
 /*
  *	begin a function
@@ -126,7 +127,8 @@ newfunc ()
 getarg (t)
 int	t;
 {
-    int	j, legalname, address;
+    int	j, legalname;
+    size_t address;
     char	n[NAMESIZE], c, *argptr;
 
 	FOREVER {
