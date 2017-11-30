@@ -20,7 +20,7 @@ openin (p) char *p;
 		pl ("Open failure\n");
 		return (NO);
 	}
-	kill ();
+	kill_line ();
 	return (YES);
 }
 
@@ -34,7 +34,7 @@ openout ()
 		pl ("Open failure");
 		return (NO);
 	}
-	kill ();
+	kill_line ();
 	return (YES);
 }
 
@@ -47,6 +47,7 @@ char	*s;
 	while (*s)
 		s++;
 	*--s = 's';
+    return 0;
 }
 
 /*
@@ -59,6 +60,7 @@ char	*s;
 	while (*s && *s++ != EOL);
 	if (!*s) return 0;
 	*(--s) = 0;
+    return 0;
 }
 
 /*
@@ -76,10 +78,11 @@ char	*s;
 	return (YES);
 }
 
-kill ()
+kill_line ()
 {
 	lptr = 0;
 	line[lptr] = 0;
+    return 0;
 }
 
 inln ()
@@ -92,7 +95,7 @@ inln ()
 			return 0;
 		if ((unit = input2) == NULL)
 			unit = input;
-		kill ();
+		kill_line ();
 		while ((k = fgetc (unit)) != EOF) {
 			if ((k == EOL) | (lptr >= LINEMAX))
 				break;
@@ -173,4 +176,5 @@ char	*str;
 	putchar (EOL);
 	while (str[k])
 		putchar (str[k++]);
+    return 0;
 }

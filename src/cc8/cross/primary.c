@@ -129,6 +129,7 @@ int	lval[],
 		lval[1] = lval2[1];
 		lval[2] = lval2[2];
 	}
+    return 0;
 }
 		
 constant (val)
@@ -309,9 +310,11 @@ char	*ptr;
 	else
 		callstk ();
 	stkp = modstk (stkp + nargs);
+    return 0;
 }
 
 needlval ()
 {
 	error ("must be lvalue");
+    return 0;
 }

@@ -127,6 +127,7 @@ stst ()
 			lastst = STEXP;
 /*		}
 */	}
+    return 0;
 }
 
 /*
@@ -154,6 +155,7 @@ int	func;
 			stst ();
 	}
 	ncmp--;
+    return 0;
 }
 
 /*
@@ -181,6 +183,7 @@ doif ()
 	stkp = modstk (fstkp);
 	locptr = flev;
 	gnlabel (flab2);
+    return 0;
 }
 
 /*
@@ -204,6 +207,7 @@ dowhile ()
 	locptr = ws[WSSYM];
 	stkp = modstk (ws[WSSP]);
 	delwhile ();
+    return 0;
 }
 
 /*
@@ -232,6 +236,7 @@ dodo ()
 	locptr = ws[WSSYM];
 	stkp = modstk (ws[WSSP]);
 	delwhile ();
+    return 0;
 }
 
 /*
@@ -278,6 +283,7 @@ dofor ()
 	locptr = pws[WSSYM];
 	stkp = modstk (pws[WSSP]);
 	delwhile ();
+    return 0;
 }
 
 /*
@@ -315,6 +321,7 @@ doswitch ()
 //	stkp = modstk (ptr[WSSP]);
 	swstp = ptr[WSCASEP];
 	delwhile ();
+    return 0;
 }
 
 /*
@@ -334,6 +341,7 @@ docase ()
 			error ("missing colon");
 	} else
 		error ("no active switch");
+    return 0;
 }
 
 /*
@@ -351,6 +359,7 @@ dodefault ()
 			error ("missing colon");
 	} else
 		error ("no active switch");
+    return 0;
 }
 
 /*
@@ -361,6 +370,7 @@ doreturn ()
 	if (endst () == 0)
 		expression (YES);
 	jump(fexitlab);
+    return 0;
 }
 
 /*
@@ -374,6 +384,7 @@ dobreak ()
 		return 0;
 	modstk (ptr[WSSP]);
 	jump (ptr[WSEXIT]);
+    return 0;
 }
 
 /*
@@ -390,6 +401,7 @@ docont ()
 		jump (ptr[WSINCR]);
 	else
 		jump (ptr[WSTEST]);
+    return 0;
 }
 
 /*
@@ -422,4 +434,5 @@ int	ws[];
 		jump(ws[WSDEF]);
 	}
 	gtext ();
+    return 0;
 }

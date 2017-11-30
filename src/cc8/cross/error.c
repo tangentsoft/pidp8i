@@ -18,8 +18,12 @@ char	ptr[];
 	output = tempfile;
 	doerror(ptr);
 	errcnt++;
+    return 0;
 }
-doerror(ptr) char *ptr; {
+
+doerror(ptr)
+char *ptr;
+{
 	int k;
 	comment ();
 	outstr (line);
@@ -40,4 +44,5 @@ doerror(ptr) char *ptr; {
 	outstr (ptr);
 	outstr ("  ******");
 	nl ();
+    return 0;
 }

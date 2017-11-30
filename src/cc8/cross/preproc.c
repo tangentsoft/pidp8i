@@ -27,7 +27,8 @@ doinclude ()
 	else {
 		error ("Could not open include file");
 	}
-	kill ();
+	kill_line ();
+    return 0;
 }
 
 /*
@@ -75,13 +76,15 @@ doasm ()
 		outstr (line);
 		nl ();
 	}
-	kill ();
+	kill_line ();
 	cmode = 1;
+    return 0;
 }
 
 dodefine ()
 {
 	addmac();
+    return 0;
 }
 
 doundef ()
@@ -91,19 +94,21 @@ doundef ()
 
 	if (!symname(sname)) {
 		illname();
-		kill();
+		kill_line ();
 		return 0;
 	}
 
 	if (mp = findmac(sname))
 		delmac(mp);
-	kill();
+	kill_line ();
+    return 0;
 }
 
 preprocess ()
 {
 	if (ifline()) return 0;
 	while (cpp());
+    return 0;
 }
 
 doifdef (ifdef)
@@ -117,6 +122,7 @@ int ifdef;
 	if (skiplevel) return 0;
 	k = symname(sname) && findmac(sname);
 	if (k != ifdef) skiplevel = iflevel;
+    return 0;
 }
 
 ifline()
@@ -150,6 +156,7 @@ ifline()
 noiferr()
 {
 	error("no matching #if...");
+    return 0;
 }
 
 
@@ -265,9 +272,10 @@ char	c;
 defmac(s)
 char *s;
 {
-	kill();
+	kill_line();
 	strcpy(line, s);
 	addmac();
+    return 0;
 }
 
 addmac ()
@@ -278,7 +286,7 @@ addmac ()
 
 	if (!symname (sname)) {
 		illname ();
-		kill ();
+		kill_line ();
 		return 0;
 	}
 	if (mp = findmac(sname)) {
@@ -292,11 +300,13 @@ addmac ()
 	while (putmac (gch ()));
 	if (macptr >= MACMAX)
 		error ("macro table full");
+    return 0;
 }
 
 delmac(mp) int mp; {
 	--mp; --mp;	/* step over previous null */
 	while (mp >= 0 && macq[mp]) macq[mp--] = '%';
+    return 0;
 }
 	
 
@@ -335,4 +345,5 @@ int	onoff;
 		ctext = onoff;
 		break;
 	}
+    return 0;
 }

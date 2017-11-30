@@ -53,12 +53,14 @@ header ()
 	ol ("OPDEF BSW 7002");
 	ol ("OPDEF CAM 7621");
 	ol ("/");
+    return 0;
 }
 
 nl ()
 {
 	outbyte (EOL);
 /*	outbyte (10); */
+    return 0;
 }
 initmac()
 {
@@ -66,6 +68,7 @@ initmac()
 	defmac("I8080\t1");
 	defmac("RMAC\t1");
 	defmac("smallc\t1");
+    return 0;
 }
 
 galign(t)
@@ -94,6 +97,7 @@ byteoff() {
  */
 olprfix() {
 	ot("CC");
+    return 0;
 }
 
 /*
@@ -102,6 +106,7 @@ olprfix() {
 col ()
 {
 	outbyte (',');
+    return 0;
 }
 
 /*
@@ -111,6 +116,7 @@ col ()
 comment ()
 {
 	outbyte ('/');
+    return 0;
 }
 
 /*
@@ -118,12 +124,14 @@ comment ()
  */
 prefix ()
 {
+    return 0;
 }
 
 /* Stkbase output stack base->literals =stkp+2 ... ie 202(8) =130(10) + sizeof(globals) */
 stkbase()
 {
 	ot("GBL");
+    return 0;
 }
 
 /*
@@ -173,6 +181,7 @@ trailer ()
 	nl();
 	ol("CCEND,\t0");
 	ol ("END");
+    return 0;
 }
 
 
@@ -182,6 +191,7 @@ trailer ()
 prologue (sym)
 char *sym;
 {
+    return 0;
 }
 
 /*
@@ -190,6 +200,7 @@ char *sym;
 gtext ()
 {
 /*	ol ("cseg"); */
+    return 0;
 }
 
 /*
@@ -198,6 +209,7 @@ gtext ()
 gdata ()
 {
 /*	ol ("dseg"); */
+    return 0;
 }
 
 /*
@@ -209,6 +221,7 @@ ppubext(scptr) char *scptr; {
 //	prefix ();
 //	outstr (scptr);
 //	nl();
+    return 0;
 }
 
 /*
@@ -220,6 +233,7 @@ fpubext(scptr) char *scptr; {
 //	prefix ();
 //	outstr (scptr);
 //	nl (); */
+    return 0;
 }
 
 /*
@@ -227,6 +241,7 @@ fpubext(scptr) char *scptr; {
  */
 onum(num) int num; {
 	outdec(num);	/* pdp11 needs a "." here */
+    return 0;
 }
 
 
@@ -249,11 +264,12 @@ getmem (sym)
 char	*sym;
 {
 	int adr;
-		ol ("\tCLA");
-		immd4 ();
-		adr=glint(sym)+128;
-		onum(glint(sym)+128);
-		nl();
+	ol ("\tCLA");
+	immd4 ();
+	adr=glint(sym)+128;
+	onum(glint(sym)+128);
+    nl();
+    return 0;
 }
 /*
  *	fetch a static memory cell into the primary register (pre-increment*/
@@ -262,14 +278,15 @@ getincmem (sym)
 char	*sym;
 {
 	int adr;
-		ol ("\tCLA");
-		adr=glint(sym)+128;
-		ot ("\tISZI (");
-		onum(adr);
-		nl();
-		immd4 ();
-		onum(adr);
-		nl();
+	ol ("\tCLA");
+	adr=glint(sym)+128;
+	ot ("\tISZI (");
+	onum(adr);
+	nl();
+	immd4 ();
+	onum(adr);
+	nl();
+    return 0;
 }
 
 
@@ -292,6 +309,7 @@ char	*sym;
 		outdec (stkp-glint(sym));
 		nl ();
 	}
+    return 0;
 }
 
 /*
@@ -315,12 +333,13 @@ char	*sym;
 putmem (sym)
 char	*sym;
 {
-		ot("\tDCAI (");
-		onum(glint(sym)+128);
-		nl();
-		immd4 ();
-		onum(glint(sym)+128);
-		nl();
+	ot("\tDCAI (");
+	onum(glint(sym)+128);
+	nl();
+	immd4 ();
+	onum(glint(sym)+128);
+	nl();
+    return 0;
 }
 
 /*
@@ -333,6 +352,7 @@ char	typeobj;
 {
 	ol("\tJMSI PTSK");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -346,6 +366,7 @@ char	typeobj;
 	ol("\tDCA JLC");
 /*	ol("\tCDF1"); */
 	ol("\tTADI JLC");
+    return 0;
 }
 
 /*
@@ -359,6 +380,7 @@ char	typeobj;
 	ol("\tDCA JLC");
 	ol("\tISZI JLC");
 	ol("\tTADI JLC");
+    return 0;
 }
 
 
@@ -369,6 +391,7 @@ char	typeobj;
 swap ()
 {
 	ol ("\tSWP");
+    return 0;
 }
 /*
 *	Clear primary reg
@@ -376,6 +399,7 @@ swap ()
 cpri()
 {
 	ol("\tCLA");
+    return 0;
 }
 /*
  *	print partial instruction to get an immediate value into
@@ -386,20 +410,24 @@ immed ()
 {
 	ol ("\tCLA");
 	ot ("\tTAD (");
+    return 0;
 }
 immd2 ()
 {
 	ol ("\tCLA");
 	ot ("\tTAD ");
+    return 0;
 }
 immd3 ()
 {
 	ot ("\tTAD (");
+    return 0;
 }
 
 immd4 ()
 {
 	ot("\tTADI (");
+    return 0;
 }
 /*
  *	push the primary register onto the stack
@@ -409,6 +437,7 @@ gpush ()
 {
 	ol ("\tJMSI PSH");
 	stkp = stkp - INTSIZE;
+    return 0;
 }
 
 /*
@@ -419,6 +448,7 @@ gpop ()
 {
 	ol ("\tJMSI POP");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -432,6 +462,7 @@ swapstk ()
 	ol ("\tSWP");
 	gpush();
 	ol ("\tSWP");
+    return 0;
 }
 
 /*
@@ -472,16 +503,19 @@ int		*nargs;
 	ot ("\t");
 	outstr (sname);
 	nl ();
+    return 0;
 }
 
 stri()
 {
 	ol("\tDCAI 10");
+    return 0;
 }
 iinit()
 {
 	ol("\tCIA;CMA");
 	ol("\tDCA 10");
+    return 0;
 }
 
 /*
@@ -492,6 +526,7 @@ gret (sym)
 char *sym;
 {
 	ol ("\tJMPI POPR");
+    return 0;
 }
 
 /*
@@ -506,6 +541,7 @@ callstk ()
 	swapstk ();
 	ol ("pchl");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -518,6 +554,7 @@ int	label;
 	ot ("\tJMP\t");
 	printlabel (label);
 	nl ();
+    return 0;
 }
 
 /*
@@ -533,12 +570,14 @@ int	label,
 	else
 		ol ("\tSNA");
 	jump (label);
+    return 0;
 }
 
 casejump()
 {
 	ol("\tTAD TMP");
 	ol("\tSNA CLA");
+    return 0;
 }
 /*
  *	print pseudo-op  to define a byte
@@ -547,6 +586,7 @@ casejump()
 defbyte ()
 {
 	ot ("\t");
+    return 0;
 }
 
 /*
@@ -556,6 +596,7 @@ defbyte ()
 defstorage ()
 {
 	ot ("COMMN\t");
+    return 0;
 }
 
 /*
@@ -565,6 +606,7 @@ defstorage ()
 defword ()
 {
 	ot ("\t");
+    return 0;
 }
 
 /*
@@ -598,6 +640,7 @@ int	newstkp;
  */
 gaslint ()
 {
+    return 0;
 }
 
 /*
@@ -605,6 +648,7 @@ gaslint ()
  */
 gasrint()
 {
+    return 0;
 }
 
 /*
@@ -613,6 +657,7 @@ gasrint()
 gjcase() {
 	ol ("\tCIA");
 	ol ("\tDCA TMP");
+    return 0;
 }
 
 /*
@@ -627,6 +672,7 @@ gadd (lval,lval2) int *lval,*lval2;
 	ol("\tMQA");
 	ol("\tTAD JLC");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -641,6 +687,7 @@ gsub ()
 	ol("\tMQA");
 	ol("\tTAD JLC");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -657,6 +704,7 @@ gmult ()
 	ol("\tARG JLC");
 	ol("\tCDF1");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -673,6 +721,7 @@ gdiv ()
 	ol("\tARG JLC");
 	ol("\tCDF1");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -692,6 +741,7 @@ gmod ()
 	ol("\tARG 0");
 	ol("\tCDF1");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -703,6 +753,7 @@ gor ()
 	ol("\tJMSI POP");
 	ol("\tMQA");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -713,6 +764,7 @@ gxor ()
 {
 	gpop();
 	gcall ("?xor");
+    return 0;
 }
 
 /*
@@ -726,6 +778,7 @@ gand ()
 	ol("\tMQA");
 	ol("\tAND JLC");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -750,6 +803,7 @@ gasr ()
 	jump(lbl);
 	ol("\tSWP");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -774,6 +828,7 @@ gasl ()
 	jump(lbl);
 	ol("\tSWP");
 	stkp = stkp + INTSIZE;
+    return 0;
 }
 
 /*
@@ -783,6 +838,7 @@ gasl ()
 gneg ()
 {
 	ol("\tCIA");
+    return 0;
 }
 
 /*
@@ -793,6 +849,7 @@ glneg ()
 {
 	ol("\tSNA CLA");
 	ol("\tCMA");
+    return 0;
 }
 
 /*
@@ -802,6 +859,7 @@ glneg ()
 gcom ()
 {
 	ol("\tCMA");
+    return 0;
 }
 
 /*
@@ -812,6 +870,7 @@ gbool ()
 {
 	ol("\tSZA CLA");
 	ol("\tIAC");
+    return 0;
 }
 
 /*
@@ -823,6 +882,7 @@ ginc (lval) int lval[];
 	ol ("\tIAC");
 /*	if (lval[2] == CINT)
 //		ol ("inx\th"); */
+    return 0;
 }
 /*
  * Shortened INC
@@ -845,6 +905,7 @@ int *lval;
 		adr=glint(sym)+128;
 	onum(adr);
 	nl();
+    return 0;
 }
 /*
  *	decrement the primary register by one if char, INTSIZE if
@@ -855,6 +916,7 @@ gdec (lval) int lval[];
 	ol ("\tTAD (-1");
 /*	if (lval[2] == CINT)
 //		ol("dcx\th"); */
+    return 0;
 }
 
 /*
@@ -876,6 +938,7 @@ geq ()
 	gpop();
 	ol("\tSNA CLA");
 	ol("\tCMA");
+    return 0;
 }
 
 /*
@@ -889,6 +952,7 @@ gne ()
 	ol("\tDCA JLC");
 	ol("\tMQA");
 	ol("\tTAD JLC");
+    return 0;
 }
 
 /*
@@ -903,6 +967,7 @@ glt ()
 	ol("\tMQA");
 	ol("\tTAD JLC");
 	ol("\tAND (2048");
+    return 0;
 }
 
 /*
@@ -919,6 +984,7 @@ gle ()
 	ol("\tSNA");
 	ol("\tCLA CMA");
 	ol("\tAND (2048");
+    return 0;
 }
 
 /*
@@ -934,6 +1000,7 @@ ggt ()
 	ol("\tMQA");
 	ol("\tTAD JLC");
 	ol("\tAND (2048");
+    return 0;
 }
 
 /*
@@ -951,6 +1018,7 @@ gge ()
 	ol("\tSNA");
 	ol("\tCLA CMA");
 	ol("\tAND (2048");
+    return 0;
 }
 
 /*
@@ -966,6 +1034,7 @@ gult ()
 	ol("\tTAD JLC");
 	ol("\tSNL CLA");
 	ol("\tIAC");
+    return 0;
 }
 
 /*
@@ -981,6 +1050,7 @@ gule ()
 	ol("\tTAD JLC");
 	ol("\tSNL CLA");
 	ol("\tIAC");
+    return 0;
 }
 
 /*
@@ -996,6 +1066,7 @@ gugt ()
 	ol("\tTAD JLC");
 	ol("\tSNA SZL CLA");
 	ol("\tIAC");
+    return 0;
 }
 
 /*
@@ -1012,6 +1083,7 @@ guge ()
 	ol("\tTAD JLC");
 	ol("\tSNL CLA");
 	ol("\tIAC");
+    return 0;
 }
 
 /*	Squirrel away argument count in a register that modstk
@@ -1023,6 +1095,7 @@ int	d; {
 /*	ot ("mvi\ta,");
 //	onum(d);
 //	nl (); */
+    return 0;
 }
 
 assemble(s)
@@ -1034,14 +1107,6 @@ char	*s; {
 	strcat(buf, s);
 	buf[strlen(buf)-1] = 's';
 	return(system(buf));
-#else
-	return(0);
-#endif
-}
-
-link() {
-#ifdef	LDNM
-	fputs("I don't know how to link files yet\n", stderr);
 #else
 	return(0);
 #endif

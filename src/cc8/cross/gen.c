@@ -32,6 +32,7 @@ int	label;
 {
 	olprfix ();
 	outdec (label);
+    return 0;
 }
 
 /*
@@ -44,6 +45,7 @@ char	*lab;
 	outstr (lab);
 	col ();
 	nl ();
+    return 0;
 }
 
 /*
@@ -55,6 +57,7 @@ int	nlab;
 	printlabel (nlab);
 	col ();
 	nl ();
+    return 0;
 }
 
 outbyte (c)
@@ -73,12 +76,14 @@ char	ptr[];
 
 	k = 0;
 	while (outbyte (ucase(ptr[k++])));
+    return 0;
 }
 
 
 tab ()
 {
 	outbyte (9);
+    return 0;
 }
 
 ol (ptr)
@@ -86,12 +91,14 @@ char	ptr[];
 {
 	ot (ptr);
 	nl ();
+    return 0;
 }
 
 ot (ptr)
 char	ptr[];
 {
 	outstr (ptr);
+    return 0;
 }
 
 outdec (number)
@@ -119,6 +126,7 @@ int	number;
 		number = number % k;
 		k = k / 10;
 	}
+    return 0;
 }
 		
 store (lval)
@@ -128,6 +136,7 @@ int	*lval;
 		putmem (lval[0]);
 	else
 		putstk (lval[1]);
+    return 0;
 }
 
 rvalue (lval)
@@ -137,6 +146,7 @@ int	*lval;
 		getmem (lval[0]);
 	else
 		indirect (lval[1]);
+    return 0;
 }
 
 rivalue (lval)
@@ -146,6 +156,7 @@ int	*lval;
 		getincmem (lval[0]);
 	else
 		incdirect (lval[1]);
+    return 0;
 }
 
 test (label, ft)
@@ -156,4 +167,5 @@ int	label,
 	expression (YES);
 	needbrack (")");
 	testjump (label, ft);
+    return 0;
 }

@@ -17,6 +17,7 @@ ns ()
 {
 	if (!match (";"))
 		error ("missing semicolon");
+    return 0;
 }
 
 junk ()
@@ -31,6 +32,7 @@ junk ()
 			gch ();
 		}
 	blanks ();
+    return 0;
 }
 
 endst ()
@@ -48,6 +50,7 @@ char	*str;
 		outstr (str);
 		nl ();
 	}
+    return 0;
 }
 
 /*

@@ -229,6 +229,7 @@ char	*sname;
 illname ()
 {
 	error ("illegal symbol name");
+    return 0;
 }
 
 multidef (sname)
@@ -238,6 +239,7 @@ char	*sname;
 	comment ();
 	outstr (sname);
 	nl ();
+    return 0;
 }
 
 glint(syment) char *syment; {

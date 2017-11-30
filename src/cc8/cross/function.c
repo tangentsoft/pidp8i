@@ -23,7 +23,7 @@ newfunc ()
 
 	if (!symname (n) ) {
 		error ("illegal function or declaration");
-		kill ();
+		kill_line ();
 		return 0;
 	}
 	if (ptr = findglb (n)) {
@@ -112,6 +112,7 @@ newfunc ()
 	gret (rtn);
 	stkp = 0;
 	locptr = STARTLOC;
+    return 0;
 }
 
 /*
@@ -125,8 +126,8 @@ newfunc ()
 getarg (t)
 int	t;
 {
-	int	j, legalname, address;
-	char	n[NAMESIZE], c, *argptr;
+    int	j, legalname, address;
+    char	n[NAMESIZE], c, *argptr;
 
 	FOREVER {
 		if (argstk == 0)

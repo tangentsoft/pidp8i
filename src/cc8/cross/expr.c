@@ -24,6 +24,7 @@ int	comma;
 		if (!comma)
 			return 0;
 	} while (match (","));
+    return 0;
 }
 
 heir1 (lval)

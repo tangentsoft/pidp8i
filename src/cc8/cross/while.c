@@ -26,6 +26,7 @@ delwhile ()
 {
 	if (readwhile ())
 		wsptr = wsptr - WSSIZ;
+    return 0;
 }
 
 int readwhile ()
@@ -74,4 +75,5 @@ int	val;
 		col ();
 		nl ();
 	}
+    return 0;
 }

@@ -112,17 +112,14 @@ char** argv;        /* OS/8 CC8 can't cope, but bootstrapping CC8 doesn't work, 
 #endif
 		p = *argv++;
 	}
-#ifndef	NOASLD
-	if (!errs && !sflag && !cflag)
-		errs = errs || link();
-#endif
 	exit(errs != 0);
-	getchar();
+    return 0;
 }
 
 FEvers()
 {
 	outstr("/\tFront End (1.0:27/1/99)");
+    return 0;
 }
 
 usage()
@@ -158,6 +155,7 @@ parse ()
 			newfunc ();
 		blanks ();
 	}
+    return 0;
 }
 
 /*
@@ -223,6 +221,7 @@ dumplits ()
 		}
 	}
 	ol("\tEAP");
+    return 0;
 }
 
 /*
@@ -261,6 +260,7 @@ dumpglbs ()
   ot("GBLS,\t");
   onum(gsize+128);				// Beginning of stack after globals
   nl();
+  return 0;
 }
 
 /*
@@ -289,6 +289,7 @@ errorsummary ()
 	outdec(macptr);
 	nl();
 	pl (errcnt ? "Error(s)" : "No errors");
+    return 0;
 }
 
 typof(s)
