@@ -246,11 +246,12 @@ all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LIST
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
-		$(OUTFILES) $(OS8_RK05S) $(ADF) \
-		bin/*.save \
-		tags \
-		obj/*.log \
-		obj/mkos8.opts \
+		$(OUTFILES) $(ADF) \
+		config.log cscope.out tags \
+		bin/*.pt bin/*.rk05 bin/*.save bin/txt2ptp \
+		lib/*.pyc lib/*/*.pyc lib/mkos8/opts.py \
+		obj/*.log obj/*.pt obj/mkos8.opts \
+		src/config.h \
 		@srcdir@/examples/*.err
 	@find obj \( -name \*.o -o -name \*.d \) -delete
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
