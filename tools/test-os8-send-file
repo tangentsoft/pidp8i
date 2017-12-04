@@ -61,7 +61,7 @@ def gen_file ():
         # Normal case: write some number of printable ASCII characters
         # on this line.
         for j in range (0, random.randint (1, 79)):
-          f.write (chr (random.randint (32, 127)))
+          f.write (chr (random.randint (32, 126)))
       # else: Every now and then, just write a blank line
 
       f.write ('\r\n')
