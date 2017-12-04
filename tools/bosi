@@ -166,6 +166,12 @@ function do_prepare() {
     sudo usermod -p $encpass pidp8i
     sudo passwd -e pidp8i
 
+    cl=/boot/cmdline.txt
+    if ! grep -Fq ' init=' $cl
+    then
+        sudo sed -i -e 's#$# init=/usr/lib/raspi-config/init_resize.sh#' $cl
+    fi
+
     sudo poweroff
 }
 
