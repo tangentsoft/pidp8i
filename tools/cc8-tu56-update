@@ -125,6 +125,14 @@ def main ():
   if os.path.exists (tape): os.remove (tape)
   s.send_cmd ("att dt0 " + tape)
 
+  # Zero core before beginning.  SIMH's PDP-8 simulator doesn't do it,
+  # on purpose, because the actual hardware did not do that.  SIMH does
+  # not attempt to simulate the persistence of core memory by saving it
+  # to disk between runs, but the developers are right: you cannot trust
+  # the prior state of core before initializing it yourself.  Rather
+  # than do that in some OS/8 specific way, we tell SIMH to do it.
+  s.send_cmd ('de all 0')
+
   # Find and boot the bootable OS/8 disk.  Use the "patched" version
   # because that is what "make run" uses; we use that command to
   # inspect this script's work.
