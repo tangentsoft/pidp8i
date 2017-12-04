@@ -150,7 +150,7 @@ class simh:
     ptf.close ()
     ptn = ptf.name
     self.back_to_cmd ('\\.')
-    self.send_cmd ('attach ptp "' + ptn + '"')
+    self.send_cmd ('attach ptp ' + ptn)
 
     # Punch internal file to external paper tape image
     self.os8_restart ()
