@@ -50,9 +50,10 @@ import tempfile
 
 
 #### gen_file ##########################################################
-# Generate a random text file.  We use CR+LF plus printable ASCII only
-# to be lossless through the txt2ptp/ptp2txt transition.  Returns the
-# name of the generated file.
+# Generate a random text file.  In order that the process be lossless
+# through the txt2ptp/ptp2txt filters and the SIMH + OS/8 terminal
+# handling, we use only printable ASCII plus CR+LF characters.  Returns
+# the name of the generated file.
 
 def gen_file ():
     f = tempfile.NamedTemporaryFile (delete = False, suffix = '.tmp')
