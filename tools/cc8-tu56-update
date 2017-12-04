@@ -86,7 +86,7 @@ def cross_compile (module):
 
 def link (s, rl, sv, extra_flags = ''):
   s.os8_send_cmd ('\\.', 'R LOADER')
-  s.os8_send_cmd ('\*', rl + ',LIBC/I' + extra_flags)
+  s.os8_send_cmd ('\\*', rl + ',LIBC/I' + extra_flags)
   s.os8_send_ctrl ('[')
   s.os8_send_cmd ('\\.', 'SAVE SYS ' + sv)
 
