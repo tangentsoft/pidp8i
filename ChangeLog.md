@@ -312,14 +312,6 @@
         *   FORTRAN IV
         *   MACREL port of PEP001.PA?
 
-    *   Fix all Immediate, High, and Medium priority [Bugs](/bugs)
-
-    *   Implement all Immediate and High priority [Features](/features)
-
-    *   Keep `cc8.rk05`?
-
-    *   Merge cc8-fixes branch into trunk if Ian doesn't do it first.
-
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md

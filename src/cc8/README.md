@@ -142,18 +142,12 @@ some example programs.
 
 To try it out:
 
-Boot OS/8 from the included RK05 image with:
+Boot OS/8 within the PiDP-8/I environment as you normally would. If
+you're at the Linux command prompt within the PiDP-8/I source tree, you
+can start it most easily with a `make run` command.
 
-     $ bin/pidp8i-sim boot/cc8.script
-
-Note that this is a different version of OS/8 than the one currently
-distributed in the IF=0, IF=3, and IF=7 positions in the PiDP-8/I boot
-scheme. It is version V3Q (up from V3D) and it is configured to smash
-lowercase input to uppercase only in the OS/8 command processor.
-Lowercase input in the text editor will be saved as lowercase.
-
-With this special CC8 OS/8 environment running, you can enter a C
-programme in lower case via the editor.
+With the OS/8 environment running, you can enter a C programme in lower
+case via the editor.
 
 Before getting into the text editor, try building a copy of one of the
 example programs:
