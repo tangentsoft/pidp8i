@@ -55,8 +55,6 @@ import tempfile
 # handling, we use only printable ASCII plus CR+LF characters.  Returns
 # the name of the generated file.
 
-We use CR+LF plus printable ASCII only
-
 def gen_file ():
     f = tempfile.NamedTemporaryFile (delete = False, suffix = '.tmp')
     for i in range (0, random.randint (10, 1000)):
