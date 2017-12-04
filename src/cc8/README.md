@@ -147,25 +147,17 @@ you're at the Linux command prompt within the PiDP-8/I source tree, you
 can start it most easily with a `make run` command.
 
 With the OS/8 environment running, you can enter a C programme in lower
-case via the editor.
+case via the editor, but before doing that, try building a copy of one
+of the example programs:
 
-Before getting into the text editor, try building a copy of one of the
-example programs:
+    .RUN CC0         ⇠ preprocessor/compiler front end
+    >ps.cc           ⇠ takes name of C program; creates CC.SB
+    .COMP CC         ⇠ compile SABR output of CC8 to CC.RL
 
-    .COPY CC.CC<PS.CC
-
-Run with:
-
-    .R CC1
-
-Then:
-
-    .COMP CC.SB
-
-Then:
+Link and run it with:
 
     .R LOADER
-    *CC,LIBC/G
+    *CC,LIBC/G       ⇠ CC.RL + pre-built LIBC.RL = runnable program; /G = "go"
 
 
 ## GOVERNMENT HEALTH WARNING
