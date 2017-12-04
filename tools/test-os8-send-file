@@ -57,7 +57,7 @@ import tempfile
 
 def gen_file ():
     f = tempfile.NamedTemporaryFile (delete = False, suffix = '.tmp')
-    for i in range (0, random.randint (10, 1000)):
+    for i in range (0, random.randint (10, 4000)):
       if random.randint (0, 10) != 0:
         # Normal case: write some number of printable ASCII characters
         # on this line.
