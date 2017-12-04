@@ -93,27 +93,33 @@ def main ():
   # Setup
   random.seed ()
 
-  # Transfer a random file through
-  ifn = gen_file ()
-  of = tempfile.NamedTemporaryFile (suffix = '.out', delete = False)
-  of.close ()
-  ofn = of.name
-  tfn = 'T00001.TX'
-  s.os8_send_file (ifn, tfn)
-  s.os8_get_file (tfn, ofn)
+  # Transfer several random files through.  Beware increasing the range
+  # too far: max is 99999 due to the file name length limit of OS/8 due
+  # to the temporary file naming scheme we use in the loop.
+  for i in range (0, 1000):
+    # Build another temp file
+    ifn = gen_file ()
+    of = tempfile.NamedTemporaryFile (suffix = '.out', delete = False)
+    of.close ()
 
-  # Did it change?
-  if filecmp.cmp (ifn, ofn):
-    print ifn + ' transferred successfully.'
-    s.os8_send_cmd ('\\.', 'DEL ' + tfn)
-    os.remove (ifn)
-    os.remove (ofn)
-  elif os.path.getsize (ofn) == 0:
-    print "\nDifferences found: output is empty!\n"
-  else:
-    print "\nDifferences found:\n--------------------------------"
-    os.system ('diff -wu "' + ifn + '" "' + ofn + '"')
-    print 'Left ' + tfn + ' inside OS/8.'
+    # Send it
+    ofn = of.name
+    tfn = 'T%05d.TX' % i
+    s.os8_send_file (ifn, tfn)
+    s.os8_get_file (tfn, ofn)
+
+    # Did it change?
+    if filecmp.cmp (ifn, ofn):
+      print ifn + ' transferred successfully.'
+      s.os8_send_cmd ('\\.', 'DEL ' + tfn)
+      os.remove (ifn)
+      os.remove (ofn)
+    elif os.path.getsize (ofn) == 0:
+      print "\nDifferences found: output is empty!\n"
+    else:
+      print "\nDifferences found:\n--------------------------------"
+      os.system ('diff -wu "' + ifn + '" "' + ofn + '"')
+      print 'Left ' + tfn + ' inside OS/8.'
 
 
 if __name__ == "__main__":
