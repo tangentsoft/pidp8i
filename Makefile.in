@@ -217,7 +217,6 @@ INFILES = \
 	@srcdir@/boot/4.script.in \
 	@srcdir@/boot/6.script.in \
 	@srcdir@/boot/7.script.in \
-	@srcdir@/boot/cc8.script.in \
 	@srcdir@/boot/run.script.in \
 	@srcdir@/etc/pidp8i-init.in \
 	@srcdir@/etc/sudoers.in \
