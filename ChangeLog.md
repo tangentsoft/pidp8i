@@ -1,6 +1,6 @@
 # PiDP-8/I Changes
 
-## Version 2017.11.eh? — The "Languages and Custom OS/8 Disk Packs" release
+## Version 2017.12.eh? — The "Languages and Custom OS/8 Disk Packs" release
 
 *   All prior versions were shipping `os8.rk05`, a "Field Service
     Diagnostic" OS/8 disk pack image with uncertain provenance,
@@ -314,11 +314,13 @@
     *   Write Project Euler Problem #1 examples for new languages in
         this release and wiki articles explaining each one:
 
-        *   CC8
         *   U/W FOCAL
         *   FORTRAN II
         *   FORTRAN IV
         *   MACREL port of PEP001.PA?
+
+        Plus one more pass at the CC8 one if compiler improvements
+        apppear before release.
 
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
