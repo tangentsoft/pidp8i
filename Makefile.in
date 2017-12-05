@@ -433,7 +433,7 @@ OS8_BIN_SRCS := $(MKOS8_SRCS) \
 ifneq (@MKOS8_BIN_PATCHES@,)
 	OS8_BIN_SRCS += @srcdir@/media/os8/patches/patch_list.txt
 endif
-$(OS8_BIN_RK05): $(OS8_BIN_SRCS) $(SIM) | $(MKOS8_OUTFILES)
+$(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
 	$(MKOS8)@MKOS8_OPTS@ bin @MKOS8_BIN_PATCHES@
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
@@ -443,7 +443,7 @@ $(OS8_BIN_RK05): $(OS8_BIN_SRCS) $(SIM) | $(MKOS8_OUTFILES)
 # only need *a* version of each, they don't have to be recent!
 OS8_SRC_SRCS = $(MKOS8_SRCS) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
-$(OS8_SRC_RK05): $(OS8_SRC_SRCS) $(SIM) $(OS8_BIN_RK05)
+$(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
 	$(MKOS8)@MKOS8_OPTS@ src
 
 # Rule for building PAL assembly language programs in asm/*.pal.
