@@ -56,7 +56,7 @@ The `d8tape` program is distributed under the license given in
 [d8tl]: https://tangentsoft.com/pidp8i/doc/trunk/src/d8tape/LICENSE.md
 
 
-## <a id="#cc8"></a>CC8 Compiler License
+## <a id="cc8"></a>CC8 Compiler License
 
 The license for the `src/cc8` subtree is messy as it comes to us from
 multiple authors over many years.
