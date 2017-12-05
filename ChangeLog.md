@@ -25,21 +25,24 @@
 
         -   `os8v3d-patched.rk05` is a copy of the `bin` disk with
             [most][os8p] of the patches DEC published over the years for
-            OS/8 V3D applied.  That set of patches was hand-chosen for
-            their applicability to our modern PiDP-8/I world and for
+            OS/8 V3D applied.  That set of patches was chosen and tested
+            for applicability to our modern PiDP-8/I world and for
             mutual compatibility.
 
             This is the boot disk used for the IF=0 and IF=7 cases
             unless you give `--disable-os8-patches` to the `configure`
-            script, in which case it falls back to the `bin` disk.
+            script, in which case these boot options use the `bin` disk.
 
         -   `os8v3d-src.rk05` is a non-bootable disk containing the
-            contents of the seven OS/8 V3D source code tapes plus the
-            contents of the three tapes of extensions to OS/8 V3D.  It
-            is built as a convenience for those who would like to
-            explore the OS/8 source code, since it's easier to do that
-            with an RK05 disk than with a pile of DECtape images.  You
-            can suppress building this with `--disable-os8-src`.
+            contents of the OS/8 V3D source code tapes plus the source
+            code for the extensions to OS/8 V3D.  The *ten* TU56 tape
+            images used as input to this process are also included among
+            the PiDP-8/I software — see `media/os8/al-*-sa-*.tu56` — but
+            we find it much more convenient to explore the sources on a
+            single RK05 disk than to repeatedly attach and detach the
+            TU56 tapes.
+
+            You can suppress building this with `--disable-os8-src`.
 
         Default versions of these disk images are also now published on
         the project's home page for the benefit of those not running our
@@ -61,11 +64,16 @@
         This is a fascinating programming language, well worth studying!
 
     -   Ian Schofield's CC8 OS/8 C compiler is installed on `SYS:` by
-        default, and its examples and other files are on `DSK:`.  We have
-        also merged in his `cc8` cross-compiler and his hand-rolled OS/8
-        distribution, `media/os8/cc8.rk05`.  See [the CC8 `README`][cc8rm]
-        for details.  This is an improved version of the compiler relative
-        to what was distributed on the mailing list.
+        default, and its examples and other files are on `DSK:`.  We
+        have also merged in his `cc8` host-side cross-compiler.  See
+        [the CC8 `README`][cc8rm] for details.
+        
+        This is an improved version of the compiler relative to what was
+        distributed on the mailing list in August 2017.  Ian has been
+        working within the project since that initial public release,
+        making improvements to his compiler within our project, so that
+        there will be a single canonical version.  We thank him for
+        trusting us to host and distribute his project.
 
     -   The MACREL v2 macro assembler and its associated FUTIL V8B tool
         are installed by default.  Not only is this new functionality
