@@ -80,17 +80,6 @@ def cross_compile (module):
       exit (1)
 
 
-#### link ##############################################################
-# Use the OS/8 linking loader to create runnable binaries from assembled
-# *.RL outputs written by SABR.
-
-def link (s, rl, sv, extra_flags = ''):
-  s.os8_send_cmd ('\\.', 'R LOADER')
-  s.os8_send_cmd ('\\*', rl + ',LIBC/I' + extra_flags)
-  s.os8_send_ctrl ('[')
-  s.os8_send_cmd ('\\.', 'SAVE SYS ' + sv)
-
-
 #### main ##############################################################
 
 def main ():
@@ -101,10 +90,8 @@ def main ():
   # directory as our primary inputs.
   os.chdir (os.path.join (cc8_src, 'os8'))
 
-  # Cross-compile the OS/8 version of CC8's C sources to SABR.  We send
-  # LIBC first because the others depend on it at link time.  As of this
-  # writing, the code doesn't depend on it, but we might as well operate
-  # on these files in the safest order.
+  # Cross-compile the OS/8 version of CC8's C sources to SABR.  These
+  # files are listed in dependency order, in case that later matters.
   modules = [ 'libc', 'c8', 'n8', 'p8' ]
   try:
     for m in modules: cross_compile (m)
@@ -128,7 +115,7 @@ def main ():
   # than do that in some OS/8 specific way, we tell SIMH to do it.
   s.send_cmd ('de all 0')
 
-  # Attach a clean version of the DECtape image to the simulator
+  # Attach an empty DECtape to the simulator to hold our output.
   tape = os.path.join (dirs.os8mi, 'subsys', 'cc8.tu56')
   if os.path.exists (tape): os.remove (tape)
   s.send_cmd ("att dt0 " + tape)
@@ -144,35 +131,27 @@ def main ():
   s.send_cmd ("att rk0 " + rk)
   s.send_cmd ("boot rk0")
 
-  # Insert example programs.  We have to modify the destination file
-  # name because the OS/8 version of CC8 currently uses *.CC as its
-  # extension for some reason.
+  # Copy the SABR files produced above by the host-side cross-compiler
+  # to the OS/8 environment's RK05 disk.
+  for m in modules:
+    source = m + '.s'
+    dest = m.upper() + '.SB'
+    s.os8_send_file (source, dest)
+
+  # Copy example programs in as well.
+  #
+  # We have to modify the destination file name because the OS/8 version
+  # of CC8 currently uses *.CC as its extension for some reason.
   for src in glob.glob ('../examples/*.c'):
     dest = os.path.basename (src.upper ()) + 'C'
     s.os8_send_file (src, dest)
 
-  # Insert CC8 header files and such
-  for src in [ 'header.sb', 'init.pa', 'libc.h' ]: s.os8_send_file (src)
+  # Copy the remaining static OS/8 CC8 text files in.
+  for src in [ 'bldcc8.bi', 'header.sb', 'init.pa', 'libc.h' ]:
+    s.os8_send_file (src)
 
-  # Insert the SABR files produced by the host-side cross-compiler
-  dml = [ ]
-  for m in modules:
-    source = m + '.s'
-    dest = m.upper() + '.SB'
-    dml.append (dest)
-    s.os8_send_file (source, dest)
-
-  # Assemble sent SABR files.  We wait until now because we don't want
-  # to do this interleaved with OS/8 restarts.
-  for dest in dml:
-    s.os8_send_cmd ('\\.', 'COMP ' + dest)
-
-  # Link the OS/8 compiler binaries.  The /O flags are for the stages
-  # that produce output files; CC1 chains to CC2, thus no "output" as
-  # far as the linker/loader is concerned.
-  link (s, 'C8', 'CC0', '/O')
-  link (s, 'N8', 'CC1')
-  link (s, 'P8', 'CC2', '/O')
+  # Build the OS/8 version of CC8 using the batch file we copied in.
+  s.os8_send_cmd ('\\.', 'EXE BLDCC8.BI')
 
   # Get rid of intermediary files on DSK: so the subsequent COPY
   # commands don't add them to the DECtape image.
