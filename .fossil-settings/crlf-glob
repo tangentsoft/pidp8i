@@ -1,11 +1,11 @@
-cc8/*.[ch]
-cc8/*.pa
-cc8/*.sb
-
 examples/*.fc
 
 src/*.[ch]
 src/*.in
+
+src/cc8/*/*.[ch]
+src/cc8/include/*
+src/cc8/os8/*.sb
 
 src/PDP8/pdp8_*.[ch]
 src/PDP8/pidp8i.c.in

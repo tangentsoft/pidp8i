@@ -5,7 +5,7 @@ multiple sources.  Several different licenses apply to its parts.  This
 file guides you to those individual licenses.
 
 
-## SIMH License
+## <a id="simh"></a>SIMH License
 
 Most of the files in this software distribution are released under the
 terms of the SIMH license, a copy of which typically appears at the top
@@ -20,7 +20,7 @@ included with the distribution][sl].
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
 
 
-## PiDP-8/I Design Files
+## <a id="hw"></a>PiDP-8/I Design Files
 
 The PiDP-8/I design files in [`hardware/pidp8i`][hwp] were released
 under the Creative Commons [Attribution-NonCommercial-ShareAlike 4.0
@@ -32,7 +32,7 @@ author, Oscar Vermeulen.
 [pdp8il]: https://groups.google.com/d/msg/pidp-8/bcIH9uEB_kU/zg9uho7NDAAJ
 
 
-## autosetup License
+## <a id="autosetup"></a>autosetup License
 
 The `configure` script and the contents of the `autosetup` directory are
 released under the FreeBSD license given in [`autosetup/LICENSE`][as].
@@ -40,7 +40,7 @@ released under the FreeBSD license given in [`autosetup/LICENSE`][as].
 [as]: https://tangentsoft.com/pidp8i/doc/trunk/autosetup/LICENSE
 
 
-## palbart License
+## <a id="palbart"></a>palbart License
 
 The `palbart` program and its manual page are released under the terms
 of the license given in [`src/palbart/LICENSE.md`][pl].
@@ -48,7 +48,7 @@ of the license given in [`src/palbart/LICENSE.md`][pl].
 [pl]: https://tangentsoft.com/pidp8i/doc/trunk/src/palbart/LICENSE.md
 
 
-## d8tape License
+## <a id="d8tape"></a>d8tape License
 
 The `d8tape` program is distributed under the license given in
 [`src/d8tape/LICENSE.md`][d8tl].
@@ -56,7 +56,39 @@ The `d8tape` program is distributed under the license given in
 [d8tl]: https://tangentsoft.com/pidp8i/doc/trunk/src/d8tape/LICENSE.md
 
 
-## OS/8 License
+## <a id="#cc8"></a>CC8 Compiler License
+
+The license for the `src/cc8` subtree is messy as it comes to us from
+multiple authors over many years.
+
+There are two compilers here.
+
+First we have the OS/8 "native" compiler in `src/cc8/os8`, which is
+entirely Ian Schofield's work, released under the terms of the [GNU
+General Public License version 3][gpl3].
+
+Then we have the CC8 cross-compiler which is based on Ron Cain's
+[Small-C][smc], originally published in [Dr.  Dobbs' Journal][ddj].
+Wikipedia describes Small-C as "copyrighted but sharable," which I take
+to mean that we cannot claim it as our exclusive property, but we can
+modify it and distribute those modifications to others, which is what
+we're doing here.
+
+Ian Schofield then took the Small-C source base and added a SABR
+back-end, `code8.c`, which is also distributed under the [GPLv3][gpl3].
+
+There is [another PDP-8 C compiler project][smsc] based on Small-C by
+Vincent Slyngstad, which uses an entirely different approach for code
+generation.  Ian Schofield took some of the library routines from this
+implementation.
+
+[ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
+[gpl3]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/LICENSE.txt
+[smc]:  https://en.wikipedia.org/wiki/Small-C
+[smsc]: http://so-much-stuff.com/pdp8/C/C.php
+
+
+## <a id="os8"></a>OS/8 License
 
 The OS/8 media images included with this software distribution are
 released under the Digital License Agreement presented in
@@ -65,7 +97,7 @@ released under the Digital License Agreement presented in
 [dla]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/LICENSE.md
 
 
-## Other DEC Software
+## <a id="dec"></a>Other DEC Software
 
 The other files in the [`media`][md] and [`examples`][ed] directories
 that originate from Digital Equipment Corporation are believed to fall
@@ -79,7 +111,7 @@ however.
 [pdp8pd]: http://mailman.trailing-edge.com/pipermail/simh/2017-January/016164.html
 
 
-## ETOS License
+## <a id="etos"></a>ETOS License
 
 ETOS was a commercial product produced outside of DEC. No public
 documented declaration of license is known to be available for it, but

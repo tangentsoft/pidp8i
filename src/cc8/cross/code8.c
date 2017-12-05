@@ -1,6 +1,19 @@
-/*	File code8080.c: 2.2 (84/08/31,10:05:09) */
-/*% cc -O -c %
+/*
+ * This file is part of the CC8 cross-compiler.
  *
+ * The CC8 cross-compiler is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License 
+ * as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * The CC8 cross-compiler is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with the CC8 cross-compiler as ../GPL3.txt.  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 
 #define unix
