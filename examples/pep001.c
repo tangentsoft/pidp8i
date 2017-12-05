@@ -1,18 +1,23 @@
-main()
+ire0 (n, d)
+int n, d;
 {
-    int i, j, st;
+    while (n > 0) {
+        n = n - d;
+    }
+    return n == 0;
+}
+
+main ()
+{
+    int i, st;
     st = 0;
 
     for (i = 3; i < 1000; i++) {
-        for (j = i; j >= 3; j = j - 3) ;
-        if (j == 0) {
+        if (ire0 (i, 3)) {
             st = st + i;
         }
-        else {
-            for (j = i; j >= 5; j = j - 5) ;
-            if (j == 0) {
-                st = st + i;
-            }
+        else if (ire0 (i, 5)) {
+            st = st + i;
         }
 
         if (st > 1000) {
