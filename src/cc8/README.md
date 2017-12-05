@@ -20,8 +20,8 @@ to play with. With this in mind, I thought it was time to have a modern
 language compiler running on the PDP-8 which as far as I can tell, the
 last native compiler developed for the PDP-8 was Pascal in 1979 by Heinz
 Stegbauer. In more recent times, one cross-compiler has been developed
-by Vince Slyngstad and updated by Paolo Maffei based on Ron Cain’s Small
-C using a VM approach. [This code][sms] is most certainly worth
+by Vince Slyngstad and updated by Paolo Maffei based on Ron Cain’s
+Small-C using a VM approach. [This code][sms] is most certainly worth
 examining, and I am delighted to acknowledge this work as I have used
 some of the C library code in this project.
 
