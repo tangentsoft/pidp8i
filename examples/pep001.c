@@ -1,4 +1,6 @@
-int main()
+#include <stdio.h>
+
+main()
 {
     int i, j, st;
     st = 0;
@@ -15,11 +17,11 @@ int main()
             }
         }
 
-        if (st > 2000) {
+        if (st > 1000) {
             printf("%d + ", st);
             st = 0;
         }
     }
 
-    puts("0");
+    printf("%d\n", st);
 }
