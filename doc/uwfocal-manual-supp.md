@@ -837,7 +837,7 @@ starts off with `ERASE` commands to initialize its variables, there's a
 pretty good chance your program will just erase itself under U/W FOCAL.
 
 
-### <a id="rationale"></a>Why Did We Write This?
+## <a id="rationale"></a>Why Did We Write This?
 
 [The Manual][uwfm] is well written as far as it goes, but there are
 gaps:
@@ -865,7 +865,7 @@ This document is our attempt to fill these gaps and to supplement those
 other documents.  [Extensions and corrections][hack] are welcome.
 
 
-### <a id="references"></a>References
+## <a id="references"></a>References
 
 The primary sources for this supplement are:
 
