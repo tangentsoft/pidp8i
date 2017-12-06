@@ -837,22 +837,10 @@ starts off with `ERASE` commands to initialize its variables, there's a
 pretty good chance your program will just erase itself under U/W FOCAL.
 
 
-------------------------------------------------------------------------
-
-## Coccyges
-
 ### <a id="rationale"></a>Why Did We Write This?
 
 [The Manual][uwfm] is well written as far as it goes, but there are
 gaps:
-
-1.  It inspires questions in the reader's mind without providing an
-    answer.  While that is actually a hallmark of a good book, the U/W
-    FOCAL manual sometimes does it for topics that are properly within
-    its scope and so should be answered within.
-
-1.  It omits coverage for some topics we wish it would cover, though
-    they are not properly within its scope.
 
 1.  It is written somewhat generically for the whole PDP-8 family as of
     late 1978, whereas the PiDP-8/I project is focused on a single model
@@ -866,6 +854,12 @@ gaps:
     [the Manual][uwfm] isn't the one we actually ship.  Our two
     [other][uwfr] primary [sources][uwfd] also do not cover exactly the
     version of U/W FOCAL we ship.
+
+1.  It inspires questions in the reader's mind without providing an
+    answer.  Whether this was intentional — with the author intending
+    that the user answer these questions on his own — or otherwise, some
+    of these questions we felt needed answering here within the PiDP-8/I
+    U/W FOCAL documentation.
 
 This document is our attempt to fill these gaps and to supplement those
 other documents.  [Extensions and corrections][hack] are welcome.
