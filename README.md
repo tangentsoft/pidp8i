@@ -166,7 +166,7 @@ other Linux/Unix software these days.  The short-and-sweet is:
 
 The `configure` step is generally needed only the first time you build
 the software in a new directory.  You may want to add options after it,
-as described in the next section.
+as described [below](#options).
 
 After that initial configuration, the software normally auto-reconfigures
 itself on updates using the same options you gave before, but occasionally
@@ -180,6 +180,18 @@ reporting a build error.
 
 If `make reconfig` also fails, you can try running the `configure`
 script again manually.
+
+
+<a id="running"></a>
+### Running the Software
+
+For the most part, this is covered in the documentation linked from the
+[Learning More](/#learning) section of the project home page.
+
+The only tricky bit is that if this is the first time you have
+configured, built and installed the software as above on a given system,
+you will have to log out and back in before commands like `pidp8i` will
+be in your user's `PATH`.
 
 
 <a id="options"></a>
