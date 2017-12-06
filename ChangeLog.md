@@ -270,6 +270,12 @@
     time.  (Remove `lib/pidp8i/ips.py`, say `make reconfig` and run the
     demo again to see the difference.)
 
+*   The `DF` + `SING_STEP` feature for automatically attaching binary
+    media images to the simulator from files on USB sticks now looks
+    at all directories under `/media`, not just `usb0` through `usb7`
+    so that it works with several other common Linux USB automounting
+    schemes, such as the one Raspbian Desktop uses.
+
 *   Fixed the order of initialization in the GPIO setup code for the
     James L-W serial mod case.  Fix by Dylan McNamee.
 
