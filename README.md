@@ -165,15 +165,21 @@ other Linux/Unix software these days.  The short-and-sweet is:
     $ ./configure && make && sudo make install
 
 The `configure` step is generally needed only the first time you build
-the software in a new directory, but occasionally we make some change
-to the software that invalidates the old `make` dependencies causing
-the second step above to fail.  If that happens, try reconfiguring:
+the software in a new directory.  You may want to add options after it,
+as described in the next section.
+
+After that initial configuration, the software normally auto-reconfigures
+itself on updates using the same options you gave before, but occasionally
+we make some change that prevents this from happening.  If you get a
+build error after updating to a new version of the software, try saying:
 
     $ make reconfig
 
-If that doesn't work, call `./configure` directly again.  If you
-can't remember which options you gave last time, they're at the top of
-`config.log`.
+...and then continuing with the `make && sudo make install` steps before
+reporting a build error.
+
+If `make reconfig` also fails, you can try running the `configure`
+script again manually.
 
 
 <a id="options"></a>
