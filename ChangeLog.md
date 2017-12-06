@@ -320,7 +320,6 @@
     *   Write Project Euler Problem #1 examples for new languages in
         this release and wiki articles explaining each one:
 
-        *   U/W FOCAL
         *   FORTRAN II
         *   FORTRAN IV
         *   MACREL port of PEP001.PA?
