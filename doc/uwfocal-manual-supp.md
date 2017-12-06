@@ -880,12 +880,14 @@ The primary sources for this supplement are:
     1978.
     
     This document describes the OS/8 version of U/W FOCAL rather than
-    the paper tape version described by the Manual.  We chose to convert
-    the Manual to Markdown rather than this DECUS submission because the
-    scan is terrible, resulting in nearly worthless OCR output; we
-    *really* did not want to retype the whole thing! On balance, we
-    think the Manual is a better tutorial than the DECUS submission,
-    though the DECUS submission is perhaps a better reference text.
+    the paper tape version described by [the Manual][uwfm] we use as our
+    primary document here within the PiDP-8/I project. We chose to
+    convert the Manual to Markdown rather than this DECUS submission
+    because the DECUS document's scan is terrible, resulting in nearly
+    worthless OCR output; we *really* did not want to retype the whole
+    thing! Additionally, we think the Manual is a better tutorial than
+    the DECUS submission, though the DECUS submission is perhaps a
+    better reference text.
 
 [df8]:  http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/FOCL69%20Files/DEC-08-AJAD-D.pdf
 [f71]:  http://svn.so-much-stuff.com/svn/trunk/pdp8/src/decus/focal8-177/
