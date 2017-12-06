@@ -205,15 +205,22 @@ installed by giving options to the `configure` script:
 #### --prefix
 
 Perhaps the most widely useful `configure` script option is `--prefix`,
-which lets you override the default installation directory,
-`/opt/pidp8i`.  You could make it install the software under your home
-directory on the Pi with this command:
+which lets you override the default installation directory, `/opt/pidp8i`.
+There are many good reasons to change where the software gets installed,
+but the default is also a good one, so unless you know for a fact that
+you want to change this default, leave it alone.
+
+For example, you might prefer that the installer put the built software
+under your home directory.  This will do that:
 
     $ ./configure --prefix=$HOME/pidp8i && sudo make install
 
-Although this is installing to a directory your user has write access
-to, you still need to install via `sudo` because the installation
-process does other things that do require `root` access.
+You might think that installing to a directory your user has complete
+control over would remove the need for installing via `sudo`, but that
+is not the case, since the installation script needs root privileges to
+mark a few of the executables as having permission to run at high priority
+levels, which improves the quality of the display, particularly with the
+[incandescent lamp simulator][ils] feature enabled.
 
 
 <a id="lowercase"></a>
