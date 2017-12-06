@@ -1753,7 +1753,7 @@ with the data once the tape has started moving. By way of an example,
 the following command will read in 50 numbers from the high-speed
 reader:
 
-    O R; FOR 1=1,50; ASK DATA(I); NEXT; O I,E 
+    O R; FOR I=1,50; ASK DATA(I); NEXT; O I,E 
 
 Notice that an `O I,E` command is used at the end of the loop to restore
 input to the keyboard. If this command were omitted the H.S. reader
@@ -2248,7 +2248,7 @@ values when dumping an array in a multi-column format. In this example,
 `C` is the number of columns and `N` the number of data values in the
 array:
 
-    FOR 1=1,C,N; FOR J=I,FMIN(N,C+I-1); TYPE Q(J); NEXT; TYPE ! 
+    FOR I=1,C,N; FOR J=I,FMIN(N,C+I-1); TYPE Q(J); NEXT; TYPE ! 
 
 As a final example, an entire array can be scanned for its extrema
 simply by comparing each element with the previous best estimates:
