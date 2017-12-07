@@ -317,13 +317,8 @@
 
 *   **TODO**
 
-    *   Write Project Euler Problem #1 examples for new languages in
-        this release and wiki articles explaining each one:
-
-        *   MACREL port of PEP001.PA?
-
-        Plus one more pass at the CC8 one if compiler improvements
-        apppear before release.
+    -   Create udev script replacement for usbmount so that `DF` +
+        `SING_STEP` works on Stretch.
 
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
