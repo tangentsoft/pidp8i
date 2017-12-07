@@ -320,6 +320,8 @@
     -   Create udev script replacement for usbmount so that `DF` +
         `SING_STEP` works on Stretch.
 
+    -   Do a `simh-update` pass, document the diffs, test for breakage.
+
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
