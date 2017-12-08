@@ -277,16 +277,9 @@ Y(  ) {
 			}
 			return;
 		}
-		stri(21);
-		stri(o);
-		return;
+		tmp=21;
 	}
 	switch (*p) {
-		case 0:
-		case ',':
-		case ')':
-			tmp=-17;
-			break;
 		case '=':
 			if (*q=='=')
 				break;
@@ -295,7 +288,6 @@ Y(  ) {
 				tmp=-8;
 			ixf=0;
 			stkp++;
-		default:
 			break;
 	}
 	stri(tmp);
