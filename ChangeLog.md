@@ -322,6 +322,9 @@
 
     -   Do a `simh-update` pass, document the diffs, test for breakage.
 
+    -   Merge Steve Bennett's idea for combined autosetup/mkos8 option
+        handling.
+
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
