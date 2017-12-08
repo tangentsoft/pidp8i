@@ -121,7 +121,10 @@ void make_ptp (FILE *fpin, FILE *fpout)
     int inchar, outchar, prior = '\0';
     int read_ct, n;
     char *obuffp;
-    char ibuff[BLOCK_SIZE], obuff[BLOCK_SIZE];
+    char ibuff[BLOCK_SIZE];
+    /* Every \n might add a \r to the output. 
+       Worst case is obuff doubles in size. */
+    char obuff[2*BLOCK_SIZE];
 
     make_lt (fpout);
 
