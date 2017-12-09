@@ -532,6 +532,100 @@ There are a few exceptions:
 Run `./configure --help` for more information on your options here.
 
 
+## <a id="os8di"></a>OS/8 Disk Images
+
+For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
+image included with the PiDP-8/I software (called `os8.rk05`) was based
+on an image of a real RK05 disk someone found in a salvaged PDP-8
+system.  Parts of the image were corrupt, and not all of the pieces of
+software on the disk worked properly with the other parts.  It was also
+a reflection of the time it was created and used out in the world, which
+was not always what we would wish to use today.
+
+In late 2017, several of us — see [the ChangeLog][cl] for details —
+created the `mkos8` tool, which takes the `--*-os8-*` options documented
+above and generates the `os8v3d-*.rk05` RK05 disk image files with your
+chosen configuration options.
+
+This set of disk images entirely replaces the old `os8.rk05` disk image,
+in that all features of the old disk image are still available in the
+new disk images, though the default configuration is not a strict
+superset of the old disk image. In some cases, we have made some options
+disabled by default, and in some cases, we have changed default
+behaviors. Mostly, though, the new disk images are simply more
+functional than the old ones.
+
+If you wish to know the full details of how these disk images are
+created, the best documentation so far is [the source code for the
+`mkos8` script][mkos8] and the [documentation for `class simh`][cs].
+
+The remainder of this section describes some aspects of these disk
+images which are not clear from the descriptions of the `--*-os8-*`
+configuration options above.
+
+
+### Baseline
+
+The baseline for the bootable OS/8 disk images comes from a set of
+DECtapes distributed by Digital Equipment Corporation which are now
+included with the PiDP-8/I software; see the [`media/os8/*.tu56`
+files][os8mf]. From these files and your configuration options, the
+`mkos8` script creates the baseline `os8v3d-bin.rk05` disk image.
+
+The default build creates a complete OS/8 system including `BUILD`
+support, FORTRAN IV, MACREL v2, and more.
+
+
+### Subtractions
+
+It turns out that it's pretty easy to run out of directory space on an
+OS/8 RK05 disk due to a limitation in the number of files on an OS/8
+filesystem.  For this reason, the archive of device drivers and TD8E
+system are left off the system packs.  They can be found in [OS/8
+Binary Distribution DECtape #2][bdt2].
+
+If you do fancy work with `BUILD`, you may need to attach that DECtape
+image and copy files in from it.
+
+
+### Default Additions
+
+The OS/8 RK05 disk image build process normally installs many software
+and data file sets to the disk image.  See the [option descriptions
+above](#disable-os8): the "disable" option set effectively lists those
+packages that `mkos8` installs by default, and the following set of
+["enable" options](#enable-os8) lists those left out by default.
+
+
+### Console Enhancements
+
+The default build [enhances the console](/wiki?name=Console+TTY+Setup),
+adding support for lower case terminals where:
+
+1.  The SIMH PDP-8 simulator and a few select parts of OS/8 are adjusted
+    to cope with lowercase input to [varying degrees](#lowercase).
+
+2.  Rubout/backspace handling is set to assume a video terminal rather
+    than a teletype by default.
+
+
+### Patches
+
+After the baseline disk image is created, `mkos8` makes a copy of it as
+`os8v3d-patched.rk05` and applies a [carefully selected set of official
+DEC patches][os8p] to it unless you give the `--disable-os8-patches`
+configuration option.  The IF=0 and IF=7 boot options boot from the
+patched disk unless you give that option.
+
+
+[bdt2]:  https://tangentsoft.com/pidp8i/file/media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
+[cl]:    https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
+[cs]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
+[mkos8]: https://tangentsoft.com/pidp8i/doc/trunk/libexec/mkos8
+[os8mf]: https://tangentsoft.com/pidp8i/file/media/os8
+[tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
 <a id="overwrite-setup"></a>
 ## Overwriting the Local Simulator Setup
 
@@ -585,100 +679,6 @@ You have several options here:
     Beware that this is potentially destructive! If you've made changes
     to your PDP-8 operating systems or have saved files to your OS
     system disks, this option will overwrite those changes!
-
-
-## <a id="os8di"></a>OS/8 Disk Images
-
-For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
-image included with the PiDP-8/I software (called `os8.rk05`) was based
-on an image of a real RK05 disk someone found in a salvaged PDP-8
-system.  Parts of the image were corrupt, and not all of the pieces of
-software on the disk worked properly with the other parts.  It was also
-a reflection of the time it was created and used out in the world, which
-was not always what we would wish to use today.
-
-In late 2017, several of us — see [the ChangeLog][cl] for details —
-created the `mkos8` tool, which takes the `--*-os8-*` options documented
-above and generates the `os8v3d-*.rk05` RK05 disk image files with your
-chosen configuration options.
-
-This set of disk images entirely replaces the old `os8.rk05` disk image,
-in that all features of the old disk image are still available in the
-new disk images, though the default configuration is not a strict
-superset of the old disk image. In some cases, we have made some options
-disabled by default, and in some cases, we have changed default
-behaviors. Mostly, though, the new disk images are simply more
-functional than the old ones.
-
-If you wish to know the full details of how these disk images are
-created, the best documentation so far is [the source code for the
-`mkos8` script][mkos8] and the [documentation for `class simh`][cs].
-
-The remainder of this section describes some aspects of these disk
-images which are not clear from the descriptions of the `--*-os8-*`
-configuration options above.
-
-
-### Baseline
-
-The baseline for the bootable OS/8 disk images comes from a set of
-DECtapes distributed by Digital Equipment Corporation which are now
-included with the PiDP-8/I software; see the [`media/os8/*.tu56`
-files][os8mf]. From these files and your configuration options, the
-`mkos8` script creates the baseline `os8v3d-bin.rk05` disk image.
-
-The default build creates a complete OS/8 system including `BUILD`
-support, FORTRAN IV, MACREL v2, and more.
-
-
-## Subtractions
-
-It turns out that it's pretty easy to run out of directory space on an
-OS/8 RK05 disk due to a limitation in the number of files on an OS/8
-filesystem.  For this reason, the archive of device drivers and TD8E
-system are left off the system packs.  They can be found in [OS/8
-Binary Distribution DECtape #2][bdt2].
-
-If you do fancy work with `BUILD`, you may need to attach that DECtape
-image and copy files in from it.
-
-
-## Default Additions
-
-The OS/8 RK05 disk image build process normally installs many software
-and data file sets to the disk image.  See the [option descriptions
-above](#disable-os8): the "disable" option set effectively lists those
-packages that `mkos8` installs by default, and the following set of
-["enable" options](#enable-os8) lists those left out by default.
-
-
-## Console Enhancements
-
-The default build [enhances the console](/wiki?name=Console+TTY+Setup),
-adding support for lower case terminals where:
-
-1.  The SIMH PDP-8 simulator and a few select parts of OS/8 are adjusted
-    to cope with lowercase input to [varying degrees](#lowercase).
-
-2.  Rubout/backspace handling is set to assume a video terminal rather
-    than a teletype by default.
-
-
-## Patches
-
-After the baseline disk image is created, `mkos8` makes a copy of it as
-`os8v3d-patched.rk05` and applies a [carefully selected set of official
-DEC patches][os8p] to it unless you give the `--disable-os8-patches`
-configuration option.  The IF=0 and IF=7 boot options boot from the
-patched disk unless you give that option.
-
-
-[bdt2]:  https://tangentsoft.com/pidp8i/file/media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
-[cl]:    https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
-[cs]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
-[mkos8]: https://tangentsoft.com/pidp8i/doc/trunk/libexec/mkos8
-[os8mf]: https://tangentsoft.com/pidp8i/file/media/os8
-[tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
 
 
 <a id="testing"></a>
