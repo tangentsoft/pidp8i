@@ -68,12 +68,12 @@
         have also merged in his `cc8` host-side cross-compiler.  See
         [the CC8 `README`][cc8rm] for details.
         
-        This is an improved version of the compiler relative to what was
-        distributed on the mailing list in August 2017.  Ian has been
-        working within the project since that initial public release,
-        making improvements to his compiler within our project, so that
-        there will be a single canonical version.  We thank him for
-        trusting us to host and distribute his project.
+        This is a considerably improved compiler relative to what
+        was distributed on the mailing list in August 2017.  Ian has
+        been working within the PiDP-8/I project since that initial
+        public release, which we are now distributing publicly for
+        the first time.  We thank him for trusting us to host and
+        distribute his project.
 
     -   The MACREL v2 macro assembler and its associated FUTIL V8B tool
         are installed by default.  Not only is this new functionality
@@ -209,6 +209,28 @@
     the default OS/8 configuration.  Pretty much everything above can be
     disabled if it's enabled by default, and vice versa.
 
+*   Added several new wiki articles covering the above:
+
+    *   More Project Euler Problem #1 solutions in:
+
+        *   [pe1c][C]
+        *   [pe1f][FORTRAN II]
+        *   [pe1f][FORTRAN IV]
+        *   [pe1u][U/W FOCAL]
+
+    *   [Demos in BASIC][dibas], deescribing `DSK:*.BA`
+
+    *   [OS/8 Console TTY Setup][os8ct], describing how we have
+        modified the stock behavior of OS/8 to behave appropriately
+        with a glass terminal or SSH on its console, as opposed to
+        its default behavior, which assumes a teletype.
+
+    *   [OS/8 LCSYS.BI Disassembled][os8lc], a symbolic
+        disassembly of the `LCSYS.BI` patch we distribute with the
+        system, which is widely available online elsewhere. That script
+        is a raw binary patch, which makes its operation a mystery
+        unless you happen to be able to read PDP-8 machine code.
+
 *   Added Bill Cattey's `txt2ptp` program which converts plain ASCII
     text files files to the paper tape format used by SIMH, which eases
     transfer of text data into the simulator.  That program is also
@@ -328,9 +350,15 @@
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
+[dibas]: https://tangentsoft.com/pidp8i/wiki?name=Demos+in+BASIC
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
+[os8ct]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
+[os8lc]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+LCSYS.BI+Disassembled
 [os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 [os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
+[pe1c]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
+[pe1f]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT
+[pe1u]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.FC
 [uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
 
