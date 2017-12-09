@@ -61,7 +61,6 @@ Fossil Anonymous Access
 To clone the code repository anonymously, say:
 
     $ mkdir -p ~/museum ~/src/pidp8i/trunk
-    $ sudo apt install fossil
     $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
     $ cd ~/src/pidp8i/trunk
     $ fossil open ~/museum/pidp8i.fossil
