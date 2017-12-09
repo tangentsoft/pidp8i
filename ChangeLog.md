@@ -214,8 +214,8 @@
     *   More Project Euler Problem #1 solutions in:
 
         *   [C][pe1c]
-        *   [FORTRAN II][pe1f]
-        *   [FORTRAN IV][pe1f]
+        *   [FORTRAN II][pe1f2]
+        *   [FORTRAN IV][pe1f4]
         *   [U/W FOCAL][pe1u]
 
     *   [Demos in BASIC][dibas], deescribing `DSK:*.BA`
@@ -357,7 +357,8 @@
 [os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 [os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
 [pe1c]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
-[pe1f]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT
+[pe1f2]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT#fortran-ii
+[pe1f4]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT#fortran-iv
 [pe1u]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.FC
 [uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
