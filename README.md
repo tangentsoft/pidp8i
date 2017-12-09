@@ -535,12 +535,12 @@ Run `./configure --help` for more information on your options here.
 ## <a id="os8di"></a>OS/8 Disk Images
 
 For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
-image included with the PiDP-8/I software (called `os8.rk05`) was
-allegedly based on an image of a real RK05 disk pack that someone found
-in a salvaged PDP-8 system.  Parts of the image were corrupt, and not
-all of the pieces of software on the disk worked properly with the other
-parts.  It was also a reflection of the time it was created and used out
-in the world, which was not always what we would wish to use today.
+image included with the PiDP-8/I software (called `os8.rk05`) was based
+on an image of a real RK05 disk pack that someone allegedly found in a
+salvaged PDP-8 system.  Parts of the image were corrupt, and not all of
+the pieces of software on the disk worked properly with the other parts.
+It was also a reflection of the time it was created and used out in the
+world, which was not always what we would wish to use today.
 
 In late 2017 [several of us][aut] created the `mkos8` tool, which takes
 the `--*-os8-*` options documented above and generates the
