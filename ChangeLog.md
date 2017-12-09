@@ -213,10 +213,10 @@
 
     *   More Project Euler Problem #1 solutions in:
 
-        *   [pe1c][C]
-        *   [pe1f][FORTRAN II]
-        *   [pe1f][FORTRAN IV]
-        *   [pe1u][U/W FOCAL]
+        *   [C][pe1c]
+        *   [FORTRAN II][pe1f]
+        *   [FORTRAN IV][pe1f]
+        *   [U/W FOCAL][pe1u]
 
     *   [Demos in BASIC][dibas], deescribing `DSK:*.BA`
 
