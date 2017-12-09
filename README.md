@@ -535,25 +535,25 @@ Run `./configure --help` for more information on your options here.
 ## <a id="os8di"></a>OS/8 Disk Images
 
 For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
-image included with the PiDP-8/I software (called `os8.rk05`) was based
-on an image of a real RK05 disk someone found in a salvaged PDP-8
-system.  Parts of the image were corrupt, and not all of the pieces of
-software on the disk worked properly with the other parts.  It was also
-a reflection of the time it was created and used out in the world, which
-was not always what we would wish to use today.
+image included with the PiDP-8/I software (called `os8.rk05`) was
+allegedly based on an image of a real RK05 disk pack that someone found
+in a salvaged PDP-8 system.  Parts of the image were corrupt, and not
+all of the pieces of software on the disk worked properly with the other
+parts.  It was also a reflection of the time it was created and used out
+in the world, which was not always what we would wish to use today.
 
-In late 2017, several of us — see [the ChangeLog][cl] for details —
-created the `mkos8` tool, which takes the `--*-os8-*` options documented
-above and generates the `os8v3d-*.rk05` RK05 disk image files with your
-chosen configuration options.
+In late 2017 [several of us][aut] created the `mkos8` tool, which takes
+the `--*-os8-*` options documented above and generates the
+`os8v3d-*.rk05` RK05 disk image files with your chosen configuration
+options.
 
 This set of disk images entirely replaces the old `os8.rk05` disk image,
-in that all features of the old disk image are still available in the
-new disk images, though the default configuration is not a strict
-superset of the old disk image. In some cases, we have made some options
-disabled by default, and in some cases, we have changed default
-behaviors. Mostly, though, the new disk images are simply more
-functional than the old ones.
+in that all features of the old disk image are still available, though
+not necessarily in the default configuration. In some cases, we have
+disabled some features that were included in the stock `os8.rk05` disk
+image, and in other cases we have changed the behavior of features.
+Mostly, though, the new disk images are simply more functional than the
+old ones.
 
 If you wish to know the full details of how these disk images are
 created, the best documentation so far is [the source code for the
@@ -562,6 +562,8 @@ created, the best documentation so far is [the source code for the
 The remainder of this section describes some aspects of these disk
 images which are not clear from the descriptions of the `--*-os8-*`
 configuration options above.
+
+[aut]: https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
 
 
 ### Baseline
@@ -639,6 +641,13 @@ files:
     the OS configuration or saved personal files to the disk the OS
     boots from, which in turn modifies this media image file out in the
     host operating environment.
+
+    There is an important exception here: when upgrading from v20170404
+    to v201712xx or newer, the old `os8.rk05` disk image will be left
+    untouched per the above, but because `os8v3d-*.rk05` does not exist
+    yet, those will be copied alongside `os8.rk05`. However, the next
+    item still holds, so that the simulator will continue to use
+    `os8.rk05` because it will be booted by the preexisting scripts.
 
 2.  **The PDP-8 simulator configuration files**, installed as
     `$prefix/share/boot/*.script`, which may similarly have local
