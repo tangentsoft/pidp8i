@@ -46,99 +46,101 @@ an enormous (28K) assembler file which cannot be run on the PDP-8.
 # The Cross-Compiler
 
 The code for this is in the `cross` subdirectory, and is built along
-with the top-level PiDP-8/I software. As above, this is based upon Ron
-Cain’s Small-C compiler, and the reader is directed to the extensive
-documentation available on the web. The key file is the code generator
-section in `code8.c`. This is used to generate SABR (Symbolic Assembler
-for Binary Relocatable programmes) assembly output which is normally
-used as the second pass of the OS/8 FORTRAN II system.
+with the top-level PiDP-8/I software. When installed, it is in your
+`PATH` as `cc8`.
 
-You use this cross-compiler to compile the 3 components of the OS/8 C
-compiler:
+The CC8 cross-compiler is based upon Ron Cain’s famous Small-C compiler.
+The reader is directed to the extensive documentation available on the
+web.
 
-1.  `n8.c` &rarr; `n8.s`: The parser/tokeniser section of the compiler
+The key file is the PDP-8 code generator in `code8.c` which emits SABR —
+Symbolic Assembler for Binary Relocatable programmes — assembly code.
+SABR is normally used as the second pass of the OS/8 FORTRAN II system.
 
-2.  `p8.c` &rarr; `p8.s`: The token to SABR code converter section.
-
-3.  `libc.c` &rarr; `libc.s`: The C library used by both of the above
-    via the `libc.h` include file.
-
-When you build and run this cross-compiler on a POSIX type system such
-as the Raspbian PiDP-8/I environment, the resulting `*.s` files will
-have LF-only line endings. You may need to run these files through a
-`unix2dos` type utility in order to produce the CRLF line endings that
-OS/8's SABR assembler expects, depending on how you get those `*.s`
-files into OS/8 as `*.SB`.
-
-The `*.SB` files may be assembled under OS/8:
-
-    .COMP N8.SB
-    .COMP LIBC.SB
-    .COMP P8.SB
-
-This will create the `*.RL` files for the linking loader (`LOADER.SV`).
+When you use the cross-compiler on a POSIX type system such as the
+Raspbian PiDP-8/I environment, the resulting `*.s` files will have
+LF-only line endings, but OS/8 expects CR+LF line endings. The `txt2ptp`
+utility program included with the PiDP-8/I distribution will
+automatically do that conversion for you when making a SIMH paper tape
+image file, which you can then read into the OS/8 environment.
 
 The cross-compiler has some non-standard features to enable the
 interface between the main programme and the C library. This constitutes
 a compile time linkage system to allow for standard and vararg functions
-to be called in the library. The 3 SABR files generated from the source
-files as above may then be separately downloaded, compiled, loaded and
-linked under OS/8. Each of these SABR files generates just less than 4K
-of relocatable code as `N8.RL`, `P8.RL` and `LIBC.RL`. These are linked
-in pairs under OS/8 to create the 2 native OS/8 compiler phases:
-
-Phase 1: Link `N8.RL` and `LIBC.RL` to be saved as `CC1.SV`
-
-Phase 2: Link `P8.RL` and `LIBC.RL` to be saved as `CC2.SV`
-
-The commands are as follows, with `$` being an Escape keypress:
-
-    .R LOADER
-    *N8,LIBC/I$
-    .SAVE SYS CC1
-    .R LOADER
-    P8,LIBC/I/O$
-    .SAVE SYS CC2
-
-N8 (`CC1.SV`) terminates by chaining to `CC2.SV` to complete the process
-of generating a final SABR file.
+to be called in the library.
 
 Several of the C programs in this distribution reference a PAL assembly
-initialization routine `cc8/include/init.pa`, which is symlinked into
-each directory that uses it. It defines some low-level subroutines,
+initialization routine `include/init.pa`, which is symlinked into each
+directory that uses it. It defines some low-level subroutines,
 initializes the environment for the programs, and calls into the LIBC
-initialization code. If you are going to compile these programs with the
-OS/8 native compiler, you will need to copy `init.pa` into the OS/8
-environment as well.
+initialization code. This file is installed within the OS/8 environment
+unless you gave `--disable-os8-cc8` when configuring the PiDP-8/I
+software.
 
 The same goes for `cc8/include/libc.h`, which defines the mappings
 between the familiar C library routine names and their underlying
 implementation names.
 
-The linking loader determines the core layout of each of the pairs of
-`.RL` files as above. Typically this is as follows:
+The linking loader determines the core layout for the built programs.
+Most commonly, it uses this scheme:
 
 **Field 0:** FOTRAN library utility functions and OS/8 I/O system
 
-**Field 1:** Reserved for the programme’s runtime stack/globals/literals.
+**Field 1:** The programme’s runtime stack/globals/literals
 
-**Field 2:** Usually the primary programme ... either N8 or P8.
+**Field 2:** The programme's executable code
 
-**Field 3:** Usually the LIBC library.
+**Field 3:** The LIBC library code
 
-In all, each phase of the native OS/8 compiler will use 16K of core.
+Since this memory layout applies to the phases of the CC8 compiler as
+well, this means that each phase uses approximately 16 kWords of core.
 
 
 ## The Native Compiler
 
-This compiler is built and linked as above. The final two files
-generated are `CC1.SV` and `CC2.SV`. These should be on the OS/8 system
-device. (`SYS:`) The compiler expects the source file in C to be in `CC.CC`
-on the default user device. (`DSK:`) In addition, you will need to file
-`HEADER.SB` on the default user device. This is used by `CC2.SV`. I suggest
-you use the provided RK05 image as this has the `SYS:` and `DSK:` partitions
-configured as required and include a linked copy of the compiler and
-some example programs.
+This compiler is supplied in both source and binary forms as part of the
+PiDP-8/I software distribution.
+
+We ship pre-built binaries to avoid a chicken-and-egg problem: the
+binaries require a working OS/8 environment to be built, but when the
+PiDP-8/I build system goes to build the bootable OS/8 media, it expects
+to have the OS/8 CC8 binaries at hand so it can copy them to the RK05
+disk it is building. It's trivial to deal with that on our development
+systems, since we normally have a working `os8v3d-*.rk05` disk set from
+the previous build sitting around to bootstrap the process, so we break
+the cycle at that point rather than do a two-stage RK05 bootstrap build
+on end-user systems.
+
+These pre-built binaries are saved as `media/os8/subsys/cc8.tu56` by the
+`tools/cc8-tu56-update` script. Basically, that script uses the
+cross-compiler to produce SABR assembly files for each stage of the OS/8
+CC8 compiler, which it then copies into the OS/8 environment, then it
+assembles, links, and saves the result as `CC*.SV`:
+
+2.  `c8.c` &rarr; `c8.s` &rarr; `CC0.SV`: The compiler driver: accepts
+    the input file name from the user, calls the first internal compiler
+    stage, and cleans up afterward.
+
+2.  `n8.c` &rarr; `n8.s` &rarr; `CC1.SV`: The parser/tokeniser section
+    of the compiler.
+
+3.  `p8.c` &rarr; `p8.s` &rarr; `CC2.SV`: The token to SABR code
+    converter section of the compiler.
+
+4.  `libc.c` &rarr; `libc.s` &rarr; `LIBC.RL`: The C library linked to
+    any program built with CC8, including the stages above, but also to
+    your own programs.
+
+If you are not changing the OS/8 CC8 source code, you needn't run the
+`cc8-tu56-update` script or build the OS/8 version of CC8 by hand.
+
+The PiDP-8/I build system's OS/8 RK05 media build script copies those
+files and the other files required for building C programs under OS/8 to
+the appropriate OS/8 volumes: `CC*.SV` on `SYS:`, and everything else on
+`DSK:`. 
+
+Input programs should go on `DSK:`. Compiler outputs are also placed on
+`DSK:`.
 
 To try it out:
 
@@ -163,8 +165,8 @@ Link and run it with:
 ## GOVERNMENT HEALTH WARNING
 
 **You are hereby warned**: The native OS/8 compiler does not contain any
-error checking whatsoever. If the source files contain an error, you
-may get:
+error checking whatsoever. If the source files contain an error or you
+mistype a build command, you may get:
 
 *   A runtime crash in the compiler
 *   SABR assembly output that won't assemble
@@ -178,11 +180,11 @@ on a real PDP-8. Since we're working within the constraints of the old
 PDP-8 architecture, we only have about 3 kWords to construct the parse
 result, for example.
 
-In addition, the native OS/8 compiler is also severely limited in code
-space, so it does not understand the full C language. It is almost
-certainly less functional in all respects than K&R C 1978; we do not
-have a good benchmark for what it compares to in terms of other early C
-dialects, but we can sum it up in a single word: "primitive."
+In addition, the native OS/8 compiler is severely limited in code space,
+so it does not understand the full C language. It is less functional
+than K&R C 1978; we do not have a good benchmark for what it compares to
+in terms of other early C dialects, but we can sum it up in a single
+word: "primitive."
 
 Nonetheless, our highly limited C dialect is Turing complete. It might
 be better to think of it as a high-level assembly language that
