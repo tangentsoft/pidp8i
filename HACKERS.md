@@ -27,19 +27,14 @@ If you started with one of our PiDP-8/I binary OS images made in or
 after April 2017, Fossil 2.x is already installed.
 
 If you're starting from some other OS, you either won't have Fossil
-installed at all, or you'll most likley be using an older version, since
-the Debian project is still shipping version 1.37 and likely will
-continue to do so until 2020 or so.  You'll have to build Fossil from
-source:
+installed at all, or you'll most likley be using an older version,
+since the Debian project is still shipping version 1.37 and likely
+will continue to do so until 2020 or so.  You could build Fossil from
+source, or you could just go grab a prebuilt binary we keep on the
+project site:
 
-    $ sudo apt install libssl-dev
-    $ wget -O fossil-release.tar.gz \
-      https://fossil-scm.org/index.html/tarball/fossil-release?uuid=release
-    $ tar xvf fossil-release.tar.gz
-    $ cd fossil-release
-    $ ./configure
-    $ make
-    $ sudo make install
+    $ wget https://tangentsoft.com/pidp8i/uv/fossil-raspbian-9.1-stretch
+    $ sudo install -m 755 fossil-* /usr/local/bin/fossil
 
 Fossil is also available for all common desktop platforms.  One of [the
 official binaries][fbin] may work on your system.  If you're getting
