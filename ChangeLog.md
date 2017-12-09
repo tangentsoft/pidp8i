@@ -214,8 +214,8 @@
     *   More Project Euler Problem #1 solutions in:
 
         *   [C][pe1c]
-        *   [FORTRAN II][pe1f2]
         *   [FORTRAN IV][pe1f4]
+        *   [FORTRAN II][pe1f2]
         *   [U/W FOCAL][pe1u]
 
     *   [Demos in BASIC][dibas], deescribing `DSK:*.BA`
