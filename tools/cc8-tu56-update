@@ -140,14 +140,22 @@ def main ():
 
   # Copy example programs in as well.
   #
-  # We have to modify the destination file name because the OS/8 version
-  # of CC8 currently uses *.CC as its extension for some reason.
+  # We have to filter these files' content for the reasons given at the
+  # top of the filter's code.
+  #
+  # We don't let os8_send_file build the destination file name because
+  # the source is a random-named temp file.
+  tool = os.path.join (dirs.bin, 'cc8-to-os8')
   for src in glob.glob ('../examples/*.c'):
-    dest = os.path.basename (src.upper ()) + 'C'
-    s.os8_send_file (src, dest)
+    ctf = tempfile.NamedTemporaryFile ()
+    ctn = ctf.name
+    os.system (tool + ' < ' + src + ' > ' + ctn)
+    s.os8_send_file (ctn, os.path.basename (src).upper ())
 
-  # Copy the remaining static OS/8 CC8 text files in.
-  for src in [ 'bldcc8.bi', 'header.sb', 'init.h', 'libc.h' ]:
+  # Copy the remaining static OS/8 CC8 text files in.  We purposely do
+  # not send init.h or libc.h because OS/8 CC8 doesn't process #include,
+  # so it has those bits hard-coded into the compiler at the moment.
+  for src in [ 'bldcc8.bi', 'header.sb' ]:
     s.os8_send_file (src)
 
   # Build the OS/8 version of CC8 using the batch file we copied in.
@@ -165,14 +173,13 @@ def main ():
   # Save all the remaining involved files to the cc8.tu56 tape, giving
   # DIR DTA0: output approximately like this:
   #
-  # HEADER.SB   4               INIT  .PA   4               CC    .CC   3
-  # LIBC  .H    3               FIB   .CC   1               CALC  .CC   3
+  # HEADER.SB   4               FIB   .C    1               CALC  .C    3
   # CC1   .SV  40               CC0   .SV  27               CC2   .SV  40
-  # LIBC  .RL  22               BASIC .CC  13               PS    .CC   1
+  # LIBC  .RL  22               BASIC .C   13               PS    .C    1
   s.os8_send_cmd ('\\.', 'ZERO DTA0:')
   s.os8_send_cmd ('\\.', 'COPY DTA0:<' + cc_copies)
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:INIT.H')
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.CC')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.C')
 
   # Exit simulator nicely so that tape detaches cleanly
   s.back_to_cmd ('\\.')
