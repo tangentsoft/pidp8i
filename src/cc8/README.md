@@ -200,10 +200,28 @@ be better to think of it as a high-level assembly language that
 resembles C rather than as "C" proper.
 
 
-<a id="features"></a>
-### Features
+<a id="cross-fl"></a>
+### Features and Limitations of the Cross-Compiler
 
-Here is what is known to work:
+The features of the cross-compiler are basically that of Small-C itself,
+the primary difference being in the PDP-8 SABR code generator, which
+doesn't affect its C language support.
+
+A good approximation is K&R C (1978) minus:
+
+*   `struct` and `union`
+
+*   function pointers
+
+*   `float` and `long`
+
+
+<a id="features"></a>
+### Features of the OS/8 CC8 Compiler
+
+The OS/8 version of CC8 is missing many features relative to the
+cross-compiler, and much more compared to modern C. Before we list
+those limitations, here is what is known to work:
 
 1.  **Local and global variables**
 
@@ -275,8 +293,8 @@ Here is what is known to work:
 <a id="limitations"></a>
 ### Known Limitations of the OS/8 CC8 Compiler
 
-Much of what you understand as "C" does not work in the dialect
-understood by the OS/8 version of the compiler:
+The OS/8 compiler has these known limitations relative to [those of the
+cross-compiler](#cross-fl):
 
 1.  The language is typeless in that everything is a 12 bit integer and
     any variable/array can interpreted as `int`, `char` or pointer.  All
@@ -328,15 +346,7 @@ understood by the OS/8 version of the compiler:
 
 6.  Arrays may only be single indexed. See `PS.CC` for an example.
 
-7.  We do not even support all of K&R C yet, much less post-C89 features
-    such as statement-scoped variable declarations:
-
-        for (int i = ...
-
-    All variables must either be predeclared at the top of the function
-    they're used in, or they must be global.
-
-8.  The compiler does not yet understand how to assign a variable's
+7.  The compiler does not yet understand how to assign a variable's
     initial value as part of its declaration. This:
 
         int i = 5;
@@ -346,7 +356,7 @@ understood by the OS/8 version of the compiler:
         int i;
         i = 5;
 
-9.  There is no `&&` nor &brvbar;&brvbar;.  Neither is there support for
+8.  There is no `&&` nor &brvbar;&brvbar;.  Neither is there support for
     complex relational operators like `>=` nor even `!=`.  Abandon all
     hope for complex assignment operators like `+=`.
 
@@ -381,32 +391,28 @@ understood by the OS/8 version of the compiler:
     if you learn nothing else about Boolean algebra, you would be well
     served to memorize those rules.
 
-10. `atoi` is non-standard: `int atoi(char *, int *)`, returning
+9.  `atoi` is non-standard: `int atoi(char *, int *)`, returning
      the length of the numeric string.
 
-11. `scanf` is not implemented; use `gets` then `sscanf`
+10. `scanf` is not implemented; use `gets` then `sscanf`
 
-12. Dereferencing parenthesized expressions does not work: `*(<expr>)`
+11. Dereferencing parenthesized expressions does not work: `*(<expr>)`
 
-13. `struct` is not supported.
-
-14. Double precision `int`, `float` etc. are not supported. If you need
-    to do heavy duty maths, use FORTRAN, U/W FOCAL, or even OS/8 BASIC.
-
-15. The stack, which includes all globals and literals, is only 4 kwords.
+12. The stack, which includes all globals and literals, is only 4 kwords.
     Stack overflow is not detected.  Literals are inlcuded in this due
-    to a limitation in the way `COMMON` is implemented in SABR.
+    to a limitation in the way `COMMN` is implemented in SABR.
 
-16. There is no argument list checking, not even for standard library
+13. There is no argument list checking, not even for standard library
     functions.
 
-17. `do/while` is parsed, but code for it is not properly generated.
+14. `do/while` loops are parsed, but the code is not properly generated.
+    Regular `while` loops work fine, however.
 
-The cross-compiler does not have most of these limitations.
+15. `switch` doesn't work.
 
 
 <a id="bugs"></a>
-### Known Bugs
+### Known Bugs in the OS/8 CC8 Compiler
 
 1.  Binary file I/O is not always reliable.  You are strongly encouraged
     to limit I/O to text files.
