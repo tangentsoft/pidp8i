@@ -69,17 +69,22 @@ interface between the main programme and the C library. This constitutes
 a compile time linkage system to allow for standard and vararg functions
 to be called in the library.
 
-Several of the C programs in this distribution reference a PAL assembly
-initialization routine `include/init.pa`, which is symlinked into each
-directory that uses it. It defines some low-level subroutines,
-initializes the environment for the programs, and calls into the LIBC
-initialization code. This file is installed within the OS/8 environment
-unless you gave `--disable-os8-cc8` when configuring the PiDP-8/I
-software.
+Several of the C programs in this distribution `#include <init.h>` which
+inserts an assembly language initialization routine into the program at
+that point using the `#asm` inline assembly feature. This file is
+symlinked into each directory that has a `*.c` file needing it since CC8
+doesn't have an include path feature, and it must be in the current
+directory in any case when using the OS/8 version of CC8.
 
-The same goes for `cc8/include/libc.h`, which defines the mappings
-between the familiar C library routine names and their underlying
-implementation names.
+The `init.h` initialization routine defines some low-level subroutines,
+initializes the environment for the programs, and calls into the LIBC
+initialization code. This file was copied to the OS/8 boot disk as
+`DSK:INIT.H` unless you gave `--disable-os8-cc8` when configuring the
+PiDP-8/I software.
+
+The file `include/libc.h` is likewise copied to `DSK:LIBC.H`. It defines
+the mappings between the familiar C library routine names and their
+underlying implementation names.
 
 The linking loader determines the core layout for the built programs.
 Most commonly, it uses this scheme:

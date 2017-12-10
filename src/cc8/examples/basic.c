@@ -1,5 +1,5 @@
 #include <libc.h>
-#include <init.pa>
+#include <init.h>
 
 
 #define SMAX 10

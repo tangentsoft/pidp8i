@@ -147,7 +147,7 @@ def main ():
     s.os8_send_file (src, dest)
 
   # Copy the remaining static OS/8 CC8 text files in.
-  for src in [ 'bldcc8.bi', 'header.sb', 'init.pa', 'libc.h' ]:
+  for src in [ 'bldcc8.bi', 'header.sb', 'init.h', 'libc.h' ]:
     s.os8_send_file (src)
 
   # Build the OS/8 version of CC8 using the batch file we copied in.
@@ -171,7 +171,7 @@ def main ():
   # LIBC  .RL  22               BASIC .CC  13               PS    .CC   1
   s.os8_send_cmd ('\\.', 'ZERO DTA0:')
   s.os8_send_cmd ('\\.', 'COPY DTA0:<' + cc_copies)
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:INIT.PA')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:INIT.H')
   s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.CC')
 
   # Exit simulator nicely so that tape detaches cleanly

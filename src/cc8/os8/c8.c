@@ -17,7 +17,7 @@
  */
 
 #include <libc.h>
-#include <init.pa>
+#include <init.h>
 
 /* C pre-processor stub for PDP/8 c compiler 2017 */
 /* Ask for input file, copy to CC.CC and run CC1 */
