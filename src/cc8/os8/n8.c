@@ -560,7 +560,7 @@ main()
 	char trm;
 
 	memset(ltbf,0,&ssz-ltbf);
-	fopen("CC.CC","r");
+	fopen("CC.C","r");
 	strcpy(tkn,"int if else while break return for ");
 	lctr = 10;
 	ectr = 900;

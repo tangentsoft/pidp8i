@@ -124,9 +124,9 @@ cross-compiler to produce SABR assembly files for each stage of the OS/8
 CC8 compiler, which it then copies into the OS/8 environment, then it
 assembles, links, and saves the result as `CC*.SV`:
 
-2.  `c8.c` &rarr; `c8.s` &rarr; `CC0.SV`: The compiler driver: accepts
-    the input file name from the user, calls the first internal compiler
-    stage, and cleans up afterward.
+2.  `c8.c` &rarr; `c8.s` &rarr; `CC.SV`: The compiler driver: accepts
+    the input file name from the user, and calls the first proper
+    compiler stage, `CC1`.
 
 2.  `n8.c` &rarr; `n8.s` &rarr; `CC1.SV`: The parser/tokeniser section
     of the compiler.
@@ -159,7 +159,7 @@ With the OS/8 environment running, you can enter a C programme in lower
 case via the editor, but before doing that, try building a copy of one
 of the example programs:
 
-    .RUN CC0         ⇠ preprocessor/compiler front end
+    .R CC            ⇠ compiler front end
     >ps.cc           ⇠ takes name of C program; creates CC.SB
     .COMP CC         ⇠ compile SABR output of CC8 to CC.RL
 
@@ -272,9 +272,10 @@ Here is what is known to work:
 
 
 <a id="limitations"></a>
-### Known Limitations
+### Known Limitations of the OS/8 CC8 Compiler
 
-Much of what you understand as "C" does not work in our dialect:
+Much of what you understand as "C" does not work in the dialect
+understood by the OS/8 version of the compiler:
 
 1.  The language is typeless in that everything is a 12 bit integer and
     any variable/array can interpreted as `int`, `char` or pointer.  All
@@ -291,9 +292,10 @@ Much of what you understand as "C" does not work in our dialect:
     of the previous limitation, only one of these can be written in C.
 
 4.  Unlike the CC8 cross-compiler, the OS/8 compiler ignores `#include`
-    directives.  (One day, `CC0` may get that ability, but not today.)
-    This means you cannot use `#include` directives to string multiple C
-    modules into a single program.
+    directives.  (One day, we may add a preprocessor called by the
+    `CC.SV` driver program, but not today.) This means you cannot use
+    `#include` directives to string multiple C modules into a single
+    program.
 
     If that then makes you wonder how the OS/8 compiler looks up its
     stock library functions — note that I've resisted using the word
@@ -383,6 +385,8 @@ Much of what you understand as "C" does not work in our dialect:
 
 17. `do/while` is parsed, but code for it is not properly generated.
 
+The cross-compiler does not have most of these limitations.
+
 
 <a id="bugs"></a>
 ### Known Bugs
@@ -399,36 +403,25 @@ Much of what you understand as "C" does not work in our dialect:
     to make this as reliable as modern C programmers expect.
 
 
-<a id="pre"></a>
-## Preprocessor
+<a id="driver"></a>
+## Compiler Driver
 
-The compiler distribution includes a pre-processor file (`c8.c` &rarr;
-`CC0.SV`). This is a stub and merely asks for a filename and calls the
-compiler chain. This file may be extended and used to process `#define`
-`#include`, etc.
+The OS/8 compiler distribution includes a driver program (`c8.c` &rarr;
+`CC.SV`). It simply asks for a filename and calls the first stage of the
+compiler proper, `CC1`.  Eventually, we may add a preprocessor and call
+it from this driver between those steps.
 
-Compile using the cross-compiler to `c8.s`, copy to `C8.SB` under OS/8
-on your PDP-8 target system, then:
 
-    .COMP C8.SB
-    .R LOADER
-    *C8,LIBC/I/O$
-    .SAVE SYS CC0
-    .R CC0
-    >                   enter filename and press Return
-    .COMP CC.SB
-    .R LOADER
-    *CC,LIBC/G          if no file I/O; or...
-    *CC,LIBC/I/O/G      ...if using file I/O
+## Demo
 
-Try the examples in `*.CC` on `DSK:`. I personally like `PS.CC`,
-Pascal’s triangle. This version does not require factorials, which are a
-bit out of range for 12 bits!!
+Try the examples in `*.C` on `DSK:`. I personally like `PS.C`, Pascal’s
+triangle. This version does not require factorials, which are a bit out
+of range for 12 bits!
 
 Try it with:
 
-    .R CC0
-    >PS.CC
+    .R CC
+    >PS.C
     .COMP CC.SB
     .R LOADER
     *CC,LIBC/G

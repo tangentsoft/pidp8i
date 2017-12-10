@@ -19,9 +19,7 @@
 #include <libc.h>
 #include <init.h>
 
-/* C pre-processor stub for PDP/8 c compiler 2017 */
-/* Ask for input file, copy to CC.CC and run CC1 */
-
+/* C compiler driver: asks for input files, copies to CC.C & runs CC1 */
 
 main()
 {
@@ -32,7 +30,7 @@ main()
 	gets(fnm);
 	cupper(fnm);
 	fopen(fnm,"r");
-	fopen("CC.CC","w");
+	fopen("CC.C","w");
 	while (bfr=fgetc())
 		if (bfr!=12)		/* Ignore form feed */
 			fputc(bfr);

@@ -174,7 +174,7 @@ def main ():
   # DIR DTA0: output approximately like this:
   #
   # HEADER.SB   4               FIB   .C    1               CALC  .C    3
-  # CC1   .SV  40               CC0   .SV  27               CC2   .SV  40
+  # CC0   .SV  27               CC1   .SV  40               CC2   .SV  40
   # LIBC  .RL  22               BASIC .C   13               PS    .C    1
   s.os8_send_cmd ('\\.', 'ZERO DTA0:')
   s.os8_send_cmd ('\\.', 'COPY DTA0:<' + cc_copies)
