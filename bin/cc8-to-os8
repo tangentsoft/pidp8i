@@ -46,12 +46,15 @@
 use strict;
 use warnings;
 
+my $nblines = 0;        # number of non-blank lines written out
+
 while (<>) {
     if (m{^[a-zA-Z_][a-zA-Z0-9_]*\s*\(}) {
         # Looks like a function definition without a type; assume int.
         print "int $_";
+        ++$nblines;
     }
-    elsif (!m{^#include }) {
+    elsif (!m{^\#include } and length and $nblines) {
         # Pass it through unchanged.
         print;
     }
