@@ -176,7 +176,7 @@ def main ():
   s.os8_send_cmd ('\\.', 'COPY DTA0:<SYS:CC1.SV')
   s.os8_send_cmd ('\\.', 'COPY DTA0:<SYS:CC2.SV')
   s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB')
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.C')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.C,DSK:CC.BI')
 
   # Exit simulator nicely so that tape detaches cleanly
   s.back_to_cmd ('\\.')
