@@ -1,4 +1,7 @@
-int fib(n)
+#include <init.h>
+#include <libc.h>
+
+fib(n)
 {
     if (n < 2)
         return n;
@@ -7,7 +10,7 @@ int fib(n)
 }
 
 
-int main()
+main()
 {
         int i;
         for (i=0;i<10;i++)

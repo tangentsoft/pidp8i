@@ -1,4 +1,7 @@
-int main()
+#include <init.h>
+#include <libc.h>
+
+main()
 {
 	int ar[20],i,j,n;
 
