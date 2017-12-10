@@ -161,13 +161,21 @@ case via the editor, but before doing that, try building a copy of one
 of the example programs:
 
     .R CC            ⇠ compiler front end
-    >ps.cc           ⇠ takes name of C program; creates CC.SB
+    >ps.c            ⇠ takes name of C program; creates CC.SB
     .COMP CC         ⇠ compile SABR output of CC8 to CC.RL
 
 Link and run it with:
 
     .R LOADER
     *CC,LIBC/G       ⇠ CC.RL + pre-built LIBC.RL = runnable program; /G = "go"
+
+These steps are wrapped up into the `CC.BI` BATCH file:
+
+    .EXE CC.BI       ⇠ must specify .BI to avoid running CC.SV instead
+    >ps.c            ⇠ builds, links, and runs it
+
+That demo is particularly interesting. It generates Pascal’s triangle
+without using factorials, which are a bit out of range for 12 bits!
 
 
 <a id="warning"></a>
@@ -426,21 +434,6 @@ cross-compiler](#cross-fl):
     to make this as reliable as modern C programmers expect.
 
 
-## Demo
-
-Try the examples in `*.C` on `DSK:`. I personally like `PS.C`, Pascal’s
-triangle. This version does not require factorials, which are a bit out
-of range for 12 bits!
-
-Try it with:
-
-    .R CC
-    >PS.C
-    .COMP CC.SB
-    .R LOADER
-    *CC,LIBC/G
-
-
 ## Conclusion
 
 This is a somewhat limited manual which attempts to give an outline of a
@@ -461,8 +454,8 @@ programs for OS/8.
 ## License
 
 This document is under the [GNU GPLv3 License][gpl], copyright © May,
-June, and November 2017 by [Ian Schofield][ian], with minor updates by
-[Warren Young][wy].
+June, and November 2017 by [Ian Schofield][ian], with assorted updates
+by [Warren Young][wy] in 2017.
 
 [gpl]: https://www.gnu.org/licenses/gpl.html
 [ian]: mailto:Isysxp@gmail.com
