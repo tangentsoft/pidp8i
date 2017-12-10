@@ -126,7 +126,8 @@ assembles, links, and saves the result as `CC*.SV`:
 
 2.  `c8.c` &rarr; `c8.s` &rarr; `CC.SV`: The compiler driver: accepts
     the input file name from the user, and calls the first proper
-    compiler stage, `CC1`.
+    compiler stage, `CC1`. Should we add a preprocessor feature, this
+    driver will call it before calling `CC1`.
 
 2.  `n8.c` &rarr; `n8.s` &rarr; `CC1.SV`: The parser/tokeniser section
     of the compiler.
@@ -291,17 +292,33 @@ understood by the OS/8 version of the compiler:
     OS/8 `*.RL` format and link them with the OS/8 LOADER, but because
     of the previous limitation, only one of these can be written in C.
 
-4.  Unlike the CC8 cross-compiler, the OS/8 compiler ignores `#include`
-    directives.  (One day, we may add a preprocessor called by the
-    `CC.SV` driver program, but not today.) This means you cannot use
-    `#include` directives to string multiple C modules into a single
-    program.
+4.  Unlike the CC8 cross-compiler, the OS/8 compiler ignores all C
+    preprocessor directives: `#define`, `#ifdef`, `#include`, etc. This
+    even includes inline assembly via `#asm`!
+    
+    One day, we may add a preprocessor called by the `CC.SV` driver
+    program, but not today.
+    
+    This means you cannot use `#include` directives to string multiple C
+    modules into a single program.
 
-    If that then makes you wonder how the OS/8 compiler looks up its
-    stock library functions — note that I've resisted using the word
-    "standard" here, for they are anything but that in the Standard C
-    sense — it is that the entry point mappings declared in `libc.h` are
-    hard-coded into the `CC2` compiler stage, implemented in `p8.c`.
+    If that then makes you wonder how the OS/8 compiler looks up the
+    stock library functions defined in `libc.h` — note that I've
+    resisted using the word "standard" here, for they are anything but
+    that in the Standard C sense — it is that the entry point mappings
+    declared in `libc.h` are hard-coded into the `CC2` compiler stage,
+    implemented in `p8.c`.
+
+    Similarly, the program initialization code defined in `init.h` is
+    inserted into the program directly by the compiler rather than being
+    pulled in via the preprocessor.
+
+    Both of these header files must be included when building with the
+    cross-compiler. The examples have these `#include` statements
+    stripped out as they are copied to the OS/8 RK05 disk during the
+    build process. This is done by `bin/cc8-to-os8`, a tool you may find
+    use for yourself if you use both compilers on a single source
+    program.
 
     If you have a program that is compiled using both the cross-compiler
     and the OS/8 compiler, you may wish to use `#include` statements,
@@ -401,15 +418,6 @@ The cross-compiler does not have most of these limitations.
     fix, keeping in mind that we're using every trick in the book to fit
     as much functionality in as we currently do.  It may not be possible
     to make this as reliable as modern C programmers expect.
-
-
-<a id="driver"></a>
-## Compiler Driver
-
-The OS/8 compiler distribution includes a driver program (`c8.c` &rarr;
-`CC.SV`). It simply asks for a filename and calls the first stage of the
-compiler proper, `CC1`.  Eventually, we may add a preprocessor and call
-it from this driver between those steps.
 
 
 ## Demo
