@@ -18,7 +18,7 @@
 
 #asm
 /
-/	PDP8/E Run time routines for Small c compiler
+/	PDP8/E Run time routines for the Small-C compiler.  SABR syntax.
 /
 ABSYM POP 160
 ABSYM PSH 161
