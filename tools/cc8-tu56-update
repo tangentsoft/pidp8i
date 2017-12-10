@@ -131,6 +131,11 @@ def main ():
   s.send_cmd ("att rk0 " + rk)
   s.send_cmd ("boot rk0")
 
+  # Get rid of any C program sources that may happen to be laying around
+  # on the RK05 disk image we start with so we don't copy any working
+  # files created by hand to the cc8.tu56 tape with the wildcard below.
+  s.os8_send_cmd ('\\.', 'DEL *.C')
+
   # Copy the SABR files produced above by the host-side cross-compiler
   # to the OS/8 environment's RK05 disk.
   for m in modules:
@@ -163,20 +168,18 @@ def main ():
 
   # Get rid of intermediary files on DSK: so the subsequent COPY
   # commands don't add them to the DECtape image.
-  s.os8_send_cmd ('\\.', 'DEL ?8.RL,?8.SB,CC.*,LIBC.SB')
+  s.os8_send_cmd ('\\.', 'DEL ?8.RL,?8.SB,LIBC.SB')
 
   # Save all the remaining involved files to the cc8.tu56 tape, giving
   # DIR DTA0: output approximately like this:
   #
-  # HEADER.SB   4               FIB   .C    1               CALC  .C    3
-  # CC    .SV  27               CC1   .SV  40               CC2   .SV  40
-  # LIBC  .RL  22               BASIC .C   13               PS    .C    1
+  # CC    .SV  27           CC1   .SV  41           CC2   .SV  41
+  # FIB   .C    1           CALC  .C    5           BASIC .C   11
+  # PS    .C    1           CC    .BI   1           HEADER.SB   6
+  # LIBC  .RL  22       
   s.os8_send_cmd ('\\.', 'ZERO DTA0:')
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<SYS:CC.SV')
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<SYS:CC1.SV')
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<SYS:CC2.SV')
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB')
-  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:LIBC.*,DSK:*.C,DSK:CC.BI')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<SYS:CC.SV,SYS:CC1.SV,SYS:CC2.SV')
+  s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:LIBC.RL,DSK:*.C,DSK:CC.BI')
 
   # Exit simulator nicely so that tape detaches cleanly
   s.back_to_cmd ('\\.')
