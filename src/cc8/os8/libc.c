@@ -19,10 +19,10 @@
 /*
  * PDP8/E LIBC routines for Small-C compiler.
  *
- * THIS IS A COMPLEX COLLECTION OF MIXED C AND ASSEMBLY ROUTINES.
- * SOME FUNCTIONS HAVE BEEN SUBSTANTIALLY SHORTENED TO SAVE SPACE.
- * EVENTUALLY, MOST WILL NEED TO BE WRITTEN IN ASSEMBLY AND HAND
- * OPTIMISED; E.G. ATOI.
+ * This is a complex collection of mixed C and SABR assembly routines.
+ * Some functions have been substantially shortened to save space
+ * relative to the original versions.  Eventually, most of the C will
+ * need to be rewritten in SABR and hand optimised; e.g. atoi().
  */
 
 #asm
