@@ -43,6 +43,7 @@ not compile itself. The cross-compiler will compile itself but produces
 an enormous (28K) assembler file which cannot be run on the PDP-8.
 
 
+<a id="cross" name="posix"></a>
 # The Cross-Compiler
 
 The code for this is in the `cross` subdirectory, and is built along
@@ -101,6 +102,7 @@ Since this memory layout applies to the phases of the CC8 compiler as
 well, this means that each phase uses approximately 16 kWords of core.
 
 
+<a id="native" name="os8"></a>
 ## The Native Compiler
 
 This compiler is supplied in both source and binary forms as part of the
@@ -167,6 +169,7 @@ Link and run it with:
     *CC,LIBC/G       ⇠ CC.RL + pre-built LIBC.RL = runnable program; /G = "go"
 
 
+<a id="warning"></a>
 ## GOVERNMENT HEALTH WARNING
 
 **You are hereby warned**: The native OS/8 compiler does not contain any
@@ -196,6 +199,7 @@ be better to think of it as a high-level assembly language that
 resembles C rather than as "C" proper.
 
 
+<a id="features"></a>
 ### Features
 
 Here is what is known to work:
@@ -267,6 +271,7 @@ Here is what is known to work:
     in long `if/else if/...` chains.
 
 
+<a id="limitations"></a>
 ### Known Limitations
 
 Much of what you understand as "C" does not work in our dialect:
@@ -379,6 +384,7 @@ Much of what you understand as "C" does not work in our dialect:
 17. `do/while` is parsed, but code for it is not properly generated.
 
 
+<a id="bugs"></a>
 ### Known Bugs
 
 1.  Binary file I/O is not always reliable.  You are strongly encouraged
@@ -393,7 +399,8 @@ Much of what you understand as "C" does not work in our dialect:
     to make this as reliable as modern C programmers expect.
 
 
-## <a id="pre"></a>Preprocessor
+<a id="pre"></a>
+## Preprocessor
 
 The compiler distribution includes a pre-processor file (`c8.c` &rarr;
 `CC0.SV`). This is a stub and merely asks for a filename and calls the
