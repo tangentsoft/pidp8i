@@ -383,14 +383,16 @@ The directory structure of the PiDP-8/I project is as follows:
     interface of a program in `libexec` is described by its usage
     message. Examples:
 
-    *   <b>`mkos8`</b> - Run by the build system. It is sometimes run by
-        hand in development, but primarily only to further its
-        development. Once it runs correctly after adding some feature,
-        we let `make` run it for us.
+    *   <b>`mkos8`</b> - Run by the build system.
+    
+        <p>It is sometimes run by hand in development, but primarily
+        only to further its development. Once it runs correctly after
+        adding some feature, we let `make` run it for us.</p>
 
-    *   <b>`scanswitch`</b> - Run by `etc/pidp8i`. As with `mkos8`, it
-        is generally run by hand only by developers modifying its
-        behavior.
+    *   <b>`scanswitch`</b> - Run by `etc/pidp8i`.
+    
+        <p>As with `mkos8`, it is generally run by hand only by
+        developers modifying its behavior.</p>
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
     *not* put into the user's `PATH`, on purpose. If a program should
