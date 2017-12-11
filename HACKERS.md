@@ -407,15 +407,16 @@ The directory structure of the PiDP-8/I project is as follows:
     should be placed here.
 
     (Contrast `bin` which does have some files checked into Fossil; all
-    of the *other* files that end up there can be recreated by `make`,
-    but not these few hand-written programs.)
+    of the *other* files that end up in `bin` can be recreated by
+    `make`, but not these few hand-written programs.)
 
 *   <b>`pics`</b> - Graphics and photographs that do not fit under
     `doc`, such as because the document they're part of is one of the
     wiki articles.
 
 *   <b>`src`</b> - Source code for the project's programs, excepting
-    sources that fit better elsewhere: `bin`, `examples`, `tools`, etc.
+    sources that fit better elsewhere: `bin`, `examples`, `lib`,
+    `tools`, etc.
 
     The top level is for the SIMH core, with the PDP-8 simulator
     specific bits in the `PDP8` subdirectory.
