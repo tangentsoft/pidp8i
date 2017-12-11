@@ -168,8 +168,8 @@ endif
 
 LIBS = -lm -ldl -lpthread
 
-ASM_PTS     := $(wildcard @srcdir@/asm/*.pal)
-ASM_PTS     := $(subst @srcdir@/asm,bin,$(ASM_PTS))
+ASM_PTS     := $(wildcard @srcdir@/src/asm/*.pal)
+ASM_PTS     := $(subst @srcdir@/src/asm,bin,$(ASM_PTS))
 ASM_PTS     := $(ASM_PTS:.pal=-pal.pt)
 FC_EX_PTS   := $(wildcard @srcdir@/examples/*.fc)
 FC_EX_PTS   := $(subst @srcdir@/examples,bin,$(FC_EX_PTS))
@@ -446,11 +446,11 @@ OS8_SRC_SRCS = $(MKOS8_SRCS) \
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
 	$(MKOS8)@MKOS8_OPTS@ src
 
-# Rule for building PAL assembly language programs in asm/*.pal.
-obj/%.lst bin/%-pal.pt: @srcdir@/asm/%.pal bin/palbart
+# Rule for building PAL assembly language programs in src/asm/*.pal.
+obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
 	bin/palbart -lr $< || cat obj/$*.err
-	mv @srcdir@/asm/$*.lst obj
-	mv @srcdir@/asm/$*.rim bin/$*-pal.pt
+	mv @srcdir@/src/asm/$*.lst obj
+	mv @srcdir@/src/asm/$*.rim bin/$*-pal.pt
 
 # Ditto for those in examples/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/examples/%.pal bin/palbart

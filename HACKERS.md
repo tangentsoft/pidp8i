@@ -339,8 +339,6 @@ The directory structure of the PiDP-8/I project is as follows:
     Any setting whose value may vary between users of the Fossil
     repository should be done locally with a `fossil set` command.
 
-*   <b>`asm`</b> - Assembly language sources for the project.
-
 *   <b>`autosetup`</b> - The bulk of the [Autosetup build system][asbs].
     These are generic files, not modified by the project itself. We
     occasionally run `tools/autosetup-update` to merge in upstream
@@ -387,16 +385,18 @@ The directory structure of the PiDP-8/I project is as follows:
     
         <p>It is sometimes run by hand in development, but primarily
         only to further its development. Once it runs correctly after
-        adding some feature, we let `make` run it for us.</p>
+        adding some feature, we let <code>make</code> run it for us.</p>
 
     *   <b>`scanswitch`</b> - Run by `etc/pidp8i`.
     
-        <p>As with `mkos8`, it is generally run by hand only by
-        developers modifying its behavior.</p>
+        <p>As with <code>mkos8</code>, it is generally run by hand only
+        by developers modifying its behavior.</p>
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
     *not* put into the user's `PATH`, on purpose. If a program should
-    end up in the user's `PATH`, it belongs in `bin`.
+    end up in the user's `PATH`, it belongs in `bin`. Alternately, a
+    wrapper may be put in `bin` which calls a `libexec` program as a
+    helper.
 
 *   <b>`media`</b> - Binary media images used either by SIMH directly or
     by tools like `mkos8` to produce media used by SIMH.
@@ -415,7 +415,7 @@ The directory structure of the PiDP-8/I project is as follows:
     wiki articles.
 
 *   <b>`src`</b> - Source code for the project's programs, excepting
-    sources that fit better elsewhere: `asm`, `bin`, `examples`, etc.
+    sources that fit better elsewhere: `bin`, `examples`, `tools`, etc.
 
     The top level is for the SIMH core, with the PDP-8 simulator
     specific bits in the `PDP8` subdirectory.

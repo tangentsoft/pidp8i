@@ -71,8 +71,8 @@ OS/8 Handbook for a decoding guide.
 
 ## How to Use the Assembly Language Examples
 
-For each PAL8 assembly program in `asm/*.pal` or `examples/*.pal`, the
-build process produces several output files:
+For each PAL8 assembly program in `src/asm/*.pal` or `examples/*.pal`,
+the build process produces several output files:
 
 | Extension       | Meaning
 | --------------- | ---------------
