@@ -324,78 +324,82 @@ Directory Structure
 
 The directory structure of the PiDP-8/I project is as follows:
 
-*   <code>`.`</code> - Top level, occupied only by the few files the end
-    user of the source code needs immediately at hand: the top level build
-    system files, the top-level `README*.md` files, and licensing
-    information. If the file or information *can* be buried deeper, it
-    *should* be buried to reduce clutter at this most precious level of
-    the hierarchy.
+*   <b>`.`</b> - Top level, occupied only by the few files the end user
+    of the source code needs immediately at hand on first unpacking the
+    project: the top level build system files, the top-level
+    `README*.md` files, and licensing information. If a given file *can*
+    be buried deeper, it *should* be buried to reduce clutter at this
+    most precious level of the hierarchy.
 
-*   <code>`.fossil-settings`</code> - Versioned settings for the Fossil
-    build system. Say `fossil help set` at the command line for more on
-    this.
+*   <b>`.fossil-settings`</b> - Versioned settings for the Fossil build
+    system.  Say `fossil help set` at the command line for more on this.
+    Such settings are intended to be correct for all users of the
+    system; rather than expressing defaults, they express *policy*.
 
-*   <code>`asm`</code> - Assembly language sources for the project.
+    Any setting whose value may vary between users of the Fossil
+    repository should be done locally with a `fossil set` command.
 
-*   <code>`autosetup`</code> - The bulk of the [Autosetup build
-    system][asbs].  These are generic files, not modified by the project
-    itself. We occasionally run `tools/autosetup-update` to merge in
-    upstream changes.
+*   <b>`asm`</b> - Assembly language sources for the project.
 
-*   <code>`bin`</code> - Programs run both in development and after
+*   <b>`autosetup`</b> - The bulk of the [Autosetup build system][asbs].
+    These are generic files, not modified by the project itself. We
+    occasionally run `tools/autosetup-update` to merge in upstream
+    changes.
+
+*   <b>`bin`</b> - Programs run both in development and after
     installation.  Some files here are created directly by the project's
     developers, while others are outputs of the build system. The
-    contents of this directory are copied to `$prefix/bin` at
-    installation time, which is added to the user's `PATH` by the
-    installer.
+    content of this directory is copied to `$prefix/bin` at installation
+    time, which is added to the user's `PATH` by the installer.
 
-*   <code>`boot`</code> - SIMH initialization scripts. The `*.script.in`
-    files are written by the project developers but have build-time values
+*   <b>`boot`</b> - SIMH initialization scripts. The `*.script.in` files
+    are written by the project developers but have build-time values
     substituted in by the `configure` script. The `*.script` files are
     either hand-written or are outputs of `tools/mkbootscript`, which
     produces them from `palbart` assembly listings.
 
-*   <code>`doc`</code> - Documentation files not immediately important
-    enough to a new user of the software that they do not have to be at the
-    top level of the project tree.
+*   <b>`doc`</b> - Documentation files not immediately important enough
+    to a new user of the software that they do not have to be at the top
+    level of the project tree.
 
-*   <code>`etc`</code> - Files which get copied to `/etc` or one of its
+*   <b>`etc`</b> - Files which get copied to `/etc` or one of its
     subdirectories at installation time.
 
-*   <code>`examples`</code> - Example programs for the end user's
-    edification.  Many of these are referenced by documentation files.
+*   <b>`examples`</b> - Example programs for the end user's edification.
+    Many of these are referenced by documentation files.
 
-*   <code>`hardware`</code> - Schematics and such for the PiDP-8/I board
-    or associated hardware.
+*   <b>`hardware`</b> - Schematics and such for the PiDP-8/I board or
+    associated hardware.
 
-*   <code>`labels`</code> - Graphics intended to be printed out and used
-    as labels for removable media.
+*   <b>`labels`</b> - Graphics intended to be printed out and used as
+    labels for removable media.
 
-*   <code>`lib`</code> - Library routines used by other programs.
+*   <b>`lib`</b> - Library routines used by other programs.
 
-*   <code>`libexec`</code> - A logical extension of `lib`, these are
-    standalone programs that nevertheless are intended to be run primarily
-    by other programs. Whereas a file in `lib` might have its interface
-    described by a programmer's reference manual, the interface of a
-    program in `libexec` is described by its usage message. Examples:
+*   <b>`libexec`</b> - A logical extension of `lib`, these are
+    standalone programs that nevertheless are intended to be run
+    primarily by other programs. Whereas a file in `lib` might have its
+    interface described by a programmer's reference manual, the
+    interface of a program in `libexec` is described by its usage
+    message. Examples:
 
-    *   <code>`mkos8`</code> - Run by the build system. It is sometimes
-        run by hand in development, but primarily only to further its
+    *   <b>`mkos8`</b> - Run by the build system. It is sometimes run by
+        hand in development, but primarily only to further its
         development. Once it runs correctly after adding some feature,
         we let `make` run it for us.
 
-    *   <code>`scanswitch`</code> - Run by `etc/pidp8i`. As with
-        `mkos8`, it is generally run by hand only by developers modifying
-        its behavior.
+    *   <b>`scanswitch`</b> - Run by `etc/pidp8i`. As with `mkos8`, it
+        is generally run by hand only by developers modifying its
+        behavior.
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
     *not* put into the user's `PATH`, on purpose. If a program should
     end up in the user's `PATH`, it belongs in `bin`.
 
-*   <code>`media`</code> - Binary media images used either by SIMH
-    directly or by tools like `mkos8` to produce media used by SIMH.
+*   <b>`media`</b> - Binary media images used either by SIMH directly or
+    by tools like `mkos8` to produce media used by SIMH.
 
-*   <code>`obj`</code> - Intermediate output directory used by the build
+*   <b>`obj`</b> - Intermediate output directory used by the build
     system.  It is safe to remove this directory at any time, as its
     contents may be recreated by `make`. No file checked into Fossil
     should be placed here.
@@ -404,22 +408,21 @@ The directory structure of the PiDP-8/I project is as follows:
     of the *other* files that end up there can be recreated by `make`,
     but not these few hand-written programs.)
 
-*   <code>`pics`</code> - Graphics and photographs that do not fit under
-    `doc`, such as because the document they're part of is one of the wiki
-    articles.
+*   <b>`pics`</b> - Graphics and photographs that do not fit under
+    `doc`, such as because the document they're part of is one of the
+    wiki articles.
 
-*   <code>`src`</code> - Source code for the project's programs,
-    excepting sources that fit better elsewhere: `asm`, `bin`, `examples`,
-    etc.
+*   <b>`src`</b> - Source code for the project's programs, excepting
+    sources that fit better elsewhere: `asm`, `bin`, `examples`, etc.
 
     The top level is for the SIMH core, with the PDP-8 simulator
     specific bits in the `PDP8` subdirectory.
 
     The other subdirectories are for other programs' source code.
 
-*   <code>`test`</code> - Output directory used by `tools/test-*`.
+*   <b>`test`</b> - Output directory used by `tools/test-*`.
 
-*   <code>`tools`</code> - Programs run only during development and not
+*   <b>`tools`</b> - Programs run only during development and not
     installed.
 
     If a program is initially created here but we later decide that it
