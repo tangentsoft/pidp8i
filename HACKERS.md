@@ -352,9 +352,14 @@ The directory structure of the PiDP-8/I project is as follows:
 
 *   <b>`boot`</b> - SIMH initialization scripts. The `*.script.in` files
     are written by the project developers but have build-time values
-    substituted in by the `configure` script. The `*.script` files are
-    either hand-written or are outputs of `tools/mkbootscript`, which
-    produces them from `palbart` assembly listings.
+    substituted in by the `configure` script to produce a `*.script`
+    version. Some of the remaining `*.script` files are hand-written and
+    as such are checked into Fossil directly. The remainder are outputs
+    of `tools/mkbootscript`, which produces them from `palbart` assembly
+    listings.
+
+    All of these `*.script` files are installed to `$prefix/share/boot`
+    regardless of their origin.
 
 *   <b>`doc`</b> - Documentation files not immediately important enough
     to a new user of the software that they do not have to be at the top
@@ -400,6 +405,8 @@ The directory structure of the PiDP-8/I project is as follows:
 
 *   <b>`media`</b> - Binary media images used either by SIMH directly or
     by tools like `mkos8` to produce media used by SIMH.
+
+    The contents of this tree are installed to `$prefix/share/media`.
 
 *   <b>`obj`</b> - Intermediate output directory used by the build
     system.  It is safe to remove this directory at any time, as its
