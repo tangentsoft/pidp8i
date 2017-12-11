@@ -365,6 +365,22 @@ The directory structure of the PiDP-8/I project is as follows:
     to a new user of the software that they do not have to be at the top
     level of the project tree.
 
+    Fossil allows us to treat the contents of `doc` much like the wiki,
+    so how do we decide whether to put a given document into `doc` or
+    the wiki?  The rule is simple: is the document's history tied to the
+    history of the PiDP-8/I project itself?  If so, it goes in `doc`,
+    else it goes in the wiki.  When checking out older versions of the
+    PiDP-8/I software, you expect to roll back to contemporaneous
+    versions of the project documentation; such files go into `doc`.
+    Documents which are independent of the PiDP-8/I project history go
+    into the wiki.
+
+    (The wiki does also have history, but rolling back to a prior
+    version of the PiDP-8/I repository and then saying `fossil ui` will
+    show you the current version of the wiki documents, not the versions
+    as they existed at the time of the historical checkin you rolled
+    back to.)
+
     The `doc/graphics` subdirectory holds JPEGs and SVGs displayed
     inline within wiki articles.
 
