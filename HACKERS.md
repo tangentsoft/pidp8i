@@ -417,10 +417,6 @@ The directory structure of the PiDP-8/I project is as follows:
     of the *other* files that end up in `bin` can be recreated by
     `make`, but not these few hand-written programs.)
 
-*   <b>`pics`</b> - Graphics and photographs that do not fit under
-    `doc`, such as because the document they're part of is one of the
-    wiki articles.
-
 *   <b>`src`</b> - Source code for the project's programs, especially
     those that cannot be used until they are built. The build system's
     output directories are `bin`, `boot`, `libexec`, and `obj`.
