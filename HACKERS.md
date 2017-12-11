@@ -318,7 +318,115 @@ our purposes here.)
 [tcldoc]: http://wiki.tcl.tk/11485
 
 
-<a id="patches"></a>Submitting Patches
+<a id="dirs"></a>
+Directory Structure
+----
+
+The directory structure of the PiDP-8/I project is as follows:
+
+*   **`.`** - Top level, occupied only by the few files the end user of
+    the source code needs immediately at hand: the top level build
+    system files, the top-level `README*.md` files, and licensing
+    information. If the file or information *can* be buried deeper, it
+    *should* be buried to reduce clutter at this most precious level of
+    the hierarchy.
+
+*   **`.fossil-settings`** - Versioned settings for the Fossil build
+    system. Say `fossil help set` at the command line for more on this.
+
+*   **`asm`** - Assembly language sources for the project.
+
+*   **`autosetup`** - The bulk of the [Autosetup build system][asbs].
+    These are generic files, not modified by the project itself. We
+    occasionally run `tools/autosetup-update` to merge in upstream
+    changes.
+
+*   **`bin`** - Programs run both in development and after installation.
+    Some files here are created directly by the project's developers,
+    while others are outputs of the build system. The contents of this
+    directory are copied to `$prefix/bin` at installation time, which is
+    added to the user's `PATH` by the installer.
+
+*   **`boot`** - SIMH initialization scripts. The `*.script.in` files
+    are written by the project developers but have build-time values
+    substituted in by the `configure` script. The `*.script` files are
+    either hand-written or are outputs of `tools/mkbootscript`, which
+    produces them from `palbart` assembly listings.
+
+*   **`doc`** - Documentation files not immediately important enough to
+    a new user of the software that they do not have to be at the top
+    level of the project tree.
+
+*   **`etc`** - Files which get copied to `/etc` or one of its
+    subdirectories at installation time.
+
+*   **`examples`** - Example programs for the end user's edification.
+    Many of these are referenced by documentation files.
+
+*   **`hardware`** - Schematics and such for the PiDP-8/I board or
+    associated hardware.
+
+*   **`labels`** - Graphics intended to be printed out and used as
+    labels for removable media.
+
+*   **`lib`** - Library routines used by other programs.
+
+*   **`libexec`** - A logical extension of `lib`, these are standalone
+    programs that nevertheless are intended to be run primarily by other
+    programs. Whereas a file in `lib` might have its interface described
+    by a programmer's reference manual, the interface of a program in
+    `libexec` is described by its usage message. Examples:
+
+    *   **`mkos8`** - Run by the build system. It is sometimes run by
+        hand in development, but primarily only to further its
+        development. Once it runs correctly after adding some feature,
+        we let `make` run it for us.
+
+    *   **`scanswitch`** - Run by `etc/pidp8i`. As with `mkos8`, it is
+        generally run by hand only by developers modifying its behavior.
+
+    Programs in `libexec` are installed to `$prefix/libexec`, which is
+    *not* put into the user's `PATH`, on purpose. If a program should
+    end up in the user's `PATH`, it belongs in `bin`.
+
+*   **`media`** - Binary media images used either by SIMH directly or by
+    tools like `mkos8` to produce media used by SIMH.
+
+*   **`obj`** - Intermediate output directory used by the build system.
+    It is safe to remove this directory at any time, as its contents may
+    be recreated by `make`. No file checked into Fossil should be placed
+    here.
+    
+    (Contrast `bin` which does have some files checked into Fossil; all
+    of the *other* files that end up there can be recreated by `make`,
+    but not these few hand-written programs.)
+
+*   **`pics`** - Graphics and photographs that do not fit under `doc`,
+    such as because the document they're part of is one of the wiki
+    articles.
+
+*   **`src`** - Source code for the project's programs, excepting
+    sources that fit better elsewhere: `asm`, `bin`, `examples`, etc.
+
+    The top level is for the SIMH core, with the PDP-8 simulator
+    specific bits in the `PDP8` subdirectory.
+
+    The other subdirectories are for other programs' source code.
+
+*   **`test`** - Output directory used by `tools/test-*`.
+
+*   **`tools`** - Programs run only during development and not
+    installed.
+
+    If a program is initially created here but we later decide that it
+    should be installed for use by end users of the PiDP-8/I system, we
+    move it to either `bin` or `libexec`, depending on whether it is run
+    directly at the command line or run from some other program that is
+    also installed, respectively.
+
+
+<a id="patches"></a>
+Submitting Patches
 ----
 
 If you do not have a developer login on the PiDP-8/I software
