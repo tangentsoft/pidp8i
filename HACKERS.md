@@ -365,6 +365,9 @@ The directory structure of the PiDP-8/I project is as follows:
     to a new user of the software that they do not have to be at the top
     level of the project tree.
 
+    The `doc/graphics` subdirectory holds JPEGs and SVGs displayed
+    inline within wiki articles.
+
 *   <b>`etc`</b> - Files which get copied to `/etc` or one of its
     subdirectories at installation time.
 
