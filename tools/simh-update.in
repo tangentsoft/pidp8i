@@ -142,14 +142,20 @@ popd
 # unversioned area.  We simplify the upstream naming scheme in the
 # transfer, dropping unnecessary prefixes and suffixes.
 pushd "$SRCDIR"
+pdfdir=doc/simh
+mkdir -p $pdfdir
 for fs in pdp8_doc simh_faq simh_doc
 do
 	ft=$(echo $fs | sed -e 's/simh_//' -e 's/_doc//')
 	test "$ft" = "doc" && ft=main
-	pdfout=doc/simh/$ft.pdf
+	pdfout=$pdfdir/$ft.pdf
     pdftmp="$fs.pdf"
     say -n "Converting upstream $fs.doc to $pdfout..."
-    if [ ! -e "$pdfout" ] ; then touch $pdfout ; fi  # complaint squisher
+    if [ ! -e "$pdfout" ]
+    then
+        # Pull a copy out of the unversioned store
+        fossil uv export $pdfout $pdfout
+    fi
     if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
             [ -s "$pdfout" != -s "$pdftmp" ]
     then
