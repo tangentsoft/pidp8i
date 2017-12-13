@@ -156,24 +156,31 @@ do
         # Pull a copy out of the unversioned store
         fossil uv export $pdfout $pdfout
     fi
-    if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
-            [ -s "$pdfout" != -s "$pdftmp" ]
+    if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc"
     then
-        # The upstream doc has apparently changed, since the PDF output
-        # file is a different size.  Replace our public version.
-        #
-        # We can't use cmp or similar here because a bunch of metadata
-        # change each time we re-render the PDF, even if the source doc
-        # is unchanged.  There are proper PDF comparison tools, but none
-        # preinstalled everywhere, and we don't want to make one of
-        # those tools a dependency of this script.  Size comparison
-        # suffices for our purposes, since most any substantial text
-        # change will change the output file size.
-        say "changes detected."
-        mv "$pdftmp" "$pdfout"
-        fossil uv add "$pdfout"
+        szo=$(stat -f %s $pdfout)
+        szt=$(stat -f %s $pdftmp)
+        if [ -n "$szo" ] && [ -n "$szt" ] && [ "$szo" != "$szt" ]
+        then
+            # The upstream doc has apparently changed, since the PDF output
+            # file is a different size.  Replace our public version.
+            #
+            # We can't use cmp or similar here because a bunch of metadata
+            # change each time we re-render the PDF, even if the source doc
+            # is unchanged.  There are proper PDF comparison tools, but none
+            # preinstalled everywhere, and we don't want to make one of
+            # those tools a dependency of this script.  Size comparison
+            # suffices for our purposes, since most any substantial text
+            # change will change the output file size.
+            say "changes detected."
+            mv "$pdftmp" "$pdfout"
+            fossil uv add "$pdfout"
+        else
+            say "unchanged."
+        fi
     else
-        say "unchanged."
+        say "generation failed!"
+        exit 1
     fi
 done
 say "Syncing new PDFs..."
