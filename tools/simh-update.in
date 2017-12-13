@@ -158,8 +158,8 @@ do
     fi
     if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc"
     then
-        szo=$(stat -f %s $pdfout)
-        szt=$(stat -f %s $pdftmp)
+        szo=$(stat -f %z $pdfout)
+        szt=$(stat -f %z $pdftmp)
         if [ -n "$szo" ] && [ -n "$szt" ] && [ "$szo" != "$szt" ]
         then
             # The upstream doc has apparently changed, since the PDF output
