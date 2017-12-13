@@ -332,6 +332,11 @@
     and verified by William Cattey.  Ian Schofield suggested the current
     fix.
 
+*   Updated SIMH to upstream checkin ID 27f9fc3c3, December 11, 2017.
+    There have been no substantial changes to the PDP-8 simulator since
+    the last update, 8 months ago, but there have been a lot of bug
+    fixes to the SCP core program.
+
 *   Updated for Raspbian Stretch, released in September 2017.  It should
     still run on Raspbian Jessie, however.
 
@@ -341,8 +346,6 @@
 
     -   Create udev script replacement for usbmount so that `DF` +
         `SING_STEP` works on Stretch.
-
-    -   Do a `simh-update` pass, document the diffs, test for breakage.
 
     -   Merge Steve Bennett's idea for combined autosetup/mkos8 option
         handling.

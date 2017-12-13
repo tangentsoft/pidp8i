@@ -30,7 +30,8 @@
 #if !defined(PIDP8I_H)
 #define PIDP8I_H
 
-#include "pdp8_defs.h"
+#include <stdint.h>
+#include <stdlib.h>
 
 typedef enum {
     pft_normal,
@@ -40,15 +41,15 @@ typedef enum {
 
 extern char *build_pidp8i_scp_cmd (char* cbuf, size_t cbufsize); 
 
-extern int32 get_switch_register (void);
+extern int32_t get_switch_register (void);
 extern size_t get_pidp8i_initial_max_skips (size_t updates_per_sec);
 
-extern pidp8i_flow_t handle_flow_control_switches (uint16* pM,
-        uint32 *pPC, uint32 *pMA, int32 *pMB, int32 *pLAC, int32 *pIF,
-        int32 *pDF, int32* pint_req);
+extern pidp8i_flow_t handle_flow_control_switches (uint16_t* pM,
+        uint32_t *pPC, uint32_t *pMA, int32_t *pMB, int32_t *pLAC, int32_t *pIF,
+        int32_t *pDF, int32_t* pint_req);
 
-extern void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sIR,
-        int32 sLAC, int32 sMQ, int32 sIF, int32 sDF, int32 sSC,
-        int32 int_req, int Pause);
+extern void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint16_t sIR,
+        int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF, int32_t sSC,
+        int32_t int_req, int Pause);
 
 #endif // !defined(PIDP8I_H)

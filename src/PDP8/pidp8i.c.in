@@ -31,8 +31,12 @@
 
 #include "../gpio-common.h"
 
+#include "pdp8_defs.h"
+
 #include <assert.h>
 #include <dirent.h> // for USB stick searching
+#include <errno.h>
+#include <string.h>
 
 
 //// MODULE GLOBALS ////////////////////////////////////////////////////
