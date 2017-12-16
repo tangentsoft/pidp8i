@@ -181,13 +181,13 @@ The throttle mechanism discussed above only affects the speed of the
 PDP-8 CPU simulator. It does not affect the speed of I/O operations.
 
 The only I/O channel you can throttle in the same way is a serial
-terminal by purposely choosing a slower bit rate for it than the maximum
-value.  If you set it to 110 bps, it runs at the speed of a Teletype
-Model 33 ASR, the most common terminal type used for the PDP-8/I, and
-most other early PDP-8 flavors.  Later PDP-8s were often paired with (or
-integrated into!) glass TTYs such as the VT05, which flew along at 2400
-bps.  Then things got really fancy with the VT52, which screamed along
-at 9600 bps. Wowee!
+terminal by purposely choosing a slower bit rate for it than the
+maximum value.  If you set it to 110 bps, it runs at the speed of a
+Teletype Model 33 ASR, the most common terminal type used for the
+PDP-8/I, and most other early PDP-8 flavors. Later in the PDP-8's
+commercial life, faster glass terminals became available, though
+it was not always possible to use them at their maximum data rate,
+due to the primitive nature of I/O handling in those days.
 
 I'm not aware of a way to make SIMH slow the other I/O operations, such
 as disk access speeds, in order to emulate the speed of the actual
