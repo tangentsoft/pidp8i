@@ -131,12 +131,12 @@ command won't work.
   you then try passing `'\.'`, Python's string parser will take
   the backslash as escaping the period and again pass just a single
   period character to the regex engine, giving the same result. You
-  must specify it exactly as shown above to a) escape the backslash so
-  that Python will send an escaped period to the regex engine, and b)
-  escape the period so the regex engine treats it as a literal period
-  rather than the "any character" wildcard. Much the same is true
-  when your script needs to await the common `*` prompt character:
-  you must pass it as `os8_send_cmd('\\*', 'COMMAND')`.
+  must specify it exactly as shown above to escape the backslash so
+  that Python will send an escaped period to the regex engine, which
+  in turn is necessary to cause the regex engine to treat it as a
+  literal period rather than the "any character" wildcard. Much the
+  same is true when your script needs to await the common `*` prompt
+  character: you must pass it as `os8_send_cmd('\\*', 'COMMAND')`.
 
 Second, because OS/8 can only accept so many characters of input per
 second, `os8_send_cmd` inserts a small delay between each input
