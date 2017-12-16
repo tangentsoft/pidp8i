@@ -163,6 +163,17 @@ def main ():
   for src in [ 'bldcc8.bi', 'cc.bi', 'header.sb' ]:
     s.os8_send_file (src)
 
+  # Re-zero most of core, leaving out zero page and the top page of the
+  # first two fields before we make the SAVE calls from the BATCH script
+  # we're about to call.  Zero page often contains precious things we
+  # don't want to nuke, and it won't be SAVE'd anyway, and the top page
+  # of the first two fields contain the resident parts of OS/8.
+  s.back_to_cmd ('\\.')
+  s.send_cmd ('de 00200-07577 0')
+  s.send_cmd ('de 10000-17577 0')
+  s.send_cmd ('de 20000-77777 0')
+  s.os8_restart ()
+
   # Build the OS/8 version of CC8 using the batch file we copied in.
   s.os8_send_cmd ('\\.', 'EXE BLDCC8.BI')
 
