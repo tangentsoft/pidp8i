@@ -138,14 +138,14 @@ and `simh.send_cmd`. Read the script if you want more examples.
 prompt is tricky. If you pass just `'.'` here instead, Python's
 [regular expression][re] matching engine will interpret it to mean
 that it should match *any* character as the prompt, almost certainly
-breaking your script's state machine, since it is likely to cause the
-call to return too early. If you instead pass '\.'`, Python's string
-parser will take the backslash as escaping the period and again pass
-just a single period character to the regex engine, giving the same
-result. You must specify it exactly as shown above to escape the
-backslash so that Python will send an escaped period to the regex
-engine, which in turn is necessary to cause the regex engine to treat
-it as a literal period rather than the "any character" wildcard.
+breaking your script's state machine, since it is likely to cause
+the call to return too early. If you instead pass <code>'\.'</code>,
+Python's string parser will take the backslash as escaping the period
+and again pass just a single period character to the regex engine,
+giving the same result. You must specify it exactly as shown above to
+escape the backslash so that Python will send an escaped period to the
+regex engine, which in turn is necessary to cause the regex engine to
+treat it as a literal period rather than the "any character" wildcard.
 
 Much the same is true when your script needs to await the common
 <code>*</code> prompt character: you must pass it like so:
