@@ -77,7 +77,7 @@ foreach {opt def desc} $os8opts {
     } else {
         set prefix "enable"
     }
-    append alloptions [list os8-$opt=$def => "$prefix $desc in the built OS/8 RK05 image"]
+    append alloptions [list os8-$opt=$def => "$prefix $desc in the built OS/8 RK05 image"] \n
 }
 
 # Now define those command line options that belong only to us.
