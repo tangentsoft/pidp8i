@@ -124,20 +124,6 @@ OS/8 because OS/8 lacks a keyboard input buffer, so if you send text to
 it too early, all or part of your input is likely to be lost, so your
 command won't work.
 
-> **IMPORTANT:** The `\\.` syntax for specifying the OS/8 `.` command
-  prompt is tricky. If you pass just `'.'` here instead, the underlying
-  regular expression matching engine will match any character as the
-  prompt, almost certainly breaking your script's state machine. If
-  you then try passing `'\.'`, Python's string parser will take
-  the backslash as escaping the period and again pass just a single
-  period character to the regex engine, giving the same result. You
-  must specify it exactly as shown above to escape the backslash so
-  that Python will send an escaped period to the regex engine, which
-  in turn is necessary to cause the regex engine to treat it as a
-  literal period rather than the "any character" wildcard. Much the
-  same is true when your script needs to await the common `*` prompt
-  character: you must pass it as `os8_send_cmd('\\*', 'COMMAND')`.
-
 Second, because OS/8 can only accept so many characters of input per
 second, `os8_send_cmd` inserts a small delay between each input
 character to prevent character losses.
@@ -148,13 +134,23 @@ delay value was calculated.)
 The bulk of `teco-pi-demo` consists of more calls to `simh.os8_send_cmd`
 and `simh.send_cmd`. Read the script if you want more examples.
 
-Notice that we escape the OS/8 `.` command prompt in the first parameter
-because `class simh` treats it as a [regular expression][re], and a `.`
-in REs means "any character," which we definitely do *not* want to match
-on!  If we did not escape this special RE character with a backslash,
-`class simh` would send the command when the first character from the
-running OS/8 instance came through, likely causing some or all of the
-command to be lost by the time OS/8 is ready to accept input.
+**IMPORTANT:** The `\\.` syntax for specifying the OS/8 `.` command
+prompt is tricky. If you pass just `'.'` here instead, Python's
+[regular expression][re] matching engine will interpret it to mean
+that it should match *any* character as the prompt, almost certainly
+breaking your script's state machine, since it is likely to cause the
+call to return too early. If you instead pass '\.'`, Python's string
+parser will take the backslash as escaping the period and again pass
+just a single period character to the regex engine, giving the same
+result. You must specify it exactly as shown above to escape the
+backslash so that Python will send an escaped period to the regex
+engine, which in turn is necessary to cause the regex engine to treat
+it as a literal period rather than the "any character" wildcard.
+
+Much the same is true when your script needs to await the common
+<code>*</code> prompt character: you must pass it like so:
+
+    s.os8_send_cmd ('\\*', 'COMMAND')
 
 [re]: https://en.wikipedia.org/wiki/Regular_expression
 
