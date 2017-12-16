@@ -547,13 +547,13 @@ the `--*-os8-*` options documented above and generates the
 `os8v3d-*.rk05` RK05 disk image files with your chosen configuration
 options.
 
-This set of disk images entirely replaces the old `os8.rk05` disk image,
-in that all features of the old disk image are still available, though
-not necessarily in the default configuration. In some cases, we have
-disabled some features that were included in the stock `os8.rk05` disk
-image, and in other cases we have changed the behavior of features.
-Mostly, though, the new disk images are simply more functional than the
-old ones.
+This set of disk images entirely replaces the old `os8.rk05` disk
+image, in that all features of the old disk image are still available,
+though not necessarily in the default configuration. In some cases,
+features pesent on the old `os8.rk05` disk are now left out or disabled
+by default, and in other cases we have changed the behavior of features
+from the way they used to be on the old disk. Mostly, though, the
+new disk images are simply more functional than the old ones.
 
 If you wish to know the full details of how these disk images are
 created, the best documentation so far is [the source code for the
@@ -593,22 +593,25 @@ image and copy files in from it.
 ### Default Additions
 
 The OS/8 RK05 disk image build process normally installs many software
-and data file sets to the disk image.  See the [option descriptions
-above](#disable-os8): the "disable" option set effectively lists those
+and data file sets to the disk image.  See the option descriptions
+above: the ["disable" option set](#disable-os8) effectively lists those
 packages that `mkos8` installs by default, and the following set of
-["enable" options](#enable-os8) lists those left out by default.
+["enable" option set](#enable-os8) lists those left out by default.
 
 
 ### Console Enhancements
 
-The default build [enhances the console](/wiki?name=Console+TTY+Setup),
-adding support for lower case terminals where:
+The default build enhances the console in a few ways:
 
 1.  The SIMH PDP-8 simulator and a few select parts of OS/8 are adjusted
     to cope with lowercase input to [varying degrees](#lowercase).
 
 2.  Rubout/backspace handling is set to assume a video terminal rather
     than a teletype by default.
+
+You can read more about this [in the wiki][oce].
+
+[oce]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 
 
 ### Patches
