@@ -40,7 +40,7 @@ int	nxtlab,
 FILE	*input, *input2, *output;
 FILE	*inclstk[INCLSIZ];
 int	inclsp;
-char	fname[20];
+char	fname[NAMESIZE];
 FILE *bfile;
 
 char	quote[2];

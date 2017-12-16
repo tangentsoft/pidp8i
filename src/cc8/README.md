@@ -59,7 +59,7 @@ Symbolic Assembler for Binary Relocatable programmes — assembly code.
 SABR is normally used as the second pass of the OS/8 FORTRAN II system.
 
 When you use the cross-compiler on a POSIX type system such as the
-Raspbian PiDP-8/I environment, the resulting `*.s` files will have
+Raspbian PiDP-8/I environment, the resulting `*.sb` files will have
 LF-only line endings, but OS/8 expects CR+LF line endings. The `txt2ptp`
 utility program included with the PiDP-8/I distribution will
 automatically do that conversion for you when making a SIMH paper tape
@@ -124,18 +124,18 @@ cross-compiler to produce SABR assembly files for each stage of the OS/8
 CC8 compiler, which it then copies into the OS/8 environment, then it
 assembles, links, and saves the result as `CC*.SV`:
 
-2.  `c8.c` &rarr; `c8.s` &rarr; `CC.SV`: The compiler driver: accepts
+2.  `c8.c` &rarr; `c8.sb` &rarr; `CC.SV`: The compiler driver: accepts
     the input file name from the user, and calls the first proper
     compiler stage, `CC1`. Should we add a preprocessor feature, this
     driver will call it before calling `CC1`.
 
-2.  `n8.c` &rarr; `n8.s` &rarr; `CC1.SV`: The parser/tokeniser section
+2.  `n8.c` &rarr; `n8.sb` &rarr; `CC1.SV`: The parser/tokeniser section
     of the compiler.
 
-3.  `p8.c` &rarr; `p8.s` &rarr; `CC2.SV`: The token to SABR code
+3.  `p8.c` &rarr; `p8.sb` &rarr; `CC2.SV`: The token to SABR code
     converter section of the compiler.
 
-4.  `libc.c` &rarr; `libc.s` &rarr; `LIBC.RL`: The C library linked to
+4.  `libc.c` &rarr; `libc.sb` &rarr; `LIBC.RL`: The C library linked to
     any program built with CC8, including the stages above, but also to
     your own programs.
 

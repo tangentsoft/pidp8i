@@ -139,9 +139,7 @@ def main ():
   # Copy the SABR files produced above by the host-side cross-compiler
   # to the OS/8 environment's RK05 disk.
   for m in modules:
-    source = m + '.s'
-    dest = m.upper() + '.SB'
-    s.os8_send_file (source, dest)
+    s.os8_send_file (m + '.sb')
 
   # Copy example programs in as well.
   #
