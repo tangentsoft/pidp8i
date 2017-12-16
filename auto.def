@@ -101,36 +101,48 @@ options $alloptions
 foreach {opt def desc} $os8opts {
     set os8bool($opt) [opt-bool os8-$opt]
 }
-set os8bool(patches) [opt-bool os8-patches]
 set os8bool(src) [opt-bool os8-src]
 
 # Handle meta-options
+set os8min [opt-bool os8-minimal]
+set os8src [opt-bool os8-src]
 if {![opt-bool os8-focal]} {
     set os8bool(focal69) 0
     set os8bool(uwfocal) 0
-}
-if {![opt-bool os8-minimal]} {
-    set os8bool(patches) 0
-}
-# And dependencies
-if {$os8bool(cc8) && $os8bool(fortran-ii)} {
-    set $os8bool(fortran-ii) 0
-    msg-result "Disabling --disable-os8-fortran-ii because CC8 is enabled."
 }
 
 # -- do not use opt-bool os8-* below this point
 # -- use the os8bool() array
 
+# Handle interdependent options
+if {$os8bool(cc8) && !$os8bool(fortran-ii)} {
+    set $os8bool(fortran-ii) 1
+    msg-result "WARNING: Re-enabling OS/8 FORTRAN II: OS/8 CC8 requires it."
+}
+
 # Now build the options to mkos8
 set mkos8_opts ""
-# For simplicity, just pass all options to mkos8 even if they are the default
 foreach {opt def desc} $os8opts {
-    if {$os8bool($opt)} {
+    set val $os8bool($opt)
+    if {$os8min} {
+        # Minimal mode disables everything optional.
+        #
+        # We can't have "except for" logic because we can't tell
+        # explicitly-given options from implicit ones.
+        set act " not"
+        if {$def} { append mkos8_opts " --disable-$opt" }
+    } elseif {$val} {
         set act ""
-        append mkos8_opts " --enable-$opt"
+        if {!$def} {
+            # User is enabling a normally-disabled option, so pass it along
+            # to mkos8 explicitly.
+            append mkos8_opts " --enable-$opt"
+        }
     } else {
         set act " not"
-        append mkos8_opts " --disable-$opt"
+        if {$def} {
+            append mkos8_opts " --disable-$opt"
+        }
     }
     msg-result "Will$act add $desc to the built OS/8 RK05 image"
 }
@@ -145,14 +157,14 @@ foreach {opt def desc} $os8opts {
 append os "}\n"     ; # saved later!
 
 # Handle the OS/8 options not passed to mkos8 generically by above.
-if {$os8bool(src)} {
+if {$os8src} {
     msg-result "Building os8v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 bin/os8v3d-src.rk05
 } else {
     msg-result "Will not build os8v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 {}
 }
-if {!$os8bool(patches)} {
+if {$os8min || ![opt-bool os8-patches]} {
     msg-result "Will not patch OS/8 on the RK05 bin disk."
     define OS8_BOOT_DISK "os8v3d-bin.rk05"
     define MKOS8_BIN_PATCHES {}
