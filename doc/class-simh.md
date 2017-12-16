@@ -124,17 +124,17 @@ OS/8 because OS/8 lacks a keyboard input buffer, so if you send text to
 it too early, all or part of your input is likely to be lost, so your
 command won't work.
 
-> **IMPORTANT**: The `\\.` syntax for specifying the OS/8 `.` command >
-prompt is tricky. If you pass just `'.'` here instead, the underlying >
-regular expression matching engine will match any character as the >
-prompt, almost certainly breaking your script's state machine. If
-you > then try passing `'\.'`, Python's string parser will take the >
-backslash as escaping the period and again pass just a single period
-> character to the regex engine, giving the same result. You must >
-specify it exactly as shown above to a) escape the backslash so that
-> Python will send an escaped period to the regex engine. Much the
-same is > true when your script needs to await the common `*` prompt
-character: > you must pass it as `os8_send_cmd('\\*', 'COMMAND')`.
+> **IMPORTANT:** The `\\.` syntax for specifying the OS/8 `.` command
+  prompt is tricky. If you pass just `'.'` here instead, the underlying
+  regular expression matching engine will match any character as the
+  prompt, almost certainly breaking your script's state machine. If
+  you then try passing `'\.'`, Python's string parser will take
+  the backslash as escaping the period and again pass just a single
+  period character to the regex engine, giving the same result. You
+  must specify it exactly as shown above to a) escape the backslash so
+  that Python will send an escaped period to the regex engine. Much the
+  same is true when your script needs to await the common `*` prompt
+  character: you must pass it as `os8_send_cmd('\\*', 'COMMAND')`.
 
 Second, because OS/8 can only accept so many characters of input per
 second, `os8_send_cmd` inserts a small delay between each input
