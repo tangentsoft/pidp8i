@@ -378,10 +378,7 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     [CHECKMO-II chess implementation][chess].
 
 *   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
-    compiler normally installed to `SYS:`.  This option is implicitly
-    given if you give `--disable-os8-fortran-ii` because the output of
-    the OS/8 CC8 compiler is a SABR file, and SABR is part of the
-    FORTRAN II subsystem.
+    compiler normally installed to `SYS:`.
 
 *   **--disable-os8-crt** — Suppress the [console rubout behavior][tty]
     enabled while building the OS/8 binary RK05 disk image. You
@@ -395,7 +392,9 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 
 *   **--disable-os8-fortran-ii** - Leaves out the FORTRAN II compiler,
     SABR, the linking loader (`LOADER`), the `LIBSET` tool, and the
-    `*.RL` library files.
+    `*.RL` library files.  This option is ignored unless you also give
+    `--disable-os8-cc8` because the OS/8 version of CC8 is built atop
+    parts of the OS/8 FORTRAN II subsystem.
 
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 
@@ -503,28 +502,34 @@ with the following options:
 #### --os8-minimal
 
 If you set this flag, it sets all `--enable-os8-*` flags to false and
-all `--disable-os8-*` flags to true. If you explicitly give any of these
-flags to the `configure` script, this flag overrides them.
+all `--disable-os8-*` flags to true.  If you give this along with any
+`--enable-os8-*` option, minimal mode overrides it.  Alas, the only way
+to get "minimal plus one or two features" is to explicitly disable all
+of the optional OS/8 features you don't want.
 
-This flag only affects the optional installs made after the `BUILD`
-step: it does not remove optional features of OS/8 itself, such as its
-BASIC interpreter.
+This flag's name is aspirational, rather than accurate: our current
+"minimal" installation could still be stripped down some more.  We
+expect to add more `--disable-os8-*` flags later to reduce the delta
+between the ideal "minimal OS/8" and our current offering.  These
+options would then be included in `--os8-minimal`.  An example of this
+is OS/8's BASIC interpreter, which currently cannot be left out.
 
-Giving this option therefore gets you an empty OS/8 `DSK:` device and
-nothing in `SYS:` beyond what was left after the OS/8 `BUILD` step.
-
-There are a few exceptions:
+This option does not control some things you might think it should:
 
 1.  This option does not affect the `--lowercase` option because that
     affects only OS/8's command interpreter and OS/8's BASIC
     implementation, so we deem it to be orthogonal to the purpose of the
     `--os8-minimal` flag, which only affects the optional post-`BUILD`
-    features. If you want a *truly* pristime OS/8 disk, you should
+    features.  If you want a *truly* pristime OS/8 disk, you should
     therefore also give `--lowercase=none`.
 
 2.  This option does not affect `--disable-os8-src`, because it only
     suppresses optional features in the "bin" media.  If you want a
     minimal OS/8 bin disk and no src disk, give that option as well.
+
+3.  Although it disables *display* of the `INIT.TX` file on boot, the
+    file is still generated in case you later want to enable it, since
+    the file acts as build documentation as well as a "welcome" message.
 
 
 #### --help

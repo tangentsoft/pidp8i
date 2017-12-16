@@ -197,7 +197,10 @@
     This automatic OS/8 media build feature was suggested by Jonathan
     Trites who wrote the initial version of the script that is now
     called `libexec/mkos8`.  That script was then extended and factored
-    into its current form by Bill Cattey and Warren Young.
+    into its current form by Bill Cattey and Warren Young.  The author
+    of Autosetup, Steve Bennett, helped with the code which allows the
+    `configure` and `mkos8` scripts to share a single set of option
+    definitions.
 
     Warren thinks Bill did most of the hard work in the items above.
 
