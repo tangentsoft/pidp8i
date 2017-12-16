@@ -65,7 +65,7 @@ cc8_src = os.path.join (dirs.src, 'src', 'cc8')
 
 def cross_compile (module):
   inf  = module + '.c'
-  outf = module + '.s'
+  outf = module + '.sb'
 
   if os.path.exists (outf) and \
       os.path.getmtime (inf) <= os.path.getmtime (outf):
