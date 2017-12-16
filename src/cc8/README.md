@@ -150,15 +150,16 @@ the appropriate OS/8 volumes: `CC*.SV` on `SYS:`, and everything else on
 Input programs should go on `DSK:`. Compiler outputs are also placed on
 `DSK:`.
 
-To try it out:
 
-Boot OS/8 within the PiDP-8/I environment as you normally would. If
-you're at the Linux command prompt within the PiDP-8/I source tree, you
-can start it most easily with a `make run` command.
+<a id="examples"></a>
+## Trying the Examples
 
-With the OS/8 environment running, you can enter a C programme in lower
-case via the editor, but before doing that, try building a copy of one
-of the example programs:
+The standard PiDP-8/I OS/8 RK05 boot disk contains several example
+C programs that the OS/8 version of CC8 is able to compile.
+
+To try the OS/8 version of CC8 out, boot OS/8 within the PiDP-8/I
+environment as you normally would, then try building one of the
+examples:
 
     .R CC            ⇠ compiler front end
     >ps.c            ⇠ takes name of C program; creates CC.SB
@@ -174,8 +175,29 @@ These steps are wrapped up into the `CC.BI` BATCH file:
     .EXE CC.BI       ⇠ must specify .BI to avoid running CC.SV instead
     >ps.c            ⇠ builds, links, and runs it
 
-That demo is particularly interesting. It generates Pascal’s triangle
-without using factorials, which are a bit out of range for 12 bits!
+This particular example (`ps.c`) is particularly interesting. It
+generates Pascal’s triangle without using factorials, which are a
+bit out of range for 12 bits!
+
+The other examples preinstalled are:
+
+*   **<code>calc.c</code>** - A simple 4-function calculator program.
+
+*   **<code>fib.c</code>** - Calculates the first 10 Fibonacci numbers.
+    This implicitly demonstrates CC8's ability to handle recursive
+    function calls.
+
+If you look in `src/cc8/examples`, you will find these same programs
+plus `basic.c`, a simple BASIC language interpreter. This one is
+not preinstalled because its complexity is currently beyond the
+capability of the OS/8 version of CC8. To build it, you will have
+to use [the cross-compiler](#cross), then assemble the resulting
+`basic.sb` file under OS/8.
+
+Another set of examples not preinstalled on the OS/8 disk are
+`examples/pep001-*.c`, which are described [elsewhere][pce].
+
+[pce]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
 
 
 <a id="warning"></a>
