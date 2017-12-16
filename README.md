@@ -239,10 +239,10 @@ expect to receive lowercase ASCII text, particularly the older software.
 The PDP-8 lived long enough to see lowercase ASCII input become common
 in the computing industry.
 
-As a result, PDP-8 software reacts in many strange and wonderful ways
-when you give it lowercase input. Some software copes nicely, others
-crashes, and some software just sits there dumbly waiting for you to
-type something!
+As a result, PDP-8 software reacts in many strange and wonderful
+ways when you give it lowercase input. Some software copes nicely,
+other software crashes, and some software just sits there dumbly
+waiting for you to type something!
 
 This configuration option lets you control how you want your simulated
 PDP-8/I to react to lowercase input:
