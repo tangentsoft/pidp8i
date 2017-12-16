@@ -144,16 +144,18 @@ def main ():
   # Copy example programs in as well.
   #
   # We have to filter these files' content for the reasons given at the
-  # top of the filter's code.
+  # top of cc8-to-os8.
   #
   # We don't let os8_send_file build the destination file name because
   # the source is a random-named temp file.
   tool = os.path.join (dirs.bin, 'cc8-to-os8')
   for src in glob.glob ('../examples/*.c'):
-    ctf = tempfile.NamedTemporaryFile ()
-    ctn = ctf.name
-    os.system (tool + ' < ' + src + ' > ' + ctn)
-    s.os8_send_file (ctn, os.path.basename (src).upper ())
+    if 'basic.c' not in src:
+    # else: leave this one out.  The OS/8 compiler can't cope with it.
+      ctf = tempfile.NamedTemporaryFile ()
+      ctn = ctf.name
+      os.system (tool + ' < ' + src + ' > ' + ctn)
+      s.os8_send_file (ctn, os.path.basename (src).upper ())
 
   # Copy the remaining static OS/8 CC8 text files in.  We purposely do
   # not send init.h or libc.h because OS/8 CC8 doesn't process #include,
