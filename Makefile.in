@@ -298,6 +298,13 @@ install: all instdirs
 	@test -x /usr/bin/apt-get -a ! -h /media/usb && apt-get -y install usbmount || true
 	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
 
+	@# Diddle the udevd systemd unit file if this is Raspbian Stretch or
+	@# newer: the default settings are "secure" meaning that normal users
+	@# can't even see the mounted USB sticks.
+	@sed -i -e 's/MountFlags=slave/MountFlags=shared/' \
+	    /lib/systemd/system/systemd-udevd.service && \
+		/bin/systemctl daemon-reload || true
+
 	@# Disable competing services if this is a Raspberry Pi
 	@(test -x /bin/systemctl && /bin/systemctl disable deeper || true)
 	@(test -x /bin/systemctl && /bin/systemctl disable pidp8  || true)

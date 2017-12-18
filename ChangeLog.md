@@ -345,11 +345,6 @@
 
 *   Assorted portability, build system, and documentation improvements.
 
-*   **TODO**
-
-    -   Create udev script replacement for usbmount so that `DF` +
-        `SING_STEP` works on Stretch.
-
 [apt]:   https://linux.die.net/man/8/apt
 [cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
