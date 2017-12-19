@@ -83,13 +83,11 @@ function do_init() {
 
     if [ -z "$(type -p fossil)" ]
     then
-        bn=fossil-release
-        tb=$bn.tar.gz
-        wget -O $tb https://fossil-scm.org/index.html/tarball/$bn?uuid=release
-        apt-get -y install libssl-dev
-        ( tar xf $tb && cd $bn && ./configure && make -j3 && make install )
-        chown -R pi.pi $bn
-        rm $tb
+        fb=/usr/local/bin/fossil
+        src=https://tangentsoft.com/pidp8i/uv/fossil-raspbian-9.1-stretch
+        wget -O $fb $src
+        chmod +x $fb
+        apt-get -y install libssl-dev    # user might rebuild Fossil later
     fi
 
     if [ ! -e "$nh" ]
