@@ -238,7 +238,7 @@ class simh:
     self.send_cmd ('attach -r ptr ' + pt)
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
-    self.os8_send_cmd ('\*', dest + '<PTR:')
+    self.os8_send_cmd ('\\*', dest + '<PTR:')
     self._child.expect ('\\^')
     self.os8_send_ctrl ('[')      # finish transfer
     self._child.expect ('\\*')
