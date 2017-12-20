@@ -449,7 +449,6 @@ ASCII codes and their common meaning today.
 | Old Name    | ASCII | Current Name  |
 | ----------- | ----- | ------------- |
 | `RUBOUT`    | 127   | Delete or Del |
-| `DELETE`    | 127   | Delete or Del |
 | `BACKARROW` | 95    | Underscore    |
 | `UNDERLINE` | 95    | Underscore    |
 
