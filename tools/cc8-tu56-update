@@ -192,8 +192,9 @@ def main ():
   s.os8_send_cmd ('\\.', 'COPY DTA0:<SYS:CC.SV,SYS:CC1.SV,SYS:CC2.SV')
   s.os8_send_cmd ('\\.', 'COPY DTA0:<DSK:HEADER.SB,DSK:LIBC.RL,DSK:*.C,DSK:CC.BI')
 
-  # Exit simulator nicely so that tape detaches cleanly
+  # Detach the tape and exit the simulator.
   s.back_to_cmd ('\\.')
+  s.send_cmd ('det dt0')
   s.send_cmd ('quit')
 
 
