@@ -149,8 +149,8 @@ def main ():
   #
   # sfiles are files on SYS: that get copied to DTA0:
   #
-  # cfiles and dfiles are files on DSK: that get copied to DTA0:  We use
-  # two lists to get around a low command line length limit in OS/8.
+  # dfiles are files on DSK: that get copied to DTA0:  We use a list of
+  # lists here to get around a low command line length limit in OS/8.
   #
   # tfiles are temporaries on DSK:, either left behind by this build
   # process or by prior action on the working RK05 disk.  We delete
@@ -162,10 +162,15 @@ def main ():
   sfiles = ','.join([
     'SYS:{0}.SV'.format(f) for f in [ 'CC', 'CC1', 'CC2' ]
   ])
-  cfiles = ','.join([ 'CALC.C', 'FIB.C', 'PS.C' ])
-  dfiles = ','.join([ 'HEADER.SB', 'LIBC.RL', 'CC.BI' ])
-  tfiles = ','.join([ '?8.RL', '?8.SB', 'CC.SB', 'LIBC.SB' ])
-  for fl in [ sfiles, cfiles, dfiles, tfiles ]:
+  dfiles = [ 
+    ','.join([ 'CALC.C', 'FIB.C', 'PS.C' ]),
+    ','.join([ 'HEADER.SB', 'LIBC.RL', 'CC.BI' ]),
+  ]
+  tfiles = [
+    ','.join([ '?8.SB', 'LIBC.SB', 'CC.SB' ]),
+    ','.join([ '?8.RL', 'BLDCC8.BI', 'CC.C' ]),
+  ]
+  for fl in [ sfiles ] + dfiles + tfiles:
     s.os8_send_cmd ('\\.', 'DEL ' + fl)
   s.os8_squish ("SYS")
   s.os8_squish ("DSK")
@@ -214,9 +219,10 @@ def main ():
   # Save files in the ?files lists above to the cc8.tu56 image except
   # for those in tfiles, which we delete.
   s.os8_send_cmd ('\\.', 'ZERO DTA0:')
-  for fl in [ sfiles, cfiles, dfiles ]:
+  for fl in [ sfiles ] + dfiles:
     s.os8_send_cmd ('\\.', 'COPY DTA0:<' + fl)
-  s.os8_send_cmd ('\\.', 'DEL ' + tfiles)
+  for fl in tfiles:
+    s.os8_send_cmd ('\\.', 'DEL ' + fl)
 
   # Detach the tape and exit the simulator.
   s.back_to_cmd ('\\.')
