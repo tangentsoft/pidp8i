@@ -336,12 +336,22 @@
     fix.
 
 *   Updated SIMH to upstream checkin ID 27f9fc3c3, December 11, 2017.
+
     There have been no substantial changes to the PDP-8 simulator since
     the last update, 8 months ago, but there have been a lot of bug
     fixes to the SCP core program.
 
-*   Updated for Raspbian Stretch, released in September 2017.  It should
-    still run on Raspbian Jessie, however.
+    One upstream change had to be backed out to work around a bug they
+    introduced, which was not fixed by release time.  (See [GitHub issue
+    #508][gh508].)
+
+*   Updated for Raspbian Stretch, released in September 2017.  The only
+    significant difference found is that the old, abandoned `usbmount`
+    package no longer works, apparently due to some change in `systemd`.
+    We've replaced that with a set of scripts based on [those by Mike
+    Blackwell][mbua].
+
+    It should still run on Raspbian Jessie, however.
 
 *   Assorted portability, build system, and documentation improvements.
 
@@ -350,6 +360,8 @@
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [dibas]: https://tangentsoft.com/pidp8i/wiki?name=Demos+in+BASIC
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
+[gh508]: https://github.com/simh/simh/issues/508
+[mbua]:  https://serverfault.com/a/767079
 [os8ct]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 [os8lc]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+LCSYS.BI+Disassembled
 [os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
