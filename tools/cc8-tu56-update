@@ -164,7 +164,7 @@ def main ():
   ])
   dfiles = [ 
     ','.join([ 'CALC.C', 'FIB.C', 'PS.C' ]),
-    ','.join([ 'HEADER.SB', 'LIBC.RL', 'CC.BI' ]),
+    ','.join([ 'HEADER.SB', 'LIBC.RL', 'CCR.BI' ]),
   ]
   tfiles = [
     ','.join([ '?8.SB', 'LIBC.SB', 'CC.SB' ]),
@@ -199,7 +199,7 @@ def main ():
   # Copy the remaining static OS/8 CC8 text files in.  We purposely do
   # not send init.h or libc.h because OS/8 CC8 doesn't process #include,
   # so it has those bits hard-coded into the compiler at the moment.
-  for src in [ 'bldcc8.bi', 'cc.bi', 'header.sb' ]:
+  for src in [ 'bldcc8.bi', 'ccr.bi', 'header.sb' ]:
     s.os8_send_file (src)
 
   # Re-zero most of core, leaving out zero page and the top page of the

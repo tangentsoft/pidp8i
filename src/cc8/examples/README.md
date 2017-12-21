@@ -55,7 +55,7 @@ If you wish to compile from C source code on the OS/8 side rather than
 cross-compile, I recommend using the `CC.BI` wrapper rather than running
 the compiler directly:
 
-    .EXE CC
+    .EXE CCR
     >calc.c
 
 Note that it tolerates lowercase input.

@@ -170,9 +170,9 @@ Link and run it with:
     .R LOADER
     *CC,LIBC/G       ⇠ CC.RL + pre-built LIBC.RL = runnable program; /G = "go"
 
-These steps are wrapped up into the `CC.BI` BATCH file:
+These steps are wrapped up into the `CCR.BI` BATCH file:
 
-    .EXE CC.BI       ⇠ must specify .BI to avoid running CC.SV instead
+    .EXE CCR
     >ps.c            ⇠ builds, links, and runs it
 
 This particular example (`ps.c`) is particularly interesting. It
