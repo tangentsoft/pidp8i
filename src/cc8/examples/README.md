@@ -8,12 +8,12 @@ like so:
 
     $ cc8 calc.c
 
-You can then use the `txt2ptp` program to turn the resulting `calc.s`
+You can then use the `txt2ptp` program to turn the resulting `calc.sb`
 file into a paper tape to be loaded into OS/8:
 
-    $ txt2ptp < calc.s > calc.pt
+    $ txt2ptp < calc.sb > calc.pt
     $ pidp8i             ⇠ ...start PDP-8 sim somehow, then hit Ctrl-E
-    sim> att -r dt0 calc.pt
+    sim> att ptr calc.pt
     sim> cont
     .R PIP
     *CALC.SB<PTR:        ⇠ hit Enter, then Escape twice
@@ -33,7 +33,7 @@ on the OS/8 side with:
 
     .COMP CALC.SB
     .R LOADER
-    *CALC,LIBC/G     ⇠ press Esc to execute command and exit LOADER
+    *CALC,LIBC/I/O/G     ⇠ press Esc to execute command and exit LOADER
 
 The `/G` flag causes the loader to run the linked program immediately,
 but once you're done modifying the program, you probably want to save it
@@ -47,29 +47,24 @@ save the result where the OS/8 `R` command can find it with:
 That produces `SYS:CALC.SV`, which an `R CALC` command will load and
 run.
 
+The `/I` and `/O` flags might not be strictly necessary, depending on
+what kind of I/O your C program does.  See the OS/8 FORTRAN II manual's
+information on device-independent I/O for more on this.
+
 If you wish to compile from C source code on the OS/8 side rather than
-cross-compile, I recommend using the `CC0` front-end rather than the
-method shown in the [top level `README.md` file][tlrm] involving the
-`CC1` stage:
+cross-compile, I recommend using the `CC.BI` wrapper rather than running
+the compiler directly:
 
-    .R CC0
+    .EXE CC
+    >calc.c
 
-    >calc.cc
+Note that it tolerates lowercase input.
 
-    .COMP CC.SB
-
-    .R LOADER
-    *CC,LIBC/M
-
-Notice that the front-end processor produces `CC.SB`, not `CALC.SB` as
-you might be expecting. This is where the `CC` comes from in the `COMP`
-and `LOADER` commands.
-
-Note that `CC0` tolerates lowercase input.
+See [the CC8 documentation][ccrm] for more information.
 
 
 [aerm]: /doc/trunk/examples/README.md
-[tlrm]: /doc/trunk/src/cc8/README.md
+[ccrm]: /doc/trunk/src/cc8/README.md
 [uwfs]: /doc/trunk/doc/uwfocal-manual-supp.md
 
 
