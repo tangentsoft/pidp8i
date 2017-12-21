@@ -136,6 +136,17 @@ def main ():
   # files created by hand to the cc8.tu56 tape with the wildcard below.
   s.os8_send_cmd ('\\.', 'DEL *.C')
 
+  # We may be running this script in an RK05 image that has output
+  # from a previous run of this script.
+  # Remove any possible such files and perform a SQUISH.
+  # The first DEL command is only needed if a run of this script was
+  # aborted before it cleaned up the input files.
+  s.os8_send_cmd ('\\.', 'DEL ?8.RL,?8.SB,LIBC.SB')
+  s.os8_send_cmd ('\\.', 'DEL SYS:CC.SV,SYS:CC1.SV,SYS:CC2.SV')
+  s.os8_send_cmd ('\\.', 'DEL DSK:HEADER.SB,DSK:LIBC.RL,DSK:*.C,DSK:CC.BI')
+  s.os8_squish ("SYS")
+  s.os8_squish ("DSK")
+
   # Copy the SABR files produced above by the host-side cross-compiler
   # to the OS/8 environment's RK05 disk.
   for m in modules:
