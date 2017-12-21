@@ -462,6 +462,7 @@ make-template boot/7.script.in
 make-template boot/run.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
+make-template etc/usb-mount@.service.in
 make-template examples/Makefile.in
 make-template lib/pidp8i/__init__.py.in
 make-template lib/pidp8i/dirs.py.in
