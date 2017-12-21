@@ -160,7 +160,7 @@ def main ():
   # process them right-to-left in a COPY command, and we want them to
   # land on DTA0: in the order given here in the source code.
   sfiles = ','.join([
-    'SYS:{0}.SV'.format(f) for f in [ 'CC', 'CC1', 'CC2' ]
+    'SYS:{0}.SV'.format(f) for f in [ 'CC0', 'CC1', 'CC2' ]
   ])
   dfiles = [ 
     ','.join([ 'CALC.C', 'FIB.C', 'PS.C' ]),

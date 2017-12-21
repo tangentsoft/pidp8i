@@ -122,12 +122,15 @@ These pre-built binaries are saved as `media/os8/subsys/cc8.tu56` by the
 `tools/cc8-tu56-update` script. Basically, that script uses the
 cross-compiler to produce SABR assembly files for each stage of the OS/8
 CC8 compiler, which it then copies into the OS/8 environment, then it
-assembles, links, and saves the result as `CC*.SV`:
+assembles, links, and saves the result as `CC?.SV`:
 
-2.  `c8.c` &rarr; `c8.sb` &rarr; `CC.SV`: The compiler driver: accepts
+2.  `c8.c` &rarr; `c8.sb` &rarr; `CC0.SV`: The compiler driver: accepts
     the input file name from the user, and calls the first proper
-    compiler stage, `CC1`. Should we add a preprocessor feature, this
-    driver will call it before calling `CC1`.
+    compiler stage, `CC1`.
+    
+    If we should add a preprocessor feature, it might become part of
+    `CC0`, or it might be another program that `CC0` calls before
+    calling `CC1`.
 
 2.  `n8.c` &rarr; `n8.sb` &rarr; `CC1.SV`: The parser/tokeniser section
     of the compiler.
@@ -144,7 +147,7 @@ If you are not changing the OS/8 CC8 source code, you needn't run the
 
 The PiDP-8/I build system's OS/8 RK05 media build script copies those
 files and the other files required for building C programs under OS/8 to
-the appropriate OS/8 volumes: `CC*.SV` on `SYS:`, and everything else on
+the appropriate OS/8 volumes: `CC?.SV` on `SYS:`, and everything else on
 `DSK:`. 
 
 Input programs should go on `DSK:`. Compiler outputs are also placed on
@@ -161,23 +164,12 @@ To try the OS/8 version of CC8 out, boot OS/8 within the PiDP-8/I
 environment as you normally would, then try building one of the
 examples:
 
-    .R CC            ⇠ compiler front end
-    >ps.c            ⇠ takes name of C program; creates CC.SB
-    .COMP CC         ⇠ compile SABR output of CC8 to CC.RL
+    .EXE CC    ⇠ BATCH wrapper around CC?.SV
+    >ps.c      ⇠ takes name of C program, builds, links, and runs it
 
-Link and run it with:
-
-    .R LOADER
-    *CC,LIBC/G       ⇠ CC.RL + pre-built LIBC.RL = runnable program; /G = "go"
-
-These steps are wrapped up into the `CC.BI` BATCH file:
-
-    .EXE CC.BI       ⇠ must specify .BI to avoid running CC.SV instead
-    >ps.c            ⇠ builds, links, and runs it
-
-This particular example (`ps.c`) is particularly interesting. It
-generates Pascal’s triangle without using factorials, which are a
-bit out of range for 12 bits!
+This example is particularly interesting. It generates
+Pascal’s triangle without using factorials, which are a bit out of
+range for 12 bits!
 
 The other examples preinstalled are:
 
@@ -198,6 +190,29 @@ Another set of examples not preinstalled on the OS/8 disk are
 `examples/pep001-*.c`, which are described [elsewhere][pce].
 
 [pce]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
+
+
+## Making Executables
+
+The `CC.BI` file loads, links, and runs your C program without
+producing an executable file on disk, contrary to the way typical C
+compilers work.  You need only a small variation on this BATCH file's
+contents to get an executable core image that you can run with the OS/8
+`R` command:
+
+    .R CC0
+    >myprog.c
+    .COMP CC.SB
+    .R LOADER
+    *CC,LIBC/I/O$           ⇠ $ = Escape
+    .SAVE SYS:MYPROG.SV
+
+If you've just run `EXE CC` on `myprog.c`, you can skip the `CC0` and
+`COMP` steps above, reusing the `CC.RL` file that was left behind.
+
+Basically, we leave the `/G` "go" switch off of the command to `LOADER`
+so that the program is left in its pre-run state in core so that
+`SAVE` can capture it to disk.
 
 
 <a id="warning"></a>
@@ -265,7 +280,7 @@ those limitations, here is what is known to work:
             ...
         }
 
-1.  **Recursion:** See [`FIB.CC`][fib] for an example of this.
+1.  **Recursion:** See [`FIB.C`][fib] for an example of this.
 
 [fib]: https://tangentsoft.com/pidp8i/doc/src/cc8/examples/fib.c
 
@@ -340,15 +355,12 @@ cross-compiler](#cross-fl):
     OS/8 `*.RL` format and link them with the OS/8 LOADER, but because
     of the previous limitation, only one of these can be written in C.
 
-4.  Unlike the CC8 cross-compiler, the OS/8 compiler ignores all C
-    preprocessor directives: `#define`, `#ifdef`, `#include`, etc. This
-    even includes inline assembly via `#asm`!
-    
-    One day, we may add a preprocessor called by the `CC.SV` driver
-    program, but not today.
-    
-    This means you cannot use `#include` directives to string multiple C
-    modules into a single program.
+4.  Unlike the CC8 cross-compiler, the OS/8 compiler currently ignores
+    all C preprocessor directives: `#define`, `#ifdef`, `#include`,
+    etc.  This even includes inline assembly via `#asm`!
+
+    This means you cannot use `#include` directives to string multiple
+    C modules into a single program.
 
     If that then makes you wonder how the OS/8 compiler looks up the
     stock library functions defined in `libc.h` — note that I've
@@ -374,7 +386,7 @@ cross-compiler](#cross-fl):
 
 5.  Variables are implicitly `static`, even when local.
 
-6.  Arrays may only be single indexed. See `PS.CC` for an example.
+6.  Arrays may only be single indexed. See `PS.C` for an example.
 
 7.  The compiler does not yet understand how to assign a variable's
     initial value as part of its declaration. This:
