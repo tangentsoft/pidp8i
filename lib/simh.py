@@ -303,9 +303,10 @@ class simh:
   #
   # 0. zero page - many apps put temporary data here
   # 1. the top pages of fields 1 & 2 - OS/8 is resident here
+  # 2. the top page of field 2 - OS/8's TD8E driver (if any) lives here
   #
-  # We then restart OS/8, which means we absolutely need to do #1.
-  # We could probably get away with zeroing page 0.
+  # We then restart OS/8, which means we absolutely need to do #1 and
+  # may need to do #2.  We could probably get away with zeroing page 0.
   #
   # All of the above explains why we have this special OS/8 alternative
   # to the zero_core() method.
@@ -314,7 +315,8 @@ class simh:
     self.back_to_cmd ('\\.')
     self.send_cmd ('de 00200-07577 0')
     self.send_cmd ('de 10000-17577 0')
-    self.send_cmd ('de 20000-77777 0')
+    self.send_cmd ('de 20000-27577 0')
+    self.send_cmd ('de 30000-77777 0')
     self.os8_restart ()
 
 
