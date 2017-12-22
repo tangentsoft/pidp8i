@@ -297,6 +297,27 @@ class simh:
     self._child.send ("Y\r");
 
 
+  #### os8_zero_core ###################################################
+  # Starting from OS/8 context, bounce out to SIMH context and zero all
+  # of core excepting:
+  #
+  # 0. zero page - many apps put temporary data here
+  # 1. the top pages of fields 1 & 2 - OS/8 is resident here
+  #
+  # We then restart OS/8, which means we absolutely need to do #1.
+  # We could probably get away with zeroing page 0.
+  #
+  # All of the above explains why we have this special OS/8 alternative
+  # to the zero_core() method.
+
+  def os8_zero_core (self):
+    self.back_to_cmd ('\\.')
+    self.send_cmd ('de 00200-07577 0')
+    self.send_cmd ('de 10000-17577 0')
+    self.send_cmd ('de 20000-77777 0')
+    self.os8_restart ()
+
+
   #### quit ############################################################
   # Quits the simulator and waits for it to exit
 
@@ -348,3 +369,21 @@ class simh:
 
   def try_wait (self, success, failure, timeout = -1):
     return self._child.expect ([success, failure], timeout = timeout) == 0
+
+
+  #### zero_core #######################################################
+  # From SIMH context, zero the entire contents of core, which is
+  # assumed to be 32 kWords.
+  #
+  # SIMH's PDP-8 simulator doesn't start with core zeroed, on purpose,
+  # because the actual hardware did not do that.  SIMH does not attempt
+  # to simulate the persistence of core memory by saving it to disk
+  # between runs, but the SIMH developers are right to refuse to do this
+  # by default: you cannot trust the prior state of a PDP-8's core
+  # memory before initializing it yourself.
+  #
+  # See os8_zero_core () for a less heavy-handed alternative for use
+  # when running under OS/8.
+
+  def zero_core (self):
+    self.send_cmd ('de all 0')
