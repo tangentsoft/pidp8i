@@ -442,7 +442,9 @@ test-mkos8:
 # the updated init.tx file, not before.  We needn't even make it an
 # order-only prereq because configure and the INFILES rules above ensure
 # that it always exists.
-OS8_BIN_SRCS := $(MKOS8_SRCS) \
+OS8_BIN_SRCS := \
+	$(MKOS8) $(PIDP8I_DIN) \
+	lib/pidp8i/dirs.py \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 ifneq (@MKOS8_BIN_PATCHES@,)
@@ -456,7 +458,9 @@ $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
 #
 # Using an order-only dependency for the simulator and the bin disk: we
 # only need *a* version of each, they don't have to be recent!
-OS8_SRC_SRCS = $(MKOS8_SRCS) \
+OS8_SRC_SRCS = \
+	$(MKOS8) $(PIDP8I_DIN) \
+	lib/pidp8i/dirs.py \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
 	$(MKOS8)@MKOS8_OPTS@ src
