@@ -11,7 +11,9 @@ The contents of the Zip file are:
 | `pidp8i-*.img`    | the OS image, based on Raspbian Stretch Lite
 | `MANIFEST.txt`    | SHA 256 hash and file size for the OS image file
 
-Another difference is the default user name and password:
+Aside from having the PiDP-8/I software installed and running, the
+primary difference between this disk image and the official Raspbian
+Lite image is the default user name and password:
 
 *   **username:** `pidp8i`
 *   **password:** `edsonDeCastro1968`
