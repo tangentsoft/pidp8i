@@ -229,7 +229,7 @@
         *   [FORTRAN II][pe1f2]
         *   [U/W FOCAL][pe1u]
 
-    *   [Demos in BASIC][dibas], deescribing `DSK:*.BA`
+    *   [Demos in BASIC][dibas], describing `DSK:*.BA`
 
     *   [OS/8 Console TTY Setup][os8ct], describing how we have
         modified the stock behavior of OS/8 to behave appropriately
@@ -355,8 +355,9 @@
     simulators.
 
     One upstream change had to be backed out to work around a bug they
-    introduced, which was not fixed by release time.  (See [GitHub issue
-    #508][gh508].)
+    introduced, which was not fixed by release time.
+    
+    (See [GitHub issue \#508][gh508].)
 
 *   Updated for Raspbian Stretch, released in September 2017.  (Our
     binary OS images are built against the subsequent 2017-11-29
