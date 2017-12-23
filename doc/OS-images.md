@@ -8,14 +8,8 @@ The contents of the Zip file are:
 | File Name         | Description
 |--------------------------------
 | `README.md`       | this file
-| `pidp8i-*.img`    | the OS image, based on Raspbian Jessie Lite
+| `pidp8i-*.img`    | the OS image, based on Raspbian Stretch Lite
 | `MANIFEST.txt`    | SHA 256 hash and file size for the OS image file
-
-One small difference between these OS images and the ones that come from
-the Raspberry Pi Foundation is that mine have already booted once, so
-they won't automatically expand to fill your SD card's space. Simply run
-`sudo raspi-config` after your first boot and select the **Expand
-Filesystem** option, then reboot.
 
 Another difference is the default user name and password:
 
@@ -28,7 +22,7 @@ Remember, [the S in IoT stands for Security.][5]  If we want security,
 we have to see to it ourselves!
 
 If you do not want your PiDP-8/I to be secure, see my other guide, "[How
-to Run a Nekkid PiDP-8/I][6]."
+to Run a Naked PiDP-8/I][6]."
 
 
 [1]: https://tangentsoft.com/pidp8i/
