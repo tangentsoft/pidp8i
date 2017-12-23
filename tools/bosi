@@ -93,7 +93,6 @@ function do_init() {
     pip install pexpect
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
-    test -h /media/usb || apt-get -y install usbmount
 
     if [ -z "$(type -p fossil)" ]
     then
@@ -112,10 +111,6 @@ function do_init() {
         usermod  -l $nu -d $nh -m pi 
         groupmod -n $nu pi
     fi
-
-    sed -i.orig \
-            -e 's/^FS_MOUNTO.*/FS_MOUNTOPTIONS="-fstype=vfat,dmask=0000,fmask=0000"/' \
-            /etc/usbmount/usbmount.conf
 
     reboot
 }

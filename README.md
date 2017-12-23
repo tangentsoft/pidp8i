@@ -27,34 +27,13 @@
 
     *   Python's `pexpect` library
 
-    *   The `usbmount` tool
-    
-        This is provides two things:
-        
-        *   USB stick auto-mounting on stripped-down OSes like Raspbian
-            Lite so you can use the PiDP-8/I `SING_STEP` + `DF` feature
-            without having to manually mount the USB stick first.
-        
-        *   A known directory structure that allows the PiDP-8/I
-            software to find the media image files on those sticks.
-            (`*.pt`, `*.dt`, `*.rk`, etc.)
-
-        Full-blown GUI OSes tend to have USB auto-mounting set up
-        already, though they won't meet the second criteria unless they
-        use the same directory layout as `usbmount`: `/media/usbN`,
-        where `N` is a number from 0 to 7, depending on the order
-        you attached the USB stick.  Many Linuxes use `/media/LABEL`
-        instead, for example, where `LABEL` is the partition's label;
-        the PiDP-8/I software won't find the files on those USB sticks
-        in that case.
-
     *   The `ncurses` development libraries
 
     To install all of this on a Raspbian type OS, say:
 
         $ sudo apt update
         $ sudo apt install build-essential
-        $ sudo apt install libncurses-dev python-pip usbmount
+        $ sudo apt install libncurses-dev python-pip
         $ sudo pip install pexpect
 
 [os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
