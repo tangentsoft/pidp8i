@@ -136,6 +136,7 @@ function do_build() {
     fi
 
     tools/mmake
+    bin/teco-pi-demo -b             # test and benchmark simulator
     sudo make install || true       # don't care about return code
     sudo reboot
 }
