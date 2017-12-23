@@ -61,6 +61,20 @@ this=$($greadlink -f $0)
 topdir="$($greadlink -f "$(dirname "$this")"/..)"
 
 
+# Give user a few seconds to read the final messages before rebooting or
+# powering off.
+function do_wait() {
+    n=8
+    cat <<MSG
+    
+$1 in $n seconds...
+
+
+MSG
+    sleep $n
+}
+
+
 # Initial steps
 function do_init() {
     if [ "$USER" != "root" ]
@@ -138,6 +152,7 @@ function do_build() {
     tools/mmake
     bin/teco-pi-demo -b             # test and benchmark simulator
     sudo make install || true       # don't care about return code
+    do_wait "Rebooting"
     sudo reboot
 }
 
@@ -172,6 +187,7 @@ function do_prepare() {
         sudo sed -i -e 's#$# init=/usr/lib/raspi-config/init_resize.sh#' $cl
     fi
 
+    do_wait "Powering off"
     sudo poweroff
 }
 
