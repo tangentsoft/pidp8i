@@ -370,6 +370,10 @@
 
     It should still run on Raspbian Jessie, however.
 
+*   The binary OS images produced with this version automatically expand
+    the root partition to fill your SD card.  (Prior versions required
+    that you manually do this with `raspi-config`.)
+
 *   Assorted portability, build system, and documentation improvements.
 
 [apt]:   https://linux.die.net/man/8/apt
