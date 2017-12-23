@@ -1,13 +1,15 @@
 # PiDP-8/I Changes
 
-## Version 2017.12.eh? — The "Languages and Custom OS/8 Disk Packs" release
+<a id="20171222"></a>
+## Version 2017.12.22 — The "Languages and Custom OS/8 Disk Packs" release
 
-*   All prior versions were shipping `os8.rk05`, a "Field Service
-    Diagnostic" OS/8 disk pack image with uncertain provenance,
-    configuration, and modification history.  We have replaced that with
-    a script run at build time that programmatically assembles a set of
-    clean OS/8 RK05 disk images from curated, pristine, tested sources
-    based on the user's chosen configuration options.
+*   All prior versions of the PiDP-8/I software distribution included
+    `os8.rk05`, a "Field Service Diagnostic" OS/8 disk pack image with
+    uncertain provenance, configuration, and modification history.  We
+    have replaced that canned disk image with a script which is run at
+    build time which programmatically assembles a set of clean OS/8 RK05
+    disk images from curated, pristine, tested sources based on the
+    user's chosen configuration options.
 
     This provides the following features and benefits as compared to the
     old `os8.rk05`:
@@ -170,8 +172,14 @@
         packs acts like the Unix `PATH` and `DSK:` acts like your user's
         home directory.
 
-        The idea for this came from Ian Schofield's `cc8.rk05` disk
-        image, which we are also shipping in this release.
+        The idea for this came from the `cc8.rk05` disk image which Ian
+        Schofield included with his original CC8 distribution on the
+        PiDP-8/I mailing list.
+
+        (A version of `cc8.rk05` is still buried in our code repository
+        if you want to pull it out, but it is not part of the release
+        because our `os8v3d-patched.rk05` disk image is functionally a
+        complete replacement.)
 
     -   OS/8 has a limit on the number of devices it can support, and we
         made different choices than the creator of `os8.rk05`.
@@ -241,9 +249,13 @@
     given a SIMH paper tape image file, produce an ASCII text file on
     the host machine with its contents.
 
-    This program was written to ease the movement of FOCAL program text
-    between SIMH and its host OS, but they should prove useful for other
-    similar tasks.
+    This program was originally written to ease the movement of FOCAL
+    program text between SIMH and its host OS, but it is now a key part
+    of the OS/8 RK05 disk building process, used whenever we need to
+    inject the contents of a text file from the host into the simulated
+    PDP-8 running OS/8.
+
+    These filters should prove broadly useful.
 
 *   Integrated Robert Krten's `d8tape` PDP-8 host-side disassembler.
     This is distinct from the OS/8 DCP disassembler, which runs inside
@@ -339,17 +351,21 @@
 
     There have been no substantial changes to the PDP-8 simulator since
     the last update, 8 months ago, but there have been a lot of bug
-    fixes to the SCP core program.
+    fixes to the SCP, that being the common core of all of the SIMH
+    simulators.
 
     One upstream change had to be backed out to work around a bug they
     introduced, which was not fixed by release time.  (See [GitHub issue
     #508][gh508].)
 
-*   Updated for Raspbian Stretch, released in September 2017.  The only
-    significant difference found is that the old, abandoned `usbmount`
-    package no longer works, apparently due to some change in `systemd`.
-    We've replaced that with a set of scripts based on [those by Mike
-    Blackwell][mbua].
+*   Updated for Raspbian Stretch, released in September 2017.  (Our
+    binary OS images are built against the subsequent 2017-11-29
+    release, with updates as of 2017-12-22 applied.)
+
+    The only significant difference found is that the old, abandoned
+    `usbmount` package no longer works, apparently due to some change in
+    `systemd`.  We've replaced that with a set of scripts based on
+    [those by Mike Blackwell][mbua].
 
     It should still run on Raspbian Jessie, however.
 
@@ -374,6 +390,7 @@
 [uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
 
 
+<a id="20170404"></a>
 ## Version 2017.04.04
 
 *   Removed the PDP-8 CPU idle detection feature.  Oscar Vermeulen
@@ -397,6 +414,7 @@
     `README-throttle.md` for details.
 
 
+<a id="20170401"></a>
 ## Version 2017.04.01 — The "I May Be a Fool, but I am *Your* Fool" release
 
 *   Added the `configure --alt-serial-mod` option to change the GPIO
@@ -529,6 +547,7 @@
 [sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
 
 
+<a id="20170204"></a>
 ## Version 2017.02.04
 
 *   Largely rewrote the incandescent lamp simulator (ILS) feature.
@@ -622,6 +641,7 @@
 [ithought]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 
 
+<a id="20170123"></a>
 ## Version 2017.01.23
 
 *   When any program that talks to the PiDP-8/I front panel starts up,
@@ -766,6 +786,7 @@
 [ecl]: http://stackoverflow.com/q/1182025/142454
 
 
+<a id="20170116"></a>
 ## Version 2017.01.16
 
 *   Prior releases did not include proper licensing for many of the
@@ -880,6 +901,7 @@
 [rmth]:    https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 
 
+<a id="20170105"></a>
 ## Version 2017.01.05
 
 *   Automated the process for merging in new SIMH updates.  From within
@@ -907,6 +929,7 @@
     numbers or our Fossil checkin IDs.)
 
 
+<a id="20161226"></a>
 ## Version 2016.12.26 — The Boxing Day release
 
 *   Tony Hill updated SIMH to the latest upstream version.
@@ -1041,6 +1064,7 @@
     `examples/routines/prints.pal`.
 
 
+<a id="20161205"></a>
 ## Version 2016.12.05
 
 *   This release marks the first binary SD card image released under my
@@ -1067,6 +1091,7 @@
     a single page of PDP-8 core memory.
 
 
+<a id="20161203"></a>
 ## Version 2016.12.03
 
 *   Debounced the switches.  See [the mailing list post][cdb] announcing
@@ -1109,6 +1134,7 @@
 [p1saga]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
 
 
+<a id="20161128"></a>
 ## Version 2016.11.28
 
 *   Added an intelligent, powerful build system, replacing the
@@ -1193,6 +1219,7 @@
 [tix]:     https://tangentsoft.com/pidp8i/tickets
 
 
+<a id="20151215"></a>
 ## Version 2015.12.15
 
 *   The last release of the software made by Oscar Vermeulen, the
