@@ -97,6 +97,9 @@ do_start() {
 	elif [ $script -lt 8 ]; then
 	    bscript="@BOOTDIR@/""$script"".script"
 	    echo "Booting from $bscript..."
+	elif [ $script -eq 127 ]; then
+        echo "PiDP-8/I panel not present.  Booting from 0.script..."
+	    bscript="@BOOTDIR@/0.script"
 	else
 		echo "Bad return value $script from $scanswitch!"
 		exit 1
