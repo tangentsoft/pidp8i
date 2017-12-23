@@ -102,6 +102,13 @@ do_start() {
 		exit 1
 	fi
 
+    # We want SIMH to have a sensible working directory: somewhere the
+    # user can write files and which makes sense when giving SIMH
+    # commands involving file paths.  This default is chosen because it
+    # satisfies both criteria, plus it makes tools/mkos8 happy.
+    # If you change the default here, change that script as well.
+    cd "$prefix/share/media"
+
 	log_daemon_msg "Starting PiDP-8/I simulator" "pidp8i"
 	screenu -dmS pidp8i "$sim" $bscript
 	status=$?

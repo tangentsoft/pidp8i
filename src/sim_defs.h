@@ -108,16 +108,22 @@
 #ifndef SIM_DEFS_H_
 #define SIM_DEFS_H_    0
 
+#include "sim_rev.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #if defined(_MSC_VER) && (_MSC_VER < 1900)
 #define snprintf _snprintf      /* poor man's snprintf which will work most of the time but has different return value */
 #endif
+#if defined(__VAX)
+extern int sim_vax_snprintf(char *buf, size_t buf_size, const char *fmt, ...);
+#define snprintf sim_vax_snprintf
+#endif
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+#include <ctype.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -179,16 +185,28 @@ extern "C" {
 
 /* Length specific integer declarations */
 
+/* Handle the special/unusual cases first with everything else leveraging stdints.h */
 #if defined (VMS)
 #include <ints.h>
-#else
-typedef signed char     int8;
-typedef signed short    int16;
-typedef signed int      int32;
-typedef unsigned char   uint8;
-typedef unsigned short  uint16;
-typedef unsigned int    uint32;
-#endif
+#elif defined(_MSC_VER) && (_MSC_VER < 1600)
+typedef __int8           int8;
+typedef __int16          int16;
+typedef __int32          int32;
+typedef unsigned __int8  uint8;
+typedef unsigned __int16 uint16;
+typedef unsigned __int32 uint32;
+#else                                                   
+/* All modern/standard compiler environments */
+/* any other environment needa a special case above */
+#include <stdint.h>
+typedef int8_t          int8;
+typedef int16_t         int16;
+typedef int32_t         int32;
+typedef uint8_t         uint8;
+typedef uint16_t        uint16;
+typedef uint32_t        uint32;
+#endif                                                  /* end standard integers */
+
 typedef int             t_stat;                         /* status */
 typedef int             t_bool;                         /* boolean */
 
@@ -217,9 +235,11 @@ typedef unsigned long           t_uint64;
 #if defined (USE_INT64)                                 /* 64b data */
 typedef t_int64         t_svalue;                       /* signed value */
 typedef t_uint64        t_value;                        /* value */
+#define T_VALUE_MAX     0xffffffffffffffffuLL
 #else                                                   /* 32b data */
 typedef int32           t_svalue;
 typedef uint32          t_value;
+#define T_VALUE_MAX     0xffffffffUL
 #endif                                                  /* end 64b data */
 
 #if defined (USE_INT64) && defined (USE_ADDR64)         /* 64b address */
@@ -409,7 +429,7 @@ typedef uint32          t_addr;
 
 /* String match - at least one character required */
 
-#define MATCH_CMD(ptr,cmd) ((NULL == (ptr)) || (!*(ptr)) || sim_strncasecmp ((ptr), (cmd), strlen (ptr)))
+#define MATCH_CMD(ptr,cmd) ((NULL == (ptr)) || (!*(ptr)) || strncasecmp ((ptr), (cmd), strlen (ptr)))
 
 /* End of Linked List/Queue value                           */
 /* Chosen for 2 reasons:                                    */
@@ -634,9 +654,10 @@ struct REG {
     uint32              depth;                          /* save depth */
     const char          *desc;                          /* description */
     BITFIELD            *fields;                        /* bit fields */
-    uint32              flags;                          /* flags */
     uint32              qptr;                           /* circ q ptr */
     size_t              str_size;                       /* structure size */
+    /* NOTE: Flags MUST always be last since it is initialized outside of macro definitions */
+    uint32              flags;                          /* flags */
     };
 
 /* Register flags */
@@ -759,6 +780,7 @@ struct EXPTAB {
     uint32              size;                           /* match string size */
     char                *match_pattern;                 /* match pattern for format */
     int32               cnt;                            /* proceed count */
+    uint32              after;                          /* delay before halting */
     int32               switches;                       /* flags */
 #define EXP_TYP_PERSIST         (SWMASK ('P'))      /* rule persists after match, default is once a rule matches, it is removed */
 #define EXP_TYP_CLEARALL        (SWMASK ('C'))      /* clear all rules after matching this rule, default is to once a rule matches, it is removed */
@@ -778,10 +800,10 @@ struct EXPECT {
     uint32              dbit;                           /* Debugging Bit */
     EXPTAB              *rules;                         /* match rules */
     int32               size;                           /* count of match rules */
-    uint32              after;                          /* delay before halting */
     uint8               *buf;                           /* buffer of output data which has produced */
     uint32              buf_ins;                        /* buffer insertion point for the next output data */
     uint32              buf_size;                       /* buffer size */
+    uint32              buf_data;                       /* count of data in buffer */
     };
 
 /* Send Context */
@@ -840,42 +862,81 @@ struct MEMFILE {
 
 #define UDATA(act,fl,cap) NULL,act,NULL,NULL,NULL,0,0,(fl),0,(cap),0,NULL,0,0
 
+/* Internal use ONLY (see below) Generic Register declaration for all fields */
+#define _REGDATANF(nm,loc,rdx,wd,off,dep,desc,flds,qptr,siz) \
+    nm, (loc), (rdx), (wd), (off), (dep), (desc), (flds), (qptr), (siz)
+
 #if defined (__STDC__) || defined (_WIN32) /* Variants which depend on how macro arguments are convered to strings */
 /* Generic Register declaration for all fields.  
    If the register structure is extended, this macro will be retained and a 
-   new macro will be provided that populates the new register structure */
+   new internal macro will be provided that populates the new register structure */
 #define REGDATA(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
-    #nm, &(loc), (rdx), (wd), (off), (dep), (desc), (flds), (fl), (qptr), (siz)
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,qptr,siz),(fl)
+#define REGDATAC(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,qptr,siz),(fl)
 /* Right Justified Octal Register Data */
-#define ORDATA(nm,loc,wd) #nm, &(loc), 8, (wd), 0, 1, NULL, NULL
+#define ORDATA(nm,loc,wd) \
+    _REGDATANF(#nm,&(loc),8,wd,0,1,NULL,NULL,0,0)
+#define ORDATAD(nm,loc,wd,desc) \
+    _REGDATANF(#nm,&(loc),8,wd,0,1,desc,NULL,0,0)
+#define ORDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF(#nm,&(loc),8,wd,0,1,desc,flds,0,0)
 /* Right Justified Decimal Register Data */
-#define DRDATA(nm,loc,wd) #nm, &(loc), 10, (wd), 0, 1, NULL, NULL
+#define DRDATA(nm,loc,wd) \
+    _REGDATANF(#nm,&(loc),10,wd,0,1,NULL,NULL,0,0)
+#define DRDATAD(nm,loc,wd,desc) \
+    _REGDATANF(#nm,&(loc),10,wd,0,1,desc,NULL,0,0)
+#define DRDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF(#nm,&(loc),10,wd,0,1,desc,flds,0,0)
 /* Right Justified Hexadecimal Register Data */
-#define HRDATA(nm,loc,wd) #nm, &(loc), 16, (wd), 0, 1, NULL, NULL
+#define HRDATA(nm,loc,wd) \
+    _REGDATANF(#nm,&(loc),16,wd,0,1,NULL,NULL,0,0)
+#define HRDATAD(nm,loc,wd,desc) \
+    _REGDATANF(#nm,&(loc),16,wd,0,1,desc,NULL,0,0)
+#define HRDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF(#nm,&(loc),16,wd,0,1,desc,flds,0,0)
 /* Right Justified Binary Register Data */
-#define BINRDATA(nm,loc,wd) #nm, &(loc), 2, (wd), 0, 1, NULL, NULL
+#define BINRDATA(nm,loc,wd) \
+    _REGDATANF(#nm,&(loc),2,wd,0,1,NULL,NULL,0,0)
+#define BINRDATAD(nm,loc,wd,desc) \
+    _REGDATANF(#nm,&(loc),2,wd,0,1,desc,NULL,0,0)
+#define BINRDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF(#nm,&(loc),2,wd,0,1,desc,flds,0,0)
 /* One-bit binary flag at an arbitrary offset in a 32-bit word Register */
-#define FLDATA(nm,loc,pos) #nm, &(loc), 2, 1, (pos), 1, NULL, NULL
+#define FLDATA(nm,loc,pos) \
+    _REGDATANF(#nm,&(loc),2,1,pos,1,NULL,NULL,0,0)
+#define FLDATAD(nm,loc,pos,desc) \
+    _REGDATANF(#nm,&(loc),2,1,pos,1,desc,NULL,0,0)
+#define FLDATADF(nm,loc,pos,desc,flds) \
+    _REGDATANF(#nm,&(loc),2,1,pos,1,desc,flds,0,0)
 /* Arbitrary location and Radix Register */
-#define GRDATA(nm,loc,rdx,wd,pos) #nm, &(loc), (rdx), (wd), (pos), 1, NULL, NULL
+#define GRDATA(nm,loc,rdx,wd,pos) \
+    _REGDATANF(#nm,&(loc),rdx,wd,pos,1,NULL,NULL,0,0)
+#define GRDATAD(nm,loc,rdx,wd,pos,desc) \
+    _REGDATANF(#nm,&(loc),rdx,wd,pos,1,desc,NULL,0,0)
+#define GRDATADF(nm,loc,rdx,wd,pos,desc,flds) \
+    _REGDATANF(#nm,&(loc),rdx,wd,pos,1,desc,flds,0,0)
 /* Arrayed register whose data is kept in a standard C array Register */
-#define BRDATA(nm,loc,rdx,wd,dep) #nm, (loc), (rdx), (wd), 0, (dep), NULL, NULL
-/* Same as above, but with additional description initializer */
-#define ORDATAD(nm,loc,wd,desc) #nm, &(loc), 8, (wd), 0, 1, (desc), NULL
-#define DRDATAD(nm,loc,wd,desc) #nm, &(loc), 10, (wd), 0, 1, (desc), NULL
-#define HRDATAD(nm,loc,wd,desc) #nm, &(loc), 16, (wd), 0, 1, (desc), NULL
-#define BINRDATAD(nm,loc,wd,desc) #nm, &(loc), 2, (wd), 0, 1, (desc), NULL
-#define FLDATAD(nm,loc,pos,desc) #nm, &(loc), 2, 1, (pos), 1, (desc), NULL
-#define GRDATAD(nm,loc,rdx,wd,pos,desc) #nm, &(loc), (rdx), (wd), (pos), 1, (desc), NULL
-#define BRDATAD(nm,loc,rdx,wd,dep,desc) #nm, (loc), (rdx), (wd), 0, (dep), (desc), NULL
-/* Same as above, but with additional description initializer, and bitfields */
-#define ORDATADF(nm,loc,wd,desc,flds) #nm, &(loc), 8, (wd), 0, 1, (desc), (flds)
-#define DRDATADF(nm,loc,wd,desc,flds) #nm, &(loc), 10, (wd), 0, 1, (desc), (flds)
-#define HRDATADF(nm,loc,wd,desc,flds) #nm, &(loc), 16, (wd), 0, 1, (desc), (flds)
-#define BINRDATADF(nm,loc,wd) #nm, &(loc), 2, (wd), 0, 1, NULL, NULL
-#define FLDATADF(nm,loc,pos,desc,flds) #nm, &(loc), 2, 1, (pos), 1, (desc), (flds)
-#define GRDATADF(nm,loc,rdx,wd,pos,desc,flds) #nm, &(loc), (rdx), (wd), (pos), 1, (desc), (flds)
-#define BRDATADF(nm,loc,rdx,wd,dep,desc,flds) #nm, (loc), (rdx), (wd), 0, (dep), (desc), (flds)
+#define BRDATA(nm,loc,rdx,wd,dep) \
+    _REGDATANF(#nm,loc,rdx,wd,0,dep,NULL,NULL,0,0)
+#define BRDATAD(nm,loc,rdx,wd,dep,desc) \
+    _REGDATANF(#nm,loc,rdx,wd,0,dep,desc,NULL,0,0)
+#define BRDATADF(nm,loc,rdx,wd,dep,desc,flds) \
+    _REGDATANF(#nm,loc,rdx,wd,0,dep,desc,flds,0,0)
+/* Arrayed register whose data is part of the UNIT structure */
+#define URDATA(nm,loc,rdx,wd,off,dep,fl) \
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,NULL,NULL,0,0),((fl) | REG_UNIT)
+#define URDATAD(nm,loc,rdx,wd,off,dep,fl,desc) \
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,NULL,0,0),((fl) | REG_UNIT)
+#define URDATADF(nm,loc,rdx,wd,off,dep,fl,desc,flds) \
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,0,0),((fl) | REG_UNIT)
+/* Arrayed register whose data is part of an arbitrary structure */
+#define STRDATA(nm,loc,rdx,wd,off,dep,siz,fl) \
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,NULL,NULL,0,siz),((fl) | REG_STRUCT)
+#define STRDATAD(nm,loc,rdx,wd,off,dep,siz,fl,desc) \
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,NULL,0,siz),((fl) | REG_STRUCT)
+#define STRDATADF(nm,loc,rdx,wd,off,dep,siz,fl,desc,flds) \
+    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,0,siz),((fl) | REG_STRUCT)
 #define BIT(nm)              {#nm, 0xffffffff, 1}             /* Single Bit definition */
 #define BITNC                {"",  0xffffffff, 1}             /* Don't care Bit definition */
 #define BITF(nm,sz)          {#nm, 0xffffffff, sz}            /* Bit Field definition */
@@ -883,29 +944,76 @@ struct MEMFILE {
 #define BITFFMT(nm,sz,fmt)   {#nm, 0xffffffff, sz, NULL, #fmt}/* Bit Field definition with Output format */
 #define BITFNAM(nm,sz,names) {#nm, 0xffffffff, sz, names}     /* Bit Field definition with value->name map */
 #else /* For non-STD-C compiler which can't stringify macro arguments with # */
+/* Generic Register declaration for all fields.  
+   If the register structure is extended, this macro will be retained and a 
+   new macro will be provided that populates the new register structure */
 #define REGDATA(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
-    "nm", &(loc), (rdx), (wd), (off), (dep), (desc), (flds), (fl), (qptr), (siz)
-#define ORDATA(nm,loc,wd) "nm", &(loc), 8, (wd), 0, 1, NULL, NULL
-#define DRDATA(nm,loc,wd) "nm", &(loc), 10, (wd), 0, 1, NULL, NULL
-#define HRDATA(nm,loc,wd) "nm", &(loc), 16, (wd), 0, 1, NULL, NULL
-#define BINRDATA(nm,loc,wd) "nm", &(loc), 2, (wd), 0, 1, NULL, NULL
-#define FLDATA(nm,loc,pos) "nm", &(loc), 2, 1, (pos), 1, NULL, NULL
-#define GRDATA(nm,loc,rdx,wd,pos) "nm", &(loc), (rdx), (wd), (pos), 1, NULL, NULL
-#define BRDATA(nm,loc,rdx,wd,dep) "nm", (loc), (rdx), (wd), 0, (dep), NULL, NULL
-#define ORDATAD(nm,loc,wd,desc) "nm", &(loc), 8, (wd), 0, 1, (desc), NULL
-#define DRDATAD(nm,loc,wd,desc) "nm", &(loc), 10, (wd), 0, 1, (desc), NULL
-#define HRDATAD(nm,loc,wd,desc) "nm", &(loc), 16, (wd), 0, 1, (desc), NULL
-#define BINRDATAD(nm,loc,wd,desc) "nm", &(loc), 2, (wd), 0, 1, (desc), NULL
-#define FLDATAD(nm,loc,pos,desc) "nm", &(loc), 2, 1, (pos), 1, (desc), NULL
-#define GRDATAD(nm,loc,rdx,wd,pos,desc) "nm", &(loc), (rdx), (wd), (pos), 1, (desc), NULL
-#define BRDATAD(nm,loc,rdx,wd,dep,desc) "nm", (loc), (rdx), (wd), 0, (dep), (desc), NULL
-#define ORDATADF(nm,loc,wd,desc,flds) "nm", &(loc), 8, (wd), 0, 1, (desc), (flds)
-#define DRDATADF(nm,loc,wd,desc,flds) "nm", &(loc), 10, (wd), 0, 1, (desc), (flds)
-#define HRDATADF(nm,loc,wd,desc,flds) "nm", &(loc), 16, (wd), 0, 1, (desc), (flds)
-#define BINRDATADF(nm,loc,wd,desc,flds) "nm", &(loc), 2, (wd), 0, 1, (desc), (flds)
-#define FLDATADF(nm,loc,pos,desc,flds) "nm", &(loc), 2, 1, (pos), 1, (desc), (flds)
-#define GRDATADF(nm,loc,rdx,wd,pos,desc,flds) "nm", &(loc), (rdx), (wd), (pos), 1, (desc), (flds)
-#define BRDATADF(nm,loc,rdx,wd,dep,desc,flds) "nm", (loc), (rdx), (wd), 0, (dep), (desc), (flds)
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,qptr,siz),(fl)
+#define REGDATAC(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,qptr,siz),(fl)
+/* Right Justified Octal Register Data */
+#define ORDATA(nm,loc,wd) \
+    _REGDATANF("nm",&(loc),8,wd,0,1,NULL,NULL,0,0)
+#define ORDATAD(nm,loc,wd,desc) \
+    _REGDATANF("nm",&(loc),8,wd,0,1,desc,NULL,0,0)
+#define ORDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF("nm",&(loc),8,wd,0,1,desc,flds,0,0)
+/* Right Justified Decimal Register Data */
+#define DRDATA(nm,loc,wd) \
+    _REGDATANF("nm",&(loc),10,wd,0,1,NULL,NULL,0,0)
+#define DRDATAD(nm,loc,wd,desc) \
+    _REGDATANF("nm",&(loc),10,wd,0,1,desc,NULL,0,0)
+#define DRDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF("nm",&(loc),10,wd,0,1,desc,flds,0,0)
+/* Right Justified Hexadecimal Register Data */
+#define HRDATA(nm,loc,wd) \
+    _REGDATANF("nm",&(loc),16,wd,0,1,NULL,NULL,0,0)
+#define HRDATAD(nm,loc,wd,desc) \
+    _REGDATANF("nm",&(loc),16,wd,0,1,desc,NULL,0,0)
+#define HRDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF("nm",&(loc),16,wd,0,1,desc,flds,0,0)
+/* Right Justified Binary Register Data */
+#define BINRDATA(nm,loc,wd) \
+    _REGDATANF("nm",&(loc),2,wd,0,1,NULL,NULL,0,0)
+#define BINRDATAD(nm,loc,wd,desc) \
+    _REGDATANF("nm",&(loc),2,wd,0,1,desc,NULL,0,0)
+#define BINRDATADF(nm,loc,wd,desc,flds) \
+    _REGDATANF("nm",&(loc),2,wd,0,1,desc,flds,0,0)
+/* One-bit binary flag at an arbitrary offset in a 32-bit word Register */
+#define FLDATA(nm,loc,pos) \
+    _REGDATANF("nm",&(loc),2,1,pos,1,NULL,NULL,0,0)
+#define FLDATAD(nm,loc,pos,desc) \
+    _REGDATANF("nm",&(loc),2,1,pos,1,desc,NULL,0,0)
+#define FLDATADF(nm,loc,pos,desc,flds) \
+    _REGDATANF("nm",&(loc),2,1,pos,1,desc,flds,0,0)
+/* Arbitrary location and Radix Register */
+#define GRDATA(nm,loc,rdx,wd,pos) \
+    _REGDATANF("nm",&(loc),rdx,wd,pos,1,NULL,NULL,0,0)
+#define GRDATAD(nm,loc,rdx,wd,pos,desc) \
+    _REGDATANF("nm",&(loc),rdx,wd,pos,1,desc,NULL,0,0)
+#define GRDATADF(nm,loc,rdx,wd,pos,desc,flds) \
+    _REGDATANF("nm",&(loc),rdx,wd,pos,1,desc,flds,0,0)
+/* Arrayed register whose data is kept in a standard C array Register */
+#define BRDATA(nm,loc,rdx,wd,dep) \
+    _REGDATANF("nm",loc,rdx,wd,0,dep,NULL,NULL,0,0)
+#define BRDATAD(nm,loc,rdx,wd,dep,desc) \
+    _REGDATANF("nm",loc,rdx,wd,0,dep,desc,NULL,0,0)
+#define BRDATADF(nm,loc,rdx,wd,dep,desc,flds) \
+    _REGDATANF("nm",loc,rdx,wd,0,dep,desc,flds,0,0)
+/* Arrayed register whose data is part of the UNIT structure */
+#define URDATA(nm,loc,rdx,wd,off,dep,fl) \
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,NULL,NULL,0,0),((fl) | REG_UNIT)
+#define URDATAD(nm,loc,rdx,wd,off,dep,fl,desc) \
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,NULL,0,0),((fl) | REG_UNIT)
+#define URDATADF(nm,loc,rdx,wd,off,dep,fl,desc,flds) \
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,0,0),((fl) | REG_UNIT)
+/* Arrayed register whose data is part of an arbitrary structure */
+#define STRDATA(nm,loc,rdx,wd,off,dep,siz,fl) \
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,NULL,NULL,0,siz),((fl) | REG_STRUCT)
+#define STRDATAD(nm,loc,rdx,wd,off,dep,siz,fl,desc) \
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,NULL,0,siz),((fl) | REG_STRUCT)
+#define STRDATADF(nm,loc,rdx,wd,off,dep,siz,fl,desc,flds) \
+    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,0,siz),((fl) | REG_STRUCT)
 #define BIT(nm)              {"nm", 0xffffffff, 1}              /* Single Bit definition */
 #define BITNC                {"",   0xffffffff, 1}              /* Don't care Bit definition */
 #define BITF(nm,sz)          {"nm", 0xffffffff, sz}             /* Bit Field definition */
@@ -915,22 +1023,6 @@ struct MEMFILE {
 #endif
 #define ENDBITS {NULL}  /* end of bitfield list */
 
-/* Arrayed register whose data is part of the UNIT structure */
-#define URDATA(nm,loc,rdx,wd,off,dep,fl) \
-    REGDATA(nm,(loc),(rdx),(wd),(off),(dep),NULL,NULL,((fl) | REG_UNIT),0,0)
-/* Arrayed register whose data is part of an arbitrary structure */
-#define STRDATA(nm,loc,rdx,wd,off,dep,siz,fl) \
-    REGDATA(nm,(loc),(rdx),(wd),(off),(dep),NULL,NULL,((fl) | REG_STRUCT),0,(siz))
-/* Same as above, but with additional description initializer */
-#define URDATAD(nm,loc,rdx,wd,off,dep,fl,desc) \
-    REGDATA(nm,(loc),(rdx),(wd),(off),(dep),(desc),NULL,((fl) | REG_UNIT),0,0)
-#define STRDATAD(nm,loc,rdx,wd,off,dep,siz,fl,desc) \
-    REGDATA(nm,(loc),(rdx),(wd),(off),(dep),(desc),NULL,((fl) | REG_STRUCT),0,(siz))
-/* Same as above, but with additional description initializer, and bitfields */
-#define URDATADF(nm,loc,rdx,wd,off,dep,fl,desc,flds) \
-    REGDATA(nm,(loc),(rdx),(wd),(off),(dep),(desc),(flds),((fl) | REG_UNIT),0,0)
-#define STRDATADF(nm,loc,rdx,wd,off,dep,siz,fl,desc,flds) \
-    REGDATA(nm,(loc),(rdx),(wd),(off),(dep),(desc),(flds),((fl) | REG_STRUCT),0,(siz))
 
 /* Function prototypes */
 

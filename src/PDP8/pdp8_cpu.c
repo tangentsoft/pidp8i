@@ -54,6 +54,7 @@
 
    cpu          central processor
 
+   07-Sep-17    RMS     Fixed sim_eval declaration in history routine (COVERITY)
    09-Mar-17    RMS     Fixed PCQ_ENTRY for interrupts (COVERITY)
    13-Feb-17    RMS     RESET clear L'AC, per schematics
    28-Jan-17    RMS     Renamed switch register variable to SR, per request
@@ -221,7 +222,9 @@
         pdp8_sys.c      add sim_devices table entry
 */
 
-/* ---PiDP change------------------------------------------------------------------------------------------- */
+#include "pdp8_defs.h"
+
+/* ---PiDP add---------------------------------------------------------------------------------------------- */
 #include "gpio-common.h"
 #include "pidp8i.h"
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -412,7 +415,7 @@ while (reason == 0) {                                   /* loop until halted */
             // command.  Set a flag that will let us auto-resume.
             extern int resumeFromInstructionLoopExit, swStop, swSingInst;
             resumeFromInstructionLoopExit = swStop = swSingInst = 1;
-            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+            set_pidp8i_leds (PC, MA, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
 
             // Also copy SR hardware value to software register in case
@@ -438,7 +441,7 @@ while (reason == 0) {                                   /* loop until halted */
             // down, we'll put garbage onto the display for MA, MB, and
             // IR, but that's what the real hardware does, too.  See
             // https://github.com/simh/simh/issues/386
-            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+            set_pidp8i_leds (PC, MA, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
 
             // Go no further in STOP mode.  In particular, fetch no more
@@ -1530,8 +1533,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         skip_count = 0;
 
         // We need to update the LED data again
-        set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
-        Pause = 0;
+        set_pidp8i_leds (PC, MA, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
 
         // Has it been ~1s since we updated our max_skips value?
         time_t now;
@@ -1545,6 +1547,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             }
         dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
         }
+    Pause = 0;      // it's set outside the "if", so it must be *reset* outside
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 
@@ -1764,7 +1767,6 @@ t_stat cpu_show_hist (FILE *st, UNIT *uptr, int32 val, CONST void *desc)
 int32 l, k, di, lnt;
 const char *cptr = (const char *) desc;
 t_stat r;
-t_value sim_eval;
 InstHistory *h;
 
 if (hst_lnt == 0)                                       /* enabled? */
@@ -1787,8 +1789,8 @@ for (k = 0; k < lnt; k++) {                             /* print specified */
         if (h->ir < 06000)
             fprintf (st, "%05o  ", h->ea);
         else fprintf (st, "       ");
-        sim_eval = h->ir;
-        if ((fprint_sym (st, h->pc & ADDRMASK, &sim_eval, &cpu_unit, SWMASK ('M'))) > 0)
+        sim_eval[0] = h->ir;
+        if ((fprint_sym (st, h->pc & ADDRMASK, sim_eval, &cpu_unit, SWMASK ('M'))) > 0)
             fprintf (st, "(undefined) %04o", h->ir);
         if (h->ir < 04000)
             fprintf (st, "  [%04o]", h->opnd);

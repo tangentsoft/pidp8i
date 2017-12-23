@@ -1,0 +1,150 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+########################################################################
+# Create a tu56 or rk05 image and fill it with ASCII files, i.e.  source code.
+#
+# It is intended to be be called manually when we have a POSIX
+# directory full of ASCII files we want to bulk-copy into SIMH.
+#
+# The argument is taken both as the name of the image to create
+# and the list of files to copy in.
+#
+# For now, it takes all input and produces all output in the
+# current working directory.
+#
+# IMPORTANT:  Currently all input files are mindlessly passed through
+# txt2ptp which transforms POSIX ASCII files to OS/8 ASCII files.
+# It WILL mutilate non-ASCII files.
+#
+# This program is based on cc8-tu56-update.
+#
+# Copyright © 2017 by Warren Young and Bill Cattey
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+import argparse
+
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
+
+# Our local modules
+from pidp8i import *
+from simh   import *
+
+# Other global Python modules
+import glob
+import subprocess
+
+
+#### GLOBALS AND CONSTANTS #############################################
+
+progmsg = True
+
+
+#### main ##############################################################
+
+def main ():
+  global progmsg
+
+  # Set up the arg parser and use it to parse the command line.
+  parser = argparse.ArgumentParser()
+  parser.add_argument("name",
+                      help="Create an OS/8 image from a list of ASCII files.")
+  group = parser.add_mutually_exclusive_group(required=True)
+  group.add_argument("--tu56", "-t", action="store_true")
+  group.add_argument("--rk05a", "-ra", action="store_true")
+  group.add_argument("--rk05b", "-rb", action="store_true")
+
+  args = parser.parse_args()
+  
+  print "Filename: " + args.name
+  if args.tu56:
+    sdev = "dt0"
+    os8dev = "DTA0:"
+    imagename = args.name + ".tu56"
+    stat_str = "DECtape"
+
+  if args.rk05a:
+    sdev = "rk1"
+    os8dev = "RKA1:"
+    imagename = args.name + ".rk05"
+    stat_str = "partition A of"
+    
+  if args.rk05b:
+    sdev = "rk1"
+    os8dev = "RKB1:"
+    imagename = args.name + ".rk05"
+    stat_str = "partition B of"
+  
+  listname = args.name + ".list"
+
+  # Create the SIMH child instance and tell it where to send log output
+  try:
+    s = simh (dirs.build, True)
+  except (RuntimeError) as e:
+    print "Could not start simulator: " + e.message + '!'
+    exit (1)
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+
+  # Attach a clean version of the image to the simulator
+  if os.path.exists (imagename):
+    print "Overwriting old " + stat_str + " image " + imagename
+
+  s.send_cmd ("att " + sdev + " " + imagename)
+
+  # Find and boot the bootable OS/8 disk.  Use the "patched" version
+  # because that is what "make run" uses; we use that command to
+  # inspect this script's work.
+  rk = os.path.join (dirs.os8mo, 'os8v3d-patched.rk05')
+  if not os.path.isfile (rk):
+    print "Could not find " + rk + "; OS/8 media not yet built?"
+    exit (1)
+  print "Booting " + rk + "..."
+  s.send_cmd ("att rk0 " + rk)
+  s.send_cmd ("boot rk0")
+
+  s.os8_send_cmd ('\\.', "ZERO " + os8dev)
+
+  manifest = open (listname, "r")
+
+  for line in manifest:
+    src = line.strip()
+    if src == "": continue
+    if src[0] == '#': continue      # Allow commenting out files
+
+    dest = src.upper ()
+    s.os8_send_file (src, os8dev + dest)
+
+  # Exit simulator nicely so that image detaches cleanly
+  s.back_to_cmd ('\\.')
+  s.send_cmd ("det " + sdev)
+  s.send_cmd ('quit')
+
+
+if __name__ == "__main__": main()

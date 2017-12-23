@@ -57,18 +57,19 @@ enforce our wish to leave some CPU power left over for background tasks.
 You might wish to adjust that default host/simulator CPU usage split.
 The `--throttle` option accepts percentages:
 
-     ./configure --throttle='75%'
+     ./configure --throttle=75%
 
-Note the single-quoted value: you must do that to avoid problems with
-the shell, since the percent character is special to it.
-
-Incidentally, you cannot use this throttling feature to leave enough CPU
-power on a single-core Pi to run the [incandescent lamp simulator][ils].
-We've tried, and you have to clock the simulator down to less than the
-speed of a PDP-8/S!  We're working on ways to improve the speed of that
-lamp simulator to let it run on single-core raspberry Pis, but we may
-not succeed. For this reason, the build system disables the incandescent
-lamp simulator feature on a single-core Pi.
+This throttling feature does not allow a single-core Pi to run the
+[incandescent lamp simulator][ils]. We've tried, and you have to clock
+the simulator down to less than the speed of a PDP-8/S to leave enough
+CPU power for the ILS to run properly! (DEC says the "S" refers to the
+serial bit handling path in this cost-reduced version of the original
+PDP-8, but everyone else knows the "S" stands for *SSSLLLOOOOWWW*.) We
+have ideas for ways to improve the speed of the ILS which may allow
+the PDP-8 simulator to run at a reasonable rate alongside the ILS,
+but these plans may never make their way off the wish list, or they may
+not succeed if they are implemented.  For this reason, the build system
+disables the incandescent lamp simulator feature on a single-core Pi.
 
 You can force the build system to select this throttle value even on a
 multi-core Pi with `--throttle=single-core`.
@@ -180,13 +181,13 @@ The throttle mechanism discussed above only affects the speed of the
 PDP-8 CPU simulator. It does not affect the speed of I/O operations.
 
 The only I/O channel you can throttle in the same way is a serial
-terminal by purposely choosing a slower bit rate for it than the maximum
-value.  If you set it to 110 bps, it runs at the speed of a Teletype
-Model 33 ASR, the most common terminal type used for the PDP-8/I, and
-most other early PDP-8 flavors.  Later PDP-8s were often paired with (or
-integrated into!) glass TTYs such as the VT05, which flew along at 2400
-bps.  Then things got really fancy with the VT52, which screamed along
-at 9600 bps. Wowee!
+terminal by purposely choosing a slower bit rate for it than the
+maximum value.  If you set it to 110 bps, it runs at the speed of a
+Teletype Model 33 ASR, the most common terminal type used for the
+PDP-8/I, and most other early PDP-8 flavors. Later in the PDP-8's
+commercial life, faster glass terminals became available, though
+it was not always possible to use them at their maximum data rate,
+due to the primitive nature of I/O handling in those days.
 
 I'm not aware of a way to make SIMH slow the other I/O operations, such
 as disk access speeds, in order to emulate the speed of the actual

@@ -1,5 +1,396 @@
 # PiDP-8/I Changes
 
+<a id="20171222"></a>
+## Version 2017.12.22 — The "Languages and Custom OS/8 Disk Packs" release
+
+*   All prior versions of the PiDP-8/I software distribution included
+    `os8.rk05`, a "Field Service Diagnostic" OS/8 disk pack image with
+    uncertain provenance, configuration, and modification history.  We
+    have replaced that canned disk image with a script which is run at
+    build time which programmatically assembles a set of clean OS/8 RK05
+    disk images from curated, pristine, tested sources based on the
+    user's chosen configuration options.
+
+    This provides the following features and benefits as compared to the
+    old `os8.rk05`:
+
+    -   The PiDP-8/I software build process now builds up to three RK05
+        disk images:
+
+        -   `os8v3d-bin.rk05` is a bootable OS/8 V3D disk configured
+            according to your chosen configuration options, which are
+            described below and in [`README.md`][tlrm].  It is made from
+            the pristine DECtape images shipped by DEC for OS/8 V3D plus
+            several third-party tapes curated for and built by the
+            project's maintainers.  See [the OS/8 media `README.md`
+            file][os8rm] for more details.
+
+        -   `os8v3d-patched.rk05` is a copy of the `bin` disk with
+            [most][os8p] of the patches DEC published over the years for
+            OS/8 V3D applied.  That set of patches was chosen and tested
+            for applicability to our modern PiDP-8/I world and for
+            mutual compatibility.
+
+            This is the boot disk used for the IF=0 and IF=7 cases
+            unless you give `--disable-os8-patches` to the `configure`
+            script, in which case these boot options use the `bin` disk.
+
+        -   `os8v3d-src.rk05` is a non-bootable disk containing the
+            contents of the OS/8 V3D source code tapes plus the source
+            code for the extensions to OS/8 V3D.  The *ten* TU56 tape
+            images used as input to this process are also included among
+            the PiDP-8/I software — see `media/os8/al-*-sa-*.tu56` — but
+            we find it much more convenient to explore the sources on a
+            single RK05 disk than to repeatedly attach and detach the
+            TU56 tapes.
+
+            You can suppress building this with `--disable-os8-src`.
+
+        Default versions of these disk images are also now published on
+        the project's home page for the benefit of those not running our
+        PiDP-8/I software.  There are quite a few OS/8 RK05 disk images
+        floating around on the Internet these days, and many of them
+        have bugs and breakage in them that we've fixed.  It would
+        completely fail to break our hearts if these images were used by
+        many people outside the PiDP-8/I project.
+
+    -   U/W FOCAL V4E is installed on SYS: by default. Start with our
+        [U/W FOCAL Manual Supplement for the PiDP-8/I][uwfs], then
+        follow links from there to further information.
+        
+        The primary linked source is the [U/W FOCAL Manual][uwfm] by Jim
+        van Zee (creator of U/W FOCAL) converted from scanned and OCR'd
+        PDF form to Markdown format, which Fossil renders nicely for us
+        on the web.
+
+        This is a fascinating programming language, well worth studying!
+
+    -   Ian Schofield's CC8 OS/8 C compiler is installed on `SYS:` by
+        default, and its examples and other files are on `DSK:`.  We
+        have also merged in his `cc8` host-side cross-compiler.  See
+        [the CC8 `README`][cc8rm] for details.
+        
+        This is a considerably improved compiler relative to what
+        was distributed on the mailing list in August 2017.  Ian has
+        been working within the PiDP-8/I project since that initial
+        public release, which we are now distributing publicly for
+        the first time.  We thank him for trusting us to host and
+        distribute his project.
+
+    -   The MACREL v2 macro assembler and its associated FUTIL V8B tool
+        are installed by default.  Not only is this new functionality
+        relative to prior releases of the PiDP-8/I software, it is a
+        considerable upgrade over to the original MACREL and FUTIL V7
+        that are more commonly found on the net.
+
+    -   DCP disassembler is installed by default.
+
+    -   John Comeau's CHECKMO-II chess program is installed by default.
+
+    -   By default, SIMH no longer folds lowercase input and output to
+        uppercase.  Instead, we apply patches to OS/8's command
+        processor and its BASIC implementation to up-case input, since
+        neither OS/8 nor BASIC can cope with lowercase input.
+
+        All other programs are left to fend for themselves, which
+        often works out fine.  U/W FOCAL, Adventure, and TECO all handle
+        lowercase input to some extent, for example, and all three can
+        emit lowercase text if given it.  With the prior SIMH setting,
+        you could not use lowercase in these programs at all.
+
+        This default can be overridden.  See the documentation for the
+        new `--lowercase` configuration option in `README.md`.
+
+    -   The `INIT.TX` message displayed by default on OS/8 boot is now
+        more informative than the old `FIELD SERVICE PDP-8 DIAGNOSTIC
+        SYSTEM` message.  It also now uses lowercase unless you built
+        the simulator to force uppercase with `--lowercase=upper`.
+
+        Those that do not want any boot message can disable it at
+        configuration time with the `--disable-os8-init` flag.
+
+        The message can be modified by editing `media/os8/init.tx.in`
+        and saying `make`, which will rebuild the OS/8 media.
+
+    -   All of the above features can be disabled if not wanted, as can
+        several features present on the old `os8.rk05` disk: Adventure,
+        FORTRAN IV, FORTRAN II, Kermit-12, and the BASIC game and demo
+        programs.
+
+        You can disable each feature above with a `--disable-os8-*`
+        option to the `configure` script, or you can disable all of them
+        collectively with the `--os8-minimal` option, which gets you a
+        nearly bare-bones OS/8 installation with lots of spare disk
+        space with which you can do what *you* want.
+
+    -   Replaced the mismatched FORTRAN compiler and runtime with
+        matched versions from the distribution DECtapes, and ensured that
+        Adventure runs under this version of the FORTRAN Run Time System
+        (FRTS). At various points in the past, either FORTRAN or
+        Adventure has been broken.
+
+    -   Repaired several broken BASIC programs on `RKB0:` by going back
+        to primary sources.  Either the `os8.rk05` disk image was corrupted
+        at some point or it is an image of a real RK05 disk pack that
+        was corrupted, causing several of these BASIC programs to not
+        run properly.
+
+    -   The `*.MU` and music player files are left off of `RKB0:` by
+        default, since they apparently do not cause sufficient RFI on
+        the PiDP-8/I hardware to be picked up by normal AM radios.  This
+        saves space for things that *do* work.
+
+    -   No longer installing the `VTEDIT` macros for TECO by default.
+        Although some may enjoy this alternative way of running TECO, it
+        was decided that we should offer stock TECO by default for its
+        historical value.  If you want VTEDIT back, it can be re-enabled
+        with a `configure` script option.
+
+    -   In the old `os8.rk05` disk image, both `SYS:` and `DSK:` were
+        set to `RKA0:`, which meant that to address anything on `RKB0:`, you
+        had to specify the device path explicitly or manually change the
+        default in OS/8 with an `ASSIGN RKB0 DSK` command or similar.
+
+        In the new disk pack, programs run with the OS/8 `R` command are
+        installed on `RKA0:` which is the `SYS:` disk, and user data
+        files, FOCAL and BASIC programs, etc. are on `RKB0:` which is
+        assigned as `DSK:`. This means OS/8 and its programs are now far
+        more likely to find files without an explicit device name,
+        because files are installed where OS/8 looks for them by
+        default.  Example:
+
+            .R FRTS                   ⇠ loads FRTS from SYS: (RKA0:)
+            *ADVENT                   ⇠ loads ADVENT.LD from DSK: (RKB0:)
+            *[Esc]
+            Welcome to Adventure!!
+
+        Notice that no device names had to be specified.  OS/8 did the
+        right thing by default here, even though the files involved are
+        on two separate OS/8 devices.
+
+        To a very rough approximation, `SYS:` on these new RK05 disk
+        packs acts like the Unix `PATH` and `DSK:` acts like your user's
+        home directory.
+
+        The idea for this came from the `cc8.rk05` disk image which Ian
+        Schofield included with his original CC8 distribution on the
+        PiDP-8/I mailing list.
+
+        (A version of `cc8.rk05` is still buried in our code repository
+        if you want to pull it out, but it is not part of the release
+        because our `os8v3d-patched.rk05` disk image is functionally a
+        complete replacement.)
+
+    -   OS/8 has a limit on the number of devices it can support, and we
+        made different choices than the creator of `os8.rk05`.
+
+        Briefly, we replaced the second floppy (`RXA1:`) with a third
+        RK05 disk, that being deemed a more useful configuration for
+        this hard disk based OS/8 configuration.  A dual-floppy
+        configuration implies that you are booting from floppy and need
+        the second one for user files and such.  In our RK05 based
+        configuration, users should need floppy disk support rarely, and
+        then primarily to get data on and off of the attached hard
+        disk(s).
+
+        We chose to stick with the dual TU56 tape drive setup of the
+        prior version as we found the ability to mount two tapes very
+        helpful, particularly during the `mkos8` build process.
+
+        The difference in the `RESORC` output between the versions is:
+
+            Old: RKA0,RKB0,RKA1,RKB1,          RXA0,RXA1,DTA0,DTA1,TTY,LPT,PTP,PTR
+            New: RKA0,RKB0,RKA1,RKB1,RKA2,RKB2,RXA0,     DTA0,DTA1,TTY,LPT,PTP,PTR
+
+    This automatic OS/8 media build feature was suggested by Jonathan
+    Trites who wrote the initial version of the script that is now
+    called `libexec/mkos8`.  That script was then extended and factored
+    into its current form by Bill Cattey and Warren Young.  The author
+    of Autosetup, Steve Bennett, helped with the code which allows the
+    `configure` and `mkos8` scripts to share a single set of option
+    definitions.
+
+    Warren thinks Bill did most of the hard work in the items above.
+
+    The source media used by the `mkos8` script comes from many sources
+    and was curated for the PiDP-8/I project by Bill Cattey.  See the
+    [OS/8 media README][os8rm] for more details.
+
+    See the [the top-level `README`][tlrm] for information on modifying
+    the default OS/8 configuration.  Pretty much everything above can be
+    disabled if it's enabled by default, and vice versa.
+
+*   Added several new wiki articles covering the above:
+
+    *   More Project Euler Problem #1 solutions in:
+
+        *   [C][pe1c]
+        *   [FORTRAN IV][pe1f4]
+        *   [FORTRAN II][pe1f2]
+        *   [U/W FOCAL][pe1u]
+
+    *   [Demos in BASIC][dibas], deescribing `DSK:*.BA`
+
+    *   [OS/8 Console TTY Setup][os8ct], describing how we have
+        modified the stock behavior of OS/8 to behave appropriately
+        with a glass terminal or SSH on its console, as opposed to
+        its default behavior, which assumes a teletype.
+
+    *   [OS/8 LCSYS.BI Disassembled][os8lc], a symbolic
+        disassembly of the `LCSYS.BI` patch we distribute with the
+        system, which is widely available online elsewhere. That script
+        is a raw binary patch, which makes its operation a mystery
+        unless you happen to be able to read PDP-8 machine code.
+
+*   Added Bill Cattey's `txt2ptp` program which converts plain ASCII
+    text files files to the paper tape format used by SIMH, which eases
+    transfer of text data into the simulator.  That program is also
+    linked to `ptp2txt`, which makes it perform the inverse function:
+    given a SIMH paper tape image file, produce an ASCII text file on
+    the host machine with its contents.
+
+    This program was originally written to ease the movement of FOCAL
+    program text between SIMH and its host OS, but it is now a key part
+    of the OS/8 RK05 disk building process, used whenever we need to
+    inject the contents of a text file from the host into the simulated
+    PDP-8 running OS/8.
+
+    These filters should prove broadly useful.
+
+*   Integrated Robert Krten's `d8tape` PDP-8 host-side disassembler.
+    This is distinct from the OS/8 DCP disassembler, which runs inside
+    the simulator.  It is intended as a companion to `palbart`, which we
+    integrated last year.
+
+*   Added a new "blinkenlights" demo program called `bin/teco-pi-demo`
+    which drives SIMH from the outside, running a TECO macro under OS/8
+    to calculate *pi* to 248 digits at a very slow rate, producing a
+    display that manages to land somewhere between the random default
+    display of [Deeper Thought][dt2vk] and the clear, boring patterns of
+    our preexisting IF=5 demo script.
+
+    Why 248 digits?  Because at 249, TECO8 runs out of memory, aborting
+    the demo early.  At the default execution rate, it would take over
+    17 years to complete this demo, making it a good choice to run on
+    PiDP-8/I units primarily being used as *objets d'art*.  The demo has
+    a finite run time, but your Raspberry Pi is likely to die before it
+    completes. `;)`
+
+    This script is also included as a demonstration of how the end user
+    can reuse the technology that we developed to automatically build
+    the custom OS/8 disk images described above to achieve different
+    ends.  Perhaps you have some other program you'd like to run within
+    SIMH in an automated fashion?  This shows one way how, and
+    demonstrates a pre-built and tested set of tools for achieving it.
+
+    We have also written [a tutorial][csd] explaining how
+    `bin/teco-pi-demo` works and how to reuse the components it is built
+    atop for your own ends.
+
+    This demo also has a benchmark mode (command line option `-b`) which
+    has two purposes:
+
+    1.  It lets you see how much faster your host system runs PDP-8 code
+        than a Raspberry Pi Model B+ running the PiDP-8/I simulator.
+
+    2.  Given that information, the benchmark overrides a hardcoded
+        timing value in the source code as distributed which prevents
+        programs like `teco-pi-demo` from spamming the OS/8 terminal
+        input handler.  The default is for the slowest host we support
+        this software on, that same Model B+ referred to above, but if
+        we know you're running on a faster host, we can shorten this
+        delay and remain reliable.
+        
+    If you run the demo in benchmark mode twice, you'll notice that the
+    TECO script is input nearly instantaneously the second time, whereas
+    you can see the demo "type" the script in very quickly the first
+    time.  (Remove `lib/pidp8i/ips.py`, say `make reconfig` and run the
+    demo again to see the difference.)
+
+*   The `DF` + `SING_STEP` feature for automatically attaching binary
+    media images to the simulator from files on USB sticks now looks
+    at all directories under `/media`, not just `usb0` through `usb7`
+    so that it works with several other common Linux USB automounting
+    schemes, such as the one Raspbian Desktop uses.
+
+*   Fixed the order of initialization in the GPIO setup code for the
+    James L-W serial mod case.  Fix by Dylan McNamee.
+
+*   The helper program that selects which boot script to run when the
+    PiDP-8/I boots based on the IF switch settings broke at some point
+    in the past, apparently because it was using its own idiosyncratic
+    GPIO handling code, and thus did not track our evolving GPIO
+    handling methods.  Now it shares the same code used by `pidp8i-sim`
+    and `pidp8i-test`, so it works properly again.
+
+*   The SysV init script that starts `pidp8i-sim` under GNU Screen on
+    the PiDP-8/I now sets the working directory to `$prefix/share/media`
+    on start, so relative paths given to SIMH commands (e.g. `ATTACH`)
+    are more likely to do what you want.  In prior releases, you
+    generally had to give absolute paths to attach media and such
+    because CWD would be set somewhere unhelpful.
+
+*   The Fetch LED is no longer lit when in STOP or single-step mode.  In
+    real hardware, it can be either on or off in this mode, depending
+    on various conditions, but it is most often off, so while it is not
+    perfectly correct now, it is less wrong.  Most of the investigation
+    into this issue is by Bill Cattey, with the current partial fix by
+    me.  A more precise fix may come later.  (See ticket [347ae45403] if
+    you care to know the details.)
+
+*   The Pause LED state was over-counted in the LED sub-sampling scheme
+    so that it would tend to be brighter than it should have been.
+    Problem noticed by Ian Schofield.
+
+*   The MB row's state was not showing the right thing.  The problem was
+    noticed in comparison to real PDP-8/I hardware by Vincent Slyngstad
+    and verified by William Cattey.  Ian Schofield suggested the current
+    fix.
+
+*   Updated SIMH to upstream checkin ID 27f9fc3c3, December 11, 2017.
+
+    There have been no substantial changes to the PDP-8 simulator since
+    the last update, 8 months ago, but there have been a lot of bug
+    fixes to the SCP, that being the common core of all of the SIMH
+    simulators.
+
+    One upstream change had to be backed out to work around a bug they
+    introduced, which was not fixed by release time.  (See [GitHub issue
+    #508][gh508].)
+
+*   Updated for Raspbian Stretch, released in September 2017.  (Our
+    binary OS images are built against the subsequent 2017-11-29
+    release, with updates as of 2017-12-22 applied.)
+
+    The only significant difference found is that the old, abandoned
+    `usbmount` package no longer works, apparently due to some change in
+    `systemd`.  We've replaced that with a set of scripts based on
+    [those by Mike Blackwell][mbua].
+
+    It should still run on Raspbian Jessie, however.
+
+*   Assorted portability, build system, and documentation improvements.
+
+[apt]:   https://linux.die.net/man/8/apt
+[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
+[csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
+[dibas]: https://tangentsoft.com/pidp8i/wiki?name=Demos+in+BASIC
+[dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
+[gh508]: https://github.com/simh/simh/issues/508
+[mbua]:  https://serverfault.com/a/767079
+[os8ct]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
+[os8lc]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+LCSYS.BI+Disassembled
+[os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
+[os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
+[pe1c]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
+[pe1f2]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT#fortran-ii
+[pe1f4]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT#fortran-iv
+[pe1u]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.FC
+[uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
+[uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
+
+
+<a id="20170404"></a>
 ## Version 2017.04.04
 
 *   Removed the PDP-8 CPU idle detection feature.  Oscar Vermeulen
@@ -23,7 +414,8 @@
     `README-throttle.md` for details.
 
 
-## Version 2017.04.01 The "I May Be a Fool, but I am *Your* Fool" Release
+<a id="20170401"></a>
+## Version 2017.04.01 — The "I May Be a Fool, but I am *Your* Fool" release
 
 *   Added the `configure --alt-serial-mod` option to change the GPIO
     code to work with [James L-W's alternative serial mod][sm2].
@@ -155,6 +547,7 @@
 [sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
 
 
+<a id="20170204"></a>
 ## Version 2017.02.04
 
 *   Largely rewrote the incandescent lamp simulator (ILS) feature.
@@ -248,6 +641,7 @@
 [ithought]: https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 
 
+<a id="20170123"></a>
 ## Version 2017.01.23
 
 *   When any program that talks to the PiDP-8/I front panel starts up,
@@ -392,6 +786,7 @@
 [ecl]: http://stackoverflow.com/q/1182025/142454
 
 
+<a id="20170116"></a>
 ## Version 2017.01.16
 
 *   Prior releases did not include proper licensing for many of the
@@ -506,6 +901,7 @@
 [rmth]:    https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
 
 
+<a id="20170105"></a>
 ## Version 2017.01.05
 
 *   Automated the process for merging in new SIMH updates.  From within
@@ -533,7 +929,8 @@
     numbers or our Fossil checkin IDs.)
 
 
-## Version 2016.12.26 (The Boxing Day release)
+<a id="20161226"></a>
+## Version 2016.12.26 — The Boxing Day release
 
 *   Tony Hill updated SIMH to the latest upstream version.
 
@@ -667,6 +1064,7 @@
     `examples/routines/prints.pal`.
 
 
+<a id="20161205"></a>
 ## Version 2016.12.05
 
 *   This release marks the first binary SD card image released under my
@@ -693,6 +1091,7 @@
     a single page of PDP-8 core memory.
 
 
+<a id="20161203"></a>
 ## Version 2016.12.03
 
 *   Debounced the switches.  See [the mailing list post][cdb] announcing
@@ -735,11 +1134,12 @@
 [p1saga]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
 
 
+<a id="20161128"></a>
 ## Version 2016.11.28
 
 *   Added an intelligent, powerful build system, replacing the
     bare-bones `Makefile` based build system in the upstream version.
-    See [`README.md`][readme] for more info on this.
+    See [`README.md`][tlrm] for more info on this.
 
 *   The installation is now completely relocatable via `./configure
     --prefix=/some/other/place`. The upstream version would not work if
@@ -810,7 +1210,7 @@
 
 *   Fixed a bunch of bugs!
 
-[readme]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+[tlrm]:    https://tangentsoft.com/pidp8i/doc/trunk/README.md
 [dupatch]: https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA
 [dudis]:   https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936
 [wiki]:    https://tangentsoft.com/pidp8i/wcontent
@@ -819,7 +1219,12 @@
 [tix]:     https://tangentsoft.com/pidp8i/tickets
 
 
+<a id="20151215"></a>
 ## Version 2015.12.15
 
-*   The official upstream release of the software, still current as of
-    late 2016, at least.
+*   The last release of the software made by Oscar Vermeulen, the
+    creator of the PiDP-8/I project. This version of the software
+    derives from it, but differs in many ways. (See above.)
+
+    Since May of 2017, this version of the software is now considered
+    the current stable version.

@@ -1,0 +1,838 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+########################################################################
+# mkos8 - Build bin/os8v3d-*.rk05 from media/*/*.tu56 by scripting
+#    commands to SIMH and OS/8.
+#
+# Copyright © 2017 by Jonathan Trites, William Cattey, and Warren Young.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
+
+# Remaining Python core modules
+import re
+import shutil
+import subprocess
+
+# Our local modules
+from mkos8 import *
+from pidp8i import *
+from simh import *
+
+
+#### globals and constants #############################################
+
+# Flag set when -v is *not* given.  Causes make_*() and the functions
+# called thereby to print progress messages to the console since SIMH
+# and OS/8 output is not being sent there to clue the user into the
+# script's progress.
+progmsg = True
+
+# Name of the RK05 disk image files we create
+_bin_rk05 = "os8v3d-bin.rk05"
+_src_rk05 = "os8v3d-src.rk05"
+_patched_rk05 = "os8v3d-patched.rk05"
+
+# Parser regexps used in patcher
+_com_os8_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
+_com_os8_parse = re.compile(_com_os8_parse_str)
+_com_split_str = "^([a-zA-Z]+)\s?(.*)$"
+_com_split_parse = re.compile(_com_split_str)
+_odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
+_odt_parse = re.compile(_odt_parse_str)
+
+#### mkos8_abort  ######################################################
+# Fatal error. Abort mkos8
+
+def mkos8_abort (s):
+  print "Fatal Error.  Cannot proceed."
+  s.quit ()
+  exit (-1)
+
+
+#### check_exists ######################################################
+# Check existence of all files needed
+
+def check_exists (s, image_copyins):
+  for copyin in image_copyins:
+    image = copyin[1]
+    image_path = dirs.os8mi + image
+    if (not os.path.isfile(image_path)):
+        print "Required file: " + image_path + " not found."
+        mkos8_abort(s)
+    # else: print "Found " + image_path
+
+   
+#### Data Structures ##################################################
+#
+# The make procedures use helper procedures
+# to confirm that the relevant input image file exists and
+# to perform the file copies.
+#
+# A data structure called "image copyin"
+#    describes the image file pathname relative to an implied root,
+#    provides a message string when the action is run,
+#    names a default destination device for whole image content copies,
+#    offers an optional array of specific file copy actions.
+#
+# FUTURE: Parse source path for ".tu56" vs. ".rk05" for more general use.
+# Currently all code assumes a copyin comes from a DECtape image.
+#
+# Example: We Install all files for ADVENT, the Adventure game:
+#
+# advent_copyin = ['RKB0:', 'subsys/advent.tu56',  "Installing ADVENT...", None]
+#
+# A DECtape device is chosen for attachment in SIMH and
+# a 'COPY *.*' command is filled in with the Destination device, and the chosen DECtape.
+#
+# A data structer called "file copyin"
+#     provides override destination to allow renames or varied destinations.
+#     names individual files within a copyin to use
+#
+# Example:  To copy the C compiler we want all .SV files on SYS
+#           but everything else to RKB0:
+#           (Note the useful /V option to invert the match.)
+#
+# cc8_sv_file_copyin   = ['SYS:', '*.SV']
+# cc8_rest_file_copyin = ['RKB0:', '*.SV/V']
+#
+# A 'COPY' command is filled in with the override destination and
+# The file spec is used with the chosen dectape instead of "*.*"
+#
+
+#### copyin_pair #######################################################
+# Copy two images into two destinations with two messages
+#
+# Assumes our context is "in simh".
+# Assumes dt0 and dt1 are free.
+# Assumes rk0 is the boot device
+# Detaches dt0 and dt1 after using them.
+# copyin0 mounts on dt0.  copyin1 mounts on dt1.
+# Either copyin or both can be None
+
+def copyin_pair (s, copyin0, copyin1, debug):
+  if debug:
+    if copyin0:
+      print "Copying: " + copyin0[1] + " to: " + copyin0[0] + "from dt0"
+    else: print "copyin0 is empty."
+    if copyin1:
+      print "Copying: " + copyin1[1] + " to: " + copyin1[0] + "from dt1"
+    else: print "copyin1 is empty."
+    
+  if not copyin0 and not copyin1: return   # Nothing to do.
+
+  # The order of events here is a bit funky because we want
+  # to use both DECtape drives but also
+  # switch between SIMH and OS/8 as infrequently as possible.
+
+  if copyin0: s.send_cmd ("attach -r dt0 " + dirs.os8mi + copyin0[1])
+  if copyin1: s.send_cmd ("attach -r dt1 " + dirs.os8mi + copyin1[1])
+
+  s.os8_restart()
+
+  if copyin0:
+    if progmsg: print copyin0[2]
+    if copyin0[3]:                    # We have specific files to do.
+      for file_copyin in copyin0[3]:
+        s.os8_send_cmd ("\\.", "COPY " + file_copyin[0] + "<DTA0:" + file_copyin[1])
+    else:
+      s.os8_send_cmd ("\\.", "COPY " + copyin0[0] + "<DTA0:*.*")
+
+  if copyin1:
+    if progmsg: print copyin1[2]
+    if copyin1[3]:                    # We have specific files to do.
+      for file_copyin in copyin1[3]:
+        s.os8_send_cmd ("\\.", "COPY " + file_copyin[0] + "<DTA1:" + file_copyin[1])
+    else:
+      s.os8_send_cmd ("\\.", "COPY " + copyin1[0] + "<DTA1:*.*")
+
+  s.back_to_cmd("\\.")
+
+  if copyin0: s.send_cmd ("detach dt0")
+  if copyin1: s.send_cmd ("detach dt1")
+
+
+#### do_all_copyins ####################################################
+
+def do_all_copyins (s, copyins, debug):
+  pair_idx = 0
+  pair_ct = int(len(copyins) / 2)
+  while pair_idx < pair_ct:
+    copyin_pair(s, copyins[pair_idx * 2], copyins[pair_idx * 2 + 1], debug)
+    pair_idx += 1
+  if pair_ct * 2 < len(copyins):
+    copyin_pair(s, copyins[len(copyins) - 1], None, debug)
+
+  
+#### make_bin ##########################################################
+# Top-level driver for the "make binary OS/8 RK05 disk image" process.
+#
+# If there is already an RK05 binary destination image, moves it aside
+# to a ".save" instance, overwriting the previous .save if it exists.
+#
+# One of the input images is used as a bootable DECtape.
+# That DECtape gets written on.
+# It needs stuff from tape #2
+# So the first two DECtapes
+# are treated separately and specially.
+# All the other DECtape images used are read only.
+
+def make_bin (s, args):
+  ro_boot_tape =       "al-4711c-ba-os8-v3d-1.1978.tu56"
+  ro_boot_tape_path =  dirs.os8mi + ro_boot_tape
+  driver_tape =        "al-4712c-ba-os8-v3d-2.1978.tu56"
+  driver_tape_path =   dirs.os8mi + driver_tape
+  local_tape =         "local.tu56"
+  local_tape_path =    dirs.os8mi + local_tape
+  
+  boot_dt_path = dirs.os8mo + "bootable-al-4711-c-ba-os8-v3d-1.1978.tu56"
+
+  special_bin_copyins = [
+    ["", ro_boot_tape,  "", None],
+    ['RKA0:', driver_tape, "Device Drivers...", None],
+  ]
+
+  music_copyin  = ['RKB0:', 'subsys/music.tu56',
+                    "Copying in Music score files and source code...", None]
+
+  ba_copyin     = ['RKB0:', 'subsys/ba.tu56',
+                   "Installing *.BA BASIC games and demos...", None]
+
+  cc8_files     = [['SYS:', '*.SV'], ['RKB0:', '*.SV/V']]
+
+  cc8_copyin    = ['RKB0:', 'subsys/cc8.tu56',
+                   "Installing Ian Schofield's CC8 compiler...", cc8_files]
+
+  k12_copyin    = ['RKA0:', 'subsys/k12.tu56',
+                   "Installing Kermit-12...", None]
+
+  focal69_files  = [
+    ['RKB0:', 'FOCAL.BN'],
+    ['RKB0:', '4WORD.BN'],
+    ['RKB0:', '4KVT.BN'],
+    ['RKB0:', '8KVT.BN'],
+    ['RKB0:', '8KNOVT.BN']
+  ] 
+  focal69_copyin = ['RKA0:', 'subsys/focal69.tu56',
+                    "Installing FOCAL 69...", focal69_files]
+
+  fiv_copyins = [
+    ['RKA0:', "subsys/al-4549d-ba-fr4-v3d-1.1978.tu56",
+     "Installing FORTRAN IV ...", None],
+  ]
+
+  # Specify files explicitly. There's a README.TX we don't want copied.
+  # We may decide to leave FUTIL.SV out.
+  macrel_files = [
+    ['SYS:', 'MACREL.SV'],
+    ['SYS:', 'LINK.SV'],
+    ['SYS:', 'KREF.SV'],
+    ['SYS:', 'OVRDRV.MA'],
+    ['SYS:', 'FUTIL.SV']
+  ]
+
+  macrel_copyin = ['RKA0:', "al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56",
+                   "Installing MACREL V2 and new FUTIL V8B ...", macrel_files]
+
+  uwfocal_files  = [['SYS:', 'UWF16K.SV']]
+  
+  uwfocal_copyin = ['RKA0:', 'subsys/uwfocal-v4e-2.tu56',
+                    "Installing U/W FOCAL...", uwfocal_files]
+
+  advent_copyin = ['RKB0:', 'subsys/advent.tu56',
+                   "Installing ADVENT...", None]
+
+  bin_copyins = [
+    ['RKA0:', "al-4761c-ba-os8-v3d-ext.1978.tu56",
+     "Copying in OS/8 V3D extensions...", None],
+    ]
+
+  local_files = []
+  local_stat_str = "Performing copyins from " + local_tape + ":\n"
+
+  # Case Conversion scripts from local.tu56.
+  local_stat_str += "    Case Conversion batch scripts.\n"
+  local_files.append(['RKA0:', '?CSYS.BI'])
+  local_files.append(['RKA0:', '?CBAS.BI'])
+
+  if not args.disable_chess:
+    local_stat_str += "    CHESS.SV binary and CHESS.TX documentation...\n"
+    local_files.append(['RKA0:', 'CHESS.*'])
+
+  if args.enable_vtedit:
+    local_stat_str += "    TECO VTEDIT setup...\n"
+    local_files.append(['RKA0:', 'VTEDIT.*'])
+    local_files.append(['RKA0:', 'TECO.IN'])
+
+  if not args.disable_dcp:
+    # Should we also install DCP.WU on RKB0:?
+    local_stat_str += "    DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV.\n"
+    local_files.append(['RKA0:', 'DCP24.SV'])
+    local_files.append(['RKA0:DCP.SV', 'DCP16.SV'])
+
+  if args.enable_music:           bin_copyins.append(music_copyin)
+
+  if not args.disable_advent:     bin_copyins.append(advent_copyin)
+  if not args.disable_ba:         bin_copyins.append(ba_copyin)
+  if not args.disable_cc8:        bin_copyins.append(cc8_copyin)
+  if not args.disable_k12:        bin_copyins.append(k12_copyin)
+  if not args.disable_fortran_iv: bin_copyins.extend(fiv_copyins)
+  if not args.disable_macrel:     bin_copyins.append(macrel_copyin)
+
+  if local_files != []:
+    local_copyins = ['RKA0:', local_tape, local_stat_str, local_files]
+    bin_copyins.append(local_copyins)
+
+  if args.enable_focal69:
+    bin_copyins.append(focal69_copyin)
+  if not args.disable_uwfocal:
+    bin_copyins.append(uwfocal_copyin)
+
+  check_exists(s, special_bin_copyins)
+  check_exists(s, bin_copyins)
+
+  print "Generating " + _bin_rk05 + " from " + str(len(bin_copyins) + 2) + \
+        " source tapes..."
+
+  image_path = dirs.os8mo + _bin_rk05
+  if os.path.isfile(image_path):
+    save_path = dirs.bin + _bin_rk05 + ".save"
+    print "Pre-existing " + _bin_rk05 + " found.  Saving as " + _bin_rk05 + ".save"
+    if os.path.isfile(save_path):
+      print "Overwriting old " + _bin_rk05 + ".save"
+      os.remove(save_path)
+    os.rename(image_path, save_path)
+  
+  global progmsg
+  if progmsg: print "Building initial OS/8 system..."
+  
+  if progmsg: print "Making a writeable copy of boot DECtape..."
+  try:
+    shutil.copyfile(ro_boot_tape_path, boot_dt_path)
+  except shutil.Error as e:
+    print "Bootable DECtape copy failed with error: " + e
+    mkos8_abort (s)
+  except IOError as e:
+    print "Bootable DECtape copy failed with IOError: " + e
+    mkos8_abort (s)
+
+  s.send_cmd ("attach rk0 " + image_path)
+  s.send_cmd ("attach dt0 " + boot_dt_path)
+  s.send_cmd ("attach -r dt1 " + driver_tape_path)
+
+  if progmsg: print "Performing config with BUILD..."
+  s.send_cmd ("boot dt0")
+
+  # By default, we're going to have an INIT.CM script, but we don't want
+  # to set it up this early for two reasons.  First, we don't want the
+  # "boot rk0" commands below to emit this message, since its text
+  # varies depending on the host system, which would create unnecessary
+  # differences in our output over time.  Second, OS/8 is alleged not to
+  # always build properly if INIT is enabled in these early stages.
+  s.os8_send_cmd ("\\.", "SET SYS NO INIT")
+
+  s.os8_send_cmd ("\\.", "RUN SYS BUILD")
+  s.os8_send_cmd ("\$", "LOAD DTA1:RK8ESY.BN")
+  s.os8_send_cmd ("\$", "LOAD DTA1:PT8E.BN")
+  s.os8_send_cmd ("\$", "DELETE SYS")
+  s.os8_send_cmd ("\$", "SYSTEM RK8E")
+  s.os8_send_cmd ("\$", "DELETE RXA1")
+  s.os8_send_cmd ("\$", "INSERT PT8E,PTR")
+  s.os8_send_cmd ("\$", "INSERT PT8E,PTP")
+  s.os8_send_cmd ("\$", "DELETE RKA0")
+  s.os8_send_cmd ("\$", "DELETE RKB0")
+  s.os8_send_cmd ("\$", "INSERT RK8E,RKA0,RKB0")
+  s.os8_send_cmd ("\$", "INSERT RK05,RKA2,RKB2")
+  s.os8_send_cmd ("\$", "DELETE DTA0")
+  s.os8_send_cmd ("\$", "INSERT TC,DTA0")
+  s.os8_send_cmd ("\$", "DSK RK8E:RKB0")
+  s.os8_send_cmd ("\$", "PRINT")
+  s.os8_send_cmd ("\$", "BOOT")
+  s.os8_send_cmd ("WRITE ZERO DIRECT\?", "Y")
+  # SYS is now RK0; if we SAVE SYS we will overwrite with wrong BUILD.SV
+  s.os8_send_cmd ("\\.", "SAVE DTA0 BUILD")
+  s.back_to_cmd("\\.")
+  
+  if progmsg: print "Copying OS/8 system files from TU56 source to RK05 image..."
+  if progmsg: print "Copying in system tape 1 of 2..."
+  s.send_cmd ("boot dt0")
+  s.os8_send_cmd ("\\.", "COPY RKA0:<DTA0:*.*")
+
+  # There are not enough directory entries to put everything
+  # Including all device drivers on the running packs.
+  # So we DONT copy in the device drivers, nor TDINIT.SV,
+  # nor the two TD8E-based DECtape system area files.
+  # CCL.PA and KL8E.PA will be on the source disk.
+  # However DECtape 2 has HELP.HL and .RL files that ARE needed.
+  # if progmsg: print "Copying in system tape 2 of 2..."
+  # s.os8_send_cmd ("\\.", "COPY RKA0:<DTA1:*.*")
+  if progmsg: print "Copying in help files..."
+  s.os8_send_cmd ("\\.", "COPY RKA0:<DTA1:*.HL")
+
+  if args.disable_fortran_ii:
+    files = [ 'RKA0:{0}.SV'.format(f) for f in [
+        'FORT', 'LIBSET', 'SABR'
+      ]
+    ]
+    s.os8_send_cmd ("\\.", 'DEL ' + ','.join (files))
+  else:
+    if progmsg: print "Installing FORTRAN II libraries..."
+    s.os8_send_cmd ("\\.", "COPY RKA0:<DTA1:*.RL")
+
+  s.os8_send_cmd ("\\.", "ZERO RKB0:")      # must precede subsys/* copies
+
+  s.back_to_cmd("\\.")
+  
+  if progmsg: print "Deleting bootable copy of DECtape image and"
+  if progmsg: print "rebooting into freshly-built RK05 OS/8 system..."
+  s.send_cmd ("detach dt0")
+  s.send_cmd ("detach dt1")
+  s.send_cmd ("boot rk0")     # must do: boot media just went away
+  s.back_to_cmd("\\.")
+  os.remove(boot_dt_path)
+
+  if progmsg: print "Performing remaining copies/installs..."
+  do_all_copyins (s, bin_copyins, args.debug)
+
+  # Any further initialization of installed software is done here.
+  s.send_cmd ("boot rk0")
+
+  if progmsg: print "Configuring for 3-column DIRECT listings..."
+  s.os8_send_cmd ("\\.", "SET TTY COL 3")
+
+  if not args.disable_crt:
+    # NO SCOPE mode is the default on distribution tapes.
+    if progmsg: print "Configuring scope-style rubout processing..."
+    s.os8_send_cmd ("\\.", "SET TTY SCOPE")
+  
+  # Make sure Scripts are included in local_files array!
+  # Or this will fail.
+  if not args.disable_lcmod:
+    if progmsg: print "Patching OS/8 to upcase commands only; SIMH is set not to auto-upcase."
+    s.os8_send_cmd ("\\.", "SUBMIT SYS:LCSYS.BI")
+    if progmsg: print "Patching OS/8 BASIC to cope with lower case input"
+    s.os8_send_cmd ("\\.", "SUBMIT SYS:LCBAS.BI")
+
+  # Create a banner message and optionally set it to show on boot.
+  # This message is always upcased, even if you do this before calling
+  # LCSYS.BI.  Is it a limitation of EDIT?
+  #
+  # Note that we do not read this file from dirs.os8mi: it is either an
+  # output of autosetup or overwritten by test-mkos8 in the *build*
+  # tree, so that when building out of tree, reading from os8mi would
+  # either give an empty file if the source tree was "clean" or a
+  # mismatched version of the file from the soruce tree rather than the
+  # one we want, which is in the *build* tree.
+  if progmsg: print "Setting INIT message..."
+  s.os8_send_file ('media/os8/init.tx')
+  s.os8_send_cmd ("\\.", "CREATE INIT.CM")
+  s.os8_send_cmd ("#", "A")
+  s.os8_send_line("TYPE INIT.TX")
+  s.os8_send_ctrl('L')
+  s.os8_send_cmd ("#", "E")
+  if not args.disable_init:
+    # Set the message to display only if the user did not suppress it.
+    # We do it this way so the user can turn it on later without
+    # rebuilding their OS/8 media.
+    s.os8_send_cmd ("\\.", "SET SYS INIT")
+
+  # Finish up
+  if progmsg: print "Cleaning up..."
+  s.os8_squish ("SYS")
+  s.os8_squish ("DSK")
+  s.back_to_cmd("\\.")
+  s.send_cmd ("detach rk0")
+
+
+
+#### make_src ##########################################################
+# Source-disk version of make_bin() above.
+
+def make_src (s, args):
+  src_copyins = [
+    ["RKA1:", "al-4691c-sa-os8-v3d-1.1978.tu56", "...part 1 of 7...", None],
+    ["RKA1:", "al-4692c-sa-os8-v3d-2.1978.tu56", "...part 2 of 7...", None],
+    ["RKA1:", "al-4693d-sa-os8-v3d-3.1978.tu56", "...part 3 of 7...", None],
+    ["RKA1:", "al-4694c-sa-os8-v3d-4.1978.tu56", "...part 4 of 7...", None],
+    ["RKB1:", "al-4695c-sa-os8-v3d-5.1978.tu56", "...part 5 of 7...", None],
+    ["RKB1:", "al-4696c-sa-os8-v3d-6.1978.tu56", "...part 6 of 7...", None],
+    ["RKB1:", "al-4697c-sa-os8-v3d-7.1978.tu56", "...part 7 of 7...", None],
+    ["RKB1:", "al-4759c-sa-os8-ext-1.1978.tu56",
+     "extensions part 1 of 3...", None],
+    ["RKB1:", "al-4760c-sa-os8-ext-2.1978.tu56", "...part 2 of 3...", None],
+    ["RKA1:", "al-5586c-sa-os8-ext-3.1978.tu56", "...part 3 of 3...", None],
+  ]
+  
+  check_exists (s, src_copyins)
+
+  print "Generating " + _src_rk05 + " from " + str(len(src_copyins)) + \
+        " source tapes..."
+
+  bin_path = dirs.os8mo + _bin_rk05
+  if (not os.path.isfile(bin_path)):
+    print _bin_rk05 + " is needed to build src.  Creating..."
+    make_bin(args)
+
+  src_path = dirs.os8mo + _src_rk05
+  if os.path.isfile(src_path):
+    save_path = src_path + ".save"
+    print "Pre-existing " + _src_rk05 + " found.  Saving as " + _src_rk05 + ".save"
+    if os.path.isfile(save_path):
+      print "Overwriting old " + _src_rk05 + ".save"
+      os.remove(save_path)
+    os.rename(src_path, save_path)
+    
+  if progmsg: print "Copying OS/8 source distribution:"
+  s.send_cmd ("attach rk0 " + bin_path)
+  s.send_cmd ("attach rk1 " + src_path)
+
+  s.send_cmd ("boot rk0")
+  
+  s.os8_send_cmd ("\\.", "ZERO RKA1:")
+  s.os8_send_cmd ("\\.", "ZERO RKB1:")
+
+  s.back_to_cmd("\\.")
+
+  do_all_copyins (s, src_copyins, args.debug)
+
+  if progmsg: print "Cleaning up..."
+  s.send_cmd ("detach rk0")
+  s.send_cmd ("detach rk1")
+
+
+#### parse_odt #########################################################
+
+def parse_odt (s, com, line, debug):
+  if debug: print line
+  
+  if line == "\\c": return "break"
+  match = _odt_parse.match(line)
+  if match == None:
+    print "Aborting because of bad ODT line: " + line
+    s.os8_send_ctrl('C')
+    return "err"
+  loc = match.group(1)
+  old_val = match.group(2)
+  new_val = match.group(3)
+  expect_val_str = "\s?[0-7]{4} "
+  
+  if debug: print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
+  s.os8_send_str (loc + "/")
+  s._child.expect(expect_val_str)
+
+  if old_val.isdigit():          # We need to check old value
+    found_val = s._child.after.strip()
+    if found_val != old_val:
+      print "Old value: " + found_val + " does not match " + old_val + ". Aborting patch."
+      # Abort out of ODT back to the OS/8 Monitor
+      s.os8_send_ctrl('C')
+      return "err"
+
+  s.os8_send_line (new_val)
+  return "cont"
+
+
+#### futil_exit ########################################################
+
+def futil_exit (s, com, line):
+  s.os8_send_line(line)
+  return "break"
+
+
+#### futil_file ########################################################
+
+def futil_file (s, com, line):
+  # Redundant re-parse of line but nobody else wants args right now.
+  match = _com_split_parse.match(line)
+  if match == None:
+    print "Aborting because of mal-formed FUTIL FILE command: " + line
+    s.os8_send_ctrl('C')
+    return "err"
+  fname = match.group(2)
+  expect_futil_file_str = "\n" + fname + "\s+(.*)$"
+  s.os8_send_line (line)
+  s._child.expect(expect_futil_file_str)
+  result = s._child.after.strip()
+  match = _com_split_parse.match(result)
+  if match == None:
+    print "Aborting because unexpected return status: " + result + " from: " + line
+    s.os8_send_ctrl('C')
+    return "err"
+  if match.group(2).strip() == "LOOKUP FAILED":
+    print "Aborting because of FUTIL lookup failure on: " + fname
+    s.os8_send_ctrl('C')
+    return "err"
+  else:
+    return "cont"
+  
+  
+#### parse_futil #########################################################
+#
+# Very simple minded:
+# If first char on line is an alpha, run the command.
+# If the first char on line is number, do the substitute command.
+#
+# Substitute command acts like ODT.
+# Future version should support the IF construct.
+#
+# When we encounter the EXIT command, we return success.
+
+def parse_futil (s, com, line, debug):
+  futil_specials = {
+    "EXIT": futil_exit,
+    "FILE": futil_file
+  }
+
+  if line[0].isdigit():
+    # Treat the line as ODT
+    return parse_odt(s, com, line, debug)
+  else:
+    match = _com_split_parse.match(line)
+    if match == None:
+      print "Ignoring failed FUTIL command parse of: " + line
+      return "cont"
+    fcom = match.group(1)
+    rest = match.group(2)
+
+    if fcom not in futil_specials:
+      # Blind faith and no error checking.
+      s.os8_send_line(line)
+      return "cont"
+    else:
+      return futil_specials[fcom](s, fcom, line)
+
+
+#### do_patch_file #####################################################
+
+def do_patch_file (s, filename, debug):
+  global progmsg
+  
+  try:
+    patch_file = open(dirs.os8mi + "patches/" + filename, "r")
+  except IOError:
+    print filename + " not found. Skipping."
+    return -1
+
+  special_commands = {
+    "ODT": parse_odt,
+    "R": None,               # Get next parser.
+    "FUTIL": parse_futil
+  }
+
+  inside_a_command = False
+  the_command = ""
+  the_command_parser = None
+  
+  for line in patch_file:
+    line = line.rstrip()
+    if line == "": continue
+    elif line[0] == '#': continue     # Ignore Comments
+    elif inside_a_command:
+      retval = the_command_parser (s, the_command, line, debug)
+      if retval == "break":
+        inside_a_command = False
+        s.os8_send_ctrl('C')
+      elif retval == "err":
+        patch_file.close()
+        return -1
+    elif line[0] == '.':        # New OS/8 Command
+      match = _com_os8_parse.match(line)
+      if match == None:
+        print "Aborting patch on failed OS/8 command parse of: " + line
+        return -1
+      com = match.group(1)
+      rest = match.group(2)
+
+      if com in special_commands:
+        if com == "R":
+          # Run command is special.  Take arg as the command and run it.
+          com = rest
+        inside_a_command = True
+        the_command = com
+        the_command_parser = special_commands[com]
+
+      # We carefully separate com and args
+      # But don't make much use of that yet.
+      if progmsg and debug: print line
+      s.os8_send_cmd ("\\.", line[1:])  # Skip Prompt.
+
+  patch_file.close()
+
+  # Done.  Signal success.
+  return 0
+
+
+#### skip_patch ########################################################
+# Returns true if the given filename matches one of the regex string
+# keys of the given skips dict and the flag value for that key is set.
+# See skips definition in make_patch, which calls this.
+
+def skip_patch (fn, skips):
+    for p in skips:
+        if re.search (p, fn) and skips[p]: return True
+    return False
+
+      
+#### make_patch ########################################################
+
+def make_patch (s, args):
+  global progmsg
+  
+  manifest_filename = "patch_list.txt"
+
+  # Declare which patches to skip based on patch file name RE patterns
+  # and command line options.  All patches not matching these patterns
+  # apply to OS/8 files that always get installed.
+  skips = {
+    '^F4':            args.disable_fortran_iv,
+    '^FRTS':          args.disable_fortran_iv,
+    '^FUTIL.*v7': not args.disable_macrel,     # MACREL includes FUTIL V8B
+    '^SABR':          args.disable_fortran_ii,
+  }
+
+  print "Generating " + _patched_rk05 + " from " + _bin_rk05
+
+  image_path = dirs.os8mo + _patched_rk05
+  if os.path.isfile(image_path):
+    save_path = dirs.bin + _patched_rk05 + ".save"
+    print "Pre-existing " + _patched_rk05 + " found.  Saving as " + _patched_rk05 + ".save"
+    if os.path.isfile(save_path):
+      print "Overwriting old " + _patched_rk05 + ".save"
+      os.remove(save_path)
+    os.rename(image_path, save_path)
+
+  if progmsg: print "Copying original " +  _bin_rk05 + " to " + _patched_rk05
+  try:
+    shutil.copyfile(dirs.os8mo + _bin_rk05, image_path)
+  except shutil.Error as e:
+    print "Creation of " + _patched_rk05 + " failed with error: " + str(e)
+    mkos8_abort(s)
+  except IOError as e:
+    print "Creation of " + _patched_rk05 + " failed with IOError: " + str(e)
+    mkos8_abort(s)
+
+  s.send_cmd ("attach rk0 " + image_path)
+  s.send_cmd ("boot rk0")         # We're running OS/8. Let's patch!
+  
+  manifest = open (dirs.os8mi + "patches/" + manifest_filename, "r")
+
+  for line in manifest:
+    if line == "": continue
+    if line[0] == '#': continue      # Allow commenting out files
+
+    filename = line.strip()
+    if skip_patch (filename, skips):
+      if progmsg: print "Skipping patch file: " + filename + "."
+    else:
+      if progmsg: print "Applying patch file: " + filename + "...",
+      success = do_patch_file (s, filename, args.debug) == 0
+      if progmsg:
+        if success:
+          print "success."
+        else:
+          print "FAILED!"
+  
+  # If we have installed FORTRAN IV, install the patched FORLIB.RL
+  # to be found on local.tu56
+  if not args.disable_fortran_iv:
+    forlib_tape =         "local.tu56"
+    forlib_tape_path =    dirs.os8mi + forlib_tape
+    if progmsg: print "FORLIB 51.10.1M: Replacing FORLIB.RL with patched version from " + forlib_tape + "..."
+    # Normally we'd use check_exists, but failure to find the file is fatal.
+    # With a patch, we abort but keep going.
+    if (not os.path.isfile(forlib_tape_path)):
+      print "Can't find tape with patch FORLIB.RL.  FAILED!"
+    else:
+      s.back_to_cmd("\\.")         # return to simh and mount the tape.
+      s.send_cmd ("attach -r dt0 " + forlib_tape_path)
+      s.os8_restart ()            # return to OS/8
+      s.os8_send_cmd ("\\.", "DEL SYS:FORLIB.RL")
+      s.os8_send_cmd ("\\.", "COPY SYS:<DTA0:FORLIB.RL")
+      s.back_to_cmd("\\.")         # return to simh and mount the tape.
+      s.send_cmd ("detach dt0")
+      s.os8_restart ()            # return to OS/8
+      
+  # Finish up
+  if progmsg: print "Cleaning up..."
+  s.os8_squish ("SYS")
+  s.os8_squish ("DSK")
+  s.back_to_cmd("\\.")
+  s.send_cmd ("detach rk0")
+
+
+#### main ##############################################################
+# Program entry point.  Parses the command line and drives the above.
+
+def main ():
+  # Parse the command line
+  allowed_acts = ["all", "bin", "src", "patch"]
+  do_all_acts = ["bin", "src"]    # Just do bin and src if act is "all".
+  
+  ap = argparser.ArgParser (allowed_acts)
+  global progmsg
+  progmsg = not ap.args.verbose
+
+  # Initialize our acts dict.
+  acts = {}
+  first_act = None
+  for this in allowed_acts:
+    acts[this] = False
+
+  for act in ap.args.what:
+    if act not in allowed_acts:
+      print "Invalid act: " + act + " ignored."
+      continue
+
+    if first_act == None: first_act = act
+
+    if act == "all":
+      for this in do_all_acts:
+        acts[this] = True
+      break
+    acts[act] = True
+
+  # Log SIMH and OS/8 output to a file by default, but send it to the
+  # console instead of the progress messages if -v was given using the
+  # trick from https://stackoverflow.com/questions/21239338
+  s = simh (dirs.build, True)
+  s.set_logfile (open (dirs.log + 'mkos8-' + first_act + '.log', 'w') \
+      if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
+
+  if acts["bin"]: make_bin (s, ap.args)
+  if acts["src"]: make_src (s, ap.args)
+  if acts["patch"]: make_patch (s, ap.args)
+  
+  s.quit ()
+  if progmsg: print "Done!"
+
+
+if __name__ == "__main__":
+    main()

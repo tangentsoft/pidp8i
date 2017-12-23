@@ -142,11 +142,14 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
         }
 
         // Light up LEDs
-        extern int swStop, swSingInst;
-        if (swStop || swSingInst) {
-            // The CPU is in STOP mode, so show the current LED states
-            // full-brightness using the same mechanism NLS uses.
+        extern int swStop, swSingInst, suppressILS;
+        if (swStop || swSingInst || suppressILS) {
+            // The CPU is in STOP mode or someone has suppressed the ILS,
+            // so show the current LED states full-brightness using the
+            // same mechanism NLS uses.  Force a display swap if the next
+            // loop iteration won't do it in case this isn't STOP mode.
             update_led_states (intervl * 60);
+            if (step != (MAX_BRIGHTNESS - 1)) swap_displays();
         }
         else {
             // Normal case: PWM display using the on-count values

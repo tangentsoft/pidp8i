@@ -20,46 +20,33 @@ questions, it is best to ask them on [its low-volume mailing list][fml],
 though you may also ask me, either on [the PiDP-8/I mailing list][ggml]
 or via private email.
 
-Although most Raspberry Pi OS distributions include Fossil in their
-package repository, I am not aware of any that are currently shipping
-Fossil 2.1 or newer, the minimum version I currently recommend.  That
-version made a substantial change to the way Fossil operates that we
-will soon be depending upon.  Therefore, I recommend building Fossil
-from source:
+You must use Fossil version 2.1 or higher with our repository, or you
+will get an error.
 
-    $ sudo apt install libssl-dev
-    $ wget -O fossil-release.tar.gz \
-      https://fossil-scm.org/index.html/tarball/fossil-release?uuid=release
-    $ tar xvf fossil-release.tar.gz
-    $ cd fossil-release
-    $ ./configure
-    $ make
-    $ sudo make install
-    $ sudo apt remove fossil
+If you started with one of our PiDP-8/I binary OS images made in or
+after April 2017, Fossil 2.x is already installed.
+
+If you're starting from some other OS, you either won't have Fossil
+installed at all, or you'll most likley be using an older version,
+since the Debian project is still shipping version 1.37 and likely
+will continue to do so until 2020 or so.  You could build Fossil from
+source, or you could just go grab a prebuilt binary we keep on the
+project site:
+
+    $ wget https://tangentsoft.com/pidp8i/uv/fossil-raspbian-9.1-stretch
+    $ sudo install -m 755 fossil-* /usr/local/bin/fossil
 
 Fossil is also available for all common desktop platforms.  One of [the
 official binaries][fbin] may work on your system.  If you're getting
 binaries from a third party, be sure it is Fossil 2.1 or higher.
 
-If you started with binary OS image version 20170401 or newer, Fossil 2
-is already installed.  Binary OS images made before that date will need
-to be updated with the source code build option above, since Raspbian
-will not be shipping Fossil 2 until about the year 2020, by my
-reckoning.
 
-(The next Debian release after Jessie (called Stretch) went into feature
-freeze while Fossil 1.37 was still current, so we'll have to wait until
-the next one after that before we'll get Fossil 2.x in Raspbian.  Since
-Debian releases typically last about 2 years, and Raspbian lags
-Debian...2020.  Ouch.)
-
-
-[fbin]:   http://fossil-scm.org/index.html/uv/download.html
-[dvcs]:   http://en.wikipedia.org/wiki/Distributed_revision_control
-[fbook]:  http://www.fossil-scm.org/schimpf-book/home
-[fml]:    http://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/fossil-users
-[fossil]: http://fossil-scm.org/
-[fqsg]:   http://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
+[fbin]:   https://fossil-scm.org/index.html/uv/download.html
+[dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
+[fbook]:  https://www.fossil-scm.org/schimpf-book/home
+[fml]:    https://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/fossil-users
+[fossil]: https://fossil-scm.org/
+[fqsg]:   https://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
 [ggml]:   https://groups.google.com/forum/#!forum/pidp-8
 
 
@@ -69,19 +56,18 @@ Fossil Anonymous Access
 To clone the code repository anonymously, say:
 
     $ mkdir -p ~/museum ~/src/pidp8i/trunk
-    $ sudo apt install fossil
     $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
     $ cd ~/src/pidp8i/trunk
     $ fossil open ~/museum/pidp8i.fossil
 
 The `clone` command gets you a file called `pidp8i.fossil` containing
-the full history of PiDP-8/I from the upstream 2015.12.15 release
-onward.  You can call that clone file anything you like and put it in
-any directory you like.  Even the `.fossil` extension is largely a
-convention, not a requirement.
+the full history of the PiDP-8/I software project from the upstream
+2015.12.15 release onward.  You can call that clone file anything you
+like and put it in any directory you like.  Even the `.fossil` extension
+is largely a convention, not a requirement.
 
 
-Working With Existing Tags and Branches
+Working with Existing Tags and Branches
 ----
 
 The directory structure shown in the commands above is more complicated
@@ -108,8 +94,10 @@ moment.  So, to add a few other checkouts, you could say:
 This gives you multiple independent checkouts.  The branch checkouts
 remain pinned to the tip of that branch, so that if someone else checks
 changes in on that branch and you say `fossil update`, those changes
-appear in your checkout of that branch.  The tag checkouts behave
-differently, always showing a specific checkout with the given tag name.
+appear in your checkout of that branch.  The tag checkouts simply give
+you the latest checkin with that tag; saying `fossil update` in a
+checkout made from a tag will fast-forward you to the tip of the branch
+that tag was made on.
 
 (In Fossil, tags and branches are related, but the details are beyond
 our scope here.  See the [Fossil Quick Start Guide][fqsg] and the
@@ -119,10 +107,10 @@ This directory scheme shows an important difference between Fossil and
 Git: with Git, the checkout and the clone are intermingled in the same
 directory tree, but in Fossil, they are strictly separate.  Git can
 emulate Fossil's normal working style through its [worktree][gitwt]
-feature, but it's a kind of lash-up using symlinks and such, whereas
-with Fossil, there is no confusion: the repository clone is a single
-SQLite database file — here, `pidp8i.fossil` — and the checkouts are
-made from the contents of that database.
+feature, but it employs some trickery that causes some unwanted side
+effects that don't affect Fossil by design: the repository clone is a
+single SQLite database file — here, `pidp8i.fossil` — and the checkouts
+are made from the contents of that database.
 
 Another important difference relative to Git is that with Fossil, local
 checkins attempt to automatically sync checked-in changes back to the
@@ -157,17 +145,24 @@ Fossil Developer Access
 If you have a developer account on tangentsoft.com's Fossil instance, just
 add your username to the URL like so:
 
-    $ fossil clone http://username@tangentsoft.com/pidp8i pidp8i.fossil
+    $ fossil clone https://username@tangentsoft.com/pidp8i pidp8i.fossil
 
-Fossil will ask you for the password for `username` on the remote Fossil
-instance, and it will offer to remember it for you.  If you let it
-remember the password, operation from then on is scarcely different from
-working with an anonymous clone, except that on checkin, your changes
-will be sync'd back to the repository on tangentsoft.com if you're
-online at the time.
+If you've already cloned anonymously, you don't have to clone again to
+inform Fossil about your developer account.  Just do a manual sync,
+changing the URL to include the user name:
 
-If you're working offline, Fossil will still do the checkin, but you'll
-be able to sync with the central repoisitory once you get back online.
+    $ fossil sync https://username@tangentsoft.com/pidp8i
+
+Either way, Fossil will ask you for the password for `username` on the
+remote Fossil instance, and it will offer to remember it for you.  If
+you let it remember the password, operation from then on is scarcely
+different from working with an anonymous clone, except that on checkin,
+your changes will be sync'd back to the repository on tangentsoft.com if
+you're online at the time, and you'll get credit under your developer
+account name for the checkin.
+
+If you're working offline, Fossil will still do the checkin locally, and
+it will sync up with the central repoisitory after you get back online.
 It is best to work on a branch when unable to use Fossil's autosync
 feature, as you are less likely to have a sync conflict when attempting
 to send a new branch to the central server than in attempting to merge
@@ -182,7 +177,7 @@ Until you re-enable it (`autosync 1`) Fossil will stop trying to sync
 your local changes back to the central repo.  In this mode, Fossil works
 more like Git's default mode, buying you many of the same problems that
 go along with that working style.  I recommend disabling autosync mode
-only when you are truly going to be offline, and don't want Fossil
+only when you are truly going to be offline and don't want Fossil
 attempting to sync when you know it will fail.
 
 
@@ -241,8 +236,14 @@ points:
 
 Fossil's sync-by-default behavior fights these negative tendencies.
 
-[daff]: http://www.hanselman.com/blog/YouAreNotYourCode.aspx
-[dosd]: http://amzn.to/2iEVoBL
+PiDP-8/I project developers are welcome to create branches at will. The
+main rule is to follow the branch naming scheme: all lowercase with
+hyphens separating words. See the [available branch list][brlist] for
+examples to emulate.
+
+[brlist]: https://tangentsoft.com/pidp8i/brlist
+[daff]:   http://www.hanselman.com/blog/YouAreNotYourCode.aspx
+[dosd]:   http://amzn.to/2iEVoBL
 
 
 Debug Builds
@@ -262,16 +263,18 @@ The [autosetup build system][asbs] is composed of these files and
 directories:
 
      auto.def
-     autosetup/
+     autosetup/*
      configure
      Makefile.in
 
 Unlike with GNU Autoconf, which you may be familiar with, the
 `configure` script is not output from some other tool.  It is just a
-driver for the Tcl and C code under the `autosetup` directory.  If you
-have to modify any of these files to get some needed effect, you should
-try to get that change into the upstream project, then merge that change
-down into the local copy when it lands upstream.
+driver for the Tcl and C code under the `autosetup` directory.
+
+If you have to modify any of the files in `autosetup/` to get some
+needed effect, you should try to get that change into the upstream
+[Autosetup][asbs] project, then merge that change down into the local
+copy when it lands upstream.
 
 The bulk of the customization to the build system is in `auto.def`,
 which is a Tcl script run by `autosetup` via the `configure` script.
@@ -288,14 +291,13 @@ not vice versa.  If you have Tcl installed and don't really need it,
 consider uninstalling it to force `autosetup` to build and use `jimsh0`.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
-excepting only that it has variables substituted into it by
-[`autosetup`][asbs] using its `@VARIABLE@` syntax.  At this time, we do
-not attempt to achieve compatibility with other `make` programs, though
-in the future we may need it to work with [BSD `make`][bmake] as well,
-so if you are adding features, you might want to stick to the common
-subset of features implemented by both the GNU and BSD flavors of
-`make`.  We do not anticpate any need to support any other `make`
-flavors.
+excepting only that it has variables substituted into it by `autosetup`
+using its `@VARIABLE@` syntax.  At this time, we do not attempt to
+achieve compatibility with other `make` programs, though in the future
+we may need it to work with [BSD `make`][bmake] as well, so if you are
+adding features, you might want to stick to the common subset of
+features implemented by both the GNU and BSD flavors of `make`.  We do
+not anticpate any need to support any other `make` flavors.
 
 (This, by the way, is why we're not using some heavy-weight build system
 such as the GNU Autotools, CMake, etc.  The primary advantage of GNU
@@ -316,6 +318,152 @@ our purposes here.)
 [tcldoc]: http://wiki.tcl.tk/11485
 
 
+<a id="dirs"></a>
+Directory Structure
+----
+
+The directory structure of the PiDP-8/I project is as follows:
+
+*   <b>`.`</b> - Top level, occupied only by the few files the end user
+    of the source code needs immediately at hand on first unpacking the
+    project: the top level build system files, the top-level
+    `README*.md` files, and licensing information. If a given file *can*
+    be buried deeper, it *should* be buried to reduce clutter at this
+    most precious level of the hierarchy.
+
+*   <b>`.fossil-settings`</b> - Versioned settings for the Fossil build
+    system.  Say `fossil help set` at the command line for more on this.
+    Such settings are intended to be correct for all users of the
+    system; rather than expressing defaults, they express *policy*.
+
+    Any setting whose value may vary between users of the Fossil
+    repository should be done locally with a `fossil set` command.
+
+*   <b>`autosetup`</b> - The bulk of the [Autosetup build system][asbs].
+    These are generic files, not modified by the project itself. We
+    occasionally run `tools/autosetup-update` to merge in upstream
+    changes.
+
+*   <b>`bin`</b> - Programs run both in development and after
+    installation.  Some files here are created directly by the project's
+    developers, while others are outputs of the build system. The
+    content of this directory is copied to `$prefix/bin` at installation
+    time, which is added to the user's `PATH` by the installer.
+
+*   <b>`boot`</b> - SIMH initialization scripts. The `*.script.in` files
+    are written by the project developers but have build-time values
+    substituted in by the `configure` script to produce a `*.script`
+    version. Some of the remaining `*.script` files are hand-written and
+    as such are checked into Fossil directly. The remainder are outputs
+    of `tools/mkbootscript`, which produces them from `palbart` assembly
+    listings.
+
+    All of these `*.script` files are installed to `$prefix/share/boot`
+    regardless of their origin.
+
+*   <b>`doc`</b> - Documentation files not immediately important enough
+    to a new user of the software that they do not have to be at the top
+    level of the project tree.
+
+    Fossil allows us to treat the contents of `doc` much like the wiki,
+    so how do we decide whether to put a given document into `doc` or
+    the wiki?  The rule is simple: is the document's history tied to the
+    history of the PiDP-8/I project itself?  If so, it goes in `doc`,
+    else it goes in the wiki.  When checking out older versions of the
+    PiDP-8/I software, you expect to roll back to contemporaneous
+    versions of the project documentation; such files go into `doc`.
+    Documents which are independent of the PiDP-8/I project history go
+    into the wiki.
+
+    (The wiki does also have history, but rolling back to a prior
+    version of the PiDP-8/I repository and then saying `fossil ui` will
+    show you the current version of the wiki documents, not the versions
+    as they existed at the time of the historical checkin you rolled
+    back to.)
+
+    The `doc/graphics` subdirectory holds JPEGs and SVGs displayed
+    inline within wiki articles.
+
+*   <b>`etc`</b> - Files which get copied to `/etc` or one of its
+    subdirectories at installation time.
+
+*   <b>`examples`</b> - Example programs for the end user's edification.
+    Many of these are referenced by documentation files.
+
+*   <b>`hardware`</b> - Schematics and such for the PiDP-8/I board or
+    associated hardware.
+
+*   <b>`labels`</b> - Graphics intended to be printed out and used as
+    labels for removable media.
+
+*   <b>`lib`</b> - Library routines used by other programs.
+
+*   <b>`libexec`</b> - A logical extension of `lib`, these are
+    standalone programs that nevertheless are intended to be run
+    primarily by other programs. Whereas a file in `lib` might have its
+    interface described by a programmer's reference manual, the
+    interface of a program in `libexec` is described by its usage
+    message. Examples:
+
+    *   <b>`mkos8`</b> - Run by the build system.
+    
+        <p>It is sometimes run by hand in development, but primarily
+        only to further its development. Once it runs correctly after
+        adding some feature, we let <code>make</code> run it for us.</p>
+
+    *   <b>`scanswitch`</b> - Run by `etc/pidp8i`.
+    
+        <p>As with <code>mkos8</code>, it is generally run by hand only
+        by developers modifying its behavior.</p>
+
+    Programs in `libexec` are installed to `$prefix/libexec`, which is
+    *not* put into the user's `PATH`, on purpose. If a program should
+    end up in the user's `PATH`, it belongs in `bin`. Alternately, a
+    wrapper may be put in `bin` which calls a `libexec` program as a
+    helper.
+
+*   <b>`media`</b> - Binary media images used either by SIMH directly or
+    by tools like `mkos8` to produce media used by SIMH.
+
+    The contents of this tree are installed to `$prefix/share/media`.
+
+*   <b>`obj`</b> - Intermediate output directory used by the build
+    system.  It is safe to remove this directory at any time, as its
+    contents may be recreated by `make`. No file checked into Fossil
+    should be placed here.
+
+    (Contrast `bin` which does have some files checked into Fossil; all
+    of the *other* files that end up in `bin` can be recreated by
+    `make`, but not these few hand-written programs.)
+
+*   <b>`src`</b> - Source code for the project's programs, especially
+    those that cannot be used until they are built. The build system's
+    output directories are `bin`, `boot`, `libexec`, and `obj`.
+
+    Programs that can be used without being "built", example programs,
+    and single-file scripts are placed elsewhere: `bin`, `examples`,
+    `libexec`, `tools`, etc. Basically, we place such files where the
+    build system *would* place them if they were built from something
+    under `src`.
+
+    The top level of `src` is for the SIMH core, with the PDP-8
+    simulator specific bits in the `PDP8` subdirectory.
+
+    The subdirectories of `src` are for other programs' source code.
+
+*   <b>`test`</b> - Output directory used by `tools/test-*`.
+
+*   <b>`tools`</b> - Programs run only during development and not
+    installed.
+
+    If a program is initially created here but we later decide that it
+    should be installed for use by end users of the PiDP-8/I system, we
+    move it to either `bin` or `libexec`, depending on whether it is run
+    directly at the command line or run from some other program that is
+    also installed, respectively.
+
+
+<a id="patches"></a>
 Submitting Patches
 ----
 
@@ -366,7 +514,7 @@ that a patch against a stable release may not apply to the trunk cleanly
 otherwise.
 
 [osil]:  https://opensource.org/licenses
-[repo]:  http://tangentsoft.com/pidp8i/
+[repo]:  https://tangentsoft.com/pidp8i/
 [simhl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
 [viral]: https://en.wikipedia.org/wiki/Viral_license
 

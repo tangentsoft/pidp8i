@@ -1,5 +1,12 @@
-src/scp.*
-src/sim_*.[ch]
-src/sim_*.in
+examples/*.fc
+
+src/*.[ch]
+src/*.in
+
+src/cc8/*/*.[ch]
+src/cc8/include/*
+src/cc8/os8/*.sb
+src/cc8/os8/bldcc8.bi
+
 src/PDP8/pdp8_*.[ch]
 src/PDP8/pidp8i.c.in

@@ -142,32 +142,45 @@ popd
 # unversioned area.  We simplify the upstream naming scheme in the
 # transfer, dropping unnecessary prefixes and suffixes.
 pushd "$SRCDIR"
+pdfdir=doc/simh
+mkdir -p $pdfdir
 for fs in pdp8_doc simh_faq simh_doc
 do
 	ft=$(echo $fs | sed -e 's/simh_//' -e 's/_doc//')
 	test "$ft" = "doc" && ft=main
-	pdfout=doc/simh/$ft.pdf
+	pdfout=$pdfdir/$ft.pdf
     pdftmp="$fs.pdf"
     say -n "Converting upstream $fs.doc to $pdfout..."
-    if [ ! -e "$pdfout" ] ; then touch $pdfout ; fi  # complaint squisher
-    if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc" &&
-            [ -s "$pdfout" != -s "$pdftmp" ]
+    if [ ! -e "$pdfout" ]
     then
-        # The upstream doc has apparently changed, since the PDF output
-        # file is a different size.  Replace our public version.
-        #
-        # We can't use cmp or similar here because a bunch of metadata
-        # change each time we re-render the PDF, even if the source doc
-        # is unchanged.  There are proper PDF comparison tools, but none
-        # preinstalled everywhere, and we don't want to make one of
-        # those tools a dependency of this script.  Size comparison
-        # suffices for our purposes, since most any substantial text
-        # change will change the output file size.
-        say "changes detected."
-        mv "$pdftmp" "$pdfout"
-        fossil uv add "$pdfout"
+        # Pull a copy out of the unversioned store
+        fossil uv export $pdfout $pdfout
+    fi
+    if "$SOFFICE" --convert-to pdf "$CURR_SIMH_DIR/doc/$fs.doc"
+    then
+        szo=$(stat -f %z $pdfout)
+        szt=$(stat -f %z $pdftmp)
+        if [ -n "$szo" ] && [ -n "$szt" ] && [ "$szo" != "$szt" ]
+        then
+            # The upstream doc has apparently changed, since the PDF output
+            # file is a different size.  Replace our public version.
+            #
+            # We can't use cmp or similar here because a bunch of metadata
+            # change each time we re-render the PDF, even if the source doc
+            # is unchanged.  There are proper PDF comparison tools, but none
+            # preinstalled everywhere, and we don't want to make one of
+            # those tools a dependency of this script.  Size comparison
+            # suffices for our purposes, since most any substantial text
+            # change will change the output file size.
+            say "changes detected."
+            mv "$pdftmp" "$pdfout"
+            fossil uv add "$pdfout"
+        else
+            say "unchanged."
+        fi
     else
-        say "unchanged."
+        say "generation failed!"
+        exit 1
     fi
 done
 say "Syncing new PDFs..."

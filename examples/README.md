@@ -32,31 +32,31 @@ these:
 To use the example BASIC program, simply transcribe it into OS/8 BASIC:
 
     .R BASIC
-	NEW OR OLD--NEW
-	FILE NAME--PAL001.BA
+    NEW OR OLD--NEW
+    FILE NAME--PEP001.BA
 
-	READY
-	10 FOR I = 1 TO 999
-	10 FOR I = 1 TO 999
-	20 A = I / 3 \ B = I / 5
-	30 IF INT(A) = A GOTO 60
-	40 IF INT(B) = B GOTO 60
-	50 GOTO 70
-	60 T = T + I
-	70 NEXT I
-	80 PRINT "TOTAL: "; T
-	90 END
-	SAVE
+    READY
+    10 FOR I = 1 TO 999
+    10 FOR I = 1 TO 999
+    20 A = I / 3 \ B = I / 5
+    30 IF INT(A) = A GOTO 60
+    40 IF INT(B) = B GOTO 60
+    50 GOTO 70
+    60 T = T + I
+    70 NEXT I
+    80 PRINT "TOTAL: "; T
+    90 END
+    SAVE
 
-	READY
-	RUN
+    READY
+    RUN
 
-	PAL001  BA    4A    
+    PEP001  BA    5A
 
-	TOTAL:  xxxxxxx
+    TOTAL:  xxxxxxx
 
-	READY
-	BYE
+    READY
+    BYE
 
 If you're SSH'd into the PiDP-8/I, "transcribing" is simply a matter of
 cut-and-paste into the terminal window.
@@ -71,17 +71,18 @@ OS/8 Handbook for a decoding guide.
 
 ## How to Use the Assembly Language Examples
 
-For each PAL8 assembly program in `examples/*.pal`, there are two
-additional files:
+For each PAL8 assembly program in `src/asm/*.pal` or `examples/*.pal`,
+the build process produces several output files:
 
-| Extension | Meaning
------------------------------
-| `*.pal`   | the PAL8 assembly source code for the program
-| `*.lst`   | the human-readable assembler output
-| `*.pt`    | the machine-readable assembler output (RIM format)
+| Extension       | Meaning
+| --------------- | ---------------
+| `*.pal`         | the PAL8 assembly source code for the program; input to the process
+| `obj/*.lst`     | the human-readable assembler output
+| `bin/*-pal.pt`  | the machine-readable assembler output (RIM format)
+| `boot/*.script` | a SIMH-readable version of the assembled code
 
-There are three ways to run these on your PiDP-8/I, each starting with
-one of the above three files:
+Each of those files has a corresponding way of getting the example
+running in the simulator:
 
 1.  Transcribe the assembly program text to a file within a PDP-8
     operating system and assemble it inside the simulator.
@@ -89,14 +90,16 @@ one of the above three files:
 2.  Toggle the program in from the front panel. I can recommend this
     method only for very short programs.
 
-3.  Copy the `*.pt` file to a USB stick and use the PiDP-8/I's
+3.  Copy the `*-pal.pt` file to a USB stick and use the PiDP-8/I's
     [automatic media mounting feature][howto]. This is the fastest method.
+
+4.  Boot SIMH with the example in core, running the program immediately.
 
 I cover each of these options below, in the same order as the list
 above.
 
 
-## Option 1: Transcribing the Assembly Code into an OS/8 Session
+### Option 1: Transcribing the Assembly Code into an OS/8 Session
 
 To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
 PiDP-8/I:
@@ -168,17 +171,18 @@ SSH'd into the PiDP-8/I machine, there is a shortcut for all of the
 above. At the OS/8 command line, say:
 
     .R PIP
-	*ADD.PA<TTY:
+    *ADD.PA<TTY:
 
 Now you can simply copy the assembly language text in your desktop PC's
 text editor, paste it into the SSH window, and then hit Ctrl-Z to tell
-`PIP` that the text input from the terminal (`TTY:`) is finished. This
-is not only a smidge simpler than doing the same thing via `EDIT`, it
-also avoids a certain limitation of `EDIT` that starts to bite you once
-your program text exceeds about 5,600 characters.
+`PIP` that the text input from the terminal (`TTY:`) is finished, then
+Escape to return to OS/8 from PIP. This is not only a smidge simpler
+than doing the same thing via `EDIT`, it also avoids a certain
+limitation of `EDIT` that starts to bite you once your program text
+exceeds about 5,600 characters.
 
 
-## Option 2: Toggling a Programs in Via the Front Panel
+### Option 2: Toggling Programs in Via the Front Panel
 
 After building the PiDP-8/I software, each of the `examples/*.pal` files
 is assembled by `palbart` which writes out a human-readable listing file
@@ -202,21 +206,21 @@ the value stored at that address.
 To toggle the `add` program in, press `Stop` to halt the processor, then
 twiddle the switches like so:
 
-| Set SR Switches To... | Then Toggle...
-|------------------------------------------------
-| 000 010 000 000       | `Load Add`
-| 111 011 000 000       | `Dep`
-| 001 010 000 101       | `Dep`
-| 001 010 000 110       | `Dep`
-| 011 010 000 111       | `Dep`
-| 111 100 000 010       | `Dep`
-| 000 000 000 010       | `Dep`
-| 000 000 000 011       | `Dep`
+| Set SR Switches To... | Then Toggle... | Because...
+|--------------------------------------- | ----------
+| 000 010 000 000       | `Load Add`     | 000010000000 is binary for octal 0200, the program's start address
+| 111 011 000 000       | `Dep`          | the first instruction, 7300 octal, is 111011000000 in binary
+| 001 010 000 101       | `Dep`          | 1205 octal in binary
+| 001 010 000 110       | `Dep`          | etc, etc.
+| 011 010 000 111       | `Dep`          |
+| 111 100 000 010       | `Dep`          |
+| 000 000 000 010       | `Dep`          |
+| 000 000 000 011       | `Dep`          |
 
 To run it, repeat the first step in the table above, loading the
 program's starting address (0200) first into the switch register (SR)
 and then into the PDP-8's program counter (PC) via `Load Add`. Then
-toggle `Start` to run the program. If you then:
+toggle `Start` to run the program.
 
 If you then toggle 000 010 000 111 into SR, press `Load Add` followed by
 `Exam`, you should see 000 000 000 101 in the third row of lights, the
@@ -239,10 +243,10 @@ the last value you entered via SR above, 0206. That is the source of the
 "07" in the lower two digits of the fourth instruction, 3207.
 
 
-## Option 3: Loading a Program from Paper Tape
+### Option 3: Loading a Program from Paper Tape
 
 The `palbart` assembly process described above also produces paper tape
-output files in RIM format in `bin/*.pt`.
+output files in RIM format in `bin/-pal*.pt`.
 
 The simplest way to load these assembly examples into your PiDP-8/I is
 to copy each such file to a USB stick, one file per stick.  Then, load
@@ -257,7 +261,7 @@ section of the PiDP-8/I documentation:
     will achieve the same end as toggling `Sing Step` while it's
     running. Reset the IF switches to 0.
 
-2.  Insert the USB stick containing the `*.pt` file you want to load
+2.  Insert the USB stick containing the `*-pal.pt` file you want to load
     into the Pi.
 
 3.  Set the DF switches (first brown group) to 001, then toggle `Sing
@@ -275,6 +279,19 @@ There is an SVG template for USB stick labels in the distribution under
 the [`labels/`][label] directory, for use if you find yourself creating
 long-lived USB sticks. See [`labels/README.md`][lread] for more
 information.
+
+
+### Option 4: Booting SIMH with the Example in Core
+
+As part of the PiDP-8/I software build process, a `boot/*.script` file
+for each `examples/*.pal` file is created by translating `obj/*.lst`
+into a series of "deposit" commands to SIMH. You can thus load and run
+each example at the Linux command line with a command like this:
+
+    $ bin/pidp8i-sim boot/add.script
+
+That runs the `examples/add.pal` program's assembled binary code under
+the simulator, just as if you'd loaded it there with option #3 above.
 
 
 ## License

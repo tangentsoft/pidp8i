@@ -31,8 +31,12 @@
 
 #include "../gpio-common.h"
 
+#include "pdp8_defs.h"
+
 #include <assert.h>
 #include <dirent.h> // for USB stick searching
+#include <errno.h>
+#include <string.h>
 
 
 //// MODULE GLOBALS ////////////////////////////////////////////////////
@@ -215,6 +219,7 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
 {
     DEVICE *pthrot = find_dev ("INT-THROTTLE");
     if (pthrot) {
+        extern int suppressILS;
         REG *ptyper = find_reg ("THROT_TYPE", NULL, pthrot);
         REG *pvalr  = find_reg ("THROT_VAL", NULL, pthrot);
         if (ptyper && pvalr) {
@@ -224,8 +229,13 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
             switch (*ptype) {
                 case SIM_THROT_MCYC: ips = *pval * 1e6; break;
                 case SIM_THROT_KCYC: ips = *pval * 1e3; break;
+                case SIM_THROT_SPC: {
+                    suppressILS = 1;
+                    break;
+                }
             }
             if (ips) {
+                suppressILS = 0;
                 printf("PiDP-8/I initial throttle = %zu IPS\r\n", ips);
                 return ips / updates_per_sec;
             }
@@ -243,9 +253,9 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
 //
 // Also update the LED brightness values based on those new states.
 
-void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
-    uint16 sIR, int32 sLAC, int32 sMQ, int32 sIF, int32 sDF,
-    int32 sSC, int32 int_req, int Pause)
+void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sIR, int32 sLAC,
+    int32 sMQ, int32 sIF, int32 sDF, int32 sSC, int32 int_req,
+    int Pause)
 {
     // Bump the instruction count.  This should always be equal to the
     // Fetch LED's value, but integers are too cheap to get cute here.
@@ -257,12 +267,18 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
     display* pd = pdis_update;
     ++pd->inst_count;
 
-    // Rows 0-4, easy cases: single-register LED strings
+    // Rows 0-4, easy cases: single-register LED strings.
+    //
+    // The only non-obvious one is that we use the PDP-8 simulator's IR
+    // register value for the MB lights due to a quirk in the way the
+    // register states are set at the time this function is called; MB
+    // is not passed to us because its value at the call time is bogus.
     set_pidp8i_row_leds (pd, 0, sPC);
     set_pidp8i_row_leds (pd, 1, sMA);
-    set_pidp8i_row_leds (pd, 2, sMB);
+    set_pidp8i_row_leds (pd, 2, sIR);
     set_pidp8i_row_leds (pd, 3, sLAC & 07777);
     set_pidp8i_row_leds (pd, 4, sMQ);
+
 
 #if 0   // debugging
     static time_t last = 0, now;
@@ -295,15 +311,22 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
         set_pidp8i_led (pd, 5, 1);
     }
 
-    // Row 5c: The Fetch LED is bumped once per CPU instruction, as is
-    // Execute while we're not in STOP state.  They're set at different
-    // times, but they're twiddled so rapidly that they both just become
-    // a 50% blur in normal operation, so we don't make the CPU core set
-    // these "on-time."  It just doesn't matter.
+    // Row 5c: The Fetch & Execute LEDs are pulsed once per instruction.
+    // On real hardware, the pulses don't happen at exactly the same
+    // time, but we can't simulate that because SIMH handles each CPU
+    // instruction "whole."  When running real code, all we care about
+    // is that both LEDs are twiddled so rapidly that they both just
+    // become a 50% blur, mimicking the hardware closely enough.
+    //
+    // The exception is that when the CPU is stopped, both LEDs are off,
+    // because the pulses happen "outside" the STOP state: Fetch before
+    // and Execute after resuming from STOP.
     extern int swStop, swSingInst;
     int running = !swStop && !swSingInst;
-    if (running) set_pidp8i_led (pd, 5, 2);    // Execute
-    set_pidp8i_led (pd, 5, 3);                 // Fetch
+    if (running) {
+        set_pidp8i_led (pd, 5, 2);    // Execute
+        set_pidp8i_led (pd, 5, 3);    // Fetch
+    }
 
     // Row 6a: Remaining LEDs in upper right block
     pd->curr[6] = 0;
@@ -330,13 +353,13 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sMB,
 
 
 //// mount_usb_stick_file //////////////////////////////////////////////
-// Search for a PDP-8 media image in one of the Pi's USB auto-mount
-// directories and attempt to ATTACH it to the simulator.
+// Search for a PDP-8 media image on a USB device mounted under /media
+// and attempt to ATTACH it to the simulator.
 
 static void mount_usb_stick_file (int devNo, char *devCode)
 {
     char    sFoundFile[CBUFSIZE] = { '\0' };
-    char    sUSBPath[CBUFSIZE];     // will be "/media/usb0" etc
+    char    sDirName[CBUFSIZE];     // will be "/media/DIRNAME" etc
     char    fileExtension[4];       // will be ".RX" etc
     int     i, j;
 
@@ -359,55 +382,67 @@ static void mount_usb_stick_file (int devNo, char *devCode)
     static char mountedFiles[8][CBUFSIZE];
     mountedFiles[devNo][0] = '\0';
 
-    for (i = 0; i < 8 && sFoundFile[0] == '\0'; ++i) {
-        // search all 8 USB mount points, numbered 0-7
-        snprintf (sUSBPath, sizeof (sUSBPath), "/media/usb%d", i);
-        DIR *pDir = opendir (sUSBPath);
-        if (pDir) {
-            struct dirent* pDirent;
-            while ((pDirent = readdir (pDir)) != 0) { // search all files in directory
-                if (pDirent->d_name[0] == '.') continue;    // dotfiles clutter debug output
+	// Search all directories under /media
+	DIR *pDir1 = opendir ("/media");
+	if (pDir1) {
+		struct dirent* pDE1;
+		while ((pDE1 = readdir (pDir1)) != 0) {
+			if (pDE1->d_type != DT_DIR) continue;
 
-                char* pext = strstr (pDirent->d_name, fileExtension);
-                if (pext && (pext == (pDirent->d_name + strlen (pDirent->d_name) - 3))) {
-                    snprintf (sFoundFile, sizeof (sFoundFile), "%s/%s",
-                            sUSBPath, pDirent->d_name);
-#if 0   // debugging
-                    printf("\r\nFound candidate file %s for dev %s, ext *%s...",
-                            sFoundFile, devCode, fileExtension);
-#endif
-                    for (j = 0; j < 7; ++j) {
-                        if (strncmp (mountedFiles[j], sFoundFile, CBUFSIZE) == 0) {
-#if 0   // debugging
-                            printf("\r\nAlready have %s mounted, slot %d; will not remount.",
-                                    sFoundFile, j);
-#endif
-                            sFoundFile[0] = '\0';   // don't leave outer loop; keep looking
-                            break;
-                        }
-                    }
-                    if (j == 7) {
-                        // Media image file is not already mounted, so leave while
-                        // loop with path set to mount it
-                        break;
-                    }
-                }
-#if 0   // debugging
-                else {
-                    printf("\r\nFile %s on %s doesn't match *%s...",
-                            pDirent->d_name, sUSBPath, fileExtension);
-                }
-#endif
-            }
+			// Found a directory under /media.  Search it for plausibly
+			// named files given devCode.
+			snprintf (sDirName, sizeof(sDirName), "/media/%s", pDE1->d_name);
+			DIR *pDir2 = opendir (sDirName);
+			if (pDir2) {
+				struct dirent* pDE2;
+				while ((pDE2 = readdir (pDir2)) != 0) {      // search all files in directory
+					if (pDE2->d_name[0] == '.') continue;    // dotfiles clutter debug output
 
-            closedir (pDir);
-        }
-        else {
-            // Not a Pi or the USB auto-mounting software isn't installed
-            printf ("\r\nCannot open %s: %s\r\n", sUSBPath, strerror (errno));
-            return;
-        }
-    }
+					char* pext = strstr (pDE2->d_name, fileExtension);
+					if (pext && (pext == (pDE2->d_name + strlen (pDE2->d_name) - 3))) {
+						snprintf (sFoundFile, sizeof (sFoundFile), "%s/%s",
+								sDirName, pDE2->d_name);
+	#if 0   // debugging
+						printf("\r\nFound candidate file %s for dev %s, ext *%s...",
+								sFoundFile, devCode, fileExtension);
+	#endif
+						for (j = 0; j < 7; ++j) {
+							if (strncmp (mountedFiles[j], sFoundFile, CBUFSIZE) == 0) {
+	#if 0   // debugging
+								printf("\r\nAlready have %s mounted, slot %d; will not remount.",
+										sFoundFile, j);
+	#endif
+								sFoundFile[0] = '\0';   // don't leave outer loop; keep looking
+								break;
+							}
+						}
+						if (j == 7) {
+							// Media image file is not already mounted, so leave while
+							// loop with path set to mount it
+							break;
+						}
+					}
+	#if 0   // debugging
+					else {
+						printf("\r\nFile %s on %s doesn't match *%s...",
+								pDE2->d_name, sDirName, fileExtension);
+					}
+	#endif
+				} // end while (pDE2...)
+
+				closedir (pDir2);
+			} // end if (pDir2)
+			else {
+				// USB auto-mounting either doesn't work here or uses
+				// something other than the /media/DIR/FILE.EXT scheme
+				// we expect.
+				printf ("\r\nCannot open %s: %s\r\n", sDirName, strerror (errno));
+				return;
+			}
+		} // end while (pDE1...)
+
+		closedir(pDir1);
+	} // end if (pDir1)
 
     if (sFoundFile[0]) {            // no file found, exit
         if (access (sFoundFile, R_OK) == 0) {

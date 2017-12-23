@@ -4,12 +4,12 @@
 # @synopsis:
 #
 # This module supports common system interrogation and options
-# such as --host, --build, --prefix, and setting srcdir, builddir, and EXEEXT
+# such as '--host', '--build', '--prefix', and setting 'srcdir', 'builddir', and 'EXEEXT'.
 #
-# It also support the 'feature' naming convention, where searching
-# for a feature such as sys/type.h defines HAVE_SYS_TYPES_H
+# It also support the "feature" naming convention, where searching
+# for a feature such as 'sys/type.h' defines 'HAVE_SYS_TYPES_H'.
 #
-# It defines the following variables, based on --prefix unless overridden by the user:
+# It defines the following variables, based on '--prefix' unless overridden by the user:
 #
 ## datadir
 ## sysconfdir
@@ -18,9 +18,14 @@
 ## infodir
 ## mandir
 ## includedir
+#
+# If '--prefix' is not supplied, it defaults to '/usr/local' unless 'defaultprefix' is defined *before*
+# including the 'system' module.
 
-# Do "define defaultprefix myvalue" to set the default prefix *before* the first "use"
-set defaultprefix [get-define defaultprefix /usr/local]
+if {[is-defined defaultprefix]} {
+	user-notice "Note: defaultprefix is deprecated. Use options-defaults to set default options"
+	options-defaults [list prefix [get-define defaultprefix]]
+}
 
 module-options [subst -noc -nob {
 	host:host-alias =>		{a complete or partial cpu-vendor-opsys for the system where
@@ -28,7 +33,7 @@ module-options [subst -noc -nob {
 	build:build-alias =>	{a complete or partial cpu-vendor-opsys for the system
 							where the application will be built (defaults to the
 							result of running config.guess)}
-	prefix:dir =>			{the target directory for the build (defaults to '$defaultprefix')}
+	prefix:dir=/usr/local => {the target directory for the build (default: '@default@')}
 
 	# These (hidden) options are supported for autoconf/automake compatibility
 	exec-prefix:
@@ -45,10 +50,19 @@ module-options [subst -noc -nob {
 	localstatedir:
 	maintainer-mode=0
 	dependency-tracking=0
+	silent-rules=0
 }]
 
-# Returns 1 if exists, or 0 if  not
+# @check-feature name { script }
 #
+# defines feature '$name' to the return value of '$script',
+# which should be 1 if found or 0 if not found.
+#
+# e.g. the following will define 'HAVE_CONST' to 0 or 1.
+#
+## check-feature const {
+##     cctest -code {const int _x = 0;}
+## }
 proc check-feature {name code} {
 	msg-checking "Checking for $name..."
 	set r [uplevel 1 $code]
@@ -63,9 +77,10 @@ proc check-feature {name code} {
 
 # @have-feature name ?default=0?
 #
-# Returns the value of the feature if defined, or $default if not.
-# See 'feature-define-name' for how the feature name
-# is translated into the define name.
+# Returns the value of feature '$name' if defined, or '$default' if not.
+#
+# See 'feature-define-name' for how the "feature" name
+# is translated into the "define" name.
 #
 proc have-feature {name {default 0}} {
 	get-define [feature-define-name $name] $default
@@ -73,9 +88,10 @@ proc have-feature {name {default 0}} {
 
 # @define-feature name ?value=1?
 #
-# Sets the feature 'define' to the given value.
-# See 'feature-define-name' for how the feature name
-# is translated into the define name.
+# Sets the feature 'define' to '$value'.
+#
+# See 'feature-define-name' for how the "feature" name
+# is translated into the "define" name.
 #
 proc define-feature {name {value 1}} {
 	define [feature-define-name $name] $value
@@ -83,7 +99,7 @@ proc define-feature {name {value 1}} {
 
 # @feature-checked name
 #
-# Returns 1 if the feature has been checked, whether true or not
+# Returns 1 if feature '$name' has been checked, whether true or not.
 #
 proc feature-checked {name} {
 	is-defined [feature-define-name $name]
@@ -91,17 +107,20 @@ proc feature-checked {name} {
 
 # @feature-define-name name ?prefix=HAVE_?
 #
-# Converts a name to the corresponding define,
-# e.g. sys/stat.h becomes HAVE_SYS_STAT_H.
+# Converts a "feature" name to the corresponding "define",
+# e.g. 'sys/stat.h' becomes 'HAVE_SYS_STAT_H'.
 #
-# Converts * to P and all non-alphanumeric to underscore.
+# Converts '*' to 'P' and all non-alphanumeric to underscore.
 #
 proc feature-define-name {name {prefix HAVE_}} {
 	string toupper $prefix[regsub -all {[^a-zA-Z0-9]} [regsub -all {[*]} $name p] _]
 }
 
-# If $file doesn't exist, or it's contents are different than $buf,
-# the file is written and $script is executed.
+# @write-if-changed filename contents ?script?
+#
+# If '$filename' doesn't exist, or it's contents are different to '$contents',
+# the file is written and '$script' is evaluated.
+#
 # Otherwise a "file is unchanged" message is displayed.
 proc write-if-changed {file buf {script {}}} {
 	set old [readfile $file ""]
@@ -115,16 +134,17 @@ proc write-if-changed {file buf {script {}}} {
 
 # @make-template template ?outfile?
 #
-# Reads the input file <srcdir>/$template and writes the output file $outfile.
-# If $outfile is blank/omitted, $template should end with ".in" which
+# Reads the input file '<srcdir>/$template' and writes the output file '$outfile'
+# (unless unchanged).
+# If '$outfile' is blank/omitted, '$template' should end with '.in' which
 # is removed to create the output file name.
 #
-# Each pattern of the form @define@ is replaced with the corresponding
-# define, if it exists, or left unchanged if not.
+# Each pattern of the form '@define@' is replaced with the corresponding
+# "define", if it exists, or left unchanged if not.
 # 
-# The special value @srcdir@ is substituted with the relative
+# The special value '@srcdir@' is substituted with the relative
 # path to the source directory from the directory where the output
-# file is created, while the special value @top_srcdir@ is substituted
+# file is created, while the special value '@top_srcdir@' is substituted
 # with the relative path to the top level source directory.
 #
 # Conditional sections may be specified as follows:
@@ -134,14 +154,14 @@ proc write-if-changed {file buf {script {}}} {
 ## lines
 ## @endif
 #
-# Where 'name' is a defined variable name and @else is optional.
+# Where 'name' is a defined variable name and '@else' is optional.
 # If the expression does not match, all lines through '@endif' are ignored.
 #
 # The alternative forms may also be used:
 ## @if name
 ## @if name != value
 #
-# Where the first form is true if the variable is defined, but not empty or 0
+# Where the first form is true if the variable is defined, but not empty nor 0.
 #
 # Currently these expressions can't be nested.
 #
@@ -207,13 +227,13 @@ proc make-template {template {out {}}} {
 		}
 		lappend result $line
 	}
-	writefile $out [string map $mapping [join $result \n]]\n
-
-	msg-result "Created [relative-path $out] from [relative-path $template]"
+	write-if-changed $out [string map $mapping [join $result \n]] {
+		msg-result "Created [relative-path $out] from [relative-path $template]"
+	}
 }
 
 # build/host tuples and cross-compilation prefix
-set build [opt-val build]
+opt-str build build ""
 define build_alias $build
 if {$build eq ""} {
 	define build [config_guess]
@@ -221,7 +241,7 @@ if {$build eq ""} {
 	define build [config_sub $build]
 }
 
-set host [opt-val host]
+opt-str host host ""
 define host_alias $host
 if {$host eq ""} {
 	define host [get-define build]
@@ -232,40 +252,62 @@ if {$host eq ""} {
 }
 define cross [get-env CROSS $cross]
 
-set prefix [opt-val prefix $defaultprefix]
+# build/host _cpu, _vendor and _os
+foreach type {build host} {
+	set v [get-define $type]
+	if {![regexp {^([^-]+)-([^-]+)-(.*)$} $v -> cpu vendor os]} {
+		user-error "Invalid canonical $type: $v"
+	}
+	define ${type}_cpu $cpu
+	define ${type}_vendor $vendor
+	define ${type}_os $os
+}
+
+opt-str prefix prefix /usr/local
 
 # These are for compatibility with autoconf
 define target [get-define host]
 define prefix $prefix
 define builddir $autosetup(builddir)
 define srcdir $autosetup(srcdir)
-# Allow this to come from the environment
-define top_srcdir [get-env top_srcdir [get-define srcdir]]
+define top_srcdir $autosetup(srcdir)
+define abs_top_srcdir [file-normalize $autosetup(srcdir)]
+define abs_top_builddir [file-normalize $autosetup(builddir)]
 
 # autoconf supports all of these
-set exec_prefix [opt-val exec-prefix $prefix]
-define exec_prefix $exec_prefix
+define exec_prefix [opt-str exec-prefix exec_prefix $prefix]
 foreach {name defpath} {
 	bindir /bin
 	sbindir /sbin
 	libexecdir /libexec
 	libdir /lib
 } {
-	define $name [opt-val $name $exec_prefix$defpath]
+	define $name [opt-str $name o $exec_prefix$defpath]
 }
 foreach {name defpath} {
 	datadir /share
-	sysconfdir /etc
 	sharedstatedir /com
-	localstatedir /var
 	infodir /share/info
 	mandir /share/man
 	includedir /include
 } {
-	define $name [opt-val $name $prefix$defpath]
+	define $name [opt-str $name o $prefix$defpath]
 }
+if {$prefix ne {/usr}} {
+	opt-str sysconfdir sysconfdir $prefix/etc
+} else {
+	opt-str sysconfdir sysconfdir /etc
+}
+define sysconfdir $sysconfdir
+
+define localstatedir [opt-str localstatedir o /var]
 
 define SHELL [get-env SHELL [find-an-executable sh bash ksh]]
+
+# These could be used to generate Makefiles following some automake conventions
+define AM_SILENT_RULES [opt-bool silent-rules]
+define AM_MAINTAINER_MODE [opt-bool maintainer-mode]
+define AM_DEPENDENCY_TRACKING [opt-bool dependency-tracking]
 
 # Windows vs. non-Windows
 switch -glob -- [get-define host] {

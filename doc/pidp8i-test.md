@@ -1,4 +1,4 @@
-# PCB Test Program
+# PiDP-8/I PCB Test Program
 
 
 ## Compiling and Installing
@@ -10,24 +10,36 @@ the other software with the normal `make` process.
 
 ## Running It
 
-If you are building the software on the Pi for the first time, log out
-of your user account after installing it, then back in so that the
-install script's changes to your user's `PATH` take effect.
-
-Thereafter, simply give these commands:
+If you're running one of the [binary OS images][devhome], simply give
+these commands:
 
     $ sudo systemctl stop pidp8i
-	$ pidp8i-test
+    $ pidp8i-test
 
 The first command ensures that the modified PDP-8 simulator is stopped
 during the test, since only one program can be talking to the switch and
 LED array at a given time. (This also applies to other programs like
 [Deeper Thought 2][dt2].)
 
+If you built the PiDP-8/I software from source atop some other Raspberry
+Pi operating system installation, you will have to log out and back in
+after installing the software so the installer's adjustments to your
+`PATH` take effect. Then you can use the commands above.
+
 
 ## Test Procedure
 
-You can at any time hit Ctrl-C to stop the test.
+The test normally proceeds automatically forward, but you can take
+control of the test sequence with these keys:
+
+| Key                               | Effect
+| --------------------------------- | ------
+| <kbd>↑</kbd> or <kbd>→</kbd>      | Skip to next test
+| <kbd>↓</kbd> or <kbd>←</kbd>      | Go back to previous test 
+| <kbd>R</kbd>                      | Resume auto-advance behavior
+| <kbd>X</kbd> or <kbd>Ctrl-C</kbd> | Exit program
+
+Any of the arrow keypresses stop the auto-advancing behavior.
 
 The test proceeds as follows:
 
@@ -94,6 +106,7 @@ This document is licensed under the same terms as the associated
 [`src/test.c` program][program].
 
 
+[devhome]: https://tangentsoft.com/pidp8i/
 [project]: http://obsolescence.wix.com/obsolescence#!pidp-8
 [dt2]:     https://github.com/VentureKing/Deeper-Thought-2
 [program]: https://tangentsoft.com/pidp8i/doc/trunk/src/test.c

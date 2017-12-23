@@ -1,0 +1,127 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+########################################################################
+# test-os8-send-file - Repeatedly sends random files through class simh
+#   method os8_send_file() and pulls it back through os8_get_file(),
+#   then checks that the file is unchanged.
+#
+# Copyright © 2017 by Warren Young.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
+
+# Our local modules
+from pidp8i import *
+from simh   import *
+
+# Other core modules we need
+import filecmp
+import os.path
+import random
+import tempfile
+
+
+#### gen_file ##########################################################
+# Generate a random text file.  In order that the process be lossless
+# through the txt2ptp/ptp2txt filters and the SIMH + OS/8 terminal
+# handling, we use only printable ASCII plus CR+LF characters.  Returns
+# the name of the generated file.
+
+def gen_file ():
+    f = tempfile.NamedTemporaryFile (delete = False, suffix = '.tmp')
+    for i in range (0, random.randint (10, 4000)):
+      if random.randint (0, 10) != 0:
+        # Normal case: write some number of printable ASCII characters
+        # on this line.
+        for j in range (0, random.randint (1, 79)):
+          f.write (chr (random.randint (32, 126)))
+      # else: Every now and then, just write a blank line
+
+      f.write ('\r\n')
+
+    f.close ()
+    return f.name
+
+
+#### main ##############################################################
+
+def main ():
+  # Create the SIMH child instance and tell it where to send log output
+  try:
+    s = simh (dirs.build)
+  except (RuntimeError) as e:
+    print "Could not start simulator: " + e.message + '!'
+    exit (1)
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+
+  # Find and boot the built OS/8 bin disk
+  rk = os.path.join (dirs.os8mo, 'os8v3d-bin.rk05')
+  if not os.path.isfile (rk):
+    print "Could not find " + rk + "; OS/8 media not yet built?"
+    exit (1)
+  print "Booting " + rk + "..."
+  s.send_cmd ("att rk0 " + rk)
+  s.send_cmd ("boot rk0")
+
+  # Setup
+  random.seed ()
+
+  # Transfer several random files through.  Beware increasing the range
+  # too far: max is 99999 due to the file name length limit of OS/8 due
+  # to the temporary file naming scheme we use in the loop.
+  for i in range (0, 1000):
+    # Build another temp file
+    ifn = gen_file ()
+    of = tempfile.NamedTemporaryFile (suffix = '.out', delete = False)
+    of.close ()
+
+    # Send it
+    ofn = of.name
+    tfn = 'T%05d.TX' % i
+    s.os8_send_file (ifn, tfn)
+    s.os8_get_file (tfn, ofn)
+
+    # Did it change?
+    if filecmp.cmp (ifn, ofn):
+      print ifn + ' transferred successfully.'
+      s.os8_send_cmd ('\\.', 'DEL ' + tfn)
+      os.remove (ifn)
+      os.remove (ofn)
+    elif os.path.getsize (ofn) == 0:
+      print "\nDifferences found: output is empty!\n"
+    else:
+      print "\nDifferences found:\n--------------------------------"
+      os.system ('diff -wu "' + ifn + '" "' + ofn + '"')
+      print 'Left ' + tfn + ' inside OS/8.'
+
+
+if __name__ == "__main__":
+    main()
