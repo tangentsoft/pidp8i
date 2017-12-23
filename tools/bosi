@@ -93,7 +93,7 @@ function do_init() {
     pip install pexpect
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
-	test -h /media/usb || apt-get -y install usbmount
+    test -h /media/usb || apt-get -y install usbmount
 
     if [ -z "$(type -p fossil)" ]
     then
@@ -233,6 +233,11 @@ function do_shrink() {
 
 # This script images the OS SD card in a USB reader on a Mac OS X box.
 function do_image() {
+    dev=UNKNOWN
+    ps=UNKNOWN
+    hb=no
+    rp=UNKNOWN
+
     while read line
     do
         case $line in
@@ -242,21 +247,21 @@ function do_image() {
 
             0:*)
                 case $line in
-                    *FDisk_partition_scheme*) ;;
+                    *FDisk_partition_scheme*) ps=fdisk ;;
                     *) dev= ;;      # can't be the OS SD card
                 esac
                 ;;
 
             1:*)
                 case $line in
-                    *Windows_FAT_32\ boot*) ;;
+                    *Windows_FAT_32\ boot*) hb=yes ;;
                     *) dev= ;;      # can't be the OS SD card
                 esac
                 ;;
 
             2:*)
                 case $line in
-                    *Linux\ Untitled*) break ;; # found it!
+                    *Linux*) rp=Linux ; break ;; # found it!
                     *) dev= ;;      # can't be the OS SD card
                 esac
                 ;;
@@ -265,8 +270,15 @@ function do_image() {
 
     if [ -z "$dev" ]
     then
-        echo "Failed to find OS SD card!"
-        echo
+        cat <<MSG
+Failed to find OS SD card!  I learned the following, though:
+
+    SD /dev node:     $dev
+    Partition scheme: $ps
+    Has /boot:        $hb
+    /root partition:  $rp
+
+MSG
         exit 1
     fi
 
