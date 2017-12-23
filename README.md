@@ -651,7 +651,7 @@ files:
     host operating environment.
 
     There is an important exception here: when upgrading from v20170404
-    to v201712xx or newer, the old `os8.rk05` disk image will be left
+    to v20171222 or newer, the old `os8.rk05` disk image will be left
     untouched per the above, but because `os8v3d-*.rk05` does not exist
     yet, those will be copied alongside `os8.rk05`. However, the next
     item still holds, so that the simulator will continue to use
