@@ -56,7 +56,7 @@ extern "C" {
 
 #if !defined(__VAX)         /* Unsupported platform */
 
-#define SIM_FRONTPANEL_VERSION   8
+#define SIM_FRONTPANEL_VERSION   11
 
 /**
 
@@ -322,12 +322,14 @@ sim_panel_break_output_clear (PANEL *panel, const char *condition);
     memory or a register one of the following routines should 
     be called:  
     
-    sim_panel_gen_examine        - Examine register or memory
-    sim_panel_gen_deposit        - Deposit to register or memory
-    sim_panel_mem_examine        - Examine memory location
-    sim_panel_mem_deposit        - Deposit to memory location
-    sim_panel_set_register_value - Deposit to a register or memory 
-                                   location
+    sim_panel_gen_examine               - Examine register or memory
+    sim_panel_gen_deposit               - Deposit to register or memory
+    sim_panel_mem_examine               - Examine memory location
+    sim_panel_mem_deposit               - Deposit to memory location
+    sim_panel_mem_deposit_instruction   - Deposit instruction to memory 
+                                          location
+    sim_panel_set_register_value        - Deposit to a register or memory 
+                                          location
  */
 
 
@@ -347,6 +349,7 @@ sim_panel_gen_examine (PANEL *panel,
                        const char *name_or_addr,
                        size_t size,
                        void *value);
+
 /**
 
    sim_panel_gen_deposit
@@ -410,6 +413,25 @@ sim_panel_mem_deposit (PANEL *panel,
 
 /**
 
+   sim_panel_mem_deposit_instruction
+
+        addr_size    the size (in local storage) of the buffer which 
+                     contains the memory address of the data to be deposited
+                     into the simulator
+        addr         a pointer to the buffer containing the memory address
+                     of the data to be deposited into the simulator
+        instruction  a pointer to the buffer that contains the mnemonic 
+                     instruction to be deposited at the indicated address
+ */
+
+int
+sim_panel_mem_deposit_instruction (PANEL *panel, 
+                                   size_t addr_size,
+                                   const void *addr,
+                                   const char *instruction);
+
+/**
+
    sim_panel_set_register_value
 
         name        the name of a simulator register or a memory address
@@ -422,6 +444,33 @@ int
 sim_panel_set_register_value (PANEL *panel,
                               const char *name,
                               const char *value);
+
+/**
+
+    A front panel application might want to have access to the
+    instruction execution history that a simulator may be capable 
+    of providing.  If this functionality is desired, enabling of
+    recording instruction history should be explicitly enabled 
+    in the sim_config file that the simulator is started with.
+ */
+
+/**
+
+   sim_panel_get_history
+
+        count        the number of instructions to return
+        size         the size (in local storage) of the buffer which will
+                     receive the data returned when examining the simulator
+        buffer       a pointer to the buffer which will be loaded with the
+                     instruction history returned from the simulator
+ */
+
+int
+sim_panel_get_history (PANEL *panel, 
+                       int count,
+                       size_t size,
+                       char *buffer);
+
 
 /**
 
@@ -474,7 +523,7 @@ sim_panel_get_state (PANEL *panel);
 
 /**
 
-    All APIs routines which return an int return 0 for 
+    All API routines which return an int return 0 for 
     success and -1 for an error.  
 
     An API which returns an error (-1), will not change the panel state
