@@ -30,6 +30,8 @@
 #if !defined(PIDP8I_H)
 #define PIDP8I_H
 
+#include "gpio-common.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 

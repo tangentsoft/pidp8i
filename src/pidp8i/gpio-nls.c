@@ -33,9 +33,7 @@
  * www.obsolescenceguaranteed.blogspot.com
 */
 
-#include "gpio-common.h"
-
-#include "PDP8/pidp8i.h"
+#include "pidp8i.h"
 
 
 //// gpio_core  ////////////////////////////////////////////////////////

@@ -275,8 +275,7 @@
 #endif
 
 #ifdef PIDP8I
-#include "gpio-common.h"        // for start/stop_pidp8i_gpio_thread()
-#include "PDP8/pidp8i.h"        // for build_pidp8i_scp_cmd()
+#include <pidp8i.h>
 #endif
 
 #ifndef MAX

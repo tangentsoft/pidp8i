@@ -437,19 +437,21 @@ The directory structure of the PiDP-8/I project is as follows:
     `make`, but not these few hand-written programs.)
 
 *   <b>`src`</b> - Source code for the project's programs, especially
-    those that cannot be used until they are built. The build system's
-    output directories are `bin`, `boot`, `libexec`, and `obj`.
+    those that cannot be used until they are built.  The great majority
+    of these programs are written in C.  The build system's output
+    directories are `bin`, `boot`, `libexec`, and `obj`.
 
-    Programs that can be used without being "built", example programs,
+    Programs that can be used without being "built," example programs,
     and single-file scripts are placed elsewhere: `bin`, `examples`,
-    `libexec`, `tools`, etc. Basically, we place such files where the
+    `libexec`, `tools`, etc.  Basically, we place such files where the
     build system *would* place them if they were built from something
     under `src`.
 
-    The top level of `src` is for the SIMH core, with the PDP-8
-    simulator specific bits in the `PDP8` subdirectory.
-
-    The subdirectories of `src` are for other programs' source code.
+    The main content of the top level of `src` is the SIMH core, plus a
+    few single-module utility programs.  The `src/PDP8` subdirectory
+    contains the PDP-8 simulator proper, and the other subdirectories of
+    `src` contain other C and C++ helper programs that get built and
+    installed alongside it.
 
 *   <b>`test`</b> - Output directory used by `tools/test-*`.
 

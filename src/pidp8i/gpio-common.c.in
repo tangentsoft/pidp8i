@@ -34,11 +34,9 @@
  * by the other gpio-* modules, from the GPIO thread.
 */
 
-#include "gpio-common.h"
+#include "pidp8i.h"
 
-#include "config.h"
-
-#include "PDP8/pidp8i.h"
+#include <config.h>
 
 #include <pthread.h>
 #include <sys/file.h>

@@ -435,8 +435,18 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # It is important to list "src" last, because GNU make takes the first
 # one that matches, and the wildcards in the generated rules for "src"
 # match all "src/*" subdirs.
+#
+# If you edit this directory list, you should probably also edit
+# BUILDDIRS in Makefile.in!
 set status [catch {
-    exec $srcdir/tools/mkadrules $srcdir src/cc8/cross src/d8tape src/palbart src/PDP8 src
+    exec $srcdir/tools/mkadrules \
+            $srcdir \
+            src/cc8/cross \
+            src/d8tape \
+            src/palbart \
+            src/PDP8 \
+            src/pidp8i \
+            src
 } result]
 if {$status == 0} {
     msg-result $result
@@ -471,8 +481,8 @@ make-template media/os8/init.tx.in
 make-template src/Makefile.in
 make-template src/cc8/Makefile.in
 make-template src/cc8/os8/Makefile.in
-make-template src/gpio-common.c.in
+make-template src/pidp8i/gpio-common.c.in
+make-template src/pidp8i/main.c.in
 make-template src/PDP8/Makefile.in
-make-template src/PDP8/pidp8i.c.in
 make-template tools/simh-update.in
 exec chmod +x "$builddir/tools/simh-update"

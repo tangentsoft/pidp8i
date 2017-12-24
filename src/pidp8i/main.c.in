@@ -29,9 +29,7 @@
 
 #include "pidp8i.h"
 
-#include "../gpio-common.h"
-
-#include "pdp8_defs.h"
+#include <PDP8/pdp8_defs.h>
 
 #include <assert.h>
 #include <dirent.h> // for USB stick searching
