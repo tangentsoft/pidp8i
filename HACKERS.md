@@ -447,11 +447,16 @@ The directory structure of the PiDP-8/I project is as follows:
     build system *would* place them if they were built from something
     under `src`.
 
-    The main content of the top level of `src` is the SIMH core, plus a
-    few single-module utility programs.  The `src/PDP8` subdirectory
-    contains the PDP-8 simulator proper, and the other subdirectories of
-    `src` contain other C and C++ helper programs that get built and
-    installed alongside it.
+    There are no program sources in the top level of `src`.  The file
+    `src/config.h` may appear to be an exception to that restriction,
+    but it is *generated output* of the `configure` script, not "source
+    code" *per se*.
+
+    Multi-module programs each have their own subdirectory of `src`,
+    each named after the program contained within.
+
+    Single module programs live in `src/misc` or `src/asm`, depending on
+    whether they are host-side C programs or PAL8 assembly programs.
 
 *   <b>`test`</b> - Output directory used by `tools/test-*`.
 

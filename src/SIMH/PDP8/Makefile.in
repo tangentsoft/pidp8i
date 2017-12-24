@@ -1,7 +1,7 @@
 ########################################################################
 # Makefile.in - Processed by autosetup's configure script to generate
 #    an intermediate GNU make(1) file for building the PiDP-8/I software
-#    from within its src/PDP8 subdirectory.
+#    from within its src/SIMH/PDP8 subdirectory.
 #
 # The resulting Makefile will redirect simple "make" calls to the top
 # level as well as the major top-level targets (e.g. "make clean") but

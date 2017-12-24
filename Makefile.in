@@ -38,20 +38,20 @@
 # that has been merged into this source base.
 SGCID=27f9fc3c3e7ff105c6102dfffc6da7fb838d1e8f
 
-# C build flags for src/*.c and PDP8/*.c, containing the SIMH core
-# modules and the SIMH PDP-8 simulator, respectively.
-TOP_CFLAGS := @CFLAGS@ @BUILDMODE@ \
+# C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
+SIM_CFLAGS := @CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) -DPIDP8I \
 	-DSIM_ASYNCH_IO -DHAVE_REGEX_H -DHAVE_GLOB \
 	-DSIM_GIT_COMMIT_ID=$(SGCID) -D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
-	-I @srcdir@/src -I @srcdir@/src/pidp8i -I src -I src/pidp8i
-PIDP8I_CFLAGS = $(TOP_CFLAGS)
-PDP8_CFLAGS = $(TOP_CFLAGS)
+	-I @srcdir@/src/SIMH -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
+PIDP8I_CFLAGS = $(SIM_CFLAGS)
+SIMH_CFLAGS = $(SIM_CFLAGS)
+SIMH_PDP8_CFLAGS = $(SIM_CFLAGS)
 
 # Greatly stripped-down build options for the cc8 cross-compiler
-# primarily because it's K&R C.  Building under TOP_CFLAGS spews
+# primarily because it's K&R C.  Building under SIM_CFLAGS spews
 # pages of warnings.  The only thing we share is whether to build
 # a debug or optimized version, from BUILDMODE, set by auto.def.
 CC8_CROSS_CFLAGS = -w @BUILDMODE@
@@ -63,9 +63,9 @@ CC8_CROSS_CFLAGS = -w @BUILDMODE@
 D8TAPE_CFLAGS = -Wno-format @BUILDMODE@
 
 # Simpler options for src/misc/*.c
-MISC_CFLAGS = -I @srcdir@/src/pidp8i -I src/pidp8i
+MISC_CFLAGS = -I @srcdir@/src/pidp8i -I src/pidp8i @BUILDMODE@
 
-# Ditto palbart.
+# Even simpler options for palbart.
 PALBART_CFLAGS = @BUILDMODE@
 
 SIM = bin/pidp8i-sim
@@ -103,42 +103,51 @@ MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
 # If you edit this directory list, you should probably also edit
 # the argument list to the mkadrules call in auto.def!
-BUILDDIRS := bin libexec obj/cc8/cross obj/d8tape obj/misc obj/palbart obj/PDP8 obj/pidp8i
+BUILDDIRS := \
+	bin \
+	libexec \
+	obj/cc8/cross \
+	obj/d8tape \
+	obj/misc \
+	obj/palbart \
+	obj/pidp8i \
+	obj/SIMH \
+	obj/SIMH/PDP8
 
 INSTDIRS := bin etc lib/mkos8 lib/pidp8i libexec share/boot share/media share/include share/man/man1
 
 SIM_OBJS := \
 	obj/pidp8i/gpio-common.o \
 	obj/pidp8i/main.o \
-	obj/PDP8/pdp8_df.o \
-	obj/PDP8/pdp8_cpu.o \
-	obj/PDP8/pdp8_clk.o \
-	obj/PDP8/pdp8_ct.o \
-	obj/PDP8/pdp8_dt.o \
-	obj/PDP8/pdp8_fpp.o \
-	obj/PDP8/pdp8_lp.o \
-	obj/PDP8/pdp8_mt.o \
-	obj/PDP8/pdp8_pt.o \
-	obj/PDP8/pdp8_rf.o \
-	obj/PDP8/pdp8_rk.o \
-	obj/PDP8/pdp8_rl.o \
-	obj/PDP8/pdp8_rx.o \
-	obj/PDP8/pdp8_sys.o \
-	obj/PDP8/pdp8_td.o \
-	obj/PDP8/pdp8_tsc.o \
-	obj/PDP8/pdp8_tt.o \
-	obj/PDP8/pdp8_ttx.o \
-	obj/scp.o \
-	obj/sim_console.o \
-	obj/sim_disk.o \
-	obj/sim_ether.o \
-	obj/sim_fio.o \
-	obj/sim_serial.o \
-	obj/sim_sock.o \
-	obj/sim_tape.o \
-	obj/sim_timer.o \
-	obj/sim_tmxr.o \
-	obj/sim_video.o
+	obj/SIMH/PDP8/pdp8_df.o \
+	obj/SIMH/PDP8/pdp8_cpu.o \
+	obj/SIMH/PDP8/pdp8_clk.o \
+	obj/SIMH/PDP8/pdp8_ct.o \
+	obj/SIMH/PDP8/pdp8_dt.o \
+	obj/SIMH/PDP8/pdp8_fpp.o \
+	obj/SIMH/PDP8/pdp8_lp.o \
+	obj/SIMH/PDP8/pdp8_mt.o \
+	obj/SIMH/PDP8/pdp8_pt.o \
+	obj/SIMH/PDP8/pdp8_rf.o \
+	obj/SIMH/PDP8/pdp8_rk.o \
+	obj/SIMH/PDP8/pdp8_rl.o \
+	obj/SIMH/PDP8/pdp8_rx.o \
+	obj/SIMH/PDP8/pdp8_sys.o \
+	obj/SIMH/PDP8/pdp8_td.o \
+	obj/SIMH/PDP8/pdp8_tsc.o \
+	obj/SIMH/PDP8/pdp8_tt.o \
+	obj/SIMH/PDP8/pdp8_ttx.o \
+	obj/SIMH/scp.o \
+	obj/SIMH/sim_console.o \
+	obj/SIMH/sim_disk.o \
+	obj/SIMH/sim_ether.o \
+	obj/SIMH/sim_fio.o \
+	obj/SIMH/sim_serial.o \
+	obj/SIMH/sim_sock.o \
+	obj/SIMH/sim_tape.o \
+	obj/SIMH/sim_timer.o \
+	obj/SIMH/sim_tmxr.o \
+	obj/SIMH/sim_video.o
 
 CC8_OBJS := \
 	obj/cc8/cross/code8.o \
@@ -215,7 +224,8 @@ PRECIOUS_INFILES = \
     @srcdir@/examples/Makefile.in \
     @srcdir@/src/Makefile.in \
     @srcdir@/src/cc8/Makefile.in \
-    @srcdir@/src/PDP8/Makefile.in
+    @srcdir@/src/SIMH/Makefile.in \
+    @srcdir@/src/SIMH/PDP8/Makefile.in
 INFILES = \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \

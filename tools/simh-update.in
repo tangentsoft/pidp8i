@@ -31,7 +31,7 @@
 ########################################################################
 
 SRCDIR="@srcdir@"
-SRCSUBDIR="$SRCDIR/src"
+SRCSUBDIR="$SRCDIR/src/SIMH"
 PRGNAME="$(basename "$0")"
 WORKDIR="@builddir@/$PRGNAME-temp"
 OUR_SIMH_DIR="$WORKDIR/simh/ours"
@@ -101,13 +101,13 @@ ERROR
 trap 'error ${LINENO}' ERR
 
 # Deal with uncommitted changes in $SRCSUBDIR
-cd "$SRCSUBDIR/.."		# we need the src/ prefix to do this test properly!
-if [ $(fossil status | grep '^EDITED.*src/' | wc -l) -gt 0 ]
+cd "$SRCSUBDIR/.."		# we need the SIMH/ prefix to do this test properly!
+if [ $(fossil status | grep '^EDITED.*SIMH/' | wc -l) -gt 0 ]
 then
 	if [ "$1" = "-f" ]
 	then
 		say "Tossing uncommitted changes in $SRCSUBDIR..."
-		fossil revert $(fossil status | grep '^EDITED.*src/' | cut -f 2- -d' ')
+		fossil revert $(fossil status | grep '^EDITED.*SIMH/' | cut -f 2- -d' ')
 		shift
 	else
 		read -r -d '%' errmsg <<ERROR
@@ -223,7 +223,7 @@ then
 	error $LINENO "patch generation failed" 2
 fi
 
-# For each file in src that is also present in the current upstream
+# For each file in src/SIMH that is also present in the current upstream
 # version of SIMH, overwrite our version.
 find "$SRCSUBDIR" -type f -print | while read f
 do
