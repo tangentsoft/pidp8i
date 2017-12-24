@@ -30,11 +30,9 @@
  * www.obsolescenceguaranteed.blogspot.com
 */
 
-#include "gpio-common.h"
+#include <pidp8i.h>
 
-#include "sim_defs.h"
-
-#include "PDP8/pidp8i.h"
+#include <sim_defs.h>
 
 
 //// CONSTANTS /////////////////////////////////////////////////////////
