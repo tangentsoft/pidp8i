@@ -30,7 +30,7 @@
  * 
 */
 
-#include "pidp8i/gpio-common.h"
+#include <pidp8i.h>
 
 #define short_wait() sleep_us(100000)
 

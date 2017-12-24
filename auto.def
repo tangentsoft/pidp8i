@@ -443,6 +443,7 @@ set status [catch {
             $srcdir \
             src/cc8/cross \
             src/d8tape \
+            src/misc \
             src/palbart \
             src/PDP8 \
             src/pidp8i \

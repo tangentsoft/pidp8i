@@ -26,7 +26,7 @@
    authors.
 */
 
-#include "pidp8i/gpio-common.h"
+#include <pidp8i.h>
 
 #include <assert.h>
 #include <ctype.h>

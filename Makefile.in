@@ -46,7 +46,7 @@ TOP_CFLAGS := @CFLAGS@ @BUILDMODE@ \
 	-DSIM_ASYNCH_IO -DHAVE_REGEX_H -DHAVE_GLOB \
 	-DSIM_GIT_COMMIT_ID=$(SGCID) -D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
-	-I @srcdir@/src -I @srcdir@/src/pidp8i -I src
+	-I @srcdir@/src -I @srcdir@/src/pidp8i -I src -I src/pidp8i
 PIDP8I_CFLAGS = $(TOP_CFLAGS)
 PDP8_CFLAGS = $(TOP_CFLAGS)
 
@@ -61,6 +61,9 @@ CC8_CROSS_CFLAGS = -w @BUILDMODE@
 # other OS types, it complains about one of the printf() format
 # specifiers, which we cannot fix portably, so we suppress that one.
 D8TAPE_CFLAGS = -Wno-format @BUILDMODE@
+
+# Simpler options for src/misc/*.c
+MISC_CFLAGS = -I @srcdir@/src/pidp8i -I src/pidp8i
 
 # Ditto palbart.
 PALBART_CFLAGS = @BUILDMODE@
@@ -100,7 +103,7 @@ MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
 # If you edit this directory list, you should probably also edit
 # the argument list to the mkadrules call in auto.def!
-BUILDDIRS := bin libexec obj/cc8/cross obj/d8tape obj/palbart obj/PDP8 obj/pidp8i
+BUILDDIRS := bin libexec obj/cc8/cross obj/d8tape obj/misc obj/palbart obj/PDP8 obj/pidp8i
 
 INSTDIRS := bin etc lib/mkos8 lib/pidp8i libexec share/boot share/media share/include share/man/man1
 
@@ -160,9 +163,9 @@ D8TAPE_OBJS := \
 	obj/d8tape/version.o
 
 MISC_OBJS := \
-	obj/ptp2txt.o \
-	obj/scanswitch.o \
-	obj/test.o
+	obj/misc/ptp2txt.o \
+	obj/misc/scanswitch.o \
+	obj/misc/test.o
 
 PALBART_OBJS := obj/palbart/palbart.o
 
@@ -512,10 +515,10 @@ bin/d8tape: $(D8TAPE_OBJS)
 bin/palbart: $(PALBART_OBJS)
 	$(CC) -o $@ $^
 
-bin/pidp8i-test: obj/test.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
+bin/pidp8i-test: obj/misc/test.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS) -lncurses
 
-bin/ptp2txt: obj/ptp2txt.o
+bin/ptp2txt: obj/misc/ptp2txt.o
 	$(CC) -o $@ $^
 	ln -f bin/ptp2txt bin/txt2ptp
 
@@ -525,7 +528,7 @@ bin/txt2ptp: bin/ptp2txt
 bin/deeper: obj/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
-libexec/scanswitch: obj/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
+libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
 # Reconfigure whenever one of the *.in or autosetup files changes unless
