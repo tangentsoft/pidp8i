@@ -63,7 +63,7 @@ CC8_CROSS_CFLAGS = -w @BUILDMODE@
 D8TAPE_CFLAGS = -Wno-format @BUILDMODE@
 
 # Simpler options for src/misc/*.c
-MISC_CFLAGS = -I @srcdir@/src/pidp8i -I src/pidp8i @BUILDMODE@
+MISC_CFLAGS = -I @srcdir@/src/pidp8i -I src/pidp8i @BUILDMODE@ -std=c99
 
 # Even simpler options for palbart.
 PALBART_CFLAGS = @BUILDMODE@

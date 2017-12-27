@@ -100,9 +100,9 @@ struct bcm2835_peripheral {
     volatile unsigned int *addr;
 };
 
-typedef uint64_t   ns_time_t;
-typedef useconds_t us_time_t;
-typedef uint64_t   ms_time_t;
+typedef uint64_t ns_time_t;
+typedef uint64_t us_time_t;
+typedef uint64_t ms_time_t;
 
 typedef struct display {
     // Counters incremented each time the LED is known to be turned on,
@@ -150,7 +150,7 @@ extern void read_switches (ns_time_t delay);
 extern void swap_displays ();
 
 extern void sleep_ns(ns_time_t ns);
-#define sleep_us(us) usleep(us)
+#define sleep_us(us) sleep_ns(us * 1000)
 #define sleep_ms(ms) sleep_us(ms * 1000)
 extern ms_time_t ms_time(ms_time_t* pt);
  

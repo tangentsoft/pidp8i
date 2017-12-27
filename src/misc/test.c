@@ -26,6 +26,8 @@
    authors.
 */
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <pidp8i.h>
 
 #include <assert.h>
@@ -200,7 +202,7 @@ int switch_scan (int step, int ignored)
             }
             printf ("\r\n");
         }
-        usleep (1000);
+        sleep_us (1000);
     }
 
     return step + 1;
