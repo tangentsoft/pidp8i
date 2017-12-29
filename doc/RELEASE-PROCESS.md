@@ -15,15 +15,18 @@ Or reclassify them, of course.
 
 Most of the bug levels simply aid scheduling: Immediate priority bugs
 should be fixed before High, etc. Low priority bugs are "someone should
-fix this someday" type of problems, so they can move from release to
-release.
+fix this someday" type of problems; these are the only ones allowed to
+move from release to release. Think of bugs at this level as analogous
+to the `BUGS` section of a Unix man page: our "low" intent to fix these
+problems means they may stay at this level indefinitely, acting only as
+advisories to the software's users.
 
 The Features levels may be read as:
 
 *   **Immediate**: ASAP, or sooner. :)
-*   **High**: Features for this release.
-*   **Medium**: Features we'll look at lifting individually to High for
-    the next release.
+*   **High**: Features for the upcoming release.
+*   **Medium**: Features we'll look at lifting to High for the release
+    after that.
 *   **Low**: "Wouldn't it be nice if..."
 
 
