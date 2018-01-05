@@ -125,7 +125,7 @@ do_stop() {
 	    status=1
 	else
 	    log_daemon_msg "Stopping PiDP-8/I simulator" "pidp8i"
-	    screenu -S pidp8i -X quit
+        pkill -f pidp8i-sim
 	    status=$?
 	    log_end_msg $status
 	fi
