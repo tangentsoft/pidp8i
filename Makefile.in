@@ -291,7 +291,7 @@ install: all instdirs
 
 	@# Install files into those dirs and set their perms
 	@for f in $(BINS) ; do \
-		dest=@prefix@/bin/$$(basename $$f) ; \
+		dest=@prefix@/$$f ; \
 		echo "Installing binary $$dest..." ; \
 		@INSTALL@ -m 755 -D -s $$f $$dest ; \
 	done
