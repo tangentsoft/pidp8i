@@ -147,7 +147,12 @@ case "$1" in
 	;;
 
   status)
-	screenu -ls pidp8i | egrep '[0-9]+\.pidp8i'
+	if screenu -ls pidp8i | egrep -q '[0-9]+\.pidp8i'
+    then
+        echo "The PiDP-8/I simulator is running."
+    else
+        echo "The PiDP-8/I simulator is STOPPED."
+    fi
 	;;
 
   *)
