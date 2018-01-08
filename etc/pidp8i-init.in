@@ -1,10 +1,10 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:		pidp8i
-# Required-Start:	$syslog
-# Required-Stop:	$syslog
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 6
+# Provides:     pidp8i
+# Required-Start:   $syslog
+# Required-Stop:    $syslog
+# Default-Start:    2 3 4 5
+# Default-Stop:     0 6
 # Short-Description:PiDP-8/I simulator
 # Description:      The PiDP-8/I simulator is a modified version of
 #                   the SimH PDP-8 simulator for the PiDP-8/I front
@@ -62,25 +62,25 @@ test -x $sim || ( echo "$sim not found" && exit 0 )
 # Check if pidp8i is already runnning under screen.
 #
 is_running() {
-	procs=`screenu -ls pidp8i | egrep '[0-9]+\.pidp8i' | wc -l`
-	test $procs -gt 0 && return 0 || return 1
+    procs=`screenu -ls pidp8i | egrep '[0-9]+\.pidp8i' | wc -l`
+    test $procs -gt 0 && return 0 || return 1
 }
 
 # Wrapper around screen(1) to drop privileges and pass given args
 screenu() {
-	if [ "$USER" = "@INSTUSR@" ]
-	then
-		/usr/bin/screen $*
-	else
-		su -c "/usr/bin/screen $*" @INSTUSR@
-	fi
+    if [ "$USER" = "@INSTUSR@" ]
+    then
+        /usr/bin/screen $*
+    else
+        su -c "/usr/bin/screen $*" @INSTUSR@
+    fi
 }
 
 do_start() {
-	if is_running ; then
-	    echo "PiDP-8/I is already running, not starting again." >&2
-	    exit 0
-	fi
+    if is_running ; then
+        echo "PiDP-8/I is already running, not starting again." >&2
+        exit 0
+    fi
 
     # Regenerate SSH host keys if this is the first run on a fresh image
     if [ ! -f /etc/ssh/ssh_host_ecdsa_key -a -x /usr/sbin/dpkg-reconfigure ]
@@ -89,21 +89,21 @@ do_start() {
         /usr/sbin/dpkg-reconfigure openssh-server
     fi
 
-	$scanswitch >/dev/null 2>&1
-	script=$?
-	if [ $script -eq 8 ]; then
-	    echo "PiDP-8/I STOP switch detected, aborting." >&2
-	    exit 0
-	elif [ $script -lt 8 ]; then
-	    bscript="@BOOTDIR@/""$script"".script"
-	    echo "Booting from $bscript..."
-	elif [ $script -eq 127 ]; then
+    $scanswitch >/dev/null 2>&1
+    script=$?
+    if [ $script -eq 8 ]; then
+        echo "PiDP-8/I STOP switch detected, aborting." >&2
+        exit 0
+    elif [ $script -lt 8 ]; then
+        bscript="@BOOTDIR@/""$script"".script"
+        echo "Booting from $bscript..."
+    elif [ $script -eq 127 ]; then
         echo "PiDP-8/I panel not present.  Booting from 0.script..."
-	    bscript="@BOOTDIR@/0.script"
-	else
-		echo "Bad return value $script from $scanswitch!"
-		exit 1
-	fi
+        bscript="@BOOTDIR@/0.script"
+    else
+        echo "Bad return value $script from $scanswitch!"
+        exit 1
+    fi
 
     # We want SIMH to have a sensible working directory: somewhere the
     # user can write files and which makes sense when giving SIMH
@@ -112,52 +112,52 @@ do_start() {
     # If you change the default here, change that script as well.
     cd "$prefix/share/media"
 
-	log_daemon_msg "Starting PiDP-8/I simulator" "pidp8i"
-	screenu -dmS pidp8i "$sim" $bscript
-	status=$?
-	log_end_msg $status
-	return $status
+    log_daemon_msg "Starting PiDP-8/I simulator" "pidp8i"
+    screenu -dmS pidp8i "$sim" $bscript
+    status=$?
+    log_end_msg $status
+    return $status
 }
 
 do_stop() {
-	if ! is_running ; then
-	    echo "PiDP-8/I is already stopped." >&2
-	    status=1
-	else
-	    log_daemon_msg "Stopping PiDP-8/I simulator" "pidp8i"
-        pkill -f pidp8i-sim
-	    status=$?
-	    log_end_msg $status
-	fi
-	return $status
+    if ! is_running ; then
+        echo "PiDP-8/I is already stopped." >&2
+        status=1
+    else
+        log_daemon_msg "Stopping PiDP-8/I simulator" "pidp8i"
+	    screenu -S pidp8i -X quit ; sleep 1 ; pkill -f pidp8i-sim
+        status=$?
+        log_end_msg $status
+    fi
+    return $status
 }
 
 case "$1" in
   start)
-	do_start
-	;;
+    do_start
+    ;;
 
   stop)
-	do_stop
-	;;
+    do_stop
+    ;;
 
   restart)
-	do_stop
-	do_start
-	;;
+    do_stop
+    do_start
+    ;;
 
   status)
-	if screenu -ls pidp8i | egrep -q '[0-9]+\.pidp8i'
+    if screenu -ls pidp8i | egrep -q '[0-9]+\.pidp8i'
     then
         echo "The PiDP-8/I simulator is running."
     else
         echo "The PiDP-8/I simulator is STOPPED."
     fi
-	;;
+    ;;
 
   *)
-	log_action_msg "Usage: /etc/init.d/pidp8i {start|stop|restart|status}" || true
-	exit 1
+    log_action_msg "Usage: /etc/init.d/pidp8i {start|stop|restart|status}" || true
+    exit 1
 esac
 
 exit 0
