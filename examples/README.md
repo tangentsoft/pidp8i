@@ -114,11 +114,12 @@ running in the simulator:
 1.  Transcribe the assembly program text to a file within a PDP-8
     operating system and assemble it inside the simulator.
 
-2.  Toggle the program in from the front panel. I can recommend this
-    method only for very short programs.
+2.  Toggle the machine code for the program in from the front panel. I
+    can recommend this method only for very short programs.
 
-3.  Copy the `*-pal.pt` file to a USB stick and use the PiDP-8/I's
-    [automatic media mounting feature][howto]. This is the fastest method.
+3.  Attach the `*-pal.pt` file to the simulator and read the assembly
+    language text in, such as via the PiDP-8/I [automatic media mounting
+    feature][howto].
 
 4.  Boot SIMH with the example in core, running the program immediately.
 
@@ -128,8 +129,9 @@ above.
 
 ### Option 1: Transcribing the Assembly Code into an OS/8 Session
 
-To transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
-PiDP-8/I:
+Perhaps the most period-correct of the options given here is to
+transcribe [`examples/add.pal`][pal] into the OS/8 simulation on a
+PiDP-8/I using the OS/8 `EDIT` program:
 
     .R EDIT
     *ADD.PA<
@@ -188,32 +190,26 @@ result from the accumulator to memory location `C`, we can see the
 answer on the accumulator line on the front panel. Pressing `Start` this
 time continues to the next instruction which re-enters OS/8. Much nicer!
 
-As you can see, this option is the most educational, as it matches
-the working experience of PDP-8 assembly language programmers back
-in the day. The tools may differ — the user may prefer `TECO` over
-`EDIT` or MACRO-8 over PAL8 — but the idea is the same regardless.
+This option is the most educational, as it matches the working
+experience of PDP-8 assembly language programmers back in the day. The
+tools may differ — the user may prefer [`TECO`][teco] over `EDIT` or
+[MACREL][macrel] over [PAL8][pal8] — but the idea is the same
+regardless.
 
-If you have the finished assembly code already on your computer and are
-SSH'd into the PiDP-8/I machine, there is a shortcut for all of the
-above. At the OS/8 command line, say:
+There are [many more methods][gti] for getting program text into the
+simulator than simply transcribing it into an `EDIT` or `TECO` session.
 
-    .R PIP
-    *ADD.PA<TTY:
-
-Now you can simply copy the assembly language text in your desktop PC's
-text editor, paste it into the SSH window, and then hit Ctrl-Z to tell
-`PIP` that the text input from the terminal (`TTY:`) is finished, then
-Escape to return to OS/8 from PIP. This is not only a smidge simpler
-than doing the same thing via `EDIT`, it also avoids a certain
-limitation of `EDIT` that starts to bite you once your program text
-exceeds about 5,600 characters.
+[macrel]: https://tangentsoft.com/pidp8i/wiki?name=A+Field+Guide+to+PDP-8+Assemblers#macrel
+[pal8]:   https://tangentsoft.com/pidp8i/wiki?name=A+Field+Guide+to+PDP-8+Assemblers#pal8
+[teco]:   https://en.wikipedia.org/wiki/TECO_(text_editor)
 
 
 ### Option 2: Toggling Programs in Via the Front Panel
 
-After building the PiDP-8/I software, each of the `examples/*.pal` files
-is assembled by `palbart` which writes out a human-readable listing file
-to `obj/*.lst`, named after the source file.
+One of the automatic steps in building the PiDP-8/I software is that
+each of the `examples/*.pal` and `src/asm/*.pal` files are assembled by
+`palbart` which writes out a human-readable listing file to `obj/*.lst`,
+each named after the source file.
 
 Take [`obj/add.lst`][lst] as an example, in which you will find three
 columns of numbers on the code-bearing lines:
@@ -250,13 +246,12 @@ and then into the PDP-8's program counter (PC) via `Load Add`. Then
 toggle `Start` to run the program.
 
 If you then toggle 000 010 000 111 into SR, press `Load Add` followed by
-`Exam`, you should see 000 000 000 101 in the third row of lights, the
-bit pattern for five at memory location 0207, that being the correct
-answer for "2 + 3" in the expected location, which is what we expected
-`add.pal` to do. You could load that address back up again and `Dep` a
-different value into that location, then start the program over again at
-0200 to observe that this memory location does, indeed, get overwritten
-with 0005.
+`Exam`, you should see 000 000 000 101 in the fourth row of lights — the
+Accumulator — that being the bit pattern for "five" at memory location
+0207, the correct answer for "2 + 3", the purpose of `add.pal`. You
+could load that address back up again and `Dep` a different value into
+that location, then start the program over again at 0200 to observe that
+this memory location does, indeed, get overwritten with 0005.
 
 We only need one `Load Add` operation in the table above because all of
 the memory addresses in this program are sequential; there are no jumps
@@ -273,11 +268,12 @@ the last value you entered via SR above, 0206. That is the source of the
 ### Option 3: Loading a Program from Paper Tape
 
 The `palbart` assembly process described above also produces paper tape
-output files in RIM format in `bin/-pal*.pt`.
+output files in RIM format in `bin/*-pal.pt`.
 
-The simplest way to load these assembly examples into your PiDP-8/I is
-to copy each such file to a USB stick, one file per stick.  Then, load
-the paper tape into the simulated PDP-8/I's core memory.
+One way to load these assembly examples into your PiDP-8/I is to copy
+each such file to a USB stick, one file per stick. Then, use the
+automatic USB media mounting feature of the PiDP-8/I to attach it to the
+simulator.
 
 The following is distilled from the [How to Use the PiDP-8/I][howto]
 section of the PiDP-8/I documentation:
@@ -307,13 +303,20 @@ the [`labels/`][label] directory, for use if you find yourself creating
 long-lived USB sticks. See [`labels/README.md`][lread] for more
 information.
 
+This USB method is most convenient for often-reused binary media images.
+
 
 ### Option 4: Booting SIMH with the Example in Core
 
-As part of the PiDP-8/I software build process, a `boot/*.script` file
-for each `examples/*.pal` file is created by translating `obj/*.lst`
-into a series of "deposit" commands to SIMH. You can thus load and run
-each example at the Linux command line with a command like this:
+Another step in the PiDP-8/I software build process produces a
+`boot/*.script` file for each `obj/*.lst` file produced. These files are
+direct translations of the machine code from the assembler's listing
+file into SIMH `deposit` commands, populating the simulated PDP-8's core
+memory with the program's machine code. Each script ends with a jump to
+the start of the program.
+
+You can thus load and run each example at the Linux command line with a
+command like this:
 
     $ bin/pidp8i-sim boot/add.script
 
@@ -323,7 +326,7 @@ the simulator, just as if you'd loaded it there with option #3 above.
 
 ## License
 
-Copyright © 2016-2017 by Warren Young. This document is licensed under
+Copyright © 2016-2018 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
