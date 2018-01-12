@@ -35,7 +35,7 @@ these:
 
 ## How to Use the BASIC Examples
 
-To use the example BASIC program, simply transcribe it into OS/8 BASIC:
+Here's one way to run the `pep001.ba` program mentioned above:
 
     .R BASIC
     NEW OR OLD--NEW
@@ -64,15 +64,36 @@ To use the example BASIC program, simply transcribe it into OS/8 BASIC:
     READY
     BYE
 
-If you're SSH'd into the PiDP-8/I, "transcribing" is simply a matter of
-cut-and-paste into the terminal window.
+While you could simply type all of that, if you're SSH'd into the
+PiDP-8/I, you could instead just copy-and-paste it into OS/8 BASIC from
+the `examples/pep001.ba` file on the host side. This and several more
+useful methods are given in the companion article [Getting Text
+In][gti].
 
-I've obscured the output on purpose, since I don't want this page to be
-a spoiler for the Project Euler site.
+Other methods given in that article let you create the `PEP001.BA` file
+on the OS/8 disk first, allowing you to load it up within OS/8 BASIC
+like so:
+
+    .R BASIC
+    NEW OR OLD--old pep001.ba
+
+Notice that you can give the file name with the `NEW` or `OLD` command
+above, rather than wait for OS/8 BASIC to prompt you for it separately.
+Also notice that our version of OS/8 BASIC has a patch applied to it by
+default which allows it to tolerate lowercase input. (This patch may be
+disabled by giving the [`--lowercase` option to the `configure`
+script][lcopt].)
+
+
+I obscured the output in the first terminal transcript above on purpose,
+since I don't want this page to be a spoiler for the Project Euler site.
 
 If you get a 2-letter code from BASIC in response to your `RUN` command,
 it means you have an error in the program. See the BASIC section of the
 OS/8 Handbook for a decoding guide.
+
+[gti]:   https://tangentsoft.com/pidp8i/wiki?name=Getting+Text+In
+[lcopt]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md#lowercase
 
 
 ## How to Use the Assembly Language Examples
