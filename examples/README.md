@@ -65,10 +65,10 @@ Here's one way to run the `pep001.ba` program mentioned above:
     BYE
 
 While you could simply type all of that, if you're SSH'd into the
-PiDP-8/I, you could instead just copy-and-paste it into OS/8 BASIC from
-the `examples/pep001.ba` file on the host side. This and several more
-useful methods are given in the companion article [Getting Text
-In][gti].
+PiDP-8/I, you could instead just copy-and-paste the bulk of the text
+above into OS/8 BASIC from the `examples/pep001.ba` file on the host
+side. This and several more useful methods are given in the companion
+article [Getting Text In][gti].
 
 Other methods given in that article let you create the `PEP001.BA` file
 on the OS/8 disk first, allowing you to load it up within OS/8 BASIC
