@@ -10,7 +10,7 @@ programs:
 -----------------------------
 | `add.pal`         | 2 + 3 = 5  The simplest program here; used below as a meta-example
 | `hello.pal`       | writes "HELLO, WORLD!" to the console; tests PRINTS subroutine
-| `pep001.*`        | Project Euler Problem #1 solutions, various languages
+| `pep001*`         | Project Euler Problem #1 solutions, various languages
 | `routines/decprt` | prints an unsigned 12-bit decimal integer to the console
 | `routines/prints` | prints an ASCIIZ string stored as a series of 8-bit bytes to the console
 
@@ -22,9 +22,15 @@ these:
 
 *   [**`pep001.pal`**][pal] — PAL8 Assembly Language
 *   [**`pep001.bas`**][bas] — OS/8 BASIC
+*   [**`pep001-*.c`**][c] — two solutions for the CC8 dialects of C
+*   [**`pep001.fc`**][fc] — U/W FOCAL
+*   [**`pep001-f?.ft`**][ft] — FORTRAN II and IV
 
 [pal]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.PA
 [bas]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.BA
+[c]:    https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
+[fc]:   https://tangentsoft.com/pidp8i/wiki?name=PEP001.FC
+[ft]:   https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT
 
 
 ## How to Use the BASIC Examples
