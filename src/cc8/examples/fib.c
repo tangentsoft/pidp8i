@@ -2,6 +2,7 @@
 #include <libc.h>
 
 fib(n)
+int n;
 {
     if (n < 2)
         return n;
