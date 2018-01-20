@@ -1,13 +1,13 @@
 #include <init.h>
 #include <libc.h>
 
-ire0 (n, d)
+int ire0 (n, d)
 {
     while (n > 0) n = n - d;
     return n == 0;
 }
 
-main ()
+int main ()
 {
     int i, st;
     st = 0;

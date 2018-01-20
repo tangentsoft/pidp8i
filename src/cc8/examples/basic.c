@@ -25,7 +25,7 @@ char *p,*q,*x,*y,*z,*s,*d;
 
 
 
-G(  ) {  /* get program line from buffer */
+int G(  ) {  /* get program line from buffer */
 	atoi(B,&l);
 	y=m[l];
 	if(y){
@@ -43,7 +43,7 @@ G(  ) {  /* get program line from buffer */
 } /* end G */
 
 /* recursive descent parser for arithmetic/logical expressions */
-S(  ) {
+int S(  ) {
 	int o;
 
 	o=J( );
@@ -55,7 +55,7 @@ S(  ) {
 	}
 } /* end S */
 
-J(  ) {
+int J(  ) {
 	int o;
 
 	o=K( );
@@ -67,7 +67,7 @@ J(  ) {
 	}
 } /* end J */
 
-K(  ) {
+int K(  ) {
 	int o;
 
 	o=V( );
@@ -79,7 +79,7 @@ K(  ) {
 	}
 } /* end K */
 
-V(  ) {
+int V(  ) {
 	int o;
 
 	o=W( );
@@ -91,7 +91,7 @@ V(  ) {
 	}
 } /* end V */
 
-W(  ) {
+int W(  ) {
 	int o;
 
 	o=Y( );
@@ -103,7 +103,7 @@ W(  ) {
 	}
 } /* end W */
 
-Y(  ) {
+int Y(  ) {
 	int o;
 
 	if(*p=='-'){
@@ -124,13 +124,13 @@ Y(  ) {
 	return P [*p++];
 } /* end Y */
 
-bufclear()
+int bufclear()
 {
 	memset(m,0,LXMX);
 	memset(Lb,0,CBMX);
 }
 
-main(  ) {
+int main(  ) {
 	int tmp;  /* temp var to fix bug 07Sep2005 Somos */
 
 	bufclear();
