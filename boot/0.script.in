@@ -28,6 +28,10 @@ set cpu noidle
 set df disabled
 @SET_THROTTLE@
 
+; Override the default simulator throttle stabilization time.  See
+; README-throttle.md for details.
+deposit int-throttle THROT_DELAY 3
+
 @if SIMH_PASS_LOWERCASE
 ; The software was configured with either --lowercase=auto or =pass,
 ; so send all text input to the simulator as 7-bit ASCII, including

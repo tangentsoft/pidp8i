@@ -8,6 +8,7 @@ set rf enabled
 set df disabled
 set cpu noidle
 @SET_THROTTLE@
+deposit int-throttle THROT_DELAY 3
 attach rf @MEDIADIR@/tss8/tss8_rf.dsk
 attach ttix 4000
 run 24200

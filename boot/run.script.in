@@ -8,6 +8,7 @@ set cpu 32k
 set cpu noidle
 set df disabled
 @SET_THROTTLE@
+deposit int-throttle THROT_DELAY 3
 
 @if SIMH_PASS_LOWERCASE
 set tti 7b

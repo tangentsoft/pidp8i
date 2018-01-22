@@ -175,6 +175,44 @@ the `configure` script:
     feature to properly maintain its LED brightness values.
 
 
+## Throttle Stabilization
+
+In early January 2018, the upstream SIMH v4 project changed the way
+throttling is handled in that the simulator doesn't make any decisions
+about whether your requested throttle value is plausible until some
+seconds after the simulator starts.
+
+The SIMH default for this is 20 seconds, which we deem too long for most
+cases. We've overridden that in the stock `boot/*.script` files to 3
+seconds. This means that for the first 3 seconds, the simulator runs
+*unthrottled* until the SIMH core timer code can determine the delay
+values needed to achive the desired throttle rate.
+
+There is one case where we anticipate that you might want to increase
+this value: you've set a fixed throttle value that is right near the
+host CPU's ability to achieve and you have the simulator set to start at
+host boot time, so that there are lots of processes starting up and
+initializing in parallel with the PiDP-8/I simulator. In that case, you
+might want to override the following line in `boot/*.script`, setting a
+long enough value for the system load to stabilize:
+
+    deposit int-throttle THROT_DELAY 15
+
+That would override the 20-second stabilization time default to 15
+seconds.
+
+One more aspect of this is worth mentioning: all of the above happens
+*again* when the simulator re-starts, either because you hit
+<kbd>Ctrl-E</kbd> then gave a `CONT` command, or because you've pressed
+the `STOP` then `CONT` switches on the PiDP-8/I front panel. This means
+that if you're single-stepping through a bit of PDP-8 machine code, you
+can expect the throttle value to be going up and down like a yo-yo.
+We've got [a bug filed on this][simh508]; hopefully this behavior will
+change soon.
+
+[simh508]: https://github.com/simh/simh/issues/508
+
+
 ## I/O Matters
 
 The throttle mechanism discussed above only affects the speed of the
