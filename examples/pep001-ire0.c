@@ -2,6 +2,7 @@
 #include <libc.h>
 
 int ire0 (n, d)
+int n, d;
 {
     while (n > 0) n = n - d;
     return n == 0;
