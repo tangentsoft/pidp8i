@@ -50,9 +50,15 @@ The code for this is in the `cross` subdirectory, and is built along
 with the top-level PiDP-8/I software. When installed, it is in your
 `PATH` as `cc8`.
 
-The CC8 cross-compiler is based upon Ron Cain’s famous Small-C compiler.
-The reader is directed to the extensive documentation available on the
-web.
+The CC8 cross-compiler is based upon Ron Cain’s famous Small-C
+compiler. This means it more or less adheres to the dialect of C
+as published in "The C Programming Language," by Kernighan and
+Ritche, first edition, 1978. The known limitations are [listed
+below](#cross-fl).
+
+The reader is directed to the extensive documentation of Small-C
+available on the web for further details. You may also find references
+for K&R C 1978 helpful.
 
 The key file is the PDP-8 code generator in `code8.c` which emits SABR —
 Symbolic Assembler for Binary Relocatable programmes — assembly code.
@@ -253,6 +259,8 @@ doesn't affect its C language support.
 
 A good approximation is K&R C (1978) minus:
 
+*   most of the standard library
+
 *   `struct` and `union`
 
 *   function pointers
@@ -346,8 +354,34 @@ cross-compiler](#cross-fl):
     be left off of a function's definition; it is implicitly `int` in
     all cases, since `void` is not supported.
 
-2.  There must be an `int main()` which must be the last function in the
-    single input C file.
+    Further to this point, int the OS/8 version of CC8, it is optional
+    to declare the types of the arguments to a function. For example,
+    the following is likely to be rejected by a strictly conforming
+    K&R C compiler, but it is legal in OS/8 CC8 because the types
+    are already known, there being only one data tyype in OS/8 CC8:
+
+        myfn(n) { /* do something with n; optionally return something */ }
+
+    This declares a function taking an `int` called `n` and returning
+    an `int`. Contrast the CC8 cross-compiler, which requires the
+    function's argument type to be declared, if not the return type:
+
+        myfn(n)
+        int n;
+        {
+            /* do something with n; optionally return something */
+        }
+
+    (The return type cannot be `void` since there is no `void` in
+    K&R C as published in 1978, thus not in CC8, either.)
+
+2.  There must be an `int main()`, and it must be the last function
+    in the single input C file.
+
+    Since OS/8 has no way to pass command line arguments to a program
+    — at least, not in a way that is compatible with the Unix style
+    command lines expected by C — the `main()` function is never
+    declared to take arguments.
 
 3.  We do not yet support separate compilation of multiple C modules
     that get linked together.  You can produce relocatable libraries in
