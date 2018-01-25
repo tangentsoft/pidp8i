@@ -177,16 +177,23 @@ the `configure` script:
 
 ## Throttle Stabilization
 
-In early January 2018, the upstream SIMH v4 project changed the way
-throttling is handled in that the simulator doesn't make any decisions
-about whether your requested throttle value is plausible until some
-seconds after the simulator starts.
+In early January 2018, the [upstream SIMH v4 project][simh] changed the
+way throttling is handled in that the simulator doesn't make any
+decisions about whether your requested throttle value is plausible until
+some seconds after the simulator starts.
 
-The SIMH default for this is 20 seconds, which we deem too long for most
-cases. We've overridden that in the stock `boot/*.script` files to 3
-seconds. This means that for the first 3 seconds, the simulator runs
-*unthrottled* until the SIMH core timer code can determine the delay
-values needed to achive the desired throttle rate.
+The SIMH default for this is 20 seconds, since the default must work for
+all simulators in the SIMH family, some of which have long bootup
+cycles. 20 seconds is far too long for a PDP-8, which boots instantly,
+so we've overridden that in the stock `boot/*.script` files, setting the
+throttle calibration delay to 3 seconds in order to give the SIMH timing
+code a sufficiently long baseline to work from.
+
+For those first 3 seconds, the simulator runs *unthrottled*, after which
+the SIMH core timing code looks at the number of instructions executed
+during that time and then determines from that what timing values it
+needs to use to achieve your requested throttle value. It also checks
+whether the throttle value is even possible at this time.
 
 There is one case where we anticipate that you might want to increase
 this value: you've set a fixed throttle value that is right near the
@@ -207,10 +214,11 @@ One more aspect of this is worth mentioning: all of the above happens
 the `STOP` then `CONT` switches on the PiDP-8/I front panel. This means
 that if you're single-stepping through a bit of PDP-8 machine code, you
 can expect the throttle value to be going up and down like a yo-yo.
-We've got [a bug filed on this][simh508]; hopefully this behavior will
+We've got [a bug filed on this][si508]; hopefully this behavior will
 change soon.
 
-[simh508]: https://github.com/simh/simh/issues/508
+[simh]:  https://github.com/simh/simh/issues/508#issuecomment-359855788
+[si508]: https://github.com/simh/simh/issues/508
 
 
 ## I/O Matters
