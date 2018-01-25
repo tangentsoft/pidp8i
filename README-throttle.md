@@ -208,17 +208,7 @@ long enough value for the system load to stabilize:
 That would override the 20-second stabilization time default to 15
 seconds.
 
-One more aspect of this is worth mentioning: all of the above happens
-*again* when the simulator re-starts, either because you hit
-<kbd>Ctrl-E</kbd> then gave a `CONT` command, or because you've pressed
-the `STOP` then `CONT` switches on the PiDP-8/I front panel. This means
-that if you're single-stepping through a bit of PDP-8 machine code, you
-can expect the throttle value to be going up and down like a yo-yo.
-We've got [a bug filed on this][si508]; hopefully this behavior will
-change soon.
-
 [simh]:  https://github.com/simh/simh/issues/508#issuecomment-359855788
-[si508]: https://github.com/simh/simh/issues/508
 
 
 ## I/O Matters
