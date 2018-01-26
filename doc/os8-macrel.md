@@ -38,7 +38,7 @@ Very recently we found a complete set of `MACREL` version 2 binaries
 as part of a buildable RTS-8 Archive at [ibiblio.org ... pdp-8/rts8/v3/release][rts8rel]
 
 We found a source distribution of `MACREL` v2 in Dave Gesswein's
-[misc_floppy][dgfloppy] archive.  Part one is flagged as having
+[`misc_floppy`][dgfloppy] archive.  Part one is flagged as having
 errors, but another obscure site had a mis-labeled archive of this
 same stuff so we may be ok.
 
@@ -68,15 +68,15 @@ patch `41.5.1M` has been applied by hand to `OVRDRV.MA`.
 See also: [our documentaiton on the OS/8 Patching][os8patches]
 
 [vandermarkman]:   http://vandermark.ch/pdp8/index.php?n=PDP8.Manuals
-[maclinkss]: 	   http://vandermark.ch/pdp8/uploads/PDP8/PDP8.Manuals/AA-J073A-TA.txt
-[maclinkuser]:	   http://vandermark.ch/pdp8/uploads/PDP8/PDP8.Manuals/AA-5664B-TA.txt
-[dbitdocs]:	   ftp://ftp.dbit.com/pub/pdp8/doc/
-[dbitmacssm]:	   ftp://ftp.dbit.com/pub/pdp8/doc/maclkssm.doc
-[dbitmacuser]:	   ftp://ftp.dbit.com/pub/pdp8/doc/maclnkum.doc
-[dbitmacrel]:	   ftp://ftp.dbit.com/pub/pdp8/doc/macrelrn.doc
-[rts8rel]:	   http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/rts8/v3/release 
-[dgfloppy]:	   http://www.pdp8online.com/images/images/misc_floppy.shtml
-[os8patches]:	   https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
+[maclinkss]:       http://vandermark.ch/pdp8/uploads/PDP8/PDP8.Manuals/AA-J073A-TA.txt
+[maclinkuser]:     http://vandermark.ch/pdp8/uploads/PDP8/PDP8.Manuals/AA-5664B-TA.txt
+[dbitdocs]:    ftp://ftp.dbit.com/pub/pdp8/doc/
+[dbitmacssm]:      ftp://ftp.dbit.com/pub/pdp8/doc/maclkssm.doc
+[dbitmacuser]:     ftp://ftp.dbit.com/pub/pdp8/doc/maclnkum.doc
+[dbitmacrel]:      ftp://ftp.dbit.com/pub/pdp8/doc/macrelrn.doc
+[rts8rel]:     http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/rts8/v3/release 
+[dgfloppy]:    http://www.pdp8online.com/images/images/misc_floppy.shtml
+[os8patches]:      https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 
 ### <a id="license"></a>License
 
