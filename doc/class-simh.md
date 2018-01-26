@@ -11,8 +11,8 @@ achieve the same ends!
 When someone on the mailing list asked for a way to automatically drive
 a demo script he'd found online, it was natural to generalize the core
 functionality of `mkos8` as a reusable Python class, then write a script
-to make use of it. I called resulting demo script `teco-pi-demo` and the
-reusable bits `class simh`, which is now shared with `mkos8`.
+to make use of it. The result is `class simh`, currently used by three
+different scripts, including `mkos8` and the `teco-pi-demo` demo script.
 
 This document describes how `teco-pi-demo` works, and through it, how
 `class simh` works, with an eye toward teaching you how to reuse this
