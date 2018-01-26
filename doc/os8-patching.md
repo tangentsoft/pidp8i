@@ -188,9 +188,8 @@ With no `MACREL` v1 source code, verification was not really possible,
 so applying those patches was postponed.  But then we found both binary
 and source of `MACREL` v2!
 
-In the interests of shipping out system packs in finite time, we will
-integrate `MACREL` v2 into the system packs, and verify/apply `MACREL`
-v2 patches as follow-on work.
+None of the available `MACREL` v2 patches are currently applied. We may
+get to that later.
 
 After further testing of `MACREL`, I have concluded that integrating the
 source-level patch `41.5.1M` will reduce uncertainty, so I have
