@@ -7,7 +7,7 @@
 # re-build Makefile from that modified Makefile.in before proceeding to
 # do the "make" operation.
 #
-# Copyright © 2015-2017 Oscar Vermeulen, Warren Young
+# Copyright © 2015 by Oscar Vermeulen, © 2016-2018 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -434,6 +434,9 @@ release: all
 
 run: $(SIM)
 	$(SIM) boot/run.script
+
+run-tss8: $(SIM)
+	$(SIM) boot/tss8.script
 
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)

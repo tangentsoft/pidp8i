@@ -1,0 +1,19 @@
+; Same as 2.script, except that the binary disk image and core init
+; image files are copied into the build tree's bin/ directory and run 
+; from there rather than being run from the installation tree.
+;
+; This is used by "make run-tss8" so you don't have to say
+; "make mediainstall" then manually start the simulator with 2.script.
+;
+echo Loading TSS/8 from the RS08 fixed-head disk...
+!cp media/tss8/tss8_init.bin bin
+load bin/tss8_init.bin
+set rf enabled
+set df disabled
+set cpu noidle
+@SET_THROTTLE@
+deposit int-throttle THROT_DELAY 3
+!cp -n media/tss8/tss8_rf.dsk bin
+attach rf bin/tss8_rf.dsk
+attach ttix 4000
+run 24200

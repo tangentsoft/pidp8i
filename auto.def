@@ -2,7 +2,7 @@
 # auto.def - Configure file for the PiDP-8/I software build system,
 #            based on autosetup.
 #
-# Copyright © 2016-2017 Warren Young
+# Copyright © 2016-2018 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -471,6 +471,7 @@ make-template boot/4.script.in
 make-template boot/6.script.in
 make-template boot/7.script.in
 make-template boot/run.script.in
+make-template boot/tss8.script.in
 make-template etc/pidp8i-init.in
 make-template etc/sudoers.in
 make-template etc/usb-mount@.service.in
