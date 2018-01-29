@@ -1,0 +1,291 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+########################################################################
+# Generalized facility transfer files into or out of
+# an OS/8 rk05 or tu56 image using PIP on the OS/8 side
+# to read from simh ptr device and write to simh ptp device
+# which will get linux files attached.
+#
+# Will create new image and initialize its directory if necessary.
+#
+# Permits input or output file ames to be specified on the command line
+# or in list files.
+#
+# Will handle /A (ASCII (with POSIX conversion)),/B (.BN, OS/8 bin format),
+# and /I (PIP image mode for .SV files.)
+#
+# Consider adding support of /Y to copy system head in or out.
+#
+# Case fold rules:
+# File name specifications in all UPPER case will be kept upper case
+# on the linux side.
+#
+# File name specifications with any lower case letters will be
+# upcased when sent to OS/8 for processing, but will be used as-is
+# on the linux side.
+#
+# Examples:
+# -i foo.pa will input a linux file, 'foo.pa' to 'FOO.PA' on OS/8.
+# -i FOO.PA will input a linux file, 'FOO.PA' to 'FOO.PA' on OS/8.
+# -o FOO.PA will output an OS/8 file, 'FOO.PA' to linux as 'FOO.PA'.
+# -o foo.pa will output an OS/8 file, 'FOO.PA' to linux as 'foo.pa'.
+#
+# What about overwrites?
+# Pre-existing image files will be modified, not wiped.
+# Pre-existing files will be overwritten.
+# Consider warning of overwrites.
+# Consider forbidding overwrites unless -p (permit) option is set.
+#
+# This program is based on cc8-tu56-update and an earlier program
+# called .
+#
+# Copyright © 2017, 2018 by Warren Young and Bill Cattey
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+import argparse
+
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
+
+# Our local modules
+from pidp8i import *
+from simh   import *
+
+# Other global Python modules
+import glob
+import subprocess
+
+
+#### GLOBALS AND CONSTANTS #############################################
+
+progmsg = True
+debug = True
+
+#### UTILITY ROUTINES ##################################################
+
+#### extract_option ####################################################
+#
+# Given a filename, Look for a PIP option prefix:
+#
+#   :a    for ASCII
+#   :b    for .BN OS/8 BIN format.
+#   :i    for IMAGE for use with .SV files.
+#   :y    Later: For work with system area.
+#
+# Returns two values: updated fname, and the option string.
+# Option string may be empty.
+
+def extract_option (fname):
+  if fname[1] != ':': return fname, ""              # No option. Return fname unchanged.
+    
+  if fname[0] == 'a' or fname[0] == 'A':        # ASCII mode
+    return fname[2:], "/A"
+  elif fname[0] == 'b' or fname[0] == 'B':     # BIN mode.
+    return fname[2:], "/B"
+  elif fname[0] == 'i' or fname[0] == 'I':     # IMAGE mode.
+    return fname[2:], "/I"
+  # elif fname[0] == 'y' or fname[0] == 'Y':    # SYS HEAD mode.
+  #   return fname[2:], "/Y"
+  else:
+    print "Unknown format option: " + fname[0] + " in fname spec: " + fname + " will default to ASCII."
+  return fname[2:], ""
+
+def fetch_one (s, os8dev, oname):
+  if debug: print "\t" + oname
+  fname, option = extract_option(oname)
+  if debug: print "Option: " + option + ", fname: " + fname
+  s.os8_fetch_pip(os8dev, fname, option)
+
+def send_one (s, os8dev, iname):
+  if debug: print "\t" + iname
+  fname, option = extract_option(iname)
+  if debug: print "Option: " + option + ", fname: " + fname
+  s.os8_send_pip(os8dev, fname, option)
+
+
+
+#### main ##############################################################
+
+def main ():
+  global progmsg
+
+  # Set up the arg parser and use it to parse the command line.
+  desc_str = """Transfer files into or out of an OS/8 rk05 or tu56 image.
+
+  File names for input and output may be preceded with a colon delimited type:
+  \ta: ASCII -- OS/8 to POSIX format conversion is performed.
+  \tb: OS/8 BIN format arg to PIP is used for transfer.
+  \ti: OS/8 IMAGE format arg to PIP is used for transfer.
+  \tIf no type is specified, ASCII is assumed and format conversion is done.
+  Multiple instances of -i, -o, -li, and -lo arguments may be present.
+  CAUTION arguments are re-ordered as follows: all -o, all -lo, all -i, all -li."""
+
+  parser = argparse.ArgumentParser(description=desc_str, formatter_class=argparse.RawTextHelpFormatter,
+                                   usage="%(prog)s [-h] (-t | -ra | -rb) image [-i I] [-o O] [-li LI] [-lo LO]")
+  parser.add_argument("image",
+                      help="Name of rk05 or tu56 image to manipulate.")
+  group = parser.add_mutually_exclusive_group(required=True)
+  group.add_argument("-t", action="store_true", help="use tu56 image format")
+  group.add_argument("-ra", action="store_true", help="use rk05 image format accessing partition A")
+  group.add_argument("-rb", action="store_true", help="use rk05 image format accessing partition B")
+  parser.add_argument("-o", action="append", help="output file from OS/8")
+  parser.add_argument("-i", action="append", help="input file to OS/8")
+  parser.add_argument("-lo", action="append", help="list of files to output from OS/8")
+  parser.add_argument("-li", action="append", help="list of files to input to OS/8")
+
+  args = parser.parse_args()
+  
+  print "Filename: " + args.image
+  if args.t:
+    sdev = "dt0"
+    os8dev = "DTA0:"
+    baddev = "a DECtape"
+    good_suffix = ".tu56"
+    bad_suffix = ".rk05"
+    stat_str = "DECtape"
+
+  if args.ra:
+    sdev = "rk1"
+    os8dev = "RKA1:"
+    good_suffix = ".rk05"
+    bad_suffix = ".tu56"
+    baddev = "an RK05 Disk"
+    stat_str = "partition A of"
+    
+  if args.rb:
+    sdev = "rk1"
+    os8dev = "RKB1:"
+    good_suffix = ".rk05"
+    bad_suffix = ".tu56"
+    baddev = "an RK05 Disk"
+    stat_str = "partition B of"
+  
+  if args.image.endswith(good_suffix):
+    imagename = args.image
+  else:
+    if args.image.endswith(bad_suffix):
+      print "Fatal error: Don't treat a file ending in " + bad_suffix + " as " + baddev
+      sys.exit(-1)
+    imagename = args.image + good_suffix
+    print "appending " + good_suffix + " to image filename."
+  
+  # Create the SIMH child instance and tell it where to send log output
+  try:
+    s = simh (dirs.build, True)
+  except (RuntimeError) as e:
+    print "Could not start simulator: " + e.message + '!'
+    exit (1)
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+
+  # Attach the image to the simulator
+  if os.path.exists (imagename):
+    needs_zero = False
+    print "Modifying existing " + stat_str + " image " + imagename
+  else:
+    print "Will create a new image file named: " + imagename
+    needs_zero = True
+    
+  s.send_cmd ("att " + sdev + " " + imagename)
+
+  # Find and boot the bootable OS/8 disk.  Use the "patched" version
+  # because that is what "make run" uses; we use that command to
+  # inspect this script's work.
+  rk = os.path.join (dirs.os8mo, 'os8v3d-patched.rk05')
+  if not os.path.isfile (rk):
+    print "Could not find " + rk + "; OS/8 media not yet built?"
+    exit (1)
+  print "Booting " + rk + "..."
+  s.send_cmd ("att rk0 " + rk)
+  s.send_cmd ("boot rk0")
+
+  if needs_zero: 
+    print "New image getting initialized directory with ZERO command."
+    s.os8_send_cmd ('\\.', "ZERO " + os8dev)
+
+  # TODO:
+  # Case-folding of filenames with annotation.
+  # Structure of processing: All o, all lo, all i, all li.
+  # Sacrificial NULL as last char for :i, :b PIP input files.
+  # Consider /Y support
+  
+  option = ""
+
+  if debug: print "Performing ouputs:" 
+  if args.o != None:
+    for oname in args.o:
+      fetch_one(s, os8dev, oname)
+    
+  if args.lo != None:
+    if debug: print "output lists:" 
+    for loname in args.lo:
+      if debug: print "\t" + loname
+
+      try:
+        manifest = open(loname, "r")
+      except IOError:
+        print loname + " not found. Skipping."
+        continue
+ 
+      for line in manifest:
+        oname = line.strip()
+        if oname == "": continue
+        if oname[0] == '#': continue                  # Allow commenting out files
+        fetch_one(s, os8dev, oname)
+        
+  if args.i != None:
+    if debug: print "inputs:" 
+    for iname in args.i:
+      send_one(s, os8dev, iname)
+      
+  if args.li != None:
+    if debug: print "input lists:" 
+    for liname in args.li:
+      if debug: print "\t" + liname
+
+      try:
+        manifest = open(liname, "r")
+      except IOError:
+        print liname + " not found. Skipping."
+        continue
+ 
+      for line in manifest:
+        iname = line.strip()
+        if iname == "": continue
+        if iname[0] == '#': continue                  # Allow commenting out files
+        send_one(s, os8dev, iname)
+        
+ 
+  # Exit simulator nicely so that image detaches cleanly
+  s.back_to_cmd ('\\.')
+  s.send_cmd ("det " + sdev)
+  s.send_cmd ('quit')
+
+
+if __name__ == "__main__": main()
