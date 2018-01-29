@@ -101,6 +101,7 @@ class simh:
   def __init__ (self, basedir, ignore_gpio_lock = False):
     # Start the simulator instance
     self._child = pexpect.spawn(basedir + '/bin/pidp8i-sim')
+    self._valid_pip_options = ["/A", "/B", "/I"]
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
@@ -244,6 +245,109 @@ class simh:
     self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
 
+
+  #### os8_send_pip ###################################################
+  # Send a copy of a local file to OS/8 using PIP.
+  #
+  # The OS/8 destination filename is synthesized from the basename of the path,
+  # upcasing if necessary.
+  #
+  # The file is sent via the SIMH paper tape device through PIP
+  # specifying a transfer option.  If no option is specified,
+  # ASCII is assumed.
+  #
+  # In ASCII mode, we pre-process with txt2ptp which translates
+  # POSIX ASCII conventions to OS/8 conventions.  In all other
+  # modes, we do not do any translation.
+  #
+  # However, we should supply a sacrificial NULL as an additional character
+  # because the OS/8 PTR driver throws the last character away. (NOT DONE YET)
+  #
+  # Entry context should be inside OS/8.  Exit context is inside OS/8.
+
+  def os8_send_pip (self, dev, path, option = None):
+    # Create path and file names not given
+    bns = os.path.basename (path)
+    dest = dev + bns.upper ()
+
+    if option == "" or option == "/A":
+      # Convert text file to SIMH paper tape format
+      bdir = pidp8i.dirs.build
+      pt   = os.path.join (bdir, 'obj', bns + '.pt')
+      tool = os.path.join (bdir, 'bin', 'txt2ptp')
+      subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
+    elif option not in self._valid_pip_options:
+      print "Invalid PIP option: " + option + ". Ignoring send of: " + path
+      return
+    else:
+      pt = path
+
+    # Sacrificial extra character code goes here.
+
+    # Paper tape created, so attach it read-only and copy it in.  We're
+    # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
+    # the file.
+    self.back_to_cmd ('\\.')
+    self.send_cmd ('attach -r ptr ' + pt)
+    self.os8_restart ()
+    self.os8_send_cmd ('\\.', 'R PIP')
+    self.os8_send_cmd ('\\*', dest + '<PTR:' + option)
+    # Device full detection goes here.
+    self._child.expect ('\\^')
+    self.os8_send_ctrl ('[')      # finish transfer
+    self._child.expect ('\\*')
+    self.os8_send_ctrl ('[')      # exit PIP
+
+  #### os8_fetch_pip ###################################################
+  # Fetch a file from OS/8 to a local path using PIP.
+  #
+  # The OS/8 source filename is synthesized from the basename of the path,
+  # upcasing if necessary.
+  #
+  # The file is sent via the SIMH paper tape device through PIP
+  # specifying a transfer option.  If no option is specified,
+  # ASCII is assumed.
+  #
+  # In ASCII mode, we post-process with ptp2txt which translates
+  # POSIX ASCII conventions to OS/8 conventions.  In all other
+  # modes, we do not do any translation.
+  #
+  # Entry context should be inside OS/8.  Exit context is inside OS/8.
+
+  def os8_fetch_pip (self, dev, path, option = None):
+    # Create path and file names not given
+    bns = os.path.basename (path)
+    source = bns.upper ()
+
+    if option != "" and option not in self._valid_pip_options:
+      print "Invalid PIP option: " + option + ". Ignoring fetch of: " + path
+      return
+
+    self.back_to_cmd ('\\.')
+    self.send_cmd ('attach ptp ' + path)
+    self.os8_restart ()
+    self.os8_send_cmd ('\\.', 'R PIP')
+    self.os8_send_cmd ('\\*', 'PTP:<' + dev + source + option)
+    err_str = dev + source + " NOT FOUND"
+    index = self._child.expect ([err_str, '\\*'])
+    self.os8_send_ctrl ('[')      # exit PIP
+    self.back_to_cmd ('\\.')
+    self.send_cmd ('detach ptp')  # Clean flush of buffers.
+    self.os8_restart ()
+
+    if index == 0:                # transfer failed. Remove empty file.
+      print "Transfer failed: " + err_str
+      os.remove (path)
+      return                        # and return.
+
+    if option == "" or option == "/A":
+      print "Format converting " + path
+      # Convert text file to SIMH paper tape format
+      bdir = pidp8i.dirs.build
+      os.rename(path, path + ".temp")
+      tool = os.path.join (bdir, 'bin', 'ptp2txt')
+      subprocess.call (tool + ' < ' + path + ".temp" + ' > ' + path, shell = True)
+      os.remove(path + ".temp")
 
   #### os8_send_line ###################################################
   # Core of os8_send_cmd.  Also used by code that needs to send text
