@@ -1,15 +1,32 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ########################################################################
-# Generalized facility transfer files into or out of
-# an OS/8 rk05 or tu56 image using PIP on the OS/8 side
+# Generalized facility to manipulate os8 device images from Linux
+# using OS8 system programs under SIMH.
+#
+# Currently understands .tu56, and .rk05 images.
+#
+# Arguments specify:
+#    exactly sys one image to attach and boot.
+#          Zero or more than 1 is an error.
+#          Nonexistent image is an error.
+#    zero or more additional OS/8 device images to attach.
+#          Nonexistent image creates a new one and initializes it.
+#          New image files with multiple partitions initializes all of them.
+#    zero or more OS/8 file specifications.
+#    zero or more Linux file specifications.
+#    interpretation/translation to make of file formats.
+#
+# Depending on the count of OS/8 and Linux file specifications
+# an "action plan" is formulated to copy or move files
+# either between Linux and OS/8 or within OS/8.
+#
+# Current implementation uses PIP on the OS/8 side
 # to read from simh ptr device and write to simh ptp device
 # which will get linux files attached.
 #
-# Will create new image and initialize its directory if necessary.
-#
 # Permits input or output file ames to be specified on the command line
-# or in list files.
+# or in list files. <- May not implement.
 #
 # Will handle /A (ASCII (with POSIX conversion)),/B (.BN, OS/8 bin format),
 # and /I (PIP image mode for .SV files.)
@@ -36,10 +53,7 @@
 # Consider warning of overwrites.
 # Consider forbidding overwrites unless -p (permit) option is set.
 #
-# This program is based on cc8-tu56-update and an earlier program
-# called .
-#
-# Copyright © 2017, 2018 by Warren Young and Bill Cattey
+# Copyright © 2018 by Bill Cattey
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -68,7 +82,10 @@
 
 # Bring in just the basics so we can bring in our local modules
 import os
+import glob
 import sys
+import string
+import re
 import argparse
 
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
@@ -86,7 +103,11 @@ import subprocess
 #### GLOBALS AND CONSTANTS #############################################
 
 progmsg = True
-debug = True
+DEBUG = False
+
+_os8_file_regex_str = "(\S+):(\S+)?"
+_os8_file_re = re.compile(_os8_file_regex_str)
+
 
 #### UTILITY ROUTINES ##################################################
 
@@ -129,13 +150,238 @@ def send_one (s, os8dev, iname):
   if debug: print "Option: " + option + ", fname: " + fname
   s.os8_send_pip(os8dev, fname, option)
 
+def is_directory(path):
+  if DEBUG: "is_directory (" + path + ")"
+  m = re.match(_os8_file_re, path)
+  if m != None:
+    if DEBUG: print "OS/8 Match: DEV: " + m.group(1) + ", File: " + str(m.group(2))
+    if m.group(2) == None or m.group(2) == "": 
+      return True     # Just a device so yes it's a directory.
+    else: return False
+  if has_os8_wildcards(path):
+    if DEBUG: print "Has wildcards."
+    return False
+  return os.path.isdir(path)
 
+def has_os8_wildcards (filename):
+  os8_wild_cards = "*?"
+  for char in os8_wild_cards:
+    if char in filename: return True
+  return False
+
+def append_copy(action_plan, mode, source, destination):
+  if ":" in source:
+    if "/" in source:
+      print "Illegal OS/8 file spec containing a slash:" + source
+      sys.exit(-1)
+    source = source.upper()
+
+  if ": in destination":
+    if "/" in destination:
+      print "Illegal OS/8 file spec containing a slash:" + destination
+      sys.exit(-1)
+    destination = destination.upper()
+    
+  copyspec = [mode, source, destination]
+  action_plan["copy"].append (copyspec)
+  
+
+#### parse_args ########################################################
+#
+# Returns dictionary that will be our action plan.
+#
+# An element of the "copy" array is itself an array
+# that names a file format, a source, and a destination.
+# [<format>, <source>, <destination>]
+#
+# source and destination file specifications are as follows:
+# If it has a colon in it, it's an OS/8 spec with OS/8
+# device to the left of the colon, and filename to the right.
+# No colon means it's a Linux file spec.
+#
+# The parser may make an interpretation of file spec. contexts
+# that get synthesized into an OS/8 spec with "DSK:" as the device.
+#
+# Cases to handle:
+#
+# only 2 file specs, 1 OS/8, 1 Linux:
+#    Simplest.
+#    The first one seen is the source
+#    The second one is the destination.
+# only 2 file specs, No OS/8:
+#    Special Case
+#    Convert both to DSK: for an OS/8 to OS/8 transfer.
+# only 1 file spec, Syntax Error.
+# More than 2 specs:
+
+# regex for parsing an argument string into a sys device
+
+USAGE = """ Place Holder 
+"""
+
+_dev_arg_regex_str = "-(rk|td|tc|rx)(\d?)(s)?"
+_dev_arg_re = re.compile(_dev_arg_regex_str)
+
+_os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "tc" : "DTA", "rx" : "RX"}
+
+def parse_args():
+  global DEBUG
+  action_plan = {}
+  action_plan["sys"] = None
+  action_plan["mount"] = []
+  action_plan["copy"] = []
+
+  idx = 1
+  numargs = len(sys.argv)
+
+  filespec_seen = 0
+  mode_opt = "b"                              # start of with default of binary.
+  first_mode = mode_opt
+  source = ""
+  destination = ""
+  # Keep file_list and mode_list in sync.
+  file_and_mode_list = []
+  
+  while idx < numargs:
+    print "idx: " + str(idx)
+    arg = sys.argv[idx]
+
+    # First the simple bit set options
+    if arg == "-d":
+      DEBUG = True
+    elif arg == "-h":
+      print USAGE
+      sys.exit(0)
+    elif arg== "-b":
+      if mode_opt == "b":
+        print "Warning redundant reset of mode option to binary."
+      mode_opt = "b"
+    elif arg== "-a":
+      if mode_opt == "a":
+        print "Warning redundant reset of mode option to ASCII."
+      mode_opt = "a"
+    elif arg== "-i":
+      if mode_opt == "i":
+        print "Warning redundant reset of mode option to image."
+      mode_opt = "b"
+    elif arg== "-y":
+      if mode_opt == "y":
+        print "Warning redundant reset of mode option to Yank system head."
+      mode_opt = "y"
+    elif arg== "-z":
+      if mode_opt == "z":
+        print "Warning redundant reset of mode option to Zero directory."
+      mode_opt = "z"
+
+    # Not a simple bit set option. 
+    else:
+      # Parser for OS/8 attach spec.
+      m = re.match(_dev_arg_re, arg)
+      if m != None:
+        if m.group(2) == None or m.group(2) == "":
+          print "Need unit number for: " + m.group(1) + ". Abort."
+          sys.exit(-1)
+        if idx + 1 == numargs:             # Need filename, but no args left.
+          print "No image file name. Abort."
+          sys.exit(-1)
+        idx +=1
+        imagename = sys.argv[idx]
+        image_spec = [m.group(1), m.group(2), imagename]
+        if m.group(3) == 's': 
+          if action_plan ["sys"] != None:
+            print "Already specified system device. Abort."
+            sys.exit(-1)
+          else:
+            action_plan["sys"] = image_spec
+        else:
+          action_plan["mount"].append(image_spec)
+
+      # Do file parser if we didn't get an OS/8 attach spec.
+      else:
+
+        if DEBUG: print "File parsing of: " + arg
+        
+        # Need to know if arg is Linux. If so, we need to do globbing.
+        # If you want OS/8 globbing, specify a device to prevent globbing
+        # from being run.
+        m = re.match(_os8_file_re, arg)
+        if m == None:          # Yup, it's linux.  Glob it.
+          more_files = glob.glob(arg)
+          if more_files == []:
+            more_files.append(arg)  # If file not found may be an OS/8 internal xfer.
+          for new_file in more_files:
+            if filespec_seen == 0:
+              source = new_file
+              first_mode = mode_opt
+            elif filespec_seen == 1:
+              destination = new_file  
+            else:
+              file_and_mode_list.append([mode_opt,destination])
+              destination = new_file
+            filespec_seen += 1
+        else:
+          if filespec_seen == 0:
+            source = arg
+            first_mode = mode_opt
+          elif filespec_seen == 1:
+            destination = arg
+          else:
+            file_and_mode_list.append([mode_opt, destination])
+            destination = arg
+          filespec_seen += 1
+
+    if DEBUG: print "filespec_seen: " + str(filespec_seen)
+
+    idx +=1        # Bottom of the while loop. Increment.
+
+  if filespec_seen == 0:
+    print "No file specs seen.  Nothing to do. Abort."
+    sys.exit(1)
+  elif filespec_seen == 1:
+    print "Only 1 file spec found. Nothing to do. Abort."
+    sys.exit(1)
+  # Now it gets a little complicated...
+  # If neither source nor destination is OS/8, pretend they both were OS/8 "DSK:"
+  # If source is OS/8, and has OS/8 wild cards, the destination must be a directory.
+  else:
+    # If more than 2 files, the destination must be either an OS/8 device or a Linux directory.
+    if DEBUG: print "Destination: " + destination
+    if filespec_seen > 2 and is_directory(destination) == False:
+      print "Destination must be a Linux directory or OS/8 device for multiple source files.  Abort."
+      sys.exit(-1)
+
+    m1 = re.match(_os8_file_re, source)
+    m2 = re.match(_os8_file_re, destination)
+
+    # If source is OS/8 and it has wild cards, but destination is a file, not a device,
+    # it's a fatal error.
+    if m1 != None and has_os8_wildcards(source) and is_directory (destination) == False:
+      print "Not going to concatinate multiple OS/8 files into: " + destination + ". Abort."
+      sys.exit(-1)
+
+
+    if m1 == None and m2 == None and filespec_seen == 2:      # No OS/8 dev on two names, local DSK: copy.
+      source = "DSK:" + source
+      destination = "DSK:" + destination
+      
+    append_copy(action_plan, first_mode, source, destination)
+    
+    for mode_and_file in file_and_mode_list:
+      filename = mode_and_file[1]
+      m3 = re.match(_os8_file_re, filename)
+      if m3 != None and has_os8_wildcards(filename) and is_directory (destination) == False:
+        print "Not going to concatinate multiple OS/8 files into: " + destination + ". Abort."
+        sys.exit(-1)
+      append_copy(action_plan, mode_and_file[0], filename, destination)
+
+
+  if DEBUG: print str(action_plan)
 
 #### main ##############################################################
 
 def main ():
   global progmsg
-
+  
   # Set up the arg parser and use it to parse the command line.
   desc_str = """Transfer files into or out of an OS/8 rk05 or tu56 image.
 
@@ -146,6 +392,11 @@ def main ():
   \tIf no type is specified, ASCII is assumed and format conversion is done.
   Multiple instances of -i, -o, -li, and -lo arguments may be present.
   CAUTION arguments are re-ordered as follows: all -o, all -lo, all -i, all -li."""
+
+
+  parse_args()
+
+  """
 
   parser = argparse.ArgumentParser(description=desc_str, formatter_class=argparse.RawTextHelpFormatter,
                                    usage="%(prog)s [-h] (-t | -ra | -rb) image [-i I] [-o O] [-li LI] [-lo LO]")
@@ -286,6 +537,7 @@ def main ():
   s.back_to_cmd ('\\.')
   s.send_cmd ("det " + sdev)
   s.send_cmd ('quit')
+  """
 
 
 if __name__ == "__main__": main()
