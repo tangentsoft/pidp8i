@@ -179,10 +179,10 @@ the `configure` script:
 
 After the 2017.12.22 release, the [upstream SIMH v4 project][simh]'s
 main developer [changed the way throttling is handled][si508], mostly
-for the better. The primary upshot of this change, from the perspective
-of this document's subject matter in that the simulator doesn't make any
-decisions about whether your requested throttle value is plausible until
-some seconds after the simulator starts.
+for the better. The primary upshot of this change — from the perspective
+of this document's subject matter — is that the simulator doesn't make
+any decisions about whether your requested throttle value is plausible
+until some seconds after the simulator starts.
 
 The SIMH default for this is 20 seconds, since the default must work for
 all simulators in the SIMH family, some of which have long bootup
