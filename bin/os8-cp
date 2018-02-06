@@ -64,45 +64,6 @@ _os8_file_re = re.compile(_os8_file_regex_str)
 
 #### UTILITY ROUTINES ##################################################
 
-#### extract_option ####################################################
-#
-# Given a filename, Look for a PIP option prefix:
-#
-#   :a    for ASCII
-#   :b    for .BN OS/8 BIN format.
-#   :i    for IMAGE for use with .SV files.
-#   :y    Later: For work with system area.
-#
-# Returns two values: updated fname, and the option string.
-# Option string may be empty.
-
-def extract_option (fname):
-  if fname[1] != ':': return fname, ""              # No option. Return fname unchanged.
-    
-  if fname[0] == 'a' or fname[0] == 'A':        # ASCII mode
-    return fname[2:], "/A"
-  elif fname[0] == 'b' or fname[0] == 'B':     # BIN mode.
-    return fname[2:], "/B"
-  elif fname[0] == 'i' or fname[0] == 'I':     # IMAGE mode.
-    return fname[2:], "/I"
-  # elif fname[0] == 'y' or fname[0] == 'Y':    # SYS HEAD mode.
-  #   return fname[2:], "/Y"
-  else:
-    print "Unknown format option: " + fname[0] + " in fname spec: " + fname + " will default to ASCII."
-  return fname[2:], ""
-
-def fetch_one (s, os8dev, oname):
-  if debug: print "\t" + oname
-  fname, option = extract_option(oname)
-  if debug: print "Option: " + option + ", fname: " + fname
-  s.os8_fetch_pip(os8dev, fname, option)
-
-def send_one (s, os8dev, iname):
-  if debug: print "\t" + iname
-  fname, option = extract_option(iname)
-  if debug: print "Option: " + option + ", fname: " + fname
-  s.os8_send_pip(os8dev, fname, option)
-
 def is_directory(path):
   if DEBUG: "is_directory (" + path + ")"
   m = re.match(_os8_file_re, path)
