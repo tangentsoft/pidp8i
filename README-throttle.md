@@ -5,7 +5,7 @@ the simulator's speed is set based on the number of CPU cores detected
 by the `tools/corecount` script.
 
 
-## Multi-Core Default
+## <a id="mcore"></a>Multi-Core Default
 
 If `corecount` detects a multi-core system, the default behavior is to
 not throttle the simulator at all, since there are only 2 threads in the
@@ -25,7 +25,7 @@ simulator running.
 You can force this behavior with `--throttle=none`.
 
 
-## Single-Core Default
+## <a id="score"></a>Single-Core Default
 
 If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
@@ -85,7 +85,7 @@ latter path, please send the patch to the mailing list so it can be
 integrated into the next release of the software.
 
 
-## Underclocking
+## <a id="under"></a>Underclocking
 
 There are many reasons to make the software run slower than it normally
 would.  You may achieve such ends by giving the `--throttle` option to
@@ -175,7 +175,7 @@ the `configure` script:
     feature to properly maintain its LED brightness values.
 
 
-## Throttle Stabilization
+## <a id="stabilization"></a>Throttle Stabilization
 
 In early January 2018, the [upstream SIMH v4 project][simh] changed the
 way throttling is handled in that the simulator doesn't make any
@@ -211,7 +211,7 @@ seconds.
 [simh]:  https://github.com/simh/simh/issues/508#issuecomment-359855788
 
 
-## I/O Matters
+## <a id="io"></a>I/O Matters
 
 The throttle mechanism discussed above only affects the speed of the
 PDP-8 CPU simulator. It does not affect the speed of I/O operations.
@@ -232,7 +232,7 @@ hardware.
 
 ## License
 
-Copyright © 2017 by Warren Young. This document is licensed under
+Copyright © 2017-2018 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 [sl]:  https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
