@@ -115,7 +115,7 @@ def append_copy(action_plan, mode, source, destination):
 # regex for parsing an argument string into a sys device
 
 USAGE = 'usage: ' + os.path.basename (__file__) + \
-""" [-dh] [--rk,--rx[tag] rotating-disk] [--tc,--td[tag] tape]
+""" [-dh] [--rk,--rx[tag] rotating-disk] [--dt,--td[tag] tape]
     [[-abiyz] src-files]... [src-files] <dest>
 
     This program boots an OS/8 environment underneath the SIMH PDP-8
@@ -202,7 +202,7 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
     the option name.  (That is, --rx1 instead of just --rx, which would
     be the same as --rx0 in this example.)
 
-    The --tc and --td options are handled similarly to the --r* options,
+    The --dt and --td options are handled similarly to the --r* options,
     differing only in whether we use the SIMH DT or TD PDP-8 devices,
     which correspond to the TC08 or TD8E DECtape controllers.  Which one
     you give depends on the device support built into the OS/8 media
@@ -230,10 +230,10 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
     Give -h to print this message.
 """
 
-_dev_arg_regex_str = "-(rk|td|tc|rx)(\d?)(s)?"
+_dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
 _dev_arg_re = re.compile(_dev_arg_regex_str)
 
-_os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "tc" : "DTA", "rx" : "RX"}
+_os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "dt" : "DTA", "rx" : "RX"}
 
 def main ():
   global DEBUG
