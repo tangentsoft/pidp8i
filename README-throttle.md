@@ -189,7 +189,13 @@ so we've overridden that in the stock `boot/*.script` files, setting the
 throttle calibration delay to 3 seconds in order to give the SIMH timing
 code a sufficiently long baseline to work from.
 
-For those first 3 seconds, the simulator runs *unthrottled*, after which
+If you have a prior installation of the PiDP-8/I software, your boot
+scripts will not have this change unless you have taken specific steps
+to achieve it, so you will be using the 20-second SIMH default! See
+"[Overwriting the Local Simulator Setup][olss]" in the top-level
+`README.md` file for your options here.
+
+For those first seconds, the simulator runs *unthrottled*, after which
 the SIMH core timing code looks at the number of instructions executed
 during that time and then determines from that what timing values it
 needs to use to achieve your requested throttle value. It also checks
@@ -208,7 +214,8 @@ long enough value for the system load to stabilize:
 That would override the 20-second stabilization time default to 15
 seconds.
 
-[simh]:  https://github.com/simh/simh/issues/508#issuecomment-359855788
+[olss]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#overwrite-setup
+[simh]: https://github.com/simh/simh/issues/508#issuecomment-359855788
 
 
 ## <a id="io"></a>I/O Matters
