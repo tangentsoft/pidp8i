@@ -1,59 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ########################################################################
-# Generalized facility to manipulate os8 device images from Linux
-# using OS8 system programs under SIMH.
+# Generalized facility to manipulate os8 device images from the POSIX
+# (host) side using OS/8 system programs under SIMH.
 #
-# Currently understands .tu56, and .rk05 images.
+# See USAGE message below for details.
 #
-# Arguments specify:
-#    exactly sys one image to attach and boot.
-#          Zero or more than 1 is an error.
-#          Nonexistent image is an error.
-#    zero or more additional OS/8 device images to attach.
-#          Nonexistent image creates a new one and initializes it.
-#          New image files with multiple partitions initializes all of them.
-#    zero or more OS/8 file specifications.
-#    zero or more Linux file specifications.
-#    interpretation/translation to make of file formats.
-#
-# Depending on the count of OS/8 and Linux file specifications
-# an "action plan" is formulated to copy or move files
-# either between Linux and OS/8 or within OS/8.
-#
-# Current implementation uses PIP on the OS/8 side
-# to read from simh ptr device and write to simh ptp device
-# which will get linux files attached.
-#
-# Permits input or output file ames to be specified on the command line
-# or in list files. <- May not implement.
-#
-# Will handle /A (ASCII (with POSIX conversion)),/B (.BN, OS/8 bin format),
-# and /I (PIP image mode for .SV files.)
-#
-# Consider adding support of /Y to copy system head in or out.
-#
-# Case fold rules:
-# File name specifications in all UPPER case will be kept upper case
-# on the linux side.
-#
-# File name specifications with any lower case letters will be
-# upcased when sent to OS/8 for processing, but will be used as-is
-# on the linux side.
-#
-# Examples:
-# -i foo.pa will input a linux file, 'foo.pa' to 'FOO.PA' on OS/8.
-# -i FOO.PA will input a linux file, 'FOO.PA' to 'FOO.PA' on OS/8.
-# -o FOO.PA will output an OS/8 file, 'FOO.PA' to linux as 'FOO.PA'.
-# -o foo.pa will output an OS/8 file, 'FOO.PA' to linux as 'foo.pa'.
-#
-# What about overwrites?
-# Pre-existing image files will be modified, not wiped.
-# Pre-existing files will be overwritten.
-# Consider warning of overwrites.
-# Consider forbidding overwrites unless -p (permit) option is set.
-#
-# Copyright © 2018 by Bill Cattey
+# Copyright © 2018 by Bill Cattey and Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -202,21 +155,105 @@ def append_copy(action_plan, mode, source, destination):
 # The parser may make an interpretation of file spec. contexts
 # that get synthesized into an OS/8 spec with "DSK:" as the device.
 #
-# Cases to handle:
-#
-# only 2 file specs, 1 OS/8, 1 Linux:
-#    Simplest.
-#    The first one seen is the source
-#    The second one is the destination.
-# only 2 file specs, No OS/8:
-#    Special Case
-#    Convert both to DSK: for an OS/8 to OS/8 transfer.
-# only 1 file spec, Syntax Error.
-# More than 2 specs:
-
 # regex for parsing an argument string into a sys device
 
-USAGE = """ Place Holder 
+USAGE = 'usage: ' + os.path.basename (__file__) + \
+""" [-dh] [-B boot-image] [-r,--rk rotating-disk] [-t,--dt,--td tape]
+    [[-abiyz] src-files]... [src-files] <dest>
+
+    This program boots an OS/8 environment underneath the SIMH PDP-8
+    simulator then tries to behave like the POSIX program we are named
+    after, either copying files from the POSIX (host) side into the
+    simulated OS/8 environment, copying files out of OS/8 to the POSIX
+    side, or copying filoes within the OS/8 world from one volume to
+    another.
+
+    The copying direction is determined by which file name arguments
+    have a colon in them:
+
+    *   copy-within: The source and destination file arguments have
+        colons, so copy within the OS/8 environment from one volume to
+        another.
+
+    *   copy-into: Only the dest argument has a colon, so assume the
+        source file names are POSIX-side and copy those files into the
+        simulated OS/8 environment.
+
+    *   copy-out: The dest argument has no colon but the source file
+        names do, so copy the named OS/8 files out of the simulation.
+
+    If none of the file arguments has a colon in it and you give exactly
+    two such arguments, we operate in a special case of copy-within
+    mode: the source and destination volumes are assumed to be DSK:, so
+    the file is simply copied within the OS/8 DSK: volume from one name
+    to the other.  If you give greater than two file name arguments
+    without a colon in any of them, it is not possible to make sense of
+    the command since we do not intend to try and replace your perfectly
+    good POSIX cp implementation, so it errors out.
+
+    If you give only one file name argument, the program always errors
+    out: it requires at least one source and one destination.
+
+    The -a, -b, -i, -y, and -z flags correspond to the OS/8 PIP options
+    /A, /B, /I, /Y, and /Z, which are passed to PIP as-is.  (This
+    priogram currently uses PIP as its primary handler for the OS/8 side
+    of the work.)  They must be followed by at least one source file
+    name, and they affect all subsequent source file names until another
+    such option is found.  For example:
+
+        $ os8-cp -a foo bar -b qux sys:
+
+    Files foo and bar are copied to SYS: in ASCII mode, overriding the
+    default binary mode, then binary mode is restored for the copy of
+    file qux to the SYS: volume.
+
+    Beware that -i means something very different to this program than
+    it means to POSIX cp: destination files will be unceremoniously
+    overwritten!
+
+    If -B is given, it overrides the default boot disk for the SIMH PDP-8
+    simulator, $prefix/shared/media/os8/os8v3d-patched.rk05.  The file
+    name's extension is used to determine which device to attach it to.
+
+    If -r or --rk is given, the named rotating disk image is attached to
+    the simulator on the first free disk controller.  Since the default
+    for -B attaches to RK0, the first --rk option given attaches to RK1
+    unless you give a non-RK05 disk image with -B.  The -r option is a
+    generic rotating disk image flag which will use the file extension
+    to determine the device type after we add --rf, --rx, etc.
+
+    Therefore, the following:
+
+        $ os8-cp -B foo.tu56 -r my.rk05 foo DSK:
+
+    ...will boot from foo.tu56, which is presumed to be a bootable OS/8
+    DECtape attached to DT0 with my.rk05 attached to RK0.  It will then
+    copy POSIX-side file foo to DSK:FOO which will probably be
+    interpreted as DTA0:FOO by typical configurations for a bootable
+    OS/8 DECtape.  Beware therefore of using the generic SYS: and DSK:
+    device names with -B when you are not certain of the BUILD
+    configuration for the boot media!
+
+    Destination OS/8 volumes are modified in place, rather than
+    recreated.  The volume must therefore exist before this program
+    runs.
+
+    When only a destination device, directory, or volume name is given,
+    file names are normalized when coping between POSIX and OS/8
+    systems.  File names are uppercased and truncated to 6.2 limits when
+    copying from POSIX to OS/8.  File names are lowercased on copying
+    from OS/8 to the POSIX side unless you give the *source* file name
+    in all-uppercase; then, file name case is preserved.  This behavior
+    is overridden if you give a complete file name for the destination:
+
+        $ os8-cp my-long-file-name.txt DSK:MLF.FD
+
+    If you gave "DSK:" as the destination instead, you would have gotten
+    "MY-LON.TX" as the desintation file name instead.
+
+    Give -d to run in debug mode.
+
+    Give -h to print this message.
 """
 
 _dev_arg_regex_str = "-(rk|td|tc|rx)(\d?)(s)?"
@@ -224,7 +261,7 @@ _dev_arg_re = re.compile(_dev_arg_regex_str)
 
 _os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "tc" : "DTA", "rx" : "RX"}
 
-def main():
+def main ():
   global DEBUG
   action_plan = {}
   action_plan["sys"] = None
