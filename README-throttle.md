@@ -5,7 +5,7 @@ the simulator's speed is set based on the number of CPU cores detected
 by the `tools/corecount` script.
 
 
-## Multi-Core Default
+## <a id="mcore"></a>Multi-Core Default
 
 If `corecount` detects a multi-core system, the default behavior is to
 not throttle the simulator at all, since there are only 2 threads in the
@@ -25,7 +25,7 @@ simulator running.
 You can force this behavior with `--throttle=none`.
 
 
-## Single-Core Default
+## <a id="score"></a>Single-Core Default
 
 If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
@@ -85,7 +85,7 @@ latter path, please send the patch to the mailing list so it can be
 integrated into the next release of the software.
 
 
-## Underclocking
+## <a id="under"></a>Underclocking
 
 There are many reasons to make the software run slower than it normally
 would.  You may achieve such ends by giving the `--throttle` option to
@@ -175,12 +175,14 @@ the `configure` script:
     feature to properly maintain its LED brightness values.
 
 
-## Throttle Stabilization
+## <a id="stabilization"></a>Throttle Stabilization
 
-In early January 2018, the [upstream SIMH v4 project][simh] changed the
-way throttling is handled in that the simulator doesn't make any
-decisions about whether your requested throttle value is plausible until
-some seconds after the simulator starts.
+After the 2017.12.22 release, the [upstream SIMH v4 project][simh]'s
+main developer [changed the way throttling is handled][si508], mostly
+for the better. The primary upshot of this change — from the perspective
+of this document's subject matter — is that the simulator doesn't make
+any decisions about whether your requested throttle value is plausible
+until some seconds after the simulator starts.
 
 The SIMH default for this is 20 seconds, since the default must work for
 all simulators in the SIMH family, some of which have long bootup
@@ -189,7 +191,13 @@ so we've overridden that in the stock `boot/*.script` files, setting the
 throttle calibration delay to 3 seconds in order to give the SIMH timing
 code a sufficiently long baseline to work from.
 
-For those first 3 seconds, the simulator runs *unthrottled*, after which
+If you have a prior installation of the PiDP-8/I software, your boot
+scripts will not have this change unless you have taken specific steps
+to achieve it, so you will be using the 20-second SIMH default! See
+"[Overwriting the Local Simulator Setup][olss]" in the top-level
+`README.md` file for your options here.
+
+For those first seconds, the simulator runs *unthrottled*, after which
 the SIMH core timing code looks at the number of instructions executed
 during that time and then determines from that what timing values it
 needs to use to achieve your requested throttle value. It also checks
@@ -208,10 +216,12 @@ long enough value for the system load to stabilize:
 That would override the 20-second stabilization time default to 15
 seconds.
 
-[simh]:  https://github.com/simh/simh/issues/508#issuecomment-359855788
+[olss]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md#overwrite-setup
+[simh]:  https://github.com/simh/simh/
+[si508]: https://github.com/simh/simh/issues/508
 
 
-## I/O Matters
+## <a id="io"></a>I/O Matters
 
 The throttle mechanism discussed above only affects the speed of the
 PDP-8 CPU simulator. It does not affect the speed of I/O operations.
@@ -232,7 +242,7 @@ hardware.
 
 ## License
 
-Copyright © 2017 by Warren Young. This document is licensed under
+Copyright © 2017-2018 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 [sl]:  https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
