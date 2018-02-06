@@ -177,8 +177,10 @@ the `configure` script:
 
 ## <a id="stabilization"></a>Throttle Stabilization
 
-In early January 2018, the [upstream SIMH v4 project][simh] changed the
-way throttling is handled in that the simulator doesn't make any
+After the 2017.12.22 release, the [upstream SIMH v4 project][simh]'s
+main developer [changed the way throttling is handled][si508], mostly
+for the better. The primary upshot of this change, from the perspective
+of this document's subject matter in that the simulator doesn't make any
 decisions about whether your requested throttle value is plausible until
 some seconds after the simulator starts.
 
@@ -214,8 +216,9 @@ long enough value for the system load to stabilize:
 That would override the 20-second stabilization time default to 15
 seconds.
 
-[olss]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#overwrite-setup
-[simh]: https://github.com/simh/simh/issues/508#issuecomment-359855788
+[olss]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md#overwrite-setup
+[simh]:  https://github.com/simh/simh/
+[si508]: https://github.com/simh/simh/issues/508
 
 
 ## <a id="io"></a>I/O Matters
