@@ -104,22 +104,18 @@ def append_copy(action_plan, mode, source, destination):
 #
 # Builds the action plan from the command line arguments and executes it
 #
-# An element of the "copy" array is itself an array
-# that names a file format, a source, and a destination.
-# [<format>, <source>, <destination>]
+# An element of the action_plan["copy"] array is itself an array
+# that names a file format, a source, and a destination:
 #
-# source and destination file specifications are as follows:
-# If it has a colon in it, it's an OS/8 spec with OS/8
-# device to the left of the colon, and filename to the right.
-# No colon means it's a Linux file spec.
+#    [<format>, <source>, <destination>]
 #
-# The parser may make an interpretation of file spec. contexts
-# that get synthesized into an OS/8 spec with "DSK:" as the device.
+# The source and destination file specifications are interpreted as in
+# the USAGE message below.  (Look for "colon".)
 #
 # regex for parsing an argument string into a sys device
 
 USAGE = 'usage: ' + os.path.basename (__file__) + \
-""" [-dh] [-B boot-image] [-r,--rk rotating-disk] [-t,--dt,--td tape]
+""" [-dh] [--rk,--rx[tag] rotating-disk] [--tc,--td[tag] tape]
     [[-abiyz] src-files]... [src-files] <dest>
 
     This program boots an OS/8 environment underneath the SIMH PDP-8
@@ -172,28 +168,45 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
     it means to POSIX cp: destination files will be unceremoniously
     overwritten!
 
-    If -B is given, it overrides the default boot disk for the SIMH PDP-8
-    simulator, $prefix/shared/media/os8/os8v3d-patched.rk05.  The file
-    name's extension is used to determine which device to attach it to.
+    If --rk or --rx is given, the named rotating disk image is attached
+    to the simulator on the first free disk controller if no digit
+    follows the letters, or to the specified controller otherwise.
 
-    If -r or --rk is given, the named rotating disk image is attached to
-    the simulator on the first free disk controller.  Since the default
-    for -B attaches to RK0, the first --rk option given attaches to RK1
-    unless you give a non-RK05 disk image with -B.  The -r option is a
-    generic rotating disk image flag which will use the file extension
-    to determine the device type after we add --rf, --rx, etc.
+    If an "s" is at the end of any of the above media image file option
+    names, that marks the "system disk", which overrides our default
+    boot media, $prefix/shared/media/os8/os8v3d-patched.rk05.
 
     Therefore, the following:
 
-        $ os8-cp -B foo.tu56 -r my.rk05 foo DSK:
+        $ os8-cp --rk my.rk05 foo RKA1:
 
-    ...will boot from foo.tu56, which is presumed to be a bootable OS/8
-    DECtape attached to DT0 with my.rk05 attached to RK0.  It will then
-    copy POSIX-side file foo to DSK:FOO which will probably be
-    interpreted as DTA0:FOO by typical configurations for a bootable
-    OS/8 DECtape.  Beware therefore of using the generic SYS: and DSK:
-    device names with -B when you are not certain of the BUILD
-    configuration for the boot media!
+    ...will boot from the default RK05 disk image attached to RK0 with
+    my.rk05 attached to RK1, then copy POSIX-side file foo to RKA1:FOO.
+
+        $ os8-cp --tds my.tu56 --rk my.rk05 foo DSK:
+
+    ...will boot from my.tu56, which is presumed to be a bootable OS/8
+    DECtape attached to SIMH device TD0.  The RK05 disk image my.rk05
+    will be attached to RK0, since the default boot disk is not attached
+    there in this example.  It will copy POSIX-side file foo to DSK:FOO
+    which will probably be interpreted as DTA0:FOO by the typical BUILD
+    options for a bootable OS/8 TU56 DECtape.  Beware therefore of using
+    the generic SYS: and DSK: device names!  You would be better advised
+    to use DTA0:, RKA0: or RKB0: as the destination in this example.
+
+        $ os8-cp --tds my.tu56 --rx1 my.rx01 foo RXA1:
+
+    This not only fixes the almost-certainly incorrect use of DSK: in
+    the prior example, it shows how a disk may be mounted on a device
+    other than the default by giving a digit after the device type in
+    the option name.  (That is, --rx1 instead of just --rx, which would
+    be the same as --rx0 in this example.)
+
+    The --tc and --td options are handled similarly to the --r* options,
+    differing only in whether we use the SIMH DT or TD PDP-8 devices,
+    which correspond to the TC08 or TD8E DECtape controllers.  Which one
+    you give depends on the device support built into the OS/8 media
+    you've booted from.
 
     Destination OS/8 volumes are modified in place, rather than
     recreated.  The volume must therefore exist before this program
