@@ -326,7 +326,7 @@ MF
 function do_finish() {
     set -x
 
-    rmtrash $img
+    trash $img
     cd $dldir/..
     make synch
 }
