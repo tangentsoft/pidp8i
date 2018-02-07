@@ -70,11 +70,18 @@ _dev_actfile_regex_str = _dev_arg_regex_str[1:]   # strip -
 _dev_actfile_re = re.compile (_dev_actfile_regex_str)
 
 _os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "dt" : "DTA", "rx" : "RX"}
+_os8_partitions = {"RK": ["A", "B"]}
 
 _os8_file_regex_str = "(\S+):(\S+)?"
 _os8_file_re = re.compile(_os8_file_regex_str)
 
 _valid_options = "abiyz"
+
+_arg_to_option = {"-a" : "a", "-b" : "b", "-i" : "i", "-y" : "y", "-z" : "z" }
+_option_to_info = {"a" : "ASCII", "b" : "binary", "i" : "image",
+                    "y" : "yank system head", "z" : "zero device" }
+  
+
 
 
 #### UTILITY ROUTINES ##################################################
@@ -372,10 +379,6 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
 def parse_args ():
   global DEBUG
 
-  arg_to_option = {"-a" : "a", "-b" : "b", "-i" : "i", "-y" : "y", "-z" : "z" }
-  option_to_info = {"a" : "ASCII", "b" : "binary", "i" : "image",
-                    "y" : "yank system head", "z" : "zero device" }
-  
   action_plan = {}
   action_plan["sys"] = None
   action_plan["mount"] = []
@@ -404,8 +407,8 @@ def parse_args ():
       sys.exit(0)
 
     # look for option args.
-    elif arg in arg_to_option:
-      new_opt = arg_to_option[arg]
+    elif arg in _arg_to_option:
+      new_opt = _arg_to_option[arg]
       if mode_opt == new_opt:
         print "Warning redundant reset of mode option to " + \
           option_to_info[new_opt]
@@ -515,43 +518,6 @@ def main ():
     prog_abort ("No action plan was parsed.")
   if DEBUG: print str(action_plan)
 
-
-  
-  """  
-  print "Filename: " + args.image
-  if args.t:
-    sdev = "dt0"
-    os8dev = "DTA0:"
-    baddev = "a DECtape"
-    good_suffix = ".tu56"
-    bad_suffix = ".rk05"
-    stat_str = "DECtape"
-
-  if args.ra:
-    sdev = "rk1"
-    os8dev = "RKA1:"
-    good_suffix = ".rk05"
-    bad_suffix = ".tu56"
-    baddev = "an RK05 Disk"
-    stat_str = "partition A of"
-    
-  if args.rb:
-    sdev = "rk1"
-    os8dev = "RKB1:"
-    good_suffix = ".rk05"
-    bad_suffix = ".tu56"
-    baddev = "an RK05 Disk"
-    stat_str = "partition B of"
-  
-  if args.image.endswith(good_suffix):
-    imagename = args.image
-  else:
-    if args.image.endswith(bad_suffix):
-      print "Fatal error: Don't treat a file ending in " + bad_suffix + " as " + baddev
-      sys.exit(-1)
-    imagename = args.image + good_suffix
-    print "appending " + good_suffix + " to image filename."
-  
   # Create the SIMH child instance and tell it where to send log output
   try:
     s = simh (dirs.build, True)
@@ -560,44 +526,64 @@ def main ():
     exit (1)
   s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
 
-  # Attach the image to the simulator
-  if os.path.exists (imagename):
-    needs_zero = False
-    print "Modifying existing " + stat_str + " image " + imagename
-  else:
-    print "Will create a new image file named: " + imagename
-    needs_zero = True
-    
-  s.send_cmd ("att " + sdev + " " + imagename)
+  # Perform sys attach
+  att_spec = action_plan["sys"]
+  simh_boot_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
+  imagename = att_spec[2]
+  if not os.path.exists (imagename):
+    abort_prog ("Requested boot image file: " + imagename + " not found.")
+  
+  s.send_cmd ("att " + simh_boot_dev + " " + imagename)
 
-  # Find and boot the bootable OS/8 disk.  Use the "patched" version
-  # because that is what "make run" uses; we use that command to
-  # inspect this script's work.
-  rk = os.path.join (dirs.os8mo, 'os8v3d-patched.rk05')
-  if not os.path.isfile (rk):
-    print "Could not find " + rk + "; OS/8 media not yet built?"
-    exit (1)
-  print "Booting " + rk + "..."
-  s.send_cmd ("att rk0 " + rk)
-  s.send_cmd ("boot rk0")
+  images_to_zero = []
+  
+  # Attach other mounts
+  for att_spec in action_plan["mount"]:
+    simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
+    imagename = att_spec[2]
+    if os.path.exists (imagename):
+      print "Modifying existing " + stat_str + " image " + imagename
+    else:
+      print "Will create a new image file named: " + imagename
+      # Save this att_spec so we can zero it later.
+      images_to_zero.append (att_spec)
+      s.send_cmd ("att " + simh_dev + " " + imagename)
 
-  if needs_zero: 
-    print "New image getting initialized directory with ZERO command."
-    s.os8_send_cmd ('\\.', "ZERO " + os8dev)
+  print "Booting " + simh_boot_dev + "..."
+  s.send_cmd ("boot " + simh_boot_dev)
 
-  option = ""
+  for att_spec in images_to_zero:
+    os8dev = _os8_from_simh_dev[att_spec[0]]
+    if os8dev in _os8_subunits:
+      for partition in _os8_subunits[os8dev]:
+        os8name = os8dev + partition + att_spec[1] + ":"
+        print "Initializing directory of " + os8name + " in " + imagename
+        s.os8_send_cmd ('\\.', "ZERO " + os8name)
+    else:
+      os8name = os8dev + att_spec[1] + ":"
+      print "Initializing directory of " + os8name + " in " + imagename
+      s.os8_send_cmd ('\\.', "ZERO " + os8name)
 
-  if debug: print "Performing ouputs:" 
-  if args.o != None:
-    for oname in args.o:
-      fetch_one(s, os8dev, oname)
-    
-        
+  # Perform copy operations
+  for do_copy in action_plan["copy"]:
+    mode_opt = do_copy[0]
+    source = do_copy[1]
+    destination = do_copy[2]
+    # Is this "from" OS/8 to POSIX, "to" OS/8 from POSIX or "on" OS/8?
+    # "to" -- Attach source to simh ptr
+    # If we are operating "from" and source has wild cards,
+    # Use DIRECT to create list of files.
+    # "from" -- Attach destination to ptp
+    # "on" -- Use FOTP.
  
-  # Exit simulator nicely so that image detaches cleanly
+  # Detach all mounts and then sys.
   s.back_to_cmd ('\\.')
-  s.send_cmd ("det " + sdev)
+  for att_spec in action_plan["mount"]:
+    simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
+    s.send_cmd ("det " + simh_dev)
+  s.send_cmd ("det " + simh_boot_dev)
+
+  # And shut down the simulator.
   s.send_cmd ('quit')
-  """
 
 if __name__ == "__main__": main()
