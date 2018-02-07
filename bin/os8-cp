@@ -371,6 +371,11 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
 
 def parse_args ():
   global DEBUG
+
+  arg_to_option = {"-a" : "a", "-b" : "b", "-i" : "i", "-y" : "y", "-z" : "z" }
+  option_to_info = {"a" : "ASCII", "b" : "binary", "i" : "image",
+                    "y" : "yank system head", "z" : "zero device" }
+  
   action_plan = {}
   action_plan["sys"] = None
   action_plan["mount"] = []
@@ -397,26 +402,14 @@ def parse_args ():
     elif arg == "-h":
       print USAGE
       sys.exit(0)
-    elif arg == "-b":
-      if mode_opt == "b":
-        print "Warning redundant reset of mode option to binary."
-      mode_opt = "b"
-    elif arg == "-a":
-      if mode_opt == "a":
-        print "Warning redundant reset of mode option to ASCII."
-      mode_opt = "a"
-    elif arg == "-i":
-      if mode_opt == "i":
-        print "Warning redundant reset of mode option to image."
-      mode_opt = "b"
-    elif arg == "-y":
-      if mode_opt == "y":
-        print "Warning redundant reset of mode option to Yank system head."
-      mode_opt = "y"
-    elif arg == "-z":
-      if mode_opt == "z":
-        print "Warning redundant reset of mode option to Zero directory."
-      mode_opt = "z"
+
+    # look for option args.
+    elif arg in arg_to_option:
+      new_opt = arg_to_option[arg]
+      if mode_opt == new_opt:
+        print "Warning redundant reset of mode option to " + \
+          option_to_info[new_opt]
+        mode_opt = new_opt
 
     # Not a simple bit set option.
     
