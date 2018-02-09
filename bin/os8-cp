@@ -411,8 +411,8 @@ def parse_args ():
       new_opt = _arg_to_option[arg]
       if mode_opt == new_opt:
         print "Warning redundant reset of mode option to " + \
-          option_to_info[new_opt]
-        mode_opt = new_opt
+          _option_to_info[new_opt]
+      mode_opt = new_opt
 
     # Not a simple bit set option.
     
@@ -542,7 +542,7 @@ def main ():
     simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
     imagename = att_spec[2]
     if os.path.exists (imagename):
-      print "Modifying existing " + stat_str + " image " + imagename
+      print "Modifying existing " + simh_dev + " image " + imagename
     else:
       print "Will create a new image file named: " + imagename
       # Save this att_spec so we can zero it later.
@@ -554,7 +554,7 @@ def main ():
 
   for att_spec in images_to_zero:
     os8dev = _os8_from_simh_dev[att_spec[0]]
-    if os8dev in _os8_subunits:
+    if os8dev in _os8_partitions:
       for partition in _os8_subunits[os8dev]:
         os8name = os8dev + partition + att_spec[1] + ":"
         print "Initializing directory of " + os8name + " in " + imagename
@@ -569,6 +569,8 @@ def main ():
     mode_opt = do_copy[0]
     source = do_copy[1]
     destination = do_copy[2]
+
+    if DEBUG: print "Source: " + source + ", Destination: " + destination + ", Mode: " + mode_opt + "."
     # Is this "from" OS/8 to POSIX, "to" OS/8 from POSIX or "on" OS/8?
     # "to" -- Attach source to simh ptr
     # If we are operating "from" and source has wild cards,
