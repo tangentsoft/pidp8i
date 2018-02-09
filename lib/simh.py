@@ -39,6 +39,7 @@ import pkg_resources
 import subprocess
 import tempfile
 import time
+import re
 
 import pidp8i
 
@@ -102,6 +103,9 @@ class simh:
     # Start the simulator instance
     self._child = pexpect.spawn(basedir + '/bin/pidp8i-sim')
     self._valid_pip_options = ["/A", "/B", "/I"]
+    self._os8_file_regex_str = "(\S+):(\S+)?"
+    self._os8_file_re = re.compile(self._os8_file_regex_str)
+
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
@@ -200,6 +204,20 @@ class simh:
     self._child.sendcontrol (char[0].lower ())
 
 
+  #### mk_os8_name # ###################################################
+  # Create an OS/8 filename: of the form XXXXXX.YY
+  # From a POSIX path.
+  def mk_os8_name(self, dev, path):
+    bns = os.path.basename (path)
+    bns = re.sub("-|:|\(|\)|!", "", bns)
+    bns = bns.upper()
+    if "." not in bns:
+      return dev + bns[:min(6, len(bns))]
+    else:
+      dot = bns.index('.')
+      return dev + bns[:min(6, dot, len(bns))] + "." + bns[dot+1: dot+3]
+    
+
   #### os8_send_file ###################################################
   # Send a copy of a local text file to OS/8.  The local path may
   # contain directory components, but the remote must not, of course.
@@ -249,9 +267,6 @@ class simh:
   #### os8_send_pip ###################################################
   # Send a copy of a local file to OS/8 using PIP.
   #
-  # The OS/8 destination filename is synthesized from the basename of the path,
-  # upcasing if necessary.
-  #
   # The file is sent via the SIMH paper tape device through PIP
   # specifying a transfer option.  If no option is specified,
   # ASCII is assumed.
@@ -265,15 +280,21 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_send_pip (self, dev, path, option = None):
-    # Create path and file names not given
-    bns = os.path.basename (path)
-    dest = dev + bns.upper ()
+  def os8_send_pip (self, path, os8name, option = None):
+    # If os8name is just a device, synthesize an upcased name from
+    # the POSIX file basename.
+    print 
+    m = re.match(self._os8_file_re, os8name)
+    print m.group(2)
+    if m != None and (m.group(2) == None or m.group(2) == ""):
+        dest = self.mk_os8_name(os8name, path)
+    else:
+        dest = os8name
 
     if option == "" or option == "/A":
-      # Convert text file to SIMH paper tape format
+      # Convert text file to SIMH paper tape format in current dir of path.
       bdir = pidp8i.dirs.build
-      pt   = os.path.join (bdir, 'obj', bns + '.pt')
+      pt   = path + ".pt_temp"
       tool = os.path.join (bdir, 'bin', 'txt2ptp')
       subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
     elif option not in self._valid_pip_options:
@@ -292,11 +313,19 @@ class simh:
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
     self.os8_send_cmd ('\\*', dest + '<PTR:' + option)
-    # Device full detection goes here.
-    self._child.expect ('\\^')
+    # Error detection goes here.
+    pip_replies = ['\\^', ".+DIRECTORY I/O ERROR", "ILLEGAL SYNTAX"]
+    reply = self._child.expect (pip_replies)
+    print "reply: " + str(reply)
+    if reply !=0:
+      print "Error from PIP"
+      return
     self.os8_send_ctrl ('[')      # finish transfer
     self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
+    # We could detach ptr and restart OS/8 here, but we don't need to.
+    # Do remove the temp file we created.
+    os.remove (pt)
 
   #### os8_fetch_pip ###################################################
   # Fetch a file from OS/8 to a local path using PIP.
@@ -314,7 +343,7 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_fetch_pip (self, dev, path, option = None):
+  def os8_fetch_pip (self, path, os8name, option = None):
     # Create path and file names not given
     bns = os.path.basename (path)
     source = bns.upper ()

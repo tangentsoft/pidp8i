@@ -80,6 +80,7 @@ _valid_options = "abiyz"
 _arg_to_option = {"-a" : "a", "-b" : "b", "-i" : "i", "-y" : "y", "-z" : "z" }
 _option_to_info = {"a" : "ASCII", "b" : "binary", "i" : "image",
                     "y" : "yank system head", "z" : "zero device" }
+_option_to_pip = {"a" : "/A", "b" : "/B", "i" : "/I", "y" : "/Y", "z" : "/Z" }
   
 
 
@@ -192,7 +193,7 @@ def parse_action_file(fname):
     if option == "att":
       m = re.match(_dev_actfile_re, source)
       if m== None:
-        prog_abort ("Could not parse attach spec: " + source)
+        abort_prog ("Could not parse attach spec: " + source)
       parse_attach (action_plan, m, destination)
     else:
       if len(option) != 1:
@@ -227,20 +228,33 @@ def has_os8_wildcards (filename):
     if char in filename: return True
   return False
 
+#### append_copy ##############################################################
+#
+# Append a copy control array to the action_plan
+#
+# 
+
 def append_copy(action_plan, mode, source, destination):
+  copy_type = ""
   if ":" in source:
+    copy_type = "from"
     if "/" in source:
-      print "Illegal OS/8 file spec containing a slash:" + source
-      sys.exit(-1)
+      abort_prog ("Illegal OS/8 file spec containing a slash:" + source)
     source = source.upper()
 
   if ": in destination":
+    if copy_type == "from":
+      copy_type = "on"
+    else:
+      copy_type = "to"
     if "/" in destination:
       print "Illegal OS/8 file spec containing a slash:" + destination
       sys.exit(-1)
     destination = destination.upper()
     
-  copyspec = [mode, source, destination]
+    if copy_type == "":
+      abort_prog ("No OS/8 file spec found with source: " + source + ", destination: " + destination)
+  copyspec = [mode, source, destination, copy_type]
   action_plan["copy"].append (copyspec)
   
 
@@ -252,9 +266,14 @@ def append_copy(action_plan, mode, source, destination):
 # contents of that file REPLACE any command line arguments.
 #
 # An element of the action_plan["copy"] array is itself an array
-# that names a file format, a source, and a destination:
+# that names a file format, a source, a destination, and operation type.
 #
-#    [<format>, <source>, <destination>]
+#    [<format>, <source>, <destination>, <type>]
+#
+# type is one of:
+#      "from" if we are transferring *from* OS/8 to POSIX
+#      "to"   if we are transferring *to* OS/8 to POSIX
+#      "on"   if we are transferring files within -- *on* OS/8
 #
 # The source and destination file specifications are interpreted as in
 # the USAGE message below.  (Look for "colon".)
@@ -396,7 +415,6 @@ def parse_args ():
   file_and_mode_list = []
   
   while idx < numargs:
-    if DEBUG: print "idx: " + str(idx)
     arg = sys.argv[idx]
 
     # First the simple bit set options
@@ -468,8 +486,6 @@ def parse_args ():
             destination = arg
           filespec_seen += 1
 
-    if DEBUG: print "filespec_seen: " + str(filespec_seen)
-
     idx +=1        # Bottom of the while loop. Increment.
 
   if filespec_seen == 0:
@@ -515,7 +531,7 @@ def main ():
 
   action_plan = parse_args()
   if action_plan == None:
-    prog_abort ("No action plan was parsed.")
+    abort_prog ("No action plan was parsed.")
   if DEBUG: print str(action_plan)
 
   # Create the SIMH child instance and tell it where to send log output
@@ -524,7 +540,8 @@ def main ():
   except (RuntimeError) as e:
     print "Could not start simulator: " + e.message + '!'
     exit (1)
-  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+  # s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+  s.set_logfile (open ("logfile.txt", 'w'))
 
   # Perform sys attach
   att_spec = action_plan["sys"]
@@ -547,7 +564,7 @@ def main ():
       print "Will create a new image file named: " + imagename
       # Save this att_spec so we can zero it later.
       images_to_zero.append (att_spec)
-      s.send_cmd ("att " + simh_dev + " " + imagename)
+    s.send_cmd ("att " + simh_dev + " " + imagename)
 
   print "Booting " + simh_boot_dev + "..."
   s.send_cmd ("boot " + simh_boot_dev)
@@ -569,6 +586,11 @@ def main ():
     mode_opt = do_copy[0]
     source = do_copy[1]
     destination = do_copy[2]
+    copy_type = do_copy[3]
+    if mode_opt in _option_to_pip:
+      pip_option = _option_to_pip[mode_opt]
+    else:
+      abort_prog ("Unrecognized mode option: " + mode_opt)
 
     if DEBUG: print "Source: " + source + ", Destination: " + destination + ", Mode: " + mode_opt + "."
     # Is this "from" OS/8 to POSIX, "to" OS/8 from POSIX or "on" OS/8?
@@ -577,7 +599,20 @@ def main ():
     # Use DIRECT to create list of files.
     # "from" -- Attach destination to ptp
     # "on" -- Use FOTP.
- 
+    
+    if copy_type == "to":
+      s.os8_send_pip(source, destination, pip_option)
+    elif copy_type == "from":
+      if has_os8_wildcards(source):
+        # Use OS/8 Direct to enumerate our input files.
+        sys.exit(0)
+      else:
+        s.os8_fetch_pip(source, destination, pip_option)
+    elif copy_type == "on":
+      sys.exit(0)
+    else:
+      abort_prog ("Unrecognized copy type: " + copy_type)  # Should never happen.
+      
   # Detach all mounts and then sys.
   s.back_to_cmd ('\\.')
   for att_spec in action_plan["mount"]:
