@@ -105,6 +105,18 @@ class simh:
     self._valid_pip_options = ["/A", "/B", "/I"]
     self._os8_file_regex_str = "(\S+):(\S+)?"
     self._os8_file_re = re.compile(self._os8_file_regex_str)
+    self._os8_error_match_strings = []
+    self._os8_fatal_check = []
+
+    # Parse our OS/8 Errors table into actionable chunks
+    for error_spec in self._os8_errors:
+      self._os8_error_match_strings.append(error_spec[0])
+      self._os8_fatal_check.append(error_spec[1])
+
+    self._pip_send_replies = ['\\^']
+    self._pip_send_replies.extend(self._os8_error_match_strings)
+    self._pip_fetch_replies = ['\\*']
+    self._pip_fetch_replies.extend(self._os8_error_match_strings)
 
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
@@ -216,8 +228,69 @@ class simh:
     else:
       dot = bns.index('.')
       return dev + bns[:min(6, dot, len(bns))] + "." + bns[dot+1: dot+3]
-    
 
+  #### os8_error_handler ###############################################
+  #
+  # Elaborate handler for errors returned by OS/8
+  #
+  # Issue: Some errors keep us in the running program, and some
+  # return us to the Keyboard monitor.
+  # We need to account for this.
+  #
+  # We create everything we need to know in the _os8_errors table:
+  # fatal = True if the program exits to the monitor.
+  # [<expect match string>, <fatal>]
+  
+  _os8_errors = [
+    # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
+    ["MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
+    ["MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["name NOT AVAILABLE", False],
+    ["name NOT FOUND", False],
+    # OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
+    ["ILLEGAL SYNTAX", False],
+    ["(\S+) DOES NOT EXIST", False],
+    ["(\S+) NOT FOUND", False],
+    ["TOO MANY FILES", False],
+    # OS/8 Handbook 1974 page 1-75/113 CCL Error Messages
+    ["BAD DEVICE", False],
+    ["BAD EXTENSION", False],
+    # OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
+    ["ARE YOU SURE", False],
+    ["BAD DIRECTORY ON DEVICE #\s?\d+", False],
+    ["BAD SYSTEM HEAD", False],
+    ["CAN'T OPEN OUTPUT FILE", False],
+    ["DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
+    ["DIRECTORY ERROR", False],
+    ["ERROR DELETING FILE", False],
+    ["ILLEGIAL BINARY INPUT, FILE #\d+", False],
+    ["INPUT ERROR, FILE #\s?\d+", False],
+    ["IO ERROR IN \\(file name\\) --CONTINUING", False],
+    ["NO ROOM FOR OUTPUT FILE", False],
+    ["NO ROOM IN \\(file name\\) --CONTINUING", False],
+    ["OUTPUT ERROR", False],
+    ["PREMATURE END OF FILE, FILE #\s?\d+", False],
+    ["ZERO SYS?", False],
+    # OS/8 Handbook 1974 page 2-81/244: DIRECT Error Messages
+    ["BAD INPUT DIRECTORY", False],
+    ["DEVICE DOES NOT HAVE A DIRECTORY", False],
+    ["ERROR CLOSING FILE", False],
+    ["ERROR CLOSING FILE", False],
+    ["ERROR READING INPUT DIRECTORY", False],
+    ["ILLEGAL \\*", False],
+    # OS/8 Handbook 1974 page: 2-109/272: FOTP Error Messages
+    ["ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR READING INPUT DIRECTORY", False],
+    ["ERROR READING OUTPUT DIRECTORY", False],
+    ["ILLEGAL \\?", False],
+    ["NO FILES OF THE FORM (\S+)", False],
+    ["NO ROOM, SKIPPING \\((\S+)\\)", False],
+    ["SYSTEM ERROR-CLOSING FILE", False],
+    ["USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
+    ]
+  
   #### os8_send_file ###################################################
   # Send a copy of a local text file to OS/8.  The local path may
   # contain directory components, but the remote must not, of course.
@@ -263,7 +336,22 @@ class simh:
     self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
 
+  #### pip_error_handler ###############################################
+  #
+  # Common error handler for pip send and fetch
+  #
 
+  def pip_error_handler(self, caller, reply):
+    print "Error from PIP " + caller + ": "
+    print "\t" + self._child.before.strip()
+    print "\t" + self._child.after.strip()
+    
+    # Was this error fatal or do we need to clean up?
+    # Remember we subtract 1 from reply to get index into error tables.
+    if not self._os8_fatal_check[reply - 1]:
+      # Non fatal error.  Exit pip to the monitor
+      self.os8_send_ctrl ('[')      # exit PIP
+    
   #### os8_send_pip ###################################################
   # Send a copy of a local file to OS/8 using PIP.
   #
@@ -283,7 +371,9 @@ class simh:
   def os8_send_pip (self, path, os8name, option = None):
     # If os8name is just a device, synthesize an upcased name from
     # the POSIX file basename.
-    print 
+    if not os.path.exists(path):
+      print path + " not found. Skipping."
+      return
     m = re.match(self._os8_file_re, os8name)
     print m.group(2)
     if m != None and (m.group(2) == None or m.group(2) == ""):
@@ -291,12 +381,15 @@ class simh:
     else:
         dest = os8name
 
+    did_conversion = False
     if option == "" or option == "/A":
       # Convert text file to SIMH paper tape format in current dir of path.
+      print "Format converting " + path
       bdir = pidp8i.dirs.build
       pt   = path + ".pt_temp"
       tool = os.path.join (bdir, 'bin', 'txt2ptp')
       subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
+      did_conversion = True
     elif option not in self._valid_pip_options:
       print "Invalid PIP option: " + option + ". Ignoring send of: " + path
       return
@@ -314,18 +407,21 @@ class simh:
     self.os8_send_cmd ('\\.', 'R PIP')
     self.os8_send_cmd ('\\*', dest + '<PTR:' + option)
     # Error detection goes here.
-    pip_replies = ['\\^', ".+DIRECTORY I/O ERROR", "ILLEGAL SYNTAX"]
-    reply = self._child.expect (pip_replies)
+    pip_replies = ['\\^', "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)"]
+    reply = self._child.expect (self._pip_send_replies)
     print "reply: " + str(reply)
     if reply !=0:
-      print "Error from PIP"
+      self.pip_error_handler("send", reply)
+      if did_conversion:
+        os.remove(pt)
       return
     self.os8_send_ctrl ('[')      # finish transfer
     self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
     # We could detach ptr and restart OS/8 here, but we don't need to.
-    # Do remove the temp file we created.
-    os.remove (pt)
+    # Do remove the temp file if we created one.
+    if did_conversion:
+      os.remove (pt)
 
   #### os8_fetch_pip ###################################################
   # Fetch a file from OS/8 to a local path using PIP.
@@ -361,18 +457,16 @@ class simh:
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
     self.os8_send_cmd ('\\*', 'PTP:<' + os8name + option)
-    err_str = os8name + " NOT FOUND"
-    index = self._child.expect ([err_str, '\\*'])
+
+    reply = self._child.expect (self._pip_fetch_replies)
+    if reply !=0:
+      self.pip_error_handler ("fetch", reply)
+      return
+
     self.os8_send_ctrl ('[')      # exit PIP
     self.back_to_cmd ('\\.')
     self.send_cmd ('detach ptp')  # Clean flush of buffers.
     self.os8_restart ()
-
-    if index == 0:                # transfer failed. Remove empty file.
-      print "Transfer failed: " + err_str
-      print "Error from PIP: before: " + self._child.before + ", after: " + self._child.after
-      os.remove (path)
-      return                        # and return.
 
     if option == "" or option == "/A":
       print "Format converting " + path
