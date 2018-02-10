@@ -87,18 +87,6 @@ _option_to_pip = {"a" : "/A", "b" : "/B", "i" : "/I", "y" : "/Y", "z" : "/Z" }
 
 #### UTILITY ROUTINES ##################################################
 
-def fetch_one (s, os8dev, oname):
-  if debug: print "\t" + oname
-  fname, option = extract_option(oname)
-  if debug: print "Option: " + option + ", fname: " + fname
-  s.os8_fetch_pip(os8dev, fname, option)
-
-def send_one (s, os8dev, iname):
-  if debug: print "\t" + iname
-  fname, option = extract_option(iname)
-  if debug: print "Option: " + option + ", fname: " + fname
-  s.os8_send_pip(os8dev, fname, option)
-
 #### abort_prog ########################################################
 #
 # Print err_string and exit with -1 return status.
@@ -205,7 +193,7 @@ def parse_action_file(fname):
       elif destination == None:
         print "Null value of destination. Ignoring line: " + ioline
       else:
-        action_plan["copy"].append([option, source, destination])
+        append_copy(action_plan, option, source, destination)
 
   return action_plan
 
@@ -592,7 +580,7 @@ def main ():
   for att_spec in images_to_zero:
     os8dev = _os8_from_simh_dev[att_spec[0]]
     if os8dev in _os8_partitions:
-      for partition in _os8_subunits[os8dev]:
+      for partition in _os8_partitions[os8dev]:
         os8name = os8dev + partition + att_spec[1] + ":"
         print "Initializing directory of " + os8name + " in " + imagename
         s.os8_send_cmd ('\\.', "ZERO " + os8name)
@@ -617,8 +605,8 @@ def main ():
     # "to" -- Attach source to simh ptr
     # If we are operating "from" and source has wild cards,
     # Use DIRECT to create list of files.
-    # "from" -- Attach destination to ptp
-    # "on" -- Use FOTP.
+    # "from" -- Attach destination to ptp. We've already done POSIX globing.
+    # "on" -- Use COPY.
     
     if copy_type == "to":
       s.os8_send_pip(source, destination, pip_option)
@@ -641,7 +629,7 @@ def main ():
       else:
         s.os8_fetch_pip(source, destination, pip_option)
     elif copy_type == "on":
-      sys.exit(0)
+      s.os8_send_cmd ('\\.', "COPY " + destination + "< " + source)
     else:
       abort_prog ("Unrecognized copy type: " + copy_type)  # Should never happen.
       
