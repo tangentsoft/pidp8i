@@ -343,10 +343,14 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_fetch_pip (self, path, os8name, option = None):
-    # Create path and file names not given
-    bns = os.path.basename (path)
-    source = bns.upper ()
+  def os8_fetch_pip (self, os8name, path, option = None):
+    # If path is not a file, use the name portion of os8name.
+    if os.path.isdir(path):
+      colon = os8name.index(':')
+      if colon == -1:                # No dev, just a name.
+        path = path + "/" + os8name
+      else:
+        path = path + "/" + os8name[colon+1:]
 
     if option != "" and option not in self._valid_pip_options:
       print "Invalid PIP option: " + option + ". Ignoring fetch of: " + path
@@ -356,8 +360,8 @@ class simh:
     self.send_cmd ('attach ptp ' + path)
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
-    self.os8_send_cmd ('\\*', 'PTP:<' + dev + source + option)
-    err_str = dev + source + " NOT FOUND"
+    self.os8_send_cmd ('\\*', 'PTP:<' + os8name + option)
+    err_str = os8name + " NOT FOUND"
     index = self._child.expect ([err_str, '\\*'])
     self.os8_send_ctrl ('[')      # exit PIP
     self.back_to_cmd ('\\.')
@@ -366,6 +370,7 @@ class simh:
 
     if index == 0:                # transfer failed. Remove empty file.
       print "Transfer failed: " + err_str
+      print "Error from PIP: before: " + self._child.before + ", after: " + self._child.after
       os.remove (path)
       return                        # and return.
 

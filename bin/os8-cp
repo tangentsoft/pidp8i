@@ -228,6 +228,18 @@ def has_os8_wildcards (filename):
     if char in filename: return True
   return False
 
+def file_list_from_expect(before):
+  file_list = []
+  lines = before.split("\r")
+  for line in lines[1:]:    # First line is our command. Skip it.
+    line = line.strip()
+    if line == "": continue
+    m = re.match("(\S+)\s*.(\S+)", line)
+    if m == None: continue
+    fname = m.group(1) + "." + m.group(2)
+    file_list.append(fname)
+  return file_list
+
 #### append_copy ##############################################################
 #
 # Append a copy control array to the action_plan
@@ -239,21 +251,21 @@ def append_copy(action_plan, mode, source, destination):
   if ":" in source:
     copy_type = "from"
     if "/" in source:
-      abort_prog ("Illegal OS/8 file spec containing a slash:" + source)
+      abort_prog ("append_copy, from: Illegal OS/8 file spec containing a slash:" + source)
     source = source.upper()
 
-  if ": in destination":
+  if ":" in destination:
     if copy_type == "from":
       copy_type = "on"
     else:
       copy_type = "to"
     if "/" in destination:
-      print "Illegal OS/8 file spec containing a slash:" + destination
+      print "append_copy, to: Illegal OS/8 file spec containing a slash:" + destination
       sys.exit(-1)
     destination = destination.upper()
     
     if copy_type == "":
-      abort_prog ("No OS/8 file spec found with source: " + source + ", destination: " + destination)
+      abort_prog ("append_copy: No OS/8 file spec found with source: " + source + ", destination: " + destination)
   copyspec = [mode, source, destination, copy_type]
   action_plan["copy"].append (copyspec)
   
@@ -461,17 +473,22 @@ def parse_args ():
         # If you want OS/8 globbing, specify a device to prevent globbing
         # from being run.
         m = re.match(_os8_file_re, arg)
-        if m == None:          # Yup, it's linux.  Glob it.
+        if m == None:          # Yup, it's POSIX.  Glob it.
+          if DEBUG: print arg + " is POSIX."
           more_files = glob.glob(arg)
           if more_files == []:
+            if DEBUG: print "No more files in POSIX Glob. Our file is: " + arg
             more_files.append(arg)  # If file not found may be an OS/8 internal xfer.
           for new_file in more_files:
             if filespec_seen == 0:
               source = new_file
               first_mode = mode_opt
+              if DEBUG: print "Globber: Setting initial source: " + source + " and mode: " + first_mode
             elif filespec_seen == 1:
+              if DEBUG: print "Globber: Setting initial destination: " + destination
               destination = new_file  
             else:
+              if DEBUG: "Globber: Appending destination to list. New file is: " + new_file
               file_and_mode_list.append([mode_opt,destination])
               destination = new_file
             filespec_seen += 1
@@ -479,11 +496,14 @@ def parse_args ():
           if filespec_seen == 0:
             source = arg
             first_mode = mode_opt
+            if DEBUG: print "Setting initial source: " + source + " and mode: " + first_mode
           elif filespec_seen == 1:
             destination = arg
+            if DEBUG: print "Setting initial destination: " + destination
           else:
             file_and_mode_list.append([mode_opt, destination])
             destination = arg
+            if DEBUG: "Appending destination to list. New file is: " + new_file
           filespec_seen += 1
 
     idx +=1        # Bottom of the while loop. Increment.
@@ -604,8 +624,20 @@ def main ():
       s.os8_send_pip(source, destination, pip_option)
     elif copy_type == "from":
       if has_os8_wildcards(source):
+        # Split off device from source:
+        os8dev = source[0:source.index(":")+1]
+        if DEBUG: print "Wild card dev: " + os8dev
         # Use OS/8 Direct to enumerate our input files.
-        sys.exit(0)
+        if DEBUG: print "Calling OS/8 DIRECT on wild card filespec: " + source
+        s.os8_send_cmd ('\\.', "DIR " + source + "/F=1")
+        # Now harvest direct output.  One file per line.  Ignore blank lines.
+        # Maybe parse the FREE BLOCKS Output.
+        # Done when we see a dot.
+        s._child.expect("\d+\s+FREE BLOCKS")
+        files = file_list_from_expect(s._child.before)
+        for filename in files:
+          if DEBUG: print "Call PIP on: " + os8dev + filename
+          s.os8_fetch_pip(os8dev + filename, destination, pip_option)
       else:
         s.os8_fetch_pip(source, destination, pip_option)
     elif copy_type == "on":
