@@ -95,21 +95,16 @@ _option_to_pip = dict(zip(
 ))
 
 
-#### UTILITY ROUTINES ##################################################
-
 #### abort_prog ########################################################
-#
 # Print err_string and exit with -1 return status.
-#
 
 def abort_prog (err_str):
   print "Abort: " + err_str
   sys.exit(-1)
 
-#### parse_attach #####################################################
-#
+
+#### parse_attach ######################################################
 # Parser for OS/8 attach spec.
-#
 
 def parse_attach (action_plan, match, imagename):
   if match.group(2) == None or match.group(2) == "":
@@ -157,7 +152,6 @@ def parse_attach (action_plan, match, imagename):
 # att	td0	boing.tu56
 # a	pidp8i.in	DTA0:
 # b	ac-mq-blinker.pal.pt	DTA0:
-
 
 def parse_action_file(fname):
   try:
@@ -207,6 +201,18 @@ def parse_action_file(fname):
 
   return action_plan
 
+
+#### is_directory ######################################################
+#
+# Returns True if the passed path looks like a directory.
+#
+# This is used at a level where we may still be unsure whether the given
+# path refers to something on the OS/8 or the host side, so we first
+# determine whether the path looks like an OS/8 or host-side path.  If
+# it looks like an OS/8 path, we consider it a "directory" if it names a
+# device name, lacking a file name part after it.  Otherwise, we use the
+# local OS's "is a directory" path check.
+
 def is_directory(path):
   if DEBUG: "is_directory (" + path + ")"
   m = re.match(_os8_file_re, path)
@@ -220,11 +226,20 @@ def is_directory(path):
     return False
   return os.path.isdir(path)
 
+
+#### has_os8_wildcards #################################################
+# Returns True if the passed file name has OS/8 style wildcards.
+
 def has_os8_wildcards (filename):
   os8_wild_cards = "*?"
   for char in os8_wild_cards:
     if char in filename: return True
   return False
+
+
+#### file_list_from_expect #############################################
+# Given a block of text output by the Python Expect module used by class
+# simh, parse it with the assumption that it contains OS/8 DIR output.
 
 def file_list_from_expect(before):
   file_list = []
@@ -238,11 +253,9 @@ def file_list_from_expect(before):
     file_list.append(fname)
   return file_list
 
-#### append_copy ##############################################################
-#
+
+#### append_copy #######################################################
 # Append a copy control array to the action_plan
-#
-# 
 
 def append_copy(action_plan, mode, source, destination):
   copy_type = ""
@@ -268,7 +281,7 @@ def append_copy(action_plan, mode, source, destination):
   action_plan["copy"].append (copyspec)
   
 
-#### parse_args ##############################################################
+#### parse_args ########################################################
 #
 # Builds the action plan from the command line arguments and executes it
 #
@@ -287,7 +300,6 @@ def append_copy(action_plan, mode, source, destination):
 #
 # The source and destination file specifications are interpreted as in
 # the USAGE message below.  (Look for "colon".)
-#
 
 USAGE = 'usage: ' + os.path.basename (__file__) + \
 """ [-dh] [--rk,--rx[tag] rotating-disk] [--dt,--td[tag] tape]
@@ -540,8 +552,8 @@ def parse_args ():
         abort_prog ("Not going to concatinate multiple OS/8 files into: " + destination + ".")
       append_copy(action_plan, mode_and_file[0], filename, destination)
 
-      
   return action_plan
+  
 
 #### main ##############################################################
 
