@@ -74,15 +74,17 @@ _os8_partitions = {"RK": ["A", "B"]}
 _os8_file_re = re.compile("(\S+):(\S+)?")
 
 # PIP option flags we support and pass thru.  PIP has other options we
-# do not try to map to our program functionality.  The key bits are the
-# two literal string lists.  The transformed versions of those lists
-# simply avoid either repeated recomputations below or redundant code up
-# here.
-_valid_pip_options = [ 'a', 'b', 'i', 'y', 'z' ]
-_option_to_info = dict(zip(
-    _valid_pip_options,
-    [ "ASCII", "binary", "image", "yank system head", "zero device" ]
-))
+# do not try to map to our program functionality.  The key bit is the
+# _pip_option_info dict.  The various transforms below it prevent both
+# redundant code up here and repeated recomputation below.
+_pip_option_info = {
+    'a': 'ASCII',
+    'b': 'binary',
+    'i': 'image',
+    'y': 'yank system head',
+    'z': 'zero device'
+}
+_valid_pip_options = sorted(_pip_option_info.keys())
 _arg_to_option = dict(zip(
     [ '-' + opt for opt in _valid_pip_options ],
     _valid_pip_options
@@ -437,7 +439,7 @@ def parse_args ():
       new_opt = _arg_to_option[arg]
       if mode_opt == new_opt:
         print "Warning redundant reset of mode option to " + \
-          _option_to_info[new_opt]
+          _pip_option_info[new_opt]
       mode_opt = new_opt
 
     # Not a simple bit set option.
