@@ -89,6 +89,66 @@ class simh:
   _host_safe_cps = _pdp8i_safe_bps * _ips_ratio / _bpc       # [4]
   _os8_kbd_delay = 1 / _host_safe_cps                        # [5]
 
+  # Known OS/8 error strings and a flag indicating whether the error
+  # dumps us back out to the OS/8 command monitor or leaves us in the
+  # called program.
+  #
+  # This is currently used only by our os8_send_pip() method, but we
+  # should probably also write wrappers for other OS/8 commands prone
+  # to throwing errors.
+  #
+  _os8_errors = [
+    # The date comment tells when each message is observed and validated
+    #
+    # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
+    ["MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],   # 2018.02.11
+    ["MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
+    ["MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["(\S+) NOT AVAILABLE", False],
+    ["(\S+) NOT FOUND", False],                                   # 2018.02.11
+    # OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
+    ["ILLEGAL SYNTAX", False],                                    # 2018.02.11
+    ["(\S+) DOES NOT EXIST", False],
+    # ["(\S+) NOT FOUND", False],                                 # See above
+    ["TOO MANY FILES", False],
+    # OS/8 Handbook 1974 page 1-75/113 CCL Error Messages
+    ["BAD DEVICE", False],
+    ["BAD EXTENSION", False],
+    # OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
+    ["ARE YOU SURE", False],
+    ["BAD DIRECTORY ON DEVICE #\s?\d+", False],
+    ["BAD SYSTEM HEAD", False],
+    ["CAN'T OPEN OUTPUT FILE", False],
+    ["DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
+    ["DIRECTORY ERROR", False],
+    ["ERROR DELETING FILE", False],
+    ["ILLEGIAL BINARY INPUT, FILE #\d+", False],
+    ["INPUT ERROR, FILE #\s?\d+", False],
+    ["IO ERROR IN \\(file name\\) --CONTINUING", False],
+    ["NO ROOM FOR OUTPUT FILE", False],
+    ["NO ROOM IN \\(file name\\) --CONTINUING", False],
+    ["OUTPUT ERROR", False],
+    ["PREMATURE END OF FILE, FILE #\s?\d+", False],
+    ["ZERO SYS?", False],
+    # OS/8 Handbook 1974 page 2-81/244: DIRECT Error Messages
+    ["BAD INPUT DIRECTORY", False],
+    ["DEVICE DOES NOT HAVE A DIRECTORY", False],
+    ["ERROR CLOSING FILE", False],
+    ["ERROR CLOSING FILE", False],
+    ["ERROR READING INPUT DIRECTORY", False],
+    ["ILLEGAL \\*", False],
+    # OS/8 Handbook 1974 page: 2-109/272: FOTP Error Messages
+    ["ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR READING INPUT DIRECTORY", False],
+    ["ERROR READING OUTPUT DIRECTORY", False],
+    ["ILLEGAL \\?", False],
+    ["NO FILES OF THE FORM (\S+)", False],
+    ["NO ROOM, SKIPPING \\((\S+)\\)", False],
+    ["SYSTEM ERROR-CLOSING FILE", False],
+    ["USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
+  ]
+
 
   #### ctor ############################################################
   # The first parameter must be given as the parent of bin/pidp8i-sim.
@@ -229,70 +289,6 @@ class simh:
       dot = bns.index('.')
       return dev + bns[:min(6, dot, len(bns))] + "." + bns[dot+1: dot+3]
 
-  #### os8_error_handler ###############################################
-  #
-  # Elaborate handler for errors returned by OS/8
-  #
-  # Issue: Some errors keep us in the running program, and some
-  # return us to the Keyboard monitor.
-  # We need to account for this.
-  #
-  # We create everything we need to know in the _os8_errors table:
-  # fatal = True if the program exits to the monitor.
-  # [<expect match string>, <fatal>]
-  
-  _os8_errors = [
-    # Let's use the source file for housekeeping.  As each error message
-    # is observed and validated, include a comment on the validation date.
-    # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
-    ["MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],   # 2/10/2018
-    ["MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
-    ["MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
-    ["(\S+) NOT AVAILABLE", False],
-    ["(\S+) NOT FOUND", False],                                   # 2/11/2018
-    # OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
-    ["ILLEGAL SYNTAX", False],                                    # 2/11/2018
-    ["(\S+) DOES NOT EXIST", False],
-    # ["(\S+) NOT FOUND", False],                                 # See above
-    ["TOO MANY FILES", False],
-    # OS/8 Handbook 1974 page 1-75/113 CCL Error Messages
-    ["BAD DEVICE", False],
-    ["BAD EXTENSION", False],
-    # OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
-    ["ARE YOU SURE", False],
-    ["BAD DIRECTORY ON DEVICE #\s?\d+", False],
-    ["BAD SYSTEM HEAD", False],
-    ["CAN'T OPEN OUTPUT FILE", False],
-    ["DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
-    ["DIRECTORY ERROR", False],
-    ["ERROR DELETING FILE", False],
-    ["ILLEGIAL BINARY INPUT, FILE #\d+", False],
-    ["INPUT ERROR, FILE #\s?\d+", False],
-    ["IO ERROR IN \\(file name\\) --CONTINUING", False],
-    ["NO ROOM FOR OUTPUT FILE", False],
-    ["NO ROOM IN \\(file name\\) --CONTINUING", False],
-    ["OUTPUT ERROR", False],
-    ["PREMATURE END OF FILE, FILE #\s?\d+", False],
-    ["ZERO SYS?", False],
-    # OS/8 Handbook 1974 page 2-81/244: DIRECT Error Messages
-    ["BAD INPUT DIRECTORY", False],
-    ["DEVICE DOES NOT HAVE A DIRECTORY", False],
-    ["ERROR CLOSING FILE", False],
-    ["ERROR CLOSING FILE", False],
-    ["ERROR READING INPUT DIRECTORY", False],
-    ["ILLEGAL \\*", False],
-    # OS/8 Handbook 1974 page: 2-109/272: FOTP Error Messages
-    ["ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
-    ["ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
-    ["ERROR READING INPUT DIRECTORY", False],
-    ["ERROR READING OUTPUT DIRECTORY", False],
-    ["ILLEGAL \\?", False],
-    ["NO FILES OF THE FORM (\S+)", False],
-    ["NO ROOM, SKIPPING \\((\S+)\\)", False],
-    ["SYSTEM ERROR-CLOSING FILE", False],
-    ["USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
-    ]
-  
   #### os8_send_file ###################################################
   # Send a copy of a local text file to OS/8.  The local path may
   # contain directory components, but the remote must not, of course.
