@@ -242,16 +242,18 @@ class simh:
   # [<expect match string>, <fatal>]
   
   _os8_errors = [
+    # Let's use the source file for housekeeping.  As each error message
+    # is observed and validated, include a comment on the validation date.
     # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
-    ["MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],   # 2/10/2018
     ["MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
     ["MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
-    ["name NOT AVAILABLE", False],
-    ["name NOT FOUND", False],
+    ["(\S+) NOT AVAILABLE", False],
+    ["(\S+) NOT FOUND", False],                                   # 2/11/2018
     # OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
-    ["ILLEGAL SYNTAX", False],
+    ["ILLEGAL SYNTAX", False],                                    # 2/11/2018
     ["(\S+) DOES NOT EXIST", False],
-    ["(\S+) NOT FOUND", False],
+    # ["(\S+) NOT FOUND", False],                                 # See above
     ["TOO MANY FILES", False],
     # OS/8 Handbook 1974 page 1-75/113 CCL Error Messages
     ["BAD DEVICE", False],

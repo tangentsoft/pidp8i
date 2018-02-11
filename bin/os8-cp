@@ -55,6 +55,8 @@ import re
 
 progmsg = True
 DEBUG = False
+VERBOSE = False
+QUIET = False
 
 # Regex for parsing an argument string into a sys device
 _dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
@@ -247,8 +249,9 @@ def file_list_from_expect(before):
   for line in lines[1:]:    # First line is our command. Skip it.
     line = line.strip()
     if line == "": continue
-    m = re.match("(\S+)\s*.(\S+)", line)
+    m = re.match("(\S+)\s*\.(\S+)", line)
     if m == None: continue
+    # if DEBUG: print "file_list_from_expect: group 1: " + m.group(1) + ", group 2: " + m.group(2)
     fname = m.group(1) + "." + m.group(2)
     file_list.append(fname)
   return file_list
@@ -419,6 +422,8 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
 
 def parse_args ():
   global DEBUG
+  global VERBOSE
+  global QUIET
 
   action_plan = {}
   action_plan["sys"] = None
@@ -445,6 +450,10 @@ def parse_args ():
     elif arg == "-h":
       print USAGE
       sys.exit(0)
+    elif arg == "-q":
+      QUIET = True
+    elif arg == "-v":
+      VERBOSE = 1
 
     # look for option args.
     elif arg in _arg_to_option:
@@ -579,7 +588,8 @@ def main ():
   imagename = att_spec[2]
   if not os.path.exists (imagename):
     abort_prog ("Requested boot image file: " + imagename + " not found.")
-  
+  if VERBOSE or DEBUG:
+    print "Attaching " + simh_boot_dev + " to " + imagename
   s.send_cmd ("att " + simh_boot_dev + " " + imagename)
 
   images_to_zero = []
@@ -589,14 +599,16 @@ def main ():
     simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
     imagename = att_spec[2]
     if os.path.exists (imagename):
-      print "Modifying existing " + simh_dev + " image " + imagename
+      if VERBOSE or DEBUG: print "Modifying existing " + simh_dev + " image " + imagename
     else:
-      print "Will create a new image file named: " + imagename
+      if VERBOSE or DEBUG: print "Will create a new image file named: " + imagename
       # Save this att_spec so we can zero it later.
       images_to_zero.append (att_spec)
+    if VERBOSE or DEBUG:
+      print "Attaching " + simh_dev + " to " + imagename      
     s.send_cmd ("att " + simh_dev + " " + imagename)
 
-  print "Booting " + simh_boot_dev + "..."
+  if VERBOSE or DEBUG: print "Booting " + simh_boot_dev + "..."
   s.send_cmd ("boot " + simh_boot_dev)
 
   for att_spec in images_to_zero:
@@ -604,11 +616,11 @@ def main ():
     if os8dev in _os8_partitions:
       for partition in _os8_partitions[os8dev]:
         os8name = os8dev + partition + att_spec[1] + ":"
-        print "Initializing directory of " + os8name + " in " + imagename
+        if VERBOSE or DEBUG: print "Initializing directory of " + os8name + " in " + imagename
         s.os8_send_cmd ('\\.', "ZERO " + os8name)
     else:
       os8name = os8dev + att_spec[1] + ":"
-      print "Initializing directory of " + os8name + " in " + imagename
+      if VERBOSE or DEBUG: print "Initializing directory of " + os8name + " in " + imagename
       s.os8_send_cmd ('\\.', "ZERO " + os8name)
 
   # Perform copy operations
@@ -646,11 +658,18 @@ def main ():
         s._child.expect("\d+\s+FREE BLOCKS")
         files = file_list_from_expect(s._child.before)
         for filename in files:
-          if DEBUG: print "Call PIP on: " + os8dev + filename
+          if VERBOSE or DEBUG:
+            print "Wildcard call os8_fetch from: {" + os8dev + "}{" + filename + "}" + \
+              " to: " + destination + ", mode: " + pip_option 
           s.os8_fetch_pip(os8dev + filename, destination, pip_option)
       else:
+        if VERBOSE or DEBUG:
+          print "Call os8_fetch from: " + source + " to " + destination + \
+            ", mode: " + pip_option 
         s.os8_fetch_pip(source, destination, pip_option)
     elif copy_type == "on":
+      if VERBOSE or DEBUG:
+        print "Call COPY of: " + source + " to " + destination
       s.os8_send_cmd ('\\.', "COPY " + destination + "< " + source)
     else:
       abort_prog ("Unrecognized copy type: " + copy_type)  # Should never happen.
@@ -659,10 +678,16 @@ def main ():
   s.back_to_cmd ('\\.')
   for att_spec in action_plan["mount"]:
     simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
+    if VERBOSE or DEBUG:
+      print "Detaching " + simh_dev
     s.send_cmd ("det " + simh_dev)
+  if VERBOSE or DEBUG:
+    print "Detaching " + simh_boot_dev
   s.send_cmd ("det " + simh_boot_dev)
 
   # And shut down the simulator.
+  if VERBOSE or DEBUG:
+    print "Quitting simh."
   s.send_cmd ('quit')
 
 if __name__ == "__main__": main()

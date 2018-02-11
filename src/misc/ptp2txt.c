@@ -76,6 +76,8 @@
 #define TO_PTP 1
 #define TO_TXT 2
 #define LTCHAR '\0'
+/* PIP ASCII mode adds rubout after control chars so we strip them out too. */
+#define RUBOUT '\377'
 #define LTCOUNT 100
 
 /* global variable: ltbuf */
@@ -93,7 +95,7 @@ void make_txt (FILE *fpin, FILE *fpout)
         obuffp = obuff;
         for (n = 0; n < read_ct; n++) {
             inchar = *(ibuff + n);
-            if (inchar == LTCHAR) continue;
+            if (inchar == LTCHAR || inchar == RUBOUT) continue;
             *obuffp++ = inchar & 0177;
         }
         fwrite (obuff, sizeof(char), obuffp - obuff, fpout);
