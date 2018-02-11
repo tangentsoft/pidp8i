@@ -56,22 +56,22 @@ import re
 progmsg = True
 DEBUG = False
 
-# regex for parsing an argument string into a sys device
-
+# Regex for parsing an argument string into a sys device
 _dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
 _dev_arg_re = re.compile(_dev_arg_regex_str)
 
-# regex for parsing an action file att string into a sys device
-# reuse _dev_arg_regex_str
-
+# Regex for parsing an action file att string into a sys device.  Note
+# reuse of regex string from above.
 _dev_actfile_regex_str = _dev_arg_regex_str[1:]   # strip -
 _dev_actfile_re = re.compile (_dev_actfile_regex_str)
 
+# Map of SIMH device names to OS/8 device name prefixes.
 _os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "dt" : "DTA", "rx" : "RX"}
+
 _os8_partitions = {"RK": ["A", "B"]}
 
-_os8_file_regex_str = "(\S+):(\S+)?"
-_os8_file_re = re.compile(_os8_file_regex_str)
+# OS/8 file name matching regex
+_os8_file_re = re.compile("(\S+):(\S+)?")
 
 _valid_options = "abiyz"
 
