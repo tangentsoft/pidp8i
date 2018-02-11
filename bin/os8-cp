@@ -35,11 +35,7 @@
 
 # Bring in just the basics so we can bring in our local modules
 import os
-import glob
 import sys
-import string
-import re
-import argparse
 
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 sys.path.insert (0, os.getcwd () + '/lib')
@@ -51,6 +47,8 @@ from simh   import *
 # Other global Python modules
 import glob
 import subprocess
+import string
+import re
 
 
 #### GLOBALS AND CONSTANTS #############################################
