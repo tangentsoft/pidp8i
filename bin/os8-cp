@@ -265,16 +265,16 @@ def append_copy(action_plan, mode, source, destination):
   if ":" in source:
     copy_type = "from"
     if "/" in source:
-      abort_prog ("append_copy, from: Illegal OS/8 file spec containing a slash:" + source)
+      abort_prog ("append_copy, out: Illegal OS/8 file spec containing a slash:" + source)
     source = source.upper()
 
   if ":" in destination:
     if copy_type == "from":
-      copy_type = "on"
+      copy_type = "within"
     else:
-      copy_type = "to"
+      copy_type = "into"
     if "/" in destination:
-      print "append_copy, to: Illegal OS/8 file spec containing a slash:" + destination
+      print "append_copy, into: Illegal OS/8 file spec containing a slash:" + destination
       sys.exit(-1)
     destination = destination.upper()
     
@@ -348,8 +348,8 @@ VERBOSE_USAGE = TERSE_USAGE + """
         source file names are POSIX-side and copy those files into the
         simulated OS/8 environment.
 
-    *   copy-out: The dest argument has no colon but the source file
-        names do, so copy the named OS/8 files out of the simulation.
+    *   copy-from: The dest argument has no colon but the source file
+        names do, so copy the named OS/8 files out from the simulation.
 
     If none of the file arguments has a colon in it and you give exactly
     two such arguments, we operate in a special case of copy-within
@@ -423,10 +423,10 @@ VERBOSE_USAGE = TERSE_USAGE + """
     When only a destination device, directory, or volume name is given,
     file names are normalized when coping between POSIX and OS/8
     systems.  File names are uppercased and truncated to 6.2 limits when
-    copying from POSIX to OS/8.  File names are lowercased on copying
-    from OS/8 to the POSIX side unless you give the *source* file name
-    in all-uppercase; then, file name case is preserved.  This behavior
-    is overridden if you give a complete file name for the destination:
+    copying into OS/8.  File names are lowercased on copying from OS/8
+    unless you give the *source* file name in all-uppercase.
+    Then file name case is preserved.  This behavior is overridden
+    if you give a complete file name for the destination:
 
         $ os8-cp my-long-file-name.txt DSK:MLF.FD
 
@@ -658,15 +658,15 @@ def main ():
       abort_prog ("Unrecognized mode option: " + mode_opt)
 
     if DEBUG: print "Source: " + source + ", Destination: " + destination + ", Mode: " + mode_opt + "."
-    # Is this "from" OS/8 to POSIX, "to" OS/8 from POSIX or "on" OS/8?
-    # "to" -- Attach source to simh ptr
+    # Is this "from" OS/8 to POSIX, "into" OS/8 from POSIX or "within" OS/8?
+    # "into" -- Attach source to simh ptr
     # If we are operating "from" and source has wild cards,
     # Use DIRECT to create list of files.
     # "from" -- Attach destination to ptp. We've already done POSIX globing.
-    # "on" -- Use COPY.
+    # "within" -- Use COPY.
     
-    if copy_type == "to":
-      s.os8_send_pip(source, destination, pip_option)
+    if copy_type == "into":
+      s.os8_pip_into(source, destination, pip_option)
     elif copy_type == "from":
       if has_os8_wildcards(source):
         # Split off device from source:
@@ -682,15 +682,15 @@ def main ():
         files = file_list_from_expect(s._child.before)
         for filename in files:
           if VERBOSE or DEBUG:
-            print "Wildcard call os8_fetch from: {" + os8dev + "}{" + filename + "}" + \
+            print "Wildcard call os8_pip_from: copy from: {" + os8dev + "}{" + filename + "}" + \
               " to: " + destination + ", mode: " + pip_option 
-          s.os8_fetch_pip(os8dev + filename, destination, pip_option)
+          s.os8_pip_from(os8dev + filename, destination, pip_option)
       else:
         if VERBOSE or DEBUG:
-          print "Call os8_fetch from: " + source + " to " + destination + \
+          print "Call os8_pip_from: copy from: " + source + " to " + destination + \
             ", mode: " + pip_option 
-        s.os8_fetch_pip(source, destination, pip_option)
-    elif copy_type == "on":
+        s.os8_pip_from(source, destination, pip_option)
+    elif copy_type == "within":
       if VERBOSE or DEBUG:
         print "Call COPY of: " + source + " to " + destination
       s.os8_send_cmd ('\\.', "COPY " + destination + "< " + source)

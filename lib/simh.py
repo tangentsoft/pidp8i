@@ -93,7 +93,7 @@ class simh:
   # dumps us back out to the OS/8 command monitor or leaves us in the
   # called program.
   #
-  # This is currently used only by our os8_send_pip() method, but we
+  # This is currently used only by our os8_pip_into() method, but we
   # should probably also write wrappers for other OS/8 commands prone
   # to throwing errors.
   #
@@ -173,10 +173,10 @@ class simh:
       self._os8_error_match_strings.append(error_spec[0])
       self._os8_fatal_check.append(error_spec[1])
 
-    self._pip_send_replies = ['\\^']
-    self._pip_send_replies.extend(self._os8_error_match_strings)
-    self._pip_fetch_replies = ['\\*']
-    self._pip_fetch_replies.extend(self._os8_error_match_strings)
+    self._pip_into_replies = ['\\^']
+    self._pip_into_replies.extend(self._os8_error_match_strings)
+    self._pip_from_replies = ['\\*']
+    self._pip_from_replies.extend(self._os8_error_match_strings)
 
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
@@ -336,7 +336,7 @@ class simh:
 
   #### pip_error_handler ###############################################
   #
-  # Common error handler for pip send and fetch
+  # Common error handler for os8_pip_into and os8_pip_from
   #
 
   def pip_error_handler(self, caller, reply):
@@ -350,8 +350,8 @@ class simh:
       # Non fatal error.  Exit pip to the monitor
       self.os8_send_ctrl ('[')      # exit PIP
     
-  #### os8_send_pip ###################################################
-  # Send a copy of a local file to OS/8 using PIP.
+  #### os8_pip_into ###################################################
+  # Send a copy of a local file into OS/8 using PIP.
   #
   # The file is sent via the SIMH paper tape device through PIP
   # specifying a transfer option.  If no option is specified,
@@ -366,7 +366,7 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_send_pip (self, path, os8name, option = None):
+  def os8_pip_into (self, path, os8name, option = None):
     # If os8name is just a device, synthesize an upcased name from
     # the POSIX file basename.
     if not os.path.exists(path):
@@ -389,7 +389,7 @@ class simh:
       subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
       did_conversion = True
     elif option not in self._valid_pip_options:
-      print "Invalid PIP option: " + option + ". Ignoring send of: " + path
+      print "Invalid PIP option: " + option + ". Ignoring: " + path + " into OS/8."
       return
     else:
       pt = path
@@ -406,10 +406,10 @@ class simh:
     self.os8_send_cmd ('\\*', dest + '<PTR:' + option)
     # Error detection goes here.
     pip_replies = ['\\^', "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)"]
-    reply = self._child.expect (self._pip_send_replies)
+    reply = self._child.expect (self._pip_into_replies)
     print "reply: " + str(reply)
     if reply !=0:
-      self.pip_error_handler("send", reply)
+      self.pip_error_handler("pip_into", reply)
       if did_conversion:
         os.remove(pt)
       return
@@ -421,7 +421,7 @@ class simh:
     if did_conversion:
       os.remove (pt)
 
-  #### os8_fetch_pip ###################################################
+  #### os8_pip_from ###################################################
   # Fetch a file from OS/8 to a local path using PIP.
   #
   # The OS/8 source filename is synthesized from the basename of the path,
@@ -437,7 +437,7 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_fetch_pip (self, os8name, path, option = None):
+  def os8_pip_from (self, os8name, path, option = None):
     # If path is not a file, use the name portion of os8name.
     if os.path.isdir(path):
       colon = os8name.index(':')
@@ -447,7 +447,7 @@ class simh:
         path = path + "/" + os8name[colon+1:]
 
     if option != "" and option not in self._valid_pip_options:
-      print "Invalid PIP option: " + option + ". Ignoring fetch of: " + path
+      print "Invalid PIP option: " + option + ". Ignoring os8_pip_from on: " + path
       return
 
     self.back_to_cmd ('\\.')
@@ -456,9 +456,9 @@ class simh:
     self.os8_send_cmd ('\\.', 'R PIP')
     self.os8_send_cmd ('\\*', 'PTP:<' + os8name + option)
 
-    reply = self._child.expect (self._pip_fetch_replies)
+    reply = self._child.expect (self._pip_from_replies)
     if reply !=0:
-      self.pip_error_handler ("fetch", reply)
+      self.pip_error_handler ("pip_from", reply)
       return
 
     self.os8_send_ctrl ('[')      # exit PIP
