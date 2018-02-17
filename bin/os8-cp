@@ -304,16 +304,38 @@ def append_copy(action_plan, mode, source, destination):
 # The source and destination file specifications are interpreted as in
 # the USAGE message below.  (Look for "colon".)
 
-USAGE = 'usage: ' + os.path.basename (__file__) + \
-""" [-dh] [--rk,--rx[tag] rotating-disk] [--dt,--td[tag] tape]
-    [[-abiyz] src-files]... [src-files] <dest>
+TERSE_USAGE = 'usage: ' + os.path.basename (__file__) + \
+              " [-dhvq] [-<dev><unit>[s] image] ... [[-abiyz] <src>] ... <dest>\n" + \
+              "       " + os.path.basename (__file__) + " [-dhvq] [--action-file action-file]" + \
+"""
 
-    This program boots an OS/8 environment underneath the SIMH PDP-8
-    simulator then tries to behave like the POSIX program we are named
-    after, either copying files from the POSIX (host) side into the
-    simulated OS/8 environment, copying files out of OS/8 to the POSIX
-    side, or copying filoes within the OS/8 world from one volume to
-    another.
+    <dev> is one of rk, td, dt, rx
+    <unit> must be a valid unit number for the device in both SIMH 
+           and the booted OS/8 system. A unit number is required.
+    Following the unit with an "s" names the system device to boot.
+    The system image file must exist, and contain a working boot image.
+    Only one designated system device is allowed.
+    <src>  is a source file or wild card specification.
+    <dest> is a destination file if a single src file is specified,
+           or a directory if multiple src files are.
+
+    Specifying an action file overrides any device or file argument
+    previously specified on the command line.
+
+    Example: 
+    """ + \
+      os.path.basename (__file__) + " -rk0s os8v3d-patched.rk05 -dt0 scratch.tu56 -a prog.pa DTA0:PROG.PA "
+
+USAGE = TERSE_USAGE + """
+    To see more detailed documentation specify -v -h
+"""
+        
+VERBOSE_USAGE = TERSE_USAGE + """
+
+    This program boots an OS/8 environment in the SIMH PDP-8 simulator
+    then tries to behave like the POSIX program it is named after --
+    copying files between the POSIX (host) side and the OS/8
+    environment or under our control within the OS/8 environment.
 
     The copying direction is determined by which file name arguments
     have a colon in them:
@@ -341,12 +363,17 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
     If you give only one file name argument, the program always errors
     out: it requires at least one source and one destination.
 
-    The -a, -b, -i, -y, and -z flags correspond to the OS/8 PIP options
-    /A, /B, /I, /Y, and /Z, which are passed to PIP as-is.  (This
-    priogram currently uses PIP as its primary handler for the OS/8 side
-    of the work.)  They must be followed by at least one source file
-    name, and they affect all subsequent source file names until another
-    such option is found.  For example:
+    The -a, -b, -i, -y, and -z flags correspond to the OS/8 PIP options:
+        /A    ASCII format.  OS/8 and POSIX newlines are translated.
+        /B    Binary OS/8 ABSLDR format with leader/trailer and other
+              specific formatting that is detected and enforced by PIP.
+        /I    Image mode.  Files are copied byte for byte verbatim.
+        /Z    ZERO directory of destination OS/8 device.
+        /Y    Yank system area from source to destination.
+    (This priogram currently uses PIP as its primary handler for the
+    OS/8 side of the work.)  They must be followed by at least one source
+    file name, and they affect all subsequent source file names until
+    another such option is found.  For example:
 
         $ os8-cp -a foo bar -b qux sys:
 
@@ -358,22 +385,18 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
     it means to POSIX cp: destination files will be unceremoniously
     overwritten!
 
-    If --rk or --rx is given, the named rotating disk image is attached
-    to the simulator on the first free disk controller if no digit
-    follows the letters, or to the specified controller otherwise.
+    More about image file mounts:
 
-    If an "s" is at the end of any of the above media image file option
-    names, that marks the "system disk", which overrides our default
-    boot media, $prefix/shared/media/os8/os8v3d-patched.rk05.
+    image files for non-boot dev specifications, if they do not
+    already exist, are created. Their directories are initalized
+    with the ZERO command. Multi-partition devices initialize all.
 
-    Therefore, the following:
+    A future version will include a default system device if
+    no dev system mount is made.
 
-        $ os8-cp --rk my.rk05 foo RKA1:
+    Examples:
 
-    ...will boot from the default RK05 disk image attached to RK0 with
-    my.rk05 attached to RK1, then copy POSIX-side file foo to RKA1:FOO.
-
-        $ os8-cp --tds my.tu56 --rk my.rk05 foo DSK:
+        $ os8-cp -td0s my.tu56 -rk0 my.rk05 foo DSK:
 
     ...will boot from my.tu56, which is presumed to be a bootable OS/8
     DECtape attached to SIMH device TD0.  The RK05 disk image my.rk05
@@ -384,23 +407,18 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
     the generic SYS: and DSK: device names!  You would be better advised
     to use DTA0:, RKA0: or RKB0: as the destination in this example.
 
-        $ os8-cp --tds my.tu56 --rx1 my.rx01 foo RXA1:
+        $ os8-cp -td0s my.tu56 -rx1 my.rx01 foo RXA1:
 
-    This not only fixes the almost-certainly incorrect use of DSK: in
-    the prior example, it shows how a disk may be mounted on a device
-    other than the default by giving a digit after the device type in
-    the option name.  (That is, --rx1 instead of just --rx, which would
-    be the same as --rx0 in this example.)
+    This fixes the almost-certainly incorrect use of DSK: in the prior 
+    example.
 
-    The --dt and --td options are handled similarly to the --r* options,
+    The -dt and -td options are handled similarly to the -r* options,
     differing only in whether we use the SIMH DT or TD PDP-8 devices,
     which correspond to the TC08 or TD8E DECtape controllers.  Which one
     you give depends on the device support built into the OS/8 media
     you've booted from.
 
-    Destination OS/8 volumes are modified in place, rather than
-    recreated.  The volume must therefore exist before this program
-    runs.
+    More about src and dest specifications:
 
     When only a destination device, directory, or volume name is given,
     file names are normalized when coping between POSIX and OS/8
@@ -417,7 +435,9 @@ USAGE = 'usage: ' + os.path.basename (__file__) + \
 
     Give -d to run in debug mode.
 
-    Give -h to print this message.
+    Give -h -v to print this message.
+
+    Give -v to enable verbose status reporting.
 """
 
 def parse_args ():
@@ -448,7 +468,10 @@ def parse_args ():
     if arg == "-d":
       DEBUG = True
     elif arg == "-h":
-      print USAGE
+      if VERBOSE:
+        print VERBOSE_USAGE
+      else:
+        print USAGE
       sys.exit(0)
     elif arg == "-q":
       QUIET = True
