@@ -340,7 +340,7 @@ class simh:
   #
 
   def pip_error_handler(self, caller, reply):
-    print "Error from PIP " + caller + ": "
+    print "PIP error from inside " + caller + ": "
     print "\t" + self._child.before.strip()
     print "\t" + self._child.after.strip()
     
@@ -373,7 +373,6 @@ class simh:
       print path + " not found. Skipping."
       return
     m = re.match(self._os8_file_re, os8name)
-    print m.group(2)
     if m != None and (m.group(2) == None or m.group(2) == ""):
         dest = self.mk_os8_name(os8name, path)
     else:
@@ -407,9 +406,8 @@ class simh:
     # Error detection goes here.
     pip_replies = ['\\^', "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)"]
     reply = self._child.expect (self._pip_into_replies)
-    print "reply: " + str(reply)
     if reply !=0:
-      self.pip_error_handler("pip_into", reply)
+      self.pip_error_handler("os8_pip_into", reply)
       if did_conversion:
         os.remove(pt)
       return
@@ -458,7 +456,9 @@ class simh:
 
     reply = self._child.expect (self._pip_from_replies)
     if reply !=0:
-      self.pip_error_handler ("pip_from", reply)
+      self.pip_error_handler ("os8_pip_from", reply)
+      # There is an empty PTP file we need to remove.
+      os.remove(path)
       return
 
     self.os8_send_ctrl ('[')      # exit PIP
