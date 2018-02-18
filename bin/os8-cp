@@ -150,10 +150,10 @@ def parse_attach (action_plan, match, imagename):
 #
 # Example:
 #
-# att	rk0s	bootdisk.rk05
-# att	td0	boing.tu56
-# a	pidp8i.in	DTA0:
-# b	ac-mq-blinker.pal.pt	DTA0:
+# att rk0sbootdisk.rk05
+# att td0 boing.tu56
+# a pidp8i.in DTA0:
+# b ac-mq-blinker.pal.pt DTA0:
 
 def parse_action_file(fname):
   try:
@@ -312,9 +312,9 @@ TERSE_USAGE = 'usage: ' + os.path.basename (__file__) + \
     <dev> is one of rk, td, dt, rx
     <unit> must be a valid unit number for the device in both SIMH 
            and the booted OS/8 system. A unit number is required.
-    Following the unit with an "s" names the system device to boot.
-    The system image file must exist, and contain a working boot image.
-    Only one designated system device is allowed.
+           Following the unit with an "s" names the system device to boot.
+           The system image file must exist, and contain a working boot image.
+           Only one designated system device is allowed.
     <src>  is a source file or wild card specification.
     <dest> is a destination file if a single src file is specified,
            or a directory if multiple src files are.
