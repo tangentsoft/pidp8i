@@ -163,8 +163,7 @@ class simh:
     # Start the simulator instance
     self._child = pexpect.spawn(basedir + '/bin/pidp8i-sim')
     self._valid_pip_options = ["/A", "/B", "/I"]
-    self._os8_file_regex_str = "(\S+):(\S+)?"
-    self._os8_file_re = re.compile(self._os8_file_regex_str)
+    self._os8_file_re = re.compile("(\S+):(\S+)?")
     self._os8_error_match_strings = []
     self._os8_fatal_check = []
 
