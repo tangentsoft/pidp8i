@@ -31,28 +31,29 @@ If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
 it takes about 50% of a single core's worth of power on your system.
 
-Since different single-core Raspberry Pi boards run at different default
-clock rates — overclocking aside — we cannot just set a single IPS value
-and know that it's correct.
+Since different single-core Raspberry Pi boards run at different clock
+rates, we cannot just set the instructions per second (IPS) rate to a
+fixed value and know that it's correct.
 
-Besides that, SIMH's reaction to not having enough host CPU power to run
-at the requested IPS rate is to *turn off throttling entirely*, thus
-hogging the whole host CPU, exactly the opposite of what you want by
-turning on throttling! Since host CPU power is briefly impacted when
-starting the simulator up for the first time, SIMH's guesses about
-whether you've asked it to run at too fast a rate undershoot the actual
-capability of the hardware badly.
+We could choose a value low enough that it's supposed to work
+everywhere, but there's a serious problem with that. SIMH's reaction to
+not having enough host CPU power to run at the requested IPS rate is to
+*turn off throttling entirely*, thus hogging the whole host CPU, exactly
+the opposite of what you want by turning on throttling! Since host CPU
+power is sapped during boot time — the point where the PiDP-8/I software
+normally starts up — SIMH's estimates of available CPU poewr badly
+undershoot the hardware's capability, so that you might get thrown into
+no-throttle mode even if the hardware could actually achieve the
+requested IPS rate once it has the CPU mostly to itself.
 
-Worse, when you set the PiDP-8/I software to start on boot via
-`systemd`, it's running in parallel with other startup tasks, further
-reducing the amount of host CPU power available to the simulator at the
-instant of startup, requiring an even lower IPS rate if you want to
-prevent SIMH from going into no-throttle mode.
+Our chosen solution to all of these problems is `set throttle 50%`,
+which tells SIMH to dynamically adjust the IPS rate according to
+available host CPU power. This does mean you don't get a steady IPS
+rate, but it does enforce our wish to leave some CPU power left over for
+background tasks.
 
-The solution to all of these problems is `set throttle 50%`, which tells
-SIMH to dynamically adjust the IPS rate according to available host CPU
-power. This does mean you don't get a steady IPS rate, but it does
-enforce our wish to leave some CPU power left over for background tasks.
+(There's [an alternate fix for this](#stabilization) in recent
+versions.)
 
 You might wish to adjust that default host/simulator CPU usage split.
 The `--throttle` option accepts percentages:
