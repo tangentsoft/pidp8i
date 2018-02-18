@@ -366,6 +366,7 @@ VERBOSE_USAGE = TERSE_USAGE + """
 
     The -a, -b, -i, -y, and -z flags correspond to the OS/8 PIP options:
         /A    ASCII format.  OS/8 and POSIX newlines are translated.
+              Such transfers are lossless if line endings are  well-formed.
         /B    Binary OS/8 ABSLDR format with leader/trailer and other
               specific formatting that is detected and enforced by PIP.
         /I    Image mode.  Files are copied byte for byte verbatim.
