@@ -39,12 +39,12 @@ We could choose a value low enough that it's supposed to work
 everywhere, but there's a serious problem with that. SIMH's reaction to
 not having enough host CPU power to run at the requested IPS rate is to
 *turn off throttling entirely*, thus hogging the whole host CPU, exactly
-the opposite of what you want by turning on throttling! Since host CPU
-power is sapped during boot time — the point where the PiDP-8/I software
-normally starts up — SIMH's estimates of available CPU poewr badly
-undershoot the hardware's capability, so that you might get thrown into
-no-throttle mode even if the hardware could actually achieve the
-requested IPS rate once it has the CPU mostly to itself.
+the opposite of what you want by turning on throttling! Host CPU power
+is sapped during boot time, the point where the PiDP-8/I software
+normally starts up. That badly throws off SIMH's estimates of the
+hardware's capability, do you might get thrown into no-throttle mode
+even if the hardware could actually achieve the requested IPS rate once
+it has the CPU mostly to itself.
 
 Our chosen solution to all of these problems is `set throttle 50%`,
 which tells SIMH to dynamically adjust the IPS rate according to
