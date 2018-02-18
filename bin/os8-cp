@@ -309,15 +309,16 @@ TERSE_USAGE = 'usage: ' + os.path.basename (__file__) + \
               "       " + os.path.basename (__file__) + " [-dhvq] [--action-file action-file]" + \
 """
 
-    <dev> is one of rk, td, dt, rx
-    <unit> must be a valid unit number for the device in both SIMH 
-           and the booted OS/8 system. A unit number is required.
-           Following the unit with an "s" names the system device to boot.
-           The system image file must exist, and contain a working boot image.
-           Only one designated system device is allowed.
+    <dev> is one of rk, td, dt, rx, corresponding to SIMH PDP-8 devices
+    <unit> must be a valid unit number for the device in both SIMH and
+           the booted OS/8 system. A unit number is required.  Following
+           the unit with an "s" names the system device to boot.  The
+           system image file must exist, and contain a working boot
+           image.  Only one designated system device is allowed.
     <src>  is a source file or wild card specification.
-    <dest> is a destination file if a single src file is specified,
-           or a directory if multiple src files are.
+    <dest> is a destination file if a single src file is specified; if
+           multiple <src> files are given, it is either a POSIX
+           directory or an OS/8 device name.
 
     Specifying an action file overrides any device or file argument
     previously specified on the command line.
