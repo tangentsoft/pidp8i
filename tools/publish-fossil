@@ -2,9 +2,11 @@
 lr=/usr/bin/lsb_release
 if [ -x $lr ]
 then
-    vs=$(lsb_release -sicr | tr '\n' - | tr '[A-Z]' '[a-z]' | sed -e 's/-$//')
-    d=fossil-$vs
-    cp /usr/local/bin/fossil $d
+    fp=/usr/local/bin/fossil
+    fv=$($fp ver | grep -Po '\b\d\.\d\b')
+    ov=$(lsb_release -sicr | tr '\n' - | tr '[A-Z]' '[a-z]' | sed -e 's/-$//')
+    d=fossil-$fv-$ov
+    install -s $fp $d
     fossil uv add $d
     fossil uv sync
     rm $d
