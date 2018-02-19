@@ -60,6 +60,7 @@ progmsg = True
 _bin_rk05 = "os8v3d-bin.rk05"
 _src_rk05 = "os8v3d-src.rk05"
 _patched_rk05 = "os8v3d-patched.rk05"
+_v3f_build_rk05 = "os8-v3f-build.rk05"
 
 # Parser regexps used in patcher
 _com_os8_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
@@ -71,9 +72,20 @@ _odt_parse = re.compile(_odt_parse_str)
 
 #### mkos8_abort  ######################################################
 # Fatal error. Abort mkos8
+# Assumes we are in SIMH context. Quit SIMH
 
 def mkos8_abort (s):
   print "Fatal Error.  Cannot proceed."
+  s.quit ()
+  exit (-1)
+
+#### mkos8_abort_os8  ##################################################
+# Fatal error. Abort mkos8
+# Assumes we are in os8 context.  Exit to SIMH, then quit SIMH.
+
+def mkos8_abort_os8 (s):
+  print "Fatal Error.  Cannot proceed."
+  s.back_to_cmd("\\.")        
   s.quit ()
   exit (-1)
 
@@ -787,13 +799,107 @@ def make_patch (s, args):
   s.back_to_cmd("\\.")
   s.send_cmd ("detach rk0")
 
+#### make_system_tape ##################################################
+# Make and install new OS/8 System Head.
+# ISSUE: Doing this will probably break the LC/UC batch scripts.
+
+#### call_pal8 #########################################################
+# Generic call out to PAL8 with error recovery.
+# We rely on the caller to have good specifications for source,
+# binary and optional listing files.
+
+def call_pal8 (s, source, binary):
+  pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF", "IC\s+\S+", "ID\s+\S+",
+                  "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
+                  "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
+
+  # Build OS/8 System head by using PAL-8 to assemble OS8.PA and CD.PA
+  if progmsg: print "Assembling " + source
+  com_line = binary + "<" + source
+  s.os8_send_cmd ("\\.", "R PAL8")
+  s.os8_send_cmd ("\\*", com_line)
+  err_count = 0
+  reply = s._child.expect (pal8_replies)
+  executed_line = s._child.before.strip()
+  reply_str = s._child.after.strip()
+  if reply == 0:
+    s._child.expect("\d+")
+    err_count = int(s._child.after.strip())
+    reply_str += " " + s._child.after.strip()
+  if reply > 0 or err_count > 0:
+    print "PAL8 Error: "
+    print "\t*" + executed_line
+    print "\t" + reply_str
+    s.os8_send_ctrl ('c')      # exit PAL8 Just in case.
+    # We could do something better than just dying, I expect.
+    mkos8_abort_os8(s)
+  # s.os8_send_ctrl ('[')      # exit PAL8
+  
+
+#### make_v3f ##########################################################
+# Create an RK05 image containing the OS/8 v3f sources on partition A.
+# Build binaries for them into partition B.
+
+def make_v3f (s, args):
+  sys_path = dirs.os8mo + _patched_rk05
+  build_path = dirs.os8mo + _v3f_build_rk05
+
+  if not os.path.isfile(sys_path):
+    print "System pack: " + sys_path + " not found."
+    mkos8_abort(s)
+  if not os.path.isfile(build_path):
+    print "OS/8 V3F build image: " + build_path + " not found."
+    mkos8_abort(s)
+
+  s.send_cmd ("attach rk0 " + sys_path)
+  s.send_cmd ("attach rk1 " + build_path)
+  s.send_cmd ("boot rk0")         # We're running OS/8. Let's build!
+
+  # Build BUILD
+  if progmsg: print "Building BUILD."
+  call_pal8(s, "RKA1:BUILD.PA","RKB1:BUILD.BN")
+  if progmsg: print "Loading and savinging BUILD.SV to RKB1:"
+  s.os8_send_cmd ("\\.", "R ABSLDR")
+  s.os8_send_cmd ("\*", "RKB1:BUILD.BN")
+  s.os8_send_ctrl ('[')
+  s.os8_send_cmd ("\\.", "SAVE RKB1:BUILD.SV")
+
+  call_pal8(s, "RKA1:OS8.PA", "RKB1:OS8.BN")
+  call_pal8(s, "RKA1:CD.PA", "RKB1:CD.BN")
+
+  # Build RESORC and CCL
+  if progmsg: print "Preparing to build CCL and RESORC with BATCH scripts."
+
+  s.os8_send_cmd ("\\.", "ASSIGN RKA1 IN")
+  s.os8_send_cmd ("\\.", "ASSIGN RKB1 OUT")
+
+  # BATCH scripts must be on the SYSTEM device.  DSK: will work.
+  s.os8_send_cmd ("\\.", "COPY DSK:<RKA1:RESORC.BI")
+  s.os8_send_cmd ("\\.", "COPY DSK:<RKA1:CCL.BI")
+  
+  # The CCL.BI script chains to RESORC.BI
+  s.os8_send_cmd("\\.", "SUBMIT CCL.BI")
+  # What kind of error trapping can we do here?
+
+  # Delete the batch scripts we copied in.
+  s.os8_send_cmd ("\\.", "DEL DSK:<RKA1:RESORC.BI")
+  s.os8_send_cmd ("\\.", "DEL DSK:<RKA1:CCL.BI")
+  if progmsg: print "RESORC.SV and CCL.SV should be in RKB1:"
+  
+  # Finish up
+  if progmsg: print "Cleaning up..."
+  if progmsg: print "Squish RKB1:"
+  s.os8_squish ("RKB1:")
+  s.back_to_cmd("\\.")
+  s.send_cmd ("detach rk0")
+  s.send_cmd ("detach rk1")
 
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 
 def main ():
   # Parse the command line
-  allowed_acts = ["all", "bin", "src", "patch"]
+  allowed_acts = ["all", "bin", "src", "patch", "head", "v3f"]
   do_all_acts = ["bin", "src"]    # Just do bin and src if act is "all".
   
   ap = argparser.ArgParser (allowed_acts)
@@ -829,6 +935,7 @@ def main ():
   if acts["bin"]: make_bin (s, ap.args)
   if acts["src"]: make_src (s, ap.args)
   if acts["patch"]: make_patch (s, ap.args)
+  if acts["v3f"]: make_v3f (s, ap.args)
   
   s.quit ()
   if progmsg: print "Done!"
