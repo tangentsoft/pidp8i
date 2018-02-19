@@ -58,6 +58,11 @@ DEBUG = False
 VERBOSE = False
 QUIET = False
 
+# Default RK05 system image to attach if no sys specified.
+_default_sys_image = "os8v3d-patched.rk05"
+_default_sys_path = dirs.os8mo + _default_sys_image
+_default_att_spec = ["rk", "0", _default_sys_path]
+
 # Regex for parsing an argument string into a sys device
 _dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
 _dev_arg_re = re.compile(_dev_arg_regex_str)
@@ -365,6 +370,7 @@ VERBOSE_USAGE = TERSE_USAGE + """
     out: it requires at least one source and one destination.
 
     The -a, -b, -i, -y, and -z flags correspond to the OS/8 PIP options:
+
         /A    ASCII format.  OS/8 and POSIX newlines are translated.
               Such transfers are lossless if line endings are  well-formed.
         /B    Binary OS/8 ABSLDR format with leader/trailer and other
@@ -372,6 +378,9 @@ VERBOSE_USAGE = TERSE_USAGE + """
         /I    Image mode.  Files are copied byte for byte verbatim.
         /Z    ZERO directory of destination OS/8 device.
         /Y    Yank system area from source to destination.
+
+    If no format flag is set, the default transfer format is /I.
+
     (This priogram currently uses PIP as its primary handler for the
     OS/8 side of the work.)  They must be followed by at least one source
     file name, and they affect all subsequent source file names until
@@ -456,7 +465,7 @@ def parse_args ():
   numargs = len(sys.argv)
 
   filespec_seen = 0
-  mode_opt = "b"                              # start of with default of binary.
+  mode_opt = "i"                              # start of with default of binary.
   first_mode = mode_opt
   source = ""
   destination = ""
@@ -609,6 +618,7 @@ def main ():
 
   # Perform sys attach
   att_spec = action_plan["sys"]
+  if att_spec == None: att_spec = _default_att_spec
   simh_boot_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
   imagename = att_spec[2]
   if not os.path.exists (imagename):
