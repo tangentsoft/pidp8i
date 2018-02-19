@@ -62,6 +62,7 @@ the build RK05 image as `README.TX`.
 [rtk-mirror]:http://rtk.mirrors.pdp-11.ru/ftp.update.uu.se/pdp8/pdp-8/fromnichols/
 [extensions-doc]:https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extensions.md
 
+<code>
 ## Contents of readme.v3f
 
 OS/8 Version 3F					27-Jul-1995
@@ -151,3 +152,9 @@ to extract the V3F source files.
 `TECO.PA`
 `VXNS.PA`
 `VXSY.PA`
+</code>
+
+### <a id="license"></a>License
+
+Copyright © 2018 by Bill Cattey. Licensed under the terms of
+[the SIMH license][sl].
