@@ -888,8 +888,8 @@ def make_v3f (s, args):
   
   # Finish up
   if progmsg: print "Cleaning up..."
-  if progmsg: print "Squish RKB1:"
-  s.os8_squish ("RKB1:")
+  if progmsg: print "Squish RKB1"
+  s.os8_squish ("RKB1")
   s.back_to_cmd("\\.")
   s.send_cmd ("detach rk0")
   s.send_cmd ("detach rk1")
