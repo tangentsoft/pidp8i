@@ -843,26 +843,107 @@ def make_system_tape (s, args):
   s.os8_send_cmd ("\\.", "COPY DSK:<RKB1:OS8.BN,CD.BN")
   
   # Run build from v3f image to create the system.
+  # Although it would be nice to just load all drivers
+  # BUILD has limited space, and detectin the error,
+  # "?NO ROOM" is a pain.
   s.os8_send_cmd ("\\.", "RUN RKB1 BUILD")
   s.os8_send_cmd ("\$", "LOAD DTA1:RK8ESY.BN")
   s.os8_send_cmd ("\$", "LOAD DTA1:RK8ENS.BN")
   s.os8_send_cmd ("\$", "LOAD DTA1:PT8E.BN")
+  # Here we choose between TCO8, TD8E with either 12K or ROM
+  # Currently done with commenting out code.
+  # Need to conceive a structure for specifying these choices.
   s.os8_send_cmd ("\$", "LOAD DTA1:TC08SY.BN")
   s.os8_send_cmd ("\$", "LOAD DTA1:TC08NS.BN")
-  s.os8_send_cmd ("\$", "LOAD DTA1:RX01NS.BN")
+  # TD8E 12K
+  # s.os8_send_cmd ("\$", "LOAD DTA1:TD8ESY.BN")
+  # TD8E with ROM
+  # s.os8_send_cmd ("\$", "LOAD DTA1:ROMMSY.BN")
+  
+  # Non-System Handlers for up to 8 TD8E drives:
+  # TD8EA for units 0 and 1.
+  s.os8_send_cmd ("\$", "LOAD DTA1:TD8EA.BN")
+  # TD8EB for units 2 and 3.
+  # s.os8_send_cmd ("\$", "LOAD DTA1:TD8EB.BN")
+  # TD8EC for units 4 and 5.
+  # s.os8_send_cmd ("\$", "LOAD DTA1:TD8EC.BN")
+  # TD8ED for units 6 and 7.
+  # s.os8_send_cmd ("\$", "LOAD DTA1:TD8ED.BN")
+
   s.os8_send_cmd ("\$", "LOAD DTA1:KL8E.BN")
   s.os8_send_cmd ("\$", "LOAD DTA1:LPSV.BN")
+  
+  # We will configure for RX02 support by default.
+  s.os8_send_cmd ("\$", "LOAD RKB1:RXSY2.BN")
+  s.os8_send_cmd ("\$", "LOAD RKB1:RXNS.BN")
+  
+  # Some physical configurations will have RX01
+  # and will need the following instead:
+  # Note that BUILD calls BOTH the RX01 and RX02
+  # handlers, "RX8E" so you have to pick ONE to load.
+  # s.os8_send_cmd ("\$", "LOAD RKB1:RXSY.BN")
+  # The non-system handler with v3f may or may not work with RK01.
+  # s.os8_send_cmd ("\$", "LOAD DTA1:RX01NS.BN")
+
   s.os8_send_cmd ("\$", "INSERT PT8E,PTR")
   s.os8_send_cmd ("\$", "INSERT PT8E,PTP")
   s.os8_send_cmd ("\$", "INSERT KL8E,TTY")
   s.os8_send_cmd ("\$", "INSERT LPSV,LPT")
+
+  # Now the choice of system and DSK devices
+  # TC08
+  s.os8_send_cmd ("\$", "SYSTEM TC08")
+  s.os8_send_cmd ("\$", "INSERT TC08,DTA0")
+  s.os8_send_cmd ("\$", "INSERT TC,DTA1")
+  s.os8_send_cmd ("\$", "DSK TC08:DTA0")
+
+  # TD8E with 12K core, not ROM
+  # s.os8_send_cmd ("\$", "SYSTEM TD8E")
+  # s.os8_send_cmd ("\$", "INSERT TD8E,DTA0")
+  # s.os8_send_cmd ("\$", "INSERT TD8E,DTA1")
+  # s.os8_send_cmd ("\$", "DSK TD8E:DTA0")
+
+  # TD8E with ROM system handler
+  # s.os8_send_cmd ("\$", "SYSTEM ROM")
+  # s.os8_send_cmd ("\$", "INSERT ROM,DTA0")
+  # s.os8_send_cmd ("\$", "INSERT ROM,DTA1")
+  # s.os8_send_cmd ("\$", "DSK ROM:DTA0")
+
+  # TD8E Non-system Handlers
+  # s.os8_send_cmd ("\$", "INSERT TD8A,DTA0")
+  # s.os8_send_cmd ("\$", "INSERT TD8A,DTA1")
+  # s.os8_send_cmd ("\$", "INSERT TD8B,DTA2")
+  # s.os8_send_cmd ("\$", "INSERT TD8B,DTA3")
+  # s.os8_send_cmd ("\$", "INSERT TD8C,DTA4")
+  # s.os8_send_cmd ("\$", "INSERT TD8C,DTA5")
+  # s.os8_send_cmd ("\$", "INSERT TD8D,DTA6")
+  # s.os8_send_cmd ("\$", "INSERT TD8D,DTA7")
+
+  # RX01  (Only do this if buiding an RX01 image, not a DECtape.)
+  # s.os8_send_cmd ("\$", "SYSTEM RX8E")
+  # s.os8_send_cmd ("\$", "INSERT RX01,RXA0,RXA1")
+
+  # RX02  (Only do this if building a RX02 image, not a DECtape.)
+  # s.os8_send_cmd ("\$", "SYSTEM RX8E")
+  # s.os8_send_cmd ("\$", "INSERT RX02,RXA0,RXA1")
+
+  # In our default config we have room for 3 RKs if
+  # we don't run with both RX non-system devices.
+  s.os8_send_cmd ("\$", "INSERT RX02,RXA0")
+
+  # RK05 (Only do this if building an RK05 image, not a DECtape.)
+  # s.os8_send_cmd ("\$", "SYSTEM RK8E")
+  # s.os8_send_cmd ("\$", "INSERT RK8E,RKA0,RKB0")
+  # RK05 Non-System Handlers
   s.os8_send_cmd ("\$", "INSERT RK05,RKA0,RKB0")
   s.os8_send_cmd ("\$", "INSERT RK05,RKA1,RKB1")
   s.os8_send_cmd ("\$", "INSERT RK05,RKA2,RKB2")
-  s.os8_send_cmd ("\$", "SYSTEM TC08")
-  s.os8_send_cmd ("\$", "INSERT TC08,DTA0")
-  s.os8_send_cmd ("\$", "DSK TC08:DTA0")
 
+  # ***CAUTION***
+  # When you do this you are instructing BUILD to
+  # OVERWRITE the system area.  If you do this to your
+  # running RK05 pack by mistake, you WILL make a mess
+  # and need to re-run mkos8 to re-make it.
   s.os8_send_cmd ("\$", "BUILD")
   s.os8_send_cmd ("LOAD OS/8: ", "DSK:OS8.BN")
   s.os8_send_cmd ("LOAD CD: ", "DSK:CD.BN")
@@ -943,6 +1024,9 @@ def make_v3f (s, args):
   sys_path = dirs.os8mo + _patched_rk05
   build_path = dirs.os8mo + _v3f_build_rk05
 
+  pal_sources = ["OS8", "CD", "RL0", "RL1", "RL2", "RL3", "RLC", "RXSY1",
+             "RXSY2", "RXNS"]
+
   if not os.path.isfile(sys_path):
     print "System pack: " + sys_path + " not found."
     mkos8_abort(s)
@@ -963,8 +1047,8 @@ def make_v3f (s, args):
   s.os8_send_ctrl ('[')
   s.os8_send_cmd ("\\.", "SAVE RKB1:BUILD.SV")
 
-  call_pal8(s, "RKA1:OS8.PA", "RKB1:OS8.BN")
-  call_pal8(s, "RKA1:CD.PA", "RKB1:CD.BN")
+  for pal_src in pal_sources:
+    call_pal8 (s, "RKA1:" + pal_src + ".PA", "RKB1:" + pal_src + ".BN")
 
   # Build RESORC and CCL
   if progmsg: print "Preparing to build CCL and RESORC with BATCH scripts."
