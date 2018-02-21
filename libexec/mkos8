@@ -920,10 +920,14 @@ def make_system_tape (s, args):
   # s.os8_send_cmd ("\$", "INSERT TD8D,DTA7")
 
   # RX01  (Only do this if buiding an RX01 image, not a DECtape.)
+  # NOTE! In simh make sure you have done:
+  # set rx rx8e to configure the device for RX01 mode.
   # s.os8_send_cmd ("\$", "SYSTEM RX8E")
   # s.os8_send_cmd ("\$", "INSERT RX01,RXA0,RXA1")
 
   # RX02  (Only do this if building a RX02 image, not a DECtape.)
+  # NOTE! In simh make sure you have done:
+  # set rx rx28 to configure the device for RX01 mode.
   # s.os8_send_cmd ("\$", "SYSTEM RX8E")
   # s.os8_send_cmd ("\$", "INSERT RX02,RXA0,RXA1")
 
