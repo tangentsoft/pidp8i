@@ -763,30 +763,41 @@ to generate your OS's SSH keys, so you must do it interactively with
 `sudo` permissions.
 
 
-<a id="unit"></a>
+<a id="systemd" name="unit"></a>
 ## The systemd Unit File
 
-The PiDP-8/I software version 2017.12.22 and all prior releases
-used an old-style System V style init script to start the PiDP-8/I
-service. In the next release after that, we switched to a systemd unit
-file instead, since we normally install on Raspbian, which has been
+The PiDP-8/I software version 2017.12.22 used an [old-style System V
+init script][svinit] to start the PiDP-8/I service, as did all prior
+releases, including Oscar Vermeulen's final stable release.
+
+As of 2018.02.22, we have now switched to a [systemd][systemd]
+unit file, since we normally install on Raspbian, which has been
 systemd-based for years. We've wanted to do this for some time, but
 some changes in the way systemd handles SysV init script compatibility
 in Raspbian Stretch forced the issue.
 
-One of the features systemd gives us is the ability to set the script
-to run as "user" service rather than as a system-wide service, which
-means you no longer need the `sudo` prefix on commands to start,
-stop, restart, and query the service, but you do need to tell it
-you're referring to a user-level service, not a system-level one:
+One of the features systemd gives us is the ability to set the unit
+to run as user-level service rather than as a system-wide service,
+which means you no longer need the `sudo` prefix on commands to start,
+stop, restart, and query the service. The only time you now need root
+privileges is when installing the software. After that, the software
+runs under your normal user account, as do all of the commands you
+use to manipulate the background simulator service.
+
+As a result of these changes, none of these commands work any longer:
+
+    $ sudo /etc/init.d/pidp8i start
+    $ sudo service pidp8i stop
+    $ sudo systemctl restart pidp8i
+
+The correct forms, respectively, are:
 
     $ systemctl --user start pidp8i
     $ systemctl --user stop pidp8i
     $ systemctl --user restart pidp8i
-    $ systemctl --user status pidp8i
 
-These commands are long, so we have extended the `pidp8i` command to run
-those commands for you when you pass it arguments:
+These commands are long, so we have extended the `pidp8i` command to
+build and run `systemctl` commands for you when you pass it arguments:
 
     $ pidp8i start
     $ pidp8i stop
@@ -804,12 +815,16 @@ The service is still set to start at boot, just as before.
 To disable the service so you can run something else against the
 PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
 
-    $ systemctl --user stop pidp8i
-    $ systemctl --user disable pidp8i
+    $ pidp8i stop
+    $ pidp8i disable
 
 If you install this release on a system that has the old SysV init
 script on it, that service will be disabled and removed before we
 install and enable the replacement systemd user service.
+
+[svinit]:  https://en.wikipedia.org/wiki/Init#SysV-style
+[systemd]: https://www.freedesktop.org/wiki/Software/systemd/
+
 
 
 ## License
