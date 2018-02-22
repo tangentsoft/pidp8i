@@ -72,7 +72,9 @@ the Pi. There are many options:
         $ wget -O pidp8i.tar.gz https://goo.gl/JowPoC
 
     That will get you a file called `pidp8i.tar.gz` in the current
-    working directory.
+    working directory containing the latest *release* version.  (Use the
+    "bleeding edge" links on the home page if you want the tip of trunk
+    instead!)
 
 3.  **SCP the file over** to a running Pi from another machine.
     If your Pi has OpenSSH installed and running, you can use
