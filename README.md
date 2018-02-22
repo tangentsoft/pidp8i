@@ -682,7 +682,7 @@ You have several options here:
 
 You can test your PiDP-8/I LED and switch functions with these commands:
 
-    $ sudo systemctl stop pidp8i
+    $ systemctl --user stop pidp8i
     $ pidp8i-test
 
 You may have to log out and back in before the second command will work,
@@ -694,7 +694,7 @@ program, since both programs need exclusive access to the LEDs and
 switches on the front panel.  After you are done testing, you can start
 the PiDP-8/I simulator back up with:
 
-    $ sudo systemctl start pidp8i
+    $ systemctl --user start pidp8i
 
 See [its documentation][test] for more details.
 
@@ -712,7 +712,7 @@ were renamed to include `pidp8i` in their name:
 
 1.  To start the simulator:
 
-        $ sudo systemctl start pidp8i
+        $ systemctl --user start pidp8i
 
     This will happen automatically on reboot unless you disable the
     service, such as in order to run one of the various [forks of Deeper
@@ -734,7 +734,7 @@ were renamed to include `pidp8i` in their name:
 
 5.  To shut the simulator down from the Raspbian command line:
 
-        $ sudo systemctl stop pidp8i
+        $ systemctl --user stop pidp8i
 
 There are [other major differences][mdif] between the old stable
 distribution and this one.  See that linked wiki article for details.

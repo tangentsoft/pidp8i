@@ -165,7 +165,7 @@ function do_prepare() {
 
     history -c ; rm -f ~/.bash_history
 
-    sudo systemctl stop pidp8i || true          # avoid sim hogging CPU
+    systemctl --user stop pidp8i || true        # avoid sim hogging CPU
     sudo systemctl enable ssh || true           # disabled by default
     sudo shred -u /etc/ssh/*key* || true        # allow multiple passes
     sudo dphys-swapfile uninstall || true
