@@ -785,7 +785,21 @@ you're referring to a user-level service, not a system-level one:
     $ systemctl --user restart pidp8i
     $ systemctl --user status pidp8i
 
-The service is set to start at boot, as before.
+These commands are long, so we have extended the `pidp8i` command to run
+those commands for you when you pass it arguments:
+
+    $ pidp8i start
+    $ pidp8i stop
+    $ pidp8i restart
+    $ pidp8i status -l
+
+If you run it without arguments, it attaches to the GNU screen(1)
+session, just as before.
+
+The last command above shows that *all* arguments are passed to
+`systemctl`, not just the first, so you can pass flags and such.
+
+The service is still set to start at boot, just as before.
 
 To disable the service so you can run something else against the
 PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
