@@ -40,8 +40,30 @@ is_running() {
     test $procs -gt 0 && return 0 || return 1
 }
 
-if [ "$1" = "start" ]
+# Were we given a command line argument?
+if [ -z "$1" ]
 then
+    # No, so just try to attach to the running simulator
+    if is_running
+    then
+        echo Joining simulator session already in progress...
+        screen -r -S pidp8i
+    else
+        cat <<ERROR
+Either the simulator isn't running, or it isn't running under a screen(1)
+session owned by @INSTUSR@.  Did you start the simulator via systemd?
+
+ERROR
+    fi
+elif test -t 1
+then
+    # Yes, and we're attached to a terminal, so forward the verb to
+    # systemd.  This acts as a command shortener.
+    systemctl --user "$@" pidp8i
+    exit $?
+elif [ "$1" = "start" ]
+then
+    # systemd is telling us to start the background simulator
     if is_running
     then
         echo "PiDP-8/I is already running, not starting again." >&2
@@ -76,12 +98,14 @@ then
     exit $?
 elif [ "$1" = "stop" ]
 then
+    # systemd is telling us to stop the background simulator
     if is_running ; then screen -S pidp8i -X quit ; fi
     pkill -9 -f pidp8i-sim
 elif [ "$1" = "install" ]
 then
-    # Intended to be called only from "make install" with root perms
-    # dropped, since this stuff has to be done as @INSTUSR@.
+    # "sudo make install" is running us with root perms dropped.  We do
+    # a bunch of things for it that would be awkward to do from within
+    # the Makefile, which must be done as @INSTUSR@.
     set -e
     cd @abs_top_builddir@
     export XDG_RUNTIME_DIR=/run/user/$(id -u)
@@ -90,16 +114,4 @@ then
     @INSTALL@ -m 644 @srcdir@/etc/pidp8i.service $unitdir
     systemctl --user daemon-reload
     /bin/systemctl --user enable pidp8i
-else
-    if is_running
-    then
-        echo Joining simulator session already in progress...
-        screen -r -S pidp8i
-    else
-        cat <<ERROR
-Either the simulator isn't running, or it isn't running under a screen(1)
-session owned by @INSTUSR@.  Did you start the simulator via systemd?
-
-ERROR
-    fi
 fi
