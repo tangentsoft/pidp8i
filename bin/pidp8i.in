@@ -55,10 +55,24 @@ session owned by @INSTUSR@.  Did you start the simulator via systemd?
 
 ERROR
     fi
+elif [ "$1" = "install" ]
+then
+    # "sudo make install" is running us with root perms dropped.  We do
+    # a bunch of things for it that would be awkward to do from within
+    # the Makefile, which must be done as @INSTUSR@.
+    set -e
+    cd @abs_top_builddir@
+    export XDG_RUNTIME_DIR=/run/user/$(id -u)
+    unitdir=~@INSTUSR@/.local/share/systemd/user
+    @INSTALL@ -d $unitdir
+    @INSTALL@ -m 644 @srcdir@/etc/pidp8i.service $unitdir
+    systemctl --user daemon-reload
+    /bin/systemctl --user enable pidp8i
 elif test -t 1
 then
-    # Yes, and we're attached to a terminal, so forward the verb to
-    # systemd.  This acts as a command shortener.
+    # We were given some other arg(s) and we're attached to a terminal,
+    # so build a systemctl command with those args so the user doesn't
+    # have to type out the canonical form of the command.
     systemctl --user "$@" pidp8i
     exit $?
 elif [ "$1" = "start" ]
@@ -101,17 +115,4 @@ then
     # systemd is telling us to stop the background simulator
     if is_running ; then screen -S pidp8i -X quit ; fi
     pkill -9 -f pidp8i-sim
-elif [ "$1" = "install" ]
-then
-    # "sudo make install" is running us with root perms dropped.  We do
-    # a bunch of things for it that would be awkward to do from within
-    # the Makefile, which must be done as @INSTUSR@.
-    set -e
-    cd @abs_top_builddir@
-    export XDG_RUNTIME_DIR=/run/user/$(id -u)
-    unitdir=~@INSTUSR@/.local/share/systemd/user
-    @INSTALL@ -d $unitdir
-    @INSTALL@ -m 644 @srcdir@/etc/pidp8i.service $unitdir
-    systemctl --user daemon-reload
-    /bin/systemctl --user enable pidp8i
 fi
