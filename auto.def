@@ -93,9 +93,11 @@ append alloptions {
     os8-src=1         => "do not build os8v3d-src.rk05 from OS/8 source tapes"
     serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:         => "override the throttle values in the boot scripts"
+    usb-automount=1   => "do not automatically mount USB drives for SING_STEP + DF"
 }
 
 options $alloptions
+define USB_AUTOMOUNT [opt-bool usb-automount]
 
 # Make our own array of os8 options so we can apply the meta options
 foreach {opt def desc} $os8opts {

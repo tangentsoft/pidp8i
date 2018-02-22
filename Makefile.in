@@ -323,6 +323,7 @@ install: all instdirs
 		apt-get -y remove usbmount > /dev/null 2>&1 \
 	) || true
 
+ifeq (@USB_AUTOMOUNT@, 1)
 	@# Install the usb-mount systemd unit file and udev rules
 	@(  test -d /etc/systemd && \
 		@INSTALL@ -m 644 etc/usb-mount@.service /etc/systemd/system && \
@@ -333,6 +334,7 @@ install: all instdirs
 		/sbin/udevadm control --reload-rules && \
 		/sbin/udevadm trigger \
 	) || true
+endif
 
 	@# Disable competing services if this is a Raspberry Pi
 	@(test -x /bin/systemctl && /bin/systemctl disable deeper pidp8 2> /dev/null || true)

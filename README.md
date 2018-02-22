@@ -325,6 +325,26 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
+#### --disable-usb-automount
+
+When you install the software on a [systemd][systemd]-based Linux
+system, we normally configure the OS to automatically mount USB drives
+when they are initially plugged in, which allows the `SING_STEP` + `DF`
+media image auto-attach feature to work smoothly. That is, if you plug
+in a USB memory stick holding a `*.pt` file containing a paper tape
+image, you want the simulator to be able to find it if you have the DF
+switches set to 1, telling the PiDP-8/I front panel code to look for
+something to attach to the simulator's paper tape reader.
+
+This feature may interfere with other uses of USB, such as when booting
+your Pi from an external USB hard disk drive. Give this option to
+disable the feature.
+
+(Alternately, you could modify our `etc/udev.rules` and/or
+`bin/usb-mount` scripts so that they work cooperatively with your local
+USB setup rather than conflicting with it.)
+
+
 #### --disable-cc8-cross
 
 Give this option if you do not want to build Ian Schofield's `cc8` C
