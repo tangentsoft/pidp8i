@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 ########################################################################
-# pidp8i.in - Attach the current terminal to the screen(1) session
-#	started by the SysV init script in etc/pidp8i-ini.
+# pidp8i.in - Collection of scriptlets for dealing with the pidp8i
+#   systemd user service and its associated screen(1) session.
 #
-# Copyright © 2015-2017 Oscar Vermeulen and Warren Young
+# Copyright © 2015-2018 Oscar Vermeulen and Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -30,16 +30,76 @@
 # authorization from those authors.
 ########################################################################
 
-if [ "$USER" != "@INSTUSR@" ] ; then exec su -c "$0" @INSTUSR@ ; fi
+bootdir="@BOOTDIR@"
+prefix="@ABSPREFIX@"
+sim="$prefix/bin/pidp8i-sim"
+scanswitch="$prefix/libexec/scanswitch"
 
-procs=`screen -ls pidp8i | egrep '[0-9]+\.pidp8i' | wc -l`
-if [ $procs -ne 0 ]; then
-	echo Joining simulator session already in progress...
-	screen -r
+is_running() {
+    procs=`screen -list pidp8i | grep -Pc '\d\.pidp8i'`
+    test $procs -gt 0 && return 0 || return 1
+}
+
+if [ "$1" = "start" ]
+then
+    if is_running
+    then
+        echo "PiDP-8/I is already running, not starting again." >&2
+        exit 0
+    fi
+
+    # User is asking us to start the PiDP-8/I simulator. First step:
+    # check for special front panel switch combos which control us.
+    $scanswitch >/dev/null 2>&1
+    rv=$?
+    if [ $rv -eq 8 ]; then
+        echo "PiDP-8/I STOP switch detected, aborting." >&2
+        exit 0
+    elif [ $rv -lt 8 ]; then
+        bscript="$bootdir/""$rv"".script"
+        echo "Booting from $bscript..."
+    elif [ $rv -eq 127 ]; then
+        echo "PiDP-8/I panel not present.  Booting from 0.script..."
+        bscript="$bootdir/0.script"
+    else
+        echo "Bad return value $rv from $scanswitch!"
+        exit 1
+    fi
+
+    # We want SIMH to have a sensible working directory: somewhere the
+    # user can write files and which makes sense when giving SIMH
+    # commands involving file paths.  This default is chosen because it
+    # satisfies both criteria, plus it makes tools/mkos8 happy.
+    # If you change the default here, change that script as well.
+    cd "$prefix/share/media"
+    screen -dm -S pidp8i "$sim" "$bscript"
+    exit $?
+elif [ "$1" = "stop" ]
+then
+    if is_running ; then screen -S pidp8i -X quit ; fi
+    pkill -9 -f pidp8i-sim
+elif [ "$1" = "install" ]
+then
+    # Intended to be called only from "make install" with root perms
+    # dropped, since this stuff has to be done as @INSTUSR@.
+    set -e
+    cd @abs_top_builddir@
+    export XDG_RUNTIME_DIR=/run/user/$(id -u)
+    unitdir=~@INSTUSR@/.local/share/systemd/user
+    @INSTALL@ -d $unitdir
+    @INSTALL@ -m 644 @srcdir@/etc/pidp8i.service $unitdir
+    systemctl --user daemon-reload
+    /bin/systemctl --user enable pidp8i
 else
-	cat <<ERROR
+    if is_running
+    then
+        echo Joining simulator session already in progress...
+        screen -r -S pidp8i
+    else
+        cat <<ERROR
 Either the simulator isn't running, or it isn't running under a screen(1)
-session owned by @INSTUSR@.  Did you start it via the init script?
+session owned by @INSTUSR@.  Did you start the simulator via systemd?
 
 ERROR
+    fi
 fi

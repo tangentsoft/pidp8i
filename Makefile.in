@@ -235,7 +235,7 @@ INFILES = \
 	@srcdir@/boot/6.script.in \
 	@srcdir@/boot/7.script.in \
 	@srcdir@/boot/run.script.in \
-	@srcdir@/etc/pidp8i-init.in \
+	@srcdir@/etc/pidp8i.service.in \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/etc/usb-mount@.service.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
@@ -255,6 +255,9 @@ OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
 CLTXT = /boot/cmdline.txt
 
 ADF := adrules.mk
+
+
+#### TARGETS ###########################################################
 
 .PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
@@ -316,10 +319,12 @@ install: all instdirs
 	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
 
 	@# Remove usbmount: we've replaced that with bin/usb-mount and friends.
-	@test -x /usr/bin/apt-get -a -d /etc/usbmount && apt-get -y remove usbmount || true
+	@(test -x /usr/bin/apt-get -a -d /etc/usbmount && \
+		apt-get -y remove usbmount > /dev/null 2>&1 \
+	) || true
 
 	@# Install the usb-mount systemd unit file and udev rules
-	(  test -d /etc/systemd && \
+	@(  test -d /etc/systemd && \
 		@INSTALL@ -m 644 etc/usb-mount@.service /etc/systemd/system && \
 		@INSTALL@ -m 644 @srcdir@/etc/udev.rules /etc/udev/rules.d/68-usb-mount.rules && \
 		sed -i -e 's/MountFlags=slave/MountFlags=shared/' \
@@ -330,14 +335,18 @@ install: all instdirs
 	) || true
 
 	@# Disable competing services if this is a Raspberry Pi
-	@(test -x /bin/systemctl && /bin/systemctl disable deeper || true)
-	@(test -x /bin/systemctl && /bin/systemctl disable pidp8  || true)
+	@(test -x /bin/systemctl && /bin/systemctl disable deeper pidp8 2> /dev/null || true)
 
-	@# Install the init script if this system is systemd based.
-	@@INSTALL@ -m 755 @srcdir@/etc/pidp8i-init @prefix@/etc
-	@(  test -w /etc/init.d -a -x /bin/systemctl && \
-		ln -sf @ABSPREFIX@/etc/pidp8i-init /etc/init.d/pidp8i && \
-		/bin/systemctl enable pidp8i \
+	@# Get rid of the old SysV init file if upgrading an older system.
+	@(test -e /etc/init.d/pidp8i -a -e /etc/rc5.d/S*pidp8i && \
+		/bin/systemctl disable pidp8i && \
+		rm -f /etc/init.d/pidp8i \
+	) || true
+
+	@# Install the systemd unit file if this system is systemd based.
+	@(test -x /bin/systemctl && \
+		sudo -i -u @INSTUSR@ @ABSPREFIX@/bin/pidp8i install && \
+		/bin/loginctl enable-linger @INSTUSR@ \
 	) || true
 
 	@# Give the install user permission to use GPIO if done on a Pi

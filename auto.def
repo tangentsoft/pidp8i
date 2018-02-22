@@ -472,7 +472,7 @@ make-template boot/6.script.in
 make-template boot/7.script.in
 make-template boot/run.script.in
 make-template boot/tss8.script.in
-make-template etc/pidp8i-init.in
+make-template etc/pidp8i.service.in
 make-template etc/sudoers.in
 make-template etc/usb-mount@.service.in
 make-template examples/Makefile.in
@@ -488,4 +488,4 @@ make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
-exec chmod +x "$builddir/tools/simh-update"
+exec chmod +x "$builddir/bin/pidp8i" "$builddir/tools/simh-update"

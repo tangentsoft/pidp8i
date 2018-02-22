@@ -740,9 +740,74 @@ There are [other major differences][mdif] between the old stable
 distribution and this one.  See that linked wiki article for details.
 
 
+<a id="sshd"></a>
+## Enabling the SSH Server on the Binary OS Images
+
+The OpenSSH server is enabled and running by default on the PiDP-8/I
+binary OS images, but for security reasons, the build process we use
+to create these OS images wipes out the SSH host keys generated here
+on our build system, else everyone's PiDP-8/I would have the same
+host keys, which would be a massive security hole. Unfortunately,
+the Raspbian `sshd` service is not smart enough to regenerate these
+keys if they are missing on boot, so you need to do this once by hand:
+
+    $ sudo dpkg-reconfigure openssh-server
+
+You should be able to log in via SSH immediately after that command
+completes.
+
+We used to do this automatically in releases v2017.12.22 and before,
+but that was when we started the `pidp8i` service as root, which we no
+longer do. Consequently, the `pidp8i` service no longer has permission
+to generate your OS's SSH keys, so you must do it interactively with
+`sudo` permissions.
+
+
+<a id="unit"></a>
+## The systemd Unit File
+
+The PiDP-8/I software version 2017.12.22 and all prior releases
+used an old-style System V style init script to start the PiDP-8/I
+service. In the next release after that, we switched to a systemd unit
+file instead, since we normally install on Raspbian, which has been
+systemd-based for years. We've wanted to do this for some time, but
+some changes in the way systemd handles SysV init script compatibility
+in Raspbian Stretch forced the issue.
+
+One of the features systemd gives us is the ability to set the script
+to run as "user" service rather than as a system-wide service, which
+means you no longer need the `sudo` prefix on commands to start,
+stop, restart, and query the service, but you do need to tell it you're
+speaking of a user-level service:
+
+    $ systemctl --user start pidp8i
+    $ systemctl --user stop pidp8i
+    $ systemctl --user restart pidp8i
+    $ systemctl --user status pidp8i
+
+You can start the service in a one-shot mode without involving systemd,
+if the service is currently stopped:
+
+    $ pidp8i start
+
+This is the same old `pidp8i` script. It just takes an optional "start"
+argument now to start the service in the background. The systemd unit
+file calls this for you, if the service is enabled at system boot, as it
+will be by default.
+
+To disable it so you can run something else against the PiDP-8/I
+front panel hardware instead, such as Deeper Thought 2:
+
+    $ systemctl --user disable pidp8i
+
+If you install this release on a system that has the old SysV init
+script on it, that service will be disabled and removed before we
+install and enable the replacement systemd user service.
+
+
 ## License
 
-Copyright © 2016-2017 by Warren Young. This document is licensed under
+Copyright © 2016-2018 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
