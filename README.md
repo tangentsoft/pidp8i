@@ -777,27 +777,20 @@ in Raspbian Stretch forced the issue.
 One of the features systemd gives us is the ability to set the script
 to run as "user" service rather than as a system-wide service, which
 means you no longer need the `sudo` prefix on commands to start,
-stop, restart, and query the service, but you do need to tell it you're
-speaking of a user-level service:
+stop, restart, and query the service, but you do need to tell it
+you're referring to a user-level service, not a system-level one:
 
     $ systemctl --user start pidp8i
     $ systemctl --user stop pidp8i
     $ systemctl --user restart pidp8i
     $ systemctl --user status pidp8i
 
-You can start the service in a one-shot mode without involving systemd,
-if the service is currently stopped:
+The service is set to start at boot, as before.
 
-    $ pidp8i start
+To disable the service so you can run something else against the
+PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
 
-This is the same old `pidp8i` script. It just takes an optional "start"
-argument now to start the service in the background. The systemd unit
-file calls this for you, if the service is enabled at system boot, as it
-will be by default.
-
-To disable it so you can run something else against the PiDP-8/I
-front panel hardware instead, such as Deeper Thought 2:
-
+    $ systemctl --user stop pidp8i
     $ systemctl --user disable pidp8i
 
 If you install this release on a system that has the old SysV init
