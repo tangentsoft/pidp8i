@@ -82,6 +82,22 @@ _com_split_parse = re.compile(_com_split_str)
 _odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
 _odt_parse = re.compile(_odt_parse_str)
 
+# Simple regex to separate command keyword from rest of line.
+_comm_re_str = "^(\S+)(\s+(.*))?$"
+_comm_re = re.compile(_comm_re_str)
+
+# Regex for parsing an argument string into a sys device
+_mount_regex_str = "^(rk|td|dt|rx)(\d?)\s+(.*)$"
+_mount_re = re.compile(_mount_regex_str)
+
+# Map of SIMH device names to OS/8 device name prefixes.
+_os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "dt" : "DTA", "rx" : "RX"}
+
+_os8_partitions = {"RK": ["A", "B"]}
+
+# OS/8 file name matching regex
+_os8_file_re = re.compile("(\S+):(\S+)?")
+
 #### mkos8_abort  ######################################################
 # Fatal error. Abort mkos8
 # Assumes we are in SIMH context. Quit SIMH
@@ -1081,12 +1097,251 @@ def make_v3f (s, args):
   s.send_cmd ("detach rk0")
   s.send_cmd ("detach rk1")
 
+#### do_mount_comm ######################################################
+# Remember we have to figure out how to differentiate between
+# RX01 and RX02
+
+def do_mount_comm (s, line, file):
+  m = re.match(_mount_re, line)
+  if m == None:
+    print "Could not parse mount.  Ignoring: " + line
+    return
+  simh_dev = m.group(1)
+  unit = m.group(2)
+  rest = m.group(3)
+  parts = rest.split()
+  if len(parts) == 0:
+    print "No image name specified in: " + line
+    return
+  ro_arg = ""
+  imagename = parts[0]
+  # Case of additional arguments.
+  if len (parts) > 1:
+    for part in parts[1:]:
+      if part == "read-only": ro_arg = "-r "
+      elif part == "must-exist":
+        if not os.path.exists(imagename):
+          print imagename + " must exist but was not found. Not mounting."
+          return
+      elif part == "no-overwrite":
+        next_tape = 0
+        while os.path.isfile(imagename):
+          print "Found: " + imagename
+          next_tape += 1
+          dot = imagename.rindex(".")
+          imagename = imagename[:dot] + str(next_tape) + imagename[dot:]
+      else:
+        print "Ignoring unrecognized mount option: " + part
+  if unit == None or unit == "":
+    print "Need unit number for: " + line
+    return
+
+  if simh_dev not in _os8_from_simh_dev:
+    print "Unrecognized simh dev: " + simh_dev
+    return
+  os8dev = _os8_from_simh_dev[simh_dev]
+
+  attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
+
+  print attach_comm
+  
+
+#### do_boot_comm #######################################################
+
+def do_boot_comm (s, line, file):
+  boot_comm = "boot " + line
+  print boot_comm
+
+#### do_os8_comm ########################################################
+
+def do_os8_comm (s, line, file):
+  os8_comm = line
+  print os8_comm
+
+#### do_done_comm #######################################################
+
+def do_done_comm (s, line, file):
+  return
+
+#### do_begin_comm ######################################################
+
+def do_begin_comm (s, line, file):
+  sub_commands = {"fotp": do_fotp_subcomm, "build": do_build_subcomm}
+
+  m = re.match(_comm_re, line)
+  if m == None:
+    print "Could not parse sub-command: " + line
+  if m.group(1) not in sub_commands:
+    print "Ignoring unrecognized sub-command: " + m.group(1)
+    print "Ignoring everything to next end."
+    ignore_to_subcomm_end(s, line, file)
+  else:
+    sub_commands[m.group(1)](s, m.group(3), file)
+  
+  
+#### do_build_load_sub ###################################################
+
+def do_build_load_sub (s, line, file):
+  load_re_str = "^(\S+:)?\S+(.BN)?$"
+  m = re.match(load_re_str, line)
+  if m == None:
+    print "Ignoring mal-formed argument to LOAD: " + line
+  else:
+    comm = "LOAD " + line
+    print comm
+
+#### do_build_insert_sub ##################################################
+
+def do_build_insert_sub (s, line, file):
+  return
+
+#### do_build_sys_sub ####################################################
+
+def do_build_sys_sub (s, line, file):
+  return
+
+#### do_build_dsk_sub ####################################################
+
+def do_build_dsk_sub (s, line, file):
+  return
+
+#### do_build_build_sub ###################################################
+
+def do_build_build_sub (s, line, file):
+  return
+
+#### do_build_bootsub ###################################################
+
+def do_build_boot_sub (s, line, file):
+  return
+
+
+#### do_end_comm ########################################################
+
+def do_end_comm (s, line, file):
+  return
+
+#### do_end_comm ########################################################
+
+def do_end_comm (s, line, file):
+  return
+
+#### do_end_comm ########################################################
+
+def do_end_comm (s, line, file):
+  return
+
+#### do_end_comm ########################################################
+
+def do_end_comm (s, line, file):
+  return
+
+#### do_build_subcomm ###################################################
+
+def do_build_subcomm (s, old_line, file):
+  build_commands = {"LOAD": do_build_load_sub, "INSERT": do_build_insert_sub,
+                    "SYSTEM": do_build_sys_sub, "DSK": do_build_dsk_sub,
+                    "BUILD": do_build_build_sub, "BOOT": do_build_boot_sub,
+                    "end": None}
+  for line in file:
+    if line[0] == "#": continue
+    line = line.strip()
+    if line == "": continue
+
+    m = re.match(_comm_re, line)
+    if m == None:
+      print "Ignoring build sub-command: " + line
+      continue
+
+    if m.group(1) not in build_commands:
+      print "Unrecognized command: " + m.group(1)
+      continue
+
+    # Handle end here
+    if m.group(1) == "end":
+      if m.group(3) == None:
+        print "Warning, it is preferrd that the name of the sub command follow \"end\"."
+        return
+      if m.group(3) != "build":
+        print "Warning: expected \"end build\". Instead got: " + m.group(2)  
+      return
+    build_commands[m.group(1)](s, m.group(3), file)
+
+
+#### do_fotp_subcomm ####################################################
+
+def do_fotp_subcomm (s, line, file):
+  return
+
+#### ignore_to_subcomm_end #############################################
+
+def ignore_to_subcomm_end (s, old_line, file):
+  for line in file:
+    line = line.strip()
+    end_key = "end"
+    if len(line) < len(end_key): continue
+    if line[0:len(end_key)] == end_key: return
+
+
+#### run_system ########################################################
+# Run a system command script
+# Call parsers as needed for supported sub commands.
+#
+# Commands:
+# mount <simh-dev> <image-file> [<option> ...]
+#       option: must-exist | no-overwrite | read-only
+# boot <simh-dev>
+# os8 <command-line>
+#       the rest of the line is passed verbatim to OS/8
+# pal8 <pal-command line>
+# done
+# begin <sub-command> <os8-path>
+# end <sub-command>
+#
+# Sub-commands:
+# build, fotp
+#
+# Currently the run-script is hard-coded because of an old assumption
+# about argument parsing for mkos8.
+
+def run_system (s, args):
+# Strings, regexps, and command arrays used by run_system
+  commands = {"mount": do_mount_comm, "boot": do_boot_comm ,
+              "os8": do_os8_comm, "done": do_done_comm,
+              "begin": do_begin_comm, "end": do_end_comm}
+
+
+  command_filename = "tc08.mkos8"
+
+  try:
+    command_file = open(dirs.os8mo + command_filename, "r")
+  except IOError:
+    print command_filename + " not found."
+    sys.exit(-1)
+
+  for line in command_file:
+    if line[0] == "#": continue
+    line = line.strip()
+    if line == "": continue
+
+    m = re.match(_comm_re, line)
+    if m == None:
+      print "Ignoring command line: " + line
+      continue
+
+    if m.group(1) not in commands:
+      print "Unrecognized command: " + m.group(1)
+      continue
+
+    print "Calling: " + m.group(1)
+    commands[m.group(1)](s, m.group(3), command_file)
+
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 
 def main ():
   # Parse the command line
-  allowed_acts = ["all", "bin", "src", "patch", "head", "v3f"]
+  allowed_acts = ["all", "bin", "src", "patch", "head", "v3f", "system"]
   do_all_acts = ["bin", "src"]    # Just do bin and src if act is "all".
   
   ap = argparser.ArgParser (allowed_acts)
@@ -1124,6 +1379,7 @@ def main ():
   if acts["patch"]: make_patch (s, ap.args)
   if acts["v3f"]: make_v3f (s, ap.args)
   if acts["head"]: make_system_tape (s, ap.args)
+  if acts["system"]: run_system (s, ap.args)
   
   s.quit ()
   if progmsg: print "Done!"

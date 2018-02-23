@@ -1,0 +1,31 @@
+# Comments begin with an octothorpe
+# Blank lines are ignored.
+
+mount rk0 ./os8v3d-patched.rk05 must-exist
+mount rk1 ./os8-v3f-build.rk05 must-exist
+
+boot rk0
+
+pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
+os8 SAVE RKB1:BUILD.SV
+
+pal8 RKB1:OS8.BN<RKA1:OS8.PA
+pal8 RKB1:CD.BN<RKA1:CD.PA
+pal8 RKB1:RL0.BN<RKA1:RL0.PA
+pal8 RKB1:RL1.BN<RKA1:RL1.PA
+pal8 RKB1:RL2.BN<RKA1:RL2.PA
+pal8 RKB1:RL3.BN<RKA1:RL3.PA
+pal8 RKB1:RLC.BN<RKA1:RLC.PA
+pal8 RKB1:RXSY1.BN<RKA1:RXSY1.PA
+pal8 RKB1:RXSY2.BN<RKA1:RXSY1.PA
+pal8 RKB1:RXNS.BN<RKA1:RXNS.PA
+
+os8 ASSIGN RKA1 IN
+os8 ASSIGN RKB1 OUT
+os8 COPY DSK:<RKA1:RESORC.BI
+os8 COPY DSK:<RKA1:CCL.BI
+os8 SUBMIT CCL.BI
+
+# The done command detaches all mounted devices
+# and quits the simulator
+done
