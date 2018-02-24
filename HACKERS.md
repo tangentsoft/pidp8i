@@ -409,6 +409,20 @@ The directory structure of the PiDP-8/I project is as follows:
 *   <b>`etc`</b> - Files which get copied to `/etc` or one of its
     subdirectories at installation time.
 
+    There is an exception: `pidp8i.service.in` does not get installed to
+    `/etc` at install time, but only because systemd's [unit file load
+    path scheme][uflp] is screwy: *some* unit files go in `/etc`, while
+    others do not.  The systemd docs claim we can put user units in
+    `/etc/systemd/user` but this does not appear to work on a Raspberry
+    Pi running Raspbian Stretch at least.  We've fallen back to another
+    directory that *does* work, which feels more right to us anyway, but
+    which happens not to be in `/etc`.  If systemd were designed sanely,
+    we'd install such files to `$HOME/etc/systemd` but noooo....
+
+    Since none of the above actually argues for creating another
+    top-level repository directory to hold this one file, we've chosen
+    to store it in `etc`.
+
 *   <b>`examples`</b> - Example programs for the end user's edification.
     Many of these are referenced by documentation files and therefore
     should not be renamed or moved, since there may be public web links
@@ -495,6 +509,7 @@ The directory structure of the PiDP-8/I project is as follows:
     also installed, respectively.
 
 [edoc]: https://www.fossil-scm.org/index.html/doc/trunk/www/embeddeddoc.wiki
+[uflp]: https://www.freedesktop.org/software/systemd/man/systemd.unit.html#id-1.9
 
 
 <a id="patches"></a>
