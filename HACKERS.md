@@ -326,60 +326,82 @@ The directory structure of the PiDP-8/I project is as follows:
 
 *   <b>`.`</b> - Top level, occupied only by the few files the end user
     of the source code needs immediately at hand on first unpacking the
-    project: the top level build system files, the top-level
-    `README*.md` files, and licensing information. If a given file *can*
-    be buried deeper, it *should* be buried to reduce clutter at this
-    most precious level of the hierarchy.
+    project: the top level build system files, key documentation, and
+    licensing information. If a given file *can* be buried deeper, it
+    *should* be buried to reduce clutter at this most precious level of
+    the hierarchy.
 
 *   <b>`.fossil-settings`</b> - Versioned settings for the Fossil build
-    system.  Say `fossil help set` at the command line for more on this.
-    Such settings are intended to be correct for all users of the
-    system; rather than expressing defaults, they express *policy*.
+    system which Fossil applies as defaults everywhere you check out a
+    Fossil version.  Settings made here are intended to be correct for
+    all users of the system; think of these not as expressing defaults
+    but as expressing *policy*.  It is possible to override these
+    settings, but we do not make settings here if we expect that some
+    users may quibble with our choices here.
 
     Any setting whose value may vary between users of the Fossil
     repository should be done locally with a `fossil set` command.
+
+    Say `fossil help set` at the command line for more on this.
 
 *   <b>`autosetup`</b> - The bulk of the [Autosetup build system][asbs].
     These are generic files, not modified by the project itself. We
     occasionally run `tools/autosetup-update` to merge in upstream
     changes.
 
-*   <b>`bin`</b> - Programs run both in development and after
-    installation.  Some files here are created directly by the project's
-    developers, while others are outputs of the build system. The
-    content of this directory is copied to `$prefix/bin` at installation
-    time, which is added to the user's `PATH` by the installer.
+*   <b>`bin`</b> - Programs installed to `$prefix/bin`, which may also
+    be run during development, if only to test changes to those
+    programs.  Some scripts stored here are written in place by the
+    project's developers, while other files in this directory are
+    outputs of the build system.
 
-*   <b>`boot`</b> - SIMH initialization scripts. The `*.script.in` files
-    are written by the project developers but have build-time values
-    substituted in by the `configure` script to produce a `*.script`
-    version. Some of the remaining `*.script` files are hand-written and
-    as such are checked into Fossil directly. The remainder are outputs
-    of `tools/mkbootscript`, which produces them from `palbart` assembly
-    listings.
+    The content of this directory is copied to `$prefix/bin` at
+    installation time, which is added to the user's `PATH` by the
+    installer.
 
-    All of these `*.script` files are installed to `$prefix/share/boot`
-    regardless of their origin.
+*   <b>`boot`</b> - SIMH initialization scripts.  The `*.script.in`
+    files are written by the project developers but have local
+    configuration values substituted in by the `configure` script to
+    produce a `*.script` version.  Scripts which need no config-time
+    values substituted in are checked in directly as `*.script`.  The
+    `*.script` files in this directory which do not fall into either of
+    those categories are outputs of `tools/mkbootscript`, which produces
+    them from `palbart` assembly listings.
+
+    All of these `*.script` files are copied to `$prefix/share/boot` by
+    `make mediainstall` which runs automatically from `make install`
+    when we detect that the binary media and SIMH boot scripts have
+    never been installed at this site before.  On subsequent installs,
+    The user choosed whether to run `make mediainstall` by hand to
+    overwrite all of this.
 
 *   <b>`doc`</b> - Documentation files not immediately important enough
-    to a new user of the software that they do not have to be at the top
-    level of the project tree.
+    to a new user of the software that they must be at the top level of
+    the project tree.
 
-    Fossil allows us to treat the contents of `doc` much like the wiki,
-    so how do we decide whether to put a given document into `doc` or
-    the wiki?  The rule is simple: is the document's history tied to the
-    history of the PiDP-8/I project itself?  If so, it goes in `doc`,
-    else it goes in the wiki.  When checking out older versions of the
+    Fossil's [embedded documentation][edoc] feature allows us to present
+    the contents of `doc` to web site users all but indistinguishably
+    from a wiki page.  Why are there two different ways to achieve the
+    same end, and how do we decide which mechanism to use?
+
+    The rule is simple: is a given document's change history is tied to
+    the history of the PiDP-8/I project itself, it goes in `doc`, else
+    it goes in the wiki.  When checking out older versions of the
     PiDP-8/I software, you expect to roll back to contemporaneous
-    versions of the project documentation; such files go into `doc`.
-    Documents which are independent of the PiDP-8/I project history go
-    into the wiki.
-
-    (The wiki does also have history, but rolling back to a prior
-    version of the PiDP-8/I repository and then saying `fossil ui` will
-    show you the current version of the wiki documents, not the versions
-    as they existed at the time of the historical checkin you rolled
-    back to.)
+    versions of the project documentation, which is what happens to
+    files in `doc` but not to the wiki documents.  The wiki always
+    presents the most current version, no matter what version you have
+    locally checked out.
+    
+    (Fossil's wiki feature behaves much like Wikipedia: it keeps change
+    history for wiki documents, but it always presents the most recent
+    version unless you manually go poking around in the history to pull
+    up old versions.  If you check out a historical version of the
+    software and then say `fossil ui` within that checkout directory,
+    the resulting web view still shows the most recent locally-available
+    version of each wiki document, not versions of the wiki documents
+    contemporaneous with the historical version of the Fossil tree you
+    have checked out.)
 
     The `doc/graphics` subdirectory holds JPEGs and SVGs displayed
     inline within wiki articles.
@@ -388,7 +410,9 @@ The directory structure of the PiDP-8/I project is as follows:
     subdirectories at installation time.
 
 *   <b>`examples`</b> - Example programs for the end user's edification.
-    Many of these are referenced by documentation files.
+    Many of these are referenced by documentation files and therefore
+    should not be renamed or moved, since there may be public web links
+    referring to these examples.
 
 *   <b>`hardware`</b> - Schematics and such for the PiDP-8/I board or
     associated hardware.
@@ -396,19 +420,20 @@ The directory structure of the PiDP-8/I project is as follows:
 *   <b>`labels`</b> - Graphics intended to be printed out and used as
     labels for removable media.
 
-*   <b>`lib`</b> - Library routines used by other programs.
+*   <b>`lib`</b> - Library routines used by other programs, installed to
+    `$prefix/lib`.
 
 *   <b>`libexec`</b> - A logical extension of `lib`, these are
     standalone programs that nevertheless are intended to be run
-    primarily by other programs. Whereas a file in `lib` might have its
+    primarily by other programs.  Whereas a file in `lib` might have its
     interface described by a programmer's reference manual, the
     interface of a program in `libexec` is described by its usage
-    message. Examples:
+    message.  Examples:
 
     *   <b>`mkos8`</b> - Run by the build system.
     
         <p>It is sometimes run by hand in development, but primarily
-        only to further its development. Once it runs correctly after
+        only to further its development.  Once it runs correctly after
         adding some feature, we let <code>make</code> run it for us.</p>
 
     *   <b>`scanswitch`</b> - Run by `etc/pidp8i`.
@@ -417,8 +442,8 @@ The directory structure of the PiDP-8/I project is as follows:
         by developers modifying its behavior.</p>
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
-    *not* put into the user's `PATH`, on purpose. If a program should
-    end up in the user's `PATH`, it belongs in `bin`. Alternately, a
+    *not* put into the user's `PATH`, on purpose.  If a program should
+    end up in the user's `PATH`, it belongs in `bin`.  Alternately, a
     wrapper may be put in `bin` which calls a `libexec` program as a
     helper.
 
@@ -429,7 +454,7 @@ The directory structure of the PiDP-8/I project is as follows:
 
 *   <b>`obj`</b> - Intermediate output directory used by the build
     system.  It is safe to remove this directory at any time, as its
-    contents may be recreated by `make`. No file checked into Fossil
+    contents may be recreated by `make`.  No file checked into Fossil
     should be placed here.
 
     (Contrast `bin` which does have some files checked into Fossil; all
@@ -468,6 +493,8 @@ The directory structure of the PiDP-8/I project is as follows:
     move it to either `bin` or `libexec`, depending on whether it is run
     directly at the command line or run from some other program that is
     also installed, respectively.
+
+[edoc]: https://www.fossil-scm.org/index.html/doc/trunk/www/embeddeddoc.wiki
 
 
 <a id="patches"></a>
