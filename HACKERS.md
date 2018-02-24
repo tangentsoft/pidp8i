@@ -375,24 +375,25 @@ The directory structure of the PiDP-8/I project is as follows:
     The user choosed whether to run `make mediainstall` by hand to
     overwrite all of this.
 
-*   <b>`doc`</b> - Documentation files not immediately important enough
-    to a new user of the software that they must be at the top level of
-    the project tree.
+*   <b>`doc`</b> - Documentation files sufficiently unimportant to a new
+    user of the software that they need not be at the top level of the
+    project tree.  Such files can wait for new users to discover them.
 
     Fossil's [embedded documentation][edoc] feature allows us to present
     the contents of `doc` to web site users all but indistinguishably
     from a wiki page.  Why are there two different ways to achieve the
     same end, and how do we decide which mechanism to use?
 
-    The rule is simple: is a given document's change history is tied to
+    The rule is simple: if a given document's change history is tied to
     the history of the PiDP-8/I project itself, it goes in `doc`, else
     it goes in the wiki.  When checking out older versions of the
     PiDP-8/I software, you expect to roll back to contemporaneous
-    versions of the project documentation, which is what happens to
-    files in `doc` but not to the wiki documents.  The wiki always
-    presents the most current version, no matter what version you have
-    locally checked out.
-    
+    versions of the project documentation, which is what happens to all
+    files stored in the repository, including those in `doc`, but this
+    does not happen to the wiki documents.  The wiki always presents the
+    most current version, no matter what version you have locally
+    checked out.
+
     (Fossil's wiki feature behaves much like Wikipedia: it keeps change
     history for wiki documents, but it always presents the most recent
     version unless you manually go poking around in the history to pull
