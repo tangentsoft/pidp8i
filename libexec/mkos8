@@ -83,6 +83,7 @@ _odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
 _odt_parse = re.compile(_odt_parse_str)
 
 # Simple regex to separate command keyword from rest of line.
+# rest is in group(3)
 _comm_re_str = "^(\S+)(\s+(.*))?$"
 _comm_re = re.compile(_comm_re_str)
 
@@ -97,6 +98,24 @@ _os8_partitions = {"RK": ["A", "B"]}
 
 # OS/8 file name matching regex
 _os8_file_re = re.compile("(\S+):(\S+)?")
+
+# Regular expression for syntax checking inside FOTP
+# Destination is in group(1), Source is in group(3)
+_fotp_re = re.compile ("^((\S+:)?\S+)<((\S+:)?\S+)$")
+
+# Array of regular expressions for syntax checking inside BUILD
+_build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
+                    "UNLOAD": re.compile("^\S+(,\S+)?$"),
+                    "INSERT": re.compile("^\S+,\S+(,\S+)?$"),
+                    "DELETE": re.compile("^\S+(,\S+)?$"),
+                    "SYSTEM": re.compile("^\S+$"),
+                    "DSK"   : re.compile("^(\S+:)?\S+$"),
+                    "BUILD" : re.compile("^(\S+(.BN)?)\s+(\S+(.BN)?)$"),
+                    "PRINT" : None,
+                    "BOOT"  : None,
+                    "end"   : None}
+
+
 
 #### mkos8_abort  ######################################################
 # Fatal error. Abort mkos8
@@ -1101,7 +1120,7 @@ def make_v3f (s, args):
 # Remember we have to figure out how to differentiate between
 # RX01 and RX02
 
-def do_mount_comm (s, line, file):
+def do_mount_comm (s, args, line, file):
   m = re.match(_mount_re, line)
   if m == None:
     print "Could not parse mount.  Ignoring: " + line
@@ -1115,6 +1134,9 @@ def do_mount_comm (s, line, file):
     return
   ro_arg = ""
   imagename = parts[0]
+  dot = imagename.rindex(".")
+  base_imagename = imagename[:dot]
+  extension = imagename[dot:]
   # Case of additional arguments.
   if len (parts) > 1:
     for part in parts[1:]:
@@ -1128,8 +1150,7 @@ def do_mount_comm (s, line, file):
         while os.path.isfile(imagename):
           print "Found: " + imagename
           next_tape += 1
-          dot = imagename.rindex(".")
-          imagename = imagename[:dot] + str(next_tape) + imagename[dot:]
+          imagename =  base_imagename + str(next_tape) + extension
       else:
         print "Ignoring unrecognized mount option: " + part
   if unit == None or unit == "":
@@ -1143,29 +1164,46 @@ def do_mount_comm (s, line, file):
 
   attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
 
-  print attach_comm
+  if progmsg: print attach_comm
+  
+  s.send_cmd(attach_comm)
   
 
 #### do_boot_comm #######################################################
+# This command toggles our context from "simh" to "os8"
+# If we are already in os8 context, this is a RE-boot command
+# and we need to shift to simh context first
 
-def do_boot_comm (s, line, file):
+def do_boot_comm (s, args, line, file):
+  if s._context != "simh":
+    # Not in simh, need to get back to simh command level.
+    s.back_to_cmd ("\\.")
+    s._context = "simh"
   boot_comm = "boot " + line
-  print boot_comm
+  if progmsg: print boot_comm
+  s._context = "os8"
+  s.send_cmd(boot_comm)
 
 #### do_os8_comm ########################################################
 
-def do_os8_comm (s, line, file):
+def do_os8_comm (s, args, line, file):
   os8_comm = line
-  print os8_comm
+  if progmsg: print os8_comm
+  s.os8_send_cmd ("\\.", os8_comm)
 
 #### do_done_comm #######################################################
+# Return to SIMH from OS/8
+# Detach all devices to make sure buffers all get written out.
 
-def do_done_comm (s, line, file):
-  return
+def do_done_comm (s, args, line, file):
+  s.back_to_cmd ("\\.")
+  s._context = "simh"
+  s.send_cmd ("detach all")
+
 
 #### do_begin_comm ######################################################
 
-def do_begin_comm (s, line, file):
+def do_begin_comm (s, args, line, file):
   sub_commands = {"fotp": do_fotp_subcomm, "build": do_build_subcomm}
 
   m = re.match(_comm_re, line)
@@ -1176,73 +1214,29 @@ def do_begin_comm (s, line, file):
     print "Ignoring everything to next end."
     ignore_to_subcomm_end(s, line, file)
   else:
-    sub_commands[m.group(1)](s, m.group(3), file)
-  
-  
-#### do_build_load_sub ###################################################
-
-def do_build_load_sub (s, line, file):
-  load_re_str = "^(\S+:)?\S+(.BN)?$"
-  m = re.match(load_re_str, line)
-  if m == None:
-    print "Ignoring mal-formed argument to LOAD: " + line
-  else:
-    comm = "LOAD " + line
-    print comm
-
-#### do_build_insert_sub ##################################################
-
-def do_build_insert_sub (s, line, file):
-  return
-
-#### do_build_sys_sub ####################################################
-
-def do_build_sys_sub (s, line, file):
-  return
-
-#### do_build_dsk_sub ####################################################
-
-def do_build_dsk_sub (s, line, file):
-  return
-
-#### do_build_build_sub ###################################################
-
-def do_build_build_sub (s, line, file):
-  return
-
-#### do_build_bootsub ###################################################
-
-def do_build_boot_sub (s, line, file):
-  return
+    sub_commands[m.group(1)](s, args, m.group(3), file)
 
 
-#### do_end_comm ########################################################
+#### do_run_build_build #################################################
+# ***CAUTION***
+# When you do this you are instructing BUILD to
+# OVERWRITE the system area.  If you do this to your
+# running RK05 pack by mistake, you WILL make a mess
+# and need to re-run mkos8 to re-make it.
 
-def do_end_comm (s, line, file):
-  return
+def do_run_build_build (s, args, os8_spec, cd_spec):
+  s.os8_send_cmd ("\$", "BUILD")
+  s.os8_send_cmd ("LOAD OS/8: ", os8_spec)
+  s.os8_send_cmd ("LOAD CD: ", cd_spec)
 
-#### do_end_comm ########################################################
-
-def do_end_comm (s, line, file):
-  return
-
-#### do_end_comm ########################################################
-
-def do_end_comm (s, line, file):
-  return
-
-#### do_end_comm ########################################################
-
-def do_end_comm (s, line, file):
-  return
 
 #### do_build_subcomm ###################################################
 
-def do_build_subcomm (s, old_line, file):
-  build_commands = {"LOAD": do_build_load_sub, "INSERT": do_build_insert_sub,
-                    "SYSTEM": do_build_sys_sub, "DSK": do_build_dsk_sub,
-                    "BUILD": do_build_build_sub, "BOOT": do_build_boot_sub,
-                    "end": None}
+def do_build_subcomm (s, args, old_line, file):
+  os8_comm = "RU " + old_line
+  if progmsg: print os8_comm
+  s.os8_send_cmd ("\\.", os8_comm)
+  
   for line in file:
     if line[0] == "#": continue
     line = line.strip()
@@ -1250,32 +1244,79 @@ def do_build_subcomm (s, old_line, file):
 
     m = re.match(_comm_re, line)
     if m == None:
-      print "Ignoring build sub-command: " + line
+      print "Ignoring mal-formed build sub-command: " + line
       continue
 
-    if m.group(1) not in build_commands:
-      print "Unrecognized command: " + m.group(1)
+    build_sub = m.group(1)
+    rest = m.group(3)
+    if rest == None: rest = ""
+    
+    if build_sub not in _build_comm_regs:
+      print "Unrecognized BUILD command: " + build_sub
       continue
 
     # Handle end here
-    if m.group(1) == "end":
-      if m.group(3) == None:
-        print "Warning, it is preferrd that the name of the sub command follow \"end\"."
+    if build_sub == "end":
+      if rest == "":
+        print "Warning, it is preferred that the name of the sub command follow end."
         return
-      if m.group(3) != "build":
-        print "Warning: expected \"end build\". Instead got: " + m.group(2)  
+      if rest != "build":
+        print "Warning: expected \"end build\". Instead got: " + m.group(3)  
+      if progmsg: print "End BUILD"
       return
-    build_commands[m.group(1)](s, m.group(3), file)
+
+    build_re = _build_comm_regs[build_sub]
+
+    if build_re != None:
+      m2 = re.match(build_re, rest)
+      if m2 == None:
+        print "Ignoring mal-formed BUILD " + build_sub + " command: " + rest
+        continue
+    
+      if build_sub == "BUILD":
+        if m2.group(1) == None:
+          print "Missing source of OS8.BN. Ignoring BUILD command."
+          continue
+        if m2.group(3) == None:
+          print "Missing sorce of CD.BN. Ignoring BUILD command."
+          continue
+        if progmsg: print "calling do_run_build_build"
+        do_run_build_build (s, args, m2.group(1), m2.group(3))
+        continue
+
+    comm = build_sub + " " + rest
+    if progmsg: print "$ " + comm
+    s.os8_send_cmd ("\$", comm)
 
 
 #### do_fotp_subcomm ####################################################
 
-def do_fotp_subcomm (s, line, file):
-  return
+def do_fotp_subcomm (s, args, old_line, file):
+  os8_comm = "RU " + old_line
+  if progmsg: print os8_comm
+  s.os8_send_cmd ("\\.", os8_comm)
+  
+  for line in file:
+    if line[0] == "#": continue
+    line = line.strip()
+    if line == "": continue
+    if line == "end fotp":
+      if progmsg: print "End FOTP"
+      s.os8_send_ctrl ('[')
+      return
+
+    m = re.match(_fotp_re, line)
+    if m == None:
+      print "Ignoring mal-formed build sub-command: " + line
+      continue
+
+    comm = line
+    if progmsg: print "* " + line
+    s.os8_send_cmd ("\\*", line)
 
 #### ignore_to_subcomm_end #############################################
 
-def ignore_to_subcomm_end (s, old_line, file):
+def ignore_to_subcomm_end (s, args, old_line, file):
   for line in file:
     line = line.strip()
     end_key = "end"
@@ -1283,6 +1324,11 @@ def ignore_to_subcomm_end (s, old_line, file):
     if line[0:len(end_key)] == end_key: return
 
 
+#### do_end_comm ########################################################
+
+def do_end_comm (s, args, line, file):
+  print "Unexpectedly encountered end command: " + line
+    
 #### run_system ########################################################
 # Run a system command script
 # Call parsers as needed for supported sub commands.
@@ -1310,7 +1356,6 @@ def run_system (s, args):
               "os8": do_os8_comm, "done": do_done_comm,
               "begin": do_begin_comm, "end": do_end_comm}
 
-
   command_filename = "tc08.mkos8"
 
   try:
@@ -1334,7 +1379,7 @@ def run_system (s, args):
       continue
 
     print "Calling: " + m.group(1)
-    commands[m.group(1)](s, m.group(3), command_file)
+    commands[m.group(1)](s, args, m.group(3), command_file)
 
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.

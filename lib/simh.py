@@ -167,6 +167,12 @@ class simh:
     self._os8_error_match_strings = []
     self._os8_fatal_check = []
 
+    # We should keep track of what our command context is.
+    # Otherwise we have to implicitly remember what command
+    # prompt to expect.
+    # We start in the simh context until we boot something.
+    self._context = "simh"
+
     # Parse our OS/8 Errors table into actionable chunks
     for error_spec in self._os8_errors:
       self._os8_error_match_strings.append(error_spec[0])
