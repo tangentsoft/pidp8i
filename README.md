@@ -704,7 +704,7 @@ You have several options here:
 
 You can test your PiDP-8/I LED and switch functions with these commands:
 
-    $ systemctl --user stop pidp8i
+    $ pidp8i stop
     $ pidp8i-test
 
 You may have to log out and back in before the second command will work,
@@ -716,7 +716,7 @@ program, since both programs need exclusive access to the LEDs and
 switches on the front panel.  After you are done testing, you can start
 the PiDP-8/I simulator back up with:
 
-    $ systemctl --user start pidp8i
+    $ pidp8i start
 
 See [its documentation][test] for more details.
 
@@ -729,12 +729,11 @@ For the most part, this software distribution works like the [old stable
 describes this software too, for the most part.
 
 The largest user-visible difference between the two software
-distributions is that all of the shell commands affecting the software
-were renamed to include `pidp8i` in their name:
+distributions is that many of the shell commands are different:
 
-1.  To start the simulator:
+1.  To start the simulator running in the background:
 
-        $ systemctl --user start pidp8i
+        $ pidp8i start
 
     This will happen automatically on reboot unless you disable the
     service, such as in order to run one of the various [forks of Deeper
@@ -743,6 +742,10 @@ were renamed to include `pidp8i` in their name:
 2.  To attach the terminal you're working on to the simulator:
 
         $ pidp8i
+
+    (Yes, it's the same base command as above.  The `pidp8i` script uses
+    its first argument to determine what you want it to do.  Without
+    arguments, this is what it does.)
 
 3.  To detach from the simulator's terminal interface while leaving the
     PiDP-8/I simulator running, type <kbd>Ctrl-A d</kbd>.  You can
@@ -756,7 +759,7 @@ were renamed to include `pidp8i` in their name:
 
 5.  To shut the simulator down from the Raspbian command line:
 
-        $ systemctl --user stop pidp8i
+        $ pidp8i stop
 
 There are [other major differences][mdif] between the old stable
 distribution and this one.  See that linked wiki article for details.
