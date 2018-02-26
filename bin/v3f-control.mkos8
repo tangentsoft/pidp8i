@@ -7,6 +7,11 @@ mount rk1 ./os8-v3f-build.rk05 must-exist
 boot rk0
 
 pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
+
+begin absldr SYS:ABSLDR.SV
+RKB1:BUILD.BN
+end absldr
+
 os8 SAVE RKB1:BUILD.SV
 
 pal8 RKB1:OS8.BN<RKA1:OS8.PA
