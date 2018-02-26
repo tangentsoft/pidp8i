@@ -1413,11 +1413,22 @@ def ignore_to_subcomm_end (s, args, old_line, file):
     if line[0:len(end_key)] == end_key: return
 
 
+#### do_include_comm #####################################################
+# Call run_system_script recursively on the file path provided.
+# Our system context is a global variable, and may indeed be
+# affected by the running of the included command file.
+
+def do_include_comm (s, args, line, file):
+  if not os.path.isfile(line):
+    print "Could not find include file: " + line
+  run_system_script (s, args, line)
+    
+
 #### do_end_comm ########################################################
 
 def do_end_comm (s, args, line, file):
   print "Unexpectedly encountered end command: " + line
-    
+  
     
 #### run_system ########################################################
 # Run a system command script
@@ -1444,9 +1455,8 @@ def run_system_script (s, args, filename):
 # Strings, regexps, and command arrays used by run_system
   commands = {"mount": do_mount_comm, "boot": do_boot_comm ,
               "os8": do_os8_comm, "done": do_done_comm,
-              "pal8": do_pal8_comm,
+              "pal8": do_pal8_comm, "include": do_include_comm,
               "begin": do_begin_comm, "end": do_end_comm}
-
 
   try:
     command_file = open(dirs.os8mo + filename, "r")

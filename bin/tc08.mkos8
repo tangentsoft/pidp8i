@@ -80,12 +80,7 @@ end build
 
 os8 SAVE DTA0 BUILD.SV
 
-begin fotp RKA0:FOTP.SV
-DTA0:<RKA0:FOTP.SV
-DTA0:<RKA0:DIRECT.SV
-DTA0:<RKB1:CCL.SV
-DTA0:<RKB1:RESORC.SV
-end fotp
+include sys-dectape-copy.mkos8
 
 boot dt0
 
