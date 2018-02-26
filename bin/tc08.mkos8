@@ -16,9 +16,29 @@ begin build RKB1:BUILD
 LOAD DTA1:RK8ESY.BN
 LOAD DTA1:RK8ENS.BN
 LOAD DTA1:PT8E.BN
+
+# TC08 systems uncomment next line.
 LOAD DTA1:TC08SY.BN
 LOAD DTA1:TC08NS.BN
+
+
+# TD8E systems with 12K uncomment next line.
+# LOAD DTA1:TD8ESY.BN
+# TD8E systems with ROM uncomment next line.
+# LOAD DTA1:ROMMSY.BN
+
+# TD8E non-system handler.
+# Comment out if we run out of room in BUILD.
 LOAD DTA1:TD8EA.BN
+
+# Additional TD8E non-system devices
+# Units 2 and 3.
+# LOAD DTA1:TD8EB.BN
+# Units 4 and 5.
+# LOAD DTA1:TD8EC.BN
+# Units 6 and 7.
+# LOAD DTA1:TD8ED.BN
+
 # I think we want the RKB1 version of KL8E.BN
 LOAD DTA1:KL8E.BN
 LOAD DTA1:LPSV.BN
@@ -30,10 +50,23 @@ INSERT PT8E,PTP
 INSERT KL8E,TTY
 INSERT LPSV,LPT
 
+# Un-comment next 4 lines for TC08 System
 SYSTEM TC08
 INSERT TC08,DTA0
 INSERT TC,DTA1
 DSK TC08:DTA0
+
+# Un-comment next 4 lines for TD8E 12K System
+# SYSTEM TD8E
+# INSERT TD8E,DTA0
+# INSERT TD8E,DTA1
+# DSK TD8E:DTA0
+
+# Un-comment next 4 lines for TD8E ROM System
+# SYSTEM ROM
+# INSERT ROM,DTA0
+# INSERT ROM,DTA1
+# DSK ROM:DTA0
 
 INSERT RX02,RXA0
 
