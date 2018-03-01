@@ -97,7 +97,7 @@ _comm_re = re.compile(_comm_re_str)
 
 # Simple regex to identify an end command and put
 # the rest of the line in group(1)
-_end_comm_re = re.compile ("^end\s+(.*)?$")
+_end_option_comm_re = re.compile ("^end\s+option\s+(.*)$")
 
 # Simple regex to identify a begin command and put
 # the rest of the line in group(1)
@@ -169,7 +169,6 @@ _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
                     "BUILD" : re.compile("^(\S+(.BN)?)\s+(\S+(.BN)?)$"),
                     "PRINT" : None,
                     "BOOT"  : None,
-                    "begin" : None,
                     "end"   : None}
 
 
@@ -1173,6 +1172,60 @@ def make_v3f (s, args):
   s.send_cmd ("detach rk0")
   s.send_cmd ("detach rk1")
 
+
+#### basic_line_parse ###################################################
+# Returns stripped line and any other cleanup we want.
+# Returns None if we should just 'continue' on to the next line.
+# Filters out comments.
+# Processes the option begin/end blocks.
+
+def basic_line_parse (s, args, line, file):
+  global options_stack
+
+  if line[0] == "#": return None
+  retval = line.strip()
+  if retval == "": return None
+
+  # First test if we are in a begin option block
+  m = re.match (_begin_option_comm_re, line)
+  if m != None:
+    rest = m.group(1)
+    print "doing_begin_option: " + rest
+    print "options_set: " + str (options_set)
+
+    if rest in options_set:
+      # Option is active. We push it onto the stack
+      print "Pushing " + line + " onto options_stack"
+      options_stack.insert(0, m.group(1))
+    else:
+      # Option is inactive.  Ignore all subseqent lines
+      # until we get to an end command that matches our option.
+      ignore_to_subcomm_end (s, args, line, file, rest)
+    return None
+
+  m = re.match(_end_option_comm_re, line)
+  if m != None:
+    rest = m.group(1)
+    if (rest == None or rest == ""):
+      print "Warning! option end statement encountered with no argument."
+      return None
+    if len(options_stack) == 0:
+      print "Warning! option end statement found with no matching begin for option: " + rest
+      return None
+    if rest != options_stack[0]:
+      print "Warning! Mismatched option begin/end group. Currently inside option: " + \
+        options_stack[0] + " not " + rest
+      return None
+    else:
+      print "Popping " + options_stack[0]
+      options_stack.pop()
+      return None
+
+  return retval
+
+
+  
+
 #### do_mount_comm ######################################################
 # Remember we have to figure out how to differentiate between
 # RX01 and RX02
@@ -1269,58 +1322,6 @@ def do_pal8_comm (s, args, line, file):
     else:
       print "Unrecognized pal8 form: " + line
 
-#### test_begin_option_comm #######################################################
-# Test the current line to see if it is an end command.
-#
-# This is called from inside sub-commands to check and see if we have
-# an option block present.
-# Return False if this is not a begin option command,
-#    in which case caller proceeds with normal commands.
-# If this is a begin option command, 
-# push the parsed out option name onto the option stack.
-#    The caller ignores the line,
-
-def test_begin_option_comm(s, args, line, file):
-  global options_stack
-
-  m = re.match (_begin_option_comm_re, line)
-  if m == None: return False
-  do_begin_option (s, args, m.group(1), file)
-  return True
-
-
-#### test_end_comm #######################################################
-# Test the current line to see if it is an end command.
-#
-# If the current line is not an end command we return False.
-# If the end command argument matches the topmost element of
-# the option stack, we pop that element off signifying we're
-# done with the block.  This may happen while we inside a
-# sub-command.  If so, we return "None" which means:
-# "Ignore this whole line." In practice sub-commands will just
-# perform a continue to keep parsing and ignore the line.
-# If the end command argument matches comm_str we return True.
-# Therefore we detect either (1) the end of a sub-command,
-# (2) an option end while the option is active,
-# (3) an option end while ignoring text while the option is inactive.
-# In case 3, test_end_comm is being called from ignore_to_subcomm_end
-# with the inactive option.
-
-def test_end_comm (line, comm_str):
-  global options_stack
-
-  m = re.match(_end_comm_re, line)
-  if m == None: return False
-  rest = m.group(1)
-  if (rest == None or rest == "") and comm_str != "":
-    print "Warning! end statement encountered with no argument.  Expecting: " + comm_str
-    return None
-  if len(options_stack) > 0 and rest == options_stack[0]:
-    print "Popping " + options_stack[0]
-    options_stack.pop()
-  if rest == comm_str: return True
-  else: return None
-  
     
 #### do_done_comm #######################################################
 # Return to SIMH from OS/8
@@ -1390,9 +1391,8 @@ def do_build_subcomm (s, args, old_line, file):
   s.os8_send_cmd ("\\.", os8_comm)
   
   for line in file:
-    if line[0] == "#": continue
-    line = line.strip()
-    if line == "": continue
+    line = basic_line_parse(s, args, line, file)
+    if line == None: continue
 
     m = re.match(_comm_re, line)
     if m == None:
@@ -1407,12 +1407,15 @@ def do_build_subcomm (s, args, old_line, file):
       print "Unrecognized BUILD command: " + build_sub
       continue
 
-    if test_begin_option_comm (s, args, line, file): continue
-
-    end_val = test_end_comm (line, "build")
-    if end_val == None: continue
-    if end_val: return
-
+    if build_sub == "end":
+      if rest == "":
+        print "Warning! end statement encountered inside build with no argument. Exiting build."
+        return
+      elif rest == "build": return
+      else:
+        print "Warning! Mismatched begin/end blocks. Encountered end: " + rest + "Exiting build."
+        return
+      
     build_re = _build_comm_regs[build_sub]
 
     if build_re != None:
@@ -1445,20 +1448,22 @@ def do_fotp_subcomm (s, args, old_line, file):
   s.os8_send_cmd ("\\.", os8_comm)
   
   for line in file:
-    if line[0] == "#": continue
-    line = line.strip()
-    if line == "": continue
-    end_val = test_end_comm (line, "fotp")
-    if end_val == None: continue
-    if end_val:
+    line = basic_line_parse(s, args, line, file)
+    if line == None: continue
+
+    # Test for special case, "end" and act on it if present.
+    m = re.match(_comm_re, line)
+    if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
+      rest = m.group(3)
+      if rest == None or rest == "":
+        print "Warning! end statement encountered inside fotp with no argument."
+      elif rest != "fotp":
+        print "Warning! Mismatched begin/end blocks in fotp. Encountered end: " + rest
+        
       if progmsg: print "End FOTP"
       s.os8_send_ctrl ('[')
       return
 
-    # Check to see if we have options active inside our FOTP block
-    # If so, the test_begin_option will do the work and tell us so.
-    if test_begin_option_comm(s, args, line, file): continue
-    
     m = re.match(_fotp_re, line)
     if m == None:
       print "Ignoring mal-formed fotp file spec: " + line
@@ -1477,12 +1482,18 @@ def do_absldr_subcomm (s, args, old_line, file):
   s.os8_send_cmd ("\\.", os8_comm)
   
   for line in file:
-    if line[0] == "#": continue
-    line = line.strip()
-    if line == "": continue
-    end_val = test_end_comm(line, "absldr")
-    if end_val == None: continue
-    if end_val:
+    line = basic_line_parse(s, args, line, file)
+    if line == None: continue
+
+    # Test for special case, "end" and act on it if present.
+    m = re.match(_comm_re, line)
+    if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
+      rest = m.group(3)
+      if rest == None or rest == "":
+        print "Warning! end statement encountered inside absldr with no argument."
+      elif rest != "absldr":
+        print "Warning! Mismatched begin/end blocks in absldr. Encountered end: " + rest
+        
       if progmsg: print "End ABSLDR"
       s.os8_send_ctrl ('[')
       return

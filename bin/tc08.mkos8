@@ -21,7 +21,7 @@ LOAD DTA1:PT8E.BN
 begin option tc08
 LOAD DTA1:TC08SY.BN
 LOAD DTA1:TC08NS.BN
-end tc08
+end option tc08
 
 # TD8E systems with 12K uncomment next line.
 # LOAD DTA1:TD8ESY.BN
@@ -57,7 +57,7 @@ SYSTEM TC08
 INSERT TC08,DTA0
 INSERT TC,DTA1
 DSK TC08:DTA0
-end tc08
+end option tc08
 
 # Un-comment next 4 lines for TD8E 12K System
 # SYSTEM TD8E
