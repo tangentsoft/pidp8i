@@ -1498,10 +1498,6 @@ def do_absldr_subcomm (s, args, old_line, file):
       s.os8_send_ctrl ('[')
       return
 
-    # Check to see if we have options active inside our FOTP block
-    # If so, the test_begin_option will do the work and tell us so.
-    if test_begin_option_comm(s, args, line, file): continue
-    
     m = re.match(_absldr_re, line)
     if m == None:
       print "Ignoring mal-formed absldr file spec: " + line
