@@ -1,12 +1,47 @@
-# Builds a bootable TC08 dectape image
-# With pieces taken from os8v3d-patched.rk05,
-# the os8v3d device driver distribution DECtape,
-# the os8v3f-build rk05
+# Builds a bootable dectape image with pieces taken from:
+# os8v3d-patched.rk05, the os8v3d device driver distribution DECtape,
+# and the os8v3f-build rk05.
+# Building a bootable TD image is tricky, because our boot disk
+# is configured with TC08, not TD8E
+
+# For TD8E we run build 3 times:
+# First from SYS to change switch from TC08 to TD8E
+# Then from RKB1 to build the TD8E head,
+# Finally again from SYS to undo the first mess.
 
 mount rk0 ./os8v3d-patched.rk05 must-exist
 mount rk1 ./os8-v3f-build.rk05 must-exist
-mount dt0 ./system.tu56 no-overwrite
 mount dt1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
+
+begin option td12k
+
+boot rk0
+
+os8 SET SYS NO INIT
+
+begin build SYS:BUILD
+# TD8E non-system handler.
+# Comment out if we run out of room in BUILD.
+LOAD DTA1:TD8EA.BN
+DELETE DTA0,DTA1
+INSERT TD8A,DTA0,DTA1
+BOOT
+end build
+
+simh det dt1
+# We switch our running simh over from the dt to the td device
+# This will clear itself when simh shuts down.
+simh set dt disabled
+simh set td enabled
+
+mount td0 ./system_td12k.tu56 no-overwrite
+mount td1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
+end option td12k
+
+# Options decide what our output tape will be called.
+begin option tc08
+mount dt0 ./system_tc08.tu56 no-overwrite
+end option tc08
 
 boot rk0
 
@@ -17,20 +52,22 @@ LOAD DTA1:RK8ESY.BN
 LOAD DTA1:RK8ENS.BN
 LOAD DTA1:PT8E.BN
 
-# TC08 systems uncomment next line.
+# TD8E non-system handler.
+LOAD DTA1:TD8EA.BN
+
 begin option tc08
 LOAD DTA1:TC08SY.BN
 LOAD DTA1:TC08NS.BN
 end option tc08
 
 # TD8E systems with 12K uncomment next line.
-# LOAD DTA1:TD8ESY.BN
+begin option td12k
+LOAD DTA1:TD8ESY.BN
+end option td12k
 # TD8E systems with ROM uncomment next line.
-# LOAD DTA1:ROMMSY.BN
-
-# TD8E non-system handler.
-# Comment out if we run out of room in BUILD.
-LOAD DTA1:TD8EA.BN
+begin option tdrom
+LOAD DTA1:ROMMSY.BN
+end option tdrom
 
 # Additional TD8E non-system devices
 # Units 2 and 3.
@@ -51,7 +88,6 @@ INSERT PT8E,PTP
 INSERT KL8E,TTY
 INSERT LPSV,LPT
 
-# Un-comment next 4 lines for TC08 System
 begin option tc08
 SYSTEM TC08
 INSERT TC08,DTA0
@@ -60,16 +96,20 @@ DSK TC08:DTA0
 end option tc08
 
 # Un-comment next 4 lines for TD8E 12K System
-# SYSTEM TD8E
-# INSERT TD8E,DTA0
-# INSERT TD8E,DTA1
-# DSK TD8E:DTA0
+begin option td12k
+SYSTEM TD8E
+INSERT TD8E,DTA0
+INSERT TD8E,DTA1
+DSK TD8E:DTA0
+end option td12k
 
 # Un-comment next 4 lines for TD8E ROM System
-# SYSTEM ROM
-# INSERT ROM,DTA0
-# INSERT ROM,DTA1
-# DSK ROM:DTA0
+begin option tdrom
+SYSTEM ROM
+INSERT ROM,DTA0
+INSERT ROM,DTA1
+DSK ROM:DTA0
+end option tdrom
 
 INSERT RX02,RXA0
 
@@ -85,7 +125,21 @@ os8 SAVE DTA0 BUILD.SV
 
 include sys-dectape-copy.mkos8
 
+begin option td12k
+# Put system image back to TC08
+# The saved BUILD will just work.
+boot rk0
+begin build SYS:BUILD.SV
+BOOT
+end build
+os8 SET SYS INIT
+
+boot td0
+end option td12k
+
+begin option tc08
 boot dt0
+end option tc08
 
 os8 R CCL
 done

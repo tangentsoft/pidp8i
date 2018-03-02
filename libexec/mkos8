@@ -57,6 +57,12 @@ from simh import *
 # script's progress.
 progmsg = True
 
+# Our context -- Need to know when we are sending commands
+# to SIMH, OS/8, or other commands.
+# Starts off in simh context.
+
+context = "simh"
+
 # Optional sections encountered. Is a stack because optional sections
 # can be nested.
 options_stack = []
@@ -95,7 +101,11 @@ _odt_parse = re.compile(_odt_parse_str)
 _comm_re_str = "^(\S+)(\s+(.*))?$"
 _comm_re = re.compile(_comm_re_str)
 
-# Simple regex to identify an end command and put
+# Simple regex to identify an end comm and put the rest
+# the rest of the line in group(1)
+_end_comm_re = re.compile ("^end\s+(.*)?$")
+
+# Simple regex to identify an end option command and put
 # the rest of the line in group(1)
 _end_option_comm_re = re.compile ("^end\s+option\s+(.*)$")
 
@@ -1179,7 +1189,7 @@ def make_v3f (s, args):
 # Filters out comments.
 # Processes the option begin/end blocks.
 
-def basic_line_parse (s, args, line, file):
+def basic_line_parse (s, args, line, comm_file):
   global options_stack
 
   if line[0] == "#": return None
@@ -1187,7 +1197,7 @@ def basic_line_parse (s, args, line, file):
   if retval == "": return None
 
   # First test if we are in a begin option block
-  m = re.match (_begin_option_comm_re, line)
+  m = re.match (_begin_option_comm_re, retval)
   if m != None:
     rest = m.group(1)
     print "doing_begin_option: " + rest
@@ -1195,12 +1205,12 @@ def basic_line_parse (s, args, line, file):
 
     if rest in options_set:
       # Option is active. We push it onto the stack
-      print "Pushing " + line + " onto options_stack"
-      options_stack.insert(0, m.group(1))
+      print "Pushing " + rest + " onto options_stack"
+      options_stack.insert(0, rest)
     else:
       # Option is inactive.  Ignore all subseqent lines
       # until we get to an end command that matches our option.
-      ignore_to_subcomm_end (s, args, line, file, rest)
+      ignore_to_subcomm_end (s, args, line, comm_file, "option " + rest)
     return None
 
   m = re.match(_end_option_comm_re, line)
@@ -1224,13 +1234,43 @@ def basic_line_parse (s, args, line, file):
   return retval
 
 
+#### do_simh_comm ########################################################
+# I tried to avoid including this command but sometimes you just
+# have to reconfigure subtle bits of device drivers.
+def do_simh_comm (s, args, line, comm_file):
+  if progmsg: print line
+  if s._context == "os8":
+    # Not in simh, need to get back to simh command level.
+    s.back_to_cmd ("\\.")
+    s._context = "simh"
+    s.send_cmd(line)
+    s.os8_restart ()            # return to OS/8
+    s._context = "os8"
+  else:
+    s.send_cmd(line)
   
+
+#### do_umount_comm ######################################################
+def do_umount_comm (s, args, line, comm_file):
+  detach_comm = "det " + line
+  if progmsg: print detach_comm
+  if s._context == "os8":
+    # Not in simh, need to get back to simh command level.
+    s.back_to_cmd ("\\.")
+    s._context = "simh"
+    s.send_cmd(detach_comm)
+    s.os8_restart ()            # return to OS/8
+    s._context = "os8"
+  else:
+    s.send_cmd(detach_comm)
+
+
 
 #### do_mount_comm ######################################################
 # Remember we have to figure out how to differentiate between
 # RX01 and RX02
 
-def do_mount_comm (s, args, line, file):
+def do_mount_comm (s, args, line, comm_file):
   m = re.match(_mount_re, line)
   if m == None:
     print "Could not parse mount.  Ignoring: " + line
@@ -1275,8 +1315,15 @@ def do_mount_comm (s, args, line, file):
   attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
 
   if progmsg: print attach_comm
-  
-  s.send_cmd(attach_comm)
+  if s._context == "os8":
+    # Not in simh, need to get back to simh command level.
+    s.back_to_cmd ("\\.")
+    s._context = "simh"
+    s.send_cmd(attach_comm)
+    s.os8_restart ()            # return to OS/8
+    s._context = "os8"
+  else:
+    s.send_cmd(attach_comm)
   
 
 #### do_boot_comm #######################################################
@@ -1284,8 +1331,8 @@ def do_mount_comm (s, args, line, file):
 # If we are already in os8 context, this is a RE-boot command
 # and we need to shift to simh context first
 
-def do_boot_comm (s, args, line, file):
-  if s._context != "simh":
+def do_boot_comm (s, args, line, comm_file):
+  if s._context == "os8":
     # Not in simh, need to get back to simh command level.
     s.back_to_cmd ("\\.")
     s._context = "simh"
@@ -1296,7 +1343,7 @@ def do_boot_comm (s, args, line, file):
 
 #### do_os8_comm ########################################################
 
-def do_os8_comm (s, args, line, file):
+def do_os8_comm (s, args, line, comm_file):
   os8_comm = line
   if progmsg: print os8_comm
   s.os8_send_cmd ("\\.", os8_comm)
@@ -1307,7 +1354,7 @@ def do_os8_comm (s, args, line, file):
 # and the 3 argument form where all status goes into the listing file.
 # We do the 3 argument form with a simple "os8" script command.
 
-def do_pal8_comm (s, args, line, file):
+def do_pal8_comm (s, args, line, comm_file):
   m_2form = re.match (_two_arg_pal_re, line)
   if m_2form != None:
     # Call the 2arg pal8 code that works hard at error analysis.
@@ -1327,7 +1374,7 @@ def do_pal8_comm (s, args, line, file):
 # Return to SIMH from OS/8
 # Detach all devices to make sure buffers all get written out.
 
-def do_done_comm (s, args, line, file):
+def do_done_comm (s, args, line, comm_file):
   s.back_to_cmd ("\\.")
   s._context = "simh"
   s.send_cmd ("detach all")
@@ -1337,7 +1384,7 @@ def do_done_comm (s, args, line, file):
 # Begin a block of text that is ignored unless the option
 # appears in options_set
 
-def do_begin_option (s, args, line, file):
+def do_begin_option (s, args, line, comm_file):
   global options_stack
   global options_set
 
@@ -1351,13 +1398,13 @@ def do_begin_option (s, args, line, file):
   else:
     # Option is inactive.  Ignore all subseqent lines
     # until we get to an end command that matches our option.
-    ignore_to_subcomm_end (s, args, line, file, line)
+    ignore_to_subcomm_end (s, args, line, comm_file, line)
 
 #### do_begin_comm ######################################################
 
-def do_begin_comm (s, args, line, file):
+def do_begin_comm (s, args, line, comm_file):
   sub_commands = {"fotp": do_fotp_subcomm, "build": do_build_subcomm,
-                  "absldr": do_absldr_subcomm, "option": do_begin_option}
+                  "absldr": do_absldr_subcomm}
 
   m = re.match(_comm_re, line)
   if m == None:
@@ -1365,9 +1412,9 @@ def do_begin_comm (s, args, line, file):
   if m.group(1) not in sub_commands:
     print "Ignoring unrecognized sub-command: " + m.group(1)
     print "Ignoring everything to next end."
-    ignore_to_subcomm_end(s, line, file, "")
+    ignore_to_subcomm_end(s, line, comm_file, "")
   else:
-    sub_commands[m.group(1)](s, args, m.group(3), file)
+    sub_commands[m.group(1)](s, args, m.group(3), comm_file)
 
 
 #### do_run_build_build #################################################
@@ -1385,13 +1432,13 @@ def do_run_build_build (s, args, os8_spec, cd_spec):
 
 #### do_build_subcomm ###################################################
 
-def do_build_subcomm (s, args, old_line, file):
+def do_build_subcomm (s, args, old_line, comm_file):
   os8_comm = "RU " + old_line
   if progmsg: print os8_comm
   s.os8_send_cmd ("\\.", os8_comm)
   
-  for line in file:
-    line = basic_line_parse(s, args, line, file)
+  for line in comm_file:
+    line = basic_line_parse(s, args, line, comm_file)
     if line == None: continue
 
     m = re.match(_comm_re, line)
@@ -1442,13 +1489,13 @@ def do_build_subcomm (s, args, old_line, file):
 
 #### do_fotp_subcomm ####################################################
 
-def do_fotp_subcomm (s, args, old_line, file):
+def do_fotp_subcomm (s, args, old_line, comm_file):
   os8_comm = "RU " + old_line
   if progmsg: print os8_comm
   s.os8_send_cmd ("\\.", os8_comm)
   
-  for line in file:
-    line = basic_line_parse(s, args, line, file)
+  for line in comm_file:
+    line = basic_line_parse(s, args, line, comm_file)
     if line == None: continue
 
     # Test for special case, "end" and act on it if present.
@@ -1476,13 +1523,13 @@ def do_fotp_subcomm (s, args, old_line, file):
 #### do_absldr_subcomm ####################################################
 # A clone of do_fotp_subcom.  Can we find a way to merge the common code?
 
-def do_absldr_subcomm (s, args, old_line, file):
+def do_absldr_subcomm (s, args, old_line, comm_file):
   os8_comm = "RU " + old_line
   if progmsg: print os8_comm
   s.os8_send_cmd ("\\.", os8_comm)
   
-  for line in file:
-    line = basic_line_parse(s, args, line, file)
+  for line in comm_file:
+    line = basic_line_parse(s, args, line, comm_file)
     if line == None: continue
 
     # Test for special case, "end" and act on it if present.
@@ -1509,16 +1556,20 @@ def do_absldr_subcomm (s, args, old_line, file):
 
 #### ignore_to_subcomm_end #############################################
 
-def ignore_to_subcomm_end (s, args, old_line, file, end_str):
+def ignore_to_subcomm_end (s, args, old_line, comm_file, end_str):
   global options_stack
   
-  for line in file:
+  for line in comm_file:
     line = line.strip()
-    end_val = test_end_comm(line, end_str)
-    if end_val == None:
-      if end_str != "": continue      # We're looking for a specific end.
-      else: return
-    if end_val: return
+    print "Ignore: " + line
+    
+    m = re.match(_end_comm_re, line)
+    if m == None: continue
+
+    rest = m.group(1)
+    if rest == None: rest = ""
+    
+    if rest == end_str: return
 
 
 #### do_include_comm #####################################################
@@ -1526,7 +1577,7 @@ def ignore_to_subcomm_end (s, args, old_line, file, end_str):
 # Our system context is a global variable, and may indeed be
 # affected by the running of the included command file.
 
-def do_include_comm (s, args, line, file):
+def do_include_comm (s, args, line, comm_file):
   if not os.path.isfile(line):
     print "Could not find include file: " + line
   run_system_script (s, args, line)
@@ -1534,7 +1585,7 @@ def do_include_comm (s, args, line, file):
 
 #### do_end_comm ########################################################
 
-def do_end_comm (s, args, line, file):
+def do_end_comm (s, args, line, comm_file):
   print "Unexpectedly encountered end command: " + line
   
     
@@ -1564,19 +1615,19 @@ def run_system_script (s, args, filename):
   commands = {"mount": do_mount_comm, "boot": do_boot_comm ,
               "os8": do_os8_comm, "done": do_done_comm,
               "pal8": do_pal8_comm, "include": do_include_comm,
-              "begin": do_begin_comm, "end": do_end_comm}
+              "begin": do_begin_comm, "end": do_end_comm,
+              "umount": do_umount_comm, "simh": do_simh_comm}
 
   try:
-    command_file = open(dirs.os8mo + filename, "r")
+    comm_file = open(dirs.os8mo + filename, "r")
   except IOError:
     print filename + " not found."
     sys.exit(-1)
 
-  for line in command_file:
-    if line[0] == "#": continue
-    line = line.strip()
-    if line == "": continue
-
+  for line in comm_file:
+    line = basic_line_parse (s, args, line, comm_file)
+    if line == None: continue
+    
     m = re.match(_comm_re, line)
     if m == None:
       print "Ignoring command line: " + line
@@ -1587,7 +1638,7 @@ def run_system_script (s, args, filename):
       continue
 
     print "Calling: " + m.group(1)
-    commands[m.group(1)](s, args, m.group(3), command_file)
+    commands[m.group(1)](s, args, m.group(3), comm_file)
 
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
