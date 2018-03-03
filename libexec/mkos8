@@ -1607,8 +1607,13 @@ def run_system_script (s, args, filename):
 def run_testing (s, args):
   print "Testing!"
   s.send_cmd("att dt4 test.tu56")
-  s.change_td_to_dt()
+  retval = s.change_dt_to_td()
+  print str(retval)
+  s.send_cmd("att td1 test.tu56")
+  retval = s.change_td_to_dt()
+  print str(retval)
 
+  
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 

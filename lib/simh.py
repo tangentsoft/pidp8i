@@ -652,7 +652,7 @@ class simh:
   # Returns an ordered list of files attached or None if disabled.
   def parse_show_tape (self, after):
     lines = after.split ("\r")
-    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\d\d-\d\d,\s(\d)\s+units))$")
+    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
     m = re.match(is_enabled_re, lines[0])
     if m == None or m.group(2) == None: return None
     if m.group(2) == "disabled": return None
@@ -679,27 +679,45 @@ class simh:
   # is a file attached to a DT device so such needs to be
   # detected and corrected.
   # The routines should check to see if the change is unnecessary.
+  # For now they return None if no change necessary.
+  # In future, we should add exception handling for no change necessary.
   # They return True if the change was successful and False if not.
 
 
   def do_tape_change (self, from_tape, to_tape):
+    print "Disable: " + from_tape + ", and enable: " + to_tape
     from_cap = from_tape.upper()
     to_cap = to_tape.upper()
-    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\d\d-\d\d,\s(\d)\s+units))$")
     self.send_cmd("show " + from_tape)
     self._child.expect(from_cap + "\s+(.+)\r")
-    attached_tapes= self.parse_show_tape(self._child.after)
-    if attached_tapes == None: print from_tape + " is disabled."
+    attached_from= self.parse_show_tape(self._child.after)
+    if attached_from == None: print from_tape + " already is disabled."
     else:
-      for unit in attached_tapes.keys():
-        print "Unit: " + unit + " " + attached_tapes[unit]
+      for unit in attached_from.keys():
+        if attached_from[unit] != "":
+          det_comm = "det " + from_tape + unit
+          # print det_comm + "(Had: " + attached_from[unit] + ")"
+          self.send_cmd(det_comm)
+      self.send_cmd("set " + from_tape + " disabled")
     self.send_cmd("show " + to_tape)
     self._child.expect(to_cap + "\s+(.+)\r")
-    attached_tapes = self.parse_show_tape(self._child.after)
-    if attached_tapes == None: print to_tape + " is disabled."
+    attached_to = self.parse_show_tape(self._child.after)
+    if attached_to == None:
+      # print "Enabling formerly disabled " + to_tape
+      self.send_cmd("set " + to_tape + " enabled")
     else:
-      for unit in attached_tapes.keys():
-        print "Unit: " + unit + " " + attached_tapes[unit]
+      print to_tape + " is already enabled."
+      for unit in attached_to.keys():
+        if attached_to[unit] != "":
+          print "Not detaching " + to_tape + unit + " " + attached_to[unit]
+      return None
+    # Test to confirm to_tape is now enabled.
+    self.send_cmd("show " + to_tape)
+    self._child.expect(to_cap + "\s+(.+)\r")
+    attached_to = self.parse_show_tape(self._child.after)
+    if attached_to == None:
+      print "Failed attempt to enable " + to_tape
+      return False
     return True
 
   def change_dt_to_td (self):
