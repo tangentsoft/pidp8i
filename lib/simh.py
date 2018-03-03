@@ -794,7 +794,7 @@ class simh:
       for unit in attached_rx.keys():
         if attached_rx[unit] != "":
           det_comm = "det rx" + unit
-          print det_comm + "(Had: " + attached_rx[unit] + ")"
+          # print det_comm + "(Had: " + attached_rx[unit] + ")"
           self.send_cmd(det_comm)
 
     self.send_cmd("set rx " + to_rx)
