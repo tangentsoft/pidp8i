@@ -666,6 +666,8 @@ class simh:
       attached[m.group(4)] = filename
     return attached
 
+  
+
   #### change_foo_to_bar routines  ######################################
   # These routines affect the state of device configuration in SIMH.
   # They are intended as robust ways to toggle between incompatible
@@ -720,6 +722,7 @@ class simh:
       return False
     return True
 
+
   def change_dt_to_td (self):
     return self.do_tape_change ("dt", "td")
 
@@ -728,12 +731,92 @@ class simh:
     return self.do_tape_change ("td", "dt")
 
 
-  def change_rx01_to_rx02 (self):
-    return False
+  # Returns an ordered list of files attached or None if disabled.
+  def parse_show_rx_dev (self, after):
+    lines = after.split ("\r")
+    is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
+    m = re.match(is_enabled_re, lines[0])
+    if m == None or m.group(2) == None: return None
+    if m.group(2) == "disabled": return "disabled"
+    return m.group(4)
 
 
+
+  # Returns an ordered list of files attached or None if disabled.
+  def parse_show_rx_attached (self, after):
+    lines = after.split ("\r")
+
+    attached = {}
+    attachment_re = re.compile("^\s+(((RX)(\d)(.+),\s+(not\s+attached|attached\s+to\s+(\S+)),(.+))|autosize)$")
+    for line in lines[1:]:
+      m = re.match(attachment_re, line)
+      if m == None or m.group(1) == None or m.group(1) == "autosize": continue
+      filename = m.group(7)
+      if filename == None: filename = ""
+      attached[m.group(4)] = filename
+    return attached
+
+  
+  def do_rx_change (self, from_rx, to_rx):
+    print "Switch rx driver: " + from_rx + ", to: " + to_rx
+    self.send_cmd("show rx")
+    self._child.expect("RX\s+(.+)\r")
+
+    rx_type = self.parse_show_rx_dev (self._child.after)
+    if rx_type == None:
+      print "do_rx_change: Trouble parsing \'show rx\' output from simh. Giving up on:"
+      print self.child.after
+      return False
+    elif rx_type == "disabled":
+      print "rx is disabled. Enabling..."
+      self.send_cmd("set rx enabled")
+      # Retry getting rx info
+      self.send_cmd("show rx")
+      self._child.expect("RX\s+(.+)\r")
+      rx_type = self.parse_show_rx_dev (self._child.after)
+      if rx_type == None:
+        print "do_rx_change after re-enable: Trouble parsing \`show rx\` output from simh. Giving up on:"
+        print self._child.after
+        return False
+      elif rx_type == "disabled":
+        print "do_rx_change re-enable of rx failed. Giving up."
+        return False
+
+    if rx_type.lower() == to_rx:
+      print "rx device is already set to " + to_rx
+      return None
+      
+    attached_rx= self.parse_show_rx_attached(self._child.after)
+    if attached_rx == None:
+      print "do_rx_change: Trouble parsing /'show rx\' from simh to find rx attachments. Got:"
+      print self._child.after
+    else:
+      for unit in attached_rx.keys():
+        if attached_rx[unit] != "":
+          det_comm = "det rx" + unit
+          print det_comm + "(Had: " + attached_rx[unit] + ")"
+          self.send_cmd(det_comm)
+
+    self.send_cmd("set rx " + to_rx)
+
+    # Test to confirm new setting of RX
+    self.send_cmd("show rx")
+    self._child.expect("RX\s+(.+)\r")
+    rx_type = self.parse_show_rx_dev(self._child.after)
+    if rx_type == None:
+      print "Failed change of rx to " + to_rx + ". Parse fail on \'show rx\'."
+      return False
+    elif rx_type.lower() != to_rx: 
+      print "Failed change of rx to " + to_rx + ". Instead got: " + rx_type
+      return False
+    return True
+
   def change_rx01_to_rx02 (self):
-    return False
+    return self.do_rx_change ("rx8e", "rx28")
+
+
+  def change_rx02_to_rx01 (self):
+    return self.do_rx_change ("rx28", "rx8e")
 
 
   def change_ksr_to_7bit (self):

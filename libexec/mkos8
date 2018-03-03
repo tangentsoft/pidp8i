@@ -1606,11 +1606,11 @@ def run_system_script (s, args, filename):
 #### testing ##############################################################
 def run_testing (s, args):
   print "Testing!"
-  s.send_cmd("att dt4 test.tu56")
-  retval = s.change_dt_to_td()
+  s.send_cmd("att rx0 test.rx01")
+  retval = s.change_rx01_to_rx02()
   print str(retval)
-  s.send_cmd("att td1 test.tu56")
-  retval = s.change_td_to_dt()
+  s.send_cmd("att rx1 test.rx01")
+  retval = s.change_rx02_to_rx01()
   print str(retval)
 
   
