@@ -731,7 +731,7 @@ class simh:
     return self.do_tape_change ("td", "dt")
 
 
-  # Returns an ordered list of files attached or None if disabled.
+  # Show the rx device configuration.
   def parse_show_rx_dev (self, after):
     lines = after.split ("\r")
     is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
