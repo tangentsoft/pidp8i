@@ -647,3 +647,81 @@ class simh:
 
   def zero_core (self):
     self.send_cmd ('de all 0')
+  
+
+  # Returns an ordered list of files attached or None if disabled.
+  def parse_show_tape (self, after):
+    lines = after.split ("\r")
+    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\d\d-\d\d,\s(\d)\s+units))$")
+    m = re.match(is_enabled_re, lines[0])
+    if m == None or m.group(2) == None: return None
+    if m.group(2) == "disabled": return None
+    attached = {}
+    attachment_re = re.compile("^\s+(((DT|TD)(\d)(.+),\s+(not\s+attached|attached\s+to\s+(\S+)),(.+))|12b)$")
+    for line in lines[1:]:
+      m = re.match(attachment_re, line)
+      if m == None or m.group(1) == None or m.group(1) == "12b": continue
+      filename = m.group(7)
+      if filename == None: filename = ""
+      attached[m.group(4)] = filename
+    return attached
+
+  #### change_foo_to_bar routines  ######################################
+  # These routines affect the state of device configuration in SIMH.
+  # They are intended as robust ways to toggle between incompatible
+  # configurations of SIMH:
+  # Choice of TD8E or TC08 DECtape.
+  # Choice of RX01 or RX02 Floppy emulation.
+  # Choice of KSR or 7bit console configuration.
+  # There are always a pair of routines so you can go both ways.
+  # The routines attempt to detect and correct problems.
+  # For example: You are not allowed to disable DT if there
+  # is a file attached to a DT device so such needs to be
+  # detected and corrected.
+  # The routines should check to see if the change is unnecessary.
+  # They return True if the change was successful and False if not.
+
+
+  def do_tape_change (self, from_tape, to_tape):
+    from_cap = from_tape.upper()
+    to_cap = to_tape.upper()
+    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\d\d-\d\d,\s(\d)\s+units))$")
+    self.send_cmd("show " + from_tape)
+    self._child.expect(from_cap + "\s+(.+)\r")
+    attached_tapes= self.parse_show_tape(self._child.after)
+    if attached_tapes == None: print from_tape + " is disabled."
+    else:
+      for unit in attached_tapes.keys():
+        print "Unit: " + unit + " " + attached_tapes[unit]
+    self.send_cmd("show " + to_tape)
+    self._child.expect(to_cap + "\s+(.+)\r")
+    attached_tapes = self.parse_show_tape(self._child.after)
+    if attached_tapes == None: print to_tape + " is disabled."
+    else:
+      for unit in attached_tapes.keys():
+        print "Unit: " + unit + " " + attached_tapes[unit]
+    return True
+
+  def change_dt_to_td (self):
+    return self.do_tape_change ("dt", "td")
+
+
+  def change_td_to_dt (self):
+    return self.do_tape_change ("td", "dt")
+
+
+  def change_rx01_to_rx02 (self):
+    return False
+
+
+  def change_rx01_to_rx02 (self):
+    return False
+
+
+  def change_ksr_to_7bit (self):
+    return False
+
+
+  def change_7bit_to_ksr (self):
+    return False
+

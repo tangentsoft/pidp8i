@@ -1603,6 +1603,12 @@ def run_system_script (s, args, filename):
     print "Calling: " + m.group(1)
     commands[m.group(1)](s, args, m.group(3), comm_file)
 
+#### testing ##############################################################
+def run_testing (s, args):
+  print "Testing!"
+  s.send_cmd("att dt4 test.tu56")
+  s.change_td_to_dt()
+
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 
@@ -1656,7 +1662,7 @@ def main ():
   if acts["v3f"]: make_v3f (s, ap.args)
   if acts["head"]: run_system_script (s, ap.args,  "tc08.mkos8")
   if acts["system"]: run_system_script (s, ap.args, "v3f-control.mkos8")
-  if acts["testing"]: print "Testing!"
+  if acts["testing"]: run_testing (s, ap.args)
   
   s.quit ()
   if progmsg: print "Done!"
