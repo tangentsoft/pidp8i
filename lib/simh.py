@@ -649,7 +649,79 @@ class simh:
     self.send_cmd ('de all 0')
   
 
-  # Returns an ordered list of files attached or None if disabled.
+  #### describe_dev_config  #############################################
+  # We provide an interface to alter SIMH device configurations for
+  # specific parameters and specific devices
+  #
+  # dev configs supported:  rx, tti, tape
+  #
+  # rx:     RX8E, RX28   RX8E is the simh name for RX01 support.
+  #                      RX28 is the simh name for RX02 support.
+  # tti:    KSR, 7b      7b is full keyboard support.
+  #                      KSR forces upcase of lower case keys on input.
+  # tape:   td, dt       td is the TD8E DECtape device
+  #                      dt is the TC08 DECtape device
+
+  def describe_dev_config (self, name):
+    if name == "tape":
+      lines = self.do_simh_show("dt")
+      dev_status = self.new_parse_show_tape_dev(lines)
+
+      if dev_status == "dt": return "dt"
+      else:
+        lines = self.do_simh_show("td")
+        return self.new_parse_show_tape_dev(lines)
+    elif name == "rx":
+      lines = self.do_simh_show("rx")
+      return self.new_parse_show_rx_dev(lines)
+    elif name == "tti":
+      lines = self.do_simh_show("tti")
+      return self.new_parse_show_tti(lines)
+    else: return None
+      
+  #### do_simh_show  #############################################
+  # Calls show on the device name.
+  # Returns array of lines from output.
+  def do_simh_show (self, name):
+    supported_shows = ["dt", "td", "tti", "rx"]
+    if name not in supported_shows: return None
+    
+    ucname = name.upper()
+    self.send_cmd("show " + name)
+    self._child.expect(ucname + "\s+(.+)\r")
+    lines = self._child.after.split ("\r")
+    return lines
+
+
+  #### parse_show_tape_dev  #############################################
+  # Returns current state of DECtape support.
+  # One of: disabled, td, dt, or None if parse fails.
+  def new_parse_show_tape_dev (self, lines):
+    if lines == None: return None
+    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
+    m = re.match(is_enabled_re, lines[0])
+    if m == None or m.group(1) == None or m.group(2) == None: return None
+    if m.group(2) == "disabled": return "disabled"
+    elif m.group(1) == "TD": return "td"
+    elif m.group(1) == "DT": return "dt"
+    else: return None
+    
+
+
+  #### parse_show_tape_dev  #############################################
+  # Returns current state of DECtape support.
+  # One of: disabled, td, dt, or None if parse fails.
+  def parse_show_tape_dev (self, after):
+    lines = after.split ("\r")
+    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
+    m = re.match(is_enabled_re, lines[0])
+    if m == None or m.group(1) == None or m.group(2) == None: return None
+    if m.group(2) == "disabled": return "disabled"
+    elif m.group(1) == "TD": return "td"
+    elif m.group(1) == "DT": return "dt"
+    else: return None
+    
+    # Returns an ordered list of files attached or None if disabled.
   def parse_show_tape (self, after):
     lines = after.split ("\r")
     is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
@@ -666,7 +738,6 @@ class simh:
       attached[m.group(4)] = filename
     return attached
 
-  
 
   #### change_foo_to_bar routines  ######################################
   # These routines affect the state of device configuration in SIMH.
@@ -734,6 +805,15 @@ class simh:
   # Show the rx device configuration.
   def parse_show_rx_dev (self, after):
     lines = after.split ("\r")
+    is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
+    m = re.match(is_enabled_re, lines[0])
+    if m == None or m.group(2) == None: return None
+    if m.group(2) == "disabled": return "disabled"
+    return m.group(4)
+
+
+  # Show the rx device configuration.
+  def new_parse_show_rx_dev (self, lines):
     is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
     m = re.match(is_enabled_re, lines[0])
     if m == None or m.group(2) == None: return None
@@ -822,6 +902,17 @@ class simh:
   # Returns an ordered list of files attached or None if disabled.
   def parse_show_tti (self, after):
     lines = after.split ("\r")
+    is_enabled_re = re.compile("^(KSR|7b)$")
+    if len(lines) < 2: return None
+
+    # That second line of output contains embedded newlines.
+    m = re.match(is_enabled_re, lines[1].strip())
+    if m == None or m.group(1) == None: return None
+    return m.group(1)
+
+
+  # Returns an ordered list of files attached or None if disabled.
+  def new_parse_show_tti (self, lines):
     is_enabled_re = re.compile("^(KSR|7b)$")
     if len(lines) < 2: return None
 

@@ -1607,20 +1607,47 @@ def run_system_script (s, args, filename):
 def run_testing (s, args):
   print "Testing!"
 
+  retval = s.describe_dev_config("tti")
+  if retval == None: retval = "None"
+  print "tti config: " + retval
+
   retval = s.change_ksr_to_7b()
   print str(retval)
+  retval = s.describe_dev_config("tti")
+  if retval == None: retval = "None"
+  print "tti config: " + retval
+
   retval = s.change_7b_to_ksr()
   print str(retval)
 
-  
-  """
+  retval = s.describe_dev_config("tape")
+  if retval == None: retval = "None"
+  print "tape config: " + retval
+
+  s.send_cmd("att dt0 test.tu56")
+  retval = s.change_dt_to_td()
+  print str(retval)
+
+  retval = s.describe_dev_config("tape")
+  if retval == None: retval = "None"
+  print "tape config: " + retval
+
+  retval = s.describe_dev_config("rx")
+  if retval == None: retval = "None"
+  print "rx config: " + retval
+
   s.send_cmd("att rx0 test.rx01")
   retval = s.change_rx01_to_rx02()
   print str(retval)
+
+  retval = s.describe_dev_config("rx")
+  if retval == None: retval = "None"
+  print "rx config: " + retval
+
   s.send_cmd("att rx1 test.rx01")
   retval = s.change_rx02_to_rx01()
   print str(retval)
-  """
+
   
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
