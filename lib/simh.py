@@ -173,6 +173,14 @@ class simh:
     # We start in the simh context until we boot something.
     self._context = "simh"
 
+    # Cut apart a simh command, return the command in group(1)
+    # and the rest in group(3)
+  
+    self._simh_comm_re = re.compile ("^\s*(\S+)(\s+(.*))?$")
+    self._enters_os8_context = ["g", "go", "bo", "boo", "boot", "c",
+                                "co", "con", "cont","conti", "contin",
+                                "continu", "continue"]
+    
     # Parse our OS/8 Errors table into actionable chunks
     for error_spec in self._os8_errors:
       self._os8_error_match_strings.append(error_spec[0])
@@ -210,6 +218,7 @@ class simh:
     self._child.expect ("\n%s$" % prompt)
     self.os8_kbd_delay ()
     self._child.sendcontrol ('e')
+    self._context = "simh"
 
 
   #### os8_get_file ####################################################
@@ -572,11 +581,25 @@ class simh:
 
 
   #### send_cmd ########################################################
-  # Wait for a SIMH command prompt and then send the given command
+  # Wait for a SIMH command prompt and then send the given command.
+  # If we are not in the simh context send ^e and set context "simh".
+  # If we are not in simh context, send ^e set context "simh"
+  #    and hope for the best.
+  # If we issue a command that enters os8 context, set context "os8".
 
   def send_cmd (self, cmd):
+    if self._context == "os8":
+      self._child.expect ("\n\\.$")
+      self._child.sendcontrol ('e')
+      self._context = "simh"
+    elif self._context != "simh":
+      self._child.sendcontrol ('e')
+      
     self._child.expect ("sim> $")
     self._child.sendline (cmd)
+    m = re.match (self._simh_comm_re, cmd)
+    if m != None and m.group(1) in self._enters_os8_context:
+      self._context = "os8"
 
 
   #### send_line #######################################################

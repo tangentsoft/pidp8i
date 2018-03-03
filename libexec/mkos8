@@ -57,12 +57,6 @@ from simh import *
 # script's progress.
 progmsg = True
 
-# Our context -- Need to know when we are sending commands
-# to SIMH, OS/8, or other commands.
-# Starts off in simh context.
-
-context = "simh"
-
 # Optional sections encountered. Is a stack because optional sections
 # can be nested.
 options_stack = []
@@ -1237,33 +1231,20 @@ def basic_line_parse (s, args, line, comm_file):
 #### do_simh_comm ########################################################
 # I tried to avoid including this command but sometimes you just
 # have to reconfigure subtle bits of device drivers.
+# We assume we can call a simh command at any time, but
+# doing so puts us in the simh context that persists until we
+# issue a boot or go command.
+
 def do_simh_comm (s, args, line, comm_file):
   if progmsg: print line
-  if s._context == "os8":
-    # Not in simh, need to get back to simh command level.
-    s.back_to_cmd ("\\.")
-    s._context = "simh"
-    s.send_cmd(line)
-    s.os8_restart ()            # return to OS/8
-    s._context = "os8"
-  else:
-    s.send_cmd(line)
-  
+  s.send_cmd(line)
+
 
 #### do_umount_comm ######################################################
 def do_umount_comm (s, args, line, comm_file):
   detach_comm = "det " + line
   if progmsg: print detach_comm
-  if s._context == "os8":
-    # Not in simh, need to get back to simh command level.
-    s.back_to_cmd ("\\.")
-    s._context = "simh"
-    s.send_cmd(detach_comm)
-    s.os8_restart ()            # return to OS/8
-    s._context = "os8"
-  else:
-    s.send_cmd(detach_comm)
-
+  s.send_cmd(detach_comm)
 
 
 #### do_mount_comm ######################################################
@@ -1315,31 +1296,16 @@ def do_mount_comm (s, args, line, comm_file):
   attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
 
   if progmsg: print attach_comm
-  if s._context == "os8":
-    # Not in simh, need to get back to simh command level.
-    s.back_to_cmd ("\\.")
-    s._context = "simh"
-    s.send_cmd(attach_comm)
-    s.os8_restart ()            # return to OS/8
-    s._context = "os8"
-  else:
-    s.send_cmd(attach_comm)
+  s.send_cmd(attach_comm)
   
 
 #### do_boot_comm #######################################################
-# This command toggles our context from "simh" to "os8"
-# If we are already in os8 context, this is a RE-boot command
-# and we need to shift to simh context first
 
 def do_boot_comm (s, args, line, comm_file):
-  if s._context == "os8":
-    # Not in simh, need to get back to simh command level.
-    s.back_to_cmd ("\\.")
-    s._context = "simh"
   boot_comm = "boot " + line
   if progmsg: print boot_comm
-  s._context = "os8"
   s.send_cmd(boot_comm)
+
 
 #### do_os8_comm ########################################################
 
@@ -1376,7 +1342,6 @@ def do_pal8_comm (s, args, line, comm_file):
 
 def do_done_comm (s, args, line, comm_file):
   s.back_to_cmd ("\\.")
-  s._context = "simh"
   s.send_cmd ("detach all")
 
 
@@ -1574,8 +1539,6 @@ def ignore_to_subcomm_end (s, args, old_line, comm_file, end_str):
 
 #### do_include_comm #####################################################
 # Call run_system_script recursively on the file path provided.
-# Our system context is a global variable, and may indeed be
-# affected by the running of the included command file.
 
 def do_include_comm (s, args, line, comm_file):
   if not os.path.isfile(line):
