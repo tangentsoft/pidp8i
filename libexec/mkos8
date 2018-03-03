@@ -1606,13 +1606,21 @@ def run_system_script (s, args, filename):
 #### testing ##############################################################
 def run_testing (s, args):
   print "Testing!"
+
+  retval = s.change_ksr_to_7b()
+  print str(retval)
+  retval = s.change_7b_to_ksr()
+  print str(retval)
+
+  
+  """
   s.send_cmd("att rx0 test.rx01")
   retval = s.change_rx01_to_rx02()
   print str(retval)
   s.send_cmd("att rx1 test.rx01")
   retval = s.change_rx02_to_rx01()
   print str(retval)
-
+  """
   
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.

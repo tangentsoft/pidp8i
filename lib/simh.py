@@ -819,10 +819,55 @@ class simh:
     return self.do_rx_change ("rx28", "rx8e")
 
 
-  def change_ksr_to_7bit (self):
-    return False
+  # Returns an ordered list of files attached or None if disabled.
+  def parse_show_tti (self, after):
+    lines = after.split ("\r")
+    is_enabled_re = re.compile("^(KSR|7b)$")
+    if len(lines) < 2: return None
+
+    # That second line of output contains embedded newlines.
+    m = re.match(is_enabled_re, lines[1].strip())
+    if m == None or m.group(1) == None: return None
+    return m.group(1)
 
 
-  def change_7bit_to_ksr (self):
-    return False
+  def do_tti_change (self, from_tti, to_tti):
+    print "Switch tti driver from: " + from_tti + ", to: " + to_tti
+    self.send_cmd("show tti")
+    self._child.expect("TTI\s+(.+)\r")
+
+    tti_type = self.parse_show_tti (self._child.after)
+    if tti_type == None:
+      print "do_tti_change: Trouble parsing \'show tti\' output from simh. Giving up on:"
+      print self._child.after
+      return False
+    
+    if tti_type == to_tti:
+      print "tti device is already set to " + to_tti
+      return None
+
+    self.send_cmd("set tti " + to_tti)
+
+    # Test to confirm new setting of tti
+    self.send_cmd("show tti")
+    self._child.expect("TTI\s+(.+)\r")
+    tti_type = self.parse_show_tti(self._child.after)
+
+    if tti_type == None:
+      print "Failed change of tti to " + to_tti + ". Parse fail on \'show tti\'."
+      return False
+    elif tti_type != to_tti: 
+      print "Failed change of tti to " + to_tti + ". Instead got: " + tti_type
+      return False
+    return True
+
+
+  def change_ksr_to_7b (self):
+    return self.do_tti_change ("KSR", "7b")
+
+
+
+  def change_7b_to_ksr (self):
+    return self.do_tti_change ("7b", "KSR")
+
 
