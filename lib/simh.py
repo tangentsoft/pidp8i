@@ -288,8 +288,11 @@ class simh:
   # probably following a call to os8_send_line or os8_send_cmd.
 
   def os8_send_ctrl (self, char):
+    cc = char[0].lower ()
     self.os8_kbd_delay ()
-    self._child.sendcontrol (char[0].lower ())
+    self._child.sendcontrol (cc)
+    
+    if cc == 'e': self._context = 'simh'
 
 
   #### mk_os8_name # ###################################################
