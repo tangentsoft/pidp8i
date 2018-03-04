@@ -674,18 +674,18 @@ class simh:
   def describe_dev_config (self, name):
     if name == "tape":
       lines = self.do_simh_show("dt")
-      dev_status = self.new_parse_show_tape_dev(lines)
+      dev_status = self.parse_show_tape_dev(lines)
 
       if dev_status == "dt": return "dt"
       else:
         lines = self.do_simh_show("td")
-        return self.new_parse_show_tape_dev(lines)
+        return self.parse_show_tape_dev(lines)
     elif name == "rx":
       lines = self.do_simh_show("rx")
-      return self.new_parse_show_rx_dev(lines)
+      return self.parse_show_rx_dev(lines)
     elif name == "tti":
       lines = self.do_simh_show("tti")
-      return self.new_parse_show_tti(lines)
+      return self.parse_show_tti(lines)
     else: return None
 
       
@@ -708,10 +708,11 @@ class simh:
   # Returns current state of DECtape support.
   # One of: disabled, td, dt, or None if parse fails.
 
-  def new_parse_show_tape_dev (self, lines):
+  def parse_show_tape_dev (self, lines):
     if lines == None: return None
     is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
     m = re.match(is_enabled_re, lines[0])
+
     if m == None or m.group(1) == None or m.group(2) == None: return None
     if m.group(2) == "disabled": return "disabled"
     elif m.group(1) == "TD": return "td"
@@ -719,29 +720,11 @@ class simh:
     else: return None
 
 
-  #### parse_show_tape_dev  ############################################
-  # Returns current state of DECtape support.
-  # One of: disabled, td, dt, or None if parse fails.
-
-  def parse_show_tape_dev (self, after):
-    lines = after.split ("\r")
-    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
-    m = re.match(is_enabled_re, lines[0])
-    if m == None or m.group(1) == None or m.group(2) == None: return None
-    if m.group(2) == "disabled": return "disabled"
-    elif m.group(1) == "TD": return "td"
-    elif m.group(1) == "DT": return "dt"
-    else: return None
-
-  #### parse_show_tape #################################################
+  #### parse_show_tape_attached  ########################################
   # Returns an ordered list of files attached or None if disabled.
-
-  def parse_show_tape (self, after):
-    lines = after.split ("\r")
-    is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
-    m = re.match(is_enabled_re, lines[0])
-    if m == None or m.group(2) == None: return None
-    if m.group(2) == "disabled": return None
+  def parse_show_tape_attached (self, lines):
+    if lines == None: return None
+    if len(lines) < 2: return None
     attached = {}
     attachment_re = re.compile("^\s+(((DT|TD)(\d)(.+),\s+(not\s+attached|attached\s+to\s+(\S+)),(.+))|12b)$")
     for line in lines[1:]:
@@ -752,6 +735,11 @@ class simh:
       attached[m.group(4)] = filename
     return attached
 
+  #### do_print_lines ###################################################
+  # Debugging aid. Prints what we parsed out of _child.after.
+  def do_print_lines (self, lines):
+    for line in lines:
+      print line
 
   #### change_foo_to_bar routines  ######################################
   # These routines affect the state of device configuration in SIMH.
@@ -772,40 +760,55 @@ class simh:
 
   def do_tape_change (self, from_tape, to_tape):
     print "Disable: " + from_tape + ", and enable: " + to_tape
-    from_cap = from_tape.upper()
-    to_cap = to_tape.upper()
-    self.send_cmd("show " + from_tape)
-    self._child.expect(from_cap + "\s+(.+)\r")
-    attached_from= self.parse_show_tape(self._child.after)
-    if attached_from == None: print from_tape + " already is disabled."
+    
+    lines = self.do_simh_show(from_tape)
+    from_status = self.parse_show_tape_dev(lines)
+
+    if from_status == None:
+      print "do_tape_change: Trouble parsing \'show " + from_tape + "\' output from simh. Giving up on:"
+      self.do_print_lines (lines)
+      return False
+
+    if from_status == "disabled": print from_tape + " already is disabled."
     else:
-      for unit in attached_from.keys():
-        if attached_from[unit] != "":
-          det_comm = "det " + from_tape + unit
-          # print det_comm + "(Had: " + attached_from[unit] + ")"
-          self.send_cmd(det_comm)
-      self.send_cmd("set " + from_tape + " disabled")
-    self.send_cmd("show " + to_tape)
-    self._child.expect(to_cap + "\s+(.+)\r")
-    attached_to = self.parse_show_tape(self._child.after)
-    if attached_to == None:
-      # print "Enabling formerly disabled " + to_tape
-      self.send_cmd("set " + to_tape + " enabled")
+      attached_from = self.parse_show_tape_attached(lines)
+      if attached_from == None:
+        print "do_tape_change: Trouble parsing \'show " + from_tape + "\' output from simh. Giving up on:"
+        self.do_print_lines (lines)
+        return False
+      else:
+        for unit in attached_from.keys():
+          if attached_from[unit] != "":
+            det_comm = "det " + from_tape + unit
+            # print det_comm + "(Had: " + attached_from[unit] + ")"
+            self.send_cmd(det_comm)
+        self.send_cmd("set " + from_tape + " disabled")
+
+    lines = self.do_simh_show(to_tape)
+    to_status = self.parse_show_tape_dev(lines)
+
+    if to_status == None:
+      print "do_tape_change: Trouble parsing \'show " + to_tape + "\' output from simh. Giving up on:"
+      self.do_print_lines (lines)
+      return False
+    elif to_status != "disabled": print to_tape + " already is enabled."
     else:
-      print to_tape + " is already enabled."
-      for unit in attached_to.keys():
-        if attached_to[unit] != "":
-          print "Not detaching " + to_tape + unit + " " + attached_to[unit]
-      return None
+      self.send_cmd("set " + to_tape + " enabled")    
 
     # Test to confirm to_tape is now enabled.
-    self.send_cmd("show " + to_tape)
-    self._child.expect(to_cap + "\s+(.+)\r")
-    attached_to = self.parse_show_tape(self._child.after)
-    if attached_to == None:
-      print "Failed attempt to enable " + to_tape
+
+    lines = self.do_simh_show(to_tape)
+    to_status = self.parse_show_tape_dev(lines)
+
+    if to_status == None:
+      print "Failed enable of " + to_tape + ". Parse fail on \'show " + to_tape + "\'. Got:"
+      self.do_print_lines (lines)
       return False
-    return True
+    elif to_status == "disabled":
+      print "Failed enable of " + to_tape + ". Device still disabled."
+      return False
+    else: 
+      return True
 
 
   #### change_dt_to_td #################################################
@@ -823,8 +826,8 @@ class simh:
   #### parse_show_rx_dev ###############################################
   # Show the rx device configuration.
 
-  def parse_show_rx_dev (self, after):
-    lines = after.split ("\r")
+  def parse_show_rx_dev (self, lines):
+    if lines == None: return None
     is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
     m = re.match(is_enabled_re, lines[0])
     if m == None or m.group(2) == None: return None
@@ -832,23 +835,11 @@ class simh:
     return m.group(4)
 
 
-  #### new_parse_show_rx_dev ###########################################
-  # Show the rx device configuration.
-
-  def new_parse_show_rx_dev (self, lines):
-    is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
-    m = re.match(is_enabled_re, lines[0])
-    if m == None or m.group(2) == None: return None
-    if m.group(2) == "disabled": return "disabled"
-    return m.group(4)
-
-
-  #### parse_show_rx_attached ##########################################
+   #### parse_show_rx_attached ##########################################
   # Returns an ordered list of files attached or None if disabled.
 
-  def parse_show_rx_attached (self, after):
-    lines = after.split ("\r")
-
+  def parse_show_rx_attached (self, lines):
+    if len(lines) < 2: return None
     attached = {}
     attachment_re = re.compile("^\s+(((RX)(\d)(.+),\s+(not\s+attached|attached\s+to\s+(\S+)),(.+))|autosize)$")
     for line in lines[1:]:
@@ -864,24 +855,22 @@ class simh:
   
   def do_rx_change (self, from_rx, to_rx):
     print "Switch rx driver: " + from_rx + ", to: " + to_rx
-    self.send_cmd("show rx")
-    self._child.expect("RX\s+(.+)\r")
+    lines = self.do_simh_show("rx")
 
-    rx_type = self.parse_show_rx_dev (self._child.after)
+    rx_type = self.parse_show_rx_dev (lines)
     if rx_type == None:
       print "do_rx_change: Trouble parsing \'show rx\' output from simh. Giving up on:"
-      print self.child.after
+      self.do_print_lines(lines)
       return False
     elif rx_type == "disabled":
       print "rx is disabled. Enabling..."
       self.send_cmd("set rx enabled")
       # Retry getting rx info
-      self.send_cmd("show rx")
-      self._child.expect("RX\s+(.+)\r")
-      rx_type = self.parse_show_rx_dev (self._child.after)
+      lines = self.do_simh_show("rx")
+      rx_type = self.parse_show_rx_dev (lines)
       if rx_type == None:
         print "do_rx_change after re-enable: Trouble parsing \`show rx\` output from simh. Giving up on:"
-        print self._child.after
+        self.do_print_lines(lines)
         return False
       elif rx_type == "disabled":
         print "do_rx_change re-enable of rx failed. Giving up."
@@ -891,10 +880,10 @@ class simh:
       print "rx device is already set to " + to_rx
       return None
       
-    attached_rx= self.parse_show_rx_attached(self._child.after)
+    attached_rx= self.parse_show_rx_attached(lines)
     if attached_rx == None:
       print "do_rx_change: Trouble parsing /'show rx\' from simh to find rx attachments. Got:"
-      print self._child.after
+      self.do_print_lines(lines)
     else:
       for unit in attached_rx.keys():
         if attached_rx[unit] != "":
@@ -905,9 +894,9 @@ class simh:
     self.send_cmd("set rx " + to_rx)
 
     # Test to confirm new setting of RX
-    self.send_cmd("show rx")
-    self._child.expect("RX\s+(.+)\r")
-    rx_type = self.parse_show_rx_dev(self._child.after)
+    lines = self.do_simh_show("rx")
+    rx_type = self.parse_show_rx_dev (lines)
+
     if rx_type == None:
       print "Failed change of rx to " + to_rx + ". Parse fail on \'show rx\'."
       return False
@@ -931,12 +920,8 @@ class simh:
 
   #### get_tti ##################################################
   # Returns an ordered list of files attached or None if disabled.
-
-  def get_tti (self, after):
-    self.send_cmd("show tti")
-    self._child.expect("TTI\s+(.+)\r")
-
-    lines = after.split ("\r")
+  def parse_show_tti (self, lines):
+    if lines == None: return None
     is_enabled_re = re.compile("^(KSR|7b)$")
     if len(lines) < 2: return None
 
@@ -945,18 +930,6 @@ class simh:
     if m == None or m.group(1) == None: return None
     return m.group(1)
 
-
-  #### new_parse_show_tti ##############################################
-  # Returns an ordered list of files attached or None if disabled.
-
-  def new_parse_show_tti (self, lines):
-    is_enabled_re = re.compile("^(KSR|7b)$")
-    if len(lines) < 2: return None
-
-    # That second line of output contains embedded newlines.
-    m = re.match(is_enabled_re, lines[1].strip())
-    if m == None or m.group(1) == None: return None
-    return m.group(1)
 
 
   #### do_tti_change ###################################################
@@ -964,28 +937,30 @@ class simh:
   def do_tti_change (self, from_tti, to_tti):
     print "Switch tti driver from: " + from_tti + ", to: " + to_tti
 
-    tti_type = self.get_tti (self._child.after)
+    lines = self.do_simh_show("tti")
+    tti_type = self.parse_show_tti (lines)
     if tti_type == None:
       print "do_tti_change: Trouble parsing \'show tti\' output from simh. Giving up on:"
-      print self._child.after
+      self.do_print_lines(lines)
       return False
     elif tti_type == to_tti:
       print "tti device is already set to " + to_tti
       return None
-    else:
-      # Change the tti setting
-      self.send_cmd ("set tti " + to_tti)
 
-      # Test to confirm new setting of tti
-      tti_type = self.get_tti (self._child.after)
-      if tti_type == None:
-        print "Failed change of tti to " + to_tti + ". Parse fail on \'show tti\'."
-        return False
-      elif tti_type != to_tti: 
-        print "Failed change of tti to " + to_tti + ". Instead got: " + tti_type
-        return False
-      else:
-        return True
+    self.send_cmd("set tti " + to_tti)
+
+    # Test to confirm new setting of tti
+    lines = self.do_simh_show("tti")
+    tti_type = self.parse_show_tti (lines)
+    
+    if tti_type == None:
+      print "Failed change of tti to " + to_tti + ". Parse fail on \'show tti\'."
+      return False
+    elif tti_type != to_tti: 
+      print "Failed change of tti to " + to_tti + ". Instead got: " + tti_type
+      return False
+    else:
+      return True
 
 
   #### change_ksr_to_7b ################################################
