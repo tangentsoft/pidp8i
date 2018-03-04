@@ -178,10 +178,9 @@ class simh:
     self._os8_error_match_strings = []
     self._os8_fatal_check = []
 
-    # We should keep track of what our command context is.
-    # Otherwise we have to implicitly remember what command
-    # prompt to expect.
-    # We start in the simh context until we boot something.
+    # We keep track of what our command context is so our caller does
+    # not need to explicitly call back_to_cmd() or sendcontrol ('e').
+    # We keep track of the command context and transition automatically.
     self._context = "simh"
     
     # Parse our OS/8 Errors table into actionable chunks
@@ -266,6 +265,7 @@ class simh:
   # It is unsafe to send text faster than a contemporary terminal could,
   # though we can scale it based on how much faster this host is than a
   # real PDP-8.  See the constants above for the calculation.
+
   def os8_kbd_delay (self):
     time.sleep (self._os8_kbd_delay)
 
@@ -295,6 +295,7 @@ class simh:
   #### mk_os8_name # ###################################################
   # Create an OS/8 filename: of the form XXXXXX.YY
   # From a POSIX path.
+
   def mk_os8_name(self, dev, path):
     bns = os.path.basename (path)
     bns = re.sub("-|:|\(|\)|!", "", bns)
@@ -304,6 +305,7 @@ class simh:
     else:
       dot = bns.index('.')
       return dev + bns[:min(6, dot, len(bns))] + "." + bns[dot+1: dot+3]
+
 
   #### os8_send_file ###################################################
   # Send a copy of a local text file to OS/8.  The local path may
@@ -350,10 +352,9 @@ class simh:
     self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
 
+
   #### pip_error_handler ###############################################
-  #
   # Common error handler for os8_pip_into and os8_pip_from
-  #
 
   def pip_error_handler(self, caller, reply):
     print "PIP error from inside " + caller + ": "
@@ -365,6 +366,7 @@ class simh:
     if not self._os8_fatal_check[reply - 1]:
       # Non fatal error.  Exit pip to the monitor
       self.os8_send_ctrl ('[')      # exit PIP
+
     
   #### os8_pip_into ###################################################
   # Send a copy of a local file into OS/8 using PIP.
@@ -409,7 +411,7 @@ class simh:
     else:
       pt = path
 
-    # Sacrificial extra character code goes here.
+    # TODO: Sacrificial extra character code goes here.
 
     # Paper tape created, so attach it read-only and copy it in.  We're
     # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
@@ -434,6 +436,7 @@ class simh:
     # Do remove the temp file if we created one.
     if did_conversion:
       os.remove (pt)
+
 
   #### os8_pip_from ###################################################
   # Fetch a file from OS/8 to a local path using PIP.
@@ -490,6 +493,7 @@ class simh:
       tool = os.path.join (bdir, 'bin', 'ptp2txt')
       subprocess.call (tool + ' < ' + path + ".temp" + ' > ' + path, shell = True)
       os.remove(path + ".temp")
+
 
   #### os8_send_line ###################################################
   # Core of os8_send_cmd.  Also used by code that needs to send text
@@ -651,7 +655,7 @@ class simh:
     self.send_cmd ('de all 0')
   
 
-  #### describe_dev_config  #############################################
+  #### describe_dev_config #############################################
   # We provide an interface to alter SIMH device configurations for
   # specific parameters and specific devices
   #
@@ -680,10 +684,12 @@ class simh:
       lines = self.do_simh_show("tti")
       return self.new_parse_show_tti(lines)
     else: return None
+
       
-  #### do_simh_show  #############################################
+  #### do_simh_show  ###################################################
   # Calls show on the device name.
   # Returns array of lines from output.
+
   def do_simh_show (self, name):
     supported_shows = ["dt", "td", "tti", "rx"]
     if name not in supported_shows: return None
@@ -695,9 +701,10 @@ class simh:
     return lines
 
 
-  #### parse_show_tape_dev  #############################################
+  #### parse_show_tape_dev  ############################################
   # Returns current state of DECtape support.
   # One of: disabled, td, dt, or None if parse fails.
+
   def new_parse_show_tape_dev (self, lines):
     if lines == None: return None
     is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
@@ -707,12 +714,12 @@ class simh:
     elif m.group(1) == "TD": return "td"
     elif m.group(1) == "DT": return "dt"
     else: return None
-    
 
 
-  #### parse_show_tape_dev  #############################################
+  #### parse_show_tape_dev  ############################################
   # Returns current state of DECtape support.
   # One of: disabled, td, dt, or None if parse fails.
+
   def parse_show_tape_dev (self, after):
     lines = after.split ("\r")
     is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
@@ -722,8 +729,10 @@ class simh:
     elif m.group(1) == "TD": return "td"
     elif m.group(1) == "DT": return "dt"
     else: return None
-    
-    # Returns an ordered list of files attached or None if disabled.
+
+  #### parse_show_tape #################################################
+  # Returns an ordered list of files attached or None if disabled.
+
   def parse_show_tape (self, after):
     lines = after.split ("\r")
     is_enabled_re = re.compile("^(TD|DT)\s+(disabled|(devno=\S+,\s(\d)\s+units))$")
@@ -758,7 +767,6 @@ class simh:
   # In future, we should add exception handling for no change necessary.
   # They return True if the change was successful and False if not.
 
-
   def do_tape_change (self, from_tape, to_tape):
     print "Disable: " + from_tape + ", and enable: " + to_tape
     from_cap = from_tape.upper()
@@ -786,6 +794,7 @@ class simh:
         if attached_to[unit] != "":
           print "Not detaching " + to_tape + unit + " " + attached_to[unit]
       return None
+
     # Test to confirm to_tape is now enabled.
     self.send_cmd("show " + to_tape)
     self._child.expect(to_cap + "\s+(.+)\r")
@@ -796,15 +805,21 @@ class simh:
     return True
 
 
+  #### change_dt_to_td #################################################
+
   def change_dt_to_td (self):
     return self.do_tape_change ("dt", "td")
 
+
+  #### change_td_to_dt #################################################
 
   def change_td_to_dt (self):
     return self.do_tape_change ("td", "dt")
 
 
+  #### parse_show_rx_dev ###############################################
   # Show the rx device configuration.
+
   def parse_show_rx_dev (self, after):
     lines = after.split ("\r")
     is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
@@ -814,7 +829,9 @@ class simh:
     return m.group(4)
 
 
+  #### new_parse_show_rx_dev ###########################################
   # Show the rx device configuration.
+
   def new_parse_show_rx_dev (self, lines):
     is_enabled_re = re.compile("^\s*(RX)\s+(disabled|((RX8E|RX28),\s+devno=\S+,\s+(\d)\s+units))$")
     m = re.match(is_enabled_re, lines[0])
@@ -823,8 +840,9 @@ class simh:
     return m.group(4)
 
 
-
+  #### parse_show_rx_attached ##########################################
   # Returns an ordered list of files attached or None if disabled.
+
   def parse_show_rx_attached (self, after):
     lines = after.split ("\r")
 
@@ -838,6 +856,8 @@ class simh:
       attached[m.group(4)] = filename
     return attached
 
+
+  #### do_rx_change ####################################################
   
   def do_rx_change (self, from_rx, to_rx):
     print "Switch rx driver: " + from_rx + ", to: " + to_rx
@@ -893,15 +913,22 @@ class simh:
       return False
     return True
 
+
+  #### change_rx01_to_rx02 #############################################
+
   def change_rx01_to_rx02 (self):
     return self.do_rx_change ("rx8e", "rx28")
 
+
+  #### change_rx02_to_rx01 #############################################
 
   def change_rx02_to_rx01 (self):
     return self.do_rx_change ("rx28", "rx8e")
 
 
+  #### parse_show_tti ##################################################
   # Returns an ordered list of files attached or None if disabled.
+
   def parse_show_tti (self, after):
     lines = after.split ("\r")
     is_enabled_re = re.compile("^(KSR|7b)$")
@@ -913,7 +940,9 @@ class simh:
     return m.group(1)
 
 
+  #### new_parse_show_tti ##############################################
   # Returns an ordered list of files attached or None if disabled.
+
   def new_parse_show_tti (self, lines):
     is_enabled_re = re.compile("^(KSR|7b)$")
     if len(lines) < 2: return None
@@ -923,6 +952,8 @@ class simh:
     if m == None or m.group(1) == None: return None
     return m.group(1)
 
+
+  #### do_tti_change ###################################################
 
   def do_tti_change (self, from_tti, to_tti):
     print "Switch tti driver from: " + from_tti + ", to: " + to_tti
@@ -955,12 +986,14 @@ class simh:
     return True
 
 
+  #### change_ksr_to_7b ################################################
+
   def change_ksr_to_7b (self):
     return self.do_tti_change ("KSR", "7b")
 
 
+  #### change_7b_to_ksr ################################################
 
   def change_7b_to_ksr (self):
     return self.do_tti_change ("7b", "KSR")
-
 
