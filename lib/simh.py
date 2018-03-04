@@ -926,10 +926,13 @@ class simh:
     return self.do_rx_change ("rx28", "rx8e")
 
 
-  #### parse_show_tti ##################################################
+  #### get_tti ##################################################
   # Returns an ordered list of files attached or None if disabled.
 
-  def parse_show_tti (self, after):
+  def get_tti (self, after):
+    self.send_cmd("show tti")
+    self._child.expect("TTI\s+(.+)\r")
+
     lines = after.split ("\r")
     is_enabled_re = re.compile("^(KSR|7b)$")
     if len(lines) < 2: return None
@@ -957,33 +960,29 @@ class simh:
 
   def do_tti_change (self, from_tti, to_tti):
     print "Switch tti driver from: " + from_tti + ", to: " + to_tti
-    self.send_cmd("show tti")
-    self._child.expect("TTI\s+(.+)\r")
 
-    tti_type = self.parse_show_tti (self._child.after)
+    tti_type = self.get_tti (self._child.after)
     if tti_type == None:
       print "do_tti_change: Trouble parsing \'show tti\' output from simh. Giving up on:"
       print self._child.after
       return False
-    
-    if tti_type == to_tti:
+    elif tti_type == to_tti:
       print "tti device is already set to " + to_tti
       return None
+    else:
+      # Change the tti setting
+      self.send_cmd ("set tti " + to_tti)
 
-    self.send_cmd("set tti " + to_tti)
-
-    # Test to confirm new setting of tti
-    self.send_cmd("show tti")
-    self._child.expect("TTI\s+(.+)\r")
-    tti_type = self.parse_show_tti(self._child.after)
-
-    if tti_type == None:
-      print "Failed change of tti to " + to_tti + ". Parse fail on \'show tti\'."
-      return False
-    elif tti_type != to_tti: 
-      print "Failed change of tti to " + to_tti + ". Instead got: " + tti_type
-      return False
-    return True
+      # Test to confirm new setting of tti
+      tti_type = self.get_tti (self._child.after)
+      if tti_type == None:
+        print "Failed change of tti to " + to_tti + ". Parse fail on \'show tti\'."
+        return False
+      elif tti_type != to_tti: 
+        print "Failed change of tti to " + to_tti + ". Instead got: " + tti_type
+        return False
+      else:
+        return True
 
 
   #### change_ksr_to_7b ################################################
