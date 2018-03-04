@@ -278,6 +278,8 @@ class simh:
   # prompt types.
 
   def os8_send_cmd (self, prompt, line):
+    if self._context == 'simh': self.send_cmd ('cont')
+
     self._child.expect ("\n%s$" % prompt)
     self.os8_send_line (line)
 
@@ -603,6 +605,7 @@ class simh:
       self._context = "simh"
     elif self._context != "simh":
       self._child.sendcontrol ('e')
+      self._context = "simh"
       
     self._child.expect ("sim> $")
     self._child.sendline (cmd)
