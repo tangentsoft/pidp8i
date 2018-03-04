@@ -149,6 +149,17 @@ class simh:
     ["USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
   ]
 
+  # Pattern to match a SIMH command.  The command verb ends up in
+  # match().group(1), and anything after the verb in group(3).
+  _simh_comm_re = re.compile ("^\s*(\S+)(\s+(.*))?$")
+
+  # Significant prefixes of SIMH command verbs that transition from SIMH
+  # command context back into the simulation: BOOT, CONTINUE, and GO.
+  # We need only the first letter in all cases, since these particular
+  # commands are not ambiguous.  They're uppercase because the code that
+  # uses this always uppercases the command before searching this list.
+  _enters_os8_context = ["B", "C", "G"]
+
 
   #### ctor ############################################################
   # The first parameter must be given as the parent of bin/pidp8i-sim.
@@ -172,14 +183,6 @@ class simh:
     # prompt to expect.
     # We start in the simh context until we boot something.
     self._context = "simh"
-
-    # Cut apart a simh command, return the command in group(1)
-    # and the rest in group(3)
-  
-    self._simh_comm_re = re.compile ("^\s*(\S+)(\s+(.*))?$")
-    self._enters_os8_context = ["g", "go", "bo", "boo", "boot", "c",
-                                "co", "con", "cont","conti", "contin",
-                                "continu", "continue"]
     
     # Parse our OS/8 Errors table into actionable chunks
     for error_spec in self._os8_errors:
@@ -190,7 +193,6 @@ class simh:
     self._pip_into_replies.extend(self._os8_error_match_strings)
     self._pip_from_replies = ['\\*']
     self._pip_from_replies.extend(self._os8_error_match_strings)
-
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
@@ -598,7 +600,7 @@ class simh:
     self._child.expect ("sim> $")
     self._child.sendline (cmd)
     m = re.match (self._simh_comm_re, cmd)
-    if m != None and m.group(1) in self._enters_os8_context:
+    if m != None and m.group(1)[:1].upper() in self._enters_os8_context:
       self._context = "os8"
 
 
