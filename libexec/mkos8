@@ -47,6 +47,7 @@ import subprocess
 from mkos8 import *
 from pidp8i import *
 from simh import *
+from os8script import *
 
 
 #### globals and constants #############################################
@@ -1603,6 +1604,7 @@ def run_system_script (s, args, filename):
     print "Calling: " + m.group(1)
     commands[m.group(1)](s, args, m.group(3), comm_file)
 
+    
 #### testing ##############################################################
 def run_testing (s, args):
   print "Testing!"
@@ -1652,7 +1654,7 @@ def run_testing (s, args):
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 
-def main ():
+def old_main ():
   # Parse the command line
   allowed_acts = ["all", "bin", "src", "patch", "head", "v3f", "system", "testing"]
   do_all_acts = ["bin", "src"]    # Just do bin and src if act is "all".
@@ -1707,6 +1709,13 @@ def main ():
   s.quit ()
   if progmsg: print "Done!"
 
+def main ():
+  s = simh (dirs.build, True)
+  s.set_logfile (open (dirs.log + 'mkos8-foo' + '.log', 'w') \
+      if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
+  os8 = os8script (s, [])
+  os8.run_script_file ("testing.script")
+  
 if __name__ == "__main__":
     main()
