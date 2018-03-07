@@ -1139,13 +1139,13 @@ def run_testing (s, args):
   if retval == None: retval = "None"
   print "tti config: " + retval
 
-  retval = s.change_ksr_to_7b()
+  retval = s.set_tti_config("7b")
   print str(retval)
   retval = s.describe_dev_config("tti")
   if retval == None: retval = "None"
   print "tti config: " + retval
 
-  retval = s.change_7b_to_ksr()
+  retval = s.set_tti_config ("KSR")
   print str(retval)
 
   retval = s.describe_dev_config("tape")
@@ -1153,7 +1153,7 @@ def run_testing (s, args):
   print "tape config: " + retval
 
   s.send_cmd("att dt0 test.tu56")
-  retval = s.change_dt_to_td()
+  retval = s.set_tape_config("td")
   print str(retval)
 
   retval = s.describe_dev_config("tape")
@@ -1165,7 +1165,7 @@ def run_testing (s, args):
   print "rx config: " + retval
 
   s.send_cmd("att rx0 test.rx01")
-  retval = s.change_rx01_to_rx02()
+  retval = s.set_rx_config("rx28")
   print str(retval)
 
   retval = s.describe_dev_config("rx")
@@ -1173,7 +1173,7 @@ def run_testing (s, args):
   print "rx config: " + retval
 
   s.send_cmd("att rx1 test.rx01")
-  retval = s.change_rx02_to_rx01()
+  retval = s.set_rx_config("rx01")
   print str(retval)
 
   

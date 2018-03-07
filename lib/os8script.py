@@ -314,22 +314,12 @@ class os8script:
     if setting not in _configurables[item]:
       print "Cannot set " + item + " to " + setting
       return
-    # Current from/to config change interface forces
-    # a redundent describe step. The interface should change.
-    current = self.simh.describe_dev_config(item)
-    if current == None:
-      print "Could not fetch configuration of " + item
-      return
-    if current == setting:
-      if self.verbose:
-        print item + " is already set to " + setting
-      return
     if item == "tape":
-      self.simh.do_tape_change(current, setting)
+      self.simh.set_tape_config(setting)
     elif item == "rx":
-      self.simh.do_rx_change (current, setting)
+      self.simh.set_rx_config (setting)
     elif item == "tti":
-      self.simh.do_tti_change (current, setting)
+      self.simh.set_tti_config (setting)
     
   
   #### run_script_file #################################################

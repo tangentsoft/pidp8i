@@ -744,24 +744,36 @@ class simh:
     for line in lines:
       print line
 
-  #### change_foo_to_bar routines  ######################################
+  #### simh_configure routines #########################################
   # These routines affect the state of device configuration in SIMH.
   # They are intended as robust ways to toggle between incompatible
   # configurations of SIMH:
-  # Choice of TD8E or TC08 DECtape.
+  # Choice of TD8E or TC08 DECtape (SIMH td and dt devices).
   # Choice of RX01 or RX02 Floppy emulation.
+  # The SIMH rx device sets RX8E for RX01, and RX28 for RX02.  
   # Choice of KSR or 7bit console configuration.
-  # There are always a pair of routines so you can go both ways.
-  # The routines attempt to detect and correct problems.
-  # For example: You are not allowed to disable DT if there
-  # is a file attached to a DT device so such needs to be
-  # detected and corrected.
-  # The routines should check to see if the change is unnecessary.
+  #
+  # When re-configuring dt, dt, and rx devices, any attached
+  # images are detached before reconfiguration is attempted.
+  # (SIMH errors out if you don't detach them.)
+  #
+  # The check to see if the change is unnecessary.
   # For now they return None if no change necessary.
+  #
+  # After re-configuring the device, the SIMH show command is used
+  # to confirm the re-configuration was successful.
+  #
   # In future, we should add exception handling for no change necessary.
-  # They return True if the change was successful and False if not.
+  # For now, return True if the change was successful and False if not.
 
-  def do_tape_change (self, from_tape, to_tape):
+
+  def set_tape_config (self, to_tape):
+    if to_tape == "dt": from_tape = "td"
+    elif to_tape == "td": from_tape = "dt"
+    else:
+      print "Cannot set_tape_config for " + to_tape
+      return False
+
     print "Disable: " + from_tape + ", and enable: " + to_tape
     
     lines = self.do_simh_show(from_tape)
@@ -814,18 +826,6 @@ class simh:
       return True
 
 
-  #### change_dt_to_td #################################################
-
-  def change_dt_to_td (self):
-    return self.do_tape_change ("dt", "td")
-
-
-  #### change_td_to_dt #################################################
-
-  def change_td_to_dt (self):
-    return self.do_tape_change ("td", "dt")
-
-
   #### parse_show_rx_dev ###############################################
   # Show the rx device configuration.
 
@@ -854,9 +854,22 @@ class simh:
     return attached
 
 
-  #### do_rx_change ####################################################
+  #### set_rx_config ####################################################
   
-  def do_rx_change (self, from_rx, to_rx):
+  def set_rx_config (self, to_rx):
+    to_rx = to_rx.lower()
+    if to_rx == "rx8e": from_rx = "rx28"
+    elif to_rx == "rx01":
+      to_rx = "rx8e"
+      from_rx = "rx28"
+    elif to_rx == "rx28": from_rx = "rx8e"
+    elif to_rx == "rx02":
+      to_rx = "rx28"
+      from_rx = "rx8e"
+    else:
+      print "Cannot set_rx_config for " + to_rx
+      return False
+      
     print "Switch rx driver: " + from_rx + ", to: " + to_rx
     lines = self.do_simh_show("rx")
 
@@ -909,18 +922,6 @@ class simh:
     return True
 
 
-  #### change_rx01_to_rx02 #############################################
-
-  def change_rx01_to_rx02 (self):
-    return self.do_rx_change ("rx8e", "rx28")
-
-
-  #### change_rx02_to_rx01 #############################################
-
-  def change_rx02_to_rx01 (self):
-    return self.do_rx_change ("rx28", "rx8e")
-
-
   #### get_tti ##################################################
   # Returns an ordered list of files attached or None if disabled.
   def parse_show_tti (self, lines):
@@ -937,7 +938,13 @@ class simh:
 
   #### do_tti_change ###################################################
 
-  def do_tti_change (self, from_tti, to_tti):
+  def set_tti_config (self, to_tti):
+    if to_tti == "KSR": from_tti = "7b"
+    elif to_tti == "7b": from_tti = "KSR"
+    else:
+      print "Cannot set_tti_config to " + to_tti
+      return
+    
     print "Switch tti driver from: " + from_tti + ", to: " + to_tti
 
     lines = self.do_simh_show("tti")
@@ -965,15 +972,4 @@ class simh:
     else:
       return True
 
-
-  #### change_ksr_to_7b ################################################
-
-  def change_ksr_to_7b (self):
-    return self.do_tti_change ("KSR", "7b")
-
-
-  #### change_7b_to_ksr ################################################
-
-  def change_7b_to_ksr (self):
-    return self.do_tti_change ("7b", "KSR")
 
