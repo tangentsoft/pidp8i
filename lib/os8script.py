@@ -48,29 +48,29 @@ import subprocess
 from pidp8i import *
 from simh import *
 
-# Error Class Definitions ################################################
+# Error Class Definitions ##############################################
 # Enables us to use exceptions from within this module.
 
 class Error(Exception):
-    """Base Class for exceptions in this module."""
-    pass
+  """Base Class for exceptions in this module."""
+  pass
 
 class InputError(Error):
-    """Exception raised for errors in the input.
+  """Exception raised for errors in the input.
 
-    Attributes:
-        expr -- input expression in which the error occurred
-        msg  -- explanation of the error
-    """
+  Attributes:
+  expr -- input expression in which the error occurred
+  msg  -- explanation of the error
+  """
 
-    def __init__(self, msg):
-        self.msg = msg
+  def __init__(self, msg):
+    self.msg = msg
 
-    def __str__(self):
-        return self.msg
+  def __str__(self):
+    return self.msg
 
       
-# Private globals ########################################################
+# Private globals ######################################################
 # Visible within this file, but not to the outside.
 
 # Iidentify a begin command and put the rest of the line in group(1)
@@ -93,24 +93,20 @@ _com_split_parse = re.compile(_com_split_str)
 _odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
 _odt_parse = re.compile(_odt_parse_str)
 
-# Simple regex to separate command keyword from rest of line.
-# rest is in group(3)
+# Put command keyword in group(1) and the rest is in group(3)
 _comm_re_str = "^(\S+)(\s+(.*))?$"
 _comm_re = re.compile(_comm_re_str)
 
-# Simple regex to identify an end comm and put the rest
-# the rest of the line in group(1)
+# Identify an end comm and put the rest of the line in group(1)
 _end_comm_re = re.compile ("^end\s+(.*)?$")
 
-# Simple regex to identify an end option command and put
-# the rest of the line in group(1)
+# Identify an end option command and put the rest of the line in group(1)
 _end_option_comm_re = re.compile ("^end\s+option\s+(.*)$")
 
-# Simple regex to identify a begin command and put
-# the rest of the line in group(1)
+# Identify a begin command and put the rest of the line in group(1)
 _begin_option_comm_re = re.compile ("^begin\s+option\s+(.*)$")
 
-# Regex for parsing an argument string into a sys device
+# Parse an argument string into a sys device
 _mount_regex_str = "^(rk|td|dt|rx)(\d?)\s+(.*)$"
 _mount_re = re.compile(_mount_regex_str)
 
@@ -179,14 +175,21 @@ _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
                     "end"   : None}
 
 
+# Parse the requested config item into group(1) and the
+# requested setting into group(2)
+_configure_re = re.compile("^(\S+)\s+(\S+)$")
 
-
+_rx_settings = ["rx01", "rx02", "RX8E", "RX28"]
+_tape_settings = ["td", "dt"]
+_tti_settings = ["KSR", "7b"]
+_configurables = {"rx": _rx_settings, "tape": _tape_settings,
+                  "tti": _tti_settings}
 
 class os8script:
   # Contains a simh object, other global state and methods
   # for running OS/8 scripts under simh.
-  #### globals and constants #############################################
-
+  #### globals and constants ###########################################
+  
   
   def __init__ (self, simh, options, verbose=False, debug=True):
     self.verbose = verbose
@@ -198,7 +201,7 @@ class os8script:
     # When the option end statement is reached, we pop them off the stack.
     self.options_stack = []
 
-  #### basic_line_parse ###################################################
+  #### basic_line_parse ################################################
   # Returns stripped line and any other cleanup we want.
   # Returns None if we should just 'continue' on to the next line.
   # Filters out comments.
@@ -208,7 +211,7 @@ class os8script:
     if line[0] == "#": return None
     retval = line.strip()
     if retval == "": return None
-  
+    
     # First test if we are in a begin option block
     m = re.match (_begin_option_comm_re, retval)
     if m != None:
@@ -247,7 +250,7 @@ class os8script:
     return retval
   
   
-  #### ignore_to_subcomm_end #############################################
+  #### ignore_to_subcomm_end ###########################################
   
   def ignore_to_subcomm_end (self, old_line, script_file, end_str):
     for line in script_file:
@@ -263,7 +266,7 @@ class os8script:
       if rest == end_str: return
   
   
-  #### include_command #####################################################
+  #### include_command #################################################
   # Call run_system_script recursively on the file path provided.
   
   def include_command (self, line, script_file):
@@ -272,7 +275,64 @@ class os8script:
     self.run_script_file (line)
       
   
-  #### run_script_file ########################################################
+  #### unset_option_command ############################################
+  # Deletes an option from the list of active options.
+  
+  def unset_option_command (self, line, script_file):
+    m = re.match(_comm_re)
+    if m == None:
+      print "Could not parse unset option command."
+      return
+    option = m.group(1)
+    if option == None:
+      print "Empty option to unset."
+      return
+    if option not in self.options_set:
+      print "Cannot unset " + option + " because it has not been set."
+    else:
+      self.options_set.delete(option)
+
+
+  #### configure_command ###############################################
+  # First arg is the item to configure.
+  # Second arg is the setting.
+  # This enables adding option setting inside a script file.
+  
+  def configure_command (self, line, script_file):
+    m = re.match(_configure_re, line)
+    if m == None or m.group(1) == None or m.group(2) == None: 
+      print "Could not parse configure command: " + line
+      return
+    item = m.group(1)
+    setting = m.group(2)
+    if item == "option":
+      self.options_set.extend(setting)
+      return
+    if item not in _configurables:
+      print "Ignoring invalid configuration item: " + item
+      return
+    if setting not in _configurables[item]:
+      print "Cannot set " + item + " to " + setting
+      return
+    # Current from/to config change interface forces
+    # a redundent describe step. The interface should change.
+    current = self.simh.describe_dev_config(item)
+    if current == None:
+      print "Could not fetch configuration of " + item
+      return
+    if current == setting:
+      if self.verbose:
+        print item + " is already set to " + setting
+      return
+    if item == "tape":
+      self.simh.do_tape_change(current, setting)
+    elif item == "rx":
+      self.simh.do_rx_change (current, setting)
+    elif item == "tti":
+      self.simh.do_tti_change (current, setting)
+    
+  
+  #### run_script_file #################################################
   # Run os8 command script file
   # Call parsers as needed for supported sub commands.
   #
@@ -299,7 +359,9 @@ class os8script:
                 "os8": self.os8_command, "done": self.done_command,
                 "pal8": self.pal8_command, "include": self.include_command,
                 "begin": self.begin_command, "end": self.end_command,
-                "umount": self.umount_command, "simh": self.simh_command}
+                "umount": self.umount_command, "simh": self.simh_command,
+                "configure": self.configure_command,
+                "unset_option": self.unset_option_command}
   
     try:
       script_file = open(script_path, "r")
@@ -323,13 +385,13 @@ class os8script:
       print "Calling: " + m.group(1)
       commands[m.group(1)](m.group(3), script_file)
 
-  #### end_command ########################################################
+  #### end_command #####################################################
   
   def end_command (self, line, script_file):
     print "Unexpectedly encountered end command: " + line
     
 
-  #### parse_odt #########################################################
+  #### parse_odt #######################################################
   
   def parse_odt (s, com, line, debug):
     if debug: print line
@@ -395,7 +457,7 @@ class os8script:
       return "cont"
     
     
-  #### parse_futil #########################################################
+  #### parse_futil #####################################################
   #
   # Very simple minded:
   # If first char on line is an alpha, run the command.
@@ -431,7 +493,7 @@ class os8script:
         return futil_specials[fcom](s, fcom, line)
   
   
-  #### execute_patch_file ################################################
+  #### execute_patch_file ##############################################
   
   def execute_patch_file (s, pathname, debug):
     global progmsg
@@ -491,7 +553,7 @@ class os8script:
     return 0
   
   
-  #### skip_patch ########################################################
+  #### skip_patch ######################################################
   # Returns true if the given filename matches one of the regex string
   # keys of the given skips dict and the flag value for that key is set.
   # See skips definition in make_patch, which calls this.
@@ -502,7 +564,7 @@ class os8script:
       return False
   
   
-  #### call_pal8 #########################################################
+  #### call_pal8 #######################################################
   # Generic call out to PAL8 with error recovery.
   # We rely on the caller to have good specifications for source,
   # binary and optional listing files.
@@ -534,7 +596,7 @@ class os8script:
     # self.simh.os8_send_ctrl ('[')      # exit PAL8
     
   
-  #### simh_command ########################################################
+  #### simh_command ####################################################
   # I tried to avoid including this command but sometimes you just
   # have to reconfigure subtle bits of device drivers.
   # We assume we can call a simh command at any time, but
@@ -546,14 +608,14 @@ class os8script:
     self.simh.send_cmd(line)
   
   
-  #### umount_command ######################################################
+  #### umount_command ##################################################
   def umount_command (self, line, script_file):
     detach_comm = "det " + line
     if self.verbose: print detach_comm
     self.simh.send_cmd(detach_comm)
   
   
-  #### mount_command ######################################################
+  #### mount_command ###################################################
   # Remember we have to figure out how to differentiate between
   # RX01 and RX02
   
@@ -587,7 +649,7 @@ class os8script:
           while os.path.isfile(imagename):
             print "Found: " + imagename
             next_tape += 1
-            imagename =  base_imagename + str(next_tape) + extension
+            imagename =  base_imagename + "_" + str(next_tape) + extension
         else:
           print "Ignoring unrecognized mount option: " + part
     if unit == None or unit == "":
@@ -605,7 +667,7 @@ class os8script:
     self.simh.send_cmd(attach_comm)
     
   
-  #### boot_command #######################################################
+  #### boot_command ####################################################
   
   def boot_command (self, line, script_file):
     boot_comm = "boot " + line
@@ -613,14 +675,14 @@ class os8script:
     self.simh.send_cmd(boot_comm)
   
   
-  #### os8_command ########################################################
+  #### os8_command #####################################################
   
   def os8_command (self, line, script_file):
     os8_comm = line
     if self.verbose: print os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
   
-  #### pal8_command ########################################################
+  #### pal8_command ####################################################
   # The "pal8" script command comes in two forms:
   # The two argument form where the PAL8 status is printed on the fly
   # and the 3 argument form where all status goes into the listing file.
@@ -642,7 +704,7 @@ class os8script:
         print "Unrecognized pal8 form: " + line
   
       
-  #### done_command #######################################################
+  #### done_command ####################################################
   # Return to SIMH from OS/8
   # Detach all devices to make sure buffers all get written out.
   
@@ -651,31 +713,11 @@ class os8script:
     self.simh.send_cmd ("detach all")
   
   
-  #### do_begin_option ####################################################
-  # Begin a block of text that is ignored unless the option
-  # appears in self.options_set
-  
-  def do_begin_option (self, line, script_file):
-    global options_stack
-    global options_set
-  
-    print "do_begin_option: line: " + line
-    print "options_set: " + str (self.options_set)
-  
-    if line in self.options_set:
-      # Option is active. We push it onto the stack
-      print "Pushing " + line + " onto options_stack"
-      self.options_stack.insert(0, line)
-    else:
-      # Option is inactive.  Ignore all subseqent lines
-      # until we get to an end command that matches our option.
-      ignore_to_subcomm_end (self, line, script_file, line)
-  
-  #### begin_command ######################################################
+  #### begin_command ###################################################
   
   def begin_command (self, line, script_file):
-    sub_commands = {"fotp": do_fotp_subcomm, "build": do_build_subcomm,
-                    "absldr": do_absldr_subcomm}
+    sub_commands = {"fotp": self.fotp_subcomm, "build": self.build_subcomm,
+                    "absldr": self.absldr_subcomm}
   
     m = re.match(_comm_re, line)
     if m == None:
@@ -683,33 +725,33 @@ class os8script:
     if m.group(1) not in sub_commands:
       print "Ignoring unrecognized sub-command: " + m.group(1)
       print "Ignoring everything to next end."
-      ignore_to_subcomm_end(s, line, script_file, "")
+      self.ignore_to_subcomm_end(line, script_file, "")
     else:
-      sub_commands[m.group(1)](self, m.group(3), script_file)
+      sub_commands[m.group(1)](m.group(3), script_file)
   
   
-  #### do_run_build_build #################################################
+  #### run_build_build #################################################
   # ***CAUTION***
   # When you do this you are instructing BUILD to
   # OVERWRITE the system area.  If you do this to your
   # running RK05 pack by mistake, you WILL make a mess
   # and need to re-run mkos8 to re-make it.
   
-  def do_run_build_build (self, os8_spec, cd_spec):
+  def run_build_build (self, os8_spec, cd_spec):
     self.simh.os8_send_cmd ("\$", "BUILD")
     self.simh.os8_send_cmd ("LOAD OS/8: ", os8_spec)
     self.simh.os8_send_cmd ("LOAD CD: ", cd_spec)
   
   
-  #### do_build_subcomm ###################################################
+  #### build_subcomm ###################################################
   
-  def do_build_subcomm (self, old_line, script_file):
+  def build_subcomm (self, old_line, script_file):
     os8_comm = "RU " + old_line
     if self.verbose: print os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
-      line = basic_line_parse(self, line, script_file)
+      line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
       m = re.match(_comm_re, line)
@@ -749,8 +791,8 @@ class os8script:
           if m2.group(3) == None:
             print "Missing sorce of CD.BN. Ignoring BUILD command."
             continue
-          if self.verbose: print "calling do_run_build_build"
-          do_run_build_build (self, m2.group(1), m2.group(3))
+          if self.verbose: print "calling run_build_build"
+          self.run_build_build (m2.group(1), m2.group(3))
           continue
   
       comm = build_sub + " " + rest
@@ -758,15 +800,15 @@ class os8script:
       self.simh.os8_send_cmd ("\$", comm)
   
   
-  #### do_fotp_subcomm ####################################################
+  #### fotp_subcomm ####################################################
   
-  def do_fotp_subcomm (self, old_line, script_file):
+  def fotp_subcomm (self, old_line, script_file):
     os8_comm = "RU " + old_line
     if self.verbose: print os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
-      line = basic_line_parse(self, line, script_file)
+      line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
       # Test for special case, "end" and act on it if present.
@@ -791,16 +833,16 @@ class os8script:
       if self.verbose: print "* " + line
       self.simh.os8_send_cmd ("\\*", line)
   
-  #### do_absldr_subcomm ####################################################
-  # A clone of do_fotp_subcom.  Can we find a way to merge the common code?
+  #### absldr_subcomm ##################################################
+  # A clone of fotp_subcom.  Can we find a way to merge the common code?
   
-  def do_absldr_subcomm (self, old_line, script_file):
+  def absldr_subcomm (self, old_line, script_file):
     os8_comm = "RU " + old_line
     if self.verbose: print os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
-      line = basic_line_parse(self, line, script_file)
+      line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
       # Test for special case, "end" and act on it if present.
@@ -827,7 +869,7 @@ class os8script:
   
       
     
-  #### check_exists ######################################################
+  #### check_exists ####################################################
   # Check existence of all files needed
   
   def check_exists (s, image_copyins):
@@ -840,7 +882,7 @@ class os8script:
       # else: print "Found " + image_path
   
      
-  #### Data Structures ##################################################
+  #### Data Structures ################################################
   #
   # The make procedures use helper procedures
   # to confirm that the relevant input image file exists and
@@ -877,7 +919,7 @@ class os8script:
   # The file spec is used with the chosen dectape instead of "*.*"
   #
   
-  #### copyin_pair #######################################################
+  #### copyin_pair #####################################################
   # Copy two images into two destinations with two messages
   #
   # Assumes our context is "in simh".
@@ -929,7 +971,7 @@ class os8script:
     if copyin1: self.simh.send_cmd ("detach dt1")
   
   
-  #### do_all_copyins ####################################################
+  #### do_all_copyins ##################################################
   
   def do_all_copyins (s, copyins, debug):
     pair_idx = 0

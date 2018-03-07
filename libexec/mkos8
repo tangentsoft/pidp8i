@@ -58,13 +58,6 @@ from os8script import *
 # script's progress.
 progmsg = True
 
-# Optional sections encountered. Is a stack because optional sections
-# can be nested.
-options_stack = []
-
-# List of options enabled on command line.
-options_set = []
-
 # Name of the RK05 disk image files we create
 _bin_rk05 =           "os8v3d-bin.rk05"
 _src_rk05 =           "os8v3d-src.rk05"
@@ -135,46 +128,6 @@ _os8_fspec = Template ("((\S+:)?([A-Z0-9]{1,6}|[A-Z0-9]{1,6}\.$ext))")
 _os8_BN_fspec = _os8_fspec.substitute(ext="BN")
 _os8_PA_fspec = _os8_fspec.substitute(ext="PA")
 _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
-
-# For the two arg form:
-# The full destination spec is in group(1), The full source spec is in group(4).
-# The device components, if any, are in group(2) for destination, and
-# group(5) for source.
-# The file components are in group(3) for destination, and group (6) for source.
-# The destination file must either end in ".BN" or have no extension.
-# The source must file either end in ".PA" or have no extension.
-_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "<" + _os8_PA_fspec + "$")
-
-# For the 3 arg form:
-# The full destination spec is in group(1), The full source spec is in group(7).
-# The full listing spec is in group(4)
-# The device components, if any, are in group(2) for destination, group(5)
-# for listing, and group(8) for source.
-# The file components are in group(3) for destination, and group(9) for source,
-# and group(6) for listing.
-# The destination file must either end in ".BN" or have no extension.
-# The source must file either end in ".PA" or have no extension.
-# The listing must either end in "LS" or have no extension.
-
-_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "," + _os8_LS_fspec + "<" + _os8_PA_fspec + "$")
-
-# Regular expression for syntax checking inside ABSLDR
-# One or more OS/8 binary files and optional args beginning with a slash.
-
-_absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$")
-
-
-# Array of regular expressions for syntax checking inside BUILD
-_build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
-                    "UNLOAD": re.compile("^\S+(,\S+)?$"),
-                    "INSERT": re.compile("^\S+,\S+(,\S+)?$"),
-                    "DELETE": re.compile("^\S+(,\S+)?$"),
-                    "SYSTEM": re.compile("^\S+$"),
-                    "DSK"   : re.compile("^(\S+:)?\S+$"),
-                    "BUILD" : re.compile("^(\S+(.BN)?)\s+(\S+(.BN)?)$"),
-                    "PRINT" : None,
-                    "BOOT"  : None,
-                    "end"   : None}
 
 
 
@@ -922,7 +875,7 @@ def old_make_system_tape (s, args):
   while os.path.isfile(sys_tape_path):
     print "Found: " + sys_tape_path
     next_tape += 1
-    sys_tape_path = dirs.os8mo + _new_sys_tape_prefix + str(next_tape) + ".tu56"
+    sys_tape_path = dirs.os8mo + _new_sys_tape_prefix + "_" + str(next_tape) + ".tu56"
 
   # Put the drivers dectape on dt1
   s.send_cmd ("attach -r dt1 " + _driver_tape_path)
@@ -1178,433 +1131,6 @@ def make_v3f (s, args):
   s.send_cmd ("detach rk1")
 
 
-#### basic_line_parse ###################################################
-# Returns stripped line and any other cleanup we want.
-# Returns None if we should just 'continue' on to the next line.
-# Filters out comments.
-# Processes the option begin/end blocks.
-
-def basic_line_parse (s, args, line, comm_file):
-  global options_stack
-
-  if line[0] == "#": return None
-  retval = line.strip()
-  if retval == "": return None
-
-  # First test if we are in a begin option block
-  m = re.match (_begin_option_comm_re, retval)
-  if m != None:
-    rest = m.group(1)
-    print "doing_begin_option: " + rest
-    print "options_set: " + str (options_set)
-
-    if rest in options_set:
-      # Option is active. We push it onto the stack
-      print "Pushing " + rest + " onto options_stack"
-      options_stack.insert(0, rest)
-    else:
-      # Option is inactive.  Ignore all subseqent lines
-      # until we get to an end command that matches our option.
-      ignore_to_subcomm_end (s, args, line, comm_file, "option " + rest)
-    return None
-
-  m = re.match(_end_option_comm_re, line)
-  if m != None:
-    rest = m.group(1)
-    if (rest == None or rest == ""):
-      print "Warning! option end statement encountered with no argument."
-      return None
-    if len(options_stack) == 0:
-      print "Warning! option end statement found with no matching begin for option: " + rest
-      return None
-    if rest != options_stack[0]:
-      print "Warning! Mismatched option begin/end group. Currently inside option: " + \
-        options_stack[0] + " not " + rest
-      return None
-    else:
-      print "Popping " + options_stack[0]
-      options_stack.pop()
-      return None
-
-  return retval
-
-
-#### do_simh_comm ########################################################
-# I tried to avoid including this command but sometimes you just
-# have to reconfigure subtle bits of device drivers.
-# We assume we can call a simh command at any time, but
-# doing so puts us in the simh context that persists until we
-# issue a boot or go command.
-
-def do_simh_comm (s, args, line, comm_file):
-  if progmsg: print line
-  s.send_cmd(line)
-
-
-#### do_umount_comm ######################################################
-def do_umount_comm (s, args, line, comm_file):
-  detach_comm = "det " + line
-  if progmsg: print detach_comm
-  s.send_cmd(detach_comm)
-
-
-#### do_mount_comm ######################################################
-# Remember we have to figure out how to differentiate between
-# RX01 and RX02
-
-def do_mount_comm (s, args, line, comm_file):
-  m = re.match(_mount_re, line)
-  if m == None:
-    print "Could not parse mount.  Ignoring: " + line
-    return
-  simh_dev = m.group(1)
-  unit = m.group(2)
-  rest = m.group(3)
-  parts = rest.split()
-  if len(parts) == 0:
-    print "No image name specified in: " + line
-    return
-  ro_arg = ""
-  imagename = parts[0]
-  dot = imagename.rindex(".")
-  base_imagename = imagename[:dot]
-  extension = imagename[dot:]
-  # Case of additional arguments.
-  if len (parts) > 1:
-    for part in parts[1:]:
-      if part == "read-only": ro_arg = "-r "
-      elif part == "must-exist":
-        if not os.path.exists(imagename):
-          print imagename + " must exist but was not found. Not mounting."
-          return
-      elif part == "no-overwrite":
-        next_tape = 0
-        while os.path.isfile(imagename):
-          print "Found: " + imagename
-          next_tape += 1
-          imagename =  base_imagename + str(next_tape) + extension
-      else:
-        print "Ignoring unrecognized mount option: " + part
-  if unit == None or unit == "":
-    print "Need unit number for: " + line
-    return
-
-  if simh_dev not in _os8_from_simh_dev:
-    print "Unrecognized simh dev: " + simh_dev
-    return
-  os8dev = _os8_from_simh_dev[simh_dev]
-
-  attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
-
-  if progmsg: print attach_comm
-  s.send_cmd(attach_comm)
-  
-
-#### do_boot_comm #######################################################
-
-def do_boot_comm (s, args, line, comm_file):
-  boot_comm = "boot " + line
-  if progmsg: print boot_comm
-  s.send_cmd(boot_comm)
-
-
-#### do_os8_comm ########################################################
-
-def do_os8_comm (s, args, line, comm_file):
-  os8_comm = line
-  if progmsg: print os8_comm
-  s.os8_send_cmd ("\\.", os8_comm)
-
-#### do_pal8_comm ########################################################
-# The "pal8" script command comes in two forms:
-# The two argument form where the PAL8 status is printed on the fly
-# and the 3 argument form where all status goes into the listing file.
-# We do the 3 argument form with a simple "os8" script command.
-
-def do_pal8_comm (s, args, line, comm_file):
-  m_2form = re.match (_two_arg_pal_re, line)
-  if m_2form != None:
-    # Call the 2arg pal8 code that works hard at error analysis.
-    call_pal8 (s, source=m_2form.group(4), binary=m_2form.group(1))
-  else:
-    m_3form = re.match (_three_arg_pal_re, line)
-    if m_3form != None:
-      # Just run the OS/8 command.
-      os8_comm = line
-      if progmsg: print "Calling 3-arg pal8 command: " + os8_comm
-      s.os8_send_cmd ("\\.", os8_comm)
-    else:
-      print "Unrecognized pal8 form: " + line
-
-    
-#### do_done_comm #######################################################
-# Return to SIMH from OS/8
-# Detach all devices to make sure buffers all get written out.
-
-def do_done_comm (s, args, line, comm_file):
-  s.back_to_cmd ("\\.")
-  s.send_cmd ("detach all")
-
-
-#### do_begin_option ####################################################
-# Begin a block of text that is ignored unless the option
-# appears in options_set
-
-def do_begin_option (s, args, line, comm_file):
-  global options_stack
-  global options_set
-
-  print "do_begin_option: line: " + line
-  print "options_set: " + str (options_set)
-
-  if line in options_set:
-    # Option is active. We push it onto the stack
-    print "Pushing " + line + " onto options_stack"
-    options_stack.insert(0, line)
-  else:
-    # Option is inactive.  Ignore all subseqent lines
-    # until we get to an end command that matches our option.
-    ignore_to_subcomm_end (s, args, line, comm_file, line)
-
-#### do_begin_comm ######################################################
-
-def do_begin_comm (s, args, line, comm_file):
-  sub_commands = {"fotp": do_fotp_subcomm, "build": do_build_subcomm,
-                  "absldr": do_absldr_subcomm}
-
-  m = re.match(_comm_re, line)
-  if m == None:
-    print "Could not parse sub-command: " + line
-  if m.group(1) not in sub_commands:
-    print "Ignoring unrecognized sub-command: " + m.group(1)
-    print "Ignoring everything to next end."
-    ignore_to_subcomm_end(s, line, comm_file, "")
-  else:
-    sub_commands[m.group(1)](s, args, m.group(3), comm_file)
-
-
-#### do_run_build_build #################################################
-# ***CAUTION***
-# When you do this you are instructing BUILD to
-# OVERWRITE the system area.  If you do this to your
-# running RK05 pack by mistake, you WILL make a mess
-# and need to re-run mkos8 to re-make it.
-
-def do_run_build_build (s, args, os8_spec, cd_spec):
-  s.os8_send_cmd ("\$", "BUILD")
-  s.os8_send_cmd ("LOAD OS/8: ", os8_spec)
-  s.os8_send_cmd ("LOAD CD: ", cd_spec)
-
-
-#### do_build_subcomm ###################################################
-
-def do_build_subcomm (s, args, old_line, comm_file):
-  os8_comm = "RU " + old_line
-  if progmsg: print os8_comm
-  s.os8_send_cmd ("\\.", os8_comm)
-  
-  for line in comm_file:
-    line = basic_line_parse(s, args, line, comm_file)
-    if line == None: continue
-
-    m = re.match(_comm_re, line)
-    if m == None:
-      print "Ignoring mal-formed build sub-command: " + line
-      continue
-
-    build_sub = m.group(1)
-    rest = m.group(3)
-    if rest == None: rest = ""
-    
-    if build_sub not in _build_comm_regs:
-      print "Unrecognized BUILD command: " + build_sub
-      continue
-
-    if build_sub == "end":
-      if rest == "":
-        print "Warning! end statement encountered inside build with no argument. Exiting build."
-        return
-      elif rest == "build": return
-      else:
-        print "Warning! Mismatched begin/end blocks. Encountered end: " + rest + "Exiting build."
-        return
-      
-    build_re = _build_comm_regs[build_sub]
-
-    if build_re != None:
-      m2 = re.match(build_re, rest)
-      if m2 == None:
-        print "Ignoring mal-formed BUILD " + build_sub + " command: " + rest
-        continue
-    
-      if build_sub == "BUILD":
-        if m2.group(1) == None:
-          print "Missing source of OS8.BN. Ignoring BUILD command."
-          continue
-        if m2.group(3) == None:
-          print "Missing sorce of CD.BN. Ignoring BUILD command."
-          continue
-        if progmsg: print "calling do_run_build_build"
-        do_run_build_build (s, args, m2.group(1), m2.group(3))
-        continue
-
-    comm = build_sub + " " + rest
-    if progmsg: print "$ " + comm
-    s.os8_send_cmd ("\$", comm)
-
-
-#### do_fotp_subcomm ####################################################
-
-def do_fotp_subcomm (s, args, old_line, comm_file):
-  os8_comm = "RU " + old_line
-  if progmsg: print os8_comm
-  s.os8_send_cmd ("\\.", os8_comm)
-  
-  for line in comm_file:
-    line = basic_line_parse(s, args, line, comm_file)
-    if line == None: continue
-
-    # Test for special case, "end" and act on it if present.
-    m = re.match(_comm_re, line)
-    if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
-      rest = m.group(3)
-      if rest == None or rest == "":
-        print "Warning! end statement encountered inside fotp with no argument."
-      elif rest != "fotp":
-        print "Warning! Mismatched begin/end blocks in fotp. Encountered end: " + rest
-        
-      if progmsg: print "End FOTP"
-      s.os8_send_ctrl ('[')
-      return
-
-    m = re.match(_fotp_re, line)
-    if m == None:
-      print "Ignoring mal-formed fotp file spec: " + line
-      continue
-
-    comm = line
-    if progmsg: print "* " + line
-    s.os8_send_cmd ("\\*", line)
-
-#### do_absldr_subcomm ####################################################
-# A clone of do_fotp_subcom.  Can we find a way to merge the common code?
-
-def do_absldr_subcomm (s, args, old_line, comm_file):
-  os8_comm = "RU " + old_line
-  if progmsg: print os8_comm
-  s.os8_send_cmd ("\\.", os8_comm)
-  
-  for line in comm_file:
-    line = basic_line_parse(s, args, line, comm_file)
-    if line == None: continue
-
-    # Test for special case, "end" and act on it if present.
-    m = re.match(_comm_re, line)
-    if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
-      rest = m.group(3)
-      if rest == None or rest == "":
-        print "Warning! end statement encountered inside absldr with no argument."
-      elif rest != "absldr":
-        print "Warning! Mismatched begin/end blocks in absldr. Encountered end: " + rest
-        
-      if progmsg: print "End ABSLDR"
-      s.os8_send_ctrl ('[')
-      return
-
-    m = re.match(_absldr_re, line)
-    if m == None:
-      print "Ignoring mal-formed absldr file spec: " + line
-      continue
-
-    comm = line
-    if progmsg: print "* " + line
-    s.os8_send_cmd ("\\*", line)
-
-#### ignore_to_subcomm_end #############################################
-
-def ignore_to_subcomm_end (s, args, old_line, comm_file, end_str):
-  global options_stack
-  
-  for line in comm_file:
-    line = line.strip()
-    print "Ignore: " + line
-    
-    m = re.match(_end_comm_re, line)
-    if m == None: continue
-
-    rest = m.group(1)
-    if rest == None: rest = ""
-    
-    if rest == end_str: return
-
-
-#### do_include_comm #####################################################
-# Call run_system_script recursively on the file path provided.
-
-def do_include_comm (s, args, line, comm_file):
-  if not os.path.isfile(line):
-    print "Could not find include file: " + line
-  run_system_script (s, args, line)
-    
-
-#### do_end_comm ########################################################
-
-def do_end_comm (s, args, line, comm_file):
-  print "Unexpectedly encountered end command: " + line
-  
-    
-#### run_system ########################################################
-# Run a system command script
-# Call parsers as needed for supported sub commands.
-#
-# Commands:
-# mount <simh-dev> <image-file> [<option> ...]
-#       option: must-exist | no-overwrite | read-only
-# boot <simh-dev>
-# os8 <command-line>
-#       the rest of the line is passed verbatim to OS/8
-# pal8 <pal-command line>
-# done
-# begin <sub-command> <os8-path>
-# end <sub-command>
-#
-# Sub-commands:
-# build, fotp
-#
-# Currently the run-script is hard-coded because of an old assumption
-# about argument parsing for mkos8.
-
-def run_system_script (s, args, filename):
-# Strings, regexps, and command arrays used by run_system
-  commands = {"mount": do_mount_comm, "boot": do_boot_comm ,
-              "os8": do_os8_comm, "done": do_done_comm,
-              "pal8": do_pal8_comm, "include": do_include_comm,
-              "begin": do_begin_comm, "end": do_end_comm,
-              "umount": do_umount_comm, "simh": do_simh_comm}
-
-  try:
-    comm_file = open(dirs.os8mo + filename, "r")
-  except IOError:
-    print filename + " not found."
-    sys.exit(-1)
-
-  for line in comm_file:
-    line = basic_line_parse (s, args, line, comm_file)
-    if line == None: continue
-    
-    m = re.match(_comm_re, line)
-    if m == None:
-      print "Ignoring command line: " + line
-      continue
-
-    if m.group(1) not in commands:
-      print "Unrecognized command: " + m.group(1)
-      continue
-
-    print "Calling: " + m.group(1)
-    commands[m.group(1)](s, args, m.group(3), comm_file)
-
-    
 #### testing ##############################################################
 def run_testing (s, args):
   print "Testing!"
@@ -1654,15 +1180,14 @@ def run_testing (s, args):
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 
-def old_main ():
+def main ():
   # Parse the command line
   allowed_acts = ["all", "bin", "src", "patch", "head", "v3f", "system", "testing"]
   do_all_acts = ["bin", "src"]    # Just do bin and src if act is "all".
   
   ap = argparser.ArgParser (allowed_acts)
   global progmsg
-  global options_stack
-  global options_set
+  options_set = []
   
   progmsg = not ap.args.verbose
 
@@ -1698,24 +1223,19 @@ def old_main ():
   s.set_logfile (open (dirs.log + 'mkos8-' + first_act + '.log', 'w') \
       if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
+  os8 = os8script (s, options_set)
+
   if acts["bin"]: make_bin (s, ap.args)
   if acts["src"]: make_src (s, ap.args)
   if acts["patch"]: make_patch (s, ap.args)
   if acts["v3f"]: make_v3f (s, ap.args)
-  if acts["head"]: run_system_script (s, ap.args,  "tc08.mkos8")
-  if acts["system"]: run_system_script (s, ap.args, "v3f-control.mkos8")
+  if acts["head"]: os8.run_script_file ("tc08.mkos8")
+  if acts["system"]: os8.run_script_file ("v3f-control.mkos8")
   if acts["testing"]: run_testing (s, ap.args)
   
   s.quit ()
   if progmsg: print "Done!"
 
-def main ():
-  s = simh (dirs.build, True)
-  s.set_logfile (open (dirs.log + 'mkos8-foo' + '.log', 'w') \
-      if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
-
-  os8 = os8script (s, [])
-  os8.run_script_file ("testing.script")
   
 if __name__ == "__main__":
     main()
