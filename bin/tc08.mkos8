@@ -4,7 +4,7 @@
 # Building a bootable TD image is tricky, because our boot disk
 # is configured with TC08, not TD8E
 
-# For TD8E we run build 3 times:
+# For TD8E we run BUILD 3 times:
 # First from SYS to change switch from TC08 to TD8E
 # Then from RKB1 to build the TD8E head,
 # Finally again from SYS to undo the first mess.
@@ -14,7 +14,14 @@ mount rk1 ./os8-v3f-build.rk05 must-exist
 mount dt1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
 
 begin option td12k
+configure option td8e
+end option td12k
 
+begin option tdrom
+configure option td8e
+end option tdrom
+
+begin option td8e
 boot rk0
 
 os8 SET SYS NO INIT
@@ -32,7 +39,7 @@ configure tape td
 
 mount td0 ./system_td12k.tu56 no-overwrite
 mount td1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
-end option td12k
+end option td8e
 
 # Options decide what our output tape will be called.
 begin option tc08
@@ -121,7 +128,7 @@ os8 SAVE DTA0 BUILD.SV
 
 include sys-dectape-copy.mkos8
 
-begin option td12k
+begin option td8e
 # Put system image back to TC08
 # The saved BUILD will just work.
 boot rk0
@@ -131,7 +138,7 @@ end build
 os8 SET SYS INIT
 
 boot td0
-end option td12k
+end option td8e
 
 begin option tc08
 boot dt0

@@ -306,7 +306,7 @@ class os8script:
     item = m.group(1)
     setting = m.group(2)
     if item == "option":
-      self.options_set.extend(setting)
+      self.options_set.append(setting)
       return
     if item not in _configurables:
       print "Ignoring invalid configuration item: " + item
