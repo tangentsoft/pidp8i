@@ -42,6 +42,7 @@ import re
 from string import Template
 import shutil
 import subprocess
+from itertools import chain
 
 # Our local modules
 from mkos8 import *
@@ -1198,10 +1199,14 @@ def main ():
     acts[this] = False
 
   if ap.args.option != None:
-    print "options:"
-    for my_option in ap.args.option:
-      options_set.extend(my_option)
-      print my_option
+    # arg append action creates lists of lists. chain flattens it.
+    options_list = list(chain(*ap.args.option))
+    for my_option in options_list:
+      # Append the option unless it is already there.
+      print "my_option: " + str(my_option)
+      if my_option not in options_set:
+        options_set.append(my_option)
+        print my_option
 
   for act in ap.args.what:
     if act not in allowed_acts:
