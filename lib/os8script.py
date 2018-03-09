@@ -279,7 +279,7 @@ class os8script:
   # Deletes an option from the list of active options.
   
   def unset_option_command (self, line, script_file):
-    m = re.match(_comm_re)
+    m = re.match(_comm_re, line)
     if m == None:
       print "Could not parse unset option command."
       return
@@ -290,7 +290,7 @@ class os8script:
     if option not in self.options_set:
       print "Cannot unset " + option + " because it has not been set."
     else:
-      self.options_set.delete(option)
+      self.options_set.remove(option)
 
 
   #### configure_command ###############################################
