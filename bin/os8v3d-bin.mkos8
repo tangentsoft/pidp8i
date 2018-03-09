@@ -1,0 +1,44 @@
+# Creates an OS/8 v3d binary rk05 image from distribution DECtapes.
+# Caution: the boot tape must be writeable.
+
+mount dt0 ../media/os8/bootable-al-4711-c-ba-os8-v3d-1.1978.tu56
+mount dt1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
+
+mount rk0 ./os8v3d-bin.rk05 no-overwrite
+
+boot dt0
+
+begin build SYS:BUILD
+LOAD DTA1:RK8ESY.BN
+LOAD DTA1:PT8E.BN
+DELETE SYS
+SYSTEM RK8E
+DELETE RXA1
+INSERT PT8E,PTR
+INSERT PT8E,PTP
+DELETE RKA0
+DELETE RKB0
+INSERT RK8E,RKA0,RKB0
+INSERT RK05,RKA2,RKB2
+DELETE DTA0
+INSERT TC,DTA0
+DSK RK8E:RKB0
+# PRINT
+# BOOT  (Handle "WRITE ZERO DIRECT")
+
+os8 SAVE DTA0 BUILD
+
+boot dt0
+
+os8 COPY RKA0:<DTA0:*.*
+
+COPY RKA0:<DTA1:*.HL
+
+os8 ZERO RKB0:
+
+# Do copyins here.
+
+boot rk0
+
+os8 SET TTY COL 3
+os8 SET TTY SCOPE
