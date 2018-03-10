@@ -1188,7 +1188,7 @@ def main ():
   
   ap = argparser.ArgParser (allowed_acts)
   global progmsg
-  options_set = []
+  options_enabled = []
   
   progmsg = not ap.args.verbose
 
@@ -1204,8 +1204,8 @@ def main ():
     for my_option in options_list:
       # Append the option unless it is already there.
       print "my_option: " + str(my_option)
-      if my_option not in options_set:
-        options_set.append(my_option)
+      if my_option not in options_enabled:
+        options_enabled.append(my_option)
         print my_option
 
   for act in ap.args.what:
@@ -1228,7 +1228,7 @@ def main ():
   s.set_logfile (open (dirs.log + 'mkos8-' + first_act + '.log', 'w') \
       if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
-  os8 = os8script (s, options_set)
+  os8 = os8script (s, options_enabled)
 
   if acts["bin"]: make_bin (s, ap.args)
   if acts["src"]: make_src (s, ap.args)

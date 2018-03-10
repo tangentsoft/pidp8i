@@ -45,12 +45,15 @@ import subprocess
 import string
 import re
 import shutil
+import argparse
+from itertools import chain
 
 
 # Our local modules
 from pidp8i import *
 from simh   import *
 from os8script import *
+from mkos8 import opts
 
 
 #### GLOBALS AND CONSTANTS #############################################
@@ -59,14 +62,96 @@ DEBUG = False
 VERBOSE = True
 QUIET = False
 SCRIPT_FILE = ""
-OPTIONS_SET = []
 
 USAGE = "usage: "  + os.path.basename (__file__) + \
       " [-dhvq] script [script] ... [-o option] ..."
 
+_en_dis_arg_re = re.compile("^(enable|disable)_(\S+)$")
+
+
+def opt_set(en_dis, option, options_enabled, options_disabled):
+  if option == None or en_dis == None: return
+  # print en_dis + " " + option
+  if en_dis == "enable":
+    if option not in options_enabled:
+      options_enabled.append(option)
+    if option in options_disabled:
+        options_disabled.remove(option)
+  elif en_dis == "disable":
+    if option not in options_disabled:
+      options_disabled.append(option)
+    if option in options_enabled:
+        options_enabled.remove(option)
+  else: return
+
 #### parse_args ########################################################
 
-def parse_args (script_files, options_set):
+def parse_args(script_files, options_enabled, options_disabled):
+  global DEBUG
+  global VERBOSE
+  
+  ap = argparse.ArgumentParser(description = "Run OS/8 scripts")
+
+  # Add general-purpose args
+  ap.add_argument ('-d', '--debug', action = 'store_true', default = False,
+                   help = 'add extra debugging output, normally suppressed')
+  ap.add_argument ('-v', '--verbose',action = 'store_true', default = False,
+                   help = 'verbose SIMH output instead of progress messages')
+
+  # Add arguments corresponding to --*-os8-* configure script options
+  for obn, vals in opts.opts.iteritems():
+    od = 'dis' if vals[0] else 'en'
+    ap.add_argument ('--' + od + 'able-' + obn, action = 'store_true', default = False, help = vals[1])
+
+  # Add options that do not exactly mirror configuration options
+  ap.add_argument ('--disable-lcmod', action = 'store_true', default = False,
+               help = 'disable the OS/8 command upcasing patch; best set ' +
+               'when SIMH is set to tti ksr mode')
+
+  # Add the ability to feed in options.
+  ap.add_argument("--enable", nargs=1, action='append' )
+  ap.add_argument("--disable", nargs=1, action='append' )
+
+  
+  # Add trailing "what do do" argument
+  ap.add_argument (
+    'script_files',
+    help    = "Script files to run",
+    nargs   = argparse.REMAINDER)
+  
+  # Finish initializing
+  args = ap.parse_args()
+
+  arg_dict = vars(args)
+
+  VERBOSE = args.verbose
+  DEBUG = args.debug
+
+  for key in arg_dict:
+    # print key + ": " + str(arg_dict[key])
+    m = re.match(_en_dis_arg_re, key)
+    if m != None:
+      en_dis = m.group(1)
+      option = m.group(2)
+      if arg_dict[key]: opt_set(en_dis, option, options_enabled, options_disabled)
+    else:
+      if (key == "enable" or key == "disable") and arg_dict[key] != None:
+        options_list = list(chain(*arg_dict[key]))
+        for my_option in options_list:
+          opt_set(key, my_option, options_enabled, options_disabled)
+      elif key == "script_files":
+        for filename in arg_dict[key]:
+          script_files.append(filename)
+
+
+    
+def add_bool (self, *args, **kwargs):
+  kwargs['action']  = 'store_true'
+  kwargs['default'] = False
+  self.add_argument (*args, **kwargs)
+  
+
+def old_parse_args (script_files, options_enabled):
   global DEBUG
   global VERBOSE
   global QUIET
@@ -86,7 +171,7 @@ def parse_args (script_files, options_set):
     arg = sys.argv[idx]
     # print "idx: " + str(idx) + ", arg: " + arg
     # print "Files: " + str(script_files)
-    # print "Options: " + str(options_set)
+    # print "Options: " + str(options_enabled)
     if arg == "-d":
       DEBUG = True
     elif arg == "-h":
@@ -103,25 +188,31 @@ def parse_args (script_files, options_set):
       else:
         option = sys.argv[idx]
         # Only add the option once
-        if option not in options_set: options_set.append(option)
+        if option not in options_enabled: options_enabled.append(option)
     else:
       script_files.append(arg)
     idx += 1
       
   return retval
 
+
 #### main ##############################################################
 # Program entry point.  Parses the command line and drives the above.
 
 def main ():
   script_files = []
-  options_set = []
+  options_enabled = []
+  options_disabled = []
 
-  parse_args (script_files, options_set)
+  parse_args (script_files, options_enabled, options_disabled)
   if len(script_files) == 0:
     print "Need a script file to run."
     sys.exit(-1)
 
+  print "script_files: " + str(script_files)
+  print "options_enabled" + str(options_enabled)
+  print "options_disabled" + str(options_disabled)
+  
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
@@ -129,7 +220,7 @@ def main ():
   s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'w') \
       if VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
-  os8 = os8script (s, options_set)
+  os8 = os8script (s, options_enabled, options_disabled, verbose=VERBOSE, debug=DEBUG)
 
   for script_file in script_files:
     os8.run_script_file (script_file)

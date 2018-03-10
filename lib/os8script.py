@@ -73,8 +73,13 @@ class InputError(Error):
 # Private globals ######################################################
 # Visible within this file, but not to the outside.
 
-# Iidentify a begin command and put the rest of the line in group(1)
-_begin_option_comm_re = re.compile ("^begin\s+option\s+(.*)$")
+# Identify a begin enabled/not_disabled command. group(1) contains either the enabled or
+# disabled flag. Put the rest of the line in group(2)
+_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.*)$")
+  
+# Identify an end enabled/not_disabled command. group(1) contains either the enabled or
+# disabled flag. Put the rest of the line in group(2)
+_end_en_dis_comm_re = re.compile ("^end\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.*)$")
   
 # Identify an end comm and put the rest of the line in group(1)
 _end_comm_re = re.compile ("^end\s+(.*)?$")
@@ -185,20 +190,64 @@ _tti_settings = ["KSR", "7b"]
 _configurables = {"rx": _rx_settings, "tape": _tape_settings,
                   "tti": _tti_settings}
 
+# Options enabled/not_disabled for conditional execution in scripts.
+#
+# Earlier code allowed --enable and --disable. We interface to it.
+# We maintain two arrays: options_enable and options_disabled for those
+# two argument constructs.
+#
+# Argument parsing of repeated enable and disable arguments is as follows:
+# --enable looks on options_disabled and if present removes it, then adds
+# to options_enabled.
+# --disable looks on options_enabled and if present removes it, then adds
+# to options_enabled.
+#
+# Last seen enable/disable command line or executed command for a
+# particular option wins.
+#
+# Scripts have enable/disable commands that are run-time
+# changers of the contents of options_enabled and options_disabled.
+#
+# When we run a script we have begin/end blocks for enabled/not_disabled options:
+# "begin enabled <option name>" ... "end enabled <option name>
+# "begin not_disabled <option name>" ... "end not_disabled <option name>
+#
+# The enabled block looks for an explicit enablement on the options_enabled
+# list. If none is found we default to ignoring the contents of the block.
+#
+# The not_disabled block looks for an explicit disablement on the
+# options_disabled lis.  If found, the block is ignored. Otherwise
+# the block defaults to being executed.
+#
+# begin/end blocks can be nested.  We track the nesting with options_stack.
+# Testing for options happens when the begin command is evaluated.
+# So changing an enable/disable option inside a begin/end block
+# takes effect at the next begin statement. 
+# You can write a script as follows:
+# enable foo
+# begin enabled foo
+# # Commands to executed
+# disable foo
+# # Commands still being executed.
+# begin enabled foo
+# # Commands to ignore
+# end enabled foo
+# end enabled foo
+
+
 class os8script:
   # Contains a simh object, other global state and methods
   # for running OS/8 scripts under simh.
   #### globals and constants ###########################################
   
   
-  def __init__ (self, simh, options, verbose=False, debug=True):
+  def __init__ (self, simh, enabled_options, disabled_options, verbose=False, debug=True):
     self.verbose = verbose
     self.debug = debug
     self.simh = simh
-    # This is where we hold options enabled during the script run.
-    self.options_set = options
-    # As script options are encountered we push them onto this stack.
-    # When the option end statement is reached, we pop them off the stack.
+    self.options_enabled = enabled_options
+    self.options_disabled = disabled_options
+    # Do we need separate stacks for enabled/disabled options?
     self.options_stack = []
 
   #### basic_line_parse ################################################
@@ -211,27 +260,42 @@ class os8script:
     if line[0] == "#": return None
     retval = line.strip()
     if retval == "": return None
-    
     # First test if we are in a begin option block
-    m = re.match (_begin_option_comm_re, retval)
+    m = re.match (_begin_en_dis_comm_re, retval)
     if m != None:
-      rest = m.group(1)
-      print "doing_begin_option: " + rest
-      print "options_set: " + str (self.options_set)
-  
-      if rest in self.options_set:
-        # Option is active. We push it onto the stack
-        print "Pushing " + rest + " onto options_stack"
-        self.options_stack.insert(0, rest)
+      en_dis = m.group(1)
+      rest = m.group(2)
+      print "doing_begin_option: " + en_dis + " " + rest
+      print "options_enabled: " + str (self.options_enabled)
+      print "options_disabled: " + str (self.options_disabled)
+
+      if en_dis == "enabled":
+        if rest in self.options_enabled:
+          # Block is active. We push it onto the stack
+          print "Pushing " + rest + " onto options_stack"
+          self.options_stack.insert(0, rest)
+        else:
+          # Option is inactive.  Ignore all subseqent lines
+          # until we get to an end command that matches our option.
+          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+
+        return None
+      # only other choice is disabled because of our regex.
       else:
-        # Option is inactive.  Ignore all subseqent lines
-        # until we get to an end command that matches our option.
-        self.ignore_to_subcomm_end (line, script_file, "option " + rest)
-      return None
+        if rest not in self.options_disabled:
+          # Block defaults to active. We push it onto the stack
+          print "Pushing " + rest + " onto options_stack"
+          self.options_stack.insert(0, rest)
+        else:
+          # Block is inactive.  Ignore all subseqent lines
+          # until we get to an end command that matches our option.
+          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+        return None
   
-    m = re.match(_end_option_comm_re, line)
+    m = re.match(_end_en_dis_comm_re, line)
     if m != None:
-      rest = m.group(1)
+      rest = m.group(2)
+      if self.verbose: print "Inside end: rest = " + rest
       if (rest == None or rest == ""):
         print "Warning! option end statement encountered with no argument."
         return None
@@ -253,6 +317,7 @@ class os8script:
   #### ignore_to_subcomm_end ###########################################
   
   def ignore_to_subcomm_end (self, old_line, script_file, end_str):
+    print "ignore to: " + end_str
     for line in script_file:
       line = line.strip()
       if self.verbose: print "Ignore: " + line
@@ -275,22 +340,44 @@ class os8script:
     self.run_script_file (line)
       
   
-  #### unset_option_command ############################################
+  #### enable_option_command ###########################################
   # Deletes an option from the list of active options.
   
-  def unset_option_command (self, line, script_file):
+  def enable_option_command (self, line, script_file):
     m = re.match(_comm_re, line)
     if m == None:
-      print "Could not parse unset option command."
+      print "Could not parse enable command."
       return
     option = m.group(1)
     if option == None:
-      print "Empty option to unset."
+      print "Empty option to enable."
       return
-    if option not in self.options_set:
-      print "Cannot unset " + option + " because it has not been set."
-    else:
-      self.options_set.remove(option)
+    # Remove it from other set if present
+    if option in self.options_disabled:
+      self.options_disabled.remove(option)
+    # Add it if not already present.
+    if option not in self.options_enabled:
+      self.options_enabled.append(option)
+
+
+  #### disable_option_command ###########################################
+  # Deletes an option from the list of active options.
+  
+  def disable_option_command (self, line, script_file):
+    m = re.match(_comm_re, line)
+    if m == None:
+      print "Could not parse disable option command."
+      return
+    option = m.group(1)
+    if option == None:
+      print "Empty option to disable command."
+      return
+    # Remove it from other set if present
+    if option in self.options_enabled:
+      self.options_enabled.remove(option)
+    # Add it if not already present.
+    if option not in self.options_disabled:
+      self.options_disabled.append(option)
 
 
   #### configure_command ###############################################
@@ -305,10 +392,6 @@ class os8script:
       return
     item = m.group(1)
     setting = m.group(2)
-    if item == "option":
-      # Dont add an option that is already present.
-      if setting not in self.options_set: self.options_set.append(setting)
-      return
     if item not in _configurables:
       print "Ignoring invalid configuration item: " + item
       return
@@ -352,7 +435,8 @@ class os8script:
                 "begin": self.begin_command, "end": self.end_command,
                 "umount": self.umount_command, "simh": self.simh_command,
                 "configure": self.configure_command,
-                "unset_option": self.unset_option_command}
+                "enable": self.enable_option_command,
+                "disable": self.disable_option_command}
   
     try:
       script_file = open(script_path, "r")
