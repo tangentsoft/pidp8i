@@ -108,6 +108,8 @@ t_stat help_cmd (int32 flag, CONST char *ptr);
 t_stat screenshot_cmd (int32 flag, CONST char *ptr);
 t_stat spawn_cmd (int32 flag, CONST char *ptr);
 t_stat echo_cmd (int32 flag, CONST char *ptr);
+t_stat echof_cmd (int32 flag, CONST char *ptr);
+t_stat debug_cmd (int32 flag, CONST char *ptr);
 
 /* Allow compiler to help validate printf style format arguments */
 #if !defined __GNUC__
@@ -273,6 +275,7 @@ uint32 sim_brk_test (t_addr bloc, uint32 btyp);
 void sim_brk_clrspc (uint32 spc, uint32 btyp);
 void sim_brk_npc (uint32 cnt);
 void sim_brk_setact (const char *action);
+char *sim_brk_replace_act (char *new_action);
 const char *sim_brk_message(void);
 t_stat sim_send_input (SEND *snd, uint8 *data, size_t size, uint32 after, uint32 delay);
 t_stat sim_show_send_input (FILE *st, const SEND *snd);
@@ -344,12 +347,12 @@ extern struct timespec sim_deb_basetime;                /* debug base time for r
 extern DEVICE **sim_internal_devices;
 extern uint32 sim_internal_device_count;
 extern UNIT *sim_clock_queue;
-extern int32 sim_is_running;
+extern volatile t_bool sim_is_running;
 extern t_bool sim_processing_event;                     /* Called from sim_process_event */
 extern char *sim_prompt;                                /* prompt string */
 extern const char *sim_savename;                        /* Simulator Name used in Save/Restore files */
 extern t_value *sim_eval;
-extern volatile int32 stop_cpu;
+extern volatile t_bool stop_cpu;
 extern uint32 sim_brk_types;                            /* breakpoint info */
 extern uint32 sim_brk_dflt;
 extern uint32 sim_brk_summ;

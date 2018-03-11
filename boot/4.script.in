@@ -20,6 +20,7 @@ echo
 l @MEDIADIR@/spacewar/spacewar.bin
 set cpu noidle
 @SET_THROTTLE@
+deposit int-throttle THROT_DELAY 3
 set df disabled
 at ttix 2222
 set ttox0 8b

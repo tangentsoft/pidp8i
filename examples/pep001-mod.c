@@ -1,7 +1,7 @@
 #include <init.h>
 #include <libc.h>
 
-main ()
+int main ()
 {
     int i, st;
     st = 0;

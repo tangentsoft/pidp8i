@@ -29,7 +29,7 @@ checked the patch against the source.  In a few cases the code was too
 obscure, and I marked the patch as "plausable" rather than "verified"
 in my spreadsheet.
 
-The file [patch_list.txt][pl] lists all of the patch files in
+The file [`patch_list.txt`][pl] lists all of the patch files in
 `media/os8/patches`.  Comments in that file begin with `#` and are
 used to disable patches we have rejected for one reason or another.
 Each rejected patch also has a comment that explains why that
@@ -147,9 +147,9 @@ support.  But if you happen to be using this setup under `TD8E` and
 ## Patch Application Order
 
 The `patch` routine in `mkos8` applies the patches in the order they
-appear in `patch_list.txt`.  That list is currently in alphabetical
-order.  However, there may in future emerge patches that impose an
-order.
+appear in [`patch_list.txt`][pl].  That list is currently in
+alphabetical order.  However, there may in future emerge patches that
+impose an order.
 
 For example, if the `ABSLDR` patch actually did work, it needs the
 `FUTIL 31.21.2 M` in order to patch into the `ABSLDR` overlay bits.
@@ -160,6 +160,7 @@ load `ABSLDR.SV` into core with GET, the contents of memory showed by
 understanding of the OS/8 Device Extensions kit, I see that the patch
 was incorporated into the version 8 `FUTIL` source, and also that
 `ODT` is expected to be updated in version 3S of the Keyboard Monitor.
+
 
 ## Then There's `MACREL`
 
@@ -183,21 +184,21 @@ With that TECO patch, I simply changed the version amendment line in
 that `TECO` patch, because the rest was correct.  Whoever published
 the patch got the version number wrong, and nobody complained.
 
-With no `MACREL` v1 source verification was not really possible, so
-applying those patches was postponed.  But then we found both binary
+With no `MACREL` v1 source code, verification was not really possible,
+so applying those patches was postponed.  But then we found both binary
 and source of `MACREL` v2!
 
-In the interests of shipping out system packs in finite time, we will
-integrate `MACREL` v2 into the system packs, and verify/apply `MACREL`
-v2 patches as follow-on work.
+None of the available `MACREL` v2 patches are currently applied. We may
+get to that later.
 
-After further testing of 'MACREL' I have concluded that integrating
-the source-level patch `41.5.1M` will reduce uncertainty.  So I have
+After further testing of `MACREL`, I have concluded that integrating the
+source-level patch `41.5.1M` will reduce uncertainty, so I have
 hand-integrated that patch into the `MACREL` tu56 image as well.
 
 [macreldoc]:https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-macrel.md
 
-## `FUTIL`:
+
+## `FUTIL`
 
 I was dubious of some of the `FUTIL` patches, but with finding source
 to version 8A, I gained confidence in the version 7 patches, and

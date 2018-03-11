@@ -30,6 +30,11 @@ int	typ,
 				illname ();
 			if (findglb (sname))
 				multidef (sname);
+			if (match ("(")) {
+				lptr -= strlen(sname)+1;
+				newfunc();
+				return 0;
+			}
 			if (match ("[")) {
 				k = needsub ();
 				if (k || stor == EXTERN)

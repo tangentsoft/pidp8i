@@ -2,7 +2,7 @@
 # auto.def - Configure file for the PiDP-8/I software build system,
 #            based on autosetup.
 #
-# Copyright © 2016-2017 Warren Young
+# Copyright © 2016-2018 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -93,9 +93,11 @@ append alloptions {
     os8-src=1         => "do not build os8v3d-src.rk05 from OS/8 source tapes"
     serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:         => "override the throttle values in the boot scripts"
+    usb-automount=1   => "do not automatically mount USB drives for SING_STEP + DF"
 }
 
 options $alloptions
+define USB_AUTOMOUNT [opt-bool usb-automount]
 
 # Make our own array of os8 options so we can apply the meta options
 foreach {opt def desc} $os8opts {
@@ -471,7 +473,8 @@ make-template boot/4.script.in
 make-template boot/6.script.in
 make-template boot/7.script.in
 make-template boot/run.script.in
-make-template etc/pidp8i-init.in
+make-template boot/tss8.script.in
+make-template etc/pidp8i.service.in
 make-template etc/sudoers.in
 make-template etc/usb-mount@.service.in
 make-template examples/Makefile.in
@@ -487,4 +490,4 @@ make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
-exec chmod +x "$builddir/tools/simh-update"
+exec chmod +x "$builddir/bin/pidp8i" "$builddir/tools/simh-update"

@@ -164,16 +164,20 @@ parse ()
 
 dodcls(stclass)
 int stclass; {
+
+	int rsl;
+
 	blanks();
 	if (amatch("char", 4))
-		declglb(CCHAR, stclass);
+		rsl=declglb(CCHAR, stclass);
 	else if (amatch("int", 3))
-		declglb(CINT, stclass);
+		rsl=declglb(CINT, stclass);
 	else if (stclass == PUBLIC)
 		return(0);
 	else
 		declglb(CINT, stclass);
-	ns ();
+	if (rsl)
+		ns ();
 	return(1);
 }
 

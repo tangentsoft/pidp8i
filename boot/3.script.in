@@ -7,5 +7,6 @@ set dt disabled
 set td enabled
 set cpu noidle
 @SET_THROTTLE@
+deposit int-throttle THROT_DELAY 3
 attach td0 @MEDIADIR@/os8/os8.tu56
 boot td0

@@ -26,7 +26,7 @@
 
 #define itoa libc0
 #define	puts libc1
-#define	nl libc2
+#define	dispxy libc2
 #define	getc libc3
 #define	gets libc4
 #define	atoi libc5

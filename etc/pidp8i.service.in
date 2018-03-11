@@ -1,22 +1,7 @@
-#!/usr/bin/env perl
 ########################################################################
-# cc8-to-os8 - Filter C code meant for the CC8 cross-compiler so that it
-#   will work with the OS/8 version of CC8.
+# pidp8i.service - systemd user unit file for the PiDP-8/I service.
 #
-#   This is not meant to fix up 100% of the differences in the C
-#   compilers, just the ones which prevent src/cc8/examples/*.c
-#   from building under OS/8 CC8 as-is.
-#
-#   You can run it like a filter: 
-#
-#       $ cc8-to-os8 < foo.c | txt2ptp > foo.pt
-#
-#   Or you can just give it one or more file name(s), with output going
-#   to stdout, which gives this way to hack around the lack of #include:
-#
-#       $ cc8-to-os8 myheader.h foo.c > OS8FOO.C
-#
-# Copyright © 2017-2018 Warren Young
+# Copyright © 2018 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -43,21 +28,17 @@
 # authorization from those authors.
 ########################################################################
 
-use strict;
-use warnings;
+[Unit]
+Description=PiDP-8/I Simulator
+Documentation=https://tangentsoft.com/pidp8i/doc/trunk/README.md#unit
 
-my $nblines = 0;        # number of non-blank lines written out
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@ABSPREFIX@/bin/pidp8i start
+ExecStop=@ABSPREFIX@/bin/pidp8i stop
+KillMode=none
+WorkingDirectory=@ABSPREFIX@/share/media
 
-while (<>) {
-    if (!m{^\#include } and length and $nblines) {
-        # Pass it through unchanged.
-        print;
-    }
-    else {
-        # Unlike the CC8 cross-compiler, the OS/8 version of CC8 doesn't
-        # process #includes, or in fact any C preprocessor directives,
-        # not even #asm.  Strip just the #includes in the hope that it's
-        # init.h or libc.h, the contents of which are hard-coded into
-        # the OS/8 CC8 compiler.
-    }
-}
+[Install]
+WantedBy=default.target

@@ -165,7 +165,7 @@ function do_prepare() {
 
     history -c ; rm -f ~/.bash_history
 
-    sudo systemctl stop pidp8i || true          # avoid sim hogging CPU
+    pidp8i stop || true                         # avoid sim hogging CPU
     sudo systemctl enable ssh || true           # disabled by default
     sudo shred -u /etc/ssh/*key* || true        # allow multiple passes
     sudo dphys-swapfile uninstall || true
@@ -326,7 +326,7 @@ MF
 function do_finish() {
     set -x
 
-    rmtrash $img
+    trash $img
     cd $dldir/..
     make synch
 }

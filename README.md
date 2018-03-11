@@ -72,7 +72,9 @@ the Pi. There are many options:
         $ wget -O pidp8i.tar.gz https://goo.gl/JowPoC
 
     That will get you a file called `pidp8i.tar.gz` in the current
-    working directory.
+    working directory containing the latest *release* version.  (Use the
+    "bleeding edge" links on the home page if you want the tip of trunk
+    instead!)
 
 3.  **SCP the file over** to a running Pi from another machine.
     If your Pi has OpenSSH installed and running, you can use
@@ -323,6 +325,26 @@ actually done the mods as specified by James L-W.
 See [`README-throttle.md`][thro] for the values this option takes.  If
 you don't give this option, the simulator runs as fast as possible, more
 or less.
+
+
+#### --disable-usb-automount
+
+When you install the software on a [systemd][systemd]-based Linux
+system, we normally configure the OS to automatically mount USB drives
+when they are initially plugged in, which allows the `SING_STEP` + `DF`
+media image auto-attach feature to work smoothly. That is, if you plug
+in a USB memory stick holding a `*.pt` file containing a paper tape
+image, you want the simulator to be able to find it if you have the DF
+switches set to 1, telling the PiDP-8/I front panel code to look for
+something to attach to the simulator's paper tape reader.
+
+This feature may interfere with other uses of USB, such as when booting
+your Pi from an external USB hard disk drive. Give this option to
+disable the feature.
+
+(Alternately, you could modify our `etc/udev.rules` and/or
+`bin/usb-mount` scripts so that they work cooperatively with your local
+USB setup rather than conflicting with it.)
 
 
 #### --disable-cc8-cross
@@ -682,7 +704,7 @@ You have several options here:
 
 You can test your PiDP-8/I LED and switch functions with these commands:
 
-    $ sudo systemctl stop pidp8i
+    $ pidp8i stop
     $ pidp8i-test
 
 You may have to log out and back in before the second command will work,
@@ -694,7 +716,7 @@ program, since both programs need exclusive access to the LEDs and
 switches on the front panel.  After you are done testing, you can start
 the PiDP-8/I simulator back up with:
 
-    $ sudo systemctl start pidp8i
+    $ pidp8i start
 
 See [its documentation][test] for more details.
 
@@ -707,12 +729,11 @@ For the most part, this software distribution works like the [old stable
 describes this software too, for the most part.
 
 The largest user-visible difference between the two software
-distributions is that all of the shell commands affecting the software
-were renamed to include `pidp8i` in their name:
+distributions is that many of the shell commands are different:
 
-1.  To start the simulator:
+1.  To start the simulator running in the background:
 
-        $ sudo systemctl start pidp8i
+        $ pidp8i start
 
     This will happen automatically on reboot unless you disable the
     service, such as in order to run one of the various [forks of Deeper
@@ -721,6 +742,10 @@ were renamed to include `pidp8i` in their name:
 2.  To attach the terminal you're working on to the simulator:
 
         $ pidp8i
+
+    (Yes, it's the same base command as above.  The `pidp8i` script uses
+    its first argument to determine what you want it to do.  Without
+    arguments, this is what it does.)
 
 3.  To detach from the simulator's terminal interface while leaving the
     PiDP-8/I simulator running, type <kbd>Ctrl-A d</kbd>.  You can
@@ -734,15 +759,102 @@ were renamed to include `pidp8i` in their name:
 
 5.  To shut the simulator down from the Raspbian command line:
 
-        $ sudo systemctl stop pidp8i
+        $ pidp8i stop
 
 There are [other major differences][mdif] between the old stable
 distribution and this one.  See that linked wiki article for details.
 
 
+<a id="sshd"></a>
+## Enabling the SSH Server on the Binary OS Images
+
+The OpenSSH server is enabled and running by default on the PiDP-8/I
+binary OS images, but for security reasons, the build process we use
+to create these OS images wipes out the SSH host keys generated here
+on our build system, else everyone's PiDP-8/I would have the same
+host keys, which would be a massive security hole. Unfortunately,
+the Raspbian `sshd` service is not smart enough to regenerate these
+keys if they are missing on boot, so you need to do this once by hand:
+
+    $ sudo dpkg-reconfigure openssh-server
+
+You should be able to log in via SSH immediately after that command
+completes.
+
+We used to do this automatically in releases v2017.12.22 and before,
+but that was when we started the `pidp8i` service as root, which we no
+longer do. Consequently, the `pidp8i` service no longer has permission
+to generate your OS's SSH keys, so you must do it interactively with
+`sudo` permissions.
+
+
+<a id="systemd" name="unit"></a>
+## The systemd Unit File
+
+The PiDP-8/I software version 2017.12.22 used an [old-style System V
+init script][svinit] to start the PiDP-8/I service, as did all prior
+releases, including Oscar Vermeulen's final stable release.
+
+As of 2018.02.22, we have now switched to a [systemd][systemd]
+unit file, since we normally install on Raspbian, which has been
+systemd-based for years. We've wanted to do this for some time, but
+some changes in the way systemd handles SysV init script compatibility
+in Raspbian Stretch forced the issue.
+
+One of the features systemd gives us is the ability to set the unit
+to run as user-level service rather than as a system-wide service,
+which means you no longer need the `sudo` prefix on commands to start,
+stop, restart, and query the service. The only time you now need root
+privileges is when installing the software. After that, the software
+runs under your normal user account, as do all of the commands you
+use to manipulate the background simulator service.
+
+As a result of these changes, none of these commands work any longer:
+
+    $ sudo /etc/init.d/pidp8i start
+    $ sudo service pidp8i stop
+    $ sudo systemctl restart pidp8i
+
+The correct forms, respectively, are:
+
+    $ systemctl --user start pidp8i
+    $ systemctl --user stop pidp8i
+    $ systemctl --user restart pidp8i
+
+These commands are long, so we have extended the `pidp8i` command to
+build and run `systemctl` commands for you when you pass it arguments:
+
+    $ pidp8i start
+    $ pidp8i stop
+    $ pidp8i restart
+    $ pidp8i status -l
+
+If you run it without arguments, it attaches to the GNU screen(1)
+session, just as before.
+
+The last command above shows that *all* arguments are passed to
+`systemctl`, not just the first, so you can pass flags and such.
+
+The service is still set to start at boot, just as before.
+
+To disable the service so you can run something else against the
+PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
+
+    $ pidp8i stop
+    $ pidp8i disable
+
+If you install this release on a system that has the old SysV init
+script on it, that service will be disabled and removed before we
+install and enable the replacement systemd user service.
+
+[svinit]:  https://en.wikipedia.org/wiki/Init#SysV-style
+[systemd]: https://www.freedesktop.org/wiki/Software/systemd/
+
+
+
 ## License
 
-Copyright © 2016-2017 by Warren Young. This document is licensed under
+Copyright © 2016-2018 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
