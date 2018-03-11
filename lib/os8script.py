@@ -463,7 +463,7 @@ class os8script:
         print "Unrecognized command: " + m.group(1)
         continue
   
-      print "Calling: " + m.group(1)
+      # print "Calling: " + m.group(1)
       commands[m.group(1)](m.group(3), script_file)
 
   #### end_command #####################################################
