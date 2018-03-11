@@ -179,6 +179,12 @@ _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
                     "BOOT"  : None,
                     "end"   : None}
 
+_build_replies = ["\\.", "\\$", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
+                  "\\?BAD INPUT", "\\?BAD LOAD",
+                  "\\?BAD ORIGIN", "\\?CORE", "\\?DSK", "\\?HANDLERS",
+                  "I/O ERR", "\\?NAME", "NO ROOM", "SYS NOT FOUND",
+                  "\\?PLAT", "\\?SYNTAX", "\\?SYS", "SYS ERR",
+                  "\S+ NOT FOUND"]
 
 # Parse the requested config item into group(1) and the
 # requested setting into group(2)
@@ -824,6 +830,7 @@ class os8script:
     os8_comm = "RU " + old_line
     if self.verbose: print os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
+    self.simh._child.expect("\n\\$$")
     
     for line in script_file:
       line = self.basic_line_parse(line, script_file)
@@ -845,11 +852,11 @@ class os8script:
       if build_sub == "end":
         if rest == "":
           print "Warning! end statement encountered inside build with no argument. Exiting build."
-          return
-        elif rest == "build": return
-        else:
+        elif rest != "build": 
           print "Warning! Mismatched begin/end blocks. Encountered end: " + rest + "Exiting build."
-          return
+        # Return to monitor level
+        self.simh.os8_send_ctrl ('c')
+        return
         
       build_re = _build_comm_regs[build_sub]
   
@@ -869,10 +876,22 @@ class os8script:
           if self.verbose: print "calling run_build_build"
           self.run_build_build (m2.group(1), m2.group(3))
           continue
-  
+
       comm = build_sub + " " + rest
-      if self.verbose: print "$ " + comm
-      self.simh.os8_send_cmd ("\$", comm)
+      # if self.verbose: print "BUILD-> " + comm
+
+      self.simh.os8_send_line (comm)
+      print "Boot command: " + comm
+      reply = self.simh._child.expect(_build_replies)
+      print "reply: " + str(reply)
+      if reply > 3:
+        print "BUILD error with command " + self.simh._child.before.strip()
+        print "\t" + self.simh._child.after.strip()
+        self.simh.os8_send_ctrl ('c')
+      # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
+      if build_sub == "BOOT" and reply == 2:
+        self.simh.os8_send_line("Y")
+        reply = self.simh._child.expect("SYS BUILT")
   
   
   #### fotp_subcomm ####################################################
