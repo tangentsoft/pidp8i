@@ -1,8 +1,8 @@
 # Creates an OS/8 v3d binary rk05 image from distribution DECtapes.
 # Caution: the boot tape must be writeable.
 
-mount dt0 ../media/os8/bootable-al-4711-c-ba-os8-v3d-1.1978.tu56 must-exist
-mount dt1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 must-exst
+mount dt0 ../media/os8/scratch-al-4711c-ba-os8-v3d-1.1978.tu56 must-exist
+mount dt1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
 
 mount rk0 ./os8v3d-bin.rk05 no-overwrite
 
@@ -24,9 +24,13 @@ DELETE DTA0
 INSERT TC,DTA0
 DSK RK8E:RKB0
 PRINT
-BOOT  (Handle "WRITE ZERO DIRECT")
+BOOT
 end build
 
+# Note:
+# If we save BUILD to RKA0 it gets overwritten with our DTA0: copyin.
+# If we save BUILD to DTA0: that does not happen but then we modify
+# our tape. (It is supposed to be a scratch tape.)
 os8 SAVE DTA0 BUILD.SV
 
 boot dt0
@@ -37,13 +41,19 @@ os8 COPY RKA0:<DTA0:*.*
 # Help files from tape 2 of 2.
 # Not enough room for everything on tape 2.
 # We just copy the help files.
-COPY RKA0:<DTA1:*.HL
+os8 COPY RKA0:<DTA1:*.HL
 
-# We cant express this yet.
+# We cant express disabled yet.
 # Besides we need SABR for cc8
 # begin disabled fortran_ii
 # os8 DELETE RKA0:FORT.SV,LIBSET.SV,SABR.SV
 # end disabled fortran_ii
+
+begin not-disabled fortran_ii
+os8 COPY RKA0:<DTA1:*.RL
+end not-disabled fortran_ii
+
+simh det dt1
 
 boot rk0
 
@@ -52,54 +62,72 @@ os8 ZERO RKB0:
 # Do copyins here.
 
 # OS/8 V3D extensions
-mount dt0 ../media/os8/al-4761c-ba-os8-v3d-ext.1978.tu56 must-exist
+simh det dt0
+mount dt0 ../media/os8/al-4761c-ba-os8-v3d-ext.1978.tu56 read-only must-exist
+simh go 7600
 os8 COPY RKA0:<DTA0:*.*
 
 # Copying in Music score files and source code...
 begin enabled music
-mount dt1 ../media/os8/subsys/music.tu56 must-exist
+simh det dt1
+mount dt1 ../media/os8/subsys/music.tu56 read-only read-only must-exist
+simh go 7600
 os8 COPY RKB0:<DTA1:*.*
 end enabled music
 
 # Adventure
 begin not-disabled advent
-mount dt1 ../media/os8/subsys/advent.tu56 must-exist
+simh det dt1
+mount dt1 ../media/os8/subsys/advent.tu56 read-only must-exist
+simh go 7600
 os8 COPY RKB0:<DTA1:*.*
 end not-disabled advent
 
 # BASIC games and demos
 begin not-disabled ba
-mount dt1 ../media/os8/subsys/ba.tu56
+simh det dt1
+mount dt1 ../media/os8/subsys/ba.tu56 read-only must-exist
+simh go 7600
 os8 COPY RKB0:<DTA1:*.*
 end not-disabled ba
 
 # Ian Schofield's CC8 compiler
 begin not-disabled cc8
-mount dt1 ../media/os8/subsys/cc8.tu56
+simh det dt1
+mount dt1 ../media/os8/subsys/cc8.tu56 read-only must-exist
+simh go 7600
 os8 COPY RKA0:<DTA1:*.SV
 os8 COPY RKB0:<DTA1:*.SV/V
 end not-disabled cc8
 
 # Kermit-12
 begin not-disabled k12
-mount dt1 ../media/os8/subsys/k12.tu56
-os8 COPY RKB0:<DTA1:*.*
+simh det dt1
+mount dt1 ../media/os8/subsys/k12.tu56 read-only must-exist
+simh go 7600
+os8 COPY RKA0:<DTA1:*.*
 end not-disabled k12
 
 # FORTRAN IV
 begin not-disabled fortran_iv
-mount dt1 ../media/os8/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56
+simh det dt1
+mount dt1 ../media/os8/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 read-only must-exist
+simh go 7600
 os8 COPY RKA0:<DTA1:*.*
 end not-disabled fortran_iv
 
 # MACREL V2 and new FUTIL V8B
 begin not-disabled macrel
-mount dt1 ../media/os8/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56
+simh det dt1
+mount dt1 ../media/os8/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 read-only must-exist
+simh go 7600
 os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA,FUTIL.SV
 end not-disabled macrel
 
 # Files from local.tu56
-mount dt1 ../media/os8/local.tu56
+simh det dt1
+mount dt1 ../media/os8/local.tu56 read-only must-exist
+simh go 7600
 # Case conversion batch scripts
 os8 COPY RKA0:<DTA1:?CSYS.BI
 os8 COPY RKA0:<DTA1:?CBAS.BI
@@ -117,18 +145,21 @@ end enabled vtedit
 
 # DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV
 begin not-disabled dcp
-os8 COPY RKA0:<DTA1:DCP24.SV,RKA0:DCP.SV,DCP16.SV
+os8 COPY RKA0:<DTA1:DCP24.SV,DCP.SV,DCP16.SV
 end not-disabled dcp
 
 # FOCAL69 .BN files installed on DSK:
 begin enabled focal69
-mount dt1 ../media/os8/subsys/focal69.tu56
+simh det dt1
+mount dt1 ../media/os8/subsys/focal69.tu56 read-only must-exist
 os8 COPY RKB0:<DTA1:FOCAL.BN,4WORD.BN,4KVT.BN,8KVT.BN,8KNOVT.BN
 end enabled focal69
 
 # U/W FOCAL
 begin not-disabled uwfocal
-mount dt1 ../media/os8/subsys/uwfocal-v4e-2.tu56
+simh det dt1
+mount dt1 ../media/os8/subsys/uwfocal-v4e-2.tu56 read-only must-exist
+simh go 7600
 os8 COPY RKA0:<DTA1:UWF16K.SV
 end not-disabled uwfocal
 
@@ -148,7 +179,10 @@ end not-disabled lcmod
 # INIT message setting stuf goes here
 
 # Squish of SYS and DSK goes here
-
-umount rk0
+simh det dt0
+simh det dt1
+simh go 7600
+os8 SQUISH DSK:/O
+os8 SQUISH SYS:/O
 
 done

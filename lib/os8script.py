@@ -179,7 +179,7 @@ _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
                     "BOOT"  : None,
                     "end"   : None}
 
-_build_replies = ["\\.", "\\$", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
+_build_replies = ["\\$", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
                   "\\?BAD INPUT", "\\?BAD LOAD",
                   "\\?BAD ORIGIN", "\\?CORE", "\\?DSK", "\\?HANDLERS",
                   "I/O ERR", "\\?NAME", "NO ROOM", "SYS NOT FOUND",
@@ -271,14 +271,14 @@ class os8script:
     if m != None:
       en_dis = m.group(1)
       rest = m.group(2)
-      print "doing_begin_option: " + en_dis + " " + rest
-      print "options_enabled: " + str (self.options_enabled)
-      print "options_disabled: " + str (self.options_disabled)
+      if self.verbose: print "doing_begin_option: " + en_dis + " " + rest
+      if self.debug: print "options_enabled: " + str (self.options_enabled)
+      if self.debug: print "options_disabled: " + str (self.options_disabled)
 
       if en_dis == "enabled":
         if rest in self.options_enabled:
           # Block is active. We push it onto the stack
-          print "Pushing " + rest + " onto options_stack"
+          if self.debug: print "Pushing " + rest + " onto options_stack"
           self.options_stack.insert(0, rest)
         else:
           # Option is inactive.  Ignore all subseqent lines
@@ -313,7 +313,7 @@ class os8script:
           self.options_stack[0] + " not " + rest
         return None
       else:
-        print "Popping " + self.options_stack[0]
+        if self.debug: print "Popping " + self.options_stack[0]
         self.options_stack.pop()
         return None
   
@@ -323,7 +323,7 @@ class os8script:
   #### ignore_to_subcomm_end ###########################################
   
   def ignore_to_subcomm_end (self, old_line, script_file, end_str):
-    print "ignore to: " + end_str
+    if self.debug: print "ignore to: " + end_str
     for line in script_file:
       line = line.strip()
       if self.verbose: print "Ignore: " + line
@@ -460,7 +460,7 @@ class os8script:
         continue
   
       if m.group(1) not in commands:
-        print "Unrecognized command: " + m.group(1)
+        print "Unrecognized script command: " + m.group(1)
         continue
   
       # print "Calling: " + m.group(1)
@@ -790,7 +790,6 @@ class os8script:
   # Detach all devices to make sure buffers all get written out.
   
   def done_command (self, line, script_file):
-    self.simh.back_to_cmd ("\\.")
     self.simh.send_cmd ("detach all")
   
   
@@ -878,18 +877,19 @@ class os8script:
           continue
 
       comm = build_sub + " " + rest
-      # if self.verbose: print "BUILD-> " + comm
+      if self.debug: print "BUILD-> " + comm
 
       self.simh.os8_send_line (comm)
-      print "Boot command: " + comm
       reply = self.simh._child.expect(_build_replies)
-      print "reply: " + str(reply)
-      if reply > 3:
+      if self.debug: print "reply: " + str(reply)
+      # print "before: " + self.simh._child.before.strip()
+      # print "after: " + self.simh._child.after.strip()
+      if reply > 2:
         print "BUILD error with command " + self.simh._child.before.strip()
         print "\t" + self.simh._child.after.strip()
         self.simh.os8_send_ctrl ('c')
       # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
-      if build_sub == "BOOT" and reply == 2:
+      if build_sub == "BOOT" and reply == 1:
         self.simh.os8_send_line("Y")
         reply = self.simh._child.expect("SYS BUILT")
   
