@@ -50,8 +50,8 @@ extern pidp8i_flow_t handle_flow_control_switches (uint16_t* pM,
         uint32_t *pPC, uint32_t *pMA, int32_t *pMB, int32_t *pLAC, int32_t *pIF,
         int32_t *pDF, int32_t* pint_req);
 
-extern void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint16_t sIR,
-        int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF, int32_t sSC,
-        int32_t int_req, int Pause);
+extern void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint16_t sMB,
+        uint16_t sIR, int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF,
+        int32_t sSC, int32_t int_req, int Pause);
 
 #endif // !defined(PIDP8I_H)
