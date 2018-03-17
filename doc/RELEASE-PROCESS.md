@@ -56,6 +56,14 @@ shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
 
+## Build and Update the Fossil Binary
+
+If a new release of Fossil has come out since the last release, the
+`wget` link in `tools/bosi` is probably stale. Build an updated binary,
+run `tools/publish-fossil`, then replace the file name part of the URL
+in `tools/bosi` to pull that new version.
+
+
 ## Update the Release Branch
 
 Run `make release` to check the `ChangeLog.md` file changes in, tagging
