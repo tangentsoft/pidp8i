@@ -112,7 +112,26 @@ then
     exit $?
 elif [ "$1" = "stop" ]
 then
-    # systemd is telling us to stop the background simulator
+    # systemd is telling us to stop the background simulator.  Try
+    # stopping the simulator itself, gracefully at first, then
+    # increasingly forcefully if it doesn't die quickly.
+    for i in $(seq 8)
+    do
+        if [ $(pgrep -c pidp8i-sim) -gt 0 ]
+        then
+            case $i in
+                [1-6]) sig=TERM ;;
+                7)     sig=INT  ;;
+                *)     sig=KILL ;;
+            esac
+            pkill -$sig pidp8i-sim
+            sleep "0.25s"
+        else
+            break
+        fi
+    done
+
+    # Now stop the screen(1) session if it's still alive, despite its
+    # only child dying.
     if is_running ; then screen -S pidp8i -X quit ; fi
-    pkill -9 -f pidp8i-sim
 fi
