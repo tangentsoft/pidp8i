@@ -1550,6 +1550,18 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+// If we're leaving the simulator's CPU instruction execution loop for
+// the last time, during program shutdown, also clear all of the LEDs,
+// else we'll leave them solidly lit.
+//
+// If instead we're leaving for a simulator pause, as with a Ctrl-E
+// escape, leave the LEDs alone, so user can see the CPU's paused state.
+if (reason == SCPE_STOP) {
+    turn_off_pidp8i_leds ();
+    }
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
+
 /* Simulation halted */
 
 saved_PC = IF | (PC & 07777);                           /* save copies */
