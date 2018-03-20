@@ -1557,7 +1557,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 //
 // If instead we're leaving for a simulator pause, as with a Ctrl-E
 // escape, leave the LEDs alone, so user can see the CPU's paused state.
-if (reason == SCPE_STOP) {
+if (reason == SCPE_STOP && pidp8i_gpio_present) {
     turn_off_pidp8i_leds ();
     }
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
