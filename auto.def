@@ -426,7 +426,7 @@ if {$status != 0} {
 msg-result "Python module pkg_resources is installed here."
 
 # Build Deeper Thought if we find it here
-if {[file exists "[get-define srcdir]/src/deeper.c"]} {
+if {[file exists "[get-define srcdir]/src/misc/deeper.c"]} {
     set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
     msg-result "Found Deeper Thought; building it against $ls GPIO module"
     define BUILD_DEEPER_THOUGHT 1

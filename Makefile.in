@@ -551,7 +551,7 @@ bin/ptp2txt: obj/misc/ptp2txt.o
 bin/txt2ptp: bin/ptp2txt
 	ln -f bin/ptp2txt bin/txt2ptp
 
-bin/deeper: obj/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i/gpio-common.o
+bin/deeper: obj/misc/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
