@@ -507,19 +507,13 @@ typedef enum {
     SW_NUMBER           /* Numeric Value */
     } SWITCH_PARSE;
 SWITCH_PARSE get_switches (const char *cptr, int32 *sw_val, int32 *sw_number);
-CONST char *get_sim_sw (CONST char *cptr);
-t_stat get_aval (t_addr addr, DEVICE *dptr, UNIT *uptr);
-t_value get_rval (REG *rptr, uint32 idx);
 void put_rval (REG *rptr, uint32 idx, t_value val);
 void fprint_help (FILE *st);
 void fprint_stopped (FILE *st, t_stat r);
 void fprint_capac (FILE *st, DEVICE *dptr, UNIT *uptr);
 void fprint_sep (FILE *st, int32 *tokens);
-char *read_line (char *ptr, int32 size, FILE *stream);
-char *read_line_p (const char *prompt, char *ptr, int32 size, FILE *stream);
 REG *find_reg_glob (CONST char *ptr, CONST char **optr, DEVICE **gdptr);
 REG *find_reg_glob_reason (CONST char *cptr, CONST char **optr, DEVICE **gdptr, t_stat *stat);
-char *sim_trim_endspc (char *cptr);
 
 /* Forward references */
 
@@ -1117,66 +1111,66 @@ static const char simh_help[] =
        /***************** 80 character line width template *************************/
 #define HLP_SET_CONSOLE "*Commands SET CONSOLE"
       "3Console\n"
-      "+set console arg{,arg...}    set console options\n"
-      "+set console WRU=value       specify console drop to simh character\n"
-      "+set console BRK=value       specify console Break character\n"
-      "+set console DEL=value       specify console delete character\n"
-      "+set console PCHAR=bitmask   bit mask of printable characters in\n"
+      "+SET CONSOLE arg{,arg...}    set console options\n"
+      "+SET CONSOLE WRU=value       specify console drop to simh character\n"
+      "+SET CONSOLE BRK=value       specify console Break character\n"
+      "+SET CONSOLE DEL=value       specify console delete character\n"
+      "+SET CONSOLE PCHAR=bitmask   bit mask of printable characters in\n"
       "++++++++                     range [31,0]\n"
-      "+set console SPEED=speed{*factor}\n"
+      "+SET CONSOLE SPEED=speed{*factor}\n"
       "++++++++                     specify console input data rate\n"
-      "+set console TELNET=port     specify console telnet port\n"
-      "+set console TELNET=LOG=log_file\n"
+      "+SET CONSOLE TELNET=port     specify console telnet port\n"
+      "+SET CONSOLE TELNET=LOG=log_file\n"
       "++++++++                     specify console telnet logging to the\n"
       "++++++++                     specified destination {LOG,STDOUT,STDERR,\n"
       "++++++++                     DEBUG or filename)\n"
-      "+set console TELNET=NOLOG    disables console telnet logging\n"
-      "+set console TELNET=BUFFERED[=bufsize]\n"
+      "+SET CONSOLE TELNET=NOLOG    disables console telnet logging\n"
+      "+SET CONSOLE TELNET=BUFFERED[=bufsize]\n"
       "++++++++                     specify console telnet buffering\n"
-      "+set console TELNET=NOBUFFERED\n"
+      "+SET CONSOLE TELNET=NOBUFFERED\n"
       "++++++++                     disables console telnet buffering\n"
-      "+set console TELNET=UNBUFFERED\n"
+      "+SET CONSOLE TELNET=UNBUFFERED\n"
       "++++++++                     disables console telnet buffering\n"
-      "+set console NOTELNET        disable console telnet\n"
-      "+set console SERIAL=serialport[;config]\n"
+      "+SET CONSOLE NOTELNET        disable console telnet\n"
+      "+SET CONSOLE SERIAL=serialport[;config]\n"
       "++++++++                     specify console serial port and optionally\n"
       "++++++++                     the port config (i.e. ;9600-8n1)\n"
-      "+set console NOSERIAL        disable console serial session\n"
-      "+set console SPEED=nn{*fac}  specifies the maximum console port input rate\n"
+      "+SET CONSOLE NOSERIAL        disable console serial session\n"
+      "+SET CONSOLE SPEED=nn{*fac}  specifies the maximum console port input rate\n"
        /***************** 80 character line width template *************************/
 #define HLP_SET_REMOTE "*Commands SET REMOTE"
       "3Remote\n"
-      "+set remote TELNET=port      specify remote console telnet port\n"
-      "+set remote NOTELNET         disables remote console\n"
-      "+set remote BUFFERSIZE=bufsize\n"
+      "+SET REMOTE TELNET=port      specify remote console telnet port\n"
+      "+SET REMOTE NOTELNET         disables remote console\n"
+      "+SET REMOTE BUFFERSIZE=bufsize\n"
       "++++++++                     specify remote console command output buffer\n"
       "++++++++                     size\n"
-      "+set remote CONNECTIONS=n    specify number of concurrent remote\n"
+      "+SET REMOTE CONNECTIONS=n    specify number of concurrent remote\n"
       "++++++++                     console sessions\n"
-      "+set remote TIMEOUT=n        specify number of seconds without input\n"
+      "+SET REMOTE TIMEOUT=n        specify number of seconds without input\n"
       "++++++++                     before automatic continue\n"
-      "+set remote MASTER           enable master mode remote console\n"
-      "+set remote NOMASTER         disable remote master mode console\n"
+      "+SET REMOTE MASTER           enable master mode remote console\n"
+      "+SET REMOTE NOMASTER         disable remote master mode console\n"
 #define HLP_SET_DEFAULT "*Commands SET Working_Directory"
       "3Working Directory\n"
-      "+set default <dir>           set the current directory\n"
-      "+cd <dir>                    set the current directory\n"
+      "+SET DEFAULT <dir>           set the current directory\n"
+      "+CD <dir>                    set the current directory\n"
 #define HLP_SET_LOG    "*Commands SET Log"
       "3Log\n"
       " Interactions with the simulator session (at the \"sim>\" prompt\n"
       " can be recorded to a log file\n\n"
-      "+set log log_file            specify the log destination\n"
+      "+SET LOG log_file            specify the log destination\n"
       "++++++++                     (STDOUT,DEBUG or filename)\n"
-      "+set nolog                   disables any currently active logging\n"
+      "+SET NOLOG                   disables any currently active logging\n"
       "4Switches\n"
       " By default, log output is written at the end of the specified log file.\n"
       " A new log file can created if the -N switch is used on the command line.\n"
 #define HLP_SET_DEBUG  "*Commands SET Debug"
        /***************** 80 character line width template *************************/
       "3Debug\n"
-      "+set debug debug_file        specify the debug destination\n"
+      "+SET DEBUG debug_file        specify the debug destination\n"
       "++++++++                     (STDOUT,STDERR,LOG or filename)\n"
-      "+set nodebug                 disables any currently active debug output\n"
+      "+SET NODEBUG                 disables any currently active debug output\n"
       "4Switches\n"
       " Debug message output contains a timestamp which indicates the number of\n"
       " simulated instructions which have been executed prior to the debug event.\n\n"
@@ -1206,90 +1200,111 @@ static const char simh_help[] =
       " EBCDIC characters.\n"
 #define HLP_SET_BREAK  "*Commands SET Breakpoints"
       "3Breakpoints\n"
-      "+set break <list>            set breakpoints\n"
-      "+set nobreak <list>          clear breakpoints\n"
+      "+SET BREAK <list>            set breakpoints\n"
+      "+SET NOBREAK <list>          clear breakpoints\n"
        /***************** 80 character line width template *************************/
 #define HLP_SET_THROTTLE "*Commands SET Throttle"
       "3Throttle\n"
-      "+set throttle {x{M|K|%%}}|{x/t}\n"
-      "++++++++                     set simulation rate\n"
-      "+set nothrottle              set simulation rate to maximum\n"
+      " Simulator instruction execution rate can be controlled by specifying\n"
+      " one of the following throttle commands:\n\n"
+      "+SET THROTTLE xM             execute x million instructions per second\n"
+      "+SET THROTTLE xK             execute x thousand instructions per second\n"
+      "+SET THROTTLE x%%             occupy x percent of the host capacity\n"
+      "++++++++executing instructions\n"
+      "+SET THROTTLE x/t            sleep for t milliseconds after executing x\n"
+      "++++++++instructions\n\n"
+      "+SET NOTHROTTLE              set simulation rate to maximum\n\n"
+      " Throttling is only available on host systems that implement a precision\n"
+      " real-time delay function.\n\n"
+      " xM, xK and x%% modes require the simulator to execute sufficient\n"
+      " instructions to actually calibrate the desired execution rate relative\n"
+      " to wall clock time.  Very short running programs may complete before\n"
+      " calibration completes and therefore before the simulated execution rate\n"
+      " can match the desired rate.\n\n"
+      " The SET NOTHROTTLE command turns off throttling.  The SHOW THROTTLE\n"
+      " command shows the current settings for throttling and the calibration\n"
+      " results\n\n"
+      " Some simulators implement a different form of host CPU resource management\n"
+      " called idling.  Idling suspends simulated execution whenever the program\n"
+      " running in the simulator is doing nothing, and runs the simulator at full\n"
+      " speed when there is work to do.  Throttling and idling are mutually\n"
+      " exclusive.\n"
 #define HLP_SET_CLOCKS "*Commands SET Clocks"
       "3Clock\n"
 #if defined (SIM_ASYNCH_CLOCKS)
-      "+set clock asynch            enable asynchronous clocks\n"
-      "+set clock noasynch          disable asynchronous clocks\n"
+      "+SET CLOCK asynch            enable asynchronous clocks\n"
+      "+SET CLOCK noasynch          disable asynchronous clocks\n"
 #endif
-      "+set clock nocatchup         disable catchup clock ticks\n"
-      "+set clock catchup           enable catchup clock ticks\n"
-      "+set clock calib=n%%          specify idle calibration skip %%\n"
-      "+set clock stop=n            stop execution after n instructions\n\n"
-      " The set clock stop command allows execution to have a bound when\n"
+      "+SET CLOCK nocatchup         disable catchup clock ticks\n"
+      "+SET CLOCK catchup           enable catchup clock ticks\n"
+      "+SET CLOCK calib=n%%          specify idle calibration skip %%\n"
+      "+SET CLOCK stop=n            stop execution after n instructions\n\n"
+      " The SET CLOCK STOP command allows execution to have a bound when\n"
       " execution starts with a BOOT, NEXT or CONTINUE command.\n"
 #define HLP_SET_ASYNCH "*Commands SET Asynch"
       "3Asynch\n"
-      "+set asynch                  enable asynchronous I/O\n"
-      "+set noasynch                disable asynchronous I/O\n"
+      "+SET ASYNCH                  enable asynchronous I/O\n"
+      "+SET NOASYNCH                disable asynchronous I/O\n"
 #define HLP_SET_ENVIRON "*Commands SET Environment"
       "3Environment\n"
       "4Explicitily Changing A Variable\n"
-      "+set environment name=val    set environment variable\n"
-      "+set environment name        clear environment variable\n"
+      "+SET ENVIRONMENT name=val    set environment variable\n"
+      "+SET ENVIRONMENT name        clear environment variable\n"
       "4Gathering Input From A User\n"
       " Input from a user can be obtained by:\n\n"
-      "+set environment -p \"Prompt String\" name=default\n\n"
-      " The -p switch indicates that the user should be prompted\n"
+      "+set environment -P \"Prompt String\" name=default\n\n"
+      " The -P switch indicates that the user should be prompted\n"
       " with the indicated prompt string and the input provided\n"
       " will be saved in the environment variable 'name'.  If no\n"
       " input is provided, the value specified as 'default' will be\n"
       " used.\n"
 #define HLP_SET_ON      "*Commands SET Command_Status_Trap_Dispatching"
       "3Command Status Trap Dispatching\n"
-      "+set on                      enables error checking after command\n"
+      "+SET ON                      enables error checking after command\n"
       "++++++++                     execution\n"
-      "+set noon                    disables error checking after command\n"
+      "+SET NOON                    disables error checking after command\n"
       "++++++++                     execution\n"
-      "+set on inherit              enables inheritance of ON state and\n"
+      "+SET ON INHERIT              enables inheritance of ON state and\n"
       "++++++++                     actions into do command files\n"
-      "+set on noinherit            disables inheritance of ON state and\n"
+      "+SET ON NOINHERIT            disables inheritance of ON state and\n"
       "++++++++                     actions into do command files\n"
 #define HLP_SET_VERIFY "*Commands SET Command_Execution_Display"
 #define HLP_SET_VERIFY "*Commands SET Command_Execution_Display"
       "3Command Execution Display\n"
-      "+set verify                  re-enables display of command file\n"
+      "+SET VERIFY                  re-enables display of command file\n"
       "++++++++                     processed commands\n"
-      "+set verbose                 re-enables display of command file\n"
+      "+SET VERBOSE                 re-enables display of command file\n"
       "++++++++                     processed commands\n"
-      "+set noverify                disables display of command file processed\n"
+      "+SET NOVERIFY                disables display of command file processed\n"
       "++++++++                     commands\n"
-      "+set noverbose               disables display of command file processed\n"
+      "+SET NOVERBOSE               disables display of command file processed\n"
       "++++++++                     commands\n"
 #define HLP_SET_MESSAGE "*Commands SET Command_Error_Status_Display"
       "3Command Error Status Display\n"
-      "+set message                 re-enables display of command file error\n"
+      "+SET MESSAGE                 re-enables display of command file error\n"
       "++++++++                     messages\n"
-      "+set nomessage               disables display of command file error\n"
+      "+SET NOMESSAGE               disables display of command file error\n"
       "++++++++                     messages\n"
 #define HLP_SET_QUIET "*Commands SET Command_Output_Display"
       "3Command Output Display\n"
-      "+set quiet                   disables suppression of some output and\n"
+      "+SET QUIET                   disables suppression of some output and\n"
       "++++++++                     messages\n"
-      "+set noquiet                 re-enables suppression of some output and\n"
+      "+SET NOQUIET                 re-enables suppression of some output and\n"
       "++++++++                     messages\n"
 #define HLP_SET_PROMPT "*Commands SET Command_Prompt"
       "3Command Prompt\n"
-      "+set prompt \"string\"        sets an alternate simulator prompt string\n"
+      "+SET PROMPT \"string\"        sets an alternate simulator prompt string\n"
       "3Device and Unit\n"
-      "+set <dev> OCT|DEC|HEX|BIN   set device display radix\n"
-      "+set <dev> ENABLED           enable device\n"
-      "+set <dev> DISABLED          disable device\n"
-      "+set <dev> DEBUG{=arg}       set device debug flags\n"
-      "+set <dev> NODEBUG={arg}     clear device debug flags\n"
-      "+set <dev> arg{,arg...}      set device parameters (see show modifiers)\n"
-      "+set <unit> ENABLED          enable unit\n"
-      "+set <unit> DISABLED         disable unit\n"
-      "+set <unit> arg{,arg...}     set unit parameters (see show modifiers)\n"
-      "+help <dev> set              displays the device specific set commands\n"
+      "+SET <dev> OCT|DEC|HEX|BIN   set device display radix\n"
+      "+SET <dev> ENABLED           enable device\n"
+      "+SET <dev> DISABLED          disable device\n"
+      "+SET <dev> DEBUG{=arg}       set device debug flags\n"
+      "+SET <dev> NODEBUG={arg}     clear device debug flags\n"
+      "+SET <dev> arg{,arg...}      set device parameters (see show modifiers)\n"
+      "+SET <unit> ENABLED          enable unit\n"
+      "+SET <unit> DISABLED         disable unit\n"
+      "+SET <unit> arg{,arg...}     set unit parameters (see show modifiers)\n"
+      "+HELP <dev> SET              displays the device specific set commands\n"
       "++++++++                     available\n"
        /***************** 80 character line width template *************************/
 #define HLP_SHOW        "*Commands SHOW"
@@ -1996,7 +2011,7 @@ static const char simh_help[] =
       " file.  Otherwise, the next command in the command file is processed.\n\n"
       "5String Comparison Expressions\n"
       " String Values can be compared with:\n"
-      "++{-i} {NOT} \"<string1>\" <compare-op> \"<string2>\"\n\n"
+      "++{-i} {NOT} \"<string1>\"|EnVarName1 <compare-op> \"<string2>|EnvVarName2\"\n\n"
       " The -i switch, if present, causes comparisons to be case insensitive.\n"
       " <string1> and <string2> are quoted string values which may have\n"
       " environment variables substituted as desired.\n"
@@ -2448,7 +2463,7 @@ while (stat != SCPE_EXIT) {                             /* in case exit */
             cptr = (*sim_vm_read) (cbuf, sizeof(cbuf), stdin);
             }
         else
-            cptr = read_line_p (sim_prompt, cbuf, sizeof(cbuf), stdin);/* read with prmopt*/
+            cptr = read_line_p (sim_prompt, cbuf, sizeof(cbuf), stdin);/* read with prompt*/
         }
     if (cptr == NULL) {                                 /* EOF? or SIGINT? */
         if (sim_ttisatty()) {
@@ -3851,7 +3866,7 @@ if (!strcmp (gbuf, "EXIST")) {                          /* File Exist Test? */
     Exist = TRUE;                                       /* remember that, and */
     cptr = (CONST char *)tptr;
     }
-tptr = _get_string (cptr, gbuf, '=');                   /* get first string */
+tptr = _get_string (cptr, gbuf, ' ');                   /* get first string */
 if (Exist || (*gbuf == '"')) {                          /* quoted string comparison? */
     char op[CBUFSIZE];
     static struct {
@@ -3883,11 +3898,13 @@ if (Exist || (*gbuf == '"')) {                          /* quoted string compari
     if (!Exist) {
         get_glyph (cptr, op, '"');
         for (optr = compare_ops; optr->op; optr++)
-            if (0 == strcmp (op, optr->op))
+            if (0 == strncmp (op, optr->op, strlen (optr->op)))
                 break;
         if (!optr->op)
             return sim_messagef (SCPE_ARG, "Invalid operator: %s\n", op);
-        cptr += strlen (op);
+        cptr += strlen (optr->op);
+        if ((!isspace (*cptr)) && isalpha (optr->op[strlen (optr->op) - 1]) && isalnum (*cptr))
+            return sim_messagef (SCPE_ARG, "Invalid operator: %s\n", op);
         while (sim_isspace (*cptr))                     /* skip spaces */
             ++cptr;
         cptr = _get_string (cptr, gbuf2, 0);            /* get second string */
@@ -5240,6 +5257,10 @@ if (flag) {
 #define S_xstr(a) S_str(a)
 #define S_str(a) #a
 fprintf (st, "%sgit commit id: %8.8s", flag ? "\n        " : "        ", S_xstr(SIM_GIT_COMMIT_ID));
+#if defined(SIM_GIT_COMMIT_TIME)
+if (flag)
+    fprintf (st, "%sgit commit time: %s", "\n        ", S_xstr(SIM_GIT_COMMIT_TIME));
+#endif
 #undef S_str
 #undef S_xstr
 #endif
@@ -5705,7 +5726,7 @@ if (dir) {
 #endif
     t_offset FileSize;
     char FileName[PATH_MAX + 1];
-    char *MatchName = 1 + strrchr (cptr, '/');;
+    const char *MatchName = 1 + strrchr (cptr, '/');;
     char *p_name;
     struct tm *local;
 #if defined (HAVE_GLOB)
@@ -8334,9 +8355,10 @@ static const char *get_glyph_gen (const char *iptr, char *optr, char mchar, t_bo
 {
 t_bool quoting = FALSE;
 t_bool escaping = FALSE;
+t_bool got_quoted = FALSE;
 char quote_char = 0;
 
-while ((*iptr != 0) && 
+while ((*iptr != 0) && (!got_quoted) &&
        ((quote && quoting) || ((sim_isspace (*iptr) == 0) && (*iptr != mchar)))) {
     if (quote) {
         if (quoting) {
@@ -8344,8 +8366,10 @@ while ((*iptr != 0) &&
                 if (*iptr == escape_char)
                     escaping = TRUE;
                 else
-                    if (*iptr == quote_char)
+                    if (*iptr == quote_char) {
                         quoting = FALSE;
+                        got_quoted = TRUE;
+                        }
                 }
             else
                 escaping = FALSE;
