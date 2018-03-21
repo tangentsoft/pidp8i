@@ -3,7 +3,7 @@
 # simh-update - Attempt to automatically merge in the latest upstream
 #	SIMH 4 changes from the GitHub repository.
 #
-# Copyright © 2017 Warren Young
+# Copyright © 2017-2018 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -133,8 +133,9 @@ mkdir -p "$OUR_SIMH_DIR"
 mkdir -p "$CURR_SIMH_DIR"
 git clone https://github.com/simh/simh "$CURR_SIMH_DIR"
 pushd "$CURR_SIMH_DIR"
-NEW_SGCID=$(git rev-parse HEAD)
-say "Pulled ${NEW_SGCID:0:8} as curr; prev is ${OLD_SGCID:0:8}."
+NEW_SGCID=$(git log -1 --pretty='%H')
+NEW_SGCTM=$(git log -1 --pretty='%aI')
+say "Pulled ${NEW_SGCID:0:8} as curr, authored ${NEW_SGCTM}; prev is ${OLD_SGCID:0:8}."
 git worktree add "$OUR_SIMH_DIR" $OLD_SGCID
 popd
 
@@ -235,9 +236,19 @@ done
 # Now try to apply the patch we made above to the upstream files.
 patch -p0 < "$PATCHFILE"
 
-# No error, so save the new tip-of-master Git commit ID and rebuild
+# No error, so save the new tip-of-master Git commit ID and rebuild.
+# Force at least SCP to rebuild, else new values won't be added.
+#
+# The reconfig step is sidesteps a dependency bug in the current
+# Makefile.in which allows make(1) to rebuild scp.o before the automatic
+# reconfig occurs, so the old timestamp gets baked into the simulator.
+# It'd be better to fix the bug, but I failed to diagnose it.
 say "Patch appears to have applied cleanly.  Attempting a rebuild..."
-sed -e "s/^SGCID=.*/SGCID=$NEW_SGCID/" -i tmp @srcdir@/Makefile.in
+sed -e "s/^SGCID=.*/SGCID=$NEW_SGCID/" \
+    -e "s/^SGCTM=.*/SGCTM=$NEW_SGCTM/" \
+    -i tmp @srcdir@/Makefile.in
+touch src/SIMH/scp.c
+make reconfig
 tools/mmake
 
 # Restore stdout and let the human test it

@@ -34,16 +34,18 @@
 # authorization from those authors.
 ########################################################################
 
-# Git commit ID of the latest version of the SIMH 4 project on GitHub 
-# that has been merged into this source base.
+# Git commit ID and time of the latest version of the SIMH 4 project on
+# GitHub that has been merged into this source base.
 SGCID=94727159e8c89e161845190bd0e7cfe92b52bb0c
+SGCTM=2018-03-20T22:29:02-07:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 SIM_CFLAGS := @CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) -DPIDP8I \
 	-DSIM_ASYNCH_IO -DHAVE_REGEX_H -DHAVE_GLOB \
-	-DSIM_GIT_COMMIT_ID=$(SGCID) -D_GNU_SOURCE \
+	-DSIM_GIT_COMMIT_ID=$(SGCID) -DSIM_GIT_COMMIT_TIME=$(SGCTM) \
+	-D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
 	-I @srcdir@/src/SIMH -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
 PIDP8I_CFLAGS = $(SIM_CFLAGS)
@@ -262,7 +264,11 @@ ADF := adrules.mk
 .PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S)
+all: \
+	$(OUTFILES) $(PRECIOUS_OUTFILES) \
+	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
+	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
+	$(OS8_RK05S)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
