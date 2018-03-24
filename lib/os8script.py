@@ -166,6 +166,20 @@ _three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "," + _os8_LS_fspec + "<" 
 
 _absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$")
 
+# Regular expressions for syntax checking for copy_into and copy_from.
+# May be <source> where destination and default option /A is implied.
+# Or <source> <option> where destination is implied and option is set.
+# Or <source> <destination> where option /A is implied.
+# Or <source> <destination> <option> are explicit.
+# Valid options are "/A", "/I", and "/B"
+# Use two regex's in order:
+# <source> in group 1, <dest> in group 2.
+# Option is one of /I /B /A in group 4.
+
+# source in group 1, option in group 3.
+_from_into_re_1 = re.compile ("^(\S+)(\s+(/[AIB]))?$")
+# source in group 1, destination in group 2, option in group 4.
+_from_into_re_2 = re.compile ("^(\S+)\s+(\S+)(\s+(/[AIB]))?$")
 
 # Array of regular expressions for syntax checking inside BUILD
 _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
@@ -412,6 +426,31 @@ class os8script:
       self.simh.set_tti_config (setting)
     
   
+  #### copy_into_command ###########################################
+  # Calls os8_pip_into with the command line arguments.
+  
+  def copy_into_command (self, line, script_file):
+    m = re.match(_from_into_re_1, line)
+    if m != None:
+      self.simh.os8_pip_into (m.group(1), "DSK:", m.group(2))
+    else:
+      m = re.match(_from_into_re_2, line)
+      if m == None:
+        print "Could not parse copy_into command."
+        return
+      self.simh.os8_pip_into (m.group(1), m.group(2), m.group(4))
+
+  #### copy_into_command ###########################################
+  # Calls os8_pip_from with the command line arguments.
+  
+  def copy_from_command (self, line, script_file):
+    m = re.match(_from_into_re_2, line)
+    if m == None:
+      print "Could not parse copy_from command."
+      return
+    self.simh.os8_pip_from (m.group(1), m.group(2), m.group(4))
+    
+
   #### run_script_file #################################################
   # Run os8 command script file
   # Call parsers as needed for supported sub commands.
@@ -442,7 +481,9 @@ class os8script:
                 "umount": self.umount_command, "simh": self.simh_command,
                 "configure": self.configure_command,
                 "enable": self.enable_option_command,
-                "disable": self.disable_option_command}
+                "disable": self.disable_option_command,
+                "copy_into": self.copy_into_command,
+                "copy_from": self.copy_from_command}
   
     try:
       script_file = open(script_path, "r")

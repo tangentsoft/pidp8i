@@ -177,6 +177,10 @@ os8 SUBMIT SYS:LCBAS.BI
 end not-disabled lcmod
 
 # INIT message setting stuf goes here
+copy_into ../media/os8/init.tx
+copy_into ../media/os8/init.cm
+
+os8 SET SYS INIT
 
 # Squish of SYS and DSK goes here
 simh det dt0
