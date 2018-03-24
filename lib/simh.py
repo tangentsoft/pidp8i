@@ -390,6 +390,7 @@ class simh:
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
   def os8_pip_into (self, path, os8name, option = None):
+    if option == None: option = ""
     # If os8name is just a device, synthesize an upcased name from
     # the POSIX file basename.
     if not os.path.exists(path):
@@ -460,6 +461,7 @@ class simh:
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
   def os8_pip_from (self, os8name, path, option = None):
+    if option == None: option = ""
     # If path is not a file, use the name portion of os8name.
     if os.path.isdir(path):
       colon = os8name.index(':')
