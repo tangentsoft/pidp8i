@@ -464,7 +464,7 @@ class simh:
     if option == None: option = ""
     # If path is not a file, use the name portion of os8name.
     if os.path.isdir(path):
-      colon = os8name.index(':')
+      colon = os8name.find(':')
       if colon == -1:                # No dev, just a name.
         path = path + "/" + os8name
       else:
