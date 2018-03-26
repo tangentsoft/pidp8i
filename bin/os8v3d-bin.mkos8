@@ -1,7 +1,7 @@
 # Creates an OS/8 v3d binary rk05 image from distribution DECtapes.
 # Caution: the boot tape must be writeable.
 
-mount dt0 ../media/os8/scratch-al-4711c-ba-os8-v3d-1.1978.tu56 must-exist
+mount dt0 ../media/os8/al-4711c-ba-os8-v3d-1.1978.tu56 must-exist copy_scratch
 mount dt1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
 
 mount rk0 ./os8v3d-bin.rk05 no-overwrite

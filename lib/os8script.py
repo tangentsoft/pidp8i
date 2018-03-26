@@ -269,6 +269,9 @@ class os8script:
     self.options_disabled = disabled_options
     # Do we need separate stacks for enabled/disabled options?
     self.options_stack = []
+    # List of scratch files to delete when we are done with our script.
+    self.scratch_list = []
+
 
   #### basic_line_parse ################################################
   # Returns stripped line and any other cleanup we want.
@@ -758,22 +761,40 @@ class os8script:
     dot = imagename.rindex(".")
     base_imagename = imagename[:dot]
     extension = imagename[dot:]
+    copy_imagename = ""
     # Case of additional arguments.
     if len (parts) > 1:
-      for part in parts[1:]:
-        if part == "read-only": ro_arg = "-r "
-        elif part == "must-exist":
+      # Perform must_exist before copy_scratch
+      if "must-exist" in parts[1:]:
           if not os.path.exists(imagename):
             print imagename + " must exist but was not found. Not mounting."
             return
-        elif part == "no-overwrite":
+      if "copy_scratch" in parts[1:]:
+        copy_imagename = base_imagename + "_copy" + extension
+        try:
+          shutil.copyfile(imagename, copy_imagename)
+        except shutil.Error as e:
+          print "copy_scratch failed with error: " + e
+          return
+        except IOError as e:
+          print "copy_scratch failed with IOError: " + e
+          return
+        self.scratch_list.append(copy_imagename)
+        imagename = copy_imagename
+        
+      if "read-only" in parts:
+        if copy_imagename != "":
+          print "You don't really need to set read only on a scratch copy."
+        ro_arg = "-r "
+      if "no-overwrite" in parts:
+        if copy_imagename != "":
+          print "Ignoring no-overwrite option because copy_scratch is present."
+        else:
           next_tape = 0
           while os.path.isfile(imagename):
             print "Found: " + imagename
             next_tape += 1
             imagename =  base_imagename + "_" + str(next_tape) + extension
-        else:
-          print "Ignoring unrecognized mount option: " + part
     if unit == None or unit == "":
       print "Need unit number for: " + line
       return
@@ -831,6 +852,9 @@ class os8script:
   # Detach all devices to make sure buffers all get written out.
   
   def done_command (self, line, script_file):
+    for filename in self.scratch_list:
+      if self.verbose: print "Deleting scratch_copy: " + filename
+      os.remove(filename)
     self.simh.send_cmd ("detach all")
   
   
