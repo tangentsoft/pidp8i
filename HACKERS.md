@@ -542,10 +542,11 @@ changes, it is better to send a Fossil bundle:
     $ fossil bundle export --branch my-changes my-changes.bundle
 
 After that first `fossil checkin --branch ...` command, any subsequent
-changes will also be made on that branch without needing a `--branch`
-option until you explicitly switch to some other branch.  This lets you
-build up a larger change on a private branch until you're ready to
-submit the whole thing as a bundle.
+`fossil ci` commands will check your changes in on that branch without
+needing a `--branch` option until you explicitly switch that checkout
+directory to some other branch.  This lets you build up a larger change
+on a private branch until you're ready to submit the whole thing as a
+bundle.
 
 Because you are working on a branch on your private copy of the
 PiDP-8/I Fossil repository, you are free to make as many checkins as
