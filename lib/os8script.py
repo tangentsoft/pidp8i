@@ -774,10 +774,10 @@ class os8script:
         try:
           shutil.copyfile(imagename, copy_imagename)
         except shutil.Error as e:
-          print "copy_scratch failed with error: " + e
+          print "copy_scratch failed with error: " + str(e)
           return
         except IOError as e:
-          print "copy_scratch failed with IOError: " + e
+          print "copy_scratch failed with IOError: " + str(e)
           return
         self.scratch_list.append(copy_imagename)
         imagename = copy_imagename
