@@ -694,7 +694,7 @@ class os8script:
   # We rely on the caller to have good specifications for source,
   # binary and optional listing files.
   
-  def call_pal8 (s, source, binary):
+  def call_pal8 (self, source, binary):
     pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF", "IC\s+\S+", "ID\s+\S+",
                     "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
                     "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
@@ -835,7 +835,7 @@ class os8script:
     m_2form = re.match (_two_arg_pal_re, line)
     if m_2form != None:
       # Call the 2arg pal8 code that works hard at error analysis.
-      call_pal8 (s, source=m_2form.group(4), binary=m_2form.group(1))
+      call_pal8 (self, source=m_2form.group(4), binary=m_2form.group(1))
     else:
       m_3form = re.match (_three_arg_pal_re, line)
       if m_3form != None:
