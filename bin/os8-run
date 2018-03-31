@@ -209,20 +209,22 @@ def main ():
     print "Need a script file to run."
     sys.exit(-1)
 
-  print "script_files: " + str(script_files)
-  print "options_enabled" + str(options_enabled)
-  print "options_disabled" + str(options_disabled)
+  if VERBOSE:
+    print "script_files: " + str(script_files)
+    print "options_enabled" + str(options_enabled)
+    print "options_disabled" + str(options_disabled)
   
   # Log SIMH and OS/8 output to a file by default, but send it to the
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
   s = simh (dirs.build, True)
   s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'w') \
-      if VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
+      if not VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
   os8 = os8script (s, options_enabled, options_disabled, verbose=VERBOSE, debug=DEBUG)
 
   for script_file in script_files:
+    print "Running script file: " + script_file
     os8.run_script_file (script_file)
   
   s.quit ()
