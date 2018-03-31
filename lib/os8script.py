@@ -454,34 +454,51 @@ class os8script:
     self.simh.os8_pip_from (m.group(1), m.group(2), m.group(4))
     
 
-  #### run_script_file #################################################
+  #### run_script_file ############################################
   # Run os8 command script file
   # Call parsers as needed for supported sub commands.
   #
   # Commands:
   # mount <simh-dev> <image-file> [<option> ...]
-  #       option: must-exist | no-overwrite | read-only
+  #       option: must-exist | no-overwrite | read-only | copy_scratch
+  # umount <>
   # boot <simh-dev>
   # os8 <command-line>
   #       the rest of the line is passed verbatim to OS/8
   # pal8 <pal-command line>
+  # include <script-file>
+  # configure <device> <parameter>
+  #       device: tti | tape | rx
+  #       tt parameter: KSR | 7b
+  #       tape parameter: td | dt
+  #       rx parameter: rx8e | rx28 | rx01 | rx02
+  # enable <parameter>
+  # disable <parameter>
+  # copy_into <posix-file> [<os8-file>] [<format>]
+  # copy_from <os8-file> <posix-file> [<format>]
+  #       format: /A | /I | /B
   # done
   # begin <sub-command> <os8-path>
   # end <sub-command>
   #
   # Sub-commands:
-  # build, fotp
+  # build, fotp, absldr
   #
   # Currently the run-script is hard-coded because of an old assumption
   # about argument parsing for mkos8.
   
   def run_script_file (self, script_path):
   # Strings, regexps, and command arrays used by run_system
-    commands = {"mount": self.mount_command, "boot": self.boot_command,
-                "os8": self.os8_command, "done": self.done_command,
-                "pal8": self.pal8_command, "include": self.include_command,
-                "begin": self.begin_command, "end": self.end_command,
-                "umount": self.umount_command, "simh": self.simh_command,
+    commands = {"mount": self.mount_command,
+                "boot": self.boot_command,
+                "os8": self.os8_command,
+                "done": self.done_command,
+                "pal8": self.pal8_command,
+                "include": self.include_command,
+                "begin": self.begin_command,
+                "end": self.end_command,
+                "umount": self.umount_command,
+                "simh": self.simh_command,
                 "configure": self.configure_command,
                 "enable": self.enable_option_command,
                 "disable": self.disable_option_command,
