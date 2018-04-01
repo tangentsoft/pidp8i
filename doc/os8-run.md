@@ -27,24 +27,24 @@ the design of a generalized script runner for OS/8 under simh emerged.
 
 The mount command is used to attach image files to SIMH devices.
 
-    mount _simh-dev_ _image-file_ [_option_ ...]
-       option: must-exist | no-overwrite | read-only | copy_scratch
+`mount` _simh-dev_ _image-file_ [_option_ ...]
+option: `must-exist` | `no-overwrite` | `read-only` | `copy_scratch`
 
 ### `mount` Options
 
 
-`must-exist`   | _image-file_ must exist, otherwise abort the attach.
-`no-overwrite` | if _image-file_ already exists, create a copy with a version number suffix.
-	       | This is useful when you want to prevent overwrites of a good image file
-	       | with changes that might not work.  `os8-run` steps through version seen
-	       | until it can create a new version that doesn't overwrite any of the previous
-	       | ones.
-`read-only`    | Passes the `-r` option to SIMH attach to mount the device in read only mode.
-`copy_scratch` | Create a writeable scratch version of the named image file and mount it.
-	       | This is helpful when you are booting a distribution DECtape.
-	       | Booted DECtape images must be writeable. To protect a distribution DECtape,
-	       | use the `copy_scratch` option.  When the script is done the scratch version
-	       | is deleted.
+| `must-exist`   | _image-file_ must exist, otherwise abort the attach.
+| `no-overwrite` | if _image-file_ already exists, create a copy with a version number suffix.
+|	         | This is useful when you want to prevent overwrites of a good image file
+| 	         | with changes that might not work.  `os8-run` steps through version seen
+| 	         | until it can create a new version that doesn't overwrite any of the previous
+| 	         | ones.
+| `read-only`    | Passes the `-r` option to SIMH attach to mount the device in read only mode.
+| `copy_scratch` | Create a writeable scratch version of the named image file and mount it.
+| 	         | This is helpful when you are booting a distribution DECtape.
+| 	         | Booted DECtape images must be writeable. To protect a distribution DECtape,
+| 	         | use the `copy_scratch` option.  When the script is done the scratch version
+| 	         | is deleted.
 	     
 
 #TODOs:
