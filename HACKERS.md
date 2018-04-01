@@ -350,10 +350,10 @@ this stripped-down version of Tcl rather than "real" Tcl because Jim Tcl
 is more or less a strict subset of Tcl, so any changes you make that
 work with the `jimsh0` interpreter should also work with "real" Tcl, but
 not vice versa.  If you have Tcl installed and don't really need it,
-consider uninstalling it to force `autosetup` to build and use `jimsh0`.
+consider uninstalling it to force Autosetup to build and use `jimsh0`.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
-excepting only that it has variables substituted into it by `autosetup`
+excepting only that it has variables substituted into it by Autosetup
 using its `@VARIABLE@` syntax.  At this time, we do not attempt to
 achieve compatibility with other `make` programs, though in the future
 we may need it to work with [BSD `make`][bmake] as well, so if you are
@@ -361,22 +361,23 @@ adding features, you might want to stick to the common subset of
 features implemented by both the GNU and BSD flavors of `make`.  We do
 not anticpate any need to support any other `make` flavors.
 
-(This, by the way, is why we're not using some heavy-weight build system
+This, by the way, is why we're not using some heavy-weight build system
 such as the GNU Autotools, CMake, etc.  The primary advantage of GNU
 Autotools is that you can generate source packages that will configure
 and build on weird and ancient flavors of Unix; we don't need that.
 Cross-platform build systems such as CMake ease building the same
 software on multiple disparate platforms straightforward, but the
 PiDP-8/I software is built primarily on and for a single operating
-system, Rasbpian Linux.  It also happens to build and run on other
-modern Unix and Linux systems, for which we also do not need the full
-power of something like CMake.  `autosetup` and GNU `make` suffice for
-our purposes here.)
+system, Rasbpian Linux.  It also happens to build and run on [several
+other OSes][oscomp], for which we also do not need the full power of
+something like CMake.  Autosetup and GNU `make` suffice for our purposes
+here.
 
 [asbs]:   http://msteveb.github.io/autosetup/
 [bmake]:  https://www.freebsd.org/doc/en/books/developers-handbook/tools-make.html
 [gmake]:  https://www.gnu.org/software/make/
 [jim]:    http://jim.tcl.tk/
+[oscomp]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 [tcldoc]: http://wiki.tcl.tk/11485
 
 
