@@ -5,6 +5,7 @@ If you are going to make any changes to the PiDP-8/I software, here are
 some rules and hints to keep in mind while you work.
 
 
+<a id="gs-fossil"></a>
 Getting Started with Fossil
 ----
 
@@ -27,13 +28,13 @@ If you started with one of our PiDP-8/I binary OS images made in or
 after April 2017, Fossil 2.x is already installed.
 
 If you're starting from some other OS, you either won't have Fossil
-installed at all, or you'll most likley be using an older version,
-since the Debian project is still shipping version 1.37 and likely
-will continue to do so until 2020 or so.  You could build Fossil from
-source, or you could just go grab a prebuilt binary we keep on the
-project site:
+installed at all, or you'll most likley be using an older version, since
+the Debian project is still shipping version 1.37 and likely will
+continue to do so until 2020 or so in accordance with their software
+stability policy.  You could build Fossil from source, or you could just
+go grab a prebuilt binary we keep on the project site:
 
-    $ wget https://tangentsoft.com/pidp8i/uv/fossil-raspbian-9.1-stretch
+    $ wget https://tangentsoft.com/pidp8i/uv/fossil-2.5-raspbian-9.3-stretch
     $ sudo install -m 755 fossil-* /usr/local/bin/fossil
 
 Fossil is also available for all common desktop platforms.  One of [the
@@ -50,6 +51,7 @@ binaries from a third party, be sure it is Fossil 2.1 or higher.
 [ggml]:   https://groups.google.com/forum/#!forum/pidp-8
 
 
+<a id="fossil-anon"></a>
 Fossil Anonymous Access
 ----
 
@@ -67,6 +69,7 @@ like and put it in any directory you like.  Even the `.fossil` extension
 is largely a convention, not a requirement.
 
 
+<a id="tags" name="branches"></a>
 Working with Existing Tags and Branches
 ----
 
@@ -139,6 +142,7 @@ tangents.
 [gitwt]:  https://git-scm.com/docs/git-worktree
 
 
+<a id="fossil-login"></a>
 Fossil Developer Access
 ----
 
@@ -181,6 +185,7 @@ only when you are truly going to be offline and don't want Fossil
 attempting to sync when you know it will fail.
 
 
+<a id="gda"></a>
 Getting Developer Access
 ----
 
@@ -190,6 +195,7 @@ generally give developer access to anyone who makes a reasonable
 request.
 
 
+<a id="branching"></a>
 Creating Branches
 ----
 
@@ -246,6 +252,7 @@ examples to emulate.
 [dosd]:   http://amzn.to/2iEVoBL
 
 
+<a id="debug"></a>
 Debug Builds
 ----
 
@@ -256,6 +263,7 @@ symbols included:
      $ ./configure --debug-mode
 
 
+<a id="build-system"></a>
 Manipulating the Build System Source Files
 ----
 
@@ -570,6 +578,7 @@ otherwise.
 [viral]: https://en.wikipedia.org/wiki/Viral_license
 
 
+<a id="code-style"></a>
 The PiDP-8/I Software Project Code Style Rules
 ----
 
