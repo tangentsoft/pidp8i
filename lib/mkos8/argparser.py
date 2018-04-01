@@ -56,7 +56,8 @@ class ArgParser (argparse.ArgumentParser):
                    'when SIMH is set to tti ksr mode')
 
     # Add the ability to feed in options.
-    self.add_argument("-o", "--option", nargs=1, action='append' )
+    self.add_argument("--enable", nargs=1, action='append' )
+    self.add_argument("--disable", nargs=1, action='append' )
 
     # Add trailing "what do do" argument
     self.add_argument (

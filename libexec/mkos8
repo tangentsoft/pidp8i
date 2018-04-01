@@ -1189,6 +1189,7 @@ def main ():
   ap = argparser.ArgParser (allowed_acts)
   global progmsg
   options_enabled = []
+  options_disabled = []
   
   progmsg = not ap.args.verbose
 
@@ -1198,15 +1199,23 @@ def main ():
   for this in allowed_acts:
     acts[this] = False
 
-  if ap.args.option != None:
+  if ap.args.enable != None:
     # arg append action creates lists of lists. chain flattens it.
-    options_list = list(chain(*ap.args.option))
+    options_list = list(chain(*ap.args.enable))
     for my_option in options_list:
       # Append the option unless it is already there.
-      print "my_option: " + str(my_option)
+      if progmsg: print "enable option: " + str(my_option)
       if my_option not in options_enabled:
         options_enabled.append(my_option)
-        print my_option
+
+  if ap.args.disable != None:
+    # arg append action creates lists of lists. chain flattens it.
+    options_list = list(chain(*ap.args.disable))
+    for my_option in options_list:
+      # Append the option unless it is already there.
+      if progmsg: print "disable option: " + str(my_option)
+      if my_option not in options_disabled:
+        options_disabled.append(my_option)
 
   for act in ap.args.what:
     if act not in allowed_acts:
@@ -1228,7 +1237,7 @@ def main ():
   s.set_logfile (open (dirs.log + 'mkos8-' + first_act + '.log', 'w') \
       if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
-  os8 = os8script (s, options_enabled)
+  os8 = os8script (s, options_enabled, options_disabled)
 
   if acts["bin"]: make_bin (s, ap.args)
   if acts["src"]: make_src (s, ap.args)
