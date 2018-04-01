@@ -64,7 +64,7 @@ QUIET = False
 SCRIPT_FILE = ""
 
 USAGE = "usage: "  + os.path.basename (__file__) + \
-      " [-dhvq] script [script] ... [-o option] ..."
+      " [-dhvq] script [script] ... [--enable enable_option] ... \n\t[--disable disable_option] ..."
 
 _en_dis_arg_re = re.compile("^(enable|disable)_(\S+)$")
 
@@ -109,8 +109,10 @@ def parse_args(script_files, options_enabled, options_disabled):
                'when SIMH is set to tti ksr mode')
 
   # Add the ability to feed in options.
-  ap.add_argument("--enable", nargs=1, action='append' )
-  ap.add_argument("--disable", nargs=1, action='append' )
+  ap.add_argument("--enable", nargs=1, action='append',
+                  help="Execute script code within \'begin enable  ENABLE\' block.")
+  ap.add_argument("--disable", nargs=1, action='append',
+                  help="Ignore and do not execute script code within \'begin not-disabled DISABLE\' block.")
 
   
   # Add trailing "what do do" argument
@@ -151,10 +153,14 @@ def add_bool (self, *args, **kwargs):
   self.add_argument (*args, **kwargs)
   
 
-def old_parse_args (script_files, options_enabled):
+def new_parse_args (script_files, options_enabled, options_disabled):
   global DEBUG
   global VERBOSE
   global QUIET
+  global USAGE
+
+  enable_usage = ""
+  disable_usage = ""
 
   idx = 1
   numargs = len(sys.argv)
@@ -163,10 +169,30 @@ def old_parse_args (script_files, options_enabled):
     print USAGE
     sys.exit(-1)
 
-  # Maybe we should allow more than just one script file?
-      
-  retval = sys.argv[1]
-  
+  # Add arguments corresponding to --*-os8-* configure script options
+  max_obn_len = 0
+  for obn, vals in opts.opts.iteritems():
+    max_obn_len = max(max_obn_len, len(obn))
+  for obn, vals in opts.opts.iteritems():
+    if vals[0]:
+      # Enable option
+      pad_str = (max_obn_len - len (obn)) * " "
+      new_usage = "    " + obn + ": " + pad_str + vals[1] + "\n"
+      disable_usage += new_usage
+    else:
+      # Disable option
+      pad_str = (max_obn_len - len (obn)) * " "
+      new_usage = "    " + obn + ": " + pad_str + vals[1] + "\n"
+      enable_usage += new_usage
+
+  if enable_usage != "":
+    USAGE += "\n  Known enable options: \n"
+    USAGE += enable_usage
+
+  if disable_usage != "":
+    USAGE += "\n  Known disable options: \n"
+    USAGE += disable_usage
+    
   while idx < numargs:
     arg = sys.argv[idx]
     # print "idx: " + str(idx) + ", arg: " + arg
@@ -181,7 +207,7 @@ def old_parse_args (script_files, options_enabled):
       QUIET = True
     elif arg == "-v":
       VERBOSE = 1
-    elif arg == "-o" or arg == "--option":
+    elif arg == "--enable":
       idx +=1
       if idx == numargs:
         print "expecting an option but got none."
@@ -189,11 +215,18 @@ def old_parse_args (script_files, options_enabled):
         option = sys.argv[idx]
         # Only add the option once
         if option not in options_enabled: options_enabled.append(option)
+    elif arg == "--disable":
+      idx +=1
+      if idx == numargs:
+        print "expecting an option but got none."
+      else:
+        option = sys.argv[idx]
+        # Only add the option once
+        if option not in options_disabled: options_disabled.append(option)
     else:
       script_files.append(arg)
     idx += 1
       
-  return retval
 
 
 #### main ##############################################################
