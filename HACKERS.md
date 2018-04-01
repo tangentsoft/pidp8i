@@ -107,21 +107,22 @@ our scope here.  See the [Fossil Quick Start Guide][fqsg] and the
 documents it links to for more details.)
 
 This directory scheme shows an important difference between Fossil and
-Git: with Git, the checkout and the clone are intermingled in the same
-directory tree, but in Fossil, they are strictly separate.  Git can
-emulate Fossil's normal working style through its [worktree][gitwt]
-feature, but it employs some trickery that causes some unwanted side
-effects that don't affect Fossil by design: the repository clone is a
-single SQLite database file — here, `pidp8i.fossil` — and the checkouts
-are made from the contents of that database.
+Git: with Git, the checkout and the clone are normally intermingled in
+the same directory tree, but in Fossil, the clone and the checkout are
+always strictly separate.  Git has a weak emulation of Fossil's normal
+working style via its [worktree][gitwt] feature, but most Git users
+aren't even aware of the feature, and those that are aware of it tend to
+discourage its use because of the problems it can cause.  Fossil was
+designed to work this way from the start, so it doesn't have the
+problems associated with Git worktrees.
 
 Another important difference relative to Git is that with Fossil, local
 checkins attempt to automatically sync checked-in changes back to the
 repository you cloned from.  (This only works if you have a login on the
-remote repository, the subject of the next section.)  This solves a
-number of problems with Git, all stemming from the fact that Git almost
-actively tries to make sure every clone differs from every other in some
-important way.
+remote repository, the subject of the [next section](#login).)  This
+solves a number of problems with Git, all stemming from the fact that
+Git almost actively tries to make sure every clone differs from every
+other in some important way.
 
 While Fossil does allow offline operation and local independent clones,
 its default mode of operation is to try and keep the clones in sync as
@@ -142,7 +143,7 @@ tangents.
 [gitwt]:  https://git-scm.com/docs/git-worktree
 
 
-<a id="fossil-login"></a>
+<a id="login"></a>
 Fossil Developer Access
 ----
 
