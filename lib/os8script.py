@@ -200,9 +200,8 @@ _build_replies = ["\\$", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
                   "\\?PLAT", "\\?SYNTAX", "\\?SYS", "SYS ERR",
                   "\S+ NOT FOUND"]
 
-# Parse the requested config item into group(1) and the
-# requested setting into group(2)
-_configure_re = re.compile("^(\S+)\s+(\S+)$")
+# Parse two whitspace separated arguments into group(1) and group(2)
+_two_args_re = re.compile("^(\S+)\s+(\S+)$")
 
 _rx_settings = ["rx01", "rx02", "RX8E", "RX28"]
 _tape_settings = ["td", "dt"]
@@ -295,7 +294,7 @@ class os8script:
       if en_dis == "enabled":
         if rest in self.options_enabled:
           # Block is active. We push it onto the stack
-          if self.debug: print "Pushing " + rest + " onto options_stack"
+          if self.debug: print "Pushing enabled block " + rest + " onto options_stack"
           self.options_stack.insert(0, rest)
         else:
           # Option is inactive.  Ignore all subseqent lines
@@ -307,7 +306,7 @@ class os8script:
       else:
         if rest not in self.options_disabled:
           # Block defaults to active. We push it onto the stack
-          print "Pushing " + rest + " onto options_stack"
+          if self.debug: print "Pushing not_disabled block " + rest + " onto options_stack"
           self.options_stack.insert(0, rest)
         else:
           # Block is inactive.  Ignore all subseqent lines
@@ -409,7 +408,7 @@ class os8script:
   # This enables adding option setting inside a script file.
   
   def configure_command (self, line, script_file):
-    m = re.match(_configure_re, line)
+    m = re.match(_two_args_re, line)
     if m == None or m.group(1) == None or m.group(2) == None: 
       print "Could not parse configure command: " + line
       return
@@ -454,6 +453,55 @@ class os8script:
     self.simh.os8_pip_from (m.group(1), m.group(2), m.group(4))
     
 
+  #### copy_command ###############################################
+  # Simple script interface to create a copy of a file.
+
+  def copy_command (self, line, script_file):
+    m = re.match(_two_args_re, line)
+    if m == None or m.group(1) == None or m.group(2) == None: 
+      print "Could not copy command: " + line
+      return
+    from_path = m.group(1)
+    to_path = m.group(2)
+
+    print "copy command: from: " + from_path + ", to: " + to_path
+    
+    if (not os.path.isfile(from_path)):
+        print "Required copy input file: " + from_path + " not found."
+        return
+
+    if os.path.isfile(to_path):
+      save_path = to_path + ".save"
+      print "Pre-existing " + to_path + " found.  Saving as " + to_path + ".save"
+      if os.path.isfile(save_path):
+        print "Overwriting old " + to_path + ".save"
+        os.remove(save_path)
+      os.rename(to_path, save_path)
+
+    try:
+      shutil.copyfile(from_path, to_path)
+    except shutil.Error as e:
+      print "copy command failed with error: " + str(e)
+    except IOError as e:
+      print "copy command failed with IOError: " + str(e)
+      
+  
+  #### patch_command ##############################################
+  # Read the named patch file and perform its actions.
+
+  def patch_command (self, line, script_file):
+    if not os.path.isfile(line):
+      print "Could not find patch file: " + line
+    self.run_patch_file (line)
+
+  
+  #### _command ###########################################
+  # 
+
+  def _command (self, line, script_file):
+    return
+
+  
   #### run_script_file ############################################
   # Run os8 command script file
   # Call parsers as needed for supported sub commands.
@@ -477,6 +525,8 @@ class os8script:
   # copy_into <posix-file> [<os8-file>] [<format>]
   # copy_from <os8-file> <posix-file> [<format>]
   #       format: /A | /I | /B
+  # copy <from-file> <to-file>
+  # patch <patch-file>
   # done
   # begin <sub-command> <os8-path>
   # end <sub-command>
@@ -503,7 +553,9 @@ class os8script:
                 "enable": self.enable_option_command,
                 "disable": self.disable_option_command,
                 "copy_into": self.copy_into_command,
-                "copy_from": self.copy_from_command}
+                "copy_from": self.copy_from_command,
+                "copy": self.copy_command,
+                "patch": self.patch_command}
   
     try:
       script_file = open(script_path, "r")
@@ -535,8 +587,8 @@ class os8script:
 
   #### parse_odt #######################################################
   
-  def parse_odt (s, com, line, debug):
-    if debug: print line
+  def parse_odt (self, com, line):
+    if self.debug: print line
     
     if line == "\\c": return "break"
     match = _odt_parse.match(line)
@@ -549,14 +601,14 @@ class os8script:
     new_val = match.group(3)
     expect_val_str = "\s?[0-7]{4} "
     
-    if debug: print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
+    if self.debug: print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
     self.simh.os8_send_str (loc + "/")
     self.simh._child.expect(expect_val_str)
   
     if old_val.isdigit():          # We need to check old value
       found_val = self.simh._child.after.strip()
       if found_val != old_val:
-        print "Old value: " + found_val + " does not match " + old_val + ". Aborting patch."
+        print "\tOld value: " + found_val + " does not match " + old_val + ". Aborting patch."
         # Abort out of ODT back to the OS/8 Monitor
         self.simh.os8_send_ctrl('C')
         return "err"
@@ -567,14 +619,14 @@ class os8script:
   
   #### futil_exit ########################################################
   
-  def futil_exit (s, com, line):
+  def futil_exit (self, com, line):
     self.simh.os8_send_line(line)
     return "break"
   
   
   #### futil_file ########################################################
   
-  def futil_file (s, com, line):
+  def futil_file (self, com, line):
     # Redundant re-parse of line but nobody else wants args right now.
     match = _com_split_parse.match(line)
     if match == None:
@@ -610,15 +662,15 @@ class os8script:
   #
   # When we encounter the EXIT command, we return success.
   
-  def parse_futil (s, com, line, debug):
+  def parse_futil (self, com, line):
     futil_specials = {
-      "EXIT": futil_exit,
-      "FILE": futil_file
+      "EXIT": self.futil_exit,
+      "FILE": self.futil_file
     }
   
     if line[0].isdigit():
       # Treat the line as ODT
-      return parse_odt(s, com, line, debug)
+      return self.parse_odt(com, line)
     else:
       match = _com_split_parse.match(line)
       if match == None:
@@ -632,24 +684,24 @@ class os8script:
         self.simh.os8_send_line(line)
         return "cont"
       else:
-        return futil_specials[fcom](s, fcom, line)
+        return futil_specials[fcom](fcom, line)
   
   
-  #### execute_patch_file ##############################################
+  #### run_patch_file ##################################################
   
-  def execute_patch_file (s, pathname, debug):
-    global progmsg
-    
+  def run_patch_file (self, pathname):
+    print "Running patch file: " + pathname
+
     try:
       patch_file = open(pathname, "r")
     except IOError:
       print pathname + " not found. Skipping."
-      return -1
+      return
   
     special_commands = {
-      "ODT": parse_odt,
+      "ODT": self.parse_odt,
       "R": None,               # Get next parser.
-      "FUTIL": parse_futil
+      "FUTIL": self.parse_futil
     }
   
     inside_a_command = False
@@ -661,7 +713,7 @@ class os8script:
       if line == "": continue
       elif line[0] == '#': continue     # Ignore Comments
       elif inside_a_command:
-        retval = the_command_parser (s, the_command, line, debug)
+        retval = the_command_parser (the_command, line)
         if retval == "break":
           inside_a_command = False
           self.simh.os8_send_ctrl('C')
@@ -686,12 +738,12 @@ class os8script:
   
         # We carefully separate com and args
         # But don't make much use of that yet.
-        if self.verbose and debug: print line
+        if self.verbose and self.debug: print line
         self.simh.os8_send_cmd ("\\.", line[1:])  # Skip Prompt.
   
     patch_file.close()
   
-    # Done.  Signal success.
+    print "\tSuccess."
     return 0
   
   
