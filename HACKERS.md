@@ -153,8 +153,9 @@ add your username to the URL like so:
     $ fossil clone https://username@tangentsoft.com/pidp8i pidp8i.fossil
 
 If you've already cloned anonymously, you don't have to clone again to
-inform Fossil about your developer account.  Just do a manual sync,
-changing the URL to include the user name:
+inform Fossil about your developer account.  Just do a manual sync from
+within a PiDP-8/I checkout directory, changing the URL to include the
+user name:
 
     $ fossil sync https://username@tangentsoft.com/pidp8i
 
@@ -167,7 +168,7 @@ you're online at the time, and you'll get credit under your developer
 account name for the checkin.
 
 If you're working offline, Fossil will still do the checkin locally, and
-it will sync up with the central repoisitory after you get back online.
+it will sync up with the central repository after you get back online.
 It is best to work on a branch when unable to use Fossil's autosync
 feature, as you are less likely to have a sync conflict when attempting
 to send a new branch to the central server than in attempting to merge
@@ -215,9 +216,16 @@ While developers with login rights to the PiDP-8/I Fossil instance are
 allowed to check in on the trunk at any time, we recommend using
 branches whenever you're working on something experimental, or where you
 can't make the necessary changes in a single coherent checkin.
-Basically, `trunk` should always build without error, and it should
-always function correctly.  Branches are for isolating work until it is
-ready to merge into the trunk.
+
+One of this project's core principles is that `trunk` should always
+build without error, and it should always function correctly.  That's an
+ideal we have not always achieved, but we do always *try* to achieve it.
+
+Contrast branches, which PiDP-8/I developers may use to isolate work
+until it is ready to merge into the trunk.  It is okay to check work in
+on a branch that doesn't work, or doesn't even *build*, so long as the
+goal is to get it to a point that it does build and work properly before
+merging it into trunk.
 
 Here again we have a difference with Git: because Fossil normally syncs
 your work back to the central repository, this means we get to see the
@@ -227,7 +235,7 @@ code.][daff]  We are software developers, too: we understand that
 software development is an iterative process, and that not all ideas
 spring forth perfect and production-ready from the fingers of its
 developers.  These public branches let your collaborators see what
-you're up to, and maybe lend advice or a hand in the work, but mostly
+you're up to, and maybe lend advice or a hand in the work; mostly,
 public branches let your collaborators see what you're up to, so they're
 not surprised when the change finally lands in trunk.
 
@@ -248,9 +256,54 @@ main rule is to follow the branch naming scheme: all lowercase with
 hyphens separating words. See the [available branch list][brlist] for
 examples to emulate.
 
+If you have checkin rights on the repository, it is generally fine to
+check things in on someone else's feature branch, as long as you do so
+in a way that cooperates with the purpose of that branch.  The same is
+true of `trunk`: you should not check something in directly on the trunk
+that changes the nature of the software in a major way without
+discussing the idea first.  This is yet another use for branches: to
+make a possibly-controversial change so that it can be discussed before
+being merged into the trunk.
+
 [brlist]: https://tangentsoft.com/pidp8i/brlist
 [daff]:   http://www.hanselman.com/blog/YouAreNotYourCode.aspx
 [dosd]:   http://amzn.to/2iEVoBL
+
+
+<a id="special"></a>
+Special Branches
+----
+
+Most of the branches in the PiDP-8/I project are feature branches of the
+sort described in the previous section: an isolated line of development
+by one or more of the project's developers to work towards some new
+feature, with the goal of merging that feature into the `trunk` branch.
+
+There are a few branches in the project that are special, which are
+subject to different rules than other branches:
+
+*   **<code>release</code>** - One of the steps in the
+    [release process][relpr] is to merge the stabilized `trunk` into the
+    `release` branch, from which the release tarballs and binary OS
+    images are created.  Only the project's release manager — currently
+    Warren Young — should make changes to this branch.
+
+*   **<code>bogus/BOGUS</code>** — Because a branch is basically just a
+    label for a specific checkin, Fossil allows the tip of one branch to
+    be "moved" to another branch by applying a branch label to that
+    checkin.  We use this label when someone makes a checkin on the tip
+    of a branch that should be "forgotten."  Fossil makes destroying
+    project history very difficult, on purpose, so things moved to the
+    "bogus" branch are not actually destroyed; instead, they are merely
+    moved out of the way so that they do not interfere with that
+    branch's normal purpose.
+
+    If you find yourself needing to prune the tip of a branch this way,
+    the simplest way is to do it via the web UI, using the checkin
+    description page's "edit" link.  You can instead do it from the
+    command line with the `fossil amend` command.
+
+[relpr]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCES.md
 
 
 <a id="debug"></a>
