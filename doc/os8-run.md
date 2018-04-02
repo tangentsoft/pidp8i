@@ -35,17 +35,17 @@ option: `must-exist` | `no-overwrite` | `read-only` | `copy_scratch`
 
 | `must-exist`   | _image-file_ must exist, otherwise abort the attach.
 | `no-overwrite` | if _image-file_ already exists, create a copy with a version number suffix.
-|	         | This is useful when you want to prevent overwrites of a good image file
-| 	         | with changes that might not work.  `os8-run` steps through version seen
-| 	         | until it can create a new version that doesn't overwrite any of the previous
-| 	         | ones.
+|            | This is useful when you want to prevent overwrites of a good image file
+|            | with changes that might not work.  `os8-run` steps through version seen
+|            | until it can create a new version that doesn't overwrite any of the previous
+|            | ones.
 | `read-only`    | Passes the `-r` option to SIMH attach to mount the device in read only mode.
 | `copy_scratch` | Create a writeable scratch version of the named image file and mount it.
-| 	         | This is helpful when you are booting a distribution DECtape.
-| 	         | Booted DECtape images must be writeable. To protect a distribution DECtape,
-| 	         | use the `copy_scratch` option.  When the script is done the scratch version
-| 	         | is deleted.
-	     
+|            | This is helpful when you are booting a distribution DECtape.
+|            | Booted DECtape images must be writeable. To protect a distribution DECtape,
+|            | use the `copy_scratch` option.  When the script is done the scratch version
+|            | is deleted.
+         
 
 #TODOs:
 
@@ -61,5 +61,5 @@ Copyright © 2017 by Bill Cattey. Licensed under the terms of
 [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
-[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extenaions.md
+[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extensions.md
 

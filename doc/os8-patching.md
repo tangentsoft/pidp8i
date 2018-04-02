@@ -401,5 +401,5 @@ Copyright © 2017 by Bill Cattey. Licensed under the terms of
 [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
-[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extenaions.md
+[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extensions.md
 
