@@ -43,7 +43,7 @@ os8 COPY RKA0:<DTA0:*.*
 # We just copy the help files.
 os8 COPY RKA0:<DTA1:*.HL
 
-# We cant express disabled yet.
+# We can't express disabled yet.
 # Besides we need SABR for cc8
 # begin disabled fortran_ii
 # os8 DELETE RKA0:FORT.SV,LIBSET.SV,SABR.SV

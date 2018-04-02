@@ -84,7 +84,7 @@ TECO-31.20.12M-v5.07.patch8
 TECO-31.20.13M-v5.08.patch8
 #
 # MACREL, LINK, and OVDRV patches have not been validated.
-# The Version numbers dont all match. Some wont apply.
+# The Version numbers don't all match. Some won't apply.
 # More work is needed before they are deemed safe.
 # NOT Recommended.
 ## MACREL-40.5.1M-v1D.patch8
