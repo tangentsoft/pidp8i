@@ -1,4 +1,4 @@
-# os8-run Script Runner for OS/8 under simh
+# `os8-run` Script Runner for OS/8 under simh
 
 After having done a lot of exploring of how to create system images,
 the design of a generalized script runner for OS/8 under simh emerged.
@@ -20,17 +20,17 @@ the design of a generalized script runner for OS/8 under simh emerged.
 * include script files so that common code blocks can be written once in an external included script.
 * run of patch scripts that will use `ODT` or `FUTIL` to patch the booted system image.
 * perform actions in a script conditional on feature enablement matching an arbitrary keyword.
-* perform actions in a scrupt unless a disablement keyword has been specified.
+* perform actions in a script unless a disablement keyword has been specified.
 * set enable or disable keywords anywhere in the execution of a script.
 
 Under the covers, run-os8 is a python script that uses the python expect
-library that is capable of handling complex dialogues with commands.
+library that is capable of handling complex dialogs with commands.
 
 However, sometimes debugging these scripts is challenging because if you
 fall out of step with what is `expect`ed, the expect engine will get confused.
 The os8-run command hangs for a while and then times out with a big python backtrace.
 
-calling os8-run with `-v` gives verbose output that enables you to watch
+calling `os8-run` with `-v` gives verbose output that enables you to watch
 every step of the script running.  Unfortunately, the output often echos characters
 twice in a somewhat confusing cacophony.
 
@@ -49,8 +49,6 @@ This is an explicit statement to end processing of our script.
 ## `mount` -- Mount an image file as a SIMH attached device.
 
 `mount` _simh-dev_ _image-file_ [_option_ ...]
-
-The options are: `must-exist` | `no-overwrite` | `read-only` | `copy_scratch`
 
 ### `mount` Options
 
@@ -199,7 +197,7 @@ How do you implement an exception to an exception? Like this:
 * configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting between otherwise incompatible configurations of SIMH and OS/8 device drivers.
 
 
-#TODOs:
+## TODOs:
 
 * Create a `resume` command that does not reboot OS/8
 * Allow underscore and dash in mount options.
