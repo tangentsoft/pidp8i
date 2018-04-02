@@ -8,8 +8,8 @@ the design of a generalized script runner for OS/8 under simh emerged.
 `os8-run` is a general script running facility that can:
 
 * attach desired system images and boot them.
-** scratch copies of read-only images can be created and booted.
-** an existing image can be copied for use.
+    * scratch copies of read-only images can be created and booted.
+    * an existing image can be copied for use.
 * copy files into the running OS/8 from the POSIX environment running SIMH.
 * copy files from the running OS/8 environment to the POSIX environment running SIMH.
 * run any OS/8 command as long as it returns immediately to command level, including BATCH scripts.
@@ -61,5 +61,3 @@ Copyright © 2017 by Bill Cattey. Licensed under the terms of
 [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
-[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extensions.md
-
