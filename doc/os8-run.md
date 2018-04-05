@@ -36,22 +36,18 @@ twice in a somewhat confusing cacophony.
 
 ## Usage
 
-> os8-run [-h] [-d] [-v] [--disable-ba] [--enable-focal69]
->> [--disable-uwfocal] [--disable-macrel] [--disable-dcp]
->> [--disable-k12] [--disable-cc8] [--disable-crt]
->> [--disable-advent] [--disable-fortran-ii]
->> [--disable-fortran-iv] [--disable-init] [--enable-music]
->>  [--disable-chess] [--enable-vtedit] [--disable-lcmod]
->> [--enable ENABLE] [--disable DISABLE]
->> _script_file_ ...
+os8-run [-h] [-d] [-v] [--disable-ba] [--enable-focal69]
+> [--disable-uwfocal] [--disable-macrel] [--disable-dcp]
+> [--disable-k12] [--disable-cc8] [--disable-crt]
+> [--disable-advent] [--disable-fortran-ii]
+> [--disable-fortran-iv] [--disable-init] [--enable-music]
+> [--disable-chess] [--enable-vtedit] [--disable-lcmod]
+> [--enable ENABLE] [--disable DISABLE]
+> _script_file_ ...
 
-| --------------------- | ------------------------------------------------------------- |
-|                       | *Positional Arguments*
-| --------------------- | ------------------------------------------------------------- |
+|                       | **Positional Arguments**
 | script_file           | One or more script files to run
-| --------------------- | ------------------------------------------------------------- |
-|                       | *Optional Arguments
-| --------------------- | ------------------------------------------------------------- |
+|                       | **Optional Arguments**
 | -h, --help            | show this help message and exit
 | -d, --debug           | add extra debugging output, normally suppressed
 | -v, --verbose         | verbose SIMH output instead of progress messages
