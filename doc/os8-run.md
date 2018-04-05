@@ -36,44 +36,45 @@ twice in a somewhat confusing cacophony.
 
 ## Usage
 
-os8-run [-h] [-d] [-v] [--disable-ba] [--enable-focal69]
-> [--disable-uwfocal] [--disable-macrel] [--disable-dcp]
-> [--disable-k12] [--disable-cc8] [--disable-crt]
-> [--disable-advent] [--disable-fortran-ii]
-> [--disable-fortran-iv] [--disable-init] [--enable-music]
-> [--disable-chess] [--enable-vtedit] [--disable-lcmod]
-> [--enable ENABLE] [--disable DISABLE]
-> _script_file_ ...
+> `os8-run` [`-h`] [`-d`] [`-v`] [`--disable-ba` ] [`--enable-focal69`]
+> > [`--disable-uwfocal`] [`--disable-macrel`] [`--disable-dcp`]
+> > [`--disable-k12`] [`--disable-cc8`] [`--disable-crt`]
+> > [`--disable-advent`] [`--disable-fortran-ii`]
+> > [`--disable-fortran-iv`] [`--disable-init`] [`--enable-music`]
+> > [`--disable-chess`] [`--enable-vtedit`] [`--disable-lcmod`]
+> > [`--enable` _ENABLE_] [`--disable` _DISABLE_]
+> > _script_file_ ...
 
-|                       | **Positional Arguments**
-| script_file           | One or more script files to run
-|                       | **Optional Arguments**
-| -h, --help            | show this help message and exit
-| -d, --debug           | add extra debugging output, normally suppressed
-| -v, --verbose         | verbose SIMH output instead of progress messages
-| --disable-ba          | Leave *.BA BASIC games and demos off the built OS/8 RK05 image
-| --enable-focal69      | Add FOCAL 69 to the built OS/8 RK05 image
-| --disable-uwfocal     | Leave U/W FOCAL (only) off the built OS/8 RK05 image
-| --disable-macrel      | Leave the MACREL assembler off the built OS/8 RK05 image
-| --disable-dcp         | Leave the DCP disassembler off the built OS/8 RK05 image
-| --disable-k12         | Leave 12-bit Kermit off the built OS/8 RK05 image
-| --disable-cc8         | Leave the native OS/8 CC8 compiler off the built OS/8 RK05 image
-| --disable-crt         | Leave CRT-style rubout processing off the built OS/8 RK05 image
-| --disable-advent      | Leave Adventure off the built OS/8 RK05 image
-| --disable-fortran-ii  | Leave FORTRAN II off the built OS/8 RK05 image
-| --disable-fortran-iv  | Leave FORTRAN IV off the built OS/8 RK05 image
-| --disable-init        | Leave the OS/8 INIT message off the built OS/8 RK05 image
-| --enable-music        | Add *.MU files to the built OS/8 RK05 image
-| --disable-chess       | Leave the CHECKMO-II game of chess off the built OS/8 RK05 image
-| --enable-vtedit       | Add the TECO VTEDIT setup to the built OS/8 RK05 image
-| --disable-lcmod       | disable the OS/8 command upcasing patch; best set when
-|                       | SIMH is set to tti ksr mode
-| --enable ENABLE       | Execute script code within 'begin enable ENABLE' block.
-| --disable DISABLE     | Ignore and do not execute script code within 'begin
-|                       | not-disabled DISABLE' block.
+|                           | **Positional Arguments**
+| _script_file_             | One or more script files to run
+|                           | **Optional Arguments**
+| `-h`                      | show this help message and exit
+| `-d`                      | add extra debugging output, normally suppressed
+| `-v`                      | verbose SIMH output instead of progress messages
+| `--disable-ba`            | Leave *.BA `BASIC` games and demos off the built OS/8 RK05 image
+| `--enable-focal69`        | Add `FOCAL69` to the built OS/8 RK05 image
+| `--disable-uwfocal`       | Leave U/W FOCAL (only) off the built OS/8 RK05 image
+| `--disable-macrel`        | Leave the `MACREL` assembler off the built OS/8 RK05 image
+| `--disable-dcp`           | Leave the `DCP` disassembler off the built OS/8 RK05 image
+| `--disable-k12`           | Leave 12-bit Kermit off the built OS/8 RK05 image
+| `--disable-cc8`           | Leave the native OS/8 CC8 compiler off the built OS/8 RK05 image
+| `--disable-crt`           | Leave CRT-style rubout processing off the built OS/8 RK05 image
+| `--disable-advent`        | Leave Adventure off the built OS/8 RK05 image
+| `--disable-fortran-ii`    | Leave FORTRAN II off the built OS/8 RK05 image
+| `--disable-fortran-iv`    | Leave FORTRAN IV off the built OS/8 RK05 image
+| `--disable-init`          | Leave the OS/8 INIT message off the built OS/8 RK05 image
+| `--enable-music`          | Add *.MU files to the built OS/8 RK05 image
+| `--disable-chess`         | Leave the CHECKMO-II game of chess off the built OS/8 RK05 image
+| `--enable-vtedit`         | Add the TECO VTEDIT setup to the built OS/8 RK05 image
+| `--disable-lcmod`         | disable the OS/8 command upcasing patch; best set when
+|                           | SIMH is set to `tti ksr` mode
+| `--enable ENABLE`         | Execute script code within `begin enable` _ENABLE_ block.
+| `--disable DISABLE`       | Ignore and do not execute script code within `begin
+|                           | not-disabled` _DISABLE_ block.
 
+## Script language commands
 
-## `done` -- Script is done.
+### `done` -- Script is done.
 
 This is an explicit statement to end processing of our script.
 
@@ -81,15 +82,15 @@ This is an explicit statement to end processing of our script.
 * All attached SIMH image files are gracefully detached with any pending writes completed.
 * SIMH is gracefully shut down with a `quit` command.
 
-## `include` -- Execute a subordinate script file.
+### `include` -- Execute a subordinate script file.
 
 `include` _script-file-path_
 
-## `mount` -- Mount an image file as a SIMH attached device.
+### `mount` -- Mount an image file as a SIMH attached device.
 
 `mount` _simh-dev_ _image-file_ [_option_ ...]
 
-### `mount` Options
+#### `mount` Options
 
 | `must-exist`   | _image-file_ must exist, otherwise abort the attach.
 | `no-overwrite` | if _image-file_ already exists, create a copy with a version number suffix.
@@ -104,7 +105,7 @@ This is an explicit statement to end processing of our script.
 |                | use the `copy_scratch` option.  When the script is done the scratch version
 |                | is deleted.
          
-### Examples
+#### `mount` Examples
 
 Mount the `os8v3d-patched.rk05` image, which must exist, on SIMH `rk0`.
 
@@ -134,18 +135,18 @@ and `system_2.tu56` were found the new file would be called `system_3.tu56`, and
 The `no-overwrite` option turns out to be extremely helpful in experimenting with
 scripts that may or may not work the first time.
 
-## umount -- Unmount a SIMH attached device image.
+### umount -- Unmount a SIMH attached device image.
 
-## `boot` -- Boot the named SIMH device.
+### `boot` -- Boot the named SIMH device.
 
 `boot` _simh-device_
 
 If you attempt to boot a device that is not attached the expect engine
 will get confused.
 
-## Other commands to continue execution in OS/8.
+### Other commands to continue execution in OS/8.
 
-## `copy` -- Make a copy of a POSIX file
+### `copy` -- Make a copy of a POSIX file
 
 A common activity for os8-run is to make a copy of an image file,
 and edit the image file.  To obviate the need for an external driver
@@ -155,7 +156,7 @@ Adding an option to `mount` was considered, but in the interests
 of allowing an arbitrary name for the modified image, a separate
 command was used.
 
-## `copy_into` -- Copy POSIX file *into* OS/8 environment
+### `copy_into` -- Copy POSIX file *into* OS/8 environment
 
 `copy_into` _posix-path_ [_option_]
 
@@ -175,11 +176,11 @@ Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `IN
 
      copy_into ../media/os8/init.cm
 
-## `copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
+### `copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
 
 Copy files from the running OS/8 environment to the POSIX environment running SIMH.
 
-## `os8` -- Run arbitrary OS/8 command
+### `os8` -- Run arbitrary OS/8 command
 
 This command should be used ONLY for OS/8 commands that return immediately to command
 level.  `BATCH` scripts do this, and they can be run from here.
@@ -190,16 +191,16 @@ The rest of the line is passed uninterpreted to the OS/8 keyboard monitor with
 the expectation that the command will return to the monitor command level and
 the command prompt, "`.`" will result.
 
-## `pal8` -- Run OS/8 PAL-8 assembler
+### `pal8` -- Run OS/8 PAL-8 assembler
 
 * run `PAL8` with either a 3 argument form that produces a listing file, or a 2 argument form that does not.
 
-## `begin` / `end` -- Complex conditionals and sub-command blocks
+### `begin` / `end` -- Complex conditionals and sub-command blocks
 
 * run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the command decoder.
 * run 'BUILD' with arbitrarily complex configuration scripts, including a `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
 
-## `enable` / `disable` -- Set an enablement or disablement
+### `enable` / `disable` -- Set an enablement or disablement
 
 The `enable` and `disable` commands allow dynamic control over conditional
 execution in `begin` / `end` blocks.
@@ -227,11 +228,11 @@ How do you implement an exception to an exception? Like this:
     patch ../media/os8/patches/FUTIL-31.21.2M-v7D.patch8
     end not-disabled futil_patch
 
-## `patch` -- Run a patch file
+### `patch` -- Run a patch file
 
 * run of patch scripts that will use `ODT` or `FUTIL` to patch the booted system image.
 
-## `configure` -- Perform certain SIMH configuration activities.
+### `configure` -- Perform certain SIMH configuration activities.
 
 * configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting between otherwise incompatible configurations of SIMH and OS/8 device drivers.
 
