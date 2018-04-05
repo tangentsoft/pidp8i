@@ -1,38 +1,81 @@
 # `os8-run` Script Runner for OS/8 under simh
 
 After having done a lot of exploring of how to create system images,
-the design of a generalized script runner for OS/8 under simh emerged.
+the design of a generalized script runner for OS/8 under SIMH emerged.
 
 ## Overview
 
 `os8-run` is a general script running facility that can:
 
 * attach desired system images and boot them.
-    * scratch copies of read-only images can be created and booted.
-    * an existing image can be copied for use.
+    * Scratch copies of read-only images can be created and booted.
+    * An existing image can be copied for use.
 * copy files into the running OS/8 from the POSIX environment running SIMH.
 * copy files from the running OS/8 environment to the POSIX environment running SIMH.
-* run any OS/8 command as long as it returns immediately to command level, including BATCH scripts.
-* run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the command decoder.
+* run any OS/8 command as long as it returns immediately to the OS/8 Keyboard Monitor. This includes BATCH scripts.
+* run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the OS/8 Command Decoder.
 * run `PAL8` with either a 3 argument form that produces a listing file, or a 2 argument form that does not.
-* run 'BUILD' with arbitrarily complex configuration scripts, including a `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
+* run 'BUILD' with arbitrarily complex configuration scripts, including the `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
 * configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting between otherwise incompatible configurations of SIMH and OS/8 device drivers.
-* include script files so that common code blocks can be written once in an external included script.
-* run of patch scripts that will use `ODT` or `FUTIL` to patch the booted system image.
+* run included script files so that common code blocks can be written once in an external included script.
+* run of patch scripts that will use `ODT` or `FUTIL` to patch files in the booted system image.
 * perform actions in a script conditional on feature enablement matching an arbitrary keyword.
 * perform actions in a script unless a disablement keyword has been specified.
 * set enable or disable keywords anywhere in the execution of a script.
 
-Under the covers, run-os8 is a python script that uses the python expect
+Under the covers, `run-os8` is a python script that uses the python expect
 library that is capable of handling complex dialogs with commands.
 
-However, sometimes debugging these scripts is challenging because if you
+Sometimes debugging these scripts is challenging because if you
 fall out of step with what is `expect`ed, the expect engine will get confused.
-The os8-run command hangs for a while and then times out with a big python backtrace.
+The `os8-run` command hangs for a while and then times out with a big python backtrace.
 
 calling `os8-run` with `-v` gives verbose output that enables you to watch
 every step of the script running.  Unfortunately, the output often echos characters
 twice in a somewhat confusing cacophony.
+
+## Usage
+
+> os8-run [-h] [-d] [-v] [--disable-ba] [--enable-focal69]
+>> [--disable-uwfocal] [--disable-macrel] [--disable-dcp]
+>> [--disable-k12] [--disable-cc8] [--disable-crt]
+>> [--disable-advent] [--disable-fortran-ii]
+>> [--disable-fortran-iv] [--disable-init] [--enable-music]
+>>  [--disable-chess] [--enable-vtedit] [--disable-lcmod]
+>> [--enable ENABLE] [--disable DISABLE]
+>> _script_file_ ...
+
+| --------------------- | ------------------------------------------------------------- |
+|                       | *Positional Arguments*
+| --------------------- | ------------------------------------------------------------- |
+| script_file           | One or more script files to run
+| --------------------- | ------------------------------------------------------------- |
+|                       | *Optional Arguments
+| --------------------- | ------------------------------------------------------------- |
+| -h, --help            | show this help message and exit
+| -d, --debug           | add extra debugging output, normally suppressed
+| -v, --verbose         | verbose SIMH output instead of progress messages
+| --disable-ba          | Leave *.BA BASIC games and demos off the built OS/8 RK05 image
+| --enable-focal69      | Add FOCAL 69 to the built OS/8 RK05 image
+| --disable-uwfocal     | Leave U/W FOCAL (only) off the built OS/8 RK05 image
+| --disable-macrel      | Leave the MACREL assembler off the built OS/8 RK05 image
+| --disable-dcp         | Leave the DCP disassembler off the built OS/8 RK05 image
+| --disable-k12         | Leave 12-bit Kermit off the built OS/8 RK05 image
+| --disable-cc8         | Leave the native OS/8 CC8 compiler off the built OS/8 RK05 image
+| --disable-crt         | Leave CRT-style rubout processing off the built OS/8 RK05 image
+| --disable-advent      | Leave Adventure off the built OS/8 RK05 image
+| --disable-fortran-ii  | Leave FORTRAN II off the built OS/8 RK05 image
+| --disable-fortran-iv  | Leave FORTRAN IV off the built OS/8 RK05 image
+| --disable-init        | Leave the OS/8 INIT message off the built OS/8 RK05 image
+| --enable-music        | Add *.MU files to the built OS/8 RK05 image
+| --disable-chess       | Leave the CHECKMO-II game of chess off the built OS/8 RK05 image
+| --enable-vtedit       | Add the TECO VTEDIT setup to the built OS/8 RK05 image
+| --disable-lcmod       | disable the OS/8 command upcasing patch; best set when
+|                       | SIMH is set to tti ksr mode
+| --enable ENABLE       | Execute script code within 'begin enable ENABLE' block.
+| --disable DISABLE     | Ignore and do not execute script code within 'begin
+|                       | not-disabled DISABLE' block.
+
 
 ## `done` -- Script is done.
 
