@@ -36,17 +36,10 @@ twice in a somewhat confusing cacophony.
 
 ## Usage
 
-> `os8-run` [`-h`] [`-d`] [`-v`] [`--disable-ba` ] [`--enable-focal69`]
-> > [`--disable-uwfocal`] [`--disable-macrel`] [`--disable-dcp`]
-> > [`--disable-k12`] [`--disable-cc8`] [`--disable-crt`]
-> > [`--disable-advent`] [`--disable-fortran-ii`]
-> > [`--disable-fortran-iv`] [`--disable-init`] [`--enable-music`]
-> > [`--disable-chess`] [`--enable-vtedit`] [`--disable-lcmod`]
-> > [`--enable` _ENABLE_] [`--disable` _DISABLE_]
-> > _script_file_ ...
+> `os8-run` [`-h`] [`-d`] [`-v`] [_optional_arguments_ ...]  _script-file_ ...
 
 |                           | **Positional Arguments**
-| _script_file_             | One or more script files to run
+| _script-file_            | One or more script files to run
 |                           | **Optional Arguments**
 | `-h`                      | show this help message and exit
 | `-d`                      | add extra debugging output, normally suppressed
@@ -72,7 +65,41 @@ twice in a somewhat confusing cacophony.
 | `--disable DISABLE`       | Ignore and do not execute script code within `begin
 |                           | not-disabled` _DISABLE_ block.
 
-## Script language commands
+## Command contexts
+
+It is important to be mindful of the different command contexts when
+running scripts under `os8-run`:
+
+* SIMH context:  Commands are interpreted by SIMH command processor.
+* OS/8 context:  Commands are interpreted by the OS/8 Keyboard Monitor.
+* `begin` / `end` blocks:  These create special interpreter loops with their
+own rules.
+
+Examples of `begin` / `end` blocks:
+
+* Command Decoder:  Programs like `ABSLDR` and `FOTP` call the OS/8 Command Decoder
+to get file specifications and operate on them. `os8-run` uses a `begin` / `end` block to
+define set of files to feed to the Command Decoder and to indicate the last file, and
+a return to the OS/8 context.
+* OS/8 `BUILD`: Commands are passed to `BUILD` and output is interpreted.  The `end`
+of the block signifies the end of the `BUILD` program and a return to the OS/8 context.
+* Enablement Context: Blocks of script code, delimited by a `begin` / `block` can be
+either executed or ignored depending on the key word that is enabled when that block
+is encountered.  This context is very interesting and is more fully documented below.
+
+Commands such as `os8`, `pal8`, and `begin ABSLDR` only make sense in an OS/8
+context.  If a 	`boot` command to start OS/8 or a SIMH command to resume a
+booted OS/8 session is not issued, the commands will be sent to SIMH
+where they will not be understood.
+
+Commands such as `mount`, `copy`, `copy-into` can be run wile in the OS/8 context.
+They will cause an escape to the SIMH command interpreter.  To resume OS/8,
+a `boot` or `resume` or `simh cont 7600` command will need to be issued.
+
+The `begin` / `end` blocks contain their own interpreter loops and do not
+allow commands outside their particular context.
+
+## SIMH commands
 
 ### `done` -- Script is done.
 
@@ -89,6 +116,9 @@ This is an explicit statement to end processing of our script.
 ### `mount` -- Mount an image file as a SIMH attached device.
 
 `mount` _simh-dev_ _image-file_ [_option_ ...]
+
+If the `mount` command is issued when you in the OS/8 context, you will
+need to explicitly resume OS/8.
 
 #### `mount` Options
 
@@ -141,16 +171,36 @@ scripts that may or may not work the first time.
 
 `boot` _simh-device_
 
+Boot OS/8 on the named _simh-device_ and enter the OS/8 run-time context.
+
 If you attempt to boot a device that is not attached the expect engine
 will get confused.
 
-### Other commands to continue execution in OS/8.
+### `simh` -- Go to SIMH level and run a command.
+
+`simh` _command-line_
+
+When you execute certain commands that interact with SIMH
+such as `mount`, you may break out of OS/8 and need to `boot`, `resume`, or
+`continue` execution.
+
+    simh go 7600
+
+is a perfectly reasonable way to return to the OS/8 context.
+
+This command may be removed in preference to creation of a `resume` command.
+The `umount` command is intended to eliminate the need for
+
+    simh detach _simh-device_
 
 ### `copy` -- Make a copy of a POSIX file
 
 A common activity for os8-run is to make a copy of an image file,
 and edit the image file.  To obviate the need for an external driver
 that would create the copy, we added a copy command.
+
+**Note:** If you were running OS/8, you will be escaped into SIMH context
+and need to `boot` or `resume`.
 
 Adding an option to `mount` was considered, but in the interests
 of allowing an arbitrary name for the modified image, a separate
@@ -170,6 +220,9 @@ The option is either empty or exactly one of
 
 If no option is specified, `/A` is assumed.
 
+**Note:** If you were running OS/8, you will be escaped into SIMH context
+and need to `boot` or `resume`.
+
 Example:
 
 Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `INIT.CM`:
@@ -179,6 +232,9 @@ Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `IN
 ### `copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
 
 Copy files from the running OS/8 environment to the POSIX environment running SIMH.
+
+**Note:** If you were running OS/8, you will be escaped into SIMH context
+and need to `boot` or `resume`.
 
 ### `os8` -- Run arbitrary OS/8 command
 
@@ -234,7 +290,9 @@ How do you implement an exception to an exception? Like this:
 
 ### `configure` -- Perform certain SIMH configuration activities.
 
-* configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting between otherwise incompatible configurations of SIMH and OS/8 device drivers.
+* configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting
+between otherwise incompatible configurations of SIMH and OS/8 device drivers.
+
 
 
 ## TODOs:
@@ -243,6 +301,10 @@ How do you implement an exception to an exception? Like this:
 * Allow underscore and dash in mount options.
 * Make `mount` failure abort the script.
 * What happens if we don't have a done command in the script?
+* Add detection of SIMH context to the various OS/8 commands and have them blow out
+if we are not in OS/8 context.
+* Make sure the SIMH context commands really don't blow out when OS/8 is booted.
+* Catch the boot of non-mounted device and quit the script.
 
 
 
