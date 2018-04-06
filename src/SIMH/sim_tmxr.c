@@ -929,7 +929,7 @@ if (lp->destination || lp->port || lp->txlogname) {
             char portname[CBUFSIZE];
 
             get_glyph_nc (lp->destination, portname, ';');
-            sprintf (growstring(&tptr, 25 + strlen (lp->destination)), ",Connect=%s%s%s", portname, strcmp("9600-8N1", lp->serconfig) ? ";" : "", strcmp("9600-8N1", lp->serconfig) ? lp->serconfig : "");
+            sprintf (growstring(&tptr, 25 + strlen (lp->destination)), ",Connect=%s%s%s", portname, strcmp("9600-8N1", lp->serconfig ? lp->serconfig : "") ? ";" : "", strcmp("9600-8N1", lp->serconfig ? lp->serconfig : "") ? lp->serconfig : "");
             }
         else
             sprintf (growstring(&tptr, 25 + strlen (lp->destination)), ",Connect=%s%s", lp->destination, ((lp->mp->notelnet != lp->notelnet) && (!lp->datagram)) ? (lp->notelnet ? ";notelnet" : ";telnet") : "");
@@ -1430,7 +1430,7 @@ t_stat tmxr_set_port_speed_control (TMXR *mp)
 {
 int i;
 
-if (mp->uptr && !(mp->uptr->flags & UNIT_ATT))
+if (!mp->port_speed_control && mp->uptr && !(mp->uptr->flags & UNIT_ATT))
     return sim_messagef (SCPE_ALATT, "Can't change speed mode while attached.\n:");
 mp->port_speed_control = TRUE;
 for (i=0; i<mp->lines; ++i)
@@ -1448,7 +1448,7 @@ t_stat tmxr_clear_port_speed_control (TMXR *mp)
 {
 int i;
 
-if (mp->uptr && !(mp->uptr->flags & UNIT_ATT))
+if (mp->port_speed_control && mp->uptr && !(mp->uptr->flags & UNIT_ATT))
     return sim_messagef (SCPE_ALATT, "Can't change speed mode while attached.\n:");
 mp->port_speed_control = FALSE;
 for (i=0; i<mp->lines; ++i)
@@ -2139,6 +2139,9 @@ tmxr_debug_trace_line (lp, "tmxr_putc_ln()");
     if (lp->txbpi == lp->txbpr)                           \
         lp->txbpr = (1+lp->txbpr)%lp->txbsz, ++lp->txdrp; \
     }
+if ((lp->xmte == 0) && (TXBUF_AVAIL(lp) > 1) &&
+    ((lp->txbps == 0) || (lp->txnexttime <= sim_gtime ())))
+    lp->xmte = 1;                                       /* enable line transmit */
 if ((lp->txbfd && !lp->notelnet) || (TXBUF_AVAIL(lp) > 1)) {/* room for char (+ IAC)? */
     if ((TN_IAC == (u_char) chr) && (!lp->notelnet))    /* char == IAC in telnet session? */
         TXBUF_CHAR (lp, TN_IAC);                        /* stuff extra IAC char */
@@ -2252,7 +2255,7 @@ for (i = 0; i < mp->lines; i++) {                       /* loop thru lines */
 #endif
         if ((lp->xmte == 0) && 
             ((lp->txbps == 0) ||
-             (lp->txnexttime >= sim_gtime ())))
+             (lp->txnexttime <= sim_gtime ())))
             lp->xmte = 1;                               /* enable line transmit */
         }
     }                                                   /* end for */
@@ -2471,6 +2474,8 @@ if (lp->rxbpsfactor == 0.0)
 lp->txbps = lp->rxbps;
 lp->txdelta = lp->rxdelta;
 lp->txnexttime = lp->rxnexttime;
+if (lp->o_uptr)
+    lp->o_uptr->wait = lp->txdelta;
 return SCPE_OK;
 }
 
@@ -3836,7 +3841,8 @@ else {
     for (i=0; i<tmxr_open_device_count; ++i) {
         TMXR *mp = tmxr_open_devices[i];
         TMLN *lp;
-		UNIT *o_uptr = mp->ldsc[0].o_uptr;
+        UNIT *o_uptr = mp->ldsc[0].o_uptr;
+        UNIT *uptr = mp->ldsc[0].uptr;
         char *attach;
 
         fprintf(st, "Multiplexer device: %s", (mp->dptr ? sim_dname (mp->dptr) : ""));
@@ -3855,10 +3861,18 @@ else {
         if (mp->buffered)
             fprintf(st, ", Buffered=%d", mp->buffered);
         for (j = 1; j < mp->lines; j++)
-			if (o_uptr != mp->ldsc[j].o_uptr)
-				break;
-		if (j == mp->lines)
-			fprintf(st, ", Output Unit: %s", sim_uname (o_uptr));
+            if (o_uptr != mp->ldsc[j].o_uptr)
+                break;
+        if (j == mp->lines)
+            fprintf(st, ", Output Unit: %s", sim_uname (o_uptr));
+        for (j = 1; j < mp->lines; j++)
+            if (uptr != mp->ldsc[j].uptr)
+                break;
+        if (j == mp->lines) {
+            fprintf(st, ",\n    Input Polling Unit: %s", sim_uname (uptr));
+            if (uptr != mp->uptr)
+                fprintf(st, ", Connection Polling Unit: %s", sim_uname (mp->uptr));
+            }
         attach = tmxr_mux_attach_string (NULL, mp);
         if (attach)
             fprintf(st, ",\n    attached to %s, ", attach);
@@ -4034,12 +4048,15 @@ for (i=0; i<mp->lines; i++) {
         }
     if ((uptr == lp->o_uptr) &&         /* output completion unit? */
         (lp->txbps)          &&         /* while rate limiting */
-        (tmxr_tqln(lp))) {              /* with queued output data */
+        (lp->txnexttime)) {             /* with queued output data */
         if (lp->txnexttime > sim_gtime_now)
             due = (int32)(lp->txnexttime - sim_gtime_now);
         else
             due = sim_processing_event ? 1 : 0;     /* avoid potential infinite loop if called from service routine */
-        sooner = MIN(sooner, due);
+        if (i == 0)
+            sooner = due;
+        else
+            sooner = MIN(sooner, due);
         }
     }
 return sooner;
@@ -4059,10 +4076,14 @@ if (sooner != interval) {
     return _sim_activate (uptr, sooner);                /* Handle the busy case */
     }
 #if defined(SIM_ASYNCH_MUX)
-if (!sim_asynch_enabled)
+if (!sim_asynch_enabled) {
+    sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s after %d instructions\n", sim_uname (uptr), interval);
     return _sim_activate (uptr, interval);
+    }
+sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s asynchronously instead of %d instructions\n", sim_uname (uptr), interval);
 return SCPE_OK;
 #else
+sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s after %d instructions\n", sim_uname (uptr), interval);
 return _sim_activate (uptr, interval);
 #endif
 }
@@ -4085,17 +4106,21 @@ if (!(uptr->dynflags & UNIT_TM_POLL))
 sooner = _tmxr_activate_delay (uptr, 0x7FFFFFFF);
 if (sooner != 0x7FFFFFFF) {
     if (sooner < 0) {
-sooner = _tmxr_activate_delay (uptr, 0x7FFFFFFF);
+        sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s for %u usecs produced overflow interval %d instructions, sceduling for %d instructions\n", sim_uname (uptr), usecs_walltime, sooner, 0x7FFFFFFF);
+        sooner = _tmxr_activate_delay (uptr, 0x7FFFFFFF);   /* Breakpoint here on unexpected value */
         }
     sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s after %d instructions rather than %u usecs\n", sim_uname (uptr), sooner, usecs_walltime);
     return _sim_activate (uptr, sooner);                        /* Handle the busy case directly */
     }
 #if defined(SIM_ASYNCH_MUX)
-if (!sim_asynch_enabled)
+if (!sim_asynch_enabled) {
+    sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s after %u usecs\n", sim_uname (uptr), usecs_walltime);
     return _sim_activate_after (uptr, (double)usecs_walltime);
     }
+sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s asynchronously instead of %u usecs\n", sim_uname (uptr), usecs_walltime);
 return SCPE_OK;
 #else
+sim_debug (TIMER_DBG_MUX, &sim_timer_dev, "scheduling %s after %u usecs\n", sim_uname (uptr), usecs_walltime);
 return _sim_activate_after (uptr, (double)usecs_walltime);
 #endif
 }
@@ -4506,7 +4531,7 @@ if ((lp->sock) || (lp->connecting)) {                   /* tcp connection? */
         fprintf (st, "Connection from IP address %s\n", lp->ipad);
     }
 else
-    if (lp->destination)                                /* remote connection? */
+    if ((lp->destination) && (!lp->serport))            /* remote connection? */
         fprintf (st, "Connecting to remote port %s\n", lp->destination);/* print port name */
 if (lp->sock) {
     char *sockname, *peername;
@@ -5191,5 +5216,11 @@ if ((dptr) && (dbits & dptr->dctrl)) {
         else
             sim_debug (dbits, dptr, "%s %d bytes '%s'\n", msg, bufsize, tmxr_debug_buf);
         }
+    if ((lp->rxnexttime != 0.0) || (lp->txnexttime != 0.0))
+        if (lp->rxnexttime != 0.0)
+            sim_debug (dbits, dptr, " rxnexttime=%.0f", lp->rxnexttime);
+        if (lp->txnexttime != 0.0)
+            sim_debug (dbits, dptr, " txnexttime=%.0f", lp->txnexttime);
+        sim_debug (dbits, dptr, "\n");
     }
 }
