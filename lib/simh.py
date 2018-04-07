@@ -276,10 +276,29 @@ class simh:
   #
   # The prompt string is passed in because OS/8 has several different
   # prompt types.
+  #
+  # A previous version of this routine attempted to detect when
+  # OS/8 was suspended, and we were in the SIMH context.
+  # Unfortunately, re-synchronizing OS/8 with python expect requires
+  # provoking an additional prompt.
+  #
+  # Although it would be expected that sending a character delete
+  # or line delete would provoke a prompt, this does not work.
+  # At the Keyboard Monitor command level, pausing after sending
+  # the SIMH 'continue' command, then sending ^C, then pausing again
+  # then sending \n\r does provoke a command prompt.
+  # However, if you had escaped to SIMH from inside another program,
+  # that command sequence would kill your program and return you to
+  # the OS/8 keyboard monitor.
+  #
+  # Therefore, os8_send_cmd requires you to be running OS/8, and does
+  # not presume to try and get you there from SIMH.
 
   def os8_send_cmd (self, prompt, line):
-    if self._context == 'simh': self.send_cmd ('cont')
-
+    if self._context != 'os8': 
+      print "OS/8 is not running. Cannot execute: " + line 
+      return
+    
     self._child.expect ("\n%s$" % prompt)
     self.os8_send_line (line)
 
@@ -522,6 +541,36 @@ class simh:
       self.os8_kbd_delay ()
 
 
+  #### os8_resume #######################################################
+  # Resume OS/8.
+  #
+  # It would be nice if we could just send  the "cont" command
+  # and have python expect and OS/8 synch right up.
+  # But so far we have not figured out how to do that.
+  # To resume OS/8 from SIMH we need to provoke a prompt.
+  # Typing a rubout or ^U at a SIMH terminal session does this.
+  # But not when SIMH is run under python expect.
+  # We don't know why.
+  #
+  # boot works
+  # go 7600 works
+  # ^C <pause> \n\r works.
+  #
+  # The resume command uses the ^C method as the least disruptive
+  # to system state.
+
+  def os8_resume (self):
+    if self._context == "os8": return   # Already running.
+    
+    self.simh.send_cmd("cont")   # sets os8 context for us.
+
+    # Now provoke a keyboard monitor prompt.
+    self.simh.os8_kbd_delay()
+    self.simh._child.sendcontrol('c')
+    self.simh.os8_kbd_delay()
+    self.simh.os8_send_str('\r\n')
+  
+
   #### os8_restart #######################################################
   # Called while in the SIMH command prompt, this restarts OS/8.
   #
@@ -599,7 +648,13 @@ class simh:
   # If we are not in simh context, send ^e set context "simh"
   #    and hope for the best.
   # If we issue a command that enters os8 context, set context "os8".
-
+  # Note exiting out of OS/8 into the SIMH context is a bit of a
+  # trap door. Resynchronizing with python expect requires provoking
+  # a prompt, and prompts are context specific.
+  # Perhaps we should require separate and explicit commands to
+  # escape to SIMH. But for now, just be careful to use os8_resume
+  # after calling send_cmd.
+  
   def send_cmd (self, cmd):
     if self._context == "os8":
       self._child.expect ("\n\\.$")

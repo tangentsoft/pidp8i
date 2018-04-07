@@ -486,6 +486,13 @@ class os8script:
       print "copy command failed with IOError: " + str(e)
       
   
+  #### resume_command #############################################
+  # Call the os8_resume in simh to resume OS/8.
+
+  def resume_command (self, line, script_file):
+    self.simh.os8_resume()
+
+  
   #### patch_command ##############################################
   # Read the named patch file and perform its actions.
 
@@ -527,6 +534,7 @@ class os8script:
   #       format: /A | /I | /B
   # copy <from-file> <to-file>
   # patch <patch-file>
+  # resume
   # done
   # begin <sub-command> <os8-path>
   # end <sub-command>
@@ -555,6 +563,7 @@ class os8script:
                 "copy_into": self.copy_into_command,
                 "copy_from": self.copy_from_command,
                 "copy": self.copy_command,
+                "resume": self.resume_command,
                 "patch": self.patch_command}
   
     try:
@@ -875,7 +884,7 @@ class os8script:
   
     attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
   
-    if self.verbose: print attach_comm
+    if self.verbose: print "mount: " + attach_comm
     self.simh.send_cmd(attach_comm)
     
   
@@ -891,8 +900,9 @@ class os8script:
   
   def os8_command (self, line, script_file):
     os8_comm = line
-    if self.verbose: print os8_comm
+    if self.verbose: print "os8_command: " + os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
+
   
   #### pal8_command ####################################################
   # The "pal8" script command comes in two forms:

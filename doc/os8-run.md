@@ -36,7 +36,7 @@ twice in a somewhat confusing cacophony.
 
 ## Usage
 
-> `os8-run` [`-h`] [`-d`] [`-v`] [_optional_arguments_ ...]  _script-file_ ...
+> `os8-run` [`-h`] [`-d`] [`-v`] [_optional-arguments_ ...]  _script-file_ ...
 
 |                           | **Positional Arguments**
 | _script-file_            | One or more script files to run
@@ -95,6 +95,17 @@ where they will not be understood.
 Commands such as `mount`, `copy`, `copy-into` can be run wile in the OS/8 context.
 They will cause an escape to the SIMH command interpreter.  To resume OS/8,
 a `boot` or `resume` or `simh cont 7600` command will need to be issued.
+
+**Design consideration:** It may be that commands should take internal responsibility
+for validating and setting their own context.  We could keep internal states of:
+booted = True, as well as using the simh/os8 context settings to make things
+more automatic:
+
+No OS/8 context commands allowed until `booted=True`
+SIMH context programs can escape to simh.
+Since we do command loops within begin/end blocks, we can assume that
+it is ALWAYS ok to ^C or go 7600 or boot to OS/8 command level, as long
+as the boot command succeeds.
 
 The `begin` / `end` blocks contain their own interpreter loops and do not
 allow commands outside their particular context.

@@ -19,7 +19,7 @@ os8 COPY RKA1:<DTA1:*.*
 mount dt0 ../media/os8/al-4693d-sa-os8-v3d-3.1978.tu56
 mount dt1 ../media/os8/al-4694c-sa-os8-v3d-4.1978.tu56
 
-simh go 7600
+resume
 
 os8 COPY RKA1:<DTA0:*.*
 os8 COPY RKA1:<DTA1:*.*
@@ -27,7 +27,7 @@ os8 COPY RKA1:<DTA1:*.*
 mount dt0 ../media/os8/al-4695c-sa-os8-v3d-5.1978.tu56
 mount dt1 ../media/os8/al-4696c-sa-os8-v3d-6.1978.tu56
 
-simh go 7600
+resume
 
 os8 COPY RKB1:<DTA0:*.*
 os8 COPY RKB1:<DTA1:*.*
@@ -35,7 +35,7 @@ os8 COPY RKB1:<DTA1:*.*
 mount dt0 ../media/os8/al-4697c-sa-os8-v3d-7.1978.tu56
 mount dt1 ../media/os8/al-4759c-sa-os8-ext-1.1978.tu56
 
-simh go 7600
+resume
 
 os8 COPY RKB1:<DTA0:*.*
 os8 COPY RKB1:<DTA1:*.*
@@ -43,7 +43,7 @@ os8 COPY RKB1:<DTA1:*.*
 mount dt0 ../media/os8/al-4760c-sa-os8-ext-2.1978.tu56
 mount dt1 ../media/os8/al-5586c-sa-os8-ext-3.1978.tu56
 
-simh go 7600
+resume
 
 os8 COPY RKB1:<DTA0:*.*
 os8 COPY RKA1:<DTA1:*.*
