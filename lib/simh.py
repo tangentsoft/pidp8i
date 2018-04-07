@@ -562,13 +562,13 @@ class simh:
   def os8_resume (self):
     if self._context == "os8": return   # Already running.
     
-    self.simh.send_cmd("cont")   # sets os8 context for us.
+    self.send_cmd("cont")   # sets os8 context for us.
 
     # Now provoke a keyboard monitor prompt.
-    self.simh.os8_kbd_delay()
-    self.simh._child.sendcontrol('c')
-    self.simh.os8_kbd_delay()
-    self.simh.os8_send_str('\r\n')
+    self.os8_kbd_delay()
+    self._child.sendcontrol('c')
+    self.os8_kbd_delay()
+    self.os8_send_str('\r\n')
   
 
   #### os8_restart #######################################################
