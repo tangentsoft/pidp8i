@@ -281,7 +281,6 @@ class os8script:
     # List of scratch files to delete when we are done with our script.
     self.scratch_list = []
     self.booted = False
-    self.line_ct_stack = []
 
 
   #### basic_line_parse ################################################
@@ -291,7 +290,6 @@ class os8script:
   # Processes the option begin/end blocks.
   
   def basic_line_parse (self, line, script_file):
-    self.line_ct_stack[0] += 1
     if line[0] == "#": return None
     retval = line.strip()
     if retval == "": return None
@@ -354,9 +352,8 @@ class os8script:
   def ignore_to_subcomm_end (self, old_line, script_file, end_str):
     if self.debug: print "ignore to: " + end_str
     for line in script_file:
-      self.line_ct_stack[0] += 1
       line = line.strip()
-      if self.verbose: print "Ignore: " + str(self.line_ct_stack[0] + " " + line
+      if self.verbose: print "Ignore: " + line
       
       m = re.match(_end_comm_re, line)
       if m == None: continue
@@ -600,11 +597,6 @@ class os8script:
     except IOError:
       print script_path + " not found."
       return "fail"
-
-    # Every time we start a new script
-    # We append a new line number count of 0
-    # onto our line_ct_stack
-    self.line_ct_stack.insert(0, 0)
   
     for line in script_file:
       line = self.basic_line_parse (line, script_file)
@@ -625,10 +617,6 @@ class os8script:
         print "\nFatal error encountered in " + script_path + " with command line: "
         print "\t" + line
         sys.exit(-1)
-
-    # Done.  Pop the line count off our line_ct_stack
-    self.line_ct_stack.pop()
-    
     return "success"
 
 
@@ -1086,7 +1074,6 @@ class os8script:
     self.simh._child.expect("\n\\$$")
     
     for line in script_file:
-      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1160,7 +1147,6 @@ class os8script:
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
-      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1200,7 +1186,6 @@ class os8script:
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
-      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
