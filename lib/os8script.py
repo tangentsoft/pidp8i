@@ -75,17 +75,17 @@ class InputError(Error):
 
 # Identify a begin enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.*)$")
+_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.+)$")
   
 # Identify an end enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_end_en_dis_comm_re = re.compile ("^end\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.*)$")
+_end_en_dis_comm_re = re.compile ("^end\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.+)$")
   
 # Identify an end comm and put the rest of the line in group(1)
-_end_comm_re = re.compile ("^end\s+(.*)?$")
+_end_comm_re = re.compile ("^end\s+(.+)?$")
   
 # Identify an end option command and put the rest of the line in group(1)
-_end_option_comm_re = re.compile ("^end\s+option\s+(.*)$")
+_end_option_comm_re = re.compile ("^end\s+option\s+(.+)$")
   
 # Name of the DECtape image file we create
 _new_sys_tape_prefix = "system"
@@ -99,17 +99,17 @@ _odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
 _odt_parse = re.compile(_odt_parse_str)
 
 # Put command keyword in group(1) and the rest is in group(3)
-_comm_re_str = "^(\S+)(\s+(.*))?$"
+_comm_re_str = "^(\S+)(\s+(.+))?$"
 _comm_re = re.compile(_comm_re_str)
 
 # Identify an end comm and put the rest of the line in group(1)
-_end_comm_re = re.compile ("^end\s+(.*)?$")
+_end_comm_re = re.compile ("^end\s+(.+)?$")
 
 # Identify an end option command and put the rest of the line in group(1)
-_end_option_comm_re = re.compile ("^end\s+option\s+(.*)$")
+_end_option_comm_re = re.compile ("^end\s+option\s+(.+)$")
 
 # Identify a begin command and put the rest of the line in group(1)
-_begin_option_comm_re = re.compile ("^begin\s+option\s+(.*)$")
+_begin_option_comm_re = re.compile ("^begin\s+option\s+(.+)$")
 
 # Parse an argument string into a sys device with
 # device name in group(1), unit number in group(2)
@@ -122,7 +122,7 @@ _simh_boot_re = re.compile("^" + _simh_boot_dev_str + "$")
 # Parse an argument string for mount into SIMH device
 # device name in group(1), unit number in group(2)
 # And the rest in group (3)
-_mount_regex_str = "^" + _simh_boot_dev_str + "\s+(.*)$"
+_mount_regex_str = "^" + _simh_boot_dev_str + "\s+(.+)$"
 _mount_re = re.compile(_mount_regex_str)
 
 # Map of SIMH device names to OS/8 device name prefixes.
@@ -281,6 +281,7 @@ class os8script:
     # List of scratch files to delete when we are done with our script.
     self.scratch_list = []
     self.booted = False
+    self.line_ct_stack = []
 
 
   #### basic_line_parse ################################################
@@ -290,6 +291,7 @@ class os8script:
   # Processes the option begin/end blocks.
   
   def basic_line_parse (self, line, script_file):
+    self.line_ct_stack[0] += 1
     if line[0] == "#": return None
     retval = line.strip()
     if retval == "": return None
@@ -330,13 +332,17 @@ class os8script:
       rest = m.group(2)
       if self.verbose: print "Inside end: rest = " + rest
       if (rest == None or rest == ""):
-        print "Warning! option end statement encountered with no argument."
+        print "Warning! option end statement at line " + str(self.line_ct_stack[0]) + \
+          " encountered with no argument."
         return None
       if len(self.options_stack) == 0:
-        print "Warning! option end statement found with no matching begin for option: " + rest
+        print "Warning! option end statement at line " + str(self.line_ct_stack[0]) + \
+          " found with no matching begin for option: " + rest
         return None
       if rest != self.options_stack[0]:
-        print "Warning! Mismatched option begin/end group. Currently inside option: " + \
+        print "Warning! Mismatched option begin/end group at line " + \
+          str(self.line_ct_stack[0]) + \
+          " . Currently inside option: " + \
           self.options_stack[0] + " not " + rest
         return None
       else:
@@ -352,8 +358,9 @@ class os8script:
   def ignore_to_subcomm_end (self, old_line, script_file, end_str):
     if self.debug: print "ignore to: " + end_str
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = line.strip()
-      if self.verbose: print "Ignore: " + line
+      if self.verbose: print "Ignore line " + str(self.line_ct_stack[0]) + ": " + line
       
       m = re.match(_end_comm_re, line)
       if m == None: continue
@@ -369,23 +376,34 @@ class os8script:
   
   def include_command (self, line, script_file):
     if not os.path.isfile(line):
-      print "Could not find include file: " + line
+      print "Line " + str(self.line_ct_stack[0]) + \
+        ": Could not find include file: " + line
       return "fail"
     return self.run_script_file (line)
       
   
   #### enable_option_command ###########################################
   # Deletes an option from the list of active options.
+  # Parses the first argument after "enable" as the key to enable.
+  # The end of the key is the end of the line or the first whitespace
+  # character.
   
   def enable_option_command (self, line, script_file):
+    if line == "":
+      print "Empty option to enable at line: " + \
+        str(self.line_ct_stack[0]) + "."
+      return "fail"
     m = re.match(_comm_re, line)
     if m == None:
-      print "Could not parse enable command."
+      print "Could not parse enable command at line " + \
+        str(self.line_ct_stack[0]) + "."
       return "fail"
     option = m.group(1)
     if option == None:
-      print "Empty option to enable."
+      print "Empty option to enable command at line: " + \
+        str(self.line_ct_stack[0]) + "."
       return "fail"
+    if self.verbose: print "enable option: " + option
     # Remove it from other set if present
     if option in self.options_disabled:
       self.options_disabled.remove(option)
@@ -397,16 +415,26 @@ class os8script:
 
   #### disable_option_command ###########################################
   # Deletes an option from the list of active options.
-  
+  # Parses the first argument after "disable" as the key to enable.
+  # The end of the key is the end of the line or the first whitespace
+  # character.
+ 
   def disable_option_command (self, line, script_file):
+    if line == "":
+      print "Empty option to disable at line: " + \
+        str(self.line_ct_stack[0]) + "."
+      return "fail"
     m = re.match(_comm_re, line)
     if m == None:
-      print "Could not parse disable option command."
+      print "Could not parse disable option command at line " + \
+        str(self.line_ct_stack[0]) + "."
       return "fail"
     option = m.group(1)
     if option == None:
-      print "Empty option to disable command."
+      print "Empty option to disable command at line " + \
+        str(self.line_ct_stack[0]) + "."
       return "fail"
+    if self.verbose: print "disable option: " + option
     # Remove it from other set if present
     if option in self.options_enabled:
       self.options_enabled.remove(option)
@@ -424,15 +452,18 @@ class os8script:
   def configure_command (self, line, script_file):
     m = re.match(_two_args_re, line)
     if m == None or m.group(1) == None or m.group(2) == None: 
-      print "Could not parse configure command: " + line
+      print "Could not parse configure command arguments at line " + \
+        str(self.line_ct_stack[0]) + ": {" + line + "}"
       return "fail"
     item = m.group(1)
     setting = m.group(2)
     if item not in _configurables:
-      print "Ignoring invalid configuration item: " + item
+      print "Ignoring invalid configuration item at line " + \
+        str(self.line_ct_stack[0]) + ": " + item
       return "fail"
     if setting not in _configurables[item]:
-      print "Cannot set " + item + " to " + setting
+      print "At line " + str(self.line_ct_stack[0]) + \
+        ", cannot set " + item + " to " + setting
       return "fail"
     if item == "tape":
       self.simh.set_tape_config(setting)
@@ -453,7 +484,8 @@ class os8script:
     else:
       m = re.match(_from_into_re_2, line)
       if m == None:
-        print "Could not parse copy_into command."
+        print "Could not parse copy_into command at line " + \
+        str(self.line_ct_stack[0]) + "."
         return "fail"
       self.simh.os8_pip_into (m.group(1), m.group(2), m.group(4))
     return "success"
@@ -465,7 +497,8 @@ class os8script:
   def copy_from_command (self, line, script_file):
     m = re.match(_from_into_re_2, line)
     if m == None:
-      print "Could not parse copy_from command."
+      print "Could not parse copy_from command at line " + \
+        str(self.line_ct_stack[0]) + "."
     return "fail"
     self.simh.os8_pip_from (m.group(1), m.group(2), m.group(4))
     return "success"
@@ -485,7 +518,8 @@ class os8script:
     print "copy command: from: " + from_path + ", to: " + to_path
     
     if (not os.path.isfile(from_path)):
-        print "Required copy input file: " + from_path + " not found."
+        print "At line " + str(self.line_ct_stack[0]) + \
+        ", required copy input file: " + from_path + " not found."
         return "fail"
 
     if os.path.isfile(to_path):
@@ -520,10 +554,12 @@ class os8script:
 
   def patch_command (self, line, script_file):
     if not self.booted:
-      print "OS/8 has not been booted."
+      print "Cannot run patch command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
     if not os.path.isfile(line):
-      print "Could not find patch file: " + line
+      print "At line " + str(self.line_ct_stack[0]) + \
+        ", could not find patch file: " + line
       return "fail"
     self.run_patch_file (line)
     return "success"
@@ -597,6 +633,11 @@ class os8script:
     except IOError:
       print script_path + " not found."
       return "fail"
+
+    # Every time we start a new script
+    # We append a new line number count of 0
+    # onto our line_ct_stack
+    self.line_ct_stack.insert(0, 0)
   
     for line in script_file:
       line = self.basic_line_parse (line, script_file)
@@ -604,26 +645,36 @@ class os8script:
       
       m = re.match(_comm_re, line)
       if m == None:
-        print "Ignoring command line: " + line
+        print "Ignoring command line at line " + \
+        str(self.line_ct_stack[0]) + ": " + line
         continue
   
       if m.group(1) not in commands:
-        print "Unrecognized script command: " + m.group(1)
+        print "Unrecognized script command at line " + \
+        str(self.line_ct_stack[0]) + ": " + m.group(1)
         continue
   
-      # print "Calling: " + m.group(1)
-      retval = commands[m.group(1)](m.group(3), script_file)
+      # print "arg: " + m.group(3)
+      if m.group(3) == None: rest = ""
+      else: rest = m.group(3)
+      retval = commands[m.group(1)](rest, script_file)
       if retval == "die":
-        print "\nFatal error encountered in " + script_path + " with command line: "
+        print "\nFatal error encountered in " + script_path + \
+          " at line " +  str(self.line_ct_stack[0]) + ":"
         print "\t" + line
         sys.exit(-1)
+
+    # Done.  Pop the line count off our line_ct_stack
+    self.line_ct_stack.pop()
+    
     return "success"
 
 
   #### end_command #####################################################
   
   def end_command (self, line, script_file):
-    print "Unexpectedly encountered end command: " + line
+    print "Unexpectedly encountered end command at line " + \
+        str(self.line_ct_stack[0]) + ": " + line
     return "fail"
 
   
@@ -841,7 +892,8 @@ class os8script:
   # issue a boot or go command.
   
   def simh_command (self, line, script_file):
-    print "simh command is disabled."
+    print "simh command is disabled. Line " + \
+        str(self.line_ct_stack[0]) + " ignored."
     return "fail"
     if self.verbose: print line
     self.simh.send_cmd(line)
@@ -882,14 +934,16 @@ class os8script:
   def mount_command (self, line, script_file):
     m = re.match(_mount_re, line)
     if m == None:
-      print "Could not parse mount.  Ignoring: " + line
+      print "At line " + str(self.line_ct_stack[0]) + \
+        ", could not parse mount.  Ignoring: " + line
       return "die"
     simh_dev = m.group(1)
     unit = m.group(2)
     rest = m.group(3)
     parts = rest.split()
     if len(parts) == 0:
-      print "No image name specified in: " + line
+      print "At line " + str(self.line_ct_stack[0]) + \
+        "No image name specified in: " + line
       return "die"
     ro_arg = ""
     imagename = parts[0]
@@ -902,7 +956,8 @@ class os8script:
       # Perform must_exist before copy_scratch
       if "must-exist" in parts[1:]:
           if not os.path.exists(imagename):
-            print imagename + " must exist but was not found. Not mounting."
+            print "At line " + str(self.line_ct_stack[0]) + \
+              ", " + imagename + " must exist but was not found. Not mounting."
             return "die"
       if "copy_scratch" in parts[1:]:
         copy_imagename = base_imagename + "_copy" + extension
@@ -919,11 +974,13 @@ class os8script:
         
       if "read-only" in parts:
         if copy_imagename != "":
-          print "You don't really need to set read only on a scratch copy."
+          print "At line " + str(self.line_ct_stack[0]) + \
+            ", you don't really need to set read only on a scratch copy."
         ro_arg = "-r "
       if "no-overwrite" in parts:
         if copy_imagename != "":
-          print "Ignoring no-overwrite option because copy_scratch is present."
+          print "Ignoring no-overwrite option at line " + \
+            str(self.line_ct_stack[0]) + "because copy_scratch is present."
         else:
           next_tape = 0
           while os.path.isfile(imagename):
@@ -935,13 +992,15 @@ class os8script:
       return "die"
   
     if simh_dev not in _os8_from_simh_dev:
-      print "Unrecognized simh dev: " + simh_dev
+      print "At line " + str(self.line_ct_stack[0]) + \
+        "Unrecognized simh dev: " + simh_dev
       return "die"
     os8dev = _os8_from_simh_dev[simh_dev]
   
     attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
   
-    if self.verbose: print "mount: " + attach_comm
+    if self.verbose: print "Line " + str(self.line_ct_stack[0]) + \
+       ": mount: " + attach_comm
     self.simh.send_cmd(attach_comm)
     return "success"
 
@@ -973,7 +1032,8 @@ class os8script:
       return "die"
     
     boot_comm = "boot " + line
-    if self.verbose: print boot_comm
+    if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": " + \
+       boot_comm
     self.simh.send_cmd(boot_comm)
     self.booted = True
     return "success"
@@ -983,7 +1043,8 @@ class os8script:
   
   def os8_command (self, line, script_file):
     if not self.booted:
-      print "OS/8 has not been booted."
+      print "Cannot run os8 command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
     os8_comm = line
     if self.verbose: print "os8_command: " + os8_comm
@@ -999,7 +1060,8 @@ class os8script:
   
   def pal8_command (self, line, script_file):
     if not self.booted:
-      print "OS/8 has not been booted."
+      print "Cannot run pal8 command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
     m_2form = re.match (_two_arg_pal_re, line)
     if m_2form != None:
@@ -1013,7 +1075,8 @@ class os8script:
         if self.verbose: print "Calling 3-arg pal8 command: " + os8_comm
         self.simh.os8_send_cmd ("\\.", os8_comm)
       else:
-        print "Unrecognized pal8 form: " + line
+        print "At line " + str(self.line_ct_stack[0]) + \
+          "Unrecognized pal8 form: " + line
         return "fail"
     return "success"
 
@@ -1023,6 +1086,8 @@ class os8script:
   # Detach all devices to make sure buffers all get written out.
   
   def done_command (self, line, script_file):
+    if self.verbose: print "Executing done command at line " + \
+        str(self.line_ct_stack[0]) + "."
     for filename in self.scratch_list:
       if self.verbose: print "Deleting scratch_copy: " + filename
       os.remove(filename)
@@ -1034,16 +1099,19 @@ class os8script:
   
   def begin_command (self, line, script_file):
     if not self.booted:
-      print "OS/8 has not been booted."
+      print "Cannot execute begin subcommand block at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
     sub_commands = {"fotp": self.fotp_subcomm, "build": self.build_subcomm,
                     "absldr": self.absldr_subcomm}
   
     m = re.match(_comm_re, line)
     if m == None:
-      print "Could not parse sub-command: " + line
+      print "Could not parse sub-command at line " + \
+        str(self.line_ct_stack[0]) + ": " + line
     if m.group(1) not in sub_commands:
-      print "Ignoring unrecognized sub-command: " + m.group(1)
+      print "Ignoring unrecognized sub-command at line " + \
+        str(self.line_ct_stack[0]) + ": " + m.group(1)
       print "Ignoring everything to next end."
       self.ignore_to_subcomm_end(line, script_file, "")
       return "fail"
@@ -1074,12 +1142,14 @@ class os8script:
     self.simh._child.expect("\n\\$$")
     
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
       m = re.match(_comm_re, line)
       if m == None:
-        print "Ignoring mal-formed build sub-command: " + line
+        print "Ignoring mal-formed build sub-command at line " + \
+          str(self.line_ct_stack[0]) + ": " + line
         continue
   
       build_sub = m.group(1)
@@ -1087,15 +1157,18 @@ class os8script:
       if rest == None: rest = ""
       
       if build_sub not in _build_comm_regs:
-        print "Unrecognized BUILD command: " + build_sub
+        print "Unrecognized BUILD command at line " + \
+          str(self.line_ct_stack[0]) + ": " + build_sub
         continue
   
       if build_sub == "end":
         if rest == "":
-          print "Warning! end statement encountered inside build with no argument. Exiting build."
+          print "Warning! end statement encountered inside build with no argument at line " + \
+            str(self.line_ct_stack[0]) + ".\nExiting build."
           return "fail"
         elif rest != "build": 
-          print "Warning! Mismatched begin/end blocks. Encountered end: " + rest + "Exiting build."
+          print "Warning! Mismatched begin/end blocks at line " + \
+        str(self.line_ct_stack[0]) + ".\nEncountered end: " + rest + "Exiting build."
           return "fail"
         # Return to monitor level
         self.simh.os8_send_ctrl ('c')
@@ -1106,15 +1179,18 @@ class os8script:
       if build_re != None:
         m2 = re.match(build_re, rest)
         if m2 == None:
-          print "Ignoring mal-formed BUILD " + build_sub + " command: " + rest
+          print "Ignoring mal-formed BUILD at line " + \
+        str(self.line_ct_stack[0]) + ": " + build_sub + " command: " + rest
           continue
       
         if build_sub == "BUILD":
           if m2.group(1) == None:
-            print "Missing source of OS8.BN. Ignoring BUILD command."
+            print "Missing source of OS8.BN. Ignoring BUILD command at line " + \
+              str(self.line_ct_stack[0]) + "."
             continue
           if m2.group(3) == None:
-            print "Missing sorce of CD.BN. Ignoring BUILD command."
+            print "Missing sorce of CD.BN. Ignoring BUILD commandat line " + \
+              str(self.line_ct_stack[0]) + "."
             continue
           if self.verbose: print "calling run_build_build"
           self.run_build_build (m2.group(1), m2.group(3))
@@ -1129,14 +1205,16 @@ class os8script:
       # print "before: " + self.simh._child.before.strip()
       # print "after: " + self.simh._child.after.strip()
       if reply > 2:
-        print "BUILD error with command " + self.simh._child.before.strip()
+        print "BUILD error at line " + str(self.line_ct_stack[0]) + \
+          " with command " + self.simh._child.before.strip()
         print "\t" + self.simh._child.after.strip()
         self.simh.os8_send_ctrl ('c')
       # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
       if build_sub == "BOOT" and reply == 1:
         self.simh.os8_send_line("Y")
         reply = self.simh._child.expect("SYS BUILT")
-    print "Warning end of file encountered with no end of BUILD command block."
+    print "Warning end of file encountered with no end of BUILD command block at line " + \
+      str(self.line_ct_stack[0]) + "."
     return "fail"
   
   #### fotp_subcomm ####################################################
@@ -1147,6 +1225,7 @@ class os8script:
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1186,6 +1265,7 @@ class os8script:
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
