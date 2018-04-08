@@ -52,7 +52,7 @@ patch ../media/os8/patches/FRTS-51.3.3-O.patch8
 # OS/8 commands to mount DECtape with new FORLIB.RL
 # and put it in place.
 mount dt0 ../media/os8/local.tu56 read-only must-exist
-simh go 7600
+resume
 os8 DEL SYS:FORLIB.RL
 os8 COPY SYS:<DTA0:FORLIB.RL
 end not-disabled fortran_iv

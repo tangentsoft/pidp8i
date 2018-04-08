@@ -583,7 +583,7 @@ class os8script:
   # Commands:
   # mount <simh-dev> <image-file> [<option> ...]
   #       option: must-exist | no-overwrite | read-only | copy_scratch
-  # umount <>
+  # umount <simh-dev>
   # boot <simh-dev>
   # os8 <command-line>
   #       the rest of the line is passed verbatim to OS/8
@@ -907,7 +907,8 @@ class os8script:
   #### umount_command ##################################################
   def umount_command (self, line, script_file):
     detach_comm = "det " + line
-    if self.verbose: print detach_comm
+    if self.verbose: print "line: " + \
+        str(self.line_ct_stack[0]) + ": " + detach_comm
     self.simh.send_cmd(detach_comm)
     return "success"
 
