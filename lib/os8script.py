@@ -359,7 +359,8 @@ class os8script:
   def include_command (self, line, script_file):
     if not os.path.isfile(line):
       print "Could not find include file: " + line
-    self.run_script_file (line)
+      return "fail"
+    return self.run_script_file (line)
       
   
   #### enable_option_command ###########################################
@@ -369,17 +370,18 @@ class os8script:
     m = re.match(_comm_re, line)
     if m == None:
       print "Could not parse enable command."
-      return
+      return "fail"
     option = m.group(1)
     if option == None:
       print "Empty option to enable."
-      return
+      return "fail"
     # Remove it from other set if present
     if option in self.options_disabled:
       self.options_disabled.remove(option)
     # Add it if not already present.
     if option not in self.options_enabled:
       self.options_enabled.append(option)
+    return "success"
 
 
   #### disable_option_command ###########################################
@@ -389,17 +391,18 @@ class os8script:
     m = re.match(_comm_re, line)
     if m == None:
       print "Could not parse disable option command."
-      return
+      return "fail"
     option = m.group(1)
     if option == None:
       print "Empty option to disable command."
-      return
+      return "fail"
     # Remove it from other set if present
     if option in self.options_enabled:
       self.options_enabled.remove(option)
     # Add it if not already present.
     if option not in self.options_disabled:
       self.options_disabled.append(option)
+    return "success"
 
 
   #### configure_command ###############################################
@@ -411,23 +414,24 @@ class os8script:
     m = re.match(_two_args_re, line)
     if m == None or m.group(1) == None or m.group(2) == None: 
       print "Could not parse configure command: " + line
-      return
+      return "fail"
     item = m.group(1)
     setting = m.group(2)
     if item not in _configurables:
       print "Ignoring invalid configuration item: " + item
-      return
+      return "fail"
     if setting not in _configurables[item]:
       print "Cannot set " + item + " to " + setting
-      return
+      return "fail"
     if item == "tape":
       self.simh.set_tape_config(setting)
     elif item == "rx":
       self.simh.set_rx_config (setting)
     elif item == "tti":
       self.simh.set_tti_config (setting)
-    
-  
+    return "success"
+
+
   #### copy_into_command ###########################################
   # Calls os8_pip_into with the command line arguments.
   
@@ -439,8 +443,10 @@ class os8script:
       m = re.match(_from_into_re_2, line)
       if m == None:
         print "Could not parse copy_into command."
-        return
+        return "fail"
       self.simh.os8_pip_into (m.group(1), m.group(2), m.group(4))
+    return "success"
+
 
   #### copy_into_command ###########################################
   # Calls os8_pip_from with the command line arguments.
@@ -449,9 +455,10 @@ class os8script:
     m = re.match(_from_into_re_2, line)
     if m == None:
       print "Could not parse copy_from command."
-      return
+    return "fail"
     self.simh.os8_pip_from (m.group(1), m.group(2), m.group(4))
-    
+    return "success"
+
 
   #### copy_command ###############################################
   # Simple script interface to create a copy of a file.
@@ -460,7 +467,7 @@ class os8script:
     m = re.match(_two_args_re, line)
     if m == None or m.group(1) == None or m.group(2) == None: 
       print "Could not copy command: " + line
-      return
+      return "fail"
     from_path = m.group(1)
     to_path = m.group(2)
 
@@ -468,7 +475,7 @@ class os8script:
     
     if (not os.path.isfile(from_path)):
         print "Required copy input file: " + from_path + " not found."
-        return
+        return "fail"
 
     if os.path.isfile(to_path):
       save_path = to_path + ".save"
@@ -482,33 +489,39 @@ class os8script:
       shutil.copyfile(from_path, to_path)
     except shutil.Error as e:
       print "copy command failed with error: " + str(e)
+      return "fail"
     except IOError as e:
       print "copy command failed with IOError: " + str(e)
-      
-  
+      return "fail"
+    return "success"
+
+
   #### resume_command #############################################
   # Call the os8_resume in simh to resume OS/8.
 
   def resume_command (self, line, script_file):
     self.simh.os8_resume()
+    return "success"
 
-  
+
   #### patch_command ##############################################
   # Read the named patch file and perform its actions.
 
   def patch_command (self, line, script_file):
     if not os.path.isfile(line):
       print "Could not find patch file: " + line
+      return "fail"
     self.run_patch_file (line)
+    return "success"
 
-  
+
   #### _command ###########################################
   # 
 
   def _command (self, line, script_file):
-    return
+    return "success"
 
-  
+
   #### run_script_file ############################################
   # Run os8 command script file
   # Call parsers as needed for supported sub commands.
@@ -542,8 +555,7 @@ class os8script:
   # Sub-commands:
   # build, fotp, absldr
   #
-  # Currently the run-script is hard-coded because of an old assumption
-  # about argument parsing for mkos8.
+  # Commands return, "success", "fail", or "die".
   
   def run_script_file (self, script_path):
   # Strings, regexps, and command arrays used by run_system
@@ -570,7 +582,7 @@ class os8script:
       script_file = open(script_path, "r")
     except IOError:
       print script_path + " not found."
-      sys.exit(-1)
+      return "fail"
   
     for line in script_file:
       line = self.basic_line_parse (line, script_file)
@@ -586,14 +598,21 @@ class os8script:
         continue
   
       # print "Calling: " + m.group(1)
-      commands[m.group(1)](m.group(3), script_file)
+      retval = commands[m.group(1)](m.group(3), script_file)
+      if retval == "die":
+        print "\nFatal error encountered in " + script_path + " with command line: "
+        print "\t" + line
+        sys.exit(-1)
+    return "success"
+
 
   #### end_command #####################################################
   
   def end_command (self, line, script_file):
     print "Unexpectedly encountered end command: " + line
-    
+    return "fail"
 
+  
   #### parse_odt #######################################################
   
   def parse_odt (self, com, line):
@@ -624,15 +643,15 @@ class os8script:
   
     self.simh.os8_send_line (new_val)
     return "cont"
-  
-  
+
+
   #### futil_exit ########################################################
   
   def futil_exit (self, com, line):
     self.simh.os8_send_line(line)
     return "break"
-  
-  
+
+
   #### futil_file ########################################################
   
   def futil_file (self, com, line):
@@ -658,8 +677,8 @@ class os8script:
       return "err"
     else:
       return "cont"
-    
-    
+  
+  
   #### parse_futil #####################################################
   #
   # Very simple minded:
@@ -694,8 +713,8 @@ class os8script:
         return "cont"
       else:
         return futil_specials[fcom](fcom, line)
-  
-  
+
+
   #### run_patch_file ##################################################
   
   def run_patch_file (self, pathname):
@@ -705,7 +724,7 @@ class os8script:
       patch_file = open(pathname, "r")
     except IOError:
       print pathname + " not found. Skipping."
-      return
+      return "fail"
   
     special_commands = {
       "ODT": self.parse_odt,
@@ -728,12 +747,12 @@ class os8script:
           self.simh.os8_send_ctrl('C')
         elif retval == "err":
           patch_file.close()
-          return -1
+          return "fail"
       elif line[0] == '.':        # New OS/8 Command
         match = _com_os8_parse.match(line)
         if match == None:
           print "Aborting patch on failed OS/8 command parse of: " + line
-          return -1
+          return "fail"
         com = match.group(1)
         rest = match.group(2)
   
@@ -753,9 +772,9 @@ class os8script:
     patch_file.close()
   
     print "\tSuccess."
-    return 0
-  
-  
+    return "success"
+
+
   #### skip_patch ######################################################
   # Returns true if the given filename matches one of the regex string
   # keys of the given skips dict and the flag value for that key is set.
@@ -766,7 +785,7 @@ class os8script:
           if re.search (p, fn) and skips[p]: return True
       return False
   
-  
+
   #### call_pal8 #######################################################
   # Generic call out to PAL8 with error recovery.
   # We rely on the caller to have good specifications for source,
@@ -795,10 +814,11 @@ class os8script:
       print "\t" + reply_str
       self.simh.os8_send_ctrl ('c')      # exit PAL8 Just in case.
       # We could do something better than just dying, I expect.
-      mkos8_abort_os8(s)
+      return "fail"
     # self.simh.os8_send_ctrl ('[')      # exit PAL8
-    
-  
+    return "success"
+
+
   #### simh_command ####################################################
   # I tried to avoid including this command but sometimes you just
   # have to reconfigure subtle bits of device drivers.
@@ -809,31 +829,52 @@ class os8script:
   def simh_command (self, line, script_file):
     if self.verbose: print line
     self.simh.send_cmd(line)
-  
-  
+    return "success"
+
+
   #### umount_command ##################################################
   def umount_command (self, line, script_file):
     detach_comm = "det " + line
     if self.verbose: print detach_comm
     self.simh.send_cmd(detach_comm)
-  
-  
+    return "success"
+
+
   #### mount_command ###################################################
-  # Remember we have to figure out how to differentiate between
-  # RX01 and RX02
+  # mount <simh-device> <image-file> [option ...]
+  #
+  # Interface to SIMH attach command with options that do a bit more.
+  #
+  # Options:
+  # must-exist: <image-file> must exist, otherwise abort the attach.
+  # no-overwrite if <image-file> already exists, create a copy with a
+  #    version number suffix. This is useful when you want to prevent
+  #    overwrites of a good image file with changes that might not work.
+  #    os8-run steps through version seen until it can create a new
+  #    version that doesn't overwrite any of the previous ones.
+  # read-only:  Passes the `-r` option to SIMH attach to mount the
+  #    device in read only mode.
+  # copy_scratch: Create a writeable scratch version of the named image
+  #    file and mount it.  This is helpful when you are booting a
+  #    distribution DECtape.  Booted DECtape images must be writeable.
+  #    To protect a distribution DECtape, use this option.
+  #    When the script is done the scratch version is deleted.
+  #
+  # If the mount command fails for any reason, we presume
+  # it is a fatal error and abort the script.
   
   def mount_command (self, line, script_file):
     m = re.match(_mount_re, line)
     if m == None:
       print "Could not parse mount.  Ignoring: " + line
-      return
+      return "die"
     simh_dev = m.group(1)
     unit = m.group(2)
     rest = m.group(3)
     parts = rest.split()
     if len(parts) == 0:
       print "No image name specified in: " + line
-      return
+      return "die"
     ro_arg = ""
     imagename = parts[0]
     dot = imagename.rindex(".")
@@ -846,17 +887,17 @@ class os8script:
       if "must-exist" in parts[1:]:
           if not os.path.exists(imagename):
             print imagename + " must exist but was not found. Not mounting."
-            return
+            return "die"
       if "copy_scratch" in parts[1:]:
         copy_imagename = base_imagename + "_copy" + extension
         try:
           shutil.copyfile(imagename, copy_imagename)
         except shutil.Error as e:
           print "copy_scratch failed with error: " + str(e)
-          return
+          return "die"
         except IOError as e:
           print "copy_scratch failed with IOError: " + str(e)
-          return
+          return "die"
         self.scratch_list.append(copy_imagename)
         imagename = copy_imagename
         
@@ -875,35 +916,38 @@ class os8script:
             imagename =  base_imagename + "_" + str(next_tape) + extension
     if unit == None or unit == "":
       print "Need unit number for: " + line
-      return
+      return "die"
   
     if simh_dev not in _os8_from_simh_dev:
       print "Unrecognized simh dev: " + simh_dev
-      return
+      return "die"
     os8dev = _os8_from_simh_dev[simh_dev]
   
     attach_comm = "att " + ro_arg + simh_dev + unit + " " + imagename
   
     if self.verbose: print "mount: " + attach_comm
     self.simh.send_cmd(attach_comm)
-    
-  
+    return "success"
+
+
   #### boot_command ####################################################
   
   def boot_command (self, line, script_file):
     boot_comm = "boot " + line
     if self.verbose: print boot_comm
     self.simh.send_cmd(boot_comm)
-  
-  
+    return "success"
+
+
   #### os8_command #####################################################
   
   def os8_command (self, line, script_file):
     os8_comm = line
     if self.verbose: print "os8_command: " + os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
+    return "success"
 
-  
+
   #### pal8_command ####################################################
   # The "pal8" script command comes in two forms:
   # The two argument form where the PAL8 status is printed on the fly
@@ -914,7 +958,7 @@ class os8script:
     m_2form = re.match (_two_arg_pal_re, line)
     if m_2form != None:
       # Call the 2arg pal8 code that works hard at error analysis.
-      call_pal8 (self, source=m_2form.group(4), binary=m_2form.group(1))
+      return call_pal8 (self, source=m_2form.group(4), binary=m_2form.group(1))
     else:
       m_3form = re.match (_three_arg_pal_re, line)
       if m_3form != None:
@@ -924,8 +968,10 @@ class os8script:
         self.simh.os8_send_cmd ("\\.", os8_comm)
       else:
         print "Unrecognized pal8 form: " + line
-  
-      
+        return "fail"
+    return "success"
+
+
   #### done_command ####################################################
   # Return to SIMH from OS/8
   # Detach all devices to make sure buffers all get written out.
@@ -935,8 +981,9 @@ class os8script:
       if self.verbose: print "Deleting scratch_copy: " + filename
       os.remove(filename)
     self.simh.send_cmd ("detach all")
-  
-  
+    return "success"
+
+
   #### begin_command ###################################################
   
   def begin_command (self, line, script_file):
@@ -950,8 +997,9 @@ class os8script:
       print "Ignoring unrecognized sub-command: " + m.group(1)
       print "Ignoring everything to next end."
       self.ignore_to_subcomm_end(line, script_file, "")
+      return "fail"
     else:
-      sub_commands[m.group(1)](m.group(3), script_file)
+      return sub_commands[m.group(1)](m.group(3), script_file)
   
   
   #### run_build_build #################################################
@@ -965,8 +1013,9 @@ class os8script:
     self.simh.os8_send_cmd ("\$", "BUILD")
     self.simh.os8_send_cmd ("LOAD OS/8: ", os8_spec)
     self.simh.os8_send_cmd ("LOAD CD: ", cd_spec)
-  
-  
+    return "success"
+
+
   #### build_subcomm ###################################################
   
   def build_subcomm (self, old_line, script_file):
@@ -995,11 +1044,13 @@ class os8script:
       if build_sub == "end":
         if rest == "":
           print "Warning! end statement encountered inside build with no argument. Exiting build."
+          return "fail"
         elif rest != "build": 
           print "Warning! Mismatched begin/end blocks. Encountered end: " + rest + "Exiting build."
+          return "fail"
         # Return to monitor level
         self.simh.os8_send_ctrl ('c')
-        return
+        return "success"
         
       build_re = _build_comm_regs[build_sub]
   
@@ -1036,7 +1087,8 @@ class os8script:
       if build_sub == "BOOT" and reply == 1:
         self.simh.os8_send_line("Y")
         reply = self.simh._child.expect("SYS BUILT")
-  
+    print "Warning end of file encountered with no end of BUILD command block."
+    return "fail"
   
   #### fotp_subcomm ####################################################
   
@@ -1055,12 +1107,14 @@ class os8script:
         rest = m.group(3)
         if rest == None or rest == "":
           print "Warning! end statement encountered inside fotp with no argument."
+          return "fail"
         elif rest != "fotp":
           print "Warning! Mismatched begin/end blocks in fotp. Encountered end: " + rest
-          
+          return "fail"
+
         if self.verbose: print "End FOTP"
         self.simh.os8_send_ctrl ('[')
-        return
+        return "success"
   
       m = re.match(_fotp_re, line)
       if m == None:
@@ -1070,6 +1124,10 @@ class os8script:
       comm = line
       if self.verbose: print "* " + line
       self.simh.os8_send_cmd ("\\*", line)
+    print "Warning end of file encountered with no end of FOTP command block."
+    return "fail"
+
+
   
   #### absldr_subcomm ##################################################
   # A clone of fotp_subcom.  Can we find a way to merge the common code?
@@ -1089,12 +1147,14 @@ class os8script:
         rest = m.group(3)
         if rest == None or rest == "":
           print "Warning! end statement encountered inside absldr with no argument."
+          return "fail"
         elif rest != "absldr":
           print "Warning! Mismatched begin/end blocks in absldr. Encountered end: " + rest
+          return "fail"
           
         if self.verbose: print "End ABSLDR"
         self.simh.os8_send_ctrl ('[')
-        return
+        return "success"
   
       m = re.match(_absldr_re, line)
       if m == None:
@@ -1104,9 +1164,10 @@ class os8script:
       comm = line
       if self.verbose: print "* " + line
       self.simh.os8_send_cmd ("\\*", line)
-  
-      
-    
+    print "Warning end of file encountered with no end of ABSLDR command block."
+    return "fail"
+
+
   #### check_exists ####################################################
   # Check existence of all files needed
   
