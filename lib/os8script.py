@@ -111,8 +111,18 @@ _end_option_comm_re = re.compile ("^end\s+option\s+(.*)$")
 # Identify a begin command and put the rest of the line in group(1)
 _begin_option_comm_re = re.compile ("^begin\s+option\s+(.*)$")
 
-# Parse an argument string into a sys device
-_mount_regex_str = "^(rk|td|dt|rx)(\d?)\s+(.*)$"
+# Parse an argument string into a sys device with
+# device name in group(1), unit number in group(2)
+# We put all bootable devices into this string so that when
+# we add more devices, for example rl for RL01, we change one
+# string not many.
+_simh_boot_dev_str = "(rk|td|dt|rx)(\d?)"
+_simh_boot_re = re.compile("^" + _simh_boot_dev_str + "$")
+
+# Parse an argument string for mount into SIMH device
+# device name in group(1), unit number in group(2)
+# And the rest in group (3)
+_mount_regex_str = "^" + _simh_boot_dev_str + "\s+(.*)$"
 _mount_re = re.compile(_mount_regex_str)
 
 # Map of SIMH device names to OS/8 device name prefixes.
@@ -270,6 +280,8 @@ class os8script:
     self.options_stack = []
     # List of scratch files to delete when we are done with our script.
     self.scratch_list = []
+    self.booted = False
+    self.line_ct_stack = []
 
 
   #### basic_line_parse ################################################
@@ -279,6 +291,7 @@ class os8script:
   # Processes the option begin/end blocks.
   
   def basic_line_parse (self, line, script_file):
+    self.line_ct_stack[0] += 1
     if line[0] == "#": return None
     retval = line.strip()
     if retval == "": return None
@@ -341,8 +354,9 @@ class os8script:
   def ignore_to_subcomm_end (self, old_line, script_file, end_str):
     if self.debug: print "ignore to: " + end_str
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = line.strip()
-      if self.verbose: print "Ignore: " + line
+      if self.verbose: print "Ignore: " + str(self.line_ct_stack[0] + " " + line
       
       m = re.match(_end_comm_re, line)
       if m == None: continue
@@ -508,6 +522,9 @@ class os8script:
   # Read the named patch file and perform its actions.
 
   def patch_command (self, line, script_file):
+    if not self.booted:
+      print "OS/8 has not been booted."
+      return "die"
     if not os.path.isfile(line):
       print "Could not find patch file: " + line
       return "fail"
@@ -583,6 +600,11 @@ class os8script:
     except IOError:
       print script_path + " not found."
       return "fail"
+
+    # Every time we start a new script
+    # We append a new line number count of 0
+    # onto our line_ct_stack
+    self.line_ct_stack.insert(0, 0)
   
     for line in script_file:
       line = self.basic_line_parse (line, script_file)
@@ -603,6 +625,10 @@ class os8script:
         print "\nFatal error encountered in " + script_path + " with command line: "
         print "\t" + line
         sys.exit(-1)
+
+    # Done.  Pop the line count off our line_ct_stack
+    self.line_ct_stack.pop()
+    
     return "success"
 
 
@@ -827,6 +853,8 @@ class os8script:
   # issue a boot or go command.
   
   def simh_command (self, line, script_file):
+    print "simh command is disabled."
+    return "fail"
     if self.verbose: print line
     self.simh.send_cmd(line)
     return "success"
@@ -931,17 +959,44 @@ class os8script:
 
 
   #### boot_command ####################################################
+  #
+  # Check to see if the device to be booted has something attached.
+  # If not die.
+  # If so, boot it, and set our booted state to True.
   
   def boot_command (self, line, script_file):
+    # First confirm something is attached to boot from.
+    ucname = line.upper()
+    boot_replies = [ucname + "\s+(.+)\r", "Non-existent device"]
+    self.simh.send_cmd("show " + line)
+    retval = self.simh._child.expect(boot_replies)
+    if retval == 1:
+      print "Attempt to boot non-existent device: " + line
+      return "die"
+    m = re.match("^(\S+)\s(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
+                 self.simh._child.after)
+    if m == None:
+      print "Could not determine if device " + line + " is attached."
+      return "die"
+
+    # Caution match group we want ends with a space.
+    if m.group(3) != "attached to ":
+      print "Attempt to boot on non-attached device: " + line
+      return "die"
+    
     boot_comm = "boot " + line
     if self.verbose: print boot_comm
     self.simh.send_cmd(boot_comm)
+    self.booted = True
     return "success"
 
 
   #### os8_command #####################################################
   
   def os8_command (self, line, script_file):
+    if not self.booted:
+      print "OS/8 has not been booted."
+      return "die"
     os8_comm = line
     if self.verbose: print "os8_command: " + os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
@@ -955,6 +1010,9 @@ class os8script:
   # We do the 3 argument form with a simple "os8" script command.
   
   def pal8_command (self, line, script_file):
+    if not self.booted:
+      print "OS/8 has not been booted."
+      return "die"
     m_2form = re.match (_two_arg_pal_re, line)
     if m_2form != None:
       # Call the 2arg pal8 code that works hard at error analysis.
@@ -987,6 +1045,9 @@ class os8script:
   #### begin_command ###################################################
   
   def begin_command (self, line, script_file):
+    if not self.booted:
+      print "OS/8 has not been booted."
+      return "die"
     sub_commands = {"fotp": self.fotp_subcomm, "build": self.build_subcomm,
                     "absldr": self.absldr_subcomm}
   
@@ -1025,6 +1086,7 @@ class os8script:
     self.simh._child.expect("\n\\$$")
     
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1098,6 +1160,7 @@ class os8script:
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1127,7 +1190,6 @@ class os8script:
     print "Warning end of file encountered with no end of FOTP command block."
     return "fail"
 
-
   
   #### absldr_subcomm ##################################################
   # A clone of fotp_subcom.  Can we find a way to merge the common code?
@@ -1138,6 +1200,7 @@ class os8script:
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
+      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
