@@ -203,7 +203,7 @@ _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
                     "BOOT"  : None,
                     "end"   : None}
 
-_build_replies = ["\\$", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
+_build_replies = ["\\$", "SYS BUILT", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
                   "\\?BAD INPUT", "\\?BAD LOAD",
                   "\\?BAD ORIGIN", "\\?CORE", "\\?DSK", "\\?HANDLERS",
                   "I/O ERR", "\\?NAME", "NO ROOM", "SYS NOT FOUND",
@@ -300,7 +300,8 @@ class os8script:
     if m != None:
       en_dis = m.group(1)
       rest = m.group(2)
-      if self.verbose: print "doing_begin_option: " + en_dis + " " + rest
+      if self.verbose: print "Line " + str(self.line_ct_stack[0]) + \
+         ": doing_begin_option: " + en_dis + " " + rest
       if self.debug: print "options_enabled: " + str (self.options_enabled)
       if self.debug: print "options_disabled: " + str (self.options_disabled)
 
@@ -330,7 +331,7 @@ class os8script:
     m = re.match(_end_en_dis_comm_re, line)
     if m != None:
       rest = m.group(2)
-      if self.verbose: print "Inside end: rest = " + rest
+      if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": end rest = " + rest
       if (rest == None or rest == ""):
         print "Warning! option end statement at line " + str(self.line_ct_stack[0]) + \
           " encountered with no argument."
@@ -378,6 +379,8 @@ class os8script:
       print "Line " + str(self.line_ct_stack[0]) + \
         ": Could not find include file: " + line
       return "fail"
+    print "line: " + str(self.line_ct_stack[0]) + \
+       ": include " + line
     return self.run_script_file (line)
       
   
@@ -402,7 +405,8 @@ class os8script:
       print "Empty option to enable command at line: " + \
         str(self.line_ct_stack[0]) + "."
       return "fail"
-    if self.verbose: print "enable option: " + option
+    if self.verbose: print "Line " + str(self.line_ct_stack[0]) + \
+       ": enable option: " + option
     # Remove it from other set if present
     if option in self.options_disabled:
       self.options_disabled.remove(option)
@@ -433,7 +437,8 @@ class os8script:
       print "Empty option to disable command at line " + \
         str(self.line_ct_stack[0]) + "."
       return "fail"
-    if self.verbose: print "disable option: " + option
+    if self.verbose: print "line: " + \
+       str(self.line_ct_stack[0]) + ": disable option: " + option
     # Remove it from other set if present
     if option in self.options_enabled:
       self.options_enabled.remove(option)
@@ -1046,7 +1051,8 @@ class os8script:
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
     os8_comm = line
-    if self.verbose: print "os8_command: " + os8_comm
+    if self.verbose: print "Line: " + \
+       str(self.line_ct_stack[0]) + ": os8_command: " + os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
     return "success"
 
@@ -1071,7 +1077,8 @@ class os8script:
       if m_3form != None:
         # Just run the OS/8 command.
         os8_comm = line
-        if self.verbose: print "Calling 3-arg pal8 command: " + os8_comm
+        if self.verbose: print "Line: " + \
+           str(self.line_ct_stack[0]) + ": Calling 3-arg pal8 command: " + os8_comm
         self.simh.os8_send_cmd ("\\.", os8_comm)
       else:
         print "At line " + str(self.line_ct_stack[0]) + \
@@ -1126,9 +1133,9 @@ class os8script:
   # and need to re-run mkos8 to re-make it.
   
   def run_build_build (self, os8_spec, cd_spec):
-    self.simh.os8_send_cmd ("\$", "BUILD")
-    self.simh.os8_send_cmd ("LOAD OS/8: ", os8_spec)
-    self.simh.os8_send_cmd ("LOAD CD: ", cd_spec)
+    self.simh.os8_send_cmd ("\\$", "BUILD", debug=True)
+    self.simh.os8_send_cmd ("LOAD OS/8: ", os8_spec, debug=True)
+    self.simh.os8_send_cmd ("LOAD CD: ", cd_spec, debug=True)
     return "success"
 
 
@@ -1136,12 +1143,12 @@ class os8script:
   
   def build_subcomm (self, old_line, script_file):
     os8_comm = "RU " + old_line
-    if self.verbose: print os8_comm
+    if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": " + \
+       os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
     self.simh._child.expect("\n\\$$")
     
     for line in script_file:
-      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1184,35 +1191,70 @@ class os8script:
           continue
       
         if build_sub == "BUILD":
-          if m2.group(1) == None:
+          if m2.group(1) == None or m2.group(1) == "":
             print "Missing source of OS8.BN. Ignoring BUILD command at line " + \
               str(self.line_ct_stack[0]) + "."
             continue
-          if m2.group(3) == None:
+          else: kbm_arg = m2.group(1)
+
+          if m2.group(3) == None or m2.group(3) == "":
             print "Missing sorce of CD.BN. Ignoring BUILD command at line " + \
               str(self.line_ct_stack[0]) + "."
             continue
-          if self.verbose: print "calling run_build_build"
-          self.run_build_build (m2.group(1), m2.group(3))
+          else: cd_arg = m2.group(3)
+          
+          if self.verbose: print "Line " + str(self.line_ct_stack[0]) + \
+             ": BUILD KBM: " + kbm_arg + ", CD: " + cd_arg
+          self.simh.os8_send_line ("BUILD")
+
+          build_build_replies = ["LOAD OS/8: "]
+          build_build_replies.extend(_build_replies)
+          
+          reply = self.simh._child.expect(build_build_replies)
+          if reply != 0:
+            print "No prompt for LOAD OS/8 in BUILD command within BUILD at line " + \
+              str(self.line_ct_stack[0]) + "."
+            print "Instead got: {" + self.simh._child.after + "}."
+            print "Exiting BUILD."
+            return "die"
+          self.simh.os8_send_line (kbm_arg)
+
+          build_build_replies = ["LOAD CD: "]
+          build_build_replies.extend(_build_replies)
+          
+          reply = self.simh._child.expect(build_build_replies)
+          if reply != 0:
+            print "No prompt for LOAD CD in BUILD command within BUILD at line " + \
+              str(self.line_ct_stack[0]) + "."
+            print "Instead got: {" + self.simh._child.after + "}."
+            print "Exiting BUILD."
+            return "die"
+          self.simh.os8_send_line (cd_arg)
+          
+          build_build_replies = ["LOAD CD: "]
+          build_build_replies.extend(_build_replies)
+
           continue
 
       comm = build_sub + " " + rest
       if self.verbose: print "Line " + str(self.line_ct_stack[0]) + \
-         "BUILD-> " + comm
+         ": BUILD-> " + comm
 
       self.simh.os8_send_line (comm)
       reply = self.simh._child.expect(_build_replies)
-      if self.debug: print "reply: " + str(reply)
-      # print "before: " + self.simh._child.before.strip()
-      # print "after: " + self.simh._child.after.strip()
-      if reply > 2:
+      if self.debug:
+        print "reply: " + str(reply)
+        print "before: " + self.simh._child.before.strip()
+        print "after: " + self.simh._child.after.strip()
+      if reply > 3:
         print "BUILD error at line " + str(self.line_ct_stack[0]) + \
           " with command " + self.simh._child.before.strip()
         print "\t" + self.simh._child.after.strip()
         self.simh.os8_send_ctrl ('c')
       # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
-      if build_sub == "BOOT" and reply == 1:
-        self.simh.os8_send_line("Y")
+      if build_sub == "BOOT":
+        if reply == 2:
+          self.simh.os8_send_line("Y")
         reply = self.simh._child.expect("SYS BUILT")
     print "Warning end of file encountered with no end of BUILD command block at line " + \
       str(self.line_ct_stack[0]) + "."
@@ -1222,11 +1264,11 @@ class os8script:
   
   def fotp_subcomm (self, old_line, script_file):
     os8_comm = "RU " + old_line
-    if self.verbose: print os8_comm
+    if self.verbose: print "Line: " + \
+       str(self.line_ct_stack[0]) + ": " + os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
-      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1254,7 +1296,8 @@ class os8script:
         continue
   
       comm = line
-      if self.verbose: print "* " + line
+      if self.verbose: print "Line: " + \
+         str(self.line_ct_stack[0]) + ": * " + line
       self.simh.os8_send_cmd ("\\*", line)
     print "Warning end of file encountered at line " + \
       str(self.line_ct_stack[0]) + " with no end of FOTP command block."
@@ -1266,11 +1309,11 @@ class os8script:
   
   def absldr_subcomm (self, old_line, script_file):
     os8_comm = "RU " + old_line
-    if self.verbose: print os8_comm
+    if self.verbose: print " line: " + \
+       str(self.line_ct_stack[0]) + ": " + os8_comm
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
-      self.line_ct_stack[0] += 1
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   

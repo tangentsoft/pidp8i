@@ -42,13 +42,13 @@ end build
 
 configure tape td
 
-mount td0 ./system_td12k.tu56 no-overwrite
+mount td0 ./system_v3f_td12k.tu56 no-overwrite
 mount td1 ../media/os8/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
 end enabled td8e
 
 # Options decide what our output tape will be called.
 begin enabled tc08
-mount dt0 ./system_tc08.tu56 no-overwrite
+mount dt0 ./system_v3f_tc08.tu56 no-overwrite
 end enabled tc08
 
 boot rk0
