@@ -565,8 +565,7 @@ class simh:
     self.send_cmd("cont")   # sets os8 context for us.
 
     # Now provoke a keyboard monitor prompt.
-    self.os8_kbd_delay()
-    self._child.sendcontrol('c')
+    self.os8_send_ctrl('c')
     self.os8_kbd_delay()
     self.os8_send_str('\r\n')
   
