@@ -87,30 +87,43 @@ of the block signifies the end of the `BUILD` program and a return to the OS/8 c
 either executed or ignored depending on the key word that is enabled when that block
 is encountered.  This context is very interesting and is more fully documented below.
 
-Commands such as `os8`, `pal8`, and `begin ABSLDR` only make sense in an OS/8
-context.  If a 	`boot` command to start OS/8 or a SIMH command to resume a
-booted OS/8 session is not issued, the commands will be sent to SIMH
-where they will not be understood.
+The commands that execute in the OS/8 environment require a system image
+to be attached and booted.  Attempts to run OS/8 commands without having
+booted OS/8 kill the script.
 
-Commands such as `mount`, `copy`, `copy-into` can be run wile in the OS/8 context.
-They will cause an escape to the SIMH command interpreter.  To resume OS/8,
-a `boot` or `resume` or `simh cont 7600` command will need to be issued.
+Commands such as mount, umount, and configure execute in the SIMH context.
+OS/8 is suspended for these commands.
 
-**Design consideration:** It may be that commands should take internal responsibility
-for validating and setting their own context.  We could keep internal states of:
-booted = True, as well as using the simh/os8 context settings to make things
-more automatic:
+Ideally we would just resume OS/8 with a SIMH continue command when we are
+finished running SIMH commands. Unfortunately this does not work under python
+expect.  The expect engine needs a command prompt.
 
-No OS/8 context commands allowed until `booted=True`
-SIMH context programs can escape to simh.
-Since we do command loops within begin/end blocks, we can assume that
-it is ALWAYS ok to ^C or go 7600 or boot to OS/8 command level, as long
-as the boot command succeeds.
+Although hitting the erase character (`RUBOUT`) or the line kill character
+(`CTRL/U`) to a terminal-connected SIMH OS/8 session gives a command prompt,
+these actions don't work under Python expect. We don't know why.
 
-The `begin` / `end` blocks contain their own interpreter loops and do not
-allow commands outside their particular context.
+Booting OS/8 gives a fresh prompt.
 
-## SIMH commands
+Restarting the OS/8 Monitor with a SIMH `go 7600` works.
+
+The least disruptive way we have found to resume OS/8 under Python expect
+after having escaped to SIMH is to issue the SIMH `continue` command, then
+pause for an keyboard delay, then send `CTRL/C` then pause again, then send
+`\r\n`.  That wakes OS/8 back up and produces a Keyboard Monitor prompt.
+
+The simh.py code that underlies all this keeps track of the switch
+between the SIMH and OS/8 contexts.  However it does not presume to
+do this resumption because the `CTRL/C` will quit out of any program
+being run under OS/8, and return to the keyboard monitor level.
+
+Because `os8-run` creates the `begin` / `end` blocks with their own
+interpreter loops, around commands with complex command structures,
+it guarantees that the switch into SIMH context will only happen
+when OS/8 is quiescent in the Keyboard Monitor.
+
+Although `os8-run` provides a `resume` command that can appear in
+scripts after the commands that escape out to SIMH, using it is optional.
+`os8-run` checks the context and issues its own resume call if needed.
 
 ### `done` -- Script is done.
 
@@ -184,25 +197,14 @@ scripts that may or may not work the first time.
 
 Boot OS/8 on the named _simh-device_ and enter the OS/8 run-time context.
 
-If you attempt to boot a device that is not attached the expect engine
-will get confused.
+The `boot` command checks to see if something is attached to the
+SIMH being booted.  It does not protect against trying to boot
+an image that is not bootable because it lacks a system area.
 
-### `simh` -- Go to SIMH level and run a command.
+In that latter case, `os8-run` hangs for a while and then gives a
+timeout backtrace.  This can't be tested in advance because
+booting a non-bootable image simply hangs the virtual machine.
 
-`simh` _command-line_
-
-When you execute certain commands that interact with SIMH
-such as `mount`, you may break out of OS/8 and need to `boot`, `resume`, or
-`continue` execution.
-
-    simh go 7600
-
-is a perfectly reasonable way to return to the OS/8 context.
-
-This command may be removed in preference to creation of a `resume` command.
-The `umount` command is intended to eliminate the need for
-
-    simh detach _simh-device_
 
 ### `copy` -- Make a copy of a POSIX file
 
@@ -210,12 +212,9 @@ A common activity for os8-run is to make a copy of an image file,
 and edit the image file.  To obviate the need for an external driver
 that would create the copy, we added a copy command.
 
-**Note:** If you were running OS/8, you will be escaped into SIMH context
-and need to `boot` or `resume`.
-
 Adding an option to `mount` was considered, but in the interests
 of allowing an arbitrary name for the modified image, a separate
-command was used.
+command was created.
 
 ### `copy_into` -- Copy POSIX file *into* OS/8 environment
 
@@ -231,9 +230,6 @@ The option is either empty or exactly one of
 
 If no option is specified, `/A` is assumed.
 
-**Note:** If you were running OS/8, you will be escaped into SIMH context
-and need to `boot` or `resume`.
-
 Example:
 
 Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `INIT.CM`:
@@ -244,8 +240,6 @@ Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `IN
 
 Copy files from the running OS/8 environment to the POSIX environment running SIMH.
 
-**Note:** If you were running OS/8, you will be escaped into SIMH context
-and need to `boot` or `resume`.
 
 ### `os8` -- Run arbitrary OS/8 command
 
@@ -256,7 +250,7 @@ level.  `BATCH` scripts do this, and they can be run from here.
 
 The rest of the line is passed uninterpreted to the OS/8 keyboard monitor with
 the expectation that the command will return to the monitor command level and
-the command prompt, "`.`" will result.
+the command prompt, "`.`" will be produced.
 
 ### `pal8` -- Run OS/8 PAL-8 assembler
 
@@ -308,14 +302,8 @@ between otherwise incompatible configurations of SIMH and OS/8 device drivers.
 
 ## TODOs:
 
-* Create a `resume` command that does not reboot OS/8
 * Allow underscore and dash in mount options.
-* Make `mount` failure abort the script.
 * What happens if we don't have a done command in the script?
-* Add detection of SIMH context to the various OS/8 commands and have them blow out
-if we are not in OS/8 context.
-* Make sure the SIMH context commands really don't blow out when OS/8 is booted.
-* Catch the boot of non-mounted device and quit the script.
 
 
 
