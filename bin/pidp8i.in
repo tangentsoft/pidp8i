@@ -54,8 +54,17 @@ Either the simulator isn't running, or it isn't running under a screen(1)
 session owned by @INSTUSR@.  Did you start the simulator via systemd?
 
 ERROR
+		exit 1
     fi
-elif [ "$1" = "install" ]
+fi
+
+# Take first parameter as a command verb.  Lowercase it in case we're
+# connected to an all-caps terminal; it's a common wish to attach a real
+# ASR-33 to a PiDP-8/I, for example.
+verb="$(echo $1 | awk '{print tolower($0)}')"
+shift
+
+if [ "$verb" = "install" ]
 then
     # "sudo make install" is running us with root perms dropped.  We do
     # a bunch of things for it that would be awkward to do from within
@@ -73,9 +82,9 @@ then
     # We were given some other arg(s) and we're attached to a terminal,
     # so build a systemctl command with those args so the user doesn't
     # have to type out the canonical form of the command.
-    systemctl --user "$@" pidp8i
+    systemctl --user $verb "$@" pidp8i
     exit $?
-elif [ "$1" = "start" ]
+elif [ "$verb" = "start" ]
 then
     # systemd is telling us to start the background simulator
     if is_running
@@ -110,7 +119,7 @@ then
     cd "$prefix/share/media"
     screen -dm -S pidp8i "$sim" "$bscript"
     exit $?
-elif [ "$1" = "stop" ]
+elif [ "$verb" = "stop" ]
 then
     # systemd is telling us to stop the background simulator.  Try
     # stopping the simulator itself, gracefully at first, then
