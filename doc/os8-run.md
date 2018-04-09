@@ -1,4 +1,4 @@
-# `os8-run` Script Runner for OS/8 under SIMH
+# `os8-run` A Script Runner for OS/8 under SIMH
 
 After having done a lot of exploring of how to create system images,
 the design of a generalized script runner for OS/8 under SIMH emerged.
@@ -78,13 +78,13 @@ own rules.
 
 Examples of `begin` / `end` blocks:
 
-* Command Decoder:  Programs like `ABSLDR` and `FOTP` call the OS/8 Command Decoder
+* __Command Decoder:__  Programs like `ABSLDR` and `FOTP` call the OS/8 Command Decoder
 to get file specifications and operate on them. `os8-run` uses a `begin` / `end` block to
 define set of files to feed to the Command Decoder and to indicate the last file, and
 a return to the OS/8 context.
-* OS/8 `BUILD`: Commands are passed to `BUILD` and output is interpreted.  The `end`
+* __OS/8 `BUILD`:__ Commands are passed to `BUILD` and output is interpreted.  The `end`
 of the block signifies the end of the `BUILD` program and a return to the OS/8 context.
-* Enablement Context: Blocks of script code, delimited by a `begin` / `block` can be
+* __Enablement Context:__ Blocks of script code, delimited by a `begin` / `block` can be
 either executed or ignored depending on the key word that is enabled when that block
 is encountered.  This context is very interesting and is more fully documented below.
 
