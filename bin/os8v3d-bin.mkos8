@@ -64,14 +64,14 @@ os8 ZERO RKB0:
 # OS/8 V3D extensions
 umount dt0
 mount dt0 ../media/os8/al-4761c-ba-os8-v3d-ext.1978.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKA0:<DTA0:*.*
 
 # Copying in Music score files and source code...
 begin enabled music
 umount dt1
 mount dt1 ../media/os8/subsys/music.tu56 read-only read-only must-exist
-resume
+# resume
 os8 COPY RKB0:<DTA1:*.*
 end enabled music
 
@@ -79,7 +79,7 @@ end enabled music
 begin not-disabled advent
 umount dt1
 mount dt1 ../media/os8/subsys/advent.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKB0:<DTA1:*.*
 end not-disabled advent
 
@@ -87,7 +87,7 @@ end not-disabled advent
 begin not-disabled ba
 umount dt1
 mount dt1 ../media/os8/subsys/ba.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKB0:<DTA1:*.*
 end not-disabled ba
 
@@ -95,7 +95,7 @@ end not-disabled ba
 begin not-disabled cc8
 umount dt1
 mount dt1 ../media/os8/subsys/cc8.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKA0:<DTA1:*.SV
 os8 COPY RKB0:<DTA1:*.SV/V
 end not-disabled cc8
@@ -104,7 +104,7 @@ end not-disabled cc8
 begin not-disabled k12
 umount dt1
 mount dt1 ../media/os8/subsys/k12.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKA0:<DTA1:*.*
 end not-disabled k12
 
@@ -112,7 +112,7 @@ end not-disabled k12
 begin not-disabled fortran_iv
 umount dt1
 mount dt1 ../media/os8/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKA0:<DTA1:*.*
 end not-disabled fortran_iv
 
@@ -120,14 +120,14 @@ end not-disabled fortran_iv
 begin not-disabled macrel
 umount dt1
 mount dt1 ../media/os8/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA,FUTIL.SV
 end not-disabled macrel
 
 # Files from local.tu56
 umount dt1
 mount dt1 ../media/os8/local.tu56 read-only must-exist
-resume
+# resume
 # Case conversion batch scripts
 os8 COPY RKA0:<DTA1:?CSYS.BI
 os8 COPY RKA0:<DTA1:?CBAS.BI
@@ -159,7 +159,7 @@ end enabled focal69
 begin not-disabled uwfocal
 umount dt1
 mount dt1 ../media/os8/subsys/uwfocal-v4e-2.tu56 read-only must-exist
-resume
+# resume
 os8 COPY RKA0:<DTA1:UWF16K.SV
 end not-disabled uwfocal
 
@@ -185,7 +185,7 @@ os8 SET SYS INIT
 # Squish of SYS and DSK goes here
 umount dt0
 umount dt1
-resume
+# resume
 os8 SQUISH DSK:/O
 os8 SQUISH SYS:/O
 

@@ -549,6 +549,9 @@ class os8script:
   # Call the os8_resume in simh to resume OS/8.
 
   def resume_command (self, line, script_file):
+    if self.verbose: print "Resuming OS/8 at line " + \
+       str(self.line_ct_stack[0]) + "."
+
     self.simh.os8_resume()
     return "success"
 
@@ -565,6 +568,7 @@ class os8script:
       print "At line " + str(self.line_ct_stack[0]) + \
         ": Patch file: " + line + " not found."
       return "fail"
+
     self.run_patch_file (line)
     return "success"
 
@@ -805,6 +809,10 @@ class os8script:
     the_command = ""
     the_command_parser = None
     
+    # Resume OS/8 if necessary.
+    if self.simh._context == "simh":
+      self.resume_command(line, script_file)
+
     for line in patch_file:
       line = line.rstrip()
       if line == "": continue
@@ -1051,9 +1059,15 @@ class os8script:
       print "Cannot run os8 command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
+
     os8_comm = line
     if self.verbose: print "Line: " + \
        str(self.line_ct_stack[0]) + ": os8_command: " + os8_comm
+
+    # Resume OS/8 if necessary.
+    if self.simh._context == "simh":
+      self.resume_command(line, script_file)
+
     self.simh.os8_send_cmd ("\\.", os8_comm)
     return "success"
 
@@ -1069,8 +1083,14 @@ class os8script:
       print "Cannot run pal8 command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
+
     m_2form = re.match (_two_arg_pal_re, line)
     if m_2form != None:
+
+      # Resume OS/8 if necessary.
+      if self.simh._context == "simh":
+        self.resume_command(line, script_file)
+
       # Call the 2arg pal8 code that works hard at error analysis.
       return call_pal8 (self, source=m_2form.group(4), binary=m_2form.group(1))
     else:
@@ -1109,6 +1129,7 @@ class os8script:
       print "Cannot execute begin subcommand block at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
+
     sub_commands = {"fotp": self.fotp_subcomm, "build": self.build_subcomm,
                     "absldr": self.absldr_subcomm}
   
@@ -1123,6 +1144,10 @@ class os8script:
       self.ignore_to_subcomm_end(line, script_file, "")
       return "fail"
     else:
+      # Resume OS/8 if necessary.
+      if self.simh._context == "simh":
+        self.resume_command(line, script_file)
+
       return sub_commands[m.group(1)](m.group(3), script_file)
   
   
