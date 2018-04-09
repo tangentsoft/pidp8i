@@ -44,6 +44,7 @@ twice in a somewhat confusing cacophony.
 | `-h`                      | show this help message and exit
 | `-d`                      | add extra debugging output, normally suppressed
 | `-v`                      | verbose SIMH output instead of progress messages
+| `-vv`                     | very verbose: Include SIMH expect output with SIMH output.
 | `--disable-ba`            | Leave *.BA `BASIC` games and demos off the built OS/8 RK05 image
 | `--enable-focal69`        | Add `FOCAL69` to the built OS/8 RK05 image
 | `--disable-uwfocal`       | Leave U/W FOCAL (only) off the built OS/8 RK05 image

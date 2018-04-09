@@ -60,6 +60,7 @@ from mkos8 import opts
 
 DEBUG = False
 VERBOSE = True
+VERY_VERBOSE = False
 QUIET = False
 SCRIPT_FILE = ""
 
@@ -89,6 +90,7 @@ def opt_set(en_dis, option, options_enabled, options_disabled):
 def parse_args(script_files, options_enabled, options_disabled):
   global DEBUG
   global VERBOSE
+  global VERY_VERBOSE
   
   ap = argparse.ArgumentParser(description = "Run OS/8 scripts")
 
@@ -97,6 +99,8 @@ def parse_args(script_files, options_enabled, options_disabled):
                    help = 'add extra debugging output, normally suppressed')
   ap.add_argument ('-v', '--verbose',action = 'store_true', default = False,
                    help = 'verbose SIMH output instead of progress messages')
+  ap.add_argument ('-vv', '--very_verbose',action = 'store_true', default = False,
+                   help = 'include the expect output in the veverbose output.')
 
   # Add arguments corresponding to --*-os8-* configure script options
   for obn, vals in opts.opts.iteritems():
@@ -126,7 +130,8 @@ def parse_args(script_files, options_enabled, options_disabled):
 
   arg_dict = vars(args)
 
-  VERBOSE = args.verbose
+  VERBOSE = args.verbose or args.very_verbose
+  VERY_VERBOSE = args.very_verbose
   DEBUG = args.debug
 
   for key in arg_dict:
@@ -253,7 +258,7 @@ def main ():
   # trick from https://stackoverflow.com/questions/21239338
   s = simh (dirs.build, True)
   s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'w') \
-      if not VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
+      if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
   os8 = os8script (s, options_enabled, options_disabled, verbose=VERBOSE, debug=DEBUG)
 
