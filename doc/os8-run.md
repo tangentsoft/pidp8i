@@ -1,4 +1,4 @@
-# `os8-run` Script Runner for OS/8 under simh
+# `os8-run` Script Runner for OS/8 under SIMH
 
 After having done a lot of exploring of how to create system images,
 the design of a generalized script runner for OS/8 under SIMH emerged.
@@ -23,12 +23,12 @@ the design of a generalized script runner for OS/8 under SIMH emerged.
 * perform actions in a script unless a disablement keyword has been specified.
 * set enable or disable keywords anywhere in the execution of a script.
 
-Under the covers, `run-os8` is a python script that uses the python expect
+Under the covers, `run-os8` is a Python script that uses the Python expect
 library that is capable of handling complex dialogs with commands.
 
 Sometimes debugging these scripts is challenging because if you
 fall out of step with what is `expect`ed, the expect engine will get confused.
-The `os8-run` command hangs for a while and then times out with a big python backtrace.
+The `os8-run` command hangs for a while and then times out with a big Python backtrace.
 
 calling `os8-run` with `-v` gives verbose output that enables you to watch
 every step of the script running.  Unfortunately, the output often echos characters
@@ -36,7 +36,7 @@ twice in a somewhat confusing cacophony.
 
 ## Usage
 
-> `os8-run` [`-h`] [`-d`] [`-v`] [_optional-arguments_ ...]  _script-file_ ...
+> `os8-run` [`-h`] [`-d`] [`-v`] [`-vv`] [_optional-arguments_ ...]  _script-file_ ...
 
 |                           | **Positional Arguments**
 | _script-file_            | One or more script files to run
@@ -71,9 +71,9 @@ twice in a somewhat confusing cacophony.
 It is important to be mindful of the different command contexts when
 running scripts under `os8-run`:
 
-* SIMH context:  Commands are interpreted by SIMH command processor.
-* OS/8 context:  Commands are interpreted by the OS/8 Keyboard Monitor.
-* `begin` / `end` blocks:  These create special interpreter loops with their
+* __SIMH context:__  Commands are interpreted by SIMH command processor.
+* __OS/8 context:__  Commands are interpreted by the OS/8 Keyboard Monitor.
+* __`begin` / `end` blocks:__  These create special interpreter loops with their
 own rules.
 
 Examples of `begin` / `end` blocks:
@@ -96,7 +96,7 @@ Commands such as mount, umount, and configure execute in the SIMH context.
 OS/8 is suspended for these commands.
 
 Ideally we would just resume OS/8 with a SIMH continue command when we are
-finished running SIMH commands. Unfortunately this does not work under python
+finished running SIMH commands. Unfortunately this does not work under Python
 expect.  The expect engine needs a command prompt.
 
 Although hitting the erase character (`RUBOUT`) or the line kill character
