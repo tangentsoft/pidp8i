@@ -81,26 +81,27 @@ twice in a somewhat confusing cacophony.
 Here is a list of the `os8-run` scripting language commands in alphabetical order.
 
 
-| [`boot`](#boot-comm)
-| [`begin`](#begin-end-comm) |
-| [`configure`](#configure-comm) |
-| [`copy`](#copy-com) |
-| [`copy_from`](#copy-from-comm) |
-| [`copy_into`](#copy-into-comm) |
-| [`disable`](#disable-comm) |
-| [`done`](#done-comm) | Script is done
-| [`enable`](#enable-comm) |
-| [`end`](#end-comm) |
-| [`include`](#include-comm) |
-| [`mount`](#mount-comm) |
-| [`os8`](#os8-comm) |
-| [`pal8`](#pal8-comm) |
-| [`patch`](#patch-comm) |
-| [`resume`](#resume-comm) |
-| [`umount`](#umount-comm) |
+| [`boot`](#boot-comm)           | Boot the named SIMH device.                      |
+| [`begin`](#begin-end-comm)     | Begin complex conditionals or sub-command block. |
+| [`configure`](#configure-comm) | Perform specific SIMH configuration activities.  |
+| [`copy`](#copy-com)            | Make a copy of a POSIX file.                     |
+| [`copy_from`](#copy-from-comm) | Copy *from* OS/8 to a file in POSIX environment. |
+| [`copy_into`](#copy-into-comm) | Copy POSIX file *into* OS/8 environment.         |
+| [`disable`](#en-dis-comm)      | Set disablement of a feature by keyword.         |
+| [`done`](#done-comm)           | Script is done.                                  |
+| [`enable`](#en-dis-comm)       | Set enablement of a feature by keyword.          |
+| [`end`](#begin-end-comm)       | End complex conditionals or sub-command block.   |
+| [`include`](#include-comm)     | Execute a subordinate script file.               |
+| [`mount`](#mount-comm)         | Mount an image file as a SIMH attached device.   |
+| [`os8`](#os8-comm)             | Run arbitrary OS/8 command.                      |
+| [`pal8`](#pal8-comm)           | Run OS/8 `PAL8` assembler.                       |
+| [`patch`](#patch-comm)         | Run a patch file.                                |
+| [`resume`](#resume-comm)       | Resume OS/8 at Keyboard Monitor command level.   |
+| [`restart`](#restart-comm)     | Restart OS/8.                                    |
+| [`umount`](#umount-comm)       | Unmount a SIMH attached device image.            |
 
-The subsequent sections of this document present the commands in the order
-that seems most appropriate to building up an understanding of making
+These commands are described in subsections of [Scripting Commands](#scripting) below. That
+section presents commands in an order appropriate to building up an understanding of making
 first simple and then complex scripts with `os8-run`.
 
 ## Command contexts
@@ -163,8 +164,9 @@ Although `os8-run` provides a `resume` command that can appear in
 scripts after the commands that escape out to SIMH, using it is optional.
 `os8-run` checks the context and issues its own resume call if needed.
 
+## <a id="scripting"></a>Scripting commands
 
-### <a id="done-comm"></a>`done` -- Script is done
+### <a id="done-comm"></a>`done` -- Script is done.
 
 
 This is an explicit statement to end processing of our script.
@@ -175,7 +177,7 @@ pending writes completed.
 * SIMH is gracefully shut down with a `quit` command.
 
 
-### <a id="include-comm"></a>`include` -- Execute a subordinate script file. {#include-comm}
+### <a id="include-comm"></a>`include` -- Execute a subordinate script file.
 
 `include` _script-file-path_
 
@@ -247,8 +249,17 @@ In that latter case, `os8-run` hangs for a while and then gives a
 timeout backtrace.  This can't be tested in advance because
 booting a non-bootable image simply hangs the virtual machine.
 
+### <a id="resume-comm"></a>`resume` -- Resume OS/8 at Keyboard Monitor command level.
 
-### `copy` -- Make a copy of a POSIX file
+XXX  -- talk about non-disruptive restart ----
+
+
+### <a id="restart-comm"></a>`restart` -- Restart OS/8.
+
+XXX  -- talk about somewhat disruptive restart go 7600 --
+XXX  -- not implemented yet --
+
+### <a id="copy-comm"></a>`copy` -- Make a copy of a POSIX file.
 
 A common activity for os8-run is to make a copy of an image file,
 and edit the image file.  To obviate the need for an external driver
@@ -258,7 +269,7 @@ Adding an option to `mount` was considered, but in the interests
 of allowing an arbitrary name for the modified image, a separate
 command was created.
 
-### `copy_into` -- Copy POSIX file *into* OS/8 environment
+### <a id="copy-into-comm"></a>`copy_into` -- Copy POSIX file *into* OS/8 environment.
 
 `copy_into` _posix-path_ [_option_]
 
@@ -278,12 +289,12 @@ Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `IN
 
      copy_into ../media/os8/init.cm
 
-### `copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
+### <a id="copy-from-comm"></a>`copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
 
 Copy files from the running OS/8 environment to the POSIX environment running SIMH.
 
 
-### `os8` -- Run arbitrary OS/8 command
+### <a id="os8-comm"></a>`os8` -- Run arbitrary OS/8 command.
 
 This command should be used ONLY for OS/8 commands that return immediately to command
 level.  `BATCH` scripts do this, and they can be run from here.
@@ -294,16 +305,16 @@ The rest of the line is passed uninterpreted to the OS/8 keyboard monitor with
 the expectation that the command will return to the monitor command level and
 the command prompt, "`.`" will be produced.
 
-### `pal8` -- Run OS/8 PAL-8 assembler
+### <a id="pal8-comm"></a>`pal8` -- Run OS/8 `PAL8` assembler.
 
 * run `PAL8` with either a 3 argument form that produces a listing file, or a 2 argument form that does not.
 
-### `begin` / `end` -- Complex conditionals and sub-command blocks
+### <a id="begin-end-comm"></a>`begin` / `end` -- Complex conditionals and sub-command blocks.
 
 * run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the command decoder.
 * run 'BUILD' with arbitrarily complex configuration scripts, including a `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
 
-### `enable` / `disable` -- Set an enablement or disablement
+### <a id="en-dis-comm"></a>`enable` / `disable` -- Set an enablement or disablement.
 
 The `enable` and `disable` commands allow dynamic control over conditional
 execution in `begin` / `end` blocks.
@@ -331,11 +342,11 @@ How do you implement an exception to an exception? Like this:
     patch ../media/os8/patches/FUTIL-31.21.2M-v7D.patch8
     end not-disabled futil_patch
 
-### `patch` -- Run a patch file
+### <a id="patch-comm"></a>`patch` -- Run a patch file.
 
 * run of patch scripts that will use `ODT` or `FUTIL` to patch the booted system image.
 
-### `configure` -- Perform certain SIMH configuration activities.
+### `configure` -- Perform specific SIMH configuration activities.
 
 * configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting
 between otherwise incompatible configurations of SIMH and OS/8 device drivers.
@@ -346,6 +357,7 @@ between otherwise incompatible configurations of SIMH and OS/8 device drivers.
 
 * Allow underscore and dash in mount options.
 * What happens if we don't have a done command in the script?
+* Add restart command.
 
 
 
