@@ -11,15 +11,25 @@ the design of a generalized script runner for OS/8 under SIMH emerged.
     * Scratch copies of read-only images can be created and booted.
     * An existing image can be copied for use.
 * copy files into the running OS/8 from the POSIX environment running SIMH.
-* copy files from the running OS/8 environment to the POSIX environment running SIMH.
-* run any OS/8 command as long as it returns immediately to the OS/8 Keyboard Monitor. This includes BATCH scripts.
-* run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the OS/8 Command Decoder.
-* run `PAL8` with either a 3 argument form that produces a listing file, or a 2 argument form that does not.
-* run 'BUILD' with arbitrarily complex configuration scripts, including the `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
-* configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting between otherwise incompatible configurations of SIMH and OS/8 device drivers.
-* run included script files so that common code blocks can be written once in an external included script.
-* run of patch scripts that will use `ODT` or `FUTIL` to patch files in the booted system image.
-* perform actions in a script conditional on feature enablement matching an arbitrary keyword.
+* copy files from the running OS/8 environment to the POSIX environment
+running SIMH.
+* run any OS/8 command as long as it returns immediately to the OS/8 Keyboard
+Monitor. This includes BATCH scripts.
+* run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the OS/8
+Command Decoder.
+* run `PAL8` with either a 3 argument form that produces a listing file,
+or a 2 argument form that does not.
+* run 'BUILD' with arbitrarily complex configuration scripts, including
+the `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
+* configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow
+shifting between otherwise incompatible configurations of SIMH and OS/8
+device drivers.
+* run included script files so that common code blocks can be written once
+in an external included script.
+* run of patch scripts that will use `ODT` or `FUTIL` to patch files in
+the booted system image.
+* perform actions in a script conditional on feature enablement matching
+an arbitrary keyword.
 * perform actions in a script unless a disablement keyword has been specified.
 * set enable or disable keywords anywhere in the execution of a script.
 
@@ -66,6 +76,32 @@ twice in a somewhat confusing cacophony.
 | `--disable DISABLE`       | Ignore and do not execute script code within `begin
 |                           | not-disabled` _DISABLE_ block.
 
+## Scripting commands
+
+Here is a list of the `os8-run` scripting language commands in alphabetical order.
+
+[`boot`](#boot-comm) -- Script is done
+[`begin`](#begin-end-comm)
+[`configure`](#configure-comm)
+[`copy`](#copy-com)
+[`copy_from`](#copy-from-comm)
+[`copy_into`](#copy-into-comm)
+[`disable`](#disable-comm)
+[`done`](#done-comm)
+[`enable`](#enable-comm)
+[`end`](#end-comm)
+[`include`](#include-comm)
+[`mount`](#mount-comm)
+[`os8`](#os8-comm)
+[`pal8`](#pal8-comm)
+[`patch`](#patch-comm)
+[`resume`](#resume-comm)
+[`umount`](#umount-comm)
+
+The subsequent sections of this document present the commands in the order
+that seems most appropriate to building up an understanding of making
+first simple and then complex scripts with `os8-run`.
+
 ## Command contexts
 
 It is important to be mindful of the different command contexts when
@@ -92,8 +128,8 @@ The commands that execute in the OS/8 environment require a system image
 to be attached and booted.  Attempts to run OS/8 commands without having
 booted OS/8 kill the script.
 
-Commands such as mount, umount, and configure execute in the SIMH context.
-OS/8 is suspended for these commands.
+Scripting commands such as `mount`, `umount`, and `configure` execute
+in the SIMH context. OS/8 is suspended for these commands.
 
 Ideally we would just resume OS/8 with a SIMH continue command when we are
 finished running SIMH commands. Unfortunately this does not work under Python
@@ -126,21 +162,23 @@ Although `os8-run` provides a `resume` command that can appear in
 scripts after the commands that escape out to SIMH, using it is optional.
 `os8-run` checks the context and issues its own resume call if needed.
 
-### `done` -- Script is done.
+### `done` -- Script is done. {#done-comm}
 
 This is an explicit statement to end processing of our script.
 
 * All temporary files are deleted.
-* All attached SIMH image files are gracefully detached with any pending writes completed.
+* All attached SIMH image files are gracefully detached with any
+pending writes completed.
 * SIMH is gracefully shut down with a `quit` command.
 
-### `include` -- Execute a subordinate script file.
+
+### `include` -- Execute a subordinate script file. {#include-comm}
 
 `include` _script-file-path_
 
 ### `mount` -- Mount an image file as a SIMH attached device.
 
-`mount` _simh-dev_ _image-file_ [_option_ ...]
+`mount` _simh-dev_ _image-file_ [_option_ ...] {#mount-comm}
 
 If the `mount` command is issued when you in the OS/8 context, you will
 need to explicitly resume OS/8.
