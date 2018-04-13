@@ -80,23 +80,24 @@ twice in a somewhat confusing cacophony.
 
 Here is a list of the `os8-run` scripting language commands in alphabetical order.
 
-[`boot`](#boot-comm) -- Script is done
-[`begin`](#begin-end-comm)
-[`configure`](#configure-comm)
-[`copy`](#copy-com)
-[`copy_from`](#copy-from-comm)
-[`copy_into`](#copy-into-comm)
-[`disable`](#disable-comm)
-[`done`](#done:-script-is-done)
-[`enable`](#enable-comm)
-[`end`](#end-comm)
-[`include`](#include-comm)
-[`mount`](#mount-comm)
-[`os8`](#os8-comm)
-[`pal8`](#pal8-comm)
-[`patch`](#patch-comm)
-[`resume`](#resume-comm)
-[`umount`](#umount-comm)
+
+| [`boot`](#boot-comm)
+| [`begin`](#begin-end-comm) |
+| [`configure`](#configure-comm) |
+| [`copy`](#copy-com) |
+| [`copy_from`](#copy-from-comm) |
+| [`copy_into`](#copy-into-comm) |
+| [`disable`](#disable-comm) |
+| [`done`](#done-comm) | Script is done
+| [`enable`](#enable-comm) |
+| [`end`](#end-comm) |
+| [`include`](#include-comm) |
+| [`mount`](#mount-comm) |
+| [`os8`](#os8-comm) |
+| [`pal8`](#pal8-comm) |
+| [`patch`](#patch-comm) |
+| [`resume`](#resume-comm) |
+| [`umount`](#umount-comm) |
 
 The subsequent sections of this document present the commands in the order
 that seems most appropriate to building up an understanding of making
@@ -162,7 +163,9 @@ Although `os8-run` provides a `resume` command that can appear in
 scripts after the commands that escape out to SIMH, using it is optional.
 `os8-run` checks the context and issues its own resume call if needed.
 
-### `done`: Script is done
+
+### <a id="done-comm"></a>`done` -- Script is done
+
 
 This is an explicit statement to end processing of our script.
 
@@ -172,11 +175,11 @@ pending writes completed.
 * SIMH is gracefully shut down with a `quit` command.
 
 
-### `include` -- Execute a subordinate script file. {#include-comm}
+### <a id="include-comm"></a>`include` -- Execute a subordinate script file. {#include-comm}
 
 `include` _script-file-path_
 
-### `mount` -- Mount an image file as a SIMH attached device.
+### <a id="mount-comm"></a>`mount` -- Mount an image file as a SIMH attached device.
 
 `mount` _simh-dev_ _image-file_ [_option_ ...] {#mount-comm}
 
@@ -228,9 +231,9 @@ and `system_2.tu56` were found the new file would be called `system_3.tu56`, and
 The `no-overwrite` option turns out to be extremely helpful in experimenting with
 scripts that may or may not work the first time.
 
-### umount -- Unmount a SIMH attached device image.
+### <a id="umount-comm"></a>umount -- Unmount a SIMH attached device image.
 
-### `boot` -- Boot the named SIMH device.
+### <a id="boot-comm"></a>`boot` -- Boot the named SIMH device.
 
 `boot` _simh-device_
 
