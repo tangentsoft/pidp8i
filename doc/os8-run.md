@@ -87,7 +87,7 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 [`copy_from`](#copy-from-comm)
 [`copy_into`](#copy-into-comm)
 [`disable`](#disable-comm)
-[`done`](#done-comm)
+[`done`](#done:-script-is-done)
 [`enable`](#enable-comm)
 [`end`](#end-comm)
 [`include`](#include-comm)
@@ -162,7 +162,7 @@ Although `os8-run` provides a `resume` command that can appear in
 scripts after the commands that escape out to SIMH, using it is optional.
 `os8-run` checks the context and issues its own resume call if needed.
 
-### `done` -- Script is done. {#done-comm}
+### `done`: Script is done
 
 This is an explicit statement to end processing of our script.
 
