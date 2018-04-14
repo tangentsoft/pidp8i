@@ -107,7 +107,7 @@ command reference](#scripting) below. That section presents commands
 in an order appropriate to building up an understanding of making
 first simple and then complex scripts with `os8-run`.
 
-## Execution contexts
+## <a id="contexts"></a>Execution contexts
 
 It is important to be mindful of the different command contexts when
 running scripts under `os8-run`:
@@ -146,7 +146,8 @@ these actions don't work under Python expect. We don't know why.
 
 Booting OS/8 gives a fresh prompt.
 
-Restarting the OS/8 Monitor with a SIMH `go 7600` works.
+Restarting the OS/8 Monitor with a SIMH command line of \"`go 7600`\"
+works.
 
 The least disruptive way we have found to resume OS/8 under Python expect
 after having escaped to SIMH is to issue the SIMH `continue` command, then
@@ -281,19 +282,53 @@ hangs for a while and then gives a timeout backtrace.
 
 ### <a id="resume-comm"></a>`resume` -- Resume OS/8 at Keyboard Monitor command level.
 
-XXX  -- talk about non-disruptive restart ----
+`resume`
 
+As explained above in the [Execution contexts](#contexts) section, we
+can't just issue a SIMH `continue` command because we need some output
+from OS/8 running within SIMH to re-synchronize Python expect to.
+
+After trying several different things that did not work, the least
+disruptive action is to send `CTRL/C` and a newline with some keyboard
+delays. The `resume` command does this.
+
+However, because the context switches are well-defined, the `resume`
+command is completely optional in scripts.  Instead `os8-run`, when it
+detects the need to return to OS/8 from SIMH command level, will issue
+a `resume` command to force a context switch. 
 
 ### <a id="restart-comm"></a>`restart` -- Restart OS/8.
 
-XXX  -- talk about somewhat disruptive restart go 7600 --
+`restart`
+
+Equivalent to the SIMH command line of \"`go 7600`\".
+
+Before `resume` was developed, the next less disruptive way to get an
+OS/8 Keyboard Monitor prompt was to restart SIMH at address 07600.
+This is considered a soft-restart of OS/8.  It is less disruptive than
+a `boot` command, because the `boot` command loads OS/8 into main
+memory from the boot device, whereas restarting at location 07600 is
+just a resart without a reload.
+
+The restart does re-initilaize some state so it is more disruptive
+than the `CTRL/C` resume documented above.
+
 XXX  -- not implemented yet --
 
 ### <a id="copy-comm"></a>`copy` -- Make a copy of a POSIX file.
 
-A common activity for os8-run is to make a copy of an image file,
-and edit the image file.  To obviate the need for an external driver
-that would create the copy, we added a copy command.
+`copy` _source-path_ _destination-path_
+
+The most common activity for `os8-run` is to modify a system image.
+
+However, we often want to keep the original and modify a copy.
+For example, `os8v3d-patched.rk05`, a commonly used system image comes
+from modifying `os8v3d-bin.rk05`.  We keep the latter around so we
+don't have to keep rebuilding the baseline.
+
+Instead of requiring some external caller to carefully preserve the
+old file, the "make a copy with arbitrary name" functionality was
+added by way of this command.
 
 Adding an option to `mount` was considered, but in the interests
 of allowing an arbitrary name for the modified image, a separate
@@ -313,6 +348,15 @@ The option is either empty or exactly one of
 
 If no option is specified, `/A` is assumed.
 
+In the first form of the command, the OS/8 file specification is left
+out, and one is synthesized from the file component of the _posix-path_.
+
+This is how you get files *into* OS/8 from the outside world.  For
+example, this enables source code management using modern tools.  The
+builder script would check out the latest source and use an `os8-run`
+script beginning with a `copy_into` command to send it to OS/8 for
+assembly, linking, installation, etc.
+
 Example:
 
 Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `INIT.CM`:
@@ -321,23 +365,84 @@ Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `IN
 
 ### <a id="copy-from-comm"></a>`copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
 
+`copy_from`_os8-filespec_ _posix-path_ [_option_]
+
+The option is either empty or exactly one of
+
+| `/A` | OS/8 `PIP` ASCII format. POSIX newlines are converted to OS/8 newlines.
+| `/B` | OS/8 `PIP` `BIN` format. Paper tape leader/trailer may be added.
+| `/I` | OS/8 `PIP` image format. Bit for Bit copy.
+
+If no option is specified, `/A` is assumed.
+
+Unlike `copy_into` there is only one form of the command.  Both the
+_os8-filespec_ and the _posix-path_ must be specified.  The options
+are the same for both `copy_from` and `copy_into`.
+
 Copy files from the running OS/8 environment to the POSIX environment running SIMH.
+
+Example:
+
+Copy a listing file into the current working directory of the
+executing `os8-run`:
+
+    copy_from DSK:OS8.LS ./os8.ls /A
 
 
 ### <a id="os8-comm"></a>`os8` -- Run arbitrary OS/8 command.
 
-This command should be used ONLY for OS/8 commands that return immediately to command
-level.  `BATCH` scripts do this, and they can be run from here.
-
 `os8` _os8-command-line_
 
-The rest of the line is passed uninterpreted to the OS/8 keyboard monitor with
-the expectation that the command will return to the monitor command level and
-the command prompt, "`.`" will be produced.
+Everything on the script command line after \"os8 \" is passed,
+uninterpreted, to the OS/8 keyboard monitor with the expectation that
+the command will return to the monitor command level and the command
+prompt, "`.`" will be produced.
+
+This command should be used ONLY for OS/8 commands that return
+immediately to command level.  `BATCH` scripts do this, and they can
+be run from here.
 
 ### <a id="pal8-comm"></a>`pal8` -- Run OS/8 `PAL8` assembler.
 
-* run `PAL8` with either a 3 argument form that produces a listing file, or a 2 argument form that does not.
+`pal8` _os8-bn-spec_`<`_os8-pa-spec_
+
+`pal8` _os8-bn-spec_`,`_os8-ls-spec_`<`_os8-pa-spec_
+
+Note that the parser for this wrapper for `PAL8` is much too
+conservative in what it allows:
+
+* No `PAL8` options are allowed.
+* No whitespace within the `PAL8` command call specification.
+* Only two ways to call `PAL8`:
+    * two argument form with binary and source or
+    * three argument form with
+* binary, listing, and source.
+* _os8-bn-spec_` must specify a binary filename ending in `.BN`
+* _os8-ls-spec_` must specify a listing filename ending in `.LS`
+* _os8-pa-spec_` must specify a source filename ending in `.PA`
+
+This should be improved.  The reason why this wrapper is so
+constrained is that it evolved from extremely rudimentary, hard-coded
+scripts, and hasn't been worked on since reaching minimum necessary
+functionality.
+
+The three file name specifiers can include an OS/8 device specification.
+
+Run `PAL8` with either a 3 argument form that produces a listing file,
+or a 2 argument form that does not.
+
+Examples:
+
+Create a binary `OS8.BN` on partition B of rk05 drive 1 from `OS8.PA`
+source file found on partition A of rk05 drive 1.
+
+    pal8 RKB1:OS8.BN<RKA1:OS8.PA
+
+Create a binary `OS8.BN` on partition B of rk05 drive 1 and a listing
+file `OS8.LS` on the default device `DSK:` from `OS8.PA` source file
+found on partition A of rk05 drive 1.
+
+    pal8 RKB1:OS8.BN,OS8.LS<RKA1:OS8.PA
 
 ### <a id="begin-end-comm"></a>`begin` / `end` -- Complex conditionals and sub-command blocks.
 
@@ -388,7 +493,8 @@ between otherwise incompatible configurations of SIMH and OS/8 device drivers.
 * Allow underscore and dash in mount options.
 * What happens if we don't have a done command in the script?
 * Add restart command.
-
+* Allow whitespace on the pal8 command line.
+* Allow passing in of arguments to PAL8.
 
 
 ### <a id="license"></a>License
