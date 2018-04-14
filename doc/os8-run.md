@@ -1,7 +1,8 @@
 # `os8-run` A Script Runner for OS/8 under SIMH
 
-After having done a lot of exploring of how to create system images,
-the design of a generalized script runner for OS/8 under SIMH emerged.
+After having done a lot of exploring of how to automate the creation
+of system images, this generalized script runner for OS/8 under SIMH
+emerged.
 
 ## Overview
 
@@ -28,7 +29,7 @@ device drivers.
 in an external included script.
 * run of patch scripts that will use `ODT` or `FUTIL` to patch files in
 the booted system image.
-* perform actions in a script conditional on feature enablement matching
+* perform actions in a script conditionally on feature enablement matching
 an arbitrary keyword.
 * perform actions in a script unless a disablement keyword has been specified.
 * set enable or disable keywords anywhere in the execution of a script.
@@ -36,25 +37,26 @@ an arbitrary keyword.
 Under the covers, `run-os8` is a Python script that uses the Python expect
 library that is capable of handling complex dialogs with commands.
 
-Sometimes debugging these scripts is challenging because if you
-fall out of step with what is `expect`ed, the expect engine will get confused.
-The `os8-run` command hangs for a while and then times out with a big Python backtrace.
+Sometimes debugging these scripts is challenging because if you fall
+out of step with what is `expect`ed, the expect engine will get
+confused.  The `os8-run` command hangs for a while and then times out
+with a big Python backtrace.
 
-calling `os8-run` with `-v` gives verbose output that enables you to watch
-every step of the script running.  Unfortunately, the output often echos characters
-twice in a somewhat confusing cacophony.
+Running`os8-run` with the `-v` option gives verbose output that
+enables you to watch every step of the script running.
 
 ## Usage
 
 > `os8-run` [`-h`] [`-d`] [`-v`] [`-vv`] [_optional-arguments_ ...]  _script-file_ ...
 
 |                           | **Positional Arguments**
-| _script-file_            | One or more script files to run
+| _script-file_             | One or more script files to run
 |                           | **Optional Arguments**
 | `-h`                      | show this help message and exit
 | `-d`                      | add extra debugging output, normally suppressed
-| `-v`                      | verbose SIMH output instead of progress messages
-| `-vv`                     | very verbose: Include SIMH expect output with SIMH output.
+| `-v`                      | verbose script status output instead of the usual few progress messages
+| `-vv`                     | very verbose: Includes SIMH expect output with the verbose output.
+|                           | **Enable/Disable Options**
 | `--disable-ba`            | Leave *.BA `BASIC` games and demos off the built OS/8 RK05 image
 | `--enable-focal69`        | Add `FOCAL69` to the built OS/8 RK05 image
 | `--disable-uwfocal`       | Leave U/W FOCAL (only) off the built OS/8 RK05 image
@@ -76,13 +78,13 @@ twice in a somewhat confusing cacophony.
 | `--disable DISABLE`       | Ignore and do not execute script code within `begin
 |                           | not-disabled` _DISABLE_ block.
 
-## Scripting commands
+## Script Language command inventory
 
 Here is a list of the `os8-run` scripting language commands in alphabetical order.
 
 
 | [`boot`](#boot-comm)           | Boot the named SIMH device.                      |
-| [`begin`](#begin-end-comm)     | Begin complex conditionals or sub-command block. |
+| [`begin`](#begin-end-comm)     | Begin complex conditional or sub-command block. |
 | [`configure`](#configure-comm) | Perform specific SIMH configuration activities.  |
 | [`copy`](#copy-com)            | Make a copy of a POSIX file.                     |
 | [`copy_from`](#copy-from-comm) | Copy *from* OS/8 to a file in POSIX environment. |
@@ -90,7 +92,7 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`disable`](#en-dis-comm)      | Set disablement of a feature by keyword.         |
 | [`done`](#done-comm)           | Script is done.                                  |
 | [`enable`](#en-dis-comm)       | Set enablement of a feature by keyword.          |
-| [`end`](#begin-end-comm)       | End complex conditionals or sub-command block.   |
+| [`end`](#begin-end-comm)       | End complex conditional or sub-command block.   |
 | [`include`](#include-comm)     | Execute a subordinate script file.               |
 | [`mount`](#mount-comm)         | Mount an image file as a SIMH attached device.   |
 | [`os8`](#os8-comm)             | Run arbitrary OS/8 command.                      |
@@ -100,11 +102,12 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`restart`](#restart-comm)     | Restart OS/8.                                    |
 | [`umount`](#umount-comm)       | Unmount a SIMH attached device image.            |
 
-These commands are described in subsections of [Scripting Commands](#scripting) below. That
-section presents commands in an order appropriate to building up an understanding of making
+These commands are described in subsections of [Script Language
+command reference](#scripting) below. That section presents commands
+in an order appropriate to building up an understanding of making
 first simple and then complex scripts with `os8-run`.
 
-## Command contexts
+## Execution contexts
 
 It is important to be mindful of the different command contexts when
 running scripts under `os8-run`:
@@ -164,12 +167,12 @@ Although `os8-run` provides a `resume` command that can appear in
 scripts after the commands that escape out to SIMH, using it is optional.
 `os8-run` checks the context and issues its own resume call if needed.
 
-## <a id="scripting"></a>Scripting commands
+## <a id="scripting"></a>Script Language command reference
 
 ### <a id="done-comm"></a>`done` -- Script is done.
 
 
-This is an explicit statement to end processing of our script.
+This is an explicit statement to end processing of the script.
 
 * All temporary files are deleted.
 * All attached SIMH image files are gracefully detached with any
@@ -181,12 +184,27 @@ pending writes completed.
 
 `include` _script-file-path_
 
+The script file named in _script-file-path_ is executed.  If no fatal
+errors are encountered during that execution, then the main script
+continues on.
+
+A fatal error in an included script kills the whole execution of
+`os8-run`.
+
+Very few script language commands fail fatally.  The design principle
+was to ask, "Is the primary use case of this command a prerequisite
+for other work that would make no sense if this command failed?"  If
+the answer is, "yes", then the failure of command kills the execution
+of the whole script and aborts `os8-run`.  Commands that have fatal
+exits are mentioned specifically in the command reference section.
+
 ### <a id="mount-comm"></a>`mount` -- Mount an image file as a SIMH attached device.
 
-`mount` _simh-dev_ _image-file_ [_option_ ...] {#mount-comm}
+`mount` _simh-dev_ _image-file_ [_option_ ...]
 
-If the `mount` command is issued when you in the OS/8 context, you will
-need to explicitly resume OS/8.
+Because the primary expectation with `os8-run` scripts is that image
+files are mounted, booted and operated on, the failure of a `mount`
+command is fatal.
 
 #### `mount` Options
 
@@ -209,24 +227,27 @@ Mount the `os8v3d-patched.rk05` image, which must exist, on SIMH `rk0`.
 
     mount rk0 ./os8v3d-patched.rk05 must-exist
 
-Mount the `advent.tu56` image, which must exist, on SIMH `dt1` which will protect
-it from inadvertent modification.
+Mount the `advent.tu56` image, which must exist, on SIMH `dt1` which
+will protect it from inadvertent modification.
 
     mount dt1 ../media/os8/subsys/advent.tu56 read-only must-exist
 
-Create a writeable copy of the distribution DECtape, `al-4711c-ba-os8-v3d-1.1978.tu56`,
-which must exist.  Mount it on SIMH dt0 ready for for a read/write boot.  Delete the copy
-when the script is done.
+Create a writeable copy of the distribution DECtape,
+`al-4711c-ba-os8-v3d-1.1978.tu56`, which must exist.  Mount it on SIMH
+dt0 ready for for a read/write boot.  Delete the copy when the script
+is done.
 
      mount dt0 ../media/os8/al-4711c-ba-os8-v3d-1.1978.tu56 must-exist copy_scratch
 
-Create a new image file `system.tu56`.  If the file already exists, create a new version.
-If the numbered version file exists, keep incrementing the version number for the new file
-until a pre-existing file is not found.
+Create a new image file `system.tu56`.  If the file already exists,
+create a new version.  If the numbered version file exists, keep
+incrementing the version number for the new file until a pre-existing
+file is not found.
 
-For example, if `system.tu56` was not found, the new file would be called `system.tu56`.
-If it was found the next version would be called `system_1.tu56`.  If `system_1.tu56`
-and `system_2.tu56` were found the new file would be called `system_3.tu56`, and so on.
+For example, if `system.tu56` was not found, the new file would be
+called `system.tu56`.  If it was found the next version would be
+called `system_1.tu56`.  If `system_1.tu56` and `system_2.tu56` were
+found the new file would be called `system_3.tu56`, and so on.
 
      mount dt0 ./system.tu56 no-overwrite
 
@@ -235,19 +256,28 @@ scripts that may or may not work the first time.
 
 ### <a id="umount-comm"></a>umount -- Unmount a SIMH attached device image.
 
+`umount` _simh-device_
+
+This is just a wrapper for the SIMH `detach` command.
+
 ### <a id="boot-comm"></a>`boot` -- Boot the named SIMH device.
 
 `boot` _simh-device_
 
 Boot OS/8 on the named _simh-device_ and enter the OS/8 run-time context.
 
-The `boot` command checks to see if something is attached to the
-SIMH being booted.  It does not protect against trying to boot
-an image that is not bootable because it lacks a system area.
+The `boot` command tests to see if something is attached to the
+SIMH being booted.  If nothing is attached the command fails with a
+fatal error.
 
-In that latter case, `os8-run` hangs for a while and then gives a
-timeout backtrace.  This can't be tested in advance because
-booting a non-bootable image simply hangs the virtual machine.
+This test does not protect against trying to boot an image lacking a
+system area and thus not bootable.  This can't be tested in advance
+because booting a non-bootable image simply hangs the virtual machine.
+Heroic measures, like looking for magic system area bits in the image
+file were deemed too much work.
+
+If an attempt is made to boot an image with no system area, `os8-run`
+hangs for a while and then gives a timeout backtrace.
 
 ### <a id="resume-comm"></a>`resume` -- Resume OS/8 at Keyboard Monitor command level.
 
