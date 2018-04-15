@@ -612,16 +612,17 @@ patch the booted system image.
 
 The settings are device specific:
 
-| **tape** | **DECtape device settings                                |
-| `dt`     | Set TC08 operation by enabling `dt` as the SIMH DECtape  |
-|          | device.                                                  |
-| `td`     | Set TD8e operation by enabling `td` as the SIMH DECTape  |
-|          | device                                                   |
+| -------- | --------------------------------------------------------------- |
+| **tape** | **DECtape device settings**                                |
+| `dt`     | Set TC08 operation by enabling `dt` as the SIMH DECtape device. |
+| `td`     | Set TD8e operation by enabling `td` as the SIMH DECTape device. |
+| -------- | --------------------------------------------------------------- |
 | **tti**  | **Console terminal input device settings**               |
 | `KSR`    | Upper case only operation. Typed lower case caracters    |
 |          | are upcased automatically before being sent to OS/8      |
 | `7b`     | SIMH 7bit mode.  All characters are passed to OS/8       |
 |          | without case conversion.                                 |
+| -------- | --------------------------------------------------------------- |
 | **rx**   | **Floppy Disk device settings**                          |
 | `RX8E`   | Set the SIMH `rx` to `RX8E` mode compatible with RX01    |
 |          | Floppy Disk Drives.                                      |
@@ -629,6 +630,7 @@ The settings are device specific:
 |          | Floppy Disk Drives.                                      |
 | `rx01`   | Synonym for the `RX8E` option. Compatible with RX01.     |
 | `rx02`   | Synonym for the `RX28` option. Compatible with RX02.     |
+| -------- | --------------------------------------------------------------- |
 
 This command allows reconfiguration of the SIMH devices during the
 execution of a `os8-run` script.  This command makes it possible to
