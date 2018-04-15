@@ -446,18 +446,140 @@ found on partition A of rk05 drive 1.
 
 ### <a id="begin-end-comm"></a>`begin` / `end` -- Complex conditionals and sub-command blocks.
 
-* run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the command decoder.
-* run 'BUILD' with arbitrarily complex configuration scripts, including a `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
+`begin` _keyword_ _argument_
+
+`end` _keyword_
+
+_keyword_ is either one of the following:
+
+| `absldr`       | `ABSLDR` command loop through OS/8 Command Decoder |
+| `fotp`         | `FOTP` command loop through OS/8 Command Decoder   |
+| `build`        | `BUILD` command interpreter with dialogs manged with Python expect.    |
+| `enabled`      | Execution block if _argument_ is enabled. (See the [`enable` \ `disable`](#en-dis-comm)) section below. |
+| `not-disabled` | Execution block if _argument_ is not disabled. (See the [`enable` \ `disable`](#en-dis-comm))  section below. |
+
+For `absldr`, `fotp`, and `build`, _argument_ is passed to the OS/8
+`RUN` command.  This enables running the OS/8 command from specific
+devices. This is necessary for running specific `BUILD` command for
+construction of system images for specific versions of OS/8 that are
+__different__ from the default run image.
+
+**FIXME** The _argument_ is passed directly to OS/8 to run.  It is
+possible to run a completely different command.  The argument should
+have a sanity check parse.  Perhaps we should switch to using
+_argument_ as the device name, and supply the comment ourselves.
+
+The `build` command has had a lot of work put into parsing dialogs.
+This enables not only device driver related `BUILD` commands of
+`LOAD`, `UNLOAD`, `ENABLE` and `DISABLE`, but also answers "yes" to
+the "ZERO SYS" question when the `BOOT` command is issued on a brand
+new image file.
+
+Most importantly there is full support for the dialog with the `BUILD`
+command within the `BUILD` program to create a new OS/8 system head
+with new versions of `OS8.BN` and `CD.BN` assembled from source.
+
+Note: OS/8 disables the `BUILD` command within the `BUILD`
+program after it has been issued during a run.  Traditionally, the
+first action after a `BOOT` of a newly built system is to `SAVE` the
+just executed memory image of `BUILD`.  That saves all the device
+configurations, but also saves a version with the `BUILD` command
+within the `BUILD` program disabled.
+
+For this reason, you have to run a fresh version of `BUILD` from
+distribution media rather than one saved from a previous run.  This
+situation is what drove support for the _argument_ specifier to name
+the location of the program to run rather than always running from a
+default location.
+
+`os8-run` contains two lists of keywords that have been set as enabled
+or disabled.  The setting is done either with `os8-run` command line
+arguments or with the `enable` and `disable` commands (documented
+below.)
+
+Two lists are required because default behavior is different for
+enablement versus disablement.
+
+The `begin enabled` block looks on the `enabled` list for the
+keyword. If **no** such keyword is found, the block is ignored.
+
+The `begin not-disabled` block looks on the `disabled` list for the
+keyword. If such a keyword **is** found the block is ignored.
+
+A `not-disabled` block allows lines of the script to be run unless a
+keyword has been set as a disablement.  Whereas the `enabled` block
+requires an explicit keyword enablement, the `not-disabled` block
+requires no enablement. It is a default that requires explicit
+disablement.
+
+This dichotomy of `enabled` versus `not-disabled seems strange until
+you start writing scripts where you want conditional behavior that is
+enabled by default without having to touch other parts of the build
+system to inform them about new enablement keywords.  So
+`not-disabled` is for blocks of scripting code that is executed by
+default unless explicitly disabled.
+ 
+All these conditional and sub-command blocks must terminate with an
+`end` command.  The _keyword_ of the end command must always match the
+_begin_ command.  The argument of `enabled` and `not-disabled` blocks
+must also match. Nesting is possible, but care should be exercised to
+avoid crossing nesting boundaries.
+
+For example:
+
+    begin enabled outer
+    begin enabled inner
+    end enabled inner
+    end enabled outer
+
+is correct, but:
+
+    begin enabled first
+    begin enabled second
+    end enabled first
+    end enabled second
+
+is an error.
 
 ### <a id="en-dis-comm"></a>`enable` / `disable` -- Set an enablement or disablement.
 
-The `enable` and `disable` commands allow dynamic control over conditional
-execution in `begin` / `end` blocks.
+`enable` _keyword_
 
+`disable` _keyword_
 
-As explained above, the `not-disabled` construct enables us to do
-things by default without setting any explicit enablement -- an exception.
-How do you implement an exception to an exception? Like this:
+The `enable` and `disable` commands are used within scripts to
+dynamically set enablement and disablement.  This expands the scope of
+conditional execution beyond setting passed in from the `os8-run`
+command line.
+
+As mentioned above, there are two lists of keywords, one for `enabled`
+keywords and one for `disabled` keywords.
+
+The `enable` command not only adds the keyword to the `enabled`
+list. It also looks for the keyword on the `disabled` list.  If the
+keyword is found on the `disabled` list, it is **removed**.
+
+Similarly, the `disable` command adds the keyword to the `disabled`
+list, and searches the `enabled` list for the keyword.  If it is found
+on the `enabled` list, it is removed.
+
+A keyword, will appear only once, if present at all, and will be on
+only one of the two lists.
+
+The rule is: Last action wins.
+
+Why all this complexity? Here is an example we tripped over and had to
+implement:  We normally apply patches to the version of `FUTIL` that
+came on the OS/8 v3d distribution DECtapes.  We also have an add-on
+for the `MACREL` assembler.  That add-on contains a version of `FUTIL`
+with updates required to work with binaries assembled with `MACREL`
+v2. The `os8v3d-patch.mkos8` script needed to either avoid trying to
+patch an updated `FUTIL` if `MACREL` was present, or to perform the
+patching action if `MACREL` was not present.
+
+A further complication is that we opt in to including the `MACREL`
+add-on by default.  We deal with this triple negative by setting
+`disable futil_patch` by default, unless `macrel` gets disabled:
 
     # MACREL is enabled by default with no settings.
     # We need to avoid patching FUTIL in that default case
@@ -479,14 +601,58 @@ How do you implement an exception to an exception? Like this:
 
 ### <a id="patch-comm"></a>`patch` -- Run a patch file.
 
-* run of patch scripts that will use `ODT` or `FUTIL` to patch the booted system image.
+`patch` _patch-file-path_
+
+Run _patch-file-path_ file as a script that uses `ODT` or `FUTIL` to
+patch the booted system image.
 
 ### `configure` -- Perform specific SIMH configuration activities.
 
-* configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow shifting
-between otherwise incompatible configurations of SIMH and OS/8 device drivers.
+`configure` _device_ _setting_
 
+The settings are device specific:
 
+| **tape** | **DECtape device settings                                |
+| `dt`     | Set TC08 operation by enabling `dt` as the SIMH DECtape  |
+|          | device.                                                  |
+| `td`     | Set TD8e operation by enabling `td` as the SIMH DECTape  |
+|          | device                                                   |
+| **tti**  | **Console terminal input device settings**               |
+| `KSR`    | Upper case only operation. Typed lower case caracters    |
+|          | are upcased automatically before being sent to OS/8      |
+| `7b`     | SIMH 7bit mode.  All characters are passed to OS/8       |
+|          | without case conversion.                                 |
+| **rx**   | **Floppy Disk device settings**                          |
+| `RX8E`   | Set the SIMH `rx` to `RX8E` mode compatible with RX01    |
+|          | Floppy Disk Drives.                                      |
+| `RX28`   | Set the SIMH `rx` to `RX28` mode compatible with RX02    |
+|          | Floppy Disk Drives.                                      |
+| `rx01`   | Synonym for the `RX8E` option. Compatible with RX01.     |
+| `rx02`   | Synonym for the `RX28` option. Compatible with RX02.     |
+
+This command allows reconfiguration of the SIMH devices during the
+execution of a `os8-run` script.  This command makes it possible to
+create system images for hardware configurations that are not what are
+commony used for OS/8 operation under SIMH.
+
+The best example is the dichotomy between TD8e and TC08 DECTape.
+
+TC08 is a DMA device. It is trivial to emulate. The SIMH device driver
+simply copies blocks around in the .tu56 DECtape image.
+
+TD8e is an inexpensive, DECtape interface on a single hex width card
+for PDP8 hardware supporting the Omnibus&tm.  The CPU does most of the
+work. Although a SIMH emulation is available for TD8e, it runs
+perceptably and often unacceptably more slowly than the simple TC08
+emulation.
+
+However, hardware in the field most often has the TD8e DECtape because
+it was inexpensive.
+
+By allowing reconfiguration inside a script, we can use TC08 by
+default, switch to TD8e to run `BUILD` and create .tu55 tape images
+suitable for deployment on commonly found hardware out in the real
+world. 
 
 ## TODOs:
 
@@ -495,7 +661,9 @@ between otherwise incompatible configurations of SIMH and OS/8 device drivers.
 * Add restart command.
 * Allow whitespace on the pal8 command line.
 * Allow passing in of arguments to PAL8.
-
+* Add sanity check parse of sub-commands to confirm command. **OR** Change the 
+begin command to treat _argument_ not as a full command, but merely
+a device from which to fetch the command.  Maybe make _argument_ optional.
 
 ### <a id="license"></a>License
 
