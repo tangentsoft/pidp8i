@@ -967,12 +967,12 @@ class os8script:
     # Case of additional arguments.
     if len (parts) > 1:
       # Perform must_exist before copy_scratch
-      if "must-exist" in parts[1:]:
+      if "must_exist" in parts[1:] or "must-exist" in parts[1:]:
           if not os.path.exists(imagename):
             print "At line " + str(self.line_ct_stack[0]) + \
               ", " + imagename + " must exist but was not found. Not mounting."
             return "die"
-      if "copy_scratch" in parts[1:]:
+      if "copy_scratch" in parts[1:] or "copy-scratch" in parts[1:]:
         copy_imagename = base_imagename + "_copy" + extension
         try:
           shutil.copyfile(imagename, copy_imagename)
@@ -985,12 +985,12 @@ class os8script:
         self.scratch_list.append(copy_imagename)
         imagename = copy_imagename
         
-      if "read-only" in parts:
+      if "read_only" in parts[1:] or "read-only" in parts[1:]:
         if copy_imagename != "":
           print "At line " + str(self.line_ct_stack[0]) + \
             ": You don't really need to set read-only on a scratch copy."
         ro_arg = "-r "
-      if "no-overwrite" in parts:
+      if "no_overwrite" in parts[1:] or "no-overwrite" in parts[1:]:
         if copy_imagename != "":
           print "Ignoring no-overwrite option at line " + \
             str(self.line_ct_stack[0]) + "because copy_scratch is present."

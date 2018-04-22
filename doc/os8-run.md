@@ -658,7 +658,6 @@ world.
 
 ## TODOs:
 
-* Allow underscore and dash in mount options.
 * What happens if we don't have a done command in the script?
 * Add restart command.
 * Allow whitespace on the pal8 command line.
@@ -666,6 +665,10 @@ world.
 * Add sanity check parse of sub-commands to confirm command. **OR** Change the 
 begin command to treat _argument_ not as a full command, but merely
 a device from which to fetch the command.  Maybe make _argument_ optional.
+
+## Notes:
+
+* Multi word mount options can be separated either by a dash or an underscore.
 
 ### <a id="license"></a>License
 
