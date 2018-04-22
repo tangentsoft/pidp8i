@@ -8,9 +8,13 @@ emerged.
 
 `os8-run` is a general script running facility that can:
 
-* attach desired system images and boot them.
-    * Scratch copies of read-only images can be created and booted.
-    * An existing image can be copied for use.
+* attach device image files with options that include but also go beyond what SIMH offers:
+    * Protect image by attaching it read-only.
+    * Recognize the use case of working with a pre-existing image, and abort the script if the image is not found, rather than creating a new, blank image.
+    * Protect a master boot image that will not boot read-only by creating a scratch copy and booting the copy instead.
+    * Recognize the use case of creating a new, blank image, but preserving any pre-existing image files of the same name.
+* boot OS/8 on an arbitrary attached device image.
+* create a duplicate of an existing file. This is the use case of building new image files from an existing baseline while preserving the baseline image file.
 * copy files into the running OS/8 from the POSIX environment running SIMH.
 * copy files from the running OS/8 environment to the POSIX environment
 running SIMH.
