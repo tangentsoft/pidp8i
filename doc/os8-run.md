@@ -81,6 +81,68 @@ version of the OS/8 `BUILD` utility from POSIX source.
     done
 
 
+## <a id="contexts"></a>Execution contexts
+
+It is important to be mindful of the different command contexts when
+running scripts under `os8-run`:
+
+* __SIMH context:__  Commands are interpreted by SIMH command processor.
+* __OS/8 context:__  Commands are interpreted by the OS/8 Keyboard Monitor.
+* __`begin` / `end` blocks:__  These create special interpreter loops with their
+own rules.
+
+Examples of `begin` / `end` blocks:
+
+* __Command Decoder:__  Programs like `ABSLDR` and `FOTP` call the OS/8 Command Decoder
+to get file specifications and operate on them. `os8-run` uses a `begin` / `end` block to
+define set of files to feed to the Command Decoder and to indicate the last file, and
+a return to the OS/8 context.
+* __OS/8 `BUILD`:__ Commands are passed to `BUILD` and output is interpreted.  The `end`
+of the block signifies the end of the `BUILD` program and a return to the OS/8 context.
+* __Conditional Execution:__ Blocks of script code, delimited by a `begin` / `block` can be
+either executed or ignored depending on the key word that is enabled when that block
+is encountered.  This context is very interesting and is more fully documented below.
+
+The commands that execute in the OS/8 environment require a system image
+to be attached and booted.  Attempts to run OS/8 commands without having
+booted OS/8 kill the script.
+
+Scripting commands such as `mount`, `umount`, and `configure` execute
+in the SIMH context. OS/8 is suspended for these commands.
+
+Ideally we would just resume OS/8 with a SIMH continue command when we are
+finished running SIMH commands. Unfortunately this does not work under Python
+expect.  The expect engine needs a command prompt.
+
+Although hitting the erase character (`RUBOUT`) or the line kill character
+(`CTRL/U`) to a terminal-connected SIMH OS/8 session gives a command prompt,
+these actions don't work under Python expect. We don't know why.
+
+Booting OS/8 gives a fresh prompt.
+
+Restarting the OS/8 Monitor with a SIMH command line of \"`go 7600`\"
+works.
+
+The least disruptive way we have found to resume OS/8 under Python expect
+after having escaped to SIMH is to issue the SIMH `continue` command, then
+pause for an keyboard delay, then send `CTRL/C` then pause again, then send
+`\r\n`.  That wakes OS/8 back up and produces a Keyboard Monitor prompt.
+
+The simh.py code that underlies all this keeps track of the switch
+between the SIMH and OS/8 contexts.  However it does not presume to
+do this resumption because the `CTRL/C` will quit out of any program
+being run under OS/8, and return to the keyboard monitor level.
+
+Because `os8-run` creates the `begin` / `end` blocks with their own
+interpreter loops, around commands with complex command structures,
+it guarantees that the switch into SIMH context will only happen
+when OS/8 is quiescent in the Keyboard Monitor.
+
+Although `os8-run` provides a `resume` command that can appear in
+scripts after the commands that escape out to SIMH, using it is optional.
+`os8-run` checks the context and issues its own resume call if needed.
+
+
 ## Usage
 
 > `os8-run` [`-h`] [`-d`] [`-v`] [`-vv`] [_optional-arguments_ ...]  _script-file_ ...
@@ -142,67 +204,6 @@ These commands are described in subsections of [Script Language
 command reference](#scripting) below. That section presents commands
 in an order appropriate to building up an understanding of making
 first simple and then complex scripts with `os8-run`.
-
-## <a id="contexts"></a>Execution contexts
-
-It is important to be mindful of the different command contexts when
-running scripts under `os8-run`:
-
-* __SIMH context:__  Commands are interpreted by SIMH command processor.
-* __OS/8 context:__  Commands are interpreted by the OS/8 Keyboard Monitor.
-* __`begin` / `end` blocks:__  These create special interpreter loops with their
-own rules.
-
-Examples of `begin` / `end` blocks:
-
-* __Command Decoder:__  Programs like `ABSLDR` and `FOTP` call the OS/8 Command Decoder
-to get file specifications and operate on them. `os8-run` uses a `begin` / `end` block to
-define set of files to feed to the Command Decoder and to indicate the last file, and
-a return to the OS/8 context.
-* __OS/8 `BUILD`:__ Commands are passed to `BUILD` and output is interpreted.  The `end`
-of the block signifies the end of the `BUILD` program and a return to the OS/8 context.
-* __Enablement Context:__ Blocks of script code, delimited by a `begin` / `block` can be
-either executed or ignored depending on the key word that is enabled when that block
-is encountered.  This context is very interesting and is more fully documented below.
-
-The commands that execute in the OS/8 environment require a system image
-to be attached and booted.  Attempts to run OS/8 commands without having
-booted OS/8 kill the script.
-
-Scripting commands such as `mount`, `umount`, and `configure` execute
-in the SIMH context. OS/8 is suspended for these commands.
-
-Ideally we would just resume OS/8 with a SIMH continue command when we are
-finished running SIMH commands. Unfortunately this does not work under Python
-expect.  The expect engine needs a command prompt.
-
-Although hitting the erase character (`RUBOUT`) or the line kill character
-(`CTRL/U`) to a terminal-connected SIMH OS/8 session gives a command prompt,
-these actions don't work under Python expect. We don't know why.
-
-Booting OS/8 gives a fresh prompt.
-
-Restarting the OS/8 Monitor with a SIMH command line of \"`go 7600`\"
-works.
-
-The least disruptive way we have found to resume OS/8 under Python expect
-after having escaped to SIMH is to issue the SIMH `continue` command, then
-pause for an keyboard delay, then send `CTRL/C` then pause again, then send
-`\r\n`.  That wakes OS/8 back up and produces a Keyboard Monitor prompt.
-
-The simh.py code that underlies all this keeps track of the switch
-between the SIMH and OS/8 contexts.  However it does not presume to
-do this resumption because the `CTRL/C` will quit out of any program
-being run under OS/8, and return to the keyboard monitor level.
-
-Because `os8-run` creates the `begin` / `end` blocks with their own
-interpreter loops, around commands with complex command structures,
-it guarantees that the switch into SIMH context will only happen
-when OS/8 is quiescent in the Keyboard Monitor.
-
-Although `os8-run` provides a `resume` command that can appear in
-scripts after the commands that escape out to SIMH, using it is optional.
-`os8-run` checks the context and issues its own resume call if needed.
 
 ## <a id="scripting"></a>Script Language command reference
 
