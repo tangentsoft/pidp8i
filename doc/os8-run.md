@@ -489,22 +489,33 @@ found on partition A of rk05 drive 1.
 
 _keyword_ is either one of the following:
 
-| `absldr`       | `ABSLDR` command loop through OS/8 Command Decoder |
-| `fotp`         | `FOTP` command loop through OS/8 Command Decoder   |
+| `os8_cd`       | `Command loop through OS/8 Command Decoder with _argument_ specifying an OS/8 command by name and (optionally) device.|
 | `build`        | `BUILD` command interpreter with dialogs manged with Python expect.    |
 | `enabled`      | Execution block if _argument_ is enabled. (See the [`enable` \ `disable`](#en-dis-comm)) section below. |
 | `not-disabled` | Execution block if _argument_ is not disabled. (See the [`enable` \ `disable`](#en-dis-comm))  section below. |
 
-For `absldr`, `fotp`, and `build`, _argument_ is passed to the OS/8
-`RUN` command.  This enables running the OS/8 command from specific
-devices. This is necessary for running specific `BUILD` command for
-construction of system images for specific versions of OS/8 that are
-__different__ from the default run image.
+For `os8_cd`, and `build`, _argument_ is passed uninterpreted to the
+OS/8 `RUN` command.  It is expected that _argument_ will be the name
+of an executable, optionally prefixed by a device specification. This
+enables running the OS/8 command from specific devices. This is
+necessary for running specific `BUILD` command for construction of
+system images for specific versions of OS/8 that are __different__
+from the default run image.
 
-**FIXME** The _argument_ is passed directly to OS/8 to run.  It is
-possible to run a completely different command.  The argument should
-have a sanity check parse.  Perhaps we should switch to using
-_argument_ as the device name, and supply the comment ourselves.
+Example:
+
+Run `FOTP.SV` from device `RKA0` and cycle through the command decoder
+to copy files onto a DECtape under construction from two different
+places: the old system on `RKA0:` and the newly built components from
+`RKB1:`.
+
+    begin os8_cd RKA0:FOTP.SV
+    DTA0:<RKA0:FOTP.SV
+    DTA0:<RKA0:DIRECT.SV
+    DTA0:<RKB1:CCL.SV
+    DTA0:<RKB1:RESORC.SV
+    end os8_cd RKA0:FOTP.SV
+
 
 The `build` command has had a lot of work put into parsing dialogs.
 This enables not only device driver related `BUILD` commands of
@@ -512,9 +523,33 @@ This enables not only device driver related `BUILD` commands of
 the "ZERO SYS" question when the `BOOT` command is issued on a brand
 new image file.
 
+Example:
+
+Build a rudimentary system for a TC08 DECtape.
+
+    begin build SYS:BUILD
+    DELETE SYS,RKA0,RKB0
+    DELETE RXA0
+    INSERT RK05,RKA0,RKB0
+    SYSTEM TC08
+    INSERT TC08,DTA0
+    INSERT TC,DTA1
+    DSK TC08:DTA0
+    BOOT
+    end build
+
+
 Most importantly there is full support for the dialog with the `BUILD`
 command within the `BUILD` program to create a new OS/8 system head
 with new versions of `OS8.BN` and `CD.BN` assembled from source.
+
+Example:
+
+To create a system tape with new OS/8 Keyboard Monitor and Command
+Decoder, the above example would add the following just before the
+`BOOT` line:
+
+    BUILD DSK:OS8.BN DSK:CD.BN
 
 Note: OS/8 disables the `BUILD` command within the `BUILD`
 program after it has been issued during a run.  Traditionally, the
@@ -528,6 +563,13 @@ distribution media rather than one saved from a previous run.  This
 situation is what drove support for the _argument_ specifier to name
 the location of the program to run rather than always running from a
 default location.
+
+Also, `BUILD` is too sensitive to the location of the `OS8.BN` and
+`CD.BN` files. It pretty much only works if you use `PTR:` or `DSK:`.
+Anything else seems to just hang.  I believe the root cause is that,
+although the device and file are parsed, the actual device has to be
+either `PTR:` or the active system device.
+
 
 `os8-run` contains two lists of keywords that have been set as enabled
 or disabled.  The setting is done either with `os8-run` command line

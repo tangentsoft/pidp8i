@@ -1131,7 +1131,9 @@ class os8script:
       return "die"
 
     sub_commands = {"fotp": self.fotp_subcomm, "build": self.build_subcomm,
-                    "absldr": self.absldr_subcomm}
+                    "absldr": self.absldr_subcomm,
+                    "os8_cd": self.os8_cd_subcomm,
+                    "os8-cd": self.os8_cd_subcomm,}
   
     m = re.match(_comm_re, line)
     if m == None:
@@ -1285,6 +1287,54 @@ class os8script:
     print "Warning end of file encountered with no end of BUILD command block at line " + \
       str(self.line_ct_stack[0]) + "."
     return "fail"
+  
+  #### os8_cd_subcomm ##################################################
+  # Cycle through OS/8 command decoder with the command specified
+  # in the argument.
+  
+  def os8_cd_subcomm (self, old_line, script_file):
+    os8_comm = "RU " + old_line
+    end_str = "os8_cd " + old_line
+    if self.verbose: print "Line: " + \
+       str(self.line_ct_stack[0]) + ": " + os8_comm
+    self.simh.os8_send_cmd ("\\.", os8_comm)
+    
+    for line in script_file:
+      line = self.basic_line_parse(line, script_file)
+      if line == None: continue
+  
+      # Test for special case, "end" and act on it if present.
+      m = re.match(_comm_re, line)
+      if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
+        rest = m.group(3)
+        retval = "fail"  # Return fail unless proven successful.
+        if rest == None or rest == "":
+          print "Warning! end statement encountered inside os8_cd with no argument at line " + \
+            str(self.line_ct_stack[0]) + "."
+          print "Expecting: {" + end_str + "}."
+        elif rest != end_str:
+          print "Warning! Mismatched begin/end blocks in os8_cd at line " + \
+            str(self.line_ct_stack[0]) + ".\n"
+          print "Expecting: {" + end_str + "}. Got: {" + rest + "}.\n"
+        else:
+          retval = "success"
+          if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": end " + end_str
+        if retval == "fail":
+          print "Exiting os8_cd, possibly earlier than expected at line " + \
+            str(self.line_ct_stack[0]) + "."
+        self.simh.os8_send_ctrl ('[')
+        return retval
+  
+      # We could do some basic OS/8 command decoder synax checking here.
+      comm = line
+      if self.verbose: print "Line: " + \
+         str(self.line_ct_stack[0]) + ": * " + line
+      self.simh.os8_send_cmd ("\\*", line)
+    print "Warning end of file encountered at line " + \
+      str(self.line_ct_stack[0]) + " with no end of os8_cd command block."
+    self.simh.os8_send_ctrl ('[')
+    return "fail"
+
   
   #### fotp_subcomm ####################################################
   
