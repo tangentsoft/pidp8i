@@ -62,9 +62,9 @@ on the net.)
     copy-into ./src/os8/v3f/BUILD.PA RKA1:BUILD.PA
     boot rk0
     pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
-    begin absldr SYS:ABSLDR.SV
+    begin cdprog SYS:ABSLDR.SV
     RKB1:BUILD.BN
-    end absldr
+    end cdprog RKB1:BUILD.BN<RKA1:BUILD.PA
     os8 SAVE RKB1:BUILD.SV
     done
 
