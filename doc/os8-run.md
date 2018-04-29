@@ -53,9 +53,22 @@ enables you to watch every step of the script running.
 
 Here are some example os8-run scripts:
 
-Example 1: Begin work on a new rk05 image that gets an updated
-version of the OS/8 `BUILD` utility from POSIX source.
-(Perhaps it was found on the net.)
+Example 1: Begin work on a new rk05 image that gets an updated version
+of the OS/8 `BUILD` utility from POSIX source. (Perhaps it was found
+on the net.)
+
+    mount rk0 ./os8v3d-patched.rk05 must-exist
+    mount rk1 ./os8-v3f-build.rk05 no-overwrite
+    copy-into ./src/os8/v3f/BUILD.PA RKA1:BUILD.PA
+    boot rk0
+    pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
+    begin absldr SYS:ABSLDR.SV
+    RKB1:BUILD.BN
+    end absldr
+    os8 SAVE RKB1:BUILD.SV
+    done
+
+The above script does the following:
 
 * Attach the system that will do the work on rk0. It must exist.
 * Create a new rk05 image, `os8-v3f-build.rk05` but don't wipe pre-exising versions of the same image.
@@ -63,22 +76,6 @@ version of the OS/8 `BUILD` utility from POSIX source.
 * Run `PAL8` to assemble `BUILD.PA` into `BUILD.BN`.
 * Run `ABSLDR` to load `BUILD.PA` into memory.
 * Save the run image of `BUILD` as an executable on `RKB1:` of the new rk05 image.
-
-    mount rk0 ./os8v3d-patched.rk05 must-exist
-    mount rk1 ./os8-v3f-build.rk05 no-overwrite
-
-    copy-into ./src/os8/v3f/BUILD.PA RKA1:BUILD.PA
-
-    boot rk0
-
-    pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
-
-    begin absldr SYS:ABSLDR.SV
-    RKB1:BUILD.BN
-    end absldr
-
-    os8 SAVE RKB1:BUILD.SV
-    done
 
 
 ## <a id="contexts"></a>Execution contexts
