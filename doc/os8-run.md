@@ -486,12 +486,12 @@ found on partition A of rk05 drive 1.
 
 _keyword_ is either one of the following:
 
-| `os8_cd`       | `Command loop through OS/8 Command Decoder with _argument_ specifying an OS/8 command by name and (optionally) device.|
+| `cdprog`       | `Command loop through OS/8 Command Decoder with _argument_ specifying an OS/8 executable program by name and (optionally) device.|
 | `build`        | `BUILD` command interpreter with dialogs manged with Python expect.    |
 | `enabled`      | Execution block if _argument_ is enabled. (See the [`enable` \ `disable`](#en-dis-comm)) section below. |
 | `not-disabled` | Execution block if _argument_ is not disabled. (See the [`enable` \ `disable`](#en-dis-comm))  section below. |
 
-For `os8_cd`, and `build`, _argument_ is passed uninterpreted to the
+For `cdprog`, and `build`, _argument_ is passed uninterpreted to the
 OS/8 `RUN` command.  It is expected that _argument_ will be the name
 of an executable, optionally prefixed by a device specification. This
 enables running the OS/8 command from specific devices. This is
@@ -506,12 +506,12 @@ to copy files onto a DECtape under construction from two different
 places: the old system on `RKA0:` and the newly built components from
 `RKB1:`.
 
-    begin os8_cd RKA0:FOTP.SV
+    begin cdprog RKA0:FOTP.SV
     DTA0:<RKA0:FOTP.SV
     DTA0:<RKA0:DIRECT.SV
     DTA0:<RKB1:CCL.SV
     DTA0:<RKB1:RESORC.SV
-    end os8_cd RKA0:FOTP.SV
+    end cdprog RKA0:FOTP.SV
 
 
 The `build` command has had a lot of work put into parsing dialogs.

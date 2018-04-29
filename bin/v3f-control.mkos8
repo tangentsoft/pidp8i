@@ -8,9 +8,9 @@ boot rk0
 
 pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
 
-begin absldr SYS:ABSLDR.SV
+begin cdprog SYS:ABSLDR.SV
 RKB1:BUILD.BN
-end absldr
+end cdprog SYS:ABSLDR.SV
 
 os8 SAVE RKB1:BUILD.SV
 

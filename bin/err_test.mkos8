@@ -47,12 +47,12 @@ end build
 
 os8 SAVE DTA0 BUILD.SV
 
-begin os8_cd RKA0:FOTP.SV
+begin cdprog RKA0:FOTP.SV
 DTA0:<RKA0:FOTP.SV
 DTA0:<RKA0:DIRECT.SV
 DTA0:<RKA0:CCL.SV
 DTA0:<RKA0:RESORC.SV
-end os8_cd RKA0:FOTP.SV
+end cdprog RKA0:FOTP.SV
 
 boot dt0
 os8 DIR
