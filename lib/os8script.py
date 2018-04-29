@@ -1092,7 +1092,7 @@ class os8script:
         self.resume_command(line, script_file)
 
       # Call the 2arg pal8 code that works hard at error analysis.
-      return call_pal8 (self, source=m_2form.group(4), binary=m_2form.group(1))
+      return self.call_pal8 (m_2form.group(4), m_2form.group(1))
     else:
       m_3form = re.match (_three_arg_pal_re, line)
       if m_3form != None:
