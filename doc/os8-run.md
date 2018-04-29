@@ -59,13 +59,19 @@ on the net.)
 
     mount rk0 ./os8v3d-patched.rk05 must-exist
     mount rk1 ./os8-v3f-build.rk05 no-overwrite
+    
     copy-into ./src/os8/v3f/BUILD.PA RKA1:BUILD.PA
+    
     boot rk0
+    
     pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
+    
     begin cdprog SYS:ABSLDR.SV
     RKB1:BUILD.BN
-    end cdprog RKB1:BUILD.BN<RKA1:BUILD.PA
+    end cdprog SYS:ABSLDR.SV
+    
     os8 SAVE RKB1:BUILD.SV
+    
     done
 
 The above script does the following:
