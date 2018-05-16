@@ -303,12 +303,14 @@ class os8script:
     if m == None: return path
     var = m.group(1)
 
-    if var not in dirs.all:
+    val = getattr (dirs, var, None)
+    if val != None:
+      return val + m.group(2)
+    else:
       print "At line " + str(self.line_ct_stack[0]) + \
         ": {$" + var + "} is not a valid directory expansion in " + path
       return None
-    
-    return dirs.all[var] + m.group(2)
+
 
   #### basic_line_parse ################################################
   # Returns stripped line and any other cleanup we want.

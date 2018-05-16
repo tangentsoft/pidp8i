@@ -41,9 +41,6 @@ import os
 # So, autosetup subs in the proper values into the .py version of this
 # file in the development tree and the install script overwrites these
 # for the installation tree.
-
-# Base directories defined in the build process.
-
 build = "@builddir@"
 src   = "@abs_top_srcdir@"
 
@@ -69,10 +66,3 @@ if not os.path.exists(media):
     # If we're building or modifying the OS/8 media in the installation
     # tree, though, we need to write straight to the media directory.
     os8 = media
-
-# We make this parse-able with an dictionary, "all" that names all the
-# anchor directories we define here with their values.
-
-all = {"build": build, "src": src, "bin": bin, "log": log,
-       "media": media, "os8mi": os8mi,
-       "os8mo": os8mo}
