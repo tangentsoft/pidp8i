@@ -1,7 +1,7 @@
 # Provokes errors
 
-mount rk0 ./os8v3d-patched.rk05 must-exist
-mount dt0 ./scratch.tu56
+mount rk0 $bin/os8v3d-patched.rk05 must-exist
+mount dt0 $bin/scratch.tu56
 
 boot rk0
 

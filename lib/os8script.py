@@ -219,6 +219,12 @@ _tti_settings = ["KSR", "7b"]
 _configurables = {"rx": _rx_settings, "tape": _tape_settings,
                   "tti": _tti_settings}
 
+# Matches if the string begins with a dollar sign, and has at least
+# one slash, returning the string between the dollar sign and the
+# first slash in group 1 and the rest in group 2.
+# No whitespace in the string.
+_expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
+
 # Options enabled/not_disabled for conditional execution in scripts.
 #
 # Earlier code allowed --enable and --disable. We interface to it.
@@ -283,6 +289,26 @@ class os8script:
     self.booted = False
     self.line_ct_stack = []
 
+
+  #### path_expand #######################################################
+  # Simple minded variable substitution in a path.
+  # A path beginning with a dollar sign parses the characters between
+  # the dollar sign and the first slash seen becomes a name to
+  # expand with a couple local names: $home and the anchor directories
+  # defined in lib/pidp8i/dirs.py.
+  # Returns None if the expansion fails.  That signals the caller to fail.
+
+  def path_expand (self, path):
+    m = re.match(_expandable_re, path)
+    if m == None: return path
+    var = m.group(1)
+
+    if var not in dirs.all:
+      print "At line " + str(self.line_ct_stack[0]) + \
+        ": {$" + var + "} is not a valid directory expansion in " + path
+      return None
+    
+    return dirs.all[var] + m.group(2)
 
   #### basic_line_parse ################################################
   # Returns stripped line and any other cleanup we want.
@@ -375,13 +401,18 @@ class os8script:
   # Call run_system_script recursively on the file path provided.
   
   def include_command (self, line, script_file):
-    if not os.path.isfile(line):
+    path = self.path_expand(line)
+    if path == None:
+      print "Ignoring: \n\tinclude " + line
+      return "fail"
+
+    if not os.path.isfile(path):
       print "Line " + str(self.line_ct_stack[0]) + \
-        ": Could not find include file: " + line
+        ": Could not find include file: " + path
       return "fail"
     print "line: " + str(self.line_ct_stack[0]) + \
        ": include " + line
-    return self.run_script_file (line)
+    return self.run_script_file (path)
       
   
   #### enable_option_command ###########################################
@@ -516,10 +547,14 @@ class os8script:
     if m == None or m.group(1) == None or m.group(2) == None: 
       print "Could not copy command: " + line
       return "fail"
-    from_path = m.group(1)
-    to_path = m.group(2)
+    from_path = self.path_expand(m.group(1))      
+    to_path = self.path_expand(m.group(2))
 
-    print "copy command: from: " + from_path + ", to: " + to_path
+    if from_path == None or to_path == None:
+      print "Ignoring: \n\t copy " + line
+      return "fail"
+
+    print "copy command: \n\tfrom: " + from_path + ", \n\tto: " + to_path
     
     if (not os.path.isfile(from_path)):
         print "At line " + str(self.line_ct_stack[0]) + \
@@ -564,12 +599,16 @@ class os8script:
       print "Cannot run patch command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
-    if not os.path.isfile(line):
+    path = self.path_expand(line)
+    if path == None:
+      print "Ignoring: \n\t" + "patch " + line
+      return "fail"
+    if not os.path.isfile(path):
       print "At line " + str(self.line_ct_stack[0]) + \
-        ": Patch file: " + line + " not found."
+        ": Patch file: " + path + " not found."
       return "fail"
 
-    self.run_patch_file (line)
+    self.run_patch_file (path)
     return "success"
 
 
@@ -959,7 +998,9 @@ class os8script:
         ": No image name specified in: {" + line + "}"
       return "die"
     ro_arg = ""
-    imagename = parts[0]
+    imagename = self.path_expand(parts[0])
+    if imagename == None: return "die"
+    
     dot = imagename.rindex(".")
     base_imagename = imagename[:dot]
     extension = imagename[dot:]
