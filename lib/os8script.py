@@ -305,12 +305,12 @@ class os8script:
 
     val = getattr (dirs, var, None)
     if val != None:
-      return val + m.group(2)
+      return os.path.join(val,m.group(2))
     else:
       print "At line " + str(self.line_ct_stack[0]) + \
-        ": {$" + var + "} is not a valid directory expansion in " + path
+        ": {$" + var + "} is not a valid path expansion in " + path
       return None
-
+    
 
   #### basic_line_parse ################################################
   # Returns stripped line and any other cleanup we want.
@@ -515,16 +515,32 @@ class os8script:
   # Calls os8_pip_into with the command line arguments.
   
   def copy_into_command (self, line, script_file):
+    if not self.booted:
+      print "Cannot run copy_into command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
+      return "die"
+
+    # Is 2nd and final arg the option?
     m = re.match(_from_into_re_1, line)
     if m != None:
-      self.simh.os8_pip_into (m.group(1), "DSK:", m.group(2))
+      # Yes.  Expand Source first.
+      path = self.path_expand(m.group(1))
+      if path == None:
+        print "Ignoring: \n\tcopy_into " + line
+        return "fail"
+      self.simh.os8_pip_into (path, "DSK:", m.group(2))
     else:
+      # Is this normal case of source, dest, with possibly empty option?
       m = re.match(_from_into_re_2, line)
       if m == None:
         print "Could not parse copy_into command at line " + \
           str(self.line_ct_stack[0]) + "."
         return "fail"
-      self.simh.os8_pip_into (m.group(1), m.group(2), m.group(4))
+      path = self.path_expand(m.group(1))
+      if path == None:
+        print "Ignoring: \n\tcopy_into " + line
+        return "fail"
+      self.simh.os8_pip_into (path, m.group(2), m.group(4))
     return "success"
 
 
@@ -532,12 +548,21 @@ class os8script:
   # Calls os8_pip_from with the command line arguments.
   
   def copy_from_command (self, line, script_file):
+    if not self.booted:
+      print "Cannot run copy_from command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
+      return "die"
     m = re.match(_from_into_re_2, line)
     if m == None:
       print "Could not parse copy_from command at line " + \
         str(self.line_ct_stack[0]) + "."
-    return "fail"
-    self.simh.os8_pip_from (m.group(1), m.group(2), m.group(4))
+      return "fail"
+  
+    path = self.path_expand(m.group(2))
+    if path == None:
+      print "Ignoring: \n\tcopy_from " + line
+      return "fail"
+    self.simh.os8_pip_from (m.group(1), path, m.group(4))
     return "success"
 
 
