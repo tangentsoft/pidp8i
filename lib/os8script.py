@@ -942,7 +942,14 @@ class os8script:
     if self.verbose: print "Assembling " + source
     com_line = binary + "<" + source
     self.simh.os8_send_cmd ("\\.", "R PAL8")
-    self.simh.os8_send_cmd ("\\*", com_line)
+    # Did the command successfully run and enter the command decoder?
+    reply = self.simh._child.expect (self.simh._cd_replies)
+    if reply != 0:
+      print "PAL8 failed to start at line " + \
+        str(self.line_ct_stack[0])
+      return "fail"
+
+    self.simh.os8_send_line (com_line)
     err_count = 0
     reply = self.simh._child.expect (pal8_replies)
     executed_line = self.simh._child.before.strip()
