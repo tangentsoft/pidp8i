@@ -57,10 +57,10 @@ Example 1: Begin work on a new rk05 image that gets an updated version
 of the OS/8 `BUILD` utility from POSIX source. (Perhaps it was found
 on the net.)
 
-    mount rk0 ./os8v3d-patched.rk05 must-exist
-    mount rk1 ./os8-v3f-build.rk05 no-overwrite
+    mount rk0 $bin/os8v3d-patched.rk05 must-exist
+    mount rk1 $bin/os8-v3f-build.rk05 no-overwrite
     
-    copy-into ./src/os8/v3f/BUILD.PA RKA1:BUILD.PA
+    copy_into $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
     
     boot rk0
     
@@ -83,6 +83,29 @@ The above script does the following:
 * Run `ABSLDR` to load `BUILD.PA` into memory.
 * Save the run image of `BUILD` as an executable on `RKB1:` of the new rk05 image.
 
+## <a id="paths"></a>POSIX Path expansions
+
+Notice in the above example the construct `$bin/` and `$src/` in the POSIX path
+specifications.
+
+We want `os8-run` to be able to find and use image files and other files both
+at build time and after the built system is installed.  So abstract path keys
+have been implemented with a syntax modeled on POSIX shell variables.
+
+However these path expansions are currently very limited.  The substitution
+can only occur at the very beginning of a POSIX file specification.  The only
+values currently defined are:
+
+| $build/   | The absolute path to the root of the build.
+| $src/     | The absolute path to the root of the source.
+| $bin/     | The directory where executables and runable image files are installed at build time
+| $media/   | The absolute path to OS/8 media files
+| $os8mi/   | The absolute path to OS/8 media files used as input at build time
+| $os8mo/   | The absolute path to OS/8 media files produced as output at build time
+
+To add new values modify `.../lib/pidp8i/dirs.py.in` and rebuild.  The `dirs.py`
+file built from `dirs.py.in` is a very deep dependency.  Touching this file will
+cause all the OS/8 bootable system image files to be rebuilt.
 
 ## <a id="contexts"></a>Execution contexts
 
