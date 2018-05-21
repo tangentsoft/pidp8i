@@ -190,8 +190,9 @@ class simh:
 
     self._pip_into_replies = ['\\^']
     self._pip_into_replies.extend(self._os8_error_match_strings)
-    self._pip_from_replies = ['\\*']
-    self._pip_from_replies.extend(self._os8_error_match_strings)
+    # Did command start the command decoder or die with a monitor error?
+    self._cd_replies = ['\\*']
+    self._cd_replies.extend(self._os8_error_match_strings)
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
@@ -448,15 +449,21 @@ class simh:
     self.send_cmd ('attach -r ptr ' + pt)
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
-    self.os8_send_cmd ('\\*', dest + '<PTR:' + option)
-    # Error detection goes here.
-    pip_replies = ['\\^', "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)"]
+    # Was the start of PIP successful, or did we get a Monitor error?
+    reply = self._child.expect (self._cd_replies)
+    if reply != 0:
+      self.pip_error_handler ("os8_pip_into", reply)
+      return
+
+    # Has the read-in been successful?
+    self.os8_send_line (dest + '<PTR:' + option)
     reply = self._child.expect (self._pip_into_replies)
     if reply !=0:
       self.pip_error_handler("os8_pip_into", reply)
       if did_conversion:
         os.remove(pt)
       return
+
     self.os8_send_ctrl ('[')      # finish transfer
     self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
@@ -499,10 +506,17 @@ class simh:
     self.back_to_cmd ('\\.')
     self.send_cmd ('attach ptp ' + path)
     self.os8_restart ()
+    
     self.os8_send_cmd ('\\.', 'R PIP')
-    self.os8_send_cmd ('\\*', 'PTP:<' + os8name + option)
+    # Was the start of PIP successful or did we get a Monitor error?
+    reply = self._child.expect (self._cd_replies)
+    if reply != 0:
+      self.pip_error_handler ("os8_pip_from", reply)
+      return
+    
+    self.os8_send_line ('PTP:<' + os8name + option)
 
-    reply = self._child.expect (self._pip_from_replies)
+    reply = self._child.expect (self._cd_replies)
     if reply !=0:
       self.pip_error_handler ("os8_pip_from", reply)
       # There is an empty PTP file we need to remove.
