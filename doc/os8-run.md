@@ -124,17 +124,31 @@ ugly Python backtrace.  The `os8-run` scripts that ship with the
 PiDP-8/I software distribution should never do this, but as you write
 your own, you may find yourself having to debug such problems.
 
-Running`os8-run` with the `-v` option gives verbose output that
-enables you to watch every step of the script running.
+Running `os8-run` with the `-v` option gives verbose output that
+enables you to watch every step of the script as it runs.
 
 [pex]: https://pexpect.readthedocs.io/
 
 
-## <a id="examples"></a>Illustrative Examples
+## <a id="conventions"></a>Conventions
 
-Here are some example os8-run scripts:
+In the documentation below, we use the term "POSIX" to refer to the
+host side of the conversation or to resources available on that side.
+We use this generic term because the PiDP-8/I software runs on [many
+different platforms][osc], currently limited only to those that are either
+POSIX-compliant (e.g. macOS) or those sufficiently close (e.g. Linux).
+Thus, a "file from POSIX" refers to a file being copied from the host
+system running `os8-run` and SIMH's PDP-8 simulator into the simulated
+environment.
 
-Example 1: Begin work on a new rk05 image that gets an updated version
+[osc]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
+
+
+## <a id="first"></a>An Illustrative First Example
+
+Here are some example `os8-run` scripts:
+
+Example 1: Begin work on a new RK05 image that gets an updated version
 of the OS/8 `BUILD` utility from POSIX source. (Perhaps it was found
 on the net.)
 
@@ -165,18 +179,20 @@ The above script does the following:
 * Save the run image of `BUILD` as an executable on `RKB1:` of the new rk05 image.
 
 
-## <a id="paths"></a>POSIX Path expansions
+## <a id="paths"></a>POSIX Path Expansions
 
-Notice in the above example the construct `$bin/` and `$src/` in the POSIX path
-specifications.
+Notice in the [above example](#first) the use of the variables `$bin/`
+and `$src/` in the POSIX path specifications.  These refer to particular
+directories which vary depending on whether you run this script from
+the PiDP-8/I source tree or from the installation tree.  Not only does
+using these variables allow the same script to work in both trees, it
+allows your script to run regardless of where those source and
+installation trees are on any given system.
 
-We want `os8-run` to be able to find and use image files and other files both
-at build time and after the built system is installed.  So abstract path keys
-have been implemented with a syntax modeled on POSIX shell variables.
-
-However these path expansions are currently very limited.  The substitution
-can only occur at the very beginning of a POSIX file specification.  The only
-values currently defined are:
+The scheme works much like predefined POSIX shell variables, but the
+underlying mechanism is currently very limited.  First, the substitution
+can only occur at the very beginning of a POSIX file specification.
+Second, the only values currently defined are:
 
 | $build/   | The absolute path to the root of the build.
 | $src/     | The absolute path to the root of the source.
@@ -185,9 +201,11 @@ values currently defined are:
 | $os8mi/   | The absolute path to OS/8 media files used as input at build time
 | $os8mo/   | The absolute path to OS/8 media files produced as output at build time
 
-To add new values modify `.../lib/pidp8i/dirs.py.in` and rebuild.  The `dirs.py`
-file built from `dirs.py.in` is a very deep dependency.  Touching this file will
-cause all the OS/8 bootable system image files to be rebuilt.
+To add new values, modify `.../lib/pidp8i/dirs.py.in` and rebuild the
+PiDP-8/I software.  Beware that changing this generates the `dirs.py`
+file, which is a very deep dependency.  Touching this file will cause
+all the OS/8 bootable system image files to be rebuilt, which can take
+quite some time even on a fast host computer.
 
 
 ## <a id="contexts"></a>Execution contexts
@@ -286,7 +304,7 @@ scripts after the commands that escape out to SIMH, using it is optional.
 |                           | not-disabled` _DISABLE_ block.
 
 
-## Script Language command inventory
+## Script Language Command Inventory
 
 Here is a list of the `os8-run` scripting language commands in alphabetical order.
 
@@ -311,14 +329,14 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`umount`](#umount-comm)       | Unmount a SIMH attached device image.            |
 
 These commands are described in subsections of [Script Language
-command reference](#scripting) below. That section presents commands
+Command Reference](#scripting) below. That section presents commands
 in an order appropriate to building up an understanding of making
 first simple and then complex scripts with `os8-run`.
 
 
 ## <a id="scripting"></a>Script Language Command Reference
 
-### <a id="done-comm"></a>`done` -- Script is done.
+### <a id="done-comm"></a>`done` — Script is done.
 
 This is an explicit statement to end processing of the script.
 
@@ -328,7 +346,7 @@ pending writes completed.
 * SIMH is gracefully shut down with a `quit` command.
 
 
-### <a id="include-comm"></a>`include` -- Execute a subordinate script file.
+### <a id="include-comm"></a>`include` — Execute a subordinate script file.
 
 `include` _script-file-path_
 
@@ -347,7 +365,7 @@ of the whole script and aborts `os8-run`.  Commands that have fatal
 exits are mentioned specifically in the command reference section.
 
 
-### <a id="mount-comm"></a>`mount` -- Mount an image file as a SIMH attached device.
+### <a id="mount-comm"></a>`mount` — Mount an image file as a SIMH attached device.
 
 `mount` _simh-dev_ _image-file_ [_option_ ...]
 
@@ -406,14 +424,14 @@ The `no-overwrite` option turns out to be extremely helpful in experimenting wit
 scripts that may or may not work the first time.
 
 
-### <a id="umount-comm"></a>umount -- Unmount a SIMH attached device image.
+### <a id="umount-comm"></a>umount — Unmount a SIMH attached device image.
 
 `umount` _simh-device_
 
 This is just a wrapper for the SIMH `detach` command.
 
 
-### <a id="boot-comm"></a>`boot` -- Boot the named SIMH device.
+### <a id="boot-comm"></a>`boot` — Boot the named SIMH device.
 
 `boot` _simh-device_
 
@@ -433,7 +451,7 @@ If an attempt is made to boot an image with no system area, `os8-run`
 hangs for a while and then gives a timeout backtrace.
 
 
-### <a id="resume-comm"></a>`resume` -- Resume OS/8 at Keyboard Monitor command level.
+### <a id="resume-comm"></a>`resume` — Resume OS/8 at Keyboard Monitor command level.
 
 `resume`
 
@@ -451,7 +469,7 @@ detects the need to return to OS/8 from SIMH command level, will issue
 a `resume` command to force a context switch. 
 
 
-### <a id="restart-comm"></a>`restart` -- Restart OS/8.
+### <a id="restart-comm"></a>`restart` — Restart OS/8.
 
 `restart`
 
@@ -470,7 +488,7 @@ than the `CTRL/C` resume documented above.
 XXX  -- not implemented yet --
 
 
-### <a id="copy-comm"></a>`copy` -- Make a copy of a POSIX file.
+### <a id="copy-comm"></a>`copy` — Make a copy of a POSIX file.
 
 `copy` _source-path_ _destination-path_
 
@@ -490,7 +508,7 @@ of allowing an arbitrary name for the modified image, a separate
 command was created.
 
 
-### <a id="copy-into-comm"></a>`copy_into` -- Copy POSIX file *into* OS/8 environment.
+### <a id="copy-into-comm"></a>`copy_into` — Copy POSIX file *into* OS/8 environment.
 
 `copy_into` _posix-path_ [_option_]
 
@@ -520,7 +538,7 @@ Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `IN
      copy_into ../media/os8/init.cm
 
 
-### <a id="copy-from-comm"></a>`copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
+### <a id="copy-from-comm"></a>`copy_from` — Copy *from* OS/8 to a file in POSIX environment. 
 
 `copy_from`_os8-filespec_ _posix-path_ [_option_]
 
@@ -546,7 +564,7 @@ executing `os8-run`:
     copy_from DSK:OS8.LS ./os8.ls /A
 
 
-### <a id="os8-comm"></a>`os8` -- Run arbitrary OS/8 command.
+### <a id="os8-comm"></a>`os8` — Run arbitrary OS/8 command.
 
 `os8` _os8-command-line_
 
@@ -560,7 +578,7 @@ immediately to command level.  `BATCH` scripts do this, and they can
 be run from here.
 
 
-### <a id="pal8-comm"></a>`pal8` -- Run OS/8 `PAL8` assembler.
+### <a id="pal8-comm"></a>`pal8` — Run OS/8 `PAL8` assembler.
 
 `pal8` _os8-bn-spec_`<`_os8-pa-spec_
 
@@ -603,7 +621,7 @@ found on partition A of rk05 drive 1.
     pal8 RKB1:OS8.BN,OS8.LS<RKA1:OS8.PA
 
 
-### <a id="begin-end-comm"></a>`begin` / `end` -- Complex conditionals and sub-command blocks.
+### <a id="begin-end-comm"></a>`begin` / `end` — Complex conditionals and sub-command blocks.
 
 `begin` _keyword_ _argument_
 
@@ -741,7 +759,7 @@ is correct, but:
 is an error.
 
 
-### <a id="en-dis-comm"></a>`enable` / `disable` -- Set an enablement or disablement.
+### <a id="en-dis-comm"></a>`enable` / `disable` — Set an enablement or disablement.
 
 `enable` _keyword_
 
@@ -800,7 +818,7 @@ add-on by default.  We deal with this triple negative by setting
     end not-disabled futil_patch
 
 
-### <a id="patch-comm"></a>`patch` -- Run a patch file.
+### <a id="patch-comm"></a>`patch` — Run a patch file.
 
 `patch` _patch-file-path_
 
@@ -808,7 +826,7 @@ Run _patch-file-path_ file as a script that uses `ODT` or `FUTIL` to
 patch the booted system image.
 
 
-### `configure` -- Perform specific SIMH configuration activities.
+### `configure` — Perform specific SIMH configuration activities.
 
 `configure` _device_ _setting_
 
