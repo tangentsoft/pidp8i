@@ -149,6 +149,10 @@ of the whole script and aborts `os8-run`.  Commands that have fatal
 exits are mentioned specifically in the [command reference
 section](#scripting) below.
 
+Case is generally not sensitive in `os8-run` commands, but may be
+sensitive in things like POSIX paths, depending on your host
+environment.
+
 [osc]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 
 
@@ -216,7 +220,7 @@ all the OS/8 bootable system image files to be rebuilt, which can take
 quite some time even on a fast host computer.
 
 
-## <a id="contexts"></a>Execution contexts
+## <a id="contexts"></a>Execution Contexts
 
 It is important to be mindful of the different command contexts when
 running scripts under `os8-run`:
