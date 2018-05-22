@@ -1,21 +1,35 @@
-# `os8-run`: A Scripting Language for Driving OS/8
+# os8-run: A Scripting Language for Driving OS/8
 
 ## History and Motivation
 
 In the beginning, the PiDP-8/I project shipped a hand-made and
 hand-maintained OS/8 disk image. This image had multiple problems, and
-sometimes the by-hand "fixes" to those problems caused other problems.
+sometimes the by-hand fixes to those problems caused other problems.
 
 For the 2017.12.22 release, [we][auth] created a tool called `mkos8`
 which creates this disk programmatically based on the user's configuration
-choices. Not only does this allow the disk image to be created, it also
-allows it to be [tested][tm], because the process is purposefully done
-in a way that it is [reproducible][rb].
+choices. This has many virtues:
 
-That process worked fine for the limited scope of problem it was meant
-to cover: creation of an OS/8 V3D RK05 image meant for use with SIMH's
-PDP-8 simulator, configured in a very particular way. It doesn't solve a
-number of related problems that should be simple extensions to the idea:
+*   The OS/8 system media is created from pristine source media, rather than 
+    being built up in an undocumented *ad hoc* fashion.
+    
+*   The build sequence is documented in the source code of `mkos8`,
+    rather than being a mysterious product of history, most of which
+    happened before the OS/8 media came under version control.
+
+*   The build products can be [tested][tm], because the process is
+    purposefully done in a way that it is [reproducible][rb].
+
+*   Because `mkos8` is written in Python, we have a full-strength
+    scripting language for making the build conditional.  As of the
+    2017.12.22 release, there are potentially 65,635 different build
+    configurations, whereas the old manual process produced just one
+    OS/8 system disk image.
+
+That process worked fine for the limited scope of problem it was meant to
+cover: creation of an OS/8 V3D RK05 image meant for use with SIMH's PDP-8
+simulator, which was configured in a very particular way. It doesn't solve
+a number of related problems that should be simple extensions to the idea:
 
 *   What if we want a different version of OS/8, such as V3F?
 
@@ -33,9 +47,15 @@ language and a lot of new underlying functionality so that we can not
 only implement all of what `mkos8` did, we can now write scripts to do
 much more.
 
-The goal is to entirely replace `mkos8` and then also provide a suite of
-scripts and documentation support for creating one's own scripts to
-solve problems we haven't even anticipated.
+The goals of the project are:
+
+*   Entirely replace `mkos8`
+
+*   Provide a suite of scripts and documentation support for creating
+    one's own scripts to solve problems we haven't even anticipated.
+
+*   Make it flexible enough to build media images suitable for arbitrary
+    real PDP-8 hardware.
 
 
 [auth]: https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
