@@ -33,10 +33,18 @@ a number of related problems that should be simple extensions to the idea:
 
 *   What if we want a different version of OS/8, such as V3F?
 
-*   What if we want a different OS/8 `BUILD` configuration?
+*   When running under SIMH, there is little practical difference between
+    its `DT` and `TD` devices for driving an emulated TU56 tape drive:
+    the default is almost certainly fine, since it's compatible with
+    the whole range of PDP-8 computers, and thus software for PDP-8
+    computers.  But, what if you've got a real PDP-8/e computer with a
+    real TU56 tape drive, which means you're using the TD8E interface, not
+    the TC08 that SIMH's PDP-8 simulator defaults to using?  That `BUILD`
+    output will not work on your hardware.
 
-*   Not just that, but what if the new `BUILD` configuration changes the
-    system device type, such as from an RK05 to an RL01 or RX02?
+*   The same basic problem has additional complications when what's
+    changed in the `BUILD` is the system device type, such as from an
+    RK05 to an RL01 or RX02.
 
 *   How do we make it drive other tools not already hard-coded into
     `mkos8` or its underlying helper library?
@@ -83,7 +91,7 @@ Monitor. This includes BATCH scripts.
 Command Decoder.
 * run `PAL8` with either a 3 argument form that produces a listing file,
 or a 2 argument form that does not.
-* run 'BUILD' with arbitrarily complex configuration scripts, including
+* run `BUILD` with arbitrarily complex configuration scripts, including
 the `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
 * configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow
 shifting between otherwise incompatible configurations of SIMH and OS/8
