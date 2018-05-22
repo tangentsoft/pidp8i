@@ -22,7 +22,7 @@ choices. This has many virtues:
 
 *   Because `mkos8` is written in Python, we have a full-strength
     scripting language for making the build conditional.  As of the
-    2017.12.22 release, there are potentially 65,635 different build
+    2017.12.22 release, there are potentially 65536 different build
     configurations, whereas the old manual process produced just one
     OS/8 system disk image.
 
