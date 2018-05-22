@@ -1,26 +1,27 @@
 # OS/8 V3F
 
-This directory contains source files in `PAL-8` and `MACREL` labeled as OS/8 v3F.
+This directory contains source files in `PAL-8` and `MACREL` labeled as OS/8 V3F.
 It appears to be a nearly complete source distribution for the OS/8 V3D
 Device Extensions Kit.
 
 See also: [our documentation on theOS/8 V3D Device Extensions][extensions-doc].
 
-## Recent updates:
 
-### Cleanup newlines
+## Recent Updates
+
+### Cleanup Newlines
 
 There were a couple places where, either in data transmission erorrs, or odd
 formatting, an OS/8 newline was followed by an extra linefeed character. Because
 we are going to be actively using these sources, copying them into and out of
 OS/8, these files have been edited into canonical form.
 
-Files affected:  `BUILD.PA`, `CCLTAB.MA`, `OS8.PA.`
-This does subtly affect a `TECO` macro in `CCLTAB.MA`, but the change is
-in a print message getting a `\r` changed to `\r\n`.  It should be totally
-benign.
+Files affected:  `BUILD.PA`, `CCLTAB.MA`, `OS8.PA.` This does subtly
+affect a `TECO` macro in `CCLTAB.MA`, but the change is in a print
+message getting a `\r` changed to `\r\n`.  It should be totally benign.
 
-### Improved build batch files
+
+### Improved Build Batch Files
 
 `CCL.BI` and `RESORC.BI` have been modified to name different devices
 for input and output files.  You still need to do the device assignments:
@@ -33,7 +34,8 @@ output from `LINK` from `DSK:` to `OUT:` but that script is not present.
 So `COPY` and `DEL` commands to do that were added to the `RESORC.BI` and
 `CCL.BI`.
 
-## Utilization:
+
+## Utilization
 
 The file `actions.txt` is to be submitted to our os8-cp utility as follows:
 
@@ -42,6 +44,7 @@ The file `actions.txt` is to be submitted to our os8-cp utility as follows:
 This will create the rk05 image file `os8-v3f-build.rk05` with the sources in
 partition A.  We expect a builder script to be written, which may live in
 mkos8 will then build the components as they are validated.
+
 
 ## History
 
@@ -62,10 +65,10 @@ the build RK05 image as `README.TX`.
 [rtk-mirror]:http://rtk.mirrors.pdp-11.ru/ftp.update.uu.se/pdp8/pdp-8/fromnichols/
 [extensions-doc]:https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extensions.md
 
-<code>
-## Contents of readme.v3f
+## Contents of `readme.v3f`
 
-OS/8 Version 3F					27-Jul-1995
+<code>
+OS/8 Version 3F                 27-Jul-1995
 
 
 
@@ -152,6 +155,7 @@ to extract the V3F source files.
 | `TECO.PA` |
 | `VXNS.PA` |
 | `VXSY.PA` |
+
 
 ### <a id="license"></a>License
 
