@@ -57,7 +57,8 @@ much more.
 
 The goals of the project are:
 
-*   Entirely replace `mkos8`
+*   Entirely replace `mkos8`, in that `os8-run` plus a suitable script
+    should be able to do everything that `mkos8` currently does.
 
 *   Provide a suite of scripts and documentation support for creating
     one's own scripts to solve problems we haven't even anticipated.
@@ -105,16 +106,28 @@ an arbitrary keyword.
 * perform actions in a script unless a disablement keyword has been specified.
 * set enable or disable keywords anywhere in the execution of a script.
 
-Under the covers, `run-os8` is a Python script that uses the Python expect
-library that is capable of handling complex dialogs with commands.
 
-Sometimes debugging these scripts is challenging because if you fall
-out of step with what is `expect`ed, the expect engine will get
-confused.  The `os8-run` command hangs for a while and then times out
-with a big Python backtrace.
+## <a id="expect"></a>Key Implementation Detail: Pexpect
+
+Under the covers, `run-os8` is a Python script that uses the [Python
+`pexpect` library][pex] to interact programmatically with SIMH and OS/8.
+In principle, there is no limit to the complexity of the dialogs we can
+script with this.
+
+In practice, the major difficulty in constructing correct Pexpect
+scripts is that if you fall out of step with what is "expect"ed, the
+expect engine can get into a state where it is blocked waiting for
+input that either never will arrive or that already passed by and now
+can no longer be matched.  To avoid blocking forever in such situations,
+`os8-run` configures Pexpect to time out eventually, resulting in a big
+ugly Python backtrace.  The `os8-run` scripts that ship with the
+PiDP-8/I software distribution should never do this, but as you write
+your own, you may find yourself having to debug such problems.
 
 Running`os8-run` with the `-v` option gives verbose output that
 enables you to watch every step of the script running.
+
+[pex]: https://pexpect.readthedocs.io/
 
 
 ## <a id="examples"></a>Illustrative Examples
