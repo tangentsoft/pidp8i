@@ -1,10 +1,49 @@
-# `os8-run` A Script Runner for OS/8 under SIMH
+# `os8-run`: A Scripting Language for Driving OS/8
 
-After having done a lot of exploring of how to automate the creation
-of system images, this generalized script runner for OS/8 under SIMH
-emerged.
+## History and Motivation
 
-## Overview
+In the beginning, the PiDP-8/I project shipped a hand-made and
+hand-maintained OS/8 disk image. This image had multiple problems, and
+sometimes the by-hand "fixes" to those problems caused other problems.
+
+For the 2017.12.22 release, [we][auth] created a tool called `mkos8`
+which creates this disk programmatically based on the user's configuration
+choices. Not only does this allow the disk image to be created, it also
+allows it to be [tested][tm], because the process is purposefully done
+in a way that it is [reproducible][rb].
+
+That process worked fine for the limited scope of problem it was meant
+to cover: creation of an OS/8 V3D RK05 image meant for use with SIMH's
+PDP-8 simulator, configured in a very particular way. It doesn't solve a
+number of related problems that should be simple extensions to the idea:
+
+*   What if we want a different version of OS/8, such as V3F?
+
+*   What if we want a different OS/8 `BUILD` configuration?
+
+*   Not just that, but what if the new `BUILD` configuration changes the
+    system device type, such as from an RK05 to an RL01 or RX02?
+
+*   How do we make it drive other tools not already hard-coded into
+    `mkos8` or its underlying helper library?
+
+Shortly after release 2017.12.22 came out, Bill Cattey began work on
+`os8-run` to solve these problems. This new tool implements a scripting
+language and a lot of new underlying functionality so that we can not
+only implement all of what `mkos8` did, we can now write scripts to do
+much more.
+
+The goal is to entirely replace `mkos8` and then also provide a suite of
+scripts and documentation support for creating one's own scripts to
+solve problems we haven't even anticipated.
+
+
+[auth]: https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
+[rb]:   https://reproducible-builds.org/
+[tm]:   https://tangentsoft.com/pidp8i/doc/trunk/tools/test-mkos8
+
+
+## <a id="capabilities"></a>Capabilities
 
 `os8-run` is a general script running facility that can:
 
@@ -49,7 +88,8 @@ with a big Python backtrace.
 Running`os8-run` with the `-v` option gives verbose output that
 enables you to watch every step of the script running.
 
-## Illustrative Examples
+
+## <a id="examples"></a>Illustrative Examples
 
 Here are some example os8-run scripts:
 
@@ -83,6 +123,7 @@ The above script does the following:
 * Run `ABSLDR` to load `BUILD.PA` into memory.
 * Save the run image of `BUILD` as an executable on `RKB1:` of the new rk05 image.
 
+
 ## <a id="paths"></a>POSIX Path expansions
 
 Notice in the above example the construct `$bin/` and `$src/` in the POSIX path
@@ -106,6 +147,7 @@ values currently defined are:
 To add new values modify `.../lib/pidp8i/dirs.py.in` and rebuild.  The `dirs.py`
 file built from `dirs.py.in` is a very deep dependency.  Touching this file will
 cause all the OS/8 bootable system image files to be rebuilt.
+
 
 ## <a id="contexts"></a>Execution contexts
 
@@ -169,7 +211,7 @@ scripts after the commands that escape out to SIMH, using it is optional.
 `os8-run` checks the context and issues its own resume call if needed.
 
 
-## Usage
+## <a id="usage"></a>Usage
 
 > `os8-run` [`-h`] [`-d`] [`-v`] [`-vv`] [_optional-arguments_ ...]  _script-file_ ...
 
@@ -202,6 +244,7 @@ scripts after the commands that escape out to SIMH, using it is optional.
 | `--disable DISABLE`       | Ignore and do not execute script code within `begin
 |                           | not-disabled` _DISABLE_ block.
 
+
 ## Script Language command inventory
 
 Here is a list of the `os8-run` scripting language commands in alphabetical order.
@@ -231,10 +274,10 @@ command reference](#scripting) below. That section presents commands
 in an order appropriate to building up an understanding of making
 first simple and then complex scripts with `os8-run`.
 
-## <a id="scripting"></a>Script Language command reference
+
+## <a id="scripting"></a>Script Language Command Reference
 
 ### <a id="done-comm"></a>`done` -- Script is done.
-
 
 This is an explicit statement to end processing of the script.
 
@@ -262,6 +305,7 @@ the answer is, "yes", then the failure of command kills the execution
 of the whole script and aborts `os8-run`.  Commands that have fatal
 exits are mentioned specifically in the command reference section.
 
+
 ### <a id="mount-comm"></a>`mount` -- Mount an image file as a SIMH attached device.
 
 `mount` _simh-dev_ _image-file_ [_option_ ...]
@@ -269,6 +313,7 @@ exits are mentioned specifically in the command reference section.
 Because the primary expectation with `os8-run` scripts is that image
 files are mounted, booted and operated on, the failure of a `mount`
 command is fatal.
+
 
 #### `mount` Options
 
@@ -285,6 +330,7 @@ command is fatal.
 |                | use the `copy_scratch` option.  When the script is done the scratch version
 |                | is deleted.
          
+
 #### `mount` Examples
 
 Mount the `os8v3d-patched.rk05` image, which must exist, on SIMH `rk0`.
@@ -318,11 +364,13 @@ found the new file would be called `system_3.tu56`, and so on.
 The `no-overwrite` option turns out to be extremely helpful in experimenting with
 scripts that may or may not work the first time.
 
+
 ### <a id="umount-comm"></a>umount -- Unmount a SIMH attached device image.
 
 `umount` _simh-device_
 
 This is just a wrapper for the SIMH `detach` command.
+
 
 ### <a id="boot-comm"></a>`boot` -- Boot the named SIMH device.
 
@@ -343,6 +391,7 @@ file were deemed too much work.
 If an attempt is made to boot an image with no system area, `os8-run`
 hangs for a while and then gives a timeout backtrace.
 
+
 ### <a id="resume-comm"></a>`resume` -- Resume OS/8 at Keyboard Monitor command level.
 
 `resume`
@@ -359,6 +408,7 @@ However, because the context switches are well-defined, the `resume`
 command is completely optional in scripts.  Instead `os8-run`, when it
 detects the need to return to OS/8 from SIMH command level, will issue
 a `resume` command to force a context switch. 
+
 
 ### <a id="restart-comm"></a>`restart` -- Restart OS/8.
 
@@ -378,6 +428,7 @@ than the `CTRL/C` resume documented above.
 
 XXX  -- not implemented yet --
 
+
 ### <a id="copy-comm"></a>`copy` -- Make a copy of a POSIX file.
 
 `copy` _source-path_ _destination-path_
@@ -396,6 +447,7 @@ added by way of this command.
 Adding an option to `mount` was considered, but in the interests
 of allowing an arbitrary name for the modified image, a separate
 command was created.
+
 
 ### <a id="copy-into-comm"></a>`copy_into` -- Copy POSIX file *into* OS/8 environment.
 
@@ -425,6 +477,7 @@ Example:
 Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `INIT.CM`:
 
      copy_into ../media/os8/init.cm
+
 
 ### <a id="copy-from-comm"></a>`copy_from` -- Copy *from* OS/8 to a file in POSIX environment. 
 
@@ -464,6 +517,7 @@ prompt, "`.`" will be produced.
 This command should be used ONLY for OS/8 commands that return
 immediately to command level.  `BATCH` scripts do this, and they can
 be run from here.
+
 
 ### <a id="pal8-comm"></a>`pal8` -- Run OS/8 `PAL8` assembler.
 
@@ -507,6 +561,7 @@ found on partition A of rk05 drive 1.
 
     pal8 RKB1:OS8.BN,OS8.LS<RKA1:OS8.PA
 
+
 ### <a id="begin-end-comm"></a>`begin` / `end` -- Complex conditionals and sub-command blocks.
 
 `begin` _keyword_ _argument_
@@ -541,7 +596,6 @@ places: the old system on `RKA0:` and the newly built components from
     DTA0:<RKB1:CCL.SV
     DTA0:<RKB1:RESORC.SV
     end cdprog RKA0:FOTP.SV
-
 
 The `build` command has had a lot of work put into parsing dialogs.
 This enables not only device driver related `BUILD` commands of
@@ -596,7 +650,6 @@ Anything else seems to just hang.  I believe the root cause is that,
 although the device and file are parsed, the actual device has to be
 either `PTR:` or the active system device.
 
-
 `os8-run` contains two lists of keywords that have been set as enabled
 or disabled.  The setting is done either with `os8-run` command line
 arguments or with the `enable` and `disable` commands (documented
@@ -645,6 +698,7 @@ is correct, but:
     end enabled second
 
 is an error.
+
 
 ### <a id="en-dis-comm"></a>`enable` / `disable` -- Set an enablement or disablement.
 
@@ -704,12 +758,14 @@ add-on by default.  We deal with this triple negative by setting
     patch ../media/os8/patches/FUTIL-31.21.2M-v7D.patch8
     end not-disabled futil_patch
 
+
 ### <a id="patch-comm"></a>`patch` -- Run a patch file.
 
 `patch` _patch-file-path_
 
 Run _patch-file-path_ file as a script that uses `ODT` or `FUTIL` to
 patch the booted system image.
+
 
 ### `configure` -- Perform specific SIMH configuration activities.
 
@@ -761,7 +817,8 @@ default, switch to TD8e to run `BUILD` and create .tu55 tape images
 suitable for deployment on commonly found hardware out in the real
 world. 
 
-## TODOs:
+
+## TODOs
 
 * What happens if we don't have a done command in the script?
 * Add restart command.
@@ -771,13 +828,15 @@ world.
 begin command to treat _argument_ not as a full command, but merely
 a device from which to fetch the command.  Maybe make _argument_ optional.
 
-## Notes:
+
+## Notes
 
 * Multi word mount options can be separated either by a dash or an underscore.
 
+
 ### <a id="license"></a>License
 
-Copyright © 2018 by Bill Cattey. Licensed under the terms of
-[the SIMH license][sl].
+Copyright © 2018 by Bill Cattey and Warren Young. Licensed under the
+terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
