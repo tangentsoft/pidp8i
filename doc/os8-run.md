@@ -141,6 +141,14 @@ Thus, a "file from POSIX" refers to a file being copied from the host
 system running `os8-run` and SIMH's PDP-8 simulator into the simulated
 environment.
 
+Very few script language commands fail fatally.  The design principle
+was to ask, "Is the primary use case of this command a prerequisite
+for other work that would make no sense if this command failed?"  If
+the answer is, "yes", then the failure of command kills the execution
+of the whole script and aborts `os8-run`.  Commands that have fatal
+exits are mentioned specifically in the [command reference
+section](#scripting) below.
+
 [osc]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 
 
@@ -356,13 +364,6 @@ continues on.
 
 A fatal error in an included script kills the whole execution of
 `os8-run`.
-
-Very few script language commands fail fatally.  The design principle
-was to ask, "Is the primary use case of this command a prerequisite
-for other work that would make no sense if this command failed?"  If
-the answer is, "yes", then the failure of command kills the execution
-of the whole script and aborts `os8-run`.  Commands that have fatal
-exits are mentioned specifically in the command reference section.
 
 
 ### <a id="mount-comm"></a>`mount` — Mount an image file as a SIMH attached device.
