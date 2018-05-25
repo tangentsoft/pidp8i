@@ -296,7 +296,7 @@ class os8script:
     self.options_disabled = disabled_options
     # Do we need separate stacks for enabled/disabled options?
     self.options_stack = []
-    # List of scratch files to delete when we are done with our script.
+    # List of scratch files to delete when we are done with all script runs.
     self.scratch_list = []
     self.booted = False
     self.line_ct_stack = []
@@ -678,7 +678,6 @@ class os8script:
   # copy <from-file> <to-file>
   # patch <patch-file>
   # resume
-  # done
   # begin <sub-command> <os8-path>
   # end <sub-command>
   #
@@ -692,7 +691,6 @@ class os8script:
     commands = {"mount": self.mount_command,
                 "boot": self.boot_command,
                 "os8": self.os8_command,
-                "done": self.done_command,
                 "pal8": self.pal8_command,
                 "include": self.include_command,
                 "begin": self.begin_command,
@@ -1018,7 +1016,7 @@ class os8script:
   #    file and mount it.  This is helpful when you are booting a
   #    distribution DECtape.  Booted DECtape images must be writeable.
   #    To protect a distribution DECtape, use this option.
-  #    When the script is done the scratch version is deleted.
+  #    When all script runs are done, the scratch version is deleted.
   # new: If there is an existing file, move it aside as a .save because
   #    we want to create a new empty image file.
   #
@@ -1190,20 +1188,6 @@ class os8script:
         print "At line " + str(self.line_ct_stack[0]) + \
           ": Unrecognized pal8 form: {" + line + "}."
         return "fail"
-    return "success"
-
-
-  #### done_command ####################################################
-  # Return to SIMH from OS/8
-  # Detach all devices to make sure buffers all get written out.
-  
-  def done_command (self, line, script_file):
-    if self.verbose: print "Executing done command at line " + \
-       str(self.line_ct_stack[0]) + "."
-    for filename in self.scratch_list:
-      if self.verbose: print "Deleting scratch_copy: " + filename
-      os.remove(filename)
-    self.simh.send_cmd ("detach all")
     return "success"
 
 

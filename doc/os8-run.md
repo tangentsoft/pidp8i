@@ -178,8 +178,6 @@ on the net.)
     end cdprog SYS:ABSLDR.SV
     
     os8 SAVE RKB1:BUILD.SV
-    
-    done
 
 The above script does the following:
 
@@ -328,7 +326,6 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`copy_from`](#copy-from-comm) | Copy *from* OS/8 to a file in POSIX environment. |
 | [`copy_into`](#copy-into-comm) | Copy POSIX file *into* OS/8 environment.         |
 | [`disable`](#en-dis-comm)      | Set disablement of a feature by keyword.         |
-| [`done`](#done-comm)           | Script is done.                                  |
 | [`enable`](#en-dis-comm)       | Set enablement of a feature by keyword.          |
 | [`end`](#begin-end-comm)       | End complex conditional or sub-command block.   |
 | [`include`](#include-comm)     | Execute a subordinate script file.               |
@@ -347,16 +344,6 @@ first simple and then complex scripts with `os8-run`.
 
 
 ## <a id="scripting"></a>Script Language Command Reference
-
-### <a id="done-comm"></a>`done` — Script is done.
-
-This is an explicit statement to end processing of the script.
-
-* All temporary files are deleted.
-* All attached SIMH image files are gracefully detached with any
-pending writes completed.
-* SIMH is gracefully shut down with a `quit` command.
-
 
 ### <a id="include-comm"></a>`include` — Execute a subordinate script file.
 
@@ -393,7 +380,7 @@ command is fatal.
 | `copy_scratch` | Create a writeable scratch version of the named image file and mount it.
 |                | This is helpful when you are booting a distribution DECtape.
 |                | Booted DECtape images must be writeable. To protect a distribution DECtape,
-|                | use the `copy_scratch` option.  When the script is done the scratch version
+|                | use the `copy_scratch` option.  When all script runs are done the scratch version
 |                | is deleted.
          
 
@@ -886,7 +873,6 @@ world.
 
 ## TODOs
 
-* What happens if we don't have a done command in the script?
 * Add restart command.
 * Allow whitespace on the pal8 command line.
 * Allow passing in of arguments to PAL8.

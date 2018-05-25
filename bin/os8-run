@@ -265,7 +265,16 @@ def main ():
   for script_file in script_files:
     print "Running script file: " + script_file
     os8.run_script_file (script_file)
-  
+
+  # After all scripts are done, we remove any scratch files,
+  # detach any mounted devices, and shut down simh gracefully.
+
+  for filename in os8.scratch_list:
+    if os8.verbose: print "Deleting scratch_copy: " + filename
+    os.remove(filename)
+    
+  s.send_cmd ("detach all")
+
   s.quit ()
   if VERBOSE: print "Done!"
 
