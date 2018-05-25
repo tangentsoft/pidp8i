@@ -98,6 +98,7 @@ MKOS8_PY      := \
 	$(MKOS8_LIB)/__init__.py \
 	$(MKOS8_LIB)/argparser.py \
 	lib/mkos8/opts.py
+	lib/mkos8/os8scripty.py
 MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY_SRC)
 MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
@@ -475,7 +476,6 @@ OS8_BIN_SRCS := \
 	$(MKOS8) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
 	$(MKOS8_BIN_SCRIPT) \
-	$(MKOS8_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 ifneq (@MKOS8_BIN_PATCHES@,)
@@ -492,6 +492,7 @@ $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
 OS8_SRC_SRCS = \
 	$(MKOS8) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
+	$(MKOS8_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
 	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_SRC_SCRIPT)
