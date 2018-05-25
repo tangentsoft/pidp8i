@@ -92,7 +92,7 @@ GENNED_PY   := \
 SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
-MKOS8         := @srcdir@/libexec/mkos8
+MKOS8         := bin/os8-run
 MKOS8_LIB     := @srcdir@/lib/mkos8
 MKOS8_PY      := \
 	$(MKOS8_LIB)/__init__.py \
@@ -252,6 +252,14 @@ OS8_BIN_RK05 = bin/os8v3d-bin.rk05
 OS8_SRC_RK05 = @OS8_SRC_RK05@
 OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
 
+MKOS8_BIN_SCRIPT = @srcdir@/media/os8/scripts/os8v3d-bin.mkos8
+MKOS8_SRC_SCRIPT = @srcdir@/media/os8/scripts/os8v3d-src.mkos8
+ifneq (@MKOS8_BIN_PATCHES@,)
+	MKOS8_PATCH_SCRIPT = @srcdir@/media/os8/scripts/os8v3d-patch.mkos8
+endif
+
+
+
 CLTXT = /boot/cmdline.txt
 
 ADF := adrules.mk
@@ -410,21 +418,23 @@ mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
 	@cd @srcdir@ ; \
 	find media \( \
+		-name \*.mkos8 -o \
 		-name \*.bin  -o \
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
 	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
+	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ media/os8/scripts/*.mkos8 @ABSPREFIX@/share/media/os8/scripts
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
 # No-dependencies versions of the bin/os8v3d-*.rk05 targets used by
 # tools/test-mkos8, because there's no point rebuilding the simulator
 # on each iteration.
 os8-bin:
-	$(MKOS8)@MKOS8_OPTS@ bin
+	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT)
 os8-patched:
-	$(MKOS8)@MKOS8_OPTS@ bin patch
+	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT) $(MKOS8_PATCH_SCRIPT)
 
 reconfig:
 	@AUTOREMAKE@
@@ -464,13 +474,15 @@ test-mkos8:
 OS8_BIN_SRCS := \
 	$(MKOS8) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
+	$(MKOS8_BIN_SCRIPT) \
+	$(MKOS8_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 ifneq (@MKOS8_BIN_PATCHES@,)
-	OS8_BIN_SRCS += @srcdir@/media/os8/patches/patch_list.txt
+	OS8_BIN_SRCS += $(MKOS8_PATCH_SCRIPT)
 endif
 $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
-	$(MKOS8)@MKOS8_OPTS@ bin @MKOS8_BIN_PATCHES@
+	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT) $(MKOS8_PATCH_SCRIPT)
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
 # need to mount up the 7 source tapes in succession.
@@ -482,7 +494,7 @@ OS8_SRC_SRCS = \
 	lib/pidp8i/dirs.py \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
-	$(MKOS8)@MKOS8_OPTS@ src
+	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_SRC_SCRIPT)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
