@@ -269,6 +269,18 @@ _expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
 # end enabled foo
 # end enabled foo
 
+# Local routine to perform a save of a pre-existing file
+# because we do this in a couple places
+
+def save_if_needed(path):
+  if os.path.isfile(path):
+    save_path = path + ".save"
+    print "Pre-existing " + path + " found.  Saving as " + path + ".save"
+    if os.path.isfile(save_path):
+      print "Overwriting old " + path + ".save"
+      os.remove(save_path)
+    os.rename(path, save_path)
+  
 
 class os8script:
   # Contains a simh object, other global state and methods
@@ -588,14 +600,8 @@ class os8script:
           ": Required copy input file: " + from_path + " not found."
         return "fail"
 
-    if os.path.isfile(to_path):
-      save_path = to_path + ".save"
-      print "Pre-existing " + to_path + " found.  Saving as " + to_path + ".save"
-      if os.path.isfile(save_path):
-        print "Overwriting old " + to_path + ".save"
-        os.remove(save_path)
-      os.rename(to_path, save_path)
-
+    save_if_needed(to_path)
+    
     try:
       shutil.copyfile(from_path, to_path)
     except shutil.Error as e:
@@ -1013,6 +1019,8 @@ class os8script:
   #    distribution DECtape.  Booted DECtape images must be writeable.
   #    To protect a distribution DECtape, use this option.
   #    When the script is done the scratch version is deleted.
+  # new: If there is an existing file, move it aside as a .save because
+  #    we want to create a new empty image file.
   #
   # If the mount command fails for any reason, we presume
   # it is a fatal error and abort the script.
@@ -1042,6 +1050,8 @@ class os8script:
     # Case of additional arguments.
     if len (parts) > 1:
       # Perform must_exist before copy_scratch
+      if "new" in parts[1:]:
+        save_if_needed(imagename)
       if "must_exist" in parts[1:] or "must-exist" in parts[1:]:
           if not os.path.exists(imagename):
             print "At line " + str(self.line_ct_stack[0]) + \

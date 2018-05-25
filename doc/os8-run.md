@@ -381,6 +381,8 @@ command is fatal.
 
 #### `mount` Options
 
+| `new`          | If there is an existing file, rename it with a .save extension
+|                | because we want to create a new empty image file.
 | `must-exist`   | _image-file_ must exist, otherwise abort the attach.
 | `no-overwrite` | if _image-file_ already exists, create a copy with a version number suffix.
 |                | This is useful when you want to prevent overwrites of a good image file
