@@ -264,10 +264,8 @@ OS8CP := bin/os8-cp
 V3F_SRCDIR = @srcdir@/src/os8/v3f
 V3F_BUILD_RK05 = os8-v3f-build.rk05
 V3F_MANIFEST = actions.txt
-
-bin/$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST)
-	cd $(V3F_SRCDIR); @builddir@/$(OS8CP) --action-file $(V3F_MANIFEST)
-	mv $(V3F_SRCDIR)/$(V3F_BUILD_RK05) bin
+V3F_MADE_RK05 = bin/os8-v3f-made.rk05
+V3F_MAKER = @srcdir@/media/os8/scripts/v3f-control.mkos8
 
 CLTXT = /boot/cmdline.txt
 
@@ -276,7 +274,7 @@ ADF := adrules.mk
 .PHONY: all tags
 .PRECIOUS: $(PRECIOUS_OUTFILES)
 
-all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S)
+all: $(OUTFILES) $(PRECIOUS_OUTFILES) $(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) $(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) $(OS8_RK05S) $(V3F_MADE_RK05)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
@@ -504,6 +502,15 @@ OS8_SRC_SRCS = \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
 	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_SRC_SCRIPT)
+
+# Build the source disk for OS/8 V3F
+bin/$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST)
+	cd $(V3F_SRCDIR); @builddir@/$(OS8CP) --action-file $(V3F_MANIFEST)
+	mv $(V3F_SRCDIR)/$(V3F_BUILD_RK05) bin
+
+# Make a disk with binaries assembled from the V3F source disk
+$(V3F_MADE_RK05): bin/$(V3F_BUILD_RK05) $(V3F_MAKER)
+	$(MKOS8) $(V3F_MAKER)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
