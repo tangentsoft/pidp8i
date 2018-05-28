@@ -253,10 +253,12 @@ OS8_BIN_RK05 = bin/os8v3d-bin.rk05
 OS8_SRC_RK05 = @OS8_SRC_RK05@
 OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
 
-MKOS8_BIN_SCRIPT = @srcdir@/media/os8/scripts/os8v3d-bin.mkos8
-MKOS8_SRC_SCRIPT = @srcdir@/media/os8/scripts/os8v3d-src.mkos8
+OS8_SCRIPTS_DIR = @srcdir@/media/os8/scripts
+
+MKOS8_BIN_SCRIPT = $(OS8_SCRIPTS_DIR)/os8v3d-bin.mkos8
+MKOS8_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/os8v3d-src.mkos8
 ifneq (@MKOS8_BIN_PATCHES@,)
-	MKOS8_PATCH_SCRIPT = @srcdir@/media/os8/scripts/os8v3d-patch.mkos8
+	MKOS8_PATCH_SCRIPT = $(OS8_SCRIPTS_DIR)/os8v3d-patch.mkos8
 endif
 
 OS8CP := bin/os8-cp
@@ -265,7 +267,7 @@ V3F_SRCDIR = @srcdir@/src/os8/v3f
 V3F_BUILD_RK05 = os8-v3f-build.rk05
 V3F_MANIFEST = actions.txt
 V3F_MADE_RK05 = bin/os8-v3f-made.rk05
-V3F_MAKER = @srcdir@/media/os8/scripts/v3f-control.mkos8
+V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.mkos8
 
 CLTXT = /boot/cmdline.txt
 
