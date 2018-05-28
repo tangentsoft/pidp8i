@@ -269,6 +269,14 @@ V3F_MANIFEST = actions.txt
 V3F_MADE_RK05 = bin/os8-v3f-made.rk05
 V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.mkos8
 
+V3F_TC08_SCRIPT = $(OS8_SCRIPTS_DIR)/os8-v3f-tape.mkos8
+V3F_TD12K_SCRIPT = $(OS8_SCRIPTS_DIR)/os8-v3f-tape.mkos8 --enable td12k
+
+SYS_DTCOPY_INCLUDE = $(OS8_SCRIPTS_DIR)/sys-dectape-copy.mkos8
+
+V3F_TCO8_TU56 = bin/system_v3f_tc08.tu56
+V3F_TD12K_TU56 = bin/system_v3f_td12k.tu56
+
 CLTXT = /boot/cmdline.txt
 
 ADF := adrules.mk
@@ -513,6 +521,14 @@ bin/$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST)
 # Make a disk with binaries assembled from the V3F source disk
 $(V3F_MADE_RK05): bin/$(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(MKOS8) $(V3F_MAKER)
+
+# Make a bootable OS/8 v3f TCO8 DECtape image
+$(V3F_TCO8_TU56): $(V3F_MADE_RK05) $(V3F_TC08_SCRIPT) $(SYS_DTCOPY_INCLUDE)
+	$(MKOS8) $(V3F_TC08_SCRIPT)
+
+# Make a bootable OS/8 v3f TD8E 12K DECtape image
+$(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(V3F_TD12K_SCRIPT) $(SYS_DTCOPY_INCLUDE)
+	$(MKOS8) $(V3F_TD12K_SCRIPT)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
