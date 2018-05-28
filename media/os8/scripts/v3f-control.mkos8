@@ -30,7 +30,3 @@ os8 ASSIGN RKB1 OUT
 os8 COPY DSK:<RKA1:RESORC.BI
 os8 COPY DSK:<RKA1:CCL.BI
 os8 SUBMIT CCL.BI
-
-# The done command detaches all mounted devices
-# and quits the simulator
-done
