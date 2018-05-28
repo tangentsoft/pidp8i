@@ -97,7 +97,7 @@ MKOS8_LIB     := @srcdir@/lib/mkos8
 MKOS8_PY      := \
 	$(MKOS8_LIB)/__init__.py \
 	$(MKOS8_LIB)/argparser.py \
-	lib/mkos8/opts.py
+	lib/mkos8/opts.py \
 	lib/mkos8/os8scripty.py
 MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY_SRC)
 MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
