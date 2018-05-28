@@ -1,0 +1,8 @@
+mount rk0 ./os8v3d-patched.rk05 must-exist
+mount dt0 ./test_copy.tu56
+
+boot rk0
+
+copy_into ../media/os8/init.tx DTA0:
+copy_into ../media/os8/readme.md
+copy_from README.MD .
