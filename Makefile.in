@@ -92,7 +92,7 @@ GENNED_PY   := \
 SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
-MKOS8         := bin/os8-run
+OS8RUN        := bin/os8-run
 MKOS8_LIB     := @srcdir@/lib/mkos8
 MKOS8_PY      := \
 	$(MKOS8_LIB)/__init__.py \
@@ -100,7 +100,7 @@ MKOS8_PY      := \
 	lib/mkos8/opts.py \
 	lib/mkos8/os8scripty.py
 MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY_SRC)
-MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
+MKOS8_SRCS    := $(OS8RUN) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
 # If you edit this directory list, you should probably also edit
 # the argument list to the mkadrules call in auto.def!
@@ -412,7 +412,7 @@ install: all instdirs
 
 	@# Install mkos8 and its dependencies
 	@echo "Installing mkos8..."
-	@@INSTALL@ -m 775 -g @INSTGRP@ $(MKOS8) @prefix@/libexec
+	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8RUN) @prefix@/libexec
 	@( for src in $(MKOS8_PY_ALL) ; do \
 		test -e $$src || src=@srcdir@/$$src ; \
 		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
@@ -449,9 +449,9 @@ mediainstall: instdirs
 # tools/test-mkos8, because there's no point rebuilding the simulator
 # on each iteration.
 os8-bin:
-	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT)
+	$(OS8RUN)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT)
 os8-patched:
-	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT) $(MKOS8_PATCH_SCRIPT)
+	$(OS8RUN)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT) $(MKOS8_PATCH_SCRIPT)
 
 reconfig:
 	@AUTOREMAKE@
@@ -489,7 +489,7 @@ test-mkos8:
 # order-only prereq because configure and the INFILES rules above ensure
 # that it always exists.
 OS8_BIN_SRCS := \
-	$(MKOS8) $(PIDP8I_DIN) \
+	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
 	$(MKOS8_BIN_SCRIPT) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
@@ -498,7 +498,7 @@ ifneq (@MKOS8_BIN_PATCHES@,)
 	OS8_BIN_SRCS += $(MKOS8_PATCH_SCRIPT)
 endif
 $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
-	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT) $(MKOS8_PATCH_SCRIPT)
+	$(OS8RUN)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT) $(MKOS8_PATCH_SCRIPT)
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
 # need to mount up the 7 source tapes in succession.
@@ -506,12 +506,12 @@ $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
 # Using an order-only dependency for the simulator and the bin disk: we
 # only need *a* version of each, they don't have to be recent!
 OS8_SRC_SRCS = \
-	$(MKOS8) $(PIDP8I_DIN) \
+	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
 	$(MKOS8_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 $(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
-	$(MKOS8)@MKOS8_OPTS@ $(MKOS8_SRC_SCRIPT)
+	$(OS8RUN)@MKOS8_OPTS@ $(MKOS8_SRC_SCRIPT)
 
 # Build the source disk for OS/8 V3F
 bin/$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST)
@@ -520,15 +520,15 @@ bin/$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST)
 
 # Make a disk with binaries assembled from the V3F source disk
 $(V3F_MADE_RK05): bin/$(V3F_BUILD_RK05) $(V3F_MAKER)
-	$(MKOS8) $(V3F_MAKER)
+	$(OS8RUN) $(V3F_MAKER)
 
 # Make a bootable OS/8 v3f TCO8 DECtape image
 $(V3F_TCO8_TU56): $(V3F_MADE_RK05) $(V3F_TC08_SCRIPT) $(SYS_DTCOPY_INCLUDE)
-	$(MKOS8) $(V3F_TC08_SCRIPT)
+	$(OS8RUN) $(V3F_TC08_SCRIPT)
 
 # Make a bootable OS/8 v3f TD8E 12K DECtape image
 $(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(V3F_TD12K_SCRIPT) $(SYS_DTCOPY_INCLUDE)
-	$(MKOS8) $(V3F_TD12K_SCRIPT)
+	$(OS8RUN) $(V3F_TD12K_SCRIPT)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
