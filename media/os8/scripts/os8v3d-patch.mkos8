@@ -1,7 +1,7 @@
 # Takes an OS8 V3D binary rk05 image and applies patches.
 
 copy $os8mo/os8v3d-bin.rk05 $os8mo/os8v3d-patched.rk05
-mount rk0 $os8mo/os8v3d-patched.rk05 must-exist
+mount rk0 $os8mo/os8v3d-patched.rk05 required
 
 boot rk0
 
@@ -51,7 +51,7 @@ patch $os8mi/patches/FRTS-51.3.3-O.patch8
 
 # OS/8 commands to mount DECtape with new FORLIB.RL
 # and put it in place.
-mount dt0 $os8mi/local.tu56 read-only must-exist
+mount dt0 $os8mi/local.tu56 read-only required
 # resume
 os8 DEL SYS:FORLIB.RL
 os8 COPY SYS:<DTA0:FORLIB.RL

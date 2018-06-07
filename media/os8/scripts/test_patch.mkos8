@@ -1,7 +1,7 @@
 # Test the patch command.
 
 # copy ./os8v3d-bin.rk05 ./os8v3d-patched.rk05
-mount rk0 ./os8v3d-patched.rk05 must-exist
+mount rk0 ./os8v3d-patched.rk05 required
 
 boot rk0
 

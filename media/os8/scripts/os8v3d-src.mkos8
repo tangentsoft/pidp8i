@@ -1,7 +1,7 @@
 # Creates an OS/8 v3d source rk05 image from distribution dectapes
 
-# mount rk0 $os8mo/os8v3d-bin.rk05 must-exist
-mount rk0 $os8mo/os8v3d-patched.rk05 must-exist
+# mount rk0 $os8mo/os8v3d-bin.rk05 required
+mount rk0 $os8mo/os8v3d-patched.rk05 required
 
 mount rk1 $os8mo/os8v3d-src.rk05 preserve
 

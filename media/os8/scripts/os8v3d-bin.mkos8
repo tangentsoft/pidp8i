@@ -1,8 +1,8 @@
 # Creates an OS/8 v3d binary rk05 image from distribution DECtapes.
 # Caution: the boot tape must be writeable.
 
-mount dt0 $os8mi/al-4711c-ba-os8-v3d-1.1978.tu56 must-exist scratch
-mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
+mount dt0 $os8mi/al-4711c-ba-os8-v3d-1.1978.tu56 required scratch
+mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 read-only required
 
 mount rk0 $os8mo/os8v3d-bin.rk05 new
 
@@ -63,14 +63,14 @@ os8 ZERO RKB0:
 
 # OS/8 V3D extensions
 umount dt0
-mount dt0 $os8mi/al-4761c-ba-os8-v3d-ext.1978.tu56 read-only must-exist
+mount dt0 $os8mi/al-4761c-ba-os8-v3d-ext.1978.tu56 read-only required
 # resume
 os8 COPY RKA0:<DTA0:*.*
 
 # Copying in Music score files and source code...
 begin enabled music
 umount dt1
-mount dt1 $os8mi/subsys/music.tu56 read-only read-only must-exist
+mount dt1 $os8mi/subsys/music.tu56 read-only read-only required
 # resume
 os8 COPY RKB0:<DTA1:*.*
 end enabled music
@@ -78,7 +78,7 @@ end enabled music
 # Adventure
 begin default advent
 umount dt1
-mount dt1 $os8mi/subsys/advent.tu56 read-only must-exist
+mount dt1 $os8mi/subsys/advent.tu56 read-only required
 # resume
 os8 COPY RKB0:<DTA1:*.*
 end default advent
@@ -86,7 +86,7 @@ end default advent
 # BASIC games and demos
 begin default ba
 umount dt1
-mount dt1 $os8mi/subsys/ba.tu56 read-only must-exist
+mount dt1 $os8mi/subsys/ba.tu56 read-only required
 # resume
 os8 COPY RKB0:<DTA1:*.*
 end default ba
@@ -94,7 +94,7 @@ end default ba
 # Ian Schofield's CC8 compiler
 begin default cc8
 umount dt1
-mount dt1 $os8mi/subsys/cc8.tu56 read-only must-exist
+mount dt1 $os8mi/subsys/cc8.tu56 read-only required
 # resume
 os8 COPY RKA0:<DTA1:*.SV
 os8 COPY RKB0:<DTA1:*.SV/V
@@ -103,7 +103,7 @@ end default cc8
 # Kermit-12
 begin default k12
 umount dt1
-mount dt1 $os8mi/subsys/k12.tu56 read-only must-exist
+mount dt1 $os8mi/subsys/k12.tu56 read-only required
 # resume
 os8 COPY RKA0:<DTA1:*.*
 end default k12
@@ -111,7 +111,7 @@ end default k12
 # FORTRAN IV
 begin default fortran_iv
 umount dt1
-mount dt1 $os8mi/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 read-only must-exist
+mount dt1 $os8mi/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 read-only required
 # resume
 os8 COPY RKA0:<DTA1:*.*
 end default fortran_iv
@@ -119,14 +119,14 @@ end default fortran_iv
 # MACREL V2 and new FUTIL V8B
 begin default macrel
 umount dt1
-mount dt1 $os8mi/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 read-only must-exist
+mount dt1 $os8mi/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 read-only required
 # resume
 os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA,FUTIL.SV
 end default macrel
 
 # Files from local.tu56
 umount dt1
-mount dt1 $os8mi/local.tu56 read-only must-exist
+mount dt1 $os8mi/local.tu56 read-only required
 # resume
 # Case conversion batch scripts
 os8 COPY RKA0:<DTA1:?CSYS.BI
@@ -151,14 +151,14 @@ end default dcp
 # FOCAL69 .BN files installed on DSK:
 begin enabled focal69
 umount dt1
-mount dt1 $os8mi/subsys/focal69.tu56 read-only must-exist
+mount dt1 $os8mi/subsys/focal69.tu56 read-only required
 os8 COPY RKB0:<DTA1:FOCAL.BN,4WORD.BN,4KVT.BN,8KVT.BN,8KNOVT.BN
 end enabled focal69
 
 # U/W FOCAL
 begin default uwfocal
 umount dt1
-mount dt1 $os8mi/subsys/uwfocal-v4e-2.tu56 read-only must-exist
+mount dt1 $os8mi/subsys/uwfocal-v4e-2.tu56 read-only required
 # resume
 os8 COPY RKA0:<DTA1:UWF16K.SV
 end default uwfocal

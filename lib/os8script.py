@@ -658,7 +658,7 @@ class os8script:
   #
   # Commands:
   # mount <simh-dev> <image-file> [<option> ...]
-  #       option: must-exist | preserve | read-only | scratch
+  #       option: required | preserve | read-only | scratch
   # umount <simh-dev>
   # boot <simh-dev>
   # os8 <command-line>
@@ -1004,7 +1004,7 @@ class os8script:
   # Interface to SIMH attach command with options that do a bit more.
   #
   # Options:
-  # must-exist: <image-file> must exist, otherwise abort the attach.
+  # required: <image-file> is required to exist, otherwise abort the script.
   # preserve if <image-file> already exists, create a copy with a
   #    version number suffix. This is useful when you want to prevent
   #    overwrites of a good image file with changes that might not work.
@@ -1050,7 +1050,7 @@ class os8script:
       # Perform must_exist before scratch
       if "new" in parts[1:]:
         save_if_needed(imagename)
-      if "must_exist" in parts[1:] or "must-exist" in parts[1:]:
+      if "must_exist" in parts[1:] or "required" in parts[1:]:
           if not os.path.exists(imagename):
             print "At line " + str(self.line_ct_stack[0]) + \
               ", " + imagename + " must exist but was not found. Not mounting."

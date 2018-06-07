@@ -164,7 +164,7 @@ Example 1: Begin work on a new RK05 image that gets an updated version
 of the OS/8 `BUILD` utility from POSIX source. (Perhaps it was found
 on the net.)
 
-    mount rk0 $bin/os8v3d-patched.rk05 must-exist
+    mount rk0 $bin/os8v3d-patched.rk05 required
     mount rk1 $bin/os8-v3f-build.rk05 preserve
     
     copy_into $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
@@ -370,7 +370,7 @@ command is fatal.
 
 | `new`          | If there is an existing file, rename it with a .save extension
 |                | because we want to create a new empty image file.
-| `must-exist`   | _image-file_ must exist, otherwise abort the attach.
+| `required`     | _image-file_ is required to exist, otherwise abort the script.
 | `preserve`     | If _image-file_ already exists, create a copy with a version number suffix.
 |                | This is useful when you want to prevent overwrites of a good image file
 |                | with changes that might not work.  `os8-run` preserves all versions seen
@@ -387,19 +387,19 @@ command is fatal.
 
 Mount the `os8v3d-patched.rk05` image, which must exist, on SIMH `rk0`.
 
-    mount rk0 ./os8v3d-patched.rk05 must-exist
+    mount rk0 ./os8v3d-patched.rk05 required
 
 Mount the `advent.tu56` image, which must exist, on SIMH `dt1` which
 will protect it from inadvertent modification.
 
-    mount dt1 ../media/os8/subsys/advent.tu56 read-only must-exist
+    mount dt1 ../media/os8/subsys/advent.tu56 read-only required
 
 Create a writeable copy of the distribution DECtape,
 `al-4711c-ba-os8-v3d-1.1978.tu56`, which must exist.  Mount it on SIMH
 dt0 ready for for a read/write boot.  Delete the copy when the script
 is done.
 
-     mount dt0 ../media/os8/al-4711c-ba-os8-v3d-1.1978.tu56 must-exist scratch
+     mount dt0 ../media/os8/al-4711c-ba-os8-v3d-1.1978.tu56 required scratch
 
 Create a new image file `system.tu56`.  If the file already exists,
 create a new version.  If the numbered version file exists, keep

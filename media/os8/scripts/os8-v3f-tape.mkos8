@@ -9,9 +9,9 @@
 # Then from RKB1 to build the TD8E head,
 # Finally again from SYS to undo the first mess.
 
-mount rk0 $bin/os8v3d-patched.rk05 must-exist
-mount rk1 $bin/os8-v3f-made.rk05 must-exist
-mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
+mount rk0 $bin/os8v3d-patched.rk05 required
+mount rk1 $bin/os8-v3f-made.rk05 required
+mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 read-only required
 
 # We do tc08 by default
 enable tc08
@@ -43,7 +43,7 @@ end build
 configure tape td
 
 mount td0 $os8mo/system_v3f_td12k.tu56 new
-mount td1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 read-only must-exist
+mount td1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 read-only required
 end enabled td8e
 
 # Options decide what our output tape will be called.

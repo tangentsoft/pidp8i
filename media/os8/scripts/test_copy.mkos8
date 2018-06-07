@@ -1,4 +1,4 @@
-mount rk0 ./os8v3d-patched.rk05 must-exist
+mount rk0 ./os8v3d-patched.rk05 required
 mount dt0 ./test_copy.tu56
 
 boot rk0
