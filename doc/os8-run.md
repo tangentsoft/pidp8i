@@ -368,21 +368,21 @@ command is fatal.
 
 #### `mount` Options
 
-| `new`          | If there is an existing file, rename it with a .save extension
-|                | because we want to create a new empty image file.
-| `required`     | _image-file_ is required to exist, otherwise abort the script.
-| `preserve`     | If _image-file_ already exists, create a copy with a version number suffix.
-|                | This is useful when you want to prevent overwrites of a good image file
-|                | with changes that might not work.  `os8-run` preserves all versions seen
-|                | and creates new version that doesn't overwrite any of the previous ones.
-| `readonly`     | Passes the `-r` option to SIMH attach to mount the device in read only mode.
-| 'ro'           | Abbreviation for `readonly`.
-| `scratch`      | Create a writeable scratch version of the named image file and mount it.
-|                | This is helpful when you are booting a distribution DECtape.
-|                | Booted DECtape images must be writeable. To protect a distribution DECtape,
-|                | use the `scratch` option.  When all script runs are done, the scratch version
-|                | is deleted.
-         
+| `new`      | If there is an existing file, rename it with a .save extension
+|            | because we want to create a new empty image file.
+| `required` | _image-file_ is required to exist, otherwise abort the script.
+| `preserve` | If _image-file_ already exists, create a copy with a version number suffix.
+|            | This is useful when you want to prevent overwrites of a good image file
+|            | with changes that might not work.  `os8-run` preserves all versions seen
+|            | and creates new version that doesn't overwrite any of the previous ones.
+| `readonly` | Passes the `-r` option to SIMH attach to mount the device in read only mode.
+| `ro`       | Abbreviation for `readonly`.
+| `scratch`  | Create a writeable scratch version of the named image file and mount it.
+|            | This is helpful when you are booting a distribution DECtape.
+|            | Booted DECtape images must be writeable. To protect a distribution DECtape,
+|            | use the `scratch` option.  When all script runs are done, the scratch version
+|            | is deleted.
+
 
 #### `mount` Examples
 
