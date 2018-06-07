@@ -51,7 +51,7 @@ patch $os8mi/patches/FRTS-51.3.3-O.patch8
 
 # OS/8 commands to mount DECtape with new FORLIB.RL
 # and put it in place.
-mount dt0 $os8mi/local.tu56 read-only required
+mount dt0 $os8mi/local.tu56 ro required
 # resume
 os8 DEL SYS:FORLIB.RL
 os8 COPY SYS:<DTA0:FORLIB.RL

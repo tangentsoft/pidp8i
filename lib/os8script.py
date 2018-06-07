@@ -658,7 +658,7 @@ class os8script:
   #
   # Commands:
   # mount <simh-dev> <image-file> [<option> ...]
-  #       option: required | preserve | read-only | scratch
+  #       option: required | preserve | readonly | ro | scratch
   # umount <simh-dev>
   # boot <simh-dev>
   # os8 <command-line>
@@ -1010,8 +1010,9 @@ class os8script:
   #    overwrites of a good image file with changes that might not work.
   #    os8-run preserves all versions seen and creates a new
   #    version that doesn't overwrite any of the previous ones.
-  # read-only:  Passes the `-r` option to SIMH attach to mount the
+  # readonly:  Passes the `-r` option to SIMH attach to mount the
   #    device in read only mode.
+  # ro: abbreviation for  readonly.
   # scratch: Create a writeable scratch copy of the named image
   #    file and mount it.  This is helpful when you are booting a
   #    distribution DECtape.  Booted DECtape images must be writeable.
@@ -1068,10 +1069,10 @@ class os8script:
         self.scratch_list.append(copy_imagename)
         imagename = copy_imagename
         
-      if "read_only" in parts[1:] or "read-only" in parts[1:]:
+      if "readonly" in parts[1:] or "ro" in parts[1:]:
         if copy_imagename != "":
           print "At line " + str(self.line_ct_stack[0]) + \
-            ": You don't really need to set read-only on a scratch copy."
+            ": You don't really need to set readonly on a scratch copy."
         ro_arg = "-r "
       if "no_overwrite" in parts[1:] or "preserve" in parts[1:]:
         if copy_imagename != "":

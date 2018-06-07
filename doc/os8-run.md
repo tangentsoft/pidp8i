@@ -375,7 +375,8 @@ command is fatal.
 |                | This is useful when you want to prevent overwrites of a good image file
 |                | with changes that might not work.  `os8-run` preserves all versions seen
 |                | and creates new version that doesn't overwrite any of the previous ones.
-| `read-only`    | Passes the `-r` option to SIMH attach to mount the device in read only mode.
+| `readonly`     | Passes the `-r` option to SIMH attach to mount the device in read only mode.
+| 'ro'           | Abbreviation for `readonly`.
 | `scratch`      | Create a writeable scratch version of the named image file and mount it.
 |                | This is helpful when you are booting a distribution DECtape.
 |                | Booted DECtape images must be writeable. To protect a distribution DECtape,
@@ -392,7 +393,7 @@ Mount the `os8v3d-patched.rk05` image, which must exist, on SIMH `rk0`.
 Mount the `advent.tu56` image, which must exist, on SIMH `dt1` which
 will protect it from inadvertent modification.
 
-    mount dt1 ../media/os8/subsys/advent.tu56 read-only required
+    mount dt1 ../media/os8/subsys/advent.tu56 readonly required
 
 Create a writeable copy of the distribution DECtape,
 `al-4711c-ba-os8-v3d-1.1978.tu56`, which must exist.  Mount it on SIMH
