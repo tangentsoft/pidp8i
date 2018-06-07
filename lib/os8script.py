@@ -75,11 +75,11 @@ class InputError(Error):
 
 # Identify a begin enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.+)$")
+_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|default)\s+(.+)$")
   
 # Identify an end enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_end_en_dis_comm_re = re.compile ("^end\s+(enabled|notdisabled|not_disabled|not-disabled)\s+(.+)$")
+_end_en_dis_comm_re = re.compile ("^end\s+(enabled|default)\s+(.+)$")
   
 # Identify an end comm and put the rest of the line in group(1)
 _end_comm_re = re.compile ("^end\s+(.+)?$")

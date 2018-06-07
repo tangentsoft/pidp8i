@@ -32,7 +32,7 @@ patch $os8mi/patches/EDIT-21.17.3M-v12D.patch8
 # patch $os8mi/patches/EDIT 21.17.4 overwrites patch in 21.17.2. DO NOT APPLY THIS PATCH
 # patch $os8mi/patches/EDIT-21.17.4M-V12C.patch8
 
-begin not-disabled fortran_iv
+begin default fortran_iv
 patch $os8mi/patches/F4-21.1.2M-v4B.patch8
 patch $os8mi/patches/F4-51.3.1M-v4C.patch8
 patch $os8mi/patches/F4-51.3.2M-v4x.patch8
@@ -55,20 +55,20 @@ mount dt0 $os8mi/local.tu56 read-only must-exist
 # resume
 os8 DEL SYS:FORLIB.RL
 os8 COPY SYS:<DTA0:FORLIB.RL
-end not-disabled fortran_iv
+end default fortran_iv
 
 patch $os8mi/patches/FOTP-21.19.1M-V9B.patch8
 
 # MACREL is enabled by default with no settings.
 # We need to avoid patching FUTIL in that default case
 # So we have to set a disablement of that action
-# Conditional on macrel not-disabled.
+# Conditional on macrel default as well.
 
-begin not-disabled macrel
+begin default macrel
 disable futil_patch
-end not-disabled macrel
+end default macrel
 
-begin not-disabled futil_patch
+begin default futil_patch
 # The two FUTIL patches only get applied to FUTIL V7 which comes with
 # OS/8 V3D to bring it up to V7D.  MACREL V2 comes with FUTIL V8B, so
 # these patches are skipped by mkos8 using an RE match on the file name
@@ -77,7 +77,7 @@ patch $os8mi/patches/FUTIL-31.21.1M-v7B.patch8
 patch $os8mi/patches/FUTIL-31.21.2M-v7D.patch8
 # patch $os8mi/patches/FUTIL 31.21.3O switches XS format. Recommend to leave it out.
 # patch $os8mi/patches/FUTIL-31.21.3O.patch8
-end not-disabled futil_patch
+end default futil_patch
 
 # LQP 21.49.1 consists of commands run in BUILD.
 # The auto-apply system won't apply it.
@@ -94,9 +94,9 @@ patch $os8mi/patches/PAL8-21.22.3M-v10D.patch8
 patch $os8mi/patches/PIP-21.23.1M-v12B.patch8
 patch $os8mi/patches/PIP10-21.24.1M-v3B.patch8
 
-begin not-disabled fortran_ii
+begin default fortran_ii
 patch $os8mi/patches/SABR-21.91.1M-v18B.patch8
-end not-disabled fortran_ii
+end default fortran_ii
 
 patch $os8mi/patches/SET-21.26.1M-v1C.patch8
 patch $os8mi/patches/SET-21.26.2M-v1D.patch8

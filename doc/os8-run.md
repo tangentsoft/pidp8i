@@ -310,8 +310,8 @@ scripts after the commands that escape out to SIMH, using it is optional.
 | `--disable-lcmod`         | disable the OS/8 command upcasing patch; best set when
 |                           | SIMH is set to `tti ksr` mode
 | `--enable ENABLE`         | Execute script code within `begin enable` _ENABLE_ block.
-| `--disable DISABLE`       | Ignore and do not execute script code within `begin
-|                           | not-disabled` _DISABLE_ block.
+| `--disable DISABLE`       | Ignore and do not execute script code within any
+|                           | `begin default` _DISABLE_ block.
 
 
 ## Script Language Command Inventory
@@ -624,8 +624,8 @@ _keyword_ is either one of the following:
 
 | `cdprog`       | `Command loop through OS/8 Command Decoder with _argument_ specifying an OS/8 executable program by name and (optionally) device.|
 | `build`        | `BUILD` command interpreter with dialogs manged with Python expect.    |
-| `enabled`      | Execution block if _argument_ is enabled. (See the [`enable` \ `disable`](#en-dis-comm)) section below. |
-| `not-disabled` | Execution block if _argument_ is not disabled. (See the [`enable` \ `disable`](#en-dis-comm))  section below. |
+| `enabled`      | Execution block only if _argument_ is enabled. (See the [`enable` \ `disable`](#en-dis-comm)) section below. |
+| `default` | Execution block that runs by default but is ignored if _argument_ is disabled. (See the [`enable` \ `disable`](#en-dis-comm))  section below. |
 
 For `cdprog`, and `build`, _argument_ is passed uninterpreted to the
 OS/8 `RUN` command.  It is expected that _argument_ will be the name
@@ -710,28 +710,19 @@ below.)
 Two lists are required because default behavior is different for
 enablement versus disablement.
 
-The `begin enabled` block looks on the `enabled` list for the
-keyword. If **no** such keyword is found, the block is ignored.
+The `begin enabled` block is only executed if the `enabled` list
+contains the keyword. If no such keyword is found, the block is ignored.
 
-The `begin not-disabled` block looks on the `disabled` list for the
-keyword. If such a keyword **is** found the block is ignored.
+The `begin default` block is executed by default unless the `disabled`
+list contains the keyword. If such a keyword is found, the block is ignored.
 
-A `not-disabled` block allows lines of the script to be run unless a
-keyword has been set as a disablement.  Whereas the `enabled` block
-requires an explicit keyword enablement, the `not-disabled` block
-requires no enablement. It is a default that requires explicit
-disablement.
-
-This dichotomy of `enabled` versus `not-disabled seems strange until
-you start writing scripts where you want conditional behavior that is
-enabled by default without having to touch other parts of the build
-system to inform them about new enablement keywords.  So
-`not-disabled` is for blocks of scripting code that is executed by
-default unless explicitly disabled.
+The `default` construct allows creation of scripts with conditional
+execution  without worrying about informing the build system about new
+enablement keywords.
  
 All these conditional and sub-command blocks must terminate with an
 `end` command.  The _keyword_ of the end command must always match the
-_begin_ command.  The argument of `enabled` and `not-disabled` blocks
+_begin_ command.  The argument of `enabled` and `default` blocks
 must also match. Nesting is possible, but care should be exercised to
 avoid crossing nesting boundaries.
 
@@ -783,8 +774,8 @@ Why all this complexity? Here is an example we tripped over and had to
 implement:  We normally apply patches to the version of `FUTIL` that
 came on the OS/8 v3d distribution DECtapes.  We also have an add-on
 for the `MACREL` assembler.  That add-on contains a version of `FUTIL`
-with updates required to work with binaries assembled with `MACREL`
-v2. The `os8v3d-patch.mkos8` script needed to either avoid trying to
+with updates required to work with binaries assembled with `MACREL` v2.
+The `os8v3d-patch.mkos8` script needed to either avoid trying to
 patch an updated `FUTIL` if `MACREL` was present, or to perform the
 patching action if `MACREL` was not present.
 
@@ -794,21 +785,21 @@ add-on by default.  We deal with this triple negative by setting
 
     # MACREL is enabled by default with no settings.
     # We need to avoid patching FUTIL in that default case
-    # So we have to set a disablement of that action
-    # Conditional on macrel not-disabled.
+    # So we have to set a disablement of that action by
+    # default as well.
     
-    begin not-disabled macrel
+    begin default macrel
     disable futil_patch
-    end not-disabled macrel
+    end default macrel
     
-    begin not-disabled futil_patch
+    begin default futil_patch
     # The two FUTIL patches only get applied to FUTIL V7 which comes with
     # OS/8 V3D to bring it up to V7D.  MACREL V2 comes with FUTIL V8B, so
     # these patches are skipped by mkos8 using an RE match on the file name
     # when the user does not pass --disable-os8-macrel to configure.
     patch ../media/os8/patches/FUTIL-31.21.1M-v7B.patch8
     patch ../media/os8/patches/FUTIL-31.21.2M-v7D.patch8
-    end not-disabled futil_patch
+    end default futil_patch
 
 
 ### <a id="patch-comm"></a>`patch` — Run a patch file.

@@ -49,9 +49,9 @@ os8 COPY RKA0:<DTA1:*.HL
 # os8 DELETE RKA0:FORT.SV,LIBSET.SV,SABR.SV
 # end disabled fortran_ii
 
-begin not-disabled fortran_ii
+begin default fortran_ii
 os8 COPY RKA0:<DTA1:*.RL
-end not-disabled fortran_ii
+end default fortran_ii
 
 umount dt1
 
@@ -76,53 +76,53 @@ os8 COPY RKB0:<DTA1:*.*
 end enabled music
 
 # Adventure
-begin not-disabled advent
+begin default advent
 umount dt1
 mount dt1 $os8mi/subsys/advent.tu56 read-only must-exist
 # resume
 os8 COPY RKB0:<DTA1:*.*
-end not-disabled advent
+end default advent
 
 # BASIC games and demos
-begin not-disabled ba
+begin default ba
 umount dt1
 mount dt1 $os8mi/subsys/ba.tu56 read-only must-exist
 # resume
 os8 COPY RKB0:<DTA1:*.*
-end not-disabled ba
+end default ba
 
 # Ian Schofield's CC8 compiler
-begin not-disabled cc8
+begin default cc8
 umount dt1
 mount dt1 $os8mi/subsys/cc8.tu56 read-only must-exist
 # resume
 os8 COPY RKA0:<DTA1:*.SV
 os8 COPY RKB0:<DTA1:*.SV/V
-end not-disabled cc8
+end default cc8
 
 # Kermit-12
-begin not-disabled k12
+begin default k12
 umount dt1
 mount dt1 $os8mi/subsys/k12.tu56 read-only must-exist
 # resume
 os8 COPY RKA0:<DTA1:*.*
-end not-disabled k12
+end default k12
 
 # FORTRAN IV
-begin not-disabled fortran_iv
+begin default fortran_iv
 umount dt1
 mount dt1 $os8mi/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 read-only must-exist
 # resume
 os8 COPY RKA0:<DTA1:*.*
-end not-disabled fortran_iv
+end default fortran_iv
 
 # MACREL V2 and new FUTIL V8B
-begin not-disabled macrel
+begin default macrel
 umount dt1
 mount dt1 $os8mi/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 read-only must-exist
 # resume
 os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA,FUTIL.SV
-end not-disabled macrel
+end default macrel
 
 # Files from local.tu56
 umount dt1
@@ -132,9 +132,9 @@ mount dt1 $os8mi/local.tu56 read-only must-exist
 os8 COPY RKA0:<DTA1:?CSYS.BI
 os8 COPY RKA0:<DTA1:?CBAS.BI
 
-begin not-disabled chess
+begin default chess
 os8 COPY RKA0:<DTA1:CHESS.*
-end not-disabled chess
+end default chess
 
 # TECO VTEDIT setup
 begin enabled vtedit
@@ -144,9 +144,9 @@ os8 COPY RKA0:<DTA1:TECO.IN
 end enabled vtedit
 
 # DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV
-begin not-disabled dcp
+begin default dcp
 os8 COPY RKA0:<DTA1:DCP24.SV,DCP.SV,DCP16.SV
-end not-disabled dcp
+end default dcp
 
 # FOCAL69 .BN files installed on DSK:
 begin enabled focal69
@@ -156,25 +156,25 @@ os8 COPY RKB0:<DTA1:FOCAL.BN,4WORD.BN,4KVT.BN,8KVT.BN,8KNOVT.BN
 end enabled focal69
 
 # U/W FOCAL
-begin not-disabled uwfocal
+begin default uwfocal
 umount dt1
 mount dt1 $os8mi/subsys/uwfocal-v4e-2.tu56 read-only must-exist
 # resume
 os8 COPY RKA0:<DTA1:UWF16K.SV
-end not-disabled uwfocal
+end default uwfocal
 
 # Further system initialization
 
 os8 SET TTY COL 3
 
-begin not-disabled crt
+begin default crt
 os8 SET TTY SCOPE
-end not-disabled crt
+end default crt
 
-begin not-disabled lcmod
+begin default lcmod
 os8 SUBMIT SYS:LCSYS.BI
 os8 SUBMIT SYS:LCBAS.BI
-end not-disabled lcmod
+end default lcmod
 
 # INIT message setting stuf goes here
 copy_into $os8mi/init.tx
