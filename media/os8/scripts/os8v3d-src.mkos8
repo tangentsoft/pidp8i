@@ -3,7 +3,7 @@
 # mount rk0 $os8mo/os8v3d-bin.rk05 must-exist
 mount rk0 $os8mo/os8v3d-patched.rk05 must-exist
 
-mount rk1 $os8mo/os8v3d-src.rk05 no-overwrite
+mount rk1 $os8mo/os8v3d-src.rk05 preserve
 
 mount dt0 $os8mi/al-4691c-sa-os8-v3d-1.1978.tu56
 mount dt1 $os8mi/al-4692c-sa-os8-v3d-2.1978.tu56

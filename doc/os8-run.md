@@ -165,7 +165,7 @@ of the OS/8 `BUILD` utility from POSIX source. (Perhaps it was found
 on the net.)
 
     mount rk0 $bin/os8v3d-patched.rk05 must-exist
-    mount rk1 $bin/os8-v3f-build.rk05 no-overwrite
+    mount rk1 $bin/os8-v3f-build.rk05 preserve
     
     copy_into $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
     
@@ -182,7 +182,7 @@ on the net.)
 The above script does the following:
 
 * Attach the system that will do the work on rk0. It must exist.
-* Create a new rk05 image, `os8-v3f-build.rk05` but don't wipe pre-exising versions of the same image.
+* Create a new rk05 image, `os8-v3f-build.rk05` but preserve pre-exising versions of the same image.
 * Copy the source `BUILD.PA` from the POSIX environment into the OS/8 environment.
 * Run `PAL8` to assemble `BUILD.PA` into `BUILD.BN`.
 * Run `ABSLDR` to load `BUILD.PA` into memory.
@@ -371,11 +371,10 @@ command is fatal.
 | `new`          | If there is an existing file, rename it with a .save extension
 |                | because we want to create a new empty image file.
 | `must-exist`   | _image-file_ must exist, otherwise abort the attach.
-| `no-overwrite` | if _image-file_ already exists, create a copy with a version number suffix.
+| `preserve`     | If _image-file_ already exists, create a copy with a version number suffix.
 |                | This is useful when you want to prevent overwrites of a good image file
-|                | with changes that might not work.  `os8-run` steps through version seen
-|                | until it can create a new version that doesn't overwrite any of the previous
-|                | ones.
+|                | with changes that might not work.  `os8-run` preserves all versions seen
+|                | and creates new version that doesn't overwrite any of the previous ones.
 | `read-only`    | Passes the `-r` option to SIMH attach to mount the device in read only mode.
 | `copy_scratch` | Create a writeable scratch version of the named image file and mount it.
 |                | This is helpful when you are booting a distribution DECtape.
@@ -412,10 +411,10 @@ called `system.tu56`.  If it was found the next version would be
 called `system_1.tu56`.  If `system_1.tu56` and `system_2.tu56` were
 found the new file would be called `system_3.tu56`, and so on.
 
-     mount dt0 ./system.tu56 no-overwrite
+     mount dt0 ./system.tu56 preserve
 
-The `no-overwrite` option turns out to be extremely helpful in experimenting with
-scripts that may or may not work the first time.
+The `preserve` option is helpful when experimenting with scripts that may
+not work the first time.
 
 
 ### <a id="umount-comm"></a>umount — Unmount a SIMH attached device image.

@@ -658,7 +658,7 @@ class os8script:
   #
   # Commands:
   # mount <simh-dev> <image-file> [<option> ...]
-  #       option: must-exist | no-overwrite | read-only | copy_scratch
+  #       option: must-exist | preserve | read-only | copy_scratch
   # umount <simh-dev>
   # boot <simh-dev>
   # os8 <command-line>
@@ -1005,10 +1005,10 @@ class os8script:
   #
   # Options:
   # must-exist: <image-file> must exist, otherwise abort the attach.
-  # no-overwrite if <image-file> already exists, create a copy with a
+  # preserve if <image-file> already exists, create a copy with a
   #    version number suffix. This is useful when you want to prevent
   #    overwrites of a good image file with changes that might not work.
-  #    os8-run steps through version seen until it can create a new
+  #    os8-run preserves all versions seen and creates a new
   #    version that doesn't overwrite any of the previous ones.
   # read-only:  Passes the `-r` option to SIMH attach to mount the
   #    device in read only mode.
@@ -1073,9 +1073,9 @@ class os8script:
           print "At line " + str(self.line_ct_stack[0]) + \
             ": You don't really need to set read-only on a scratch copy."
         ro_arg = "-r "
-      if "no_overwrite" in parts[1:] or "no-overwrite" in parts[1:]:
+      if "no_overwrite" in parts[1:] or "preserve" in parts[1:]:
         if copy_imagename != "":
-          print "Ignoring no-overwrite option at line " + \
+          print "Ignoring preserve option at line " + \
             str(self.line_ct_stack[0]) + "because copy_scratch is present."
         else:
           next_tape = 0
