@@ -658,7 +658,7 @@ class os8script:
   #
   # Commands:
   # mount <simh-dev> <image-file> [<option> ...]
-  #       option: must-exist | preserve | read-only | copy_scratch
+  #       option: must-exist | preserve | read-only | scratch
   # umount <simh-dev>
   # boot <simh-dev>
   # os8 <command-line>
@@ -1012,7 +1012,7 @@ class os8script:
   #    version that doesn't overwrite any of the previous ones.
   # read-only:  Passes the `-r` option to SIMH attach to mount the
   #    device in read only mode.
-  # copy_scratch: Create a writeable scratch version of the named image
+  # scratch: Create a writeable scratch copy of the named image
   #    file and mount it.  This is helpful when you are booting a
   #    distribution DECtape.  Booted DECtape images must be writeable.
   #    To protect a distribution DECtape, use this option.
@@ -1047,7 +1047,7 @@ class os8script:
     copy_imagename = ""
     # Case of additional arguments.
     if len (parts) > 1:
-      # Perform must_exist before copy_scratch
+      # Perform must_exist before scratch
       if "new" in parts[1:]:
         save_if_needed(imagename)
       if "must_exist" in parts[1:] or "must-exist" in parts[1:]:
@@ -1055,15 +1055,15 @@ class os8script:
             print "At line " + str(self.line_ct_stack[0]) + \
               ", " + imagename + " must exist but was not found. Not mounting."
             return "die"
-      if "copy_scratch" in parts[1:] or "copy-scratch" in parts[1:]:
+      if "scratch" in parts[1:]:
         copy_imagename = base_imagename + "_copy" + extension
         try:
           shutil.copyfile(imagename, copy_imagename)
         except shutil.Error as e:
-          print "copy_scratch failed with error: " + str(e)
+          print "creation of scratch image, " + copy_imagename + ", failed with error: " + str(e)
           return "die"
         except IOError as e:
-          print "copy_scratch failed with IOError: " + str(e)
+          print "creation scratch image, " + copy_imagename + ", failed with IOError: " + str(e)
           return "die"
         self.scratch_list.append(copy_imagename)
         imagename = copy_imagename
@@ -1076,7 +1076,7 @@ class os8script:
       if "no_overwrite" in parts[1:] or "preserve" in parts[1:]:
         if copy_imagename != "":
           print "Ignoring preserve option at line " + \
-            str(self.line_ct_stack[0]) + "because copy_scratch is present."
+            str(self.line_ct_stack[0]) + " because scratch option is present."
         else:
           next_tape = 0
           while os.path.isfile(imagename):

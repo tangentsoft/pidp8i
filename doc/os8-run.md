@@ -376,10 +376,10 @@ command is fatal.
 |                | with changes that might not work.  `os8-run` preserves all versions seen
 |                | and creates new version that doesn't overwrite any of the previous ones.
 | `read-only`    | Passes the `-r` option to SIMH attach to mount the device in read only mode.
-| `copy_scratch` | Create a writeable scratch version of the named image file and mount it.
+| `scratch`      | Create a writeable scratch version of the named image file and mount it.
 |                | This is helpful when you are booting a distribution DECtape.
 |                | Booted DECtape images must be writeable. To protect a distribution DECtape,
-|                | use the `copy_scratch` option.  When all script runs are done the scratch version
+|                | use the `scratch` option.  When all script runs are done, the scratch version
 |                | is deleted.
          
 
@@ -399,7 +399,7 @@ Create a writeable copy of the distribution DECtape,
 dt0 ready for for a read/write boot.  Delete the copy when the script
 is done.
 
-     mount dt0 ../media/os8/al-4711c-ba-os8-v3d-1.1978.tu56 must-exist copy_scratch
+     mount dt0 ../media/os8/al-4711c-ba-os8-v3d-1.1978.tu56 must-exist scratch
 
 Create a new image file `system.tu56`.  If the file already exists,
 create a new version.  If the numbered version file exists, keep
