@@ -92,11 +92,7 @@ class simh:
   # Known OS/8 error strings and a flag indicating whether the error
   # dumps us back out to the OS/8 command monitor or leaves us in the
   # called program.
-  #
-  # This is currently used only by our os8_pip_into() method, but we
-  # should probably also write wrappers for other OS/8 commands prone
-  # to throwing errors.
-  #
+
   _os8_errors = [
     # The date comment tells when each message is observed and validated
     #
