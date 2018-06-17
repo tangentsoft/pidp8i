@@ -178,12 +178,14 @@ if {$os8min || ![opt-bool os8-patches]} {
 
 # React to remaining chosen command line options
 if {[opt-bool alt-serial-mod]} {
+    if {[opt-bool serial-mod]} {
+        user-error "You cannot request both --alt-serial-mod and --serial-mod!"
+    }
+
     msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
     define PCB_SERIAL_MOD_JLW
     define PCB_SERIAL_MOD_ANY
-}
-
-if {[opt-bool serial-mod]} {
+} elseif {[opt-bool serial-mod]} {
     msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
     define PCB_SERIAL_MOD_OV
     define PCB_SERIAL_MOD_ANY

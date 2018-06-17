@@ -319,6 +319,9 @@ See the linked mailing list thread for details.
 As with `--serial-mod`, you should only enable this flag if you have
 actually done the mods as specified by James L-W.
 
+This option is a pure alternative to [`--serial-mod`](#serial-mod): you
+can leave both off, but you cannot pass both.
+
 
 #### --throttle
 
