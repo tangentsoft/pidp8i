@@ -83,11 +83,10 @@ struct bcm2835_peripheral gpio2;
 static const ms_time_t na_ms = (ms_time_t)-1;
 
 
-// Adjust columns to scan based on whether Oscar Vermeulen's serial mod
-// was done, as that affects the free GPIOs for our use, and how the PCB
-// connects them to the LED matrix.  James L-W's mod leaves GPIO pin
-// numbering unchanged relative to the stock circuit design.
-#ifdef PCB_SERIAL_MOD_OV
+// Adjust columns to scan based on whether the Oscar Vermeulen or James L-W
+// serial mods were done, as that affects the free GPIOs for our use, and how
+// the PCB connects them to the LED matrix.
+#ifdef PCB_SERIAL_MOD_OV || PCB_SERIAL_MOD_JLW
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
