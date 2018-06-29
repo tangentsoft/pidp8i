@@ -1,7 +1,7 @@
 /*
  * gpio-common.c: functions common to both gpio.c and gpio-nls.c
  *
- * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
+ * Copyright © 2015 Oscar Vermeulen, © 2016-2018 by Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -709,8 +709,8 @@ int map_gpio_for_pidp8i (int must_map)
 #ifdef PCB_SERIAL_MOD_JLW
     // James L-W's alternative serial mods were declared to be done here
     // at configure time, so disable the hysteresis on the GPIO inputs.
-    map_peripheral (&gpio2, 0);  // assume success since prior mapping worked
     gpio2.addr_p = gpio_base_addr + 0x100000;
+    map_peripheral (&gpio2, 0);  // assume success since prior mapping worked
     gpio2.addr[0x0B] = (gpio2.addr[0x0B] & 0xF7) | (0x5A << 24);
 #endif
 
