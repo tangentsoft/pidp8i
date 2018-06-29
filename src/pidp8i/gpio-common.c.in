@@ -86,7 +86,7 @@ static const ms_time_t na_ms = (ms_time_t)-1;
 // Adjust columns to scan based on whether the Oscar Vermeulen or James L-W
 // serial mods were done, as that affects the free GPIOs for our use, and how
 // the PCB connects them to the LED matrix.
-#ifdef PCB_SERIAL_MOD_OV || PCB_SERIAL_MOD_JLW
+#if defined(PCB_SERIAL_MOD_OV) || defined(PCB_SERIAL_MOD_JLW)
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 3, 2};
 #else
 uint8_t cols[NCOLS] = {13, 12, 11,    10, 9, 8,    7, 6, 5,    4, 15, 14};
@@ -593,14 +593,13 @@ void init_pidp8i_gpio (void)
     // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
     GPIO_PULL = 2;  // pull-up
     usleep(1);  // must wait 150 cycles
-#ifdef PCB_SERIAL_MOD_OV
-    // Oscar Vermeulen's serial mod the PiDP-8/I board rearranges the
+#if defined(PCB_SERIAL_MOD_OV) || defined(PCB_SERIAL_MOD_JLW)
+    // The Oscar Vermeulen and James L-W serial mods rearrange the PiDP-8/I
     // GPIO matrix to use Pi GPIO pins 2..13, freeing up the hardware
     // serial port on GPIO pins 14 & 15.
     GPIO_PULLCLK0 = 0x03ffc;
 #else
     // The standard PiDP-8/I board drive scheme uses Pi GPIO pins 4..15.
-    // (James L-W's alternative serial mod also uses this scheme.)
     GPIO_PULLCLK0 = 0x0fff0;
 #endif
     usleep(1);
