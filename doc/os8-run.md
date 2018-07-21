@@ -368,8 +368,9 @@ command is fatal.
 
 #### `mount` Options
 
-| `new`      | If there is an existing file, rename it with a .save extension
-|            | because we want to create a new empty image file.
+| `new`      | If there is an existing file, rename it with a `.save` extension
+|            | because we want to create a new empty image file. If there is
+|            | already an existing `.save` version, the existing `.save` version is lost.
 | `required` | _image-file_ is required to exist, otherwise abort the script.
 | `preserve` | If _image-file_ already exists, create a copy with a version number suffix.
 |            | This is useful when you want to prevent overwrites of a good image file
@@ -383,36 +384,57 @@ command is fatal.
 |            | use the `scratch` option.  When all script runs are done, the scratch version
 |            | is deleted.
 
+Note that the `preserve` and `new` options approach preservation in fundamentally
+different ways: `preserve` keeps all old copies, but `new` only keeps the most recent
+copy.  This is because it is expected that the `new` option is used with the expectation
+that old content is not precious, but that we have a backstop.  Whereas the expectation
+of the use of `preserve` is that any and all old versions are precious and should be left
+to a person explicitly to delete.
 
+When new image files are created, some sort of initialization is necessary before
+files can be written to them.  Although the `new` and `preserve` options could have
+performed an OS/8 `ZERO` command to initialize the directories, it was decided
+not to do so because in some cases, the OS/8 device drivers required to perform
+such actions might not be active until farther down in a complex script.
+
+ 
 #### `mount` Examples
 
-Mount the `os8v3d-patched.rk05` image, which must exist, on SIMH `rk0`.
+Mount the `os8v3d-patched.rk05` image, to be found in in the install directory
+for runable image files, which must exist, on SIMH `rk0`.
 
-    mount rk0 ./os8v3d-patched.rk05 required
+    mount rk0 $bin/os8v3d-patched.rk05 required
 
-Mount the `advent.tu56` image, which must exist, on SIMH `dt1` which
-will protect it from inadvertent modification.
+Mount the `advent.tu56` image, to be found in the media input directory,
+which must exist, on SIMH `dt1` in read only mode, which will protect
+it from inadvertent modification.
 
-    mount dt1 ../media/os8/subsys/advent.tu56 readonly required
+    mount dt1 $os8mi/subsys/advent.tu56 readonly required
+
+Create a new image file in the media output directory, and mount it on
+the SIMH `dt0` device.
+
+    mount dt0 $os8mo/test_copy.tu56 new
 
 Create a writeable copy of the distribution DECtape,
-`al-4711c-ba-os8-v3d-1.1978.tu56`, which must exist.  Mount it on SIMH
-dt0 ready for for a read/write boot.  Delete the copy when the script
-is done.
+`al-4711c-ba-os8-v3d-1.1978.tu56`, to be found in the media input directory,
+which must exist.  Mount it on SIMH dt0 ready for for a read/write boot.
+Delete the copy when the script is done.
 
-     mount dt0 ../media/os8/al-4711c-ba-os8-v3d-1.1978.tu56 required scratch
+     mount dt0 $os8mi/al-4711c-ba-os8-v3d-1.1978.tu56 required scratch
 
-Create a new image file `system.tu56`.  If the file already exists,
-create a new version.  If the numbered version file exists, keep
-incrementing the version number for the new file until a pre-existing
-file is not found.
+Create a new image file `system.tu56` in the install director for
+runable image files.  If the file already exists, create a new
+version.  If the numbered version file exists, keep incrementing the
+version number for the new file until a pre-existing file is not
+found.
 
 For example, if `system.tu56` was not found, the new file would be
 called `system.tu56`.  If it was found the next version would be
 called `system_1.tu56`.  If `system_1.tu56` and `system_2.tu56` were
 found the new file would be called `system_3.tu56`, and so on.
 
-     mount dt0 ./system.tu56 preserve
+     mount dt0 $bin/system.tu56 preserve
 
 The `preserve` option is helpful when experimenting with scripts that may
 not work the first time.
@@ -423,6 +445,20 @@ not work the first time.
 `umount` _simh-device_
 
 This is just a wrapper for the SIMH `detach` command.
+
+Here is the rationale for having added a `umount` command instead of
+just calling the `detach` command from SIMH by its own same name:
+
+Starting from the idea of providing some abstract but useful actions
+to take around the SIMH `attach` command, the decision was made to
+lean on the POSIX  `mount` command because people familiar with
+`mount` were used to hanging lots of different abstract but useful
+actions off of it.
+
+`umount` was adopted as _what people familiar with `mount` would
+expect as the command to undo what `mount` had done_. This seemed
+preferable to inventing _`attach` with more features_ as a wholly
+new syntactic/semantic design.
 
 
 ### <a id="boot-comm"></a>`boot` — Boot the named SIMH device.
