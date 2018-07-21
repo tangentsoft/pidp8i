@@ -1,8 +1,9 @@
-mount rk0 ./os8v3d-patched.rk05 required
-mount dt0 ./test_copy.tu56
+mount rk0 $bin/os8v3d-patched.rk05 required
+mount dt0 $os8mo/test_copy.tu56 new
 
 boot rk0
 
-copy_into ../media/os8/init.tx DTA0:
-copy_into ../media/os8/readme.md
-copy_from README.MD .
+os8 ZERO DTA0:
+copy_to $os8mi/init.tx DTA0:
+copy_to $os8mi/readme.md DTA0:
+copy_from DTA0:README.MD $build/obj/

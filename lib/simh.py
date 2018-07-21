@@ -184,8 +184,8 @@ class simh:
       self._os8_error_match_strings.append(error_spec[0])
       self._os8_fatal_check.append(error_spec[1])
 
-    self._pip_into_replies = ['\\^']
-    self._pip_into_replies.extend(self._os8_error_match_strings)
+    self._pip_to_replies = ['\\^']
+    self._pip_to_replies.extend(self._os8_error_match_strings)
     # Did command start the command decoder or die with a monitor error?
     self._cd_replies = ['\\*']
     self._cd_replies.extend(self._os8_error_match_strings)
@@ -378,7 +378,7 @@ class simh:
 
 
   #### pip_error_handler ###############################################
-  # Common error handler for os8_pip_into and os8_pip_from
+  # Common error handler for os8_pip_to and os8_pip_from
 
   def pip_error_handler(self, caller, reply):
     print "PIP error from inside " + caller + ": "
@@ -392,8 +392,8 @@ class simh:
       self.os8_send_ctrl ('[')      # exit PIP
 
     
-  #### os8_pip_into ###################################################
-  # Send a copy of a local file into OS/8 using PIP.
+  #### os8_pip_to ###################################################
+  # Send a copy of a local file to OS/8 using PIP.
   #
   # The file is sent via the SIMH paper tape device through PIP
   # specifying a transfer option.  If no option is specified,
@@ -408,7 +408,7 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_pip_into (self, path, os8name, option = None):
+  def os8_pip_to (self, path, os8name, option = None):
     if option == None: option = ""
     # If os8name is just a device, synthesize an upcased name from
     # the POSIX file basename.
@@ -431,7 +431,7 @@ class simh:
       subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
       did_conversion = True
     elif option not in self._valid_pip_options:
-      print "Invalid PIP option: " + option + ". Ignoring: " + path + " into OS/8."
+      print "Invalid PIP option: " + option + ". Ignoring: " + path + " to OS/8."
       return
     else:
       pt = path
@@ -448,14 +448,14 @@ class simh:
     # Was the start of PIP successful, or did we get a Monitor error?
     reply = self._child.expect (self._cd_replies)
     if reply != 0:
-      self.pip_error_handler ("os8_pip_into", reply)
+      self.pip_error_handler ("os8_pip_to", reply)
       return
 
     # Has the read-in been successful?
     self.os8_send_line (dest + '<PTR:' + option)
-    reply = self._child.expect (self._pip_into_replies)
+    reply = self._child.expect (self._pip_to_replies)
     if reply !=0:
-      self.pip_error_handler("os8_pip_into", reply)
+      self.pip_error_handler("os8_pip_to", reply)
       if did_conversion:
         os.remove(pt)
       return

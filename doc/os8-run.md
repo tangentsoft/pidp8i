@@ -83,8 +83,8 @@ The goals of the project are:
     * Recognize the use case of creating a new, blank image, but preserving any pre-existing image files of the same name.
 * boot OS/8 on an arbitrary attached device image.
 * create a duplicate of an existing file. This is the use case of building new image files from an existing baseline while preserving the baseline image file.
-* copy files into the running OS/8 from the POSIX environment running SIMH.
-* copy files from the running OS/8 environment to the POSIX environment
+* copy files from the running OS/8 environment into the POSIX environment
+* copy files to the running OS/8 from the POSIX environment running SIMH.
 running SIMH.
 * run any OS/8 command as long as it returns immediately to the OS/8 Keyboard
 Monitor. This includes BATCH scripts.
@@ -167,7 +167,7 @@ on the net.)
     mount rk0 $bin/os8v3d-patched.rk05 required
     mount rk1 $bin/os8-v3f-build.rk05 preserve
     
-    copy_into $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
+    copy_to $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
     
     boot rk0
     
@@ -183,7 +183,7 @@ The above script does the following:
 
 * Attach the system that will do the work on rk0. It must exist.
 * Create a new rk05 image, `os8-v3f-build.rk05` but preserve pre-exising versions of the same image.
-* Copy the source `BUILD.PA` from the POSIX environment into the OS/8 environment.
+* Copy the source `BUILD.PA` from the POSIX environment to the OS/8 environment.
 * Run `PAL8` to assemble `BUILD.PA` into `BUILD.BN`.
 * Run `ABSLDR` to load `BUILD.PA` into memory.
 * Save the run image of `BUILD` as an executable on `RKB1:` of the new rk05 image.
@@ -323,8 +323,8 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`begin`](#begin-end-comm)     | Begin complex conditional or sub-command block. |
 | [`configure`](#configure-comm) | Perform specific SIMH configuration activities.  |
 | [`copy`](#copy-com)            | Make a copy of a POSIX file.                     |
-| [`copy_from`](#copy-from-comm) | Copy *from* OS/8 to a file in POSIX environment. |
-| [`copy_into`](#copy-into-comm) | Copy POSIX file *into* OS/8 environment.         |
+| [`copy_from`](#copy-from-comm) | Copy *from* OS/8 into a file in POSIX environment. |
+| [`copy_to`](#copy-to-comm)     | Copy POSIX file *to* OS/8 environment.         |
 | [`disable`](#en-dis-comm)      | Set disablement of a feature by keyword.         |
 | [`enable`](#en-dis-comm)       | Set enablement of a feature by keyword.          |
 | [`end`](#begin-end-comm)       | End complex conditional or sub-command block.   |
@@ -502,11 +502,11 @@ of allowing an arbitrary name for the modified image, a separate
 command was created.
 
 
-### <a id="copy-into-comm"></a>`copy_into` — Copy POSIX file *into* OS/8 environment.
+### <a id="copy-to-comm"></a>`copy_to` — Copy POSIX file *to* OS/8 environment.
 
-`copy_into` _posix-path_ [_option_]
+`copy_to` _posix-path_ [_option_]
 
-`copy_into` _posix-path_ _os8-filespec_ [_option_]
+`copy_to` _posix-path_ _os8-filespec_ [_option_]
 
 The option is either empty or exactly one of
 
@@ -519,17 +519,17 @@ If no option is specified, `/A` is assumed.
 In the first form of the command, the OS/8 file specification is left
 out, and one is synthesized from the file component of the _posix-path_.
 
-This is how you get files *into* OS/8 from the outside world.  For
+This is how you get files *to* OS/8 from the outside world.  For
 example, this enables source code management using modern tools.  The
 builder script would check out the latest source and use an `os8-run`
-script beginning with a `copy_into` command to send it to OS/8 for
+script beginning with a `copy_to` command to send it to OS/8 for
 assembly, linking, installation, etc.
 
 Example:
 
 Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `INIT.CM`:
 
-     copy_into ../media/os8/init.cm
+     copy_to ../media/os8/init.cm
 
 
 ### <a id="copy-from-comm"></a>`copy_from` — Copy *from* OS/8 to a file in POSIX environment. 
@@ -544,9 +544,9 @@ The option is either empty or exactly one of
 
 If no option is specified, `/A` is assumed.
 
-Unlike `copy_into` there is only one form of the command.  Both the
+Unlike `copy_to` there is only one form of the command.  Both the
 _os8-filespec_ and the _posix-path_ must be specified.  The options
-are the same for both `copy_from` and `copy_into`.
+are the same for both `copy_from` and `copy_to`.
 
 Copy files from the running OS/8 environment to the POSIX environment running SIMH.
 

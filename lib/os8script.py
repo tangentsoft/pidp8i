@@ -176,7 +176,7 @@ _three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "," + _os8_LS_fspec + "<" 
 
 _absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$")
 
-# Regular expressions for syntax checking for copy_into and copy_from.
+# Regular expressions for syntax checking for copy_to and copy_from.
 # May be <source> where destination and default option /A is implied.
 # Or <source> <option> where destination is implied and option is set.
 # Or <source> <destination> where option /A is implied.
@@ -187,9 +187,9 @@ _absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$
 # Option is one of /I /B /A in group 4.
 
 # source in group 1, option in group 3.
-_from_into_re_1 = re.compile ("^(\S+)(\s+(/[AIB]))?$")
+_from_to_re_1 = re.compile ("^(\S+)(\s+(/[AIB]))?$")
 # source in group 1, destination in group 2, option in group 4.
-_from_into_re_2 = re.compile ("^(\S+)\s+(\S+)(\s+(/[AIB]))?$")
+_from_to_re_2 = re.compile ("^(\S+)\s+(\S+)(\s+(/[AIB]))?$")
 
 # Array of regular expressions for syntax checking inside BUILD
 _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
@@ -523,40 +523,40 @@ class os8script:
     return "success"
 
 
-  #### copy_into_command ###########################################
-  # Calls os8_pip_into with the command line arguments.
+  #### copy_to_command ###########################################
+  # Calls os8_pip_to with the command line arguments.
   
-  def copy_into_command (self, line, script_file):
+  def copy_to_command (self, line, script_file):
     if not self.booted:
-      print "Cannot run copy_into command at line " + \
+      print "Cannot run copy_to command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
 
     # Is 2nd and final arg the option?
-    m = re.match(_from_into_re_1, line)
+    m = re.match(_from_to_re_1, line)
     if m != None:
       # Yes.  Expand Source first.
       path = self.path_expand(m.group(1))
       if path == None:
-        print "Ignoring: \n\tcopy_into " + line
+        print "Ignoring: \n\tcopy_to " + line
         return "fail"
-      self.simh.os8_pip_into (path, "DSK:", m.group(2))
+      self.simh.os8_pip_to (path, "DSK:", m.group(2))
     else:
       # Is this normal case of source, dest, with possibly empty option?
-      m = re.match(_from_into_re_2, line)
+      m = re.match(_from_to_re_2, line)
       if m == None:
-        print "Could not parse copy_into command at line " + \
+        print "Could not parse copy_to command at line " + \
           str(self.line_ct_stack[0]) + "."
         return "fail"
       path = self.path_expand(m.group(1))
       if path == None:
-        print "Ignoring: \n\tcopy_into " + line
+        print "Ignoring: \n\tcopy_to " + line
         return "fail"
-      self.simh.os8_pip_into (path, m.group(2), m.group(4))
+      self.simh.os8_pip_to (path, m.group(2), m.group(4))
     return "success"
 
 
-  #### copy_into_command ###########################################
+  #### copy_to_command ###########################################
   # Calls os8_pip_from with the command line arguments.
   
   def copy_from_command (self, line, script_file):
@@ -564,7 +564,7 @@ class os8script:
       print "Cannot run copy_from command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
-    m = re.match(_from_into_re_2, line)
+    m = re.match(_from_to_re_2, line)
     if m == None:
       print "Could not parse copy_from command at line " + \
         str(self.line_ct_stack[0]) + "."
@@ -672,7 +672,7 @@ class os8script:
   #       rx parameter: rx8e | rx28 | rx01 | rx02
   # enable <parameter>
   # disable <parameter>
-  # copy_into <posix-file> [<os8-file>] [<format>]
+  # copy_to <posix-file> [<os8-file>] [<format>]
   # copy_from <os8-file> <posix-file> [<format>]
   #       format: /A | /I | /B
   # copy <from-file> <to-file>
@@ -700,7 +700,7 @@ class os8script:
                 "configure": self.configure_command,
                 "enable": self.enable_option_command,
                 "disable": self.disable_option_command,
-                "copy_into": self.copy_into_command,
+                "copy_to": self.copy_to_command,
                 "copy_from": self.copy_from_command,
                 "copy": self.copy_command,
                 "resume": self.resume_command,
