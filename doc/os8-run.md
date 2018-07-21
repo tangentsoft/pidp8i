@@ -10,8 +10,8 @@ For the 2017.12.22 release, [we][auth] created a tool called `mkos8`
 which creates this disk programmatically based on the user's configuration
 choices. This has many virtues:
 
-*   The OS/8 system media is created from pristine source media, rather than 
-    being built up in an undocumented *ad hoc* fashion.
+*   The OS/8 system media is created from pristine distribution media,
+    rather than being built up in an undocumented *ad hoc* fashion.
     
 *   The build sequence is documented in the source code of `mkos8`,
     rather than being a mysterious product of history, most of which
@@ -432,7 +432,7 @@ This is just a wrapper for the SIMH `detach` command.
 Boot OS/8 on the named _simh-device_ and enter the OS/8 run-time context.
 
 The `boot` command tests to see if something is attached to the
-SIMH being booted.  If nothing is attached the command fails with a
+SIMH being booted.  If nothing is attached, the command fails with a
 fatal error.
 
 This test does not protect against trying to boot an image lacking a
@@ -585,11 +585,10 @@ conservative in what it allows:
 * No whitespace within the `PAL8` command call specification.
 * Only two ways to call `PAL8`:
     * two argument form with binary and source or
-    * three argument form with
-* binary, listing, and source.
-* _os8-bn-spec_` must specify a binary filename ending in `.BN`
-* _os8-ls-spec_` must specify a listing filename ending in `.LS`
-* _os8-pa-spec_` must specify a source filename ending in `.PA`
+    * three argument form with binary, listing, and source.
+* _os8-bn-spec_ must specify a binary filename ending in `.BN`
+* _os8-ls-spec_ must specify a listing filename ending in `.LS`
+* _os8-pa-spec_ must specify a source filename ending in `.PA`
 
 This should be improved.  The reason why this wrapper is so
 constrained is that it evolved from extremely rudimentary, hard-coded
@@ -623,7 +622,7 @@ found on partition A of rk05 drive 1.
 
 _keyword_ is either one of the following:
 
-| `cdprog`       | `Command loop through OS/8 Command Decoder with _argument_ specifying an OS/8 executable program by name and (optionally) device.|
+| `cdprog`       | Command loop through OS/8 Command Decoder with _argument_ specifying an OS/8 executable program by name and (optionally) device.|
 | `build`        | `BUILD` command interpreter with dialogs manged with Python expect.    |
 | `enabled`      | Execution block only if _argument_ is enabled. (See the [`enable` \ `disable`](#en-dis-comm)) section below. |
 | `default` | Execution block that runs by default but is ignored if _argument_ is disabled. (See the [`enable` \ `disable`](#en-dis-comm))  section below. |
