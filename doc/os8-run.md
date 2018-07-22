@@ -149,9 +149,61 @@ of the whole script and aborts `os8-run`.  Commands that have fatal
 exits are mentioned specifically in the [command reference
 section](#scripting) below.
 
-Case is generally not sensitive in `os8-run` commands, but may be
-sensitive in things like POSIX paths, depending on your host
-environment.
+### Case Sensitivity -- a tricky issue
+
+It is expected that scripts will be written on the POSIX platform with
+a case-sensitive text editor.  `os8-run` should be considered
+case-sensitive as well. Scripts should specify the `os8-run` commands
+and options in lower case, and the OS/8 commands, options, and
+filenames in upper case.
+
+POSIX is ostensibly a case-sensitive platform, filenames, commands
+and command arguments are always case sensitive. This was a basic
+design decision from the earliest days of ancestral Multics.
+
+The OS/8 platform began as an upper-case only environment.  Only late in
+the evolution of the PDP-8 as a word processing platform, did lower
+case even exist on OS/8.  SIMH addresses this reality with two different
+console device setups, `KSR` and `7b`.
+
+In `KSR` mode, typed lower case characters are upcased automatically before
+being sent to the running system.
+
+In `7b` mode, all characters are passed to OS/8 without case conversion.
+
+The current OS/8 default OS/8 system image run with this software distribution
+is called `os8v3d-patched.rk05`. It is configured to be as modern as possible.
+It contains patches to force lower case characters typed to the Keyboard Monitor
+to upper case so they will be understood.  A patch is made to OS/8
+BASIC to do the same thing.  However many programs available for use under
+OS/8 are upper case only, and get confused unless you set `CAPS LOCK` on
+your keyboard.
+
+All of the example scripts specify OS/8 commands in upper case.  Such
+commands could have been specified in lower case, and would work just
+fine if run in the default `os8v3d-patched.rk05` system image.
+However, since a basic use case of `os8-run` is to be able to run
+scripts against arbitrary system images (which probably will not have
+patches to deal with lower case), use of lower case for OS/8 commands,
+arguments, or filenames is discouraged.
+
+`os8-run` does not get involved with forcing OS/8 commands or filenames
+to upper case if they appear as lower case in scripts. `os8-run` does
+offer commands to toggle the SIMH console support between `KSR` and `7b`.
+See the [`configure`](#configure-comm) command.
+
+Although the `os8-run` commands and options could have been made case
+insensitive, and the OS/8 commands, options, and filenames could have
+been forced to upper case, rendering them case insensitive, there would
+still be that aspect where the script developer would have to deal with
+establishing case-sensitive POSIX filename conventions that would fit
+with OS/8's upper case only filenames.  The decision was made to have
+the scripting language require, mindfulness of case, where the developer
+adopts a discipline to use lower case for scripting commands, and upper
+case when dealing with OS/8.
+
+Apologies in advance for the inconvenience of having to do that. Time
+will tell if it was or was not the right decision to have been made.
 
 [osc]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 
@@ -858,7 +910,7 @@ The settings are device specific:
 | `td`     | Set TD8e operation by enabling `td` as the SIMH DECTape device. |
 | -------- | --------------------------------------------------------------- |
 | **tti**  | **Console terminal input device settings**               |
-| `KSR`    | Upper case only operation. Typed lower case caracters    |
+| `KSR`    | Upper case only operation. Typed lower case characters    |
 |          | are upcased automatically before being sent to OS/8      |
 | `7b`     | SIMH 7bit mode.  All characters are passed to OS/8       |
 |          | without case conversion.                                 |
@@ -909,8 +961,7 @@ a device from which to fetch the command.  Maybe make _argument_ optional.
 
 ## Notes
 
-* Multi word mount options can be separated either by a dash or an underscore.
-
+* No notes as of yet.
 
 ### <a id="license"></a>License
 
