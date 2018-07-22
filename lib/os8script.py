@@ -156,7 +156,7 @@ _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
 # The file components are in group(3) for destination, and group (6) for source.
 # The destination file must either end in ".BN" or have no extension.
 # The source must file either end in ".PA" or have no extension.
-_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "<" + _os8_PA_fspec + "$")
+_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s?<\s?" + _os8_PA_fspec + "$")
 
 # For the 3 arg form:
 # The full destination spec is in group(1), The full source spec is in group(7).
@@ -169,7 +169,7 @@ _two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "<" + _os8_PA_fspec + "$")
 # The source must file either end in ".PA" or have no extension.
 # The listing must either end in "LS" or have no extension.
 
-_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "," + _os8_LS_fspec + "<" + _os8_PA_fspec + "$")
+_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s?,\s?" + _os8_LS_fspec + "\s?<\s?" + _os8_PA_fspec + "$")
 
 # Regular expression for syntax checking inside ABSLDR
 # One or more OS/8 binary files and optional args beginning with a slash.
@@ -1194,7 +1194,7 @@ class os8script:
       m_3form = re.match (_three_arg_pal_re, line)
       if m_3form != None:
         # Just run the OS/8 command.
-        os8_comm = line
+        os8_comm = "pal8 " + line
         if self.verbose: print "Line: " + \
            str(self.line_ct_stack[0]) + ": Calling 3-arg pal8 command: " + os8_comm
         self.simh.os8_send_cmd ("\\.", os8_comm)

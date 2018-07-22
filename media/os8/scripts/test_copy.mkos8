@@ -6,4 +6,5 @@ boot rk0
 os8 ZERO DTA0:
 cpto $os8mi/init.tx DTA0:
 cpto $os8mi/readme.md DTA0:
+cpto $src/src/os8/v3f/PIP.PA
 cpfrom DTA0:README.MD $build/obj/

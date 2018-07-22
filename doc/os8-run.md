@@ -660,15 +660,28 @@ be run from here.
 
 ### <a id="pal8-comm"></a>`pal8` — Run OS/8 `PAL8` assembler.
 
-`pal8` _os8-bn-spec_`<`_os8-pa-spec_
+Run `PAL8` with either a 3 argument form that produces a listing file,
+or a 2 argument form that does not.
 
-`pal8` _os8-bn-spec_`,`_os8-ls-spec_`<`_os8-pa-spec_
+Actually, the `PAL8` assembler can be called just fine
+by using the `os8` command, for example:
+
+    os8 PAL8 RKB1:RL0.BN<RKA1:RL0.PA
+   
+However, an separate pal8 command was created to enable richer parsing
+of errors when no listing file is created.  This decision is currently
+under review, and the `pal8` command may go away in a subsequent version
+of `os8-run`.  For now, two forms of the `pal8` command are supported with
+an unreasonable number of limitations:
+
+`pal8` _os8-bn-spec_ `<` _os8-pa-spec_
+
+`pal8` _os8-bn-spec_ `,` _os8-ls-spec_ `<` _os8-pa-spec_
 
 Note that the parser for this wrapper for `PAL8` is much too
 conservative in what it allows:
 
 * No `PAL8` options are allowed.
-* No whitespace within the `PAL8` command call specification.
 * Only two ways to call `PAL8`:
     * two argument form with binary and source or
     * three argument form with binary, listing, and source.
@@ -682,9 +695,6 @@ scripts, and hasn't been worked on since reaching minimum necessary
 functionality.
 
 The three file name specifiers can include an OS/8 device specification.
-
-Run `PAL8` with either a 3 argument form that produces a listing file,
-or a 2 argument form that does not.
 
 Examples:
 
@@ -949,7 +959,6 @@ world.
 
 ## TODOs
 
-* Allow whitespace on the pal8 command line.
 * Allow passing in of arguments to PAL8.
 * Add sanity check parse of sub-commands to confirm command. **OR** Change the 
 begin command to treat _argument_ not as a full command, but merely
