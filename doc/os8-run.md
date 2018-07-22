@@ -567,8 +567,6 @@ just a resart without a reload.
 The restart does re-initilaize some state so it is more disruptive
 than the `CTRL/C` resume documented above.
 
-XXX  -- not implemented yet --
-
 
 ### <a id="copy-comm"></a>`copy` — Make a copy of a POSIX file.
 

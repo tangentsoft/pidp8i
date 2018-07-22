@@ -624,6 +624,17 @@ class os8script:
     return "success"
 
 
+  #### restart_command #############################################
+  # Call the os8_restart in simh to resume OS/8.
+
+  def restart_command (self, line, script_file):
+    if self.verbose: print "Restarting OS/8 at line " + \
+       str(self.line_ct_stack[0]) + "."
+
+    self.simh.os8_restart()
+    return "success"
+
+
   #### patch_command ##############################################
   # Read the named patch file and perform its actions.
 
@@ -678,6 +689,7 @@ class os8script:
   # copy <from-file> <to-file>
   # patch <patch-file>
   # resume
+  # restart
   # begin <sub-command> <os8-path>
   # end <sub-command>
   #
@@ -704,6 +716,7 @@ class os8script:
                 "cpfrom": self.cpfrom_command,
                 "copy": self.copy_command,
                 "resume": self.resume_command,
+                "restart": self.restart_command,
                 "patch": self.patch_command}
   
     try:
