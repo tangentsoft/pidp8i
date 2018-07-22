@@ -949,7 +949,6 @@ world.
 
 ## TODOs
 
-* Add restart command.
 * Allow whitespace on the pal8 command line.
 * Allow passing in of arguments to PAL8.
 * Add sanity check parse of sub-commands to confirm command. **OR** Change the 
