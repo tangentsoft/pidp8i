@@ -4,6 +4,6 @@ mount dt0 $os8mo/test_copy.tu56 new
 boot rk0
 
 os8 ZERO DTA0:
-copy_to $os8mi/init.tx DTA0:
-copy_to $os8mi/readme.md DTA0:
-copy_from DTA0:README.MD $build/obj/
+cpto $os8mi/init.tx DTA0:
+cpto $os8mi/readme.md DTA0:
+cpfrom DTA0:README.MD $build/obj/

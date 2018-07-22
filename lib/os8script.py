@@ -176,7 +176,7 @@ _three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "," + _os8_LS_fspec + "<" 
 
 _absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$")
 
-# Regular expressions for syntax checking for copy_to and copy_from.
+# Regular expressions for syntax checking for cpto and cpfrom.
 # May be <source> where destination and default option /A is implied.
 # Or <source> <option> where destination is implied and option is set.
 # Or <source> <destination> where option /A is implied.
@@ -523,12 +523,12 @@ class os8script:
     return "success"
 
 
-  #### copy_to_command ###########################################
+  #### cpto_command ###########################################
   # Calls os8_pip_to with the command line arguments.
   
-  def copy_to_command (self, line, script_file):
+  def cpto_command (self, line, script_file):
     if not self.booted:
-      print "Cannot run copy_to command at line " + \
+      print "Cannot run cpto command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
 
@@ -538,41 +538,41 @@ class os8script:
       # Yes.  Expand Source first.
       path = self.path_expand(m.group(1))
       if path == None:
-        print "Ignoring: \n\tcopy_to " + line
+        print "Ignoring: \n\tcpto " + line
         return "fail"
       self.simh.os8_pip_to (path, "DSK:", m.group(2))
     else:
       # Is this normal case of source, dest, with possibly empty option?
       m = re.match(_from_to_re_2, line)
       if m == None:
-        print "Could not parse copy_to command at line " + \
+        print "Could not parse cpto command at line " + \
           str(self.line_ct_stack[0]) + "."
         return "fail"
       path = self.path_expand(m.group(1))
       if path == None:
-        print "Ignoring: \n\tcopy_to " + line
+        print "Ignoring: \n\tcpto " + line
         return "fail"
       self.simh.os8_pip_to (path, m.group(2), m.group(4))
     return "success"
 
 
-  #### copy_to_command ###########################################
+  #### cpto_command ###########################################
   # Calls os8_pip_from with the command line arguments.
   
-  def copy_from_command (self, line, script_file):
+  def cpfrom_command (self, line, script_file):
     if not self.booted:
-      print "Cannot run copy_from command at line " + \
+      print "Cannot run cpfrom command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted."
       return "die"
     m = re.match(_from_to_re_2, line)
     if m == None:
-      print "Could not parse copy_from command at line " + \
+      print "Could not parse cpfrom command at line " + \
         str(self.line_ct_stack[0]) + "."
       return "fail"
   
     path = self.path_expand(m.group(2))
     if path == None:
-      print "Ignoring: \n\tcopy_from " + line
+      print "Ignoring: \n\tcpfrom " + line
       return "fail"
     self.simh.os8_pip_from (m.group(1), path, m.group(4))
     return "success"
@@ -672,8 +672,8 @@ class os8script:
   #       rx parameter: rx8e | rx28 | rx01 | rx02
   # enable <parameter>
   # disable <parameter>
-  # copy_to <posix-file> [<os8-file>] [<format>]
-  # copy_from <os8-file> <posix-file> [<format>]
+  # cpto <posix-file> [<os8-file>] [<format>]
+  # cpfrom <os8-file> <posix-file> [<format>]
   #       format: /A | /I | /B
   # copy <from-file> <to-file>
   # patch <patch-file>
@@ -700,8 +700,8 @@ class os8script:
                 "configure": self.configure_command,
                 "enable": self.enable_option_command,
                 "disable": self.disable_option_command,
-                "copy_to": self.copy_to_command,
-                "copy_from": self.copy_from_command,
+                "cpto": self.cpto_command,
+                "cpfrom": self.cpfrom_command,
                 "copy": self.copy_command,
                 "resume": self.resume_command,
                 "patch": self.patch_command}

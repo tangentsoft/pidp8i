@@ -219,7 +219,7 @@ on the net.)
     mount rk0 $bin/os8v3d-patched.rk05 required
     mount rk1 $bin/os8-v3f-build.rk05 preserve
     
-    copy_to $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
+    cpto $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
     
     boot rk0
     
@@ -375,8 +375,8 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`begin`](#begin-end-comm)     | Begin complex conditional or sub-command block. |
 | [`configure`](#configure-comm) | Perform specific SIMH configuration activities.  |
 | [`copy`](#copy-com)            | Make a copy of a POSIX file.                     |
-| [`copy_from`](#copy-from-comm) | Copy *from* OS/8 into a file in POSIX environment. |
-| [`copy_to`](#copy-to-comm)     | Copy POSIX file *to* OS/8 environment.         |
+| [`cpfrom`](#copy-from-comm) | Copy *from* OS/8 into a file in POSIX environment. |
+| [`cpto`](#copy-to-comm)     | Copy POSIX file *to* OS/8 environment.         |
 | [`disable`](#en-dis-comm)      | Set disablement of a feature by keyword.         |
 | [`enable`](#en-dis-comm)       | Set enablement of a feature by keyword.          |
 | [`end`](#begin-end-comm)       | End complex conditional or sub-command block.   |
@@ -590,11 +590,11 @@ of allowing an arbitrary name for the modified image, a separate
 command was created.
 
 
-### <a id="copy-to-comm"></a>`copy_to` — Copy POSIX file *to* OS/8 environment.
+### <a id="copy-to-comm"></a>`cpto` — Copy POSIX file *to* OS/8 environment.
 
-`copy_to` _posix-path_ [_option_]
+`cpto` _posix-path_ [_option_]
 
-`copy_to` _posix-path_ _os8-filespec_ [_option_]
+`cpto` _posix-path_ _os8-filespec_ [_option_]
 
 The option is either empty or exactly one of
 
@@ -610,19 +610,19 @@ out, and one is synthesized from the file component of the _posix-path_.
 This is how you get files *to* OS/8 from the outside world.  For
 example, this enables source code management using modern tools.  The
 builder script would check out the latest source and use an `os8-run`
-script beginning with a `copy_to` command to send it to OS/8 for
+script beginning with a `cpto` command to send it to OS/8 for
 assembly, linking, installation, etc.
 
 Example:
 
 Copy a POSIX file init.cm onto the default OS/8 device `DSK:` under the name `INIT.CM`:
 
-     copy_to ../media/os8/init.cm
+     cpto ../media/os8/init.cm
 
 
-### <a id="copy-from-comm"></a>`copy_from` — Copy *from* OS/8 to a file in POSIX environment. 
+### <a id="copy-from-comm"></a>`cpfrom` — Copy *from* OS/8 to a file in POSIX environment. 
 
-`copy_from`_os8-filespec_ _posix-path_ [_option_]
+`cpfrom`_os8-filespec_ _posix-path_ [_option_]
 
 The option is either empty or exactly one of
 
@@ -632,9 +632,9 @@ The option is either empty or exactly one of
 
 If no option is specified, `/A` is assumed.
 
-Unlike `copy_to` there is only one form of the command.  Both the
+Unlike `cpto` there is only one form of the command.  Both the
 _os8-filespec_ and the _posix-path_ must be specified.  The options
-are the same for both `copy_from` and `copy_to`.
+are the same for both `cpfrom` and `cpto`.
 
 Copy files from the running OS/8 environment to the POSIX environment running SIMH.
 
@@ -643,7 +643,7 @@ Example:
 Copy a listing file into the current working directory of the
 executing `os8-run`:
 
-    copy_from DSK:OS8.LS ./os8.ls /A
+    cpfrom DSK:OS8.LS ./os8.ls /A
 
 
 ### <a id="os8-comm"></a>`os8` — Run arbitrary OS/8 command.

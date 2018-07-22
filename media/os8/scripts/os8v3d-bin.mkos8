@@ -177,8 +177,8 @@ os8 SUBMIT SYS:LCBAS.BI
 end default lcmod
 
 # INIT message setting stuf goes here
-copy_to $os8mi/init.tx
-copy_to $os8mi/init.cm
+cpto $os8mi/init.tx
+cpto $os8mi/init.cm
 
 os8 SET SYS INIT
 
