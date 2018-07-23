@@ -130,18 +130,18 @@ foreach {opt def desc} $os8opts {
         # We can't have "except for" logic because we can't tell
         # explicitly-given options from implicit ones.
         set act " not"
-        if {$def} { append mkos8_opts " --disable-$opt" }
+        if {$def} { append mkos8_opts " --disable $opt" }
     } elseif {$val} {
         set act ""
         if {!$def} {
             # User is enabling a normally-disabled option, so pass it along
             # to mkos8 explicitly.
-            append mkos8_opts " --enable-$opt"
+            append mkos8_opts " --enable $opt"
         }
     } else {
         set act " not"
         if {$def} {
-            append mkos8_opts " --disable-$opt"
+            append mkos8_opts " --disable $opt"
         }
     }
     msg-result "Will$act add $desc to the built OS/8 RK05 image"
@@ -208,9 +208,9 @@ if {$lv == "auto"} {
     define SIMH_PASS_LOWERCASE
 } elseif {$lv == "pass"} {
     define SIMH_PASS_LOWERCASE
-    append mkos8_opts " --disable-lcmod"
+    append mkos8_opts " --disable lcmod"
 } elseif {$lv == "upper"} {
-    append mkos8_opts " --disable-lcmod"
+    append mkos8_opts " --disable lcmod"
 } else {
     user-error "Legal values for --lowercase are {auto,pass,upper}."
 }

@@ -65,7 +65,8 @@ QUIET = False
 SCRIPT_FILE = ""
 
 USAGE = "usage: "  + os.path.basename (__file__) + \
-      " [-dhvq] script [script] ... [--enable enable_option] ... \n\t[--disable disable_option] ..."
+       " [-h] [-d] [-v] [-vv] [--enable enable_option] ... \n\t[--disable disable_option] ... " + \
+       "\n \tscript [script] ... "
 
 _en_dis_arg_re = re.compile("^(enable|disable)_(\S+)$")
 
@@ -87,7 +88,7 @@ def opt_set(en_dis, option, options_enabled, options_disabled):
 
 #### parse_args ########################################################
 
-def parse_args(script_files, options_enabled, options_disabled):
+def old_parse_args(script_files, options_enabled, options_disabled):
   global DEBUG
   global VERBOSE
   global VERY_VERBOSE
@@ -102,6 +103,7 @@ def parse_args(script_files, options_enabled, options_disabled):
   ap.add_argument ('-vv', '--very_verbose',action = 'store_true', default = False,
                    help = 'include the expect output in the veverbose output.')
 
+  """ Comment out the bespoke options 
   # Add arguments corresponding to --*-os8-* configure script options
   for obn, vals in opts.opts.iteritems():
     od = 'dis' if vals[0] else 'en'
@@ -111,8 +113,9 @@ def parse_args(script_files, options_enabled, options_disabled):
   ap.add_argument ('--disable-lcmod', action = 'store_true', default = False,
                help = 'disable the OS/8 command upcasing patch; best set ' +
                'when SIMH is set to tti ksr mode')
+  """
 
-  # Add the ability to feed in options.
+  # Add the generic ability to feed in options.
   ap.add_argument("--enable", nargs=1, action='append',
                   help="Execute script code within \'begin enable  ENABLE\' block.")
   ap.add_argument("--disable", nargs=1, action='append',
@@ -158,10 +161,10 @@ def add_bool (self, *args, **kwargs):
   self.add_argument (*args, **kwargs)
   
 
-def new_parse_args (script_files, options_enabled, options_disabled):
+def parse_args (script_files, options_enabled, options_disabled):
   global DEBUG
   global VERBOSE
-  global QUIET
+  global VERY_VERBOSE
   global USAGE
 
   enable_usage = ""
@@ -203,15 +206,15 @@ def new_parse_args (script_files, options_enabled, options_disabled):
     # print "idx: " + str(idx) + ", arg: " + arg
     # print "Files: " + str(script_files)
     # print "Options: " + str(options_enabled)
-    if arg == "-d":
+    if arg == "-d" or arg == "--debug":
       DEBUG = True
-    elif arg == "-h":
+    elif arg == "-h" or arg == "--help":
       print USAGE
       sys.exit(0)
-    elif arg == "-q":
-      QUIET = True
-    elif arg == "-v":
+    elif arg == "-v" or arg == "--verbose":
       VERBOSE = 1
+    elif arg == "-vv" or arg == "--very-verbose":
+      VERY_VERBOSE = 1
     elif arg == "--enable":
       idx +=1
       if idx == numargs:

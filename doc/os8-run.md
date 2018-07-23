@@ -334,36 +334,33 @@ scripts after the commands that escape out to SIMH, using it is optional.
 
 ## <a id="usage"></a>Usage
 
-> `os8-run` [`-h`] [`-d`] [`-v`] [`-vv`] [_optional-arguments_ ...]  _script-file_ ...
+> `os8-run` [`-h`] [`-d`] [`-v`] [`-vv`] [`--enable` _enable_option_] ... [`--disable` _disable_option_] ... _script-file_ ...
 
 |                           | **Positional Arguments**
-| _script-file_             | One or more script files to run
-|                           | **Optional Arguments**
-| `-h`                      | show this help message and exit
-| `-d`                      | add extra debugging output, normally suppressed
-| `-v`                      | verbose script status output instead of the usual few progress messages
-| `-vv`                     | very verbose: Includes SIMH expect output with the verbose output.
-|                           | **Enable/Disable Options**
-| `--disable-ba`            | Leave *.BA `BASIC` games and demos off the built OS/8 RK05 image
-| `--enable-focal69`        | Add `FOCAL69` to the built OS/8 RK05 image
-| `--disable-uwfocal`       | Leave U/W FOCAL (only) off the built OS/8 RK05 image
-| `--disable-macrel`        | Leave the `MACREL` assembler off the built OS/8 RK05 image
-| `--disable-dcp`           | Leave the `DCP` disassembler off the built OS/8 RK05 image
-| `--disable-k12`           | Leave 12-bit Kermit off the built OS/8 RK05 image
-| `--disable-cc8`           | Leave the native OS/8 CC8 compiler off the built OS/8 RK05 image
-| `--disable-crt`           | Leave CRT-style rubout processing off the built OS/8 RK05 image
-| `--disable-advent`        | Leave Adventure off the built OS/8 RK05 image
-| `--disable-fortran-ii`    | Leave FORTRAN II off the built OS/8 RK05 image
-| `--disable-fortran-iv`    | Leave FORTRAN IV off the built OS/8 RK05 image
-| `--disable-init`          | Leave the OS/8 INIT message off the built OS/8 RK05 image
-| `--enable-music`          | Add *.MU files to the built OS/8 RK05 image
-| `--disable-chess`         | Leave the CHECKMO-II game of chess off the built OS/8 RK05 image
-| `--enable-vtedit`         | Add the TECO VTEDIT setup to the built OS/8 RK05 image
-| `--disable-lcmod`         | disable the OS/8 command upcasing patch; best set when
-|                           | SIMH is set to `tti ksr` mode
-| `--enable ENABLE`         | Execute script code within `begin enable` _ENABLE_ block.
-| `--disable DISABLE`       | Ignore and do not execute script code within any
-|                           | `begin default` _DISABLE_ block.
+| _script-file_   | One or more script files to run
+|                 | **Optional Arguments**
+| `-h`            | show this help message and exit
+| `-d`            | add extra debugging output, normally suppressed
+| `-v`            | verbose script status output instead of the usual few progress messages
+| `-vv`           | very verbose: Includes SIMH expect output with the verbose output.
+|                 | **Known Enable Options**
+| `focal69`       | Add `FOCAL69` to the built OS/8 RK05 image
+| `music`         | Add *.MU files to the built OS/8 RK05 image
+| `vtedit`        | Add the TECO VTEDIT setup to the built OS/8 RK05 image
+|                 | **Known Disable Options**
+| `ba`            | Leave *.BA `BASIC` games and demos off the built OS/8 RK05 image
+| `uwfocal`       | Leave U/W FOCAL (only) off the built OS/8 RK05 image
+| `macrel`        | Leave the `MACREL` assembler off the built OS/8 RK05 image
+| `dcp`           | Leave the `DCP` disassembler off the built OS/8 RK05 image
+| `k12`           | Leave 12-bit Kermit off the built OS/8 RK05 image
+| `cc8`           | Leave the native OS/8 CC8 compiler off the built OS/8 RK05 image
+| `crt`           | Leave CRT-style rubout processing off the built OS/8 RK05 image
+| `advent`        | Leave Adventure off the built OS/8 RK05 image
+| `fortran-ii`    | Leave FORTRAN II off the built OS/8 RK05 image
+| `fortran-iv`    | Leave FORTRAN IV off the built OS/8 RK05 image
+| `init`          | Leave the OS/8 INIT message off the built OS/8 RK05 image
+| `chess`         | Leave the CHECKMO-II game of chess off the built OS/8 RK05 image
+| `lcmod`         | Disable the OS/8 command upcasing patch. Used when SIMH has `tti ksr` set.
 
 
 ## Script Language Command Inventory
@@ -892,7 +889,7 @@ add-on by default.  We deal with this triple negative by setting
     # The two FUTIL patches only get applied to FUTIL V7 which comes with
     # OS/8 V3D to bring it up to V7D.  MACREL V2 comes with FUTIL V8B, so
     # these patches are skipped by mkos8 using an RE match on the file name
-    # when the user does not pass --disable-os8-macrel to configure.
+    # when the user does not pass --disable os8-macrel to configure.
     patch ../media/os8/patches/FUTIL-31.21.1M-v7B.patch8
     patch ../media/os8/patches/FUTIL-31.21.2M-v7D.patch8
     end default futil_patch
