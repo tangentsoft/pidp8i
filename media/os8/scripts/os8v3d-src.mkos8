@@ -1,7 +1,10 @@
 # Creates an OS/8 v3d source rk05 image from distribution dectapes
+# In order for this script to run with the --os8-minimal config option,
+# we use the os8v3d-bin.rk05 image instead of the os8v3d-patched.rk05 image
+# which might not exist.
 
-# mount rk0 $os8mo/os8v3d-bin.rk05 required
-mount rk0 $os8mo/os8v3d-patched.rk05 required
+mount rk0 $os8mo/os8v3d-bin.rk05 required
+# mount rk0 $os8mo/os8v3d-patched.rk05 required
 
 mount rk1 $os8mo/os8v3d-src.rk05 preserve
 
