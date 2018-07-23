@@ -45,13 +45,13 @@ os8 COPY RKA0:<DTA1:*.HL
 
 # We can't express disabled yet.
 # Besides we need SABR for cc8
-# begin disabled fortran_ii
+# begin disabled fortran-ii
 # os8 DELETE RKA0:FORT.SV,LIBSET.SV,SABR.SV
-# end disabled fortran_ii
+# end disabled fortran-ii
 
-begin default fortran_ii
+begin default fortran-ii
 os8 COPY RKA0:<DTA1:*.RL
-end default fortran_ii
+end default fortran-ii
 
 umount dt1
 
@@ -109,12 +109,12 @@ os8 COPY RKA0:<DTA1:*.*
 end default k12
 
 # FORTRAN IV
-begin default fortran_iv
+begin default fortran-iv
 umount dt1
 mount dt1 $os8mi/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 ro required
 # resume
 os8 COPY RKA0:<DTA1:*.*
-end default fortran_iv
+end default fortran-iv
 
 # MACREL V2 and new FUTIL V8B
 begin default macrel
