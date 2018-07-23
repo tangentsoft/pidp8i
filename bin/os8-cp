@@ -678,7 +678,7 @@ def main ():
     # "within" -- Use COPY.
     
     if copy_type == "into":
-      s.os8_pip_into(source, destination, pip_option)
+      s.os8_pip_to(source, destination, pip_option)
     elif copy_type == "from":
       if has_os8_wildcards(source):
         # Split off device from source:
