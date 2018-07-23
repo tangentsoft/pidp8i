@@ -266,7 +266,12 @@ OS8CP := bin/os8-cp
 V3F_SRCDIR = @srcdir@/src/os8/v3f
 V3F_BUILD_RK05 = os8-v3f-build.rk05
 V3F_MANIFEST = actions.txt
-V3F_MADE_RK05 = bin/os8-v3f-made.rk05
+
+# If we are not building the patched packs, don't build v3f.
+ifneq (@MKOS8_BIN_PATCHES@,)
+	V3F_MADE_RK05 = bin/os8-v3f-made.rk05
+endif
+
 V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.mkos8
 
 V3F_TC08_SCRIPT = $(OS8_SCRIPTS_DIR)/os8-v3f-tape.mkos8
