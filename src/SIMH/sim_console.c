@@ -2239,7 +2239,13 @@ if (r != SCPE_OK)
 
 sim_deb_switches = sim_switches;                        /* save debug switches */
 if (sim_deb_switches & SWMASK ('R')) {
+    struct tm loc_tm, gmt_tm;
+
     clock_gettime(CLOCK_REALTIME, &sim_deb_basetime);
+    /* Adjust the relative timebase to reflect the localtime GMT offset */
+    loc_tm = *localtime (&sim_deb_basetime.tv_sec);
+    gmt_tm = *gmtime (&sim_deb_basetime.tv_sec);
+    sim_deb_basetime.tv_sec -= mktime (&gmt_tm) - mktime (&loc_tm);
     if (!(sim_deb_switches & (SWMASK ('A') | SWMASK ('T'))))
         sim_deb_switches |= SWMASK ('T');
     }
@@ -2323,17 +2329,33 @@ if (sim_deb) {
     if (sim_deb_switches & SWMASK ('A'))
         fprintf (st, "   Debug messages display time of day as seconds.msec%s\n", sim_deb_switches & SWMASK ('R') ? " relative to the start of debugging" : "");
     for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {
+        t_bool unit_debug = FALSE;
+        uint32 unit;
+
+        for (unit = 0; unit < dptr->numunits; unit++)
+            if (dptr->units[unit].dctrl) {
+                unit_debug = TRUE;
+                break;
+                }
         if (!(dptr->flags & DEV_DIS) &&
             ((dptr->flags & DEV_DEBUG) || (dptr->debflags)) &&
-            (dptr->dctrl)) {
+            ((dptr->dctrl) || unit_debug)) {
             fprintf (st, "Device: %-6s ", dptr->name);
             show_dev_debug (st, dptr, NULL, 0, NULL);
             }
         }
     for (i = 0; sim_internal_device_count && (dptr = sim_internal_devices[i]); ++i) {
+        t_bool unit_debug = FALSE;
+        uint32 unit;
+
+        for (unit = 0; unit < dptr->numunits; unit++)
+            if (dptr->units[unit].dctrl) {
+                unit_debug = TRUE;
+                break;
+                }
         if (!(dptr->flags & DEV_DIS) &&
             ((dptr->flags & DEV_DEBUG) || (dptr->debflags)) &&
-            (dptr->dctrl)) {
+            ((dptr->dctrl) || unit_debug)) {
             fprintf (st, "Device: %-6s ", dptr->name);
             show_dev_debug (st, dptr, NULL, 0, NULL);
             }
@@ -2836,9 +2858,7 @@ if (!sim_con_ldsc.conn) {                               /* no Telnet or serial c
     if (tmxr_poll_conn (&sim_con_tmxr) >= 0)            /* poll connect */
         sim_con_ldsc.rcve = 1;                          /* rcv enabled */
     }
-if (sim_con_ldsc.xmte == 0)                             /* xmt disabled? */
-    r = SCPE_STALL;
-else r = tmxr_putc_ln (&sim_con_ldsc, c);               /* no, Telnet output */
+r = tmxr_putc_ln (&sim_con_ldsc, c);                    /* Telnet output */
 tmxr_poll_tx (&sim_con_tmxr);                           /* poll xmt */
 return r;                                               /* return status */
 }
@@ -3285,7 +3305,6 @@ return SCPE_OK;
 
 #include <fcntl.h>
 #include <io.h>
-#include <windows.h>
 #define RAW_MODE 0
 static HANDLE std_input;
 static HANDLE std_output;

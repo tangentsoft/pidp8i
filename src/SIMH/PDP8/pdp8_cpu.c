@@ -414,7 +414,7 @@ while (reason == 0) {                                   /* loop until halted */
             // command.  Set a flag that will let us auto-resume.
             extern int resumeFromInstructionLoopExit, swStop, swSingInst;
             resumeFromInstructionLoopExit = swStop = swSingInst = 1;
-            set_pidp8i_leds (PC, MA, IR, LAC, MQ, IF, DF, SC,
+            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
 
             // Also copy SR hardware value to software register in case
@@ -440,7 +440,7 @@ while (reason == 0) {                                   /* loop until halted */
             // down, we'll put garbage onto the display for MA, MB, and
             // IR, but that's what the real hardware does, too.  See
             // https://github.com/simh/simh/issues/386
-            set_pidp8i_leds (PC, MA, IR, LAC, MQ, IF, DF, SC,
+            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
 
             // Go no further in STOP mode.  In particular, fetch no more
@@ -1532,7 +1532,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         skip_count = 0;
 
         // We need to update the LED data again
-        set_pidp8i_leds (PC, MA, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
+        set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
 
         // Has it been ~1s since we updated our max_skips value?
         time_t now;
@@ -1549,6 +1549,18 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     Pause = 0;      // it's set outside the "if", so it must be *reset* outside
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
+
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+// If we're leaving the simulator's CPU instruction execution loop for
+// the last time, during program shutdown, also clear all of the LEDs,
+// else we'll leave them solidly lit.
+//
+// If instead we're leaving for a simulator pause, as with a Ctrl-E
+// escape, leave the LEDs alone, so user can see the CPU's paused state.
+if (reason == SCPE_STOP && pidp8i_gpio_present) {
+    turn_off_pidp8i_leds ();
+    }
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 /* Simulation halted */
 

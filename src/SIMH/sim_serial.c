@@ -338,17 +338,21 @@ int number = sim_serial_devices(SER_MAX_DEVICE, list);
 fprintf(st, "Serial devices:\n");
 if (number == -1)
     fprintf(st, "  serial support not available in simulator\n");
-else
-if (number == 0)
-    fprintf(st, "  no serial devices are available\n");
 else {
-    size_t min, len;
-    int i;
-    for (i=0, min=0; i<number; i++)
-        if ((len = strlen(list[i].name)) > min)
-            min = len;
-    for (i=0; i<number; i++)
-        fprintf(st," ser%d\t%-*s%s%s%s\n", i, (int)min, list[i].name, list[i].desc[0] ? " (" : "", list[i].desc, list[i].desc[0] ? ")" : "");
+    if (number == 0) {
+        fprintf(st, "  no serial devices are available.\n");
+        fprintf(st, "You may need to run with privilege or set device permissions\n");
+        fprintf(st, "to access local serial ports\n");
+        }
+    else {
+        size_t min, len;
+        int i;
+        for (i=0, min=0; i<number; i++)
+            if ((len = strlen(list[i].name)) > min)
+                min = len;
+        for (i=0; i<number; i++)
+            fprintf(st," ser%d\t%-*s%s%s%s\n", i, (int)min, list[i].name, list[i].desc[0] ? " (" : "", list[i].desc, list[i].desc[0] ? ")" : "");
+        }
     }
 if (serial_open_device_count) {
     int i;
@@ -422,6 +426,8 @@ if (port == INVALID_HANDLE) {
     }
 
 status = sim_config_serial (port, config);              /* set serial configuration */
+if ((lp) && (status == SCPE_OK))                        /* line specified? */
+    status = tmxr_set_config_line (lp, config);         /* set line speed parameters */
 
 if (status != SCPE_OK) {                                /* port configuration error? */
     sim_close_serial (port);                            /* close the port */
@@ -845,6 +851,7 @@ DWORD commerrors;
 COMSTAT cs;
 char *bptr;
 
+memset (brk, 0, count);                                 /* start with no break indicators */
 if (!ClearCommError (port->hPort, &commerrors, &cs)) {  /* get the comm error flags  */
     sim_error_serial ("ClearCommError",                 /* function failed; report unexpected error */
                       (int) GetLastError ());

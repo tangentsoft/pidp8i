@@ -93,9 +93,11 @@ append alloptions {
     os8-src=1         => "do not build os8v3d-src.rk05 from OS/8 source tapes"
     serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:         => "override the throttle values in the boot scripts"
+    usb-automount=1   => "do not automatically mount USB drives for SING_STEP + DF"
 }
 
 options $alloptions
+define USB_AUTOMOUNT [opt-bool usb-automount]
 
 # Make our own array of os8 options so we can apply the meta options
 foreach {opt def desc} $os8opts {
@@ -176,12 +178,14 @@ if {$os8min || ![opt-bool os8-patches]} {
 
 # React to remaining chosen command line options
 if {[opt-bool alt-serial-mod]} {
+    if {[opt-bool serial-mod]} {
+        user-error "You cannot request both --alt-serial-mod and --serial-mod!"
+    }
+
     msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
     define PCB_SERIAL_MOD_JLW
     define PCB_SERIAL_MOD_ANY
-}
-
-if {[opt-bool serial-mod]} {
+} elseif {[opt-bool serial-mod]} {
     msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
     define PCB_SERIAL_MOD_OV
     define PCB_SERIAL_MOD_ANY
@@ -424,7 +428,7 @@ if {$status != 0} {
 msg-result "Python module pkg_resources is installed here."
 
 # Build Deeper Thought if we find it here
-if {[file exists "[get-define srcdir]/src/deeper.c"]} {
+if {[file exists "[get-define srcdir]/src/misc/deeper.c"]} {
     set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
     msg-result "Found Deeper Thought; building it against $ls GPIO module"
     define BUILD_DEEPER_THOUGHT 1
@@ -472,7 +476,7 @@ make-template boot/6.script.in
 make-template boot/7.script.in
 make-template boot/run.script.in
 make-template boot/tss8.script.in
-make-template etc/pidp8i-init.in
+make-template etc/pidp8i.service.in
 make-template etc/sudoers.in
 make-template etc/usb-mount@.service.in
 make-template examples/Makefile.in
@@ -488,4 +492,4 @@ make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
-exec chmod +x "$builddir/tools/simh-update"
+exec chmod +x "$builddir/bin/pidp8i" "$builddir/tools/simh-update"

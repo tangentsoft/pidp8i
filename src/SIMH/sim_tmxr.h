@@ -157,6 +157,7 @@ struct tmln {
     int32               txbsz;                          /* xmt buffer size */
     int32               txbfd;                          /* xmt buffered flag */
     t_bool              modem_control;                  /* line supports modem control behaviors */
+    t_bool              port_speed_control;             /* line programmatically sets port speed */
     int32               modembits;                      /* modem bits which are currently set */
     FILE                *txlog;                         /* xmt log file */
     FILEREF             *txlogref;                      /* xmt log file reference */
@@ -220,6 +221,7 @@ struct tmxr {
     SOCKET              ring_sock;                      /* incoming connection socket awaiting DTR */
     t_bool              notelnet;                       /* default telnet capability for incoming connections */
     t_bool              modem_control;                  /* multiplexer supports modem control behaviors */
+    t_bool              port_speed_control;             /* multiplexer programmatically sets port speed */
     t_bool              packet;                         /* Lines are packet oriented */
     t_bool              datagram;                       /* Lines use datagram packet transport */
     };
@@ -246,6 +248,10 @@ t_stat tmxr_attach_help(FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, const ch
 char *tmxr_line_attach_string(TMLN *lp);
 t_stat tmxr_set_modem_control_passthru (TMXR *mp);
 t_stat tmxr_clear_modem_control_passthru (TMXR *mp);
+t_stat tmxr_set_port_speed_control (TMXR *mp);
+t_stat tmxr_clear_port_speed_control (TMXR *mp);
+t_stat tmxr_set_line_port_speed_control (TMXR *mp, int line);
+t_stat tmxr_clear_line_port_speed_control (TMXR *mp, int line);
 t_stat tmxr_set_get_modem_bits (TMLN *lp, int32 bits_to_set, int32 bits_to_clear, int32 *incoming_bits);
 t_stat tmxr_set_line_loopback (TMLN *lp, t_bool enable_loopback);
 t_bool tmxr_get_line_loopback (TMLN *lp);
@@ -279,6 +285,7 @@ t_stat tmxr_show_cstat (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 t_stat tmxr_show_lines (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 t_stat tmxr_show_open_devices (FILE* st, DEVICE *dptr, UNIT* uptr, int32 val, CONST char* desc);
 t_stat tmxr_activate (UNIT *uptr, int32 interval);
+t_stat tmxr_activate_abs (UNIT *uptr, int32 interval);
 t_stat tmxr_activate_after (UNIT *uptr, uint32 usecs_walltime);
 t_stat tmxr_activate_after_abs (UNIT *uptr, uint32 usecs_walltime);
 t_stat tmxr_clock_coschedule (UNIT *uptr, int32 interval);
@@ -314,6 +321,7 @@ void _tmxr_debug (uint32 dbits, TMLN *lp, const char *msg, char *buf, int bufsiz
 #endif
 #if (!defined(NOT_MUX_USING_CODE))
 #define sim_activate tmxr_activate
+#define sim_activate_abs tmxr_activate_abs
 #define sim_activate_after tmxr_activate_after
 #define sim_activate_after_abs tmxr_activate_after_abs
 #define sim_clock_coschedule tmxr_clock_coschedule 

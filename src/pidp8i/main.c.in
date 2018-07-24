@@ -251,9 +251,9 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
 //
 // Also update the LED brightness values based on those new states.
 
-void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sIR, int32 sLAC,
-    int32 sMQ, int32 sIF, int32 sDF, int32 sSC, int32 int_req,
-    int Pause)
+void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint16_t sMB,
+    uint16_t sIR, int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF,
+    int32_t sSC, int32_t int_req, int Pause)
 {
     // Bump the instruction count.  This should always be equal to the
     // Fetch LED's value, but integers are too cheap to get cute here.
@@ -265,18 +265,12 @@ void set_pidp8i_leds (uint32 sPC, uint32 sMA, uint16 sIR, int32 sLAC,
     display* pd = pdis_update;
     ++pd->inst_count;
 
-    // Rows 0-4, easy cases: single-register LED strings.
-    //
-    // The only non-obvious one is that we use the PDP-8 simulator's IR
-    // register value for the MB lights due to a quirk in the way the
-    // register states are set at the time this function is called; MB
-    // is not passed to us because its value at the call time is bogus.
+    // Rows 0-4, easy cases: single-register LED strings
     set_pidp8i_row_leds (pd, 0, sPC);
     set_pidp8i_row_leds (pd, 1, sMA);
-    set_pidp8i_row_leds (pd, 2, sIR);
+    set_pidp8i_row_leds (pd, 2, sMB);
     set_pidp8i_row_leds (pd, 3, sLAC & 07777);
     set_pidp8i_row_leds (pd, 4, sMQ);
-
 
 #if 0   // debugging
     static time_t last = 0, now;

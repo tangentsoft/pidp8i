@@ -507,19 +507,13 @@ typedef enum {
     SW_NUMBER           /* Numeric Value */
     } SWITCH_PARSE;
 SWITCH_PARSE get_switches (const char *cptr, int32 *sw_val, int32 *sw_number);
-CONST char *get_sim_sw (CONST char *cptr);
-t_stat get_aval (t_addr addr, DEVICE *dptr, UNIT *uptr);
-t_value get_rval (REG *rptr, uint32 idx);
 void put_rval (REG *rptr, uint32 idx, t_value val);
 void fprint_help (FILE *st);
 void fprint_stopped (FILE *st, t_stat r);
 void fprint_capac (FILE *st, DEVICE *dptr, UNIT *uptr);
 void fprint_sep (FILE *st, int32 *tokens);
-char *read_line (char *ptr, int32 size, FILE *stream);
-char *read_line_p (const char *prompt, char *ptr, int32 size, FILE *stream);
 REG *find_reg_glob (CONST char *ptr, CONST char **optr, DEVICE **gdptr);
 REG *find_reg_glob_reason (CONST char *cptr, CONST char **optr, DEVICE **gdptr, t_stat *stat);
-char *sim_trim_endspc (char *cptr);
 
 /* Forward references */
 
@@ -555,7 +549,7 @@ void int_handler (int signal);
 t_stat set_prompt (int32 flag, CONST char *cptr);
 t_stat sim_set_asynch (int32 flag, CONST char *cptr);
 t_stat sim_set_environment (int32 flag, CONST char *cptr);
-static const char *get_dbg_verb (uint32 dbits, DEVICE* dptr);
+static const char *get_dbg_verb (uint32 dbits, DEVICE* dptr, UNIT *uptr);
 
 /* Global data */
 
@@ -1117,66 +1111,66 @@ static const char simh_help[] =
        /***************** 80 character line width template *************************/
 #define HLP_SET_CONSOLE "*Commands SET CONSOLE"
       "3Console\n"
-      "+set console arg{,arg...}    set console options\n"
-      "+set console WRU=value       specify console drop to simh character\n"
-      "+set console BRK=value       specify console Break character\n"
-      "+set console DEL=value       specify console delete character\n"
-      "+set console PCHAR=bitmask   bit mask of printable characters in\n"
+      "+SET CONSOLE arg{,arg...}    set console options\n"
+      "+SET CONSOLE WRU=value       specify console drop to simh character\n"
+      "+SET CONSOLE BRK=value       specify console Break character\n"
+      "+SET CONSOLE DEL=value       specify console delete character\n"
+      "+SET CONSOLE PCHAR=bitmask   bit mask of printable characters in\n"
       "++++++++                     range [31,0]\n"
-      "+set console SPEED=speed{*factor}\n"
+      "+SET CONSOLE SPEED=speed{*factor}\n"
       "++++++++                     specify console input data rate\n"
-      "+set console TELNET=port     specify console telnet port\n"
-      "+set console TELNET=LOG=log_file\n"
+      "+SET CONSOLE TELNET=port     specify console telnet port\n"
+      "+SET CONSOLE TELNET=LOG=log_file\n"
       "++++++++                     specify console telnet logging to the\n"
       "++++++++                     specified destination {LOG,STDOUT,STDERR,\n"
       "++++++++                     DEBUG or filename)\n"
-      "+set console TELNET=NOLOG    disables console telnet logging\n"
-      "+set console TELNET=BUFFERED[=bufsize]\n"
+      "+SET CONSOLE TELNET=NOLOG    disables console telnet logging\n"
+      "+SET CONSOLE TELNET=BUFFERED[=bufsize]\n"
       "++++++++                     specify console telnet buffering\n"
-      "+set console TELNET=NOBUFFERED\n"
+      "+SET CONSOLE TELNET=NOBUFFERED\n"
       "++++++++                     disables console telnet buffering\n"
-      "+set console TELNET=UNBUFFERED\n"
+      "+SET CONSOLE TELNET=UNBUFFERED\n"
       "++++++++                     disables console telnet buffering\n"
-      "+set console NOTELNET        disable console telnet\n"
-      "+set console SERIAL=serialport[;config]\n"
+      "+SET CONSOLE NOTELNET        disable console telnet\n"
+      "+SET CONSOLE SERIAL=serialport[;config]\n"
       "++++++++                     specify console serial port and optionally\n"
       "++++++++                     the port config (i.e. ;9600-8n1)\n"
-      "+set console NOSERIAL        disable console serial session\n"
-      "+set console SPEED=nn{*fac}  specifies the maximum console port input rate\n"
+      "+SET CONSOLE NOSERIAL        disable console serial session\n"
+      "+SET CONSOLE SPEED=nn{*fac}  specifies the maximum console port input rate\n"
        /***************** 80 character line width template *************************/
 #define HLP_SET_REMOTE "*Commands SET REMOTE"
       "3Remote\n"
-      "+set remote TELNET=port      specify remote console telnet port\n"
-      "+set remote NOTELNET         disables remote console\n"
-      "+set remote BUFFERSIZE=bufsize\n"
+      "+SET REMOTE TELNET=port      specify remote console telnet port\n"
+      "+SET REMOTE NOTELNET         disables remote console\n"
+      "+SET REMOTE BUFFERSIZE=bufsize\n"
       "++++++++                     specify remote console command output buffer\n"
       "++++++++                     size\n"
-      "+set remote CONNECTIONS=n    specify number of concurrent remote\n"
+      "+SET REMOTE CONNECTIONS=n    specify number of concurrent remote\n"
       "++++++++                     console sessions\n"
-      "+set remote TIMEOUT=n        specify number of seconds without input\n"
+      "+SET REMOTE TIMEOUT=n        specify number of seconds without input\n"
       "++++++++                     before automatic continue\n"
-      "+set remote MASTER           enable master mode remote console\n"
-      "+set remote NOMASTER         disable remote master mode console\n"
+      "+SET REMOTE MASTER           enable master mode remote console\n"
+      "+SET REMOTE NOMASTER         disable remote master mode console\n"
 #define HLP_SET_DEFAULT "*Commands SET Working_Directory"
       "3Working Directory\n"
-      "+set default <dir>           set the current directory\n"
-      "+cd <dir>                    set the current directory\n"
+      "+SET DEFAULT <dir>           set the current directory\n"
+      "+CD <dir>                    set the current directory\n"
 #define HLP_SET_LOG    "*Commands SET Log"
       "3Log\n"
       " Interactions with the simulator session (at the \"sim>\" prompt\n"
       " can be recorded to a log file\n\n"
-      "+set log log_file            specify the log destination\n"
+      "+SET LOG log_file            specify the log destination\n"
       "++++++++                     (STDOUT,DEBUG or filename)\n"
-      "+set nolog                   disables any currently active logging\n"
+      "+SET NOLOG                   disables any currently active logging\n"
       "4Switches\n"
       " By default, log output is written at the end of the specified log file.\n"
       " A new log file can created if the -N switch is used on the command line.\n"
 #define HLP_SET_DEBUG  "*Commands SET Debug"
        /***************** 80 character line width template *************************/
       "3Debug\n"
-      "+set debug debug_file        specify the debug destination\n"
+      "+SET DEBUG debug_file        specify the debug destination\n"
       "++++++++                     (STDOUT,STDERR,LOG or filename)\n"
-      "+set nodebug                 disables any currently active debug output\n"
+      "+SET NODEBUG                 disables any currently active debug output\n"
       "4Switches\n"
       " Debug message output contains a timestamp which indicates the number of\n"
       " simulated instructions which have been executed prior to the debug event.\n\n"
@@ -1206,90 +1200,111 @@ static const char simh_help[] =
       " EBCDIC characters.\n"
 #define HLP_SET_BREAK  "*Commands SET Breakpoints"
       "3Breakpoints\n"
-      "+set break <list>            set breakpoints\n"
-      "+set nobreak <list>          clear breakpoints\n"
+      "+SET BREAK <list>            set breakpoints\n"
+      "+SET NOBREAK <list>          clear breakpoints\n"
        /***************** 80 character line width template *************************/
 #define HLP_SET_THROTTLE "*Commands SET Throttle"
       "3Throttle\n"
-      "+set throttle {x{M|K|%%}}|{x/t}\n"
-      "++++++++                     set simulation rate\n"
-      "+set nothrottle              set simulation rate to maximum\n"
+      " Simulator instruction execution rate can be controlled by specifying\n"
+      " one of the following throttle commands:\n\n"
+      "+SET THROTTLE xM             execute x million instructions per second\n"
+      "+SET THROTTLE xK             execute x thousand instructions per second\n"
+      "+SET THROTTLE x%%             occupy x percent of the host capacity\n"
+      "++++++++executing instructions\n"
+      "+SET THROTTLE x/t            sleep for t milliseconds after executing x\n"
+      "++++++++instructions\n\n"
+      "+SET NOTHROTTLE              set simulation rate to maximum\n\n"
+      " Throttling is only available on host systems that implement a precision\n"
+      " real-time delay function.\n\n"
+      " xM, xK and x%% modes require the simulator to execute sufficient\n"
+      " instructions to actually calibrate the desired execution rate relative\n"
+      " to wall clock time.  Very short running programs may complete before\n"
+      " calibration completes and therefore before the simulated execution rate\n"
+      " can match the desired rate.\n\n"
+      " The SET NOTHROTTLE command turns off throttling.  The SHOW THROTTLE\n"
+      " command shows the current settings for throttling and the calibration\n"
+      " results\n\n"
+      " Some simulators implement a different form of host CPU resource management\n"
+      " called idling.  Idling suspends simulated execution whenever the program\n"
+      " running in the simulator is doing nothing, and runs the simulator at full\n"
+      " speed when there is work to do.  Throttling and idling are mutually\n"
+      " exclusive.\n"
 #define HLP_SET_CLOCKS "*Commands SET Clocks"
       "3Clock\n"
 #if defined (SIM_ASYNCH_CLOCKS)
-      "+set clock asynch            enable asynchronous clocks\n"
-      "+set clock noasynch          disable asynchronous clocks\n"
+      "+SET CLOCK asynch            enable asynchronous clocks\n"
+      "+SET CLOCK noasynch          disable asynchronous clocks\n"
 #endif
-      "+set clock nocatchup         disable catchup clock ticks\n"
-      "+set clock catchup           enable catchup clock ticks\n"
-      "+set clock calib=n%%          specify idle calibration skip %%\n"
-      "+set clock stop=n            stop execution after n instructions\n\n"
-      " The set clock stop command allows execution to have a bound when\n"
+      "+SET CLOCK nocatchup         disable catchup clock ticks\n"
+      "+SET CLOCK catchup           enable catchup clock ticks\n"
+      "+SET CLOCK calib=n%%          specify idle calibration skip %%\n"
+      "+SET CLOCK stop=n            stop execution after n instructions\n\n"
+      " The SET CLOCK STOP command allows execution to have a bound when\n"
       " execution starts with a BOOT, NEXT or CONTINUE command.\n"
 #define HLP_SET_ASYNCH "*Commands SET Asynch"
       "3Asynch\n"
-      "+set asynch                  enable asynchronous I/O\n"
-      "+set noasynch                disable asynchronous I/O\n"
+      "+SET ASYNCH                  enable asynchronous I/O\n"
+      "+SET NOASYNCH                disable asynchronous I/O\n"
 #define HLP_SET_ENVIRON "*Commands SET Environment"
       "3Environment\n"
       "4Explicitily Changing A Variable\n"
-      "+set environment name=val    set environment variable\n"
-      "+set environment name        clear environment variable\n"
+      "+SET ENVIRONMENT name=val    set environment variable\n"
+      "+SET ENVIRONMENT name        clear environment variable\n"
       "4Gathering Input From A User\n"
       " Input from a user can be obtained by:\n\n"
-      "+set environment -p \"Prompt String\" name=default\n\n"
-      " The -p switch indicates that the user should be prompted\n"
+      "+set environment -P \"Prompt String\" name=default\n\n"
+      " The -P switch indicates that the user should be prompted\n"
       " with the indicated prompt string and the input provided\n"
       " will be saved in the environment variable 'name'.  If no\n"
       " input is provided, the value specified as 'default' will be\n"
       " used.\n"
 #define HLP_SET_ON      "*Commands SET Command_Status_Trap_Dispatching"
       "3Command Status Trap Dispatching\n"
-      "+set on                      enables error checking after command\n"
+      "+SET ON                      enables error checking after command\n"
       "++++++++                     execution\n"
-      "+set noon                    disables error checking after command\n"
+      "+SET NOON                    disables error checking after command\n"
       "++++++++                     execution\n"
-      "+set on inherit              enables inheritance of ON state and\n"
+      "+SET ON INHERIT              enables inheritance of ON state and\n"
       "++++++++                     actions into do command files\n"
-      "+set on noinherit            disables inheritance of ON state and\n"
+      "+SET ON NOINHERIT            disables inheritance of ON state and\n"
       "++++++++                     actions into do command files\n"
 #define HLP_SET_VERIFY "*Commands SET Command_Execution_Display"
 #define HLP_SET_VERIFY "*Commands SET Command_Execution_Display"
       "3Command Execution Display\n"
-      "+set verify                  re-enables display of command file\n"
+      "+SET VERIFY                  re-enables display of command file\n"
       "++++++++                     processed commands\n"
-      "+set verbose                 re-enables display of command file\n"
+      "+SET VERBOSE                 re-enables display of command file\n"
       "++++++++                     processed commands\n"
-      "+set noverify                disables display of command file processed\n"
+      "+SET NOVERIFY                disables display of command file processed\n"
       "++++++++                     commands\n"
-      "+set noverbose               disables display of command file processed\n"
+      "+SET NOVERBOSE               disables display of command file processed\n"
       "++++++++                     commands\n"
 #define HLP_SET_MESSAGE "*Commands SET Command_Error_Status_Display"
       "3Command Error Status Display\n"
-      "+set message                 re-enables display of command file error\n"
+      "+SET MESSAGE                 re-enables display of command file error\n"
       "++++++++                     messages\n"
-      "+set nomessage               disables display of command file error\n"
+      "+SET NOMESSAGE               disables display of command file error\n"
       "++++++++                     messages\n"
 #define HLP_SET_QUIET "*Commands SET Command_Output_Display"
       "3Command Output Display\n"
-      "+set quiet                   disables suppression of some output and\n"
+      "+SET QUIET                   disables suppression of some output and\n"
       "++++++++                     messages\n"
-      "+set noquiet                 re-enables suppression of some output and\n"
+      "+SET NOQUIET                 re-enables suppression of some output and\n"
       "++++++++                     messages\n"
 #define HLP_SET_PROMPT "*Commands SET Command_Prompt"
       "3Command Prompt\n"
-      "+set prompt \"string\"        sets an alternate simulator prompt string\n"
+      "+SET PROMPT \"string\"        sets an alternate simulator prompt string\n"
       "3Device and Unit\n"
-      "+set <dev> OCT|DEC|HEX|BIN   set device display radix\n"
-      "+set <dev> ENABLED           enable device\n"
-      "+set <dev> DISABLED          disable device\n"
-      "+set <dev> DEBUG{=arg}       set device debug flags\n"
-      "+set <dev> NODEBUG={arg}     clear device debug flags\n"
-      "+set <dev> arg{,arg...}      set device parameters (see show modifiers)\n"
-      "+set <unit> ENABLED          enable unit\n"
-      "+set <unit> DISABLED         disable unit\n"
-      "+set <unit> arg{,arg...}     set unit parameters (see show modifiers)\n"
-      "+help <dev> set              displays the device specific set commands\n"
+      "+SET <dev> OCT|DEC|HEX|BIN   set device display radix\n"
+      "+SET <dev> ENABLED           enable device\n"
+      "+SET <dev> DISABLED          disable device\n"
+      "+SET <dev> DEBUG{=arg}       set device debug flags\n"
+      "+SET <dev> NODEBUG={arg}     clear device debug flags\n"
+      "+SET <dev> arg{,arg...}      set device parameters (see show modifiers)\n"
+      "+SET <unit> ENABLED          enable unit\n"
+      "+SET <unit> DISABLED         disable unit\n"
+      "+SET <unit> arg{,arg...}     set unit parameters (see show modifiers)\n"
+      "+HELP <dev> SET              displays the device specific set commands\n"
       "++++++++                     available\n"
        /***************** 80 character line width template *************************/
 #define HLP_SHOW        "*Commands SHOW"
@@ -1996,7 +2011,7 @@ static const char simh_help[] =
       " file.  Otherwise, the next command in the command file is processed.\n\n"
       "5String Comparison Expressions\n"
       " String Values can be compared with:\n"
-      "++{-i} {NOT} \"<string1>\" <compare-op> \"<string2>\"\n\n"
+      "++{-i} {NOT} \"<string1>\"|EnVarName1 <compare-op> \"<string2>|EnvVarName2\"\n\n"
       " The -i switch, if present, causes comparisons to be case insensitive.\n"
       " <string1> and <string2> are quoted string values which may have\n"
       " environment variables substituted as desired.\n"
@@ -2019,10 +2034,15 @@ static const char simh_help[] =
       " and a numeric comparison is performed. For example: \"+1\" EQU \"1\" will be\n"
       " true.\n"
       "5File Existence Expressions\n"
-      " File existence can be determined with:\n"
+      " File existence can be determined with:\n\n"
       "++{NOT} EXIST \"<filespec>\"\n\n"
       "++{NOT} EXIST <filespec>\n\n"
       " Specifies a true (false {NOT}) condition if the file exists.\n"
+      "5File Comparison Expressions\n"
+      " Files can have their contents compared with:\n\n"
+      "++-D {NOT} \"<filespec1>\" == \"<filespec2>\" \n\n"
+      " Specifies a true (false {NOT}) condition if the indicated files\n"
+      " have the same contents.\n\n"
        /***************** 80 character line width template *************************/
 #define HLP_EXIT        "*Commands Exiting_The_Simulator"
       "2Exiting The Simulator\n"
@@ -2165,6 +2185,8 @@ static C1TAB set_dev_tab[] = {
 static C1TAB set_unit_tab[] = {
     { "ENABLED",    &set_unit_enbdis,   1 },
     { "DISABLED",   &set_unit_enbdis,   0 },
+    { "DEBUG",      &set_dev_debug,     2+1 },
+    { "NODEBUG",    &set_dev_debug,     2+0 },
     { NULL,         NULL,               0 }
     };
 
@@ -2211,6 +2233,7 @@ static SHTAB show_dev_tab[] = {
     };
 
 static SHTAB show_unit_tab[] = {
+    { "DEBUG",      &show_dev_debug,            1 },
     { NULL, NULL, 0 }
     };
 
@@ -2448,7 +2471,7 @@ while (stat != SCPE_EXIT) {                             /* in case exit */
             cptr = (*sim_vm_read) (cbuf, sizeof(cbuf), stdin);
             }
         else
-            cptr = read_line_p (sim_prompt, cbuf, sizeof(cbuf), stdin);/* read with prmopt*/
+            cptr = read_line_p (sim_prompt, cbuf, sizeof(cbuf), stdin);/* read with prompt*/
         }
     if (cptr == NULL) {                                 /* EOF? or SIGINT? */
         if (sim_ttisatty()) {
@@ -2701,6 +2724,7 @@ void fprint_set_help_ex (FILE *st, DEVICE *dptr, t_bool silent)
 MTAB *mptr;
 DEBTAB *dep;
 t_bool found = FALSE;
+t_bool deb_desc_available = FALSE;
 char buf[CBUFSIZE], header[CBUFSIZE];
 
 sprintf (header, "\n%s device SET commands:\n\n", dptr->name);
@@ -2734,13 +2758,11 @@ if ((dptr->flags & DEV_DEBUG) || (dptr->debflags)) {
     sprintf (buf, "set %s NODEBUG", sim_dname (dptr));
     fprintf (st,  "%-30s\tDisables debugging for device %s\n", buf, sim_dname (dptr));
     if (dptr->debflags) {
-        t_bool desc_available = FALSE;
-
         strcpy (buf, "");
         fprintf (st, "set %s DEBUG=", sim_dname (dptr));
         for (dep = dptr->debflags; dep->name != NULL; dep++) {
             fprintf (st, "%s%s", ((dep == dptr->debflags) ? "" : ";"), dep->name);
-            desc_available |= ((dep->desc != NULL) && (dep->desc[0] != '\0'));
+            deb_desc_available |= ((dep->desc != NULL) && (dep->desc[0] != '\0'));
             }
         fprintf (st, "\n");
         fprintf (st,  "%-30s\tEnables specific debugging for device %s\n", buf, sim_dname (dptr));
@@ -2749,11 +2771,6 @@ if ((dptr->flags & DEV_DEBUG) || (dptr->debflags)) {
             fprintf (st, "%s%s", ((dep == dptr->debflags) ? "" : ";"), dep->name);
         fprintf (st, "\n");
         fprintf (st,  "%-30s\tDisables specific debugging for device %s\n", buf, sim_dname (dptr));
-        if (desc_available) {
-            fprintf (st, "\n*%s device DEBUG settings:\n", sim_dname (dptr));
-            for (dep = dptr->debflags; dep->name != NULL; dep++)
-                fprintf (st, "%4s%-12s%s\n", "", dep->name, dep->desc ? dep->desc : "");
-            }
         }
     }
 if ((dptr->modifiers) && (dptr->units) && (dptr->numunits != 1)) {
@@ -2763,6 +2780,27 @@ if ((dptr->modifiers) && (dptr->units) && (dptr->numunits != 1)) {
         fprintf (st,  "%-30s\tEnables unit %sn\n", buf, sim_dname (dptr));
         sprintf (buf, "set %sn DISABLE", sim_dname (dptr));
         fprintf (st,  "%-30s\tDisables unit %sn\n", buf, sim_dname (dptr));
+        }
+    if (((dptr->flags & DEV_DEBUG) || (dptr->debflags)) &&
+        ((DEV_TYPE(dptr) == DEV_DISK) || (DEV_TYPE(dptr) == DEV_TAPE))) {
+        sprintf (buf, "set %sn DEBUG", sim_dname (dptr));
+        fprintf (st,  "%-30s\tEnables debugging for device unit %sn\n", buf, sim_dname (dptr));
+        sprintf (buf, "set %sn NODEBUG", sim_dname (dptr));
+        fprintf (st,  "%-30s\tDisables debugging for device unit %sn\n", buf, sim_dname (dptr));
+        if (dptr->debflags) {
+            strcpy (buf, "");
+            fprintf (st, "set %sn DEBUG=", sim_dname (dptr));
+            for (dep = dptr->debflags; dep->name != NULL; dep++)
+                fprintf (st, "%s%s", ((dep == dptr->debflags) ? "" : ";"), dep->name);
+            fprintf (st, "\n");
+            fprintf (st,  "%-30s\tEnables specific debugging for device unit %sn\n", buf, sim_dname (dptr));
+            fprintf (st, "set %sn NODEBUG=", sim_dname (dptr));
+            for (dep = dptr->debflags; dep->name != NULL; dep++)
+                fprintf (st, "%s%s", ((dep == dptr->debflags) ? "" : ";"), dep->name);
+            fprintf (st, "\n");
+            fprintf (st,  "%-30s\tDisables specific debugging for device unit %sn\n", buf, sim_dname (dptr));
+            }
+
         }
     for (mptr = dptr->modifiers; mptr->mask != 0; mptr++) {
         if ((!MODMASK(mptr,MTAB_VUN)) && MODMASK(mptr,MTAB_XTD))
@@ -2777,6 +2815,11 @@ if ((dptr->modifiers) && (dptr->units) && (dptr->numunits != 1)) {
                 fprintf (st,  "%-30s\t%s\n", "", mptr->help);
             }
         }
+    }
+if (deb_desc_available) {
+    fprintf (st, "\n*%s device DEBUG settings:\n", sim_dname (dptr));
+    for (dep = dptr->debflags; dep->name != NULL; dep++)
+        fprintf (st, "%4s%-12s%s\n", "", dep->name, dep->desc ? dep->desc : "");
     }
 if (!found && !silent)
     fprintf (st, "No SET help is available for the %s device\n", dptr->name);
@@ -3756,11 +3799,44 @@ int sim_cmp_string (const char *s1, const char *s2)
 long int v1, v2;
 char *ep1, *ep2;
 
+if (sim_switches & SWMASK ('F')) {      /* File Compare? */
+    FILE *f1, *f2;
+    int c1, c2;
+    char *filename1, *filename2;
+
+    filename1 = (char *)malloc (strlen (s1));
+    strcpy (filename1, s1 + 1);
+    filename1[strlen (filename1) - 1] = '\0';
+    filename2 = (char *)malloc (strlen (s2));
+    strcpy (filename2, s2 + 1);
+    filename2[strlen (filename2) - 1] = '\0';
+
+    f1 = fopen (filename1, "rb");
+    f2 = fopen (filename2, "rb");
+    free (filename1);
+    free (filename2);
+    if ((f1 == NULL) && (f2 == NULL))   /* Both can't open? */
+        return 0;                       /* Call that equal */
+    if (f1 == NULL) {
+        fclose (f2);
+        return -1;
+        }
+    if (f2 == NULL) {
+        fclose (f1);
+        return 1;
+        }
+    while (((c1 = fgetc (f1)) == (c2 = fgetc (f2))) &&
+           (c1 != EOF)) ;
+    fclose (f1);
+    fclose (f2);
+    return c1 - c2;
+    }
 v1 = strtol(s1+1, &ep1, 0);
 v2 = strtol(s2+1, &ep2, 0);
 if ((ep1 != s1 + strlen (s1) - 1) ||
     (ep2 != s2 + strlen (s2) - 1))
-    return strcmp (s1, s2);
+    return (strlen (s1) == strlen (s2)) ? strncmp (s1 + 1, s2 + 1, strlen (s1) - 2)
+                                        : strcmp (s1, s2);
 if (v1 == v2)
     return 0;
 if (v1 < v2)
@@ -3808,7 +3884,7 @@ CONST char *tptr, *gptr;
 REG *rptr;
 
 tptr = (CONST char *)get_glyph_gen (iptr, optr, mchar, (sim_switches & SWMASK ('I')), TRUE, '\\');
-if (*optr != '"') {
+if ((*optr != '"') && (*optr != '\'')) {
     ap = getenv (optr);
     if (!ap)
         return tptr;
@@ -3851,8 +3927,9 @@ if (!strcmp (gbuf, "EXIST")) {                          /* File Exist Test? */
     Exist = TRUE;                                       /* remember that, and */
     cptr = (CONST char *)tptr;
     }
-tptr = _get_string (cptr, gbuf, '=');                   /* get first string */
-if (Exist || (*gbuf == '"')) {                          /* quoted string comparison? */
+tptr = _get_string (cptr, gbuf, ' ');                   /* get first string */
+if (Exist || (*gbuf == '"') || (*gbuf == '\'')) {       /* quoted string comparison? */
+    char quote = *gbuf;
     char op[CBUFSIZE];
     static struct {
         const char *op;
@@ -3881,13 +3958,15 @@ if (Exist || (*gbuf == '"')) {                          /* quoted string compari
     while (sim_isspace (*cptr))                         /* skip spaces */
         ++cptr;
     if (!Exist) {
-        get_glyph (cptr, op, '"');
+        get_glyph (cptr, op, quote);
         for (optr = compare_ops; optr->op; optr++)
-            if (0 == strcmp (op, optr->op))
+            if (0 == strncmp (op, optr->op, strlen (optr->op)))
                 break;
         if (!optr->op)
             return sim_messagef (SCPE_ARG, "Invalid operator: %s\n", op);
-        cptr += strlen (op);
+        cptr += strlen (optr->op);
+        if ((!isspace (*cptr)) && isalpha (optr->op[strlen (optr->op) - 1]) && isalnum (*cptr))
+            return sim_messagef (SCPE_ARG, "Invalid operator: %s\n", op);
         while (sim_isspace (*cptr))                     /* skip spaces */
             ++cptr;
         cptr = _get_string (cptr, gbuf2, 0);            /* get second string */
@@ -4652,7 +4731,7 @@ while (*cptr != 0) {                                    /* do all mods */
                 if (cvptr)                              /* = value? */
                     return SCPE_ARG;
                 if (uptr->flags & UNIT_DIS)             /* disabled? */
-                     return SCPE_UDIS;
+                    return SCPE_UDIS;
                 if ((mptr->valid) &&                    /* invalid? */
                     ((r = mptr->valid (uptr, mptr->match, cvptr, mptr->desc)) != SCPE_OK))
                     return r;
@@ -4760,20 +4839,28 @@ else {
 return SCPE_OK;
 }
 
-/* Set device debug enabled/disabled routine */
+/* Set device/unit debug enabled/disabled routine */
 
-t_stat set_dev_debug (DEVICE *dptr, UNIT *uptr, int32 flag, CONST char *cptr)
+t_stat set_dev_debug (DEVICE *dptr, UNIT *uptr, int32 flags, CONST char *cptr)
 {
+int32 flag = flags & 1;
+t_bool uflag = ((flags & 2) != 0);
 char gbuf[CBUFSIZE];
 DEBTAB *dep;
 
 if ((dptr->flags & DEV_DEBUG) == 0)
     return SCPE_NOFNC;
 if (cptr == NULL) {                                     /* no arguments? */
-    dptr->dctrl = flag ? (dptr->debflags ? flag : 0xFFFFFFFF) : 0;/* disable/enable w/o table */
+    if (uflag)
+        uptr->dctrl = flag ? (dptr->debflags ? flag : 0xFFFFFFFF) : 0;/* disable/enable w/o table */
+    else
+        dptr->dctrl = flag ? (dptr->debflags ? flag : 0xFFFFFFFF) : 0;/* disable/enable w/o table */
     if (flag && dptr->debflags) {                       /* enable with table? */
         for (dep = dptr->debflags; dep->name != NULL; dep++)
-            dptr->dctrl = dptr->dctrl | dep->mask;      /* set all */
+            if (uflag)
+                uptr->dctrl = uptr->dctrl | dep->mask;      /* set all */
+            else
+                dptr->dctrl = dptr->dctrl | dep->mask;      /* set all */
         }
     return SCPE_OK;
     }
@@ -4784,8 +4871,15 @@ while (*cptr) {
     for (dep = dptr->debflags; dep->name != NULL; dep++) {
         if (strcmp (dep->name, gbuf) == 0) {            /* match? */
             if (flag)
-                dptr->dctrl = dptr->dctrl | dep->mask;
-            else dptr->dctrl = dptr->dctrl & ~dep->mask;
+                if (uflag)
+                    uptr->dctrl = uptr->dctrl | dep->mask;
+                else
+                    dptr->dctrl = dptr->dctrl | dep->mask;
+            else
+                if (uflag)
+                    uptr->dctrl = uptr->dctrl & ~dep->mask;
+                else
+                    dptr->dctrl = dptr->dctrl & ~dep->mask;
             break;
             }
         }                                               /* end for */
@@ -5159,7 +5253,7 @@ if (flag) {
     fprintf (st, "\n        %s", sim_toffset_64 ? "Large File (>2GB) support" : "No Large File support");
     fprintf (st, "\n        SDL Video support: %s", vid_version());
 #if defined (HAVE_PCREPOSIX_H)
-    fprintf (st, "\n        PCRE RegEx support for EXPECT commands");
+    fprintf (st, "\n        PCRE RegEx (Version %s) support for EXPECT commands", pcre_version());
 #elif defined (HAVE_REGEX_H)
     fprintf (st, "\n        RegEx support for EXPECT commands");
 #else
@@ -5240,6 +5334,10 @@ if (flag) {
 #define S_xstr(a) S_str(a)
 #define S_str(a) #a
 fprintf (st, "%sgit commit id: %8.8s", flag ? "\n        " : "        ", S_xstr(SIM_GIT_COMMIT_ID));
+#if defined(SIM_GIT_COMMIT_TIME)
+if (flag)
+    fprintf (st, "%sgit commit time: %s", "\n        ", S_xstr(SIM_GIT_COMMIT_TIME));
+#endif
 #undef S_str
 #undef S_xstr
 #endif
@@ -5394,11 +5492,38 @@ fprintf (st, "Radix=%d\n", dptr->dradix);
 return SCPE_OK;
 }
 
-t_stat show_dev_debug (FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, CONST char *cptr)
+t_stat show_dev_debug (FILE *st, DEVICE *dptr, UNIT *uptr, int32 uflag, CONST char *cptr)
 {
-int32 any = 0;
 DEBTAB *dep;
+uint32 unit;
+int32 any = 0;
 
+if (uflag) {
+    if ((dptr->flags & DEV_DEBUG) || (dptr->debflags)) {
+        if (!uptr->dctrl)
+            return SCPE_OK;
+        if (dptr->debflags == NULL)
+            fprintf (st, "%s: Debugging enabled\n", sim_uname (uptr));
+        else {
+            uint32 dctrl = uptr->dctrl;
+
+            for (dep = dptr->debflags; (dctrl != 0) && (dep->name != NULL); dep++) {
+                if ((dctrl & dep->mask) == dep->mask) {
+                    dctrl &= ~dep->mask;
+                    if (any)
+                        fputc (';', st);
+                    else
+                        fprintf (st, "%s: Debug=", sim_uname (uptr));
+                    fputs (dep->name, st);
+                    any = 1;
+                    }
+                }
+            if (any)
+                fputc ('\n', st);
+            }
+        }
+    return SCPE_OK;
+    }
 if ((dptr->flags & DEV_DEBUG) || (dptr->debflags)) {
     if (dptr->dctrl == 0)
         fputs ("Debugging disabled", st);
@@ -5419,6 +5544,8 @@ if ((dptr->flags & DEV_DEBUG) || (dptr->debflags)) {
             }
         }
     fputc ('\n', st);
+    for (unit = 0; unit < dptr->numunits; unit++)
+        show_dev_debug (st, dptr, &dptr->units[unit], 1, NULL);
     return SCPE_OK;
     }
 else return SCPE_NOFNC;
@@ -5705,7 +5832,7 @@ if (dir) {
 #endif
     t_offset FileSize;
     char FileName[PATH_MAX + 1];
-    char *MatchName = 1 + strrchr (cptr, '/');;
+    const char *MatchName = 1 + strrchr (cptr, '/');
     char *p_name;
     struct tm *local;
 #if defined (HAVE_GLOB)
@@ -6306,8 +6433,9 @@ if ((sim_switches & SWMASK ('R')) ||                    /* read only? */
     uptr->fileref = sim_fopen (cptr, "rb");             /* open rd only */
     if (uptr->fileref == NULL)                          /* open fail? */
         return attach_err (uptr, SCPE_OPENERR);         /* yes, error */
+    if (!(uptr->flags & UNIT_RO))
+        sim_messagef (SCPE_OK, "%s: unit is read only\n", sim_dname (dptr));
     uptr->flags = uptr->flags | UNIT_RO;                /* set rd only */
-    sim_messagef (SCPE_OK, "%s: unit is read only\n", sim_dname (dptr));
     }
 else {
     if (sim_switches & SWMASK ('N')) {                  /* new file only? */
@@ -6477,7 +6605,7 @@ if ((uptr->flags & UNIT_BUF) && (uptr->filebuf)) {
         }
     uptr->flags = uptr->flags & ~UNIT_BUF;
     }
-uptr->flags = uptr->flags & ~(UNIT_ATT | UNIT_RO);
+uptr->flags = uptr->flags & ~(UNIT_ATT | ((uptr->flags & UNIT_ROABLE) ? UNIT_RO : 0));
 free (uptr->filename);
 uptr->filename = NULL;
 if (fclose (uptr->fileref) == EOF)
@@ -8334,9 +8462,10 @@ static const char *get_glyph_gen (const char *iptr, char *optr, char mchar, t_bo
 {
 t_bool quoting = FALSE;
 t_bool escaping = FALSE;
+t_bool got_quoted = FALSE;
 char quote_char = 0;
 
-while ((*iptr != 0) && 
+while ((*iptr != 0) && (!got_quoted) &&
        ((quote && quoting) || ((sim_isspace (*iptr) == 0) && (*iptr != mchar)))) {
     if (quote) {
         if (quoting) {
@@ -8344,8 +8473,10 @@ while ((*iptr != 0) &&
                 if (*iptr == escape_char)
                     escaping = TRUE;
                 else
-                    if (*iptr == quote_char)
+                    if (*iptr == quote_char) {
                         quoting = FALSE;
+                        got_quoted = TRUE;
+                        }
                 }
             else
                 escaping = FALSE;
@@ -9051,17 +9182,23 @@ uint32 i, j;
 
 if (uptr == NULL)
     return NULL;
+if (uptr->dptr)
+    return uptr->dptr;
 for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {
     for (j = 0; j < dptr->numunits; j++) {
-        if (uptr == (dptr->units + j))
+        if (uptr == (dptr->units + j)) {
+            uptr->dptr = dptr;
             return dptr;
+            }
         }
     }
 for (i = 0; i<sim_internal_device_count; i++) {
     dptr = sim_internal_devices[i];
     for (j = 0; j < dptr->numunits; j++) {
-        if (uptr == (dptr->units + j))
+        if (uptr == (dptr->units + j)) {
+            uptr->dptr = dptr;
             return dptr;
+            }
         }
     }
 return NULL;
@@ -11125,7 +11262,7 @@ if (exp->buf_size) {
     free (bstr);
     }
 if (exp->dptr && (exp->dbit & exp->dptr->dctrl))
-    fprintf (st, "  Expect Debugging via: SET %s DEBUG%s%s\n", sim_dname(exp->dptr), exp->dptr->debflags ? "=" : "", exp->dptr->debflags ? get_dbg_verb (exp->dbit, exp->dptr) : "");
+    fprintf (st, "  Expect Debugging via: SET %s DEBUG%s%s\n", sim_dname(exp->dptr), exp->dptr->debflags ? "=" : "", exp->dptr->debflags ? get_dbg_verb (exp->dbit, exp->dptr, NULL) : "");
 fprintf (st, "  Match Rules:\n");
 if (!*match)
     return sim_exp_showall (st, exp);
@@ -11387,7 +11524,7 @@ if (after)
 if (delay)
     fprintf (st, "  Default delay between character input is %u instructions\n", after);
 if (snd->dptr && (snd->dbit & snd->dptr->dctrl))
-    fprintf (st, "  Send Debugging via: SET %s DEBUG%s%s\n", sim_dname(snd->dptr), snd->dptr->debflags ? "=" : "", snd->dptr->debflags ? get_dbg_verb (snd->dbit, snd->dptr) : "");
+    fprintf (st, "  Send Debugging via: SET %s DEBUG%s%s\n", sim_dname(snd->dptr), snd->dptr->debflags ? "=" : "", snd->dptr->debflags ? get_dbg_verb (snd->dbit, snd->dptr, NULL) : "");
 return SCPE_OK;
 }
 
@@ -11464,7 +11601,7 @@ int32 debug_unterm  = 0;
 
 /* Finds debug phrase matching bitmask from from device DEBTAB table */
 
-static const char *get_dbg_verb (uint32 dbits, DEVICE* dptr)
+static const char *get_dbg_verb (uint32 dbits, DEVICE* dptr, UNIT *uptr)
 {
 static const char *debtab_none    = "DEBTAB_ISNULL";
 static const char *debtab_nomatch = "DEBTAB_NOMATCH";
@@ -11474,7 +11611,7 @@ int32 offset = 0;
 if (dptr->debflags == 0)
     return debtab_none;
 
-dbits &= dptr->dctrl;                           /* Look for just the bits that matched */
+dbits &= (dptr->dctrl | (uptr ? uptr->dctrl : 0));/* Look for just the bits that matched */
 
 /* Find matching words for bitmask */
 
@@ -11490,9 +11627,9 @@ return some_match ? some_match : debtab_nomatch;
 
 /* Prints standard debug prefix unless previous call unterminated */
 
-static const char *sim_debug_prefix (uint32 dbits, DEVICE* dptr)
+static const char *sim_debug_prefix (uint32 dbits, DEVICE* dptr, UNIT* uptr)
 {
-const char* debug_type = get_dbg_verb (dbits, dptr);
+const char* debug_type = get_dbg_verb (dbits, dptr, uptr);
 char tim_t[32] = "";
 char tim_a[32] = "";
 char pc_s[64] = "";
@@ -11585,7 +11722,7 @@ if (sim_deb && dptr && (dptr->dctrl & dbits)) {
 
     sim_oline = NULL;                                                   /* avoid potential debug to active socket */
     if (!debug_unterm)
-        fprintf(sim_deb, "%s", sim_debug_prefix(dbits, dptr));          /* print prefix if required */
+        fprintf(sim_deb, "%s", sim_debug_prefix(dbits, dptr, NULL));    /* print prefix if required */
     if (header)
         fprintf(sim_deb, "%s: ", header);
     fprint_fields (sim_deb, (t_value)before, (t_value)after, bitdefs);  /* print xlation, transition */
@@ -11760,29 +11897,25 @@ return stat | SCPE_NOMESSAGE;
    Callers should be calling sim_debug() which is a macro
    defined in scp.h which evaluates the action condition before 
    incurring call overhead. */
-void _sim_debug (uint32 dbits, DEVICE* vdptr, const char* fmt, ...)
+static void _sim_vdebug (uint32 dbits, DEVICE* dptr, UNIT *uptr, const char* fmt, va_list arglist)
 {
-DEVICE *dptr = (DEVICE *)vdptr;
-if (sim_deb && dptr && (dptr->dctrl & dbits)) {
+if (sim_deb && dptr && ((dptr->dctrl | (uptr ? uptr->dctrl : 0)) & dbits)) {
     TMLN *saved_oline = sim_oline;
     char stackbuf[STACKBUFSIZE];
     int32 bufsize = sizeof(stackbuf);
     char *buf = stackbuf;
-    va_list arglist;
     int32 i, j, len;
-    const char* debug_prefix = sim_debug_prefix(dbits, dptr);   /* prefix to print if required */
+    const char* debug_prefix = sim_debug_prefix(dbits, dptr, uptr);   /* prefix to print if required */
 
     sim_oline = NULL;                                   /* avoid potential debug to active socket */
     buf[bufsize-1] = '\0';
 
     while (1) {                                         /* format passed string, args */
-        va_start (arglist, fmt);
 #if defined(NO_vsnprintf)
         len = vsprintf (buf, fmt, arglist);
 #else                                                   /* !defined(NO_vsnprintf) */
         len = vsnprintf (buf, bufsize-1, fmt, arglist);
 #endif                                                  /* NO_vsnprintf */
-        va_end (arglist);
 
 /* If the formatted result didn't fit into the buffer, then grow the buffer and try again */
 
@@ -11830,14 +11963,35 @@ if (sim_deb && dptr && (dptr->dctrl & dbits)) {
         free (buf);
     sim_oline = saved_oline;                            /* restore original socket */
     }
-return;
+}
+
+void _sim_debug_unit (uint32 dbits, UNIT *uptr, const char* fmt, ...)
+{
+DEVICE *dptr = (uptr ? uptr->dptr : NULL);
+
+if (sim_deb && (((dptr ? dptr->dctrl : 0) | (uptr ? uptr->dctrl : 0)) & dbits)) {
+    va_list arglist;
+    va_start (arglist, fmt);
+    _sim_vdebug (dbits, dptr, uptr, fmt, arglist);
+    va_end (arglist);
+    }
+}
+
+void _sim_debug_device (uint32 dbits, DEVICE* dptr, const char* fmt, ...)
+{
+if (sim_deb && dptr && (dptr->dctrl & dbits)) {
+    va_list arglist;
+    va_start (arglist, fmt);
+    _sim_vdebug (dbits, dptr, NULL, fmt, arglist);
+    va_end (arglist);
+    }
 }
 
 void sim_data_trace(DEVICE *dptr, UNIT *uptr, const uint8 *data, const char *position, size_t len, const char *txt, uint32 reason)
 {
 
-if (sim_deb && (dptr->dctrl & reason)) {
-    sim_debug (reason, dptr, "%s %s %slen: %08X\n", sim_uname(uptr), txt, position, (unsigned int)len);
+if (sim_deb && ((dptr->dctrl | (uptr ? uptr->dctrl : 0)) & reason)) {
+    _sim_debug_unit (reason, uptr, "%s %s %slen: %08X\n", sim_uname(uptr), txt, position, (unsigned int)len);
     if (data && len) {
         unsigned int i, same, group, sidx, oidx, ridx, eidx, soff;
         char outbuf[80], strbuf[28], rad50buf[36], ebcdicbuf[32];
@@ -11884,7 +12038,7 @@ if (sim_deb && (dptr->dctrl & reason)) {
                 continue;
                 }
             if (same > 0) {
-                sim_debug (reason, dptr, "%04X thru %04X same as above\n", i-(16*same), i-1);
+                _sim_debug_unit (reason, uptr, "%04X thru %04X same as above\n", i-(16*same), i-1);
                 same = 0;
                 }
             group = (((len - i) > 16) ? 16 : (len - i));
@@ -11927,10 +12081,10 @@ if (sim_deb && (dptr->dctrl & reason)) {
             strbuf[soff+sidx] = '\0';
             ebcdicbuf[eidx] = '\0';
             rad50buf[ridx] = '\0';
-            sim_debug (reason, dptr, "%04X%-48s %s%s%s\n", i, outbuf, strbuf, ebcdicbuf, rad50buf);
+            _sim_debug_unit (reason, uptr, "%04X%-48s %s%s%s\n", i, outbuf, strbuf, ebcdicbuf, rad50buf);
             }
         if (same > 0) {
-            sim_debug (reason, dptr, "%04X thru %04X same as above\n", i-(16*same), (unsigned int)(len-1));
+            _sim_debug_unit (reason, uptr, "%04X thru %04X same as above\n", i-(16*same), (unsigned int)(len-1));
             }
         }
     }
