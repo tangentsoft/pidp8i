@@ -48,12 +48,10 @@ import shutil
 import argparse
 from itertools import chain
 
-
 # Our local modules
-from pidp8i import *
-from simh   import *
+from pidp8i    import *
+from simh      import *
 from os8script import *
-from mkos8 import opts
 
 
 #### GLOBALS AND CONSTANTS #############################################
@@ -86,81 +84,15 @@ def opt_set(en_dis, option, options_enabled, options_disabled):
         options_enabled.remove(option)
   else: return
 
-#### parse_args ########################################################
 
-def old_parse_args(script_files, options_enabled, options_disabled):
-  global DEBUG
-  global VERBOSE
-  global VERY_VERBOSE
-  
-  ap = argparse.ArgumentParser(description = "Run OS/8 scripts")
-
-  # Add general-purpose args
-  ap.add_argument ('-d', '--debug', action = 'store_true', default = False,
-                   help = 'add extra debugging output, normally suppressed')
-  ap.add_argument ('-v', '--verbose',action = 'store_true', default = False,
-                   help = 'verbose SIMH output instead of progress messages')
-  ap.add_argument ('-vv', '--very_verbose',action = 'store_true', default = False,
-                   help = 'include the expect output in the veverbose output.')
-
-  """ Comment out the bespoke options 
-  # Add arguments corresponding to --*-os8-* configure script options
-  for obn, vals in opts.opts.iteritems():
-    od = 'dis' if vals[0] else 'en'
-    ap.add_argument ('--' + od + 'able-' + obn, action = 'store_true', default = False, help = vals[1])
-
-  # Add options that do not exactly mirror configuration options
-  ap.add_argument ('--disable-lcmod', action = 'store_true', default = False,
-               help = 'disable the OS/8 command upcasing patch; best set ' +
-               'when SIMH is set to tti ksr mode')
-  """
-
-  # Add the generic ability to feed in options.
-  ap.add_argument("--enable", nargs=1, action='append',
-                  help="Execute script code within \'begin enable  ENABLE\' block.")
-  ap.add_argument("--disable", nargs=1, action='append',
-                  help="Ignore and do not execute script code within \'begin not-disabled DISABLE\' block.")
-
-  
-  # Add trailing "what do do" argument
-  ap.add_argument (
-    'script_files',
-    help    = "Script files to run",
-    nargs   = argparse.REMAINDER)
-  
-  # Finish initializing
-  args = ap.parse_args()
-
-  arg_dict = vars(args)
-
-  VERBOSE = args.verbose or args.very_verbose
-  VERY_VERBOSE = args.very_verbose
-  DEBUG = args.debug
-
-  for key in arg_dict:
-    # print key + ": " + str(arg_dict[key])
-    m = re.match(_en_dis_arg_re, key)
-    if m != None:
-      en_dis = m.group(1)
-      option = m.group(2)
-      if arg_dict[key]: opt_set(en_dis, option, options_enabled, options_disabled)
-    else:
-      if (key == "enable" or key == "disable") and arg_dict[key] != None:
-        options_list = list(chain(*arg_dict[key]))
-        for my_option in options_list:
-          opt_set(key, my_option, options_enabled, options_disabled)
-      elif key == "script_files":
-        for filename in arg_dict[key]:
-          script_files.append(filename)
-
-
-    
 def add_bool (self, *args, **kwargs):
   kwargs['action']  = 'store_true'
   kwargs['default'] = False
   self.add_argument (*args, **kwargs)
   
 
+#### parse_args ########################################################
+    
 def parse_args (script_files, options_enabled, options_disabled):
   global DEBUG
   global VERBOSE
@@ -179,9 +111,9 @@ def parse_args (script_files, options_enabled, options_disabled):
 
   # Add arguments corresponding to --*-os8-* configure script options
   max_obn_len = 0
-  for obn, vals in opts.opts.iteritems():
+  for obn, vals in os8opts.opts.iteritems():
     max_obn_len = max(max_obn_len, len(obn))
-  for obn, vals in opts.opts.iteritems():
+  for obn, vals in os8opts.opts.iteritems():
     if vals[0]:
       # Enable option
       pad_str = (max_obn_len - len (obn)) * " "
