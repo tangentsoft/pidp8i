@@ -121,7 +121,7 @@ if {$os8bool(cc8) && !$os8bool(fortran-ii)} {
 }
 
 # Now build the options to mkos8
-set mkos8_opts ""
+set os8_opts ""
 foreach {opt def desc} $os8opts {
     set val $os8bool($opt)
     if {$os8min} {
@@ -130,18 +130,18 @@ foreach {opt def desc} $os8opts {
         # We can't have "except for" logic because we can't tell
         # explicitly-given options from implicit ones.
         set act " not"
-        if {$def} { append mkos8_opts " --disable $opt" }
+        if {$def} { append os8_opts " --disable $opt" }
     } elseif {$val} {
         set act ""
         if {!$def} {
             # User is enabling a normally-disabled option, so pass it along
             # to mkos8 explicitly.
-            append mkos8_opts " --enable $opt"
+            append os8_opts " --enable $opt"
         }
     } else {
         set act " not"
         if {$def} {
-            append mkos8_opts " --disable $opt"
+            append os8_opts " --disable $opt"
         }
     }
     msg-result "Will$act add $desc to the built OS/8 RK05 image"
@@ -208,9 +208,9 @@ if {$lv == "auto"} {
     define SIMH_PASS_LOWERCASE
 } elseif {$lv == "pass"} {
     define SIMH_PASS_LOWERCASE
-    append mkos8_opts " --disable lcmod"
+    append os8_opts " --disable lcmod"
 } elseif {$lv == "upper"} {
-    append mkos8_opts " --disable lcmod"
+    append os8_opts " --disable lcmod"
 } else {
     user-error "Legal values for --lowercase are {auto,pass,upper}."
 }
@@ -218,13 +218,13 @@ msg-result "Lowercase handling set to '$lv' mode."
 
 # We've purposely held off exporting the mkos8 option set until now
 # because some of the configuration options can affect the option set.
-define MKOS8_OPTS $mkos8_opts
+define MKOS8_OPTS $os8_opts
 if {![file exists "lib/mkos8"]} { file mkdir "lib/mkos8" }
 write-if-changed "lib/pidp8i/os8opts.py" $os
 
 # Force a rebuild of the OS/8 media if the option set changed.
 if {![file exists "obj"]} { file mkdir "obj" }
-write-if-changed "obj/mkos8.opts" $mkos8_opts {
+write-if-changed "obj/os8.opts" $os8_opts {
     file delete -force bin/os8v3d-bin.rk05
     msg-result "mkos8 options changed; will rebuild OS/8 disk images."
 }
