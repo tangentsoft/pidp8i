@@ -57,7 +57,7 @@ from os8script import *
 #### GLOBALS AND CONSTANTS #############################################
 
 DEBUG = False
-VERBOSE = True
+VERBOSE = False
 VERY_VERBOSE = False
 QUIET = False
 SCRIPT_FILE = ""
