@@ -91,11 +91,11 @@ _end_option_comm_re = re.compile ("^end\s+option\s+(.+)$")
 _new_sys_tape_prefix = "system"
 
 # Parser regexps used in patcher
-_com_os8_parse_str = "^\.([a-zA-Z]+)\s?(.*)$"
+_com_os8_parse_str = "^\.([a-zA-Z]+)\s*(.*)$"
 _com_os8_parse = re.compile(_com_os8_parse_str)
-_com_split_str = "^([a-zA-Z]+)\s?(.*)$"
+_com_split_str = "^([a-zA-Z]+)\s*(.*)$"
 _com_split_parse = re.compile(_com_split_str)
-_odt_parse_str = "^([0-7]+)\s?/\s?(\S+)\s+([0-7;]+)"
+_odt_parse_str = "^([0-7]+)\s*/\s*(\S+)\s+([0-7;]+)"
 _odt_parse = re.compile(_odt_parse_str)
 
 # Put command keyword in group(1) and the rest is in group(3)
@@ -116,7 +116,7 @@ _begin_option_comm_re = re.compile ("^begin\s+option\s+(.+)$")
 # We put all bootable devices into this string so that when
 # we add more devices, for example rl for RL01, we change one
 # string not many.
-_simh_boot_dev_str = "(rk|td|dt|rx)(\d?)"
+_simh_boot_dev_str = "(rk|td|dt|rx)(\d*)"
 _simh_boot_re = re.compile("^" + _simh_boot_dev_str + "$")
 
 # Parse an argument string for mount into SIMH device
@@ -156,7 +156,7 @@ _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
 # The file components are in group(3) for destination, and group (6) for source.
 # The destination file must either end in ".BN" or have no extension.
 # The source must file either end in ".PA" or have no extension.
-_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s?<\s?" + _os8_PA_fspec + "$")
+_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*<\s*" + _os8_PA_fspec + "$")
 
 # For the 3 arg form:
 # The full destination spec is in group(1), The full source spec is in group(7).
@@ -169,7 +169,7 @@ _two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s?<\s?" + _os8_PA_fspec + 
 # The source must file either end in ".PA" or have no extension.
 # The listing must either end in "LS" or have no extension.
 
-_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s?,\s?" + _os8_LS_fspec + "\s?<\s?" + _os8_PA_fspec + "$")
+_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*,\s*" + _os8_LS_fspec + "\s*<\s*" + _os8_PA_fspec + "$")
 
 # Regular expression for syntax checking inside ABSLDR
 # One or more OS/8 binary files and optional args beginning with a slash.
@@ -783,7 +783,7 @@ class os8script:
     loc = match.group(1)
     old_val = match.group(2)
     new_val = match.group(3)
-    expect_val_str = "\s?[0-7]{4} "
+    expect_val_str = "\s*[0-7]{4} "
     
     if self.debug: print "Loc: " + loc + ", old_val: " + old_val + ", new_val: " + new_val
     self.simh.os8_send_str (loc + "/")
