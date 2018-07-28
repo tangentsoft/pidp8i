@@ -874,7 +874,8 @@ class os8script:
   #### run_patch_file ##################################################
   
   def run_patch_file (self, pathname):
-    print "Running patch file: " + pathname
+    sys.stdout.write ("Applying patch " + os.path.basename (pathname) + "...")
+    sys.stdout.flush ()
 
     try:
       patch_file = open(pathname, "r")
@@ -931,7 +932,7 @@ class os8script:
   
     patch_file.close()
   
-    print "\tSuccess."
+    print "Success."
     return "success"
 
 
