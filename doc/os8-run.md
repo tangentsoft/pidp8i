@@ -369,14 +369,15 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 
 
 | [`boot`](#boot-comm)           | Boot the named SIMH device.                      |
-| [`begin`](#begin-end-comm)     | Begin complex conditional or sub-command block. |
+| [`begin`](#begin-end-comm)     | Begin complex conditional or sub-command block.  |
 | [`configure`](#configure-comm) | Perform specific SIMH configuration activities.  |
 | [`copy`](#copy-com)            | Make a copy of a POSIX file.                     |
-| [`cpfrom`](#copy-from-comm) | Copy *from* OS/8 into a file in POSIX environment. |
-| [`cpto`](#copy-to-comm)     | Copy POSIX file *to* OS/8 environment.         |
+| [`cpfrom`](#copy-from-comm) | Copy *from* OS/8 into a file in POSIX environment.  |
+| [`cpto`](#copy-to-comm)     | Copy POSIX file *to* OS/8 environment.              |
 | [`disable`](#en-dis-comm)      | Set disablement of a feature by keyword.         |
 | [`enable`](#en-dis-comm)       | Set enablement of a feature by keyword.          |
-| [`end`](#begin-end-comm)       | End complex conditional or sub-command block.   |
+| [`end`](#begin-end-comm)       | End complex conditional or sub-command block.    |
+| [`exit`](#exit-comm)           | Exit os8-run and send status                     |
 | [`include`](#include-comm)     | Execute a subordinate script file.               |
 | [`mount`](#mount-comm)         | Mount an image file as a SIMH attached device.   |
 | [`os8`](#os8-comm)             | Run arbitrary OS/8 command.                      |
@@ -393,6 +394,23 @@ first simple and then complex scripts with `os8-run`.
 
 
 ## <a id="scripting"></a>Script Language Command Reference
+
+### <a id="exit-comm"></a>`exit` - Exit `os8-run` and send status.
+
+`exit` [_status_]
+
+The simplest script command is `exit`.  It allows immediate termination
+of the `os8-run` script.   
+
+The _status_ argument is optional.  If the argument is an integer, `os8-run`
+will return that status to the calling command shell.  This enables rich
+signalling of status when `os8-run` itself is run as a script.
+
+The _status_ argument can also be a string.  If a string is specified,
+the status returned by `os8-run` to the command shell is 1, and the
+string is printed on exit.  (This is the default behavior of the python
+`sys.exit()` procedure.)
+
 
 ### <a id="include-comm"></a>`include` — Execute a subordinate script file.
 

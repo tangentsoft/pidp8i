@@ -225,6 +225,9 @@ _configurables = {"rx": _rx_settings, "tape": _tape_settings,
 # No whitespace in the string.
 _expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
 
+# Parse an exit arg for an integer or an integer in parentheses
+_exit_arg_re = re.compile ("^(\s*[+-]?\s*\d+)|\s*\(\s*([+-]?\s*\d+)\s*\)\s*$")
+
 # Options enabled/not_disabled for conditional execution in scripts.
 #
 # Earlier code allowed --enable and --disable. We interface to it.
@@ -656,6 +659,31 @@ class os8script:
     return "success"
 
 
+  #### exit_command ###############################################
+  # Call POSIX exit to exit the running program,
+  # returning a numerical status value.
+
+  def exit_command (self, line, script_file):
+    m = re.match (_exit_arg_re, line)
+    intfound = False
+    if m != None:
+      if m.group(1) != None:
+        intfound = True
+        status = int(m.group(1))
+      elif m.group(2) != None:
+        intfound = True
+        status = int(m.group(2))
+      else:
+        intfound = False
+    if self.verbose:
+      if intfound: stat_str = str(status)
+      else: stat_str = line
+      print "Calling sys.exit (" +  stat_str + ") at line: " + \
+        str(self.line_ct_stack[0]) + "."
+    if intfound: sys.exit (status)
+    else: sys.exit(line)
+
+
   #### _command ###########################################
   # 
 
@@ -707,6 +735,7 @@ class os8script:
                 "include": self.include_command,
                 "begin": self.begin_command,
                 "end": self.end_command,
+                "exit": self.exit_command,
                 "umount": self.umount_command,
                 "simh": self.simh_command,
                 "configure": self.configure_command,
