@@ -1,3 +1,20 @@
 # Test operation of version detection.
-print Hello World
-exit hello
+begin version 1+
+print Hello Version 1+
+end version 1+
+
+begin version 1-
+print Hello version 1-
+end version 1-
+
+begin version 2+
+print Hello version 2+
+end version 2+
+
+begin version 3+
+print Hello version 3+
+end version 3+
+
+begin version 3.2-
+print hello version 3.2-
+end version 3.2-

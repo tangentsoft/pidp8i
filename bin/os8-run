@@ -198,6 +198,9 @@ def main ():
   os8 = os8script (s, options_enabled, options_disabled, verbose=VERBOSE, debug=DEBUG)
 
   for script_file in script_files:
+    if VERBOSE:
+      print os.path.basename (__file__) + " -- Language Version: " + os8.lang_version
+
     print "Running script file: " + script_file
     os8.run_script_file (script_file)
 

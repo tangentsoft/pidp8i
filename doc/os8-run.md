@@ -743,10 +743,14 @@ found on partition A of rk05 drive 1.
 
 _keyword_ is either one of the following:
 
-| `cdprog`       | Command loop through OS/8 Command Decoder with _argument_ specifying an OS/8 executable program by name and (optionally) device.|
+| `cdprog`  | Command loop through OS/8 Command Decoder with _argument_ specifying |
+|           | an OS/8 executable program by name and (optionally) device.|
 | `build`        | `BUILD` command interpreter with dialogs manged with Python expect.    |
 | `enabled`      | Execution block only if _argument_ is enabled. (See the [`enable` \ `disable`](#en-dis-comm)) section below. |
-| `default` | Execution block that runs by default but is ignored if _argument_ is disabled. (See the [`enable` \ `disable`](#en-dis-comm))  section below. |
+| `default` | Execution block that runs by default but is ignored if _argument_ is disabled. |
+|           | (See the [`enable` \ `disable`](#en-dis-comm) section below.) |
+| `version` | Execution block that runs if the current version of the `os8-run` |
+|           | scripting language matches the version test. (See [version matching](#vers-match) below.)|
 
 For `cdprog`, and `build`, _argument_ is passed uninterpreted to the
 OS/8 `RUN` command.  It is expected that _argument_ will be the name
@@ -921,6 +925,49 @@ add-on by default.  We deal with this triple negative by setting
     patch ../media/os8/patches/FUTIL-31.21.1M-v7B.patch8
     patch ../media/os8/patches/FUTIL-31.21.2M-v7D.patch8
     end default futil_patch
+
+
+### <a id="vers-test"></a> version matching
+
+The `os8-run` scripting language is expected to evolve over time.  An internal
+language version number is kept, and incremented when major or minor changes
+are made to the language.
+
+This version numbering scheme can be detected and acted upon within a script
+by specifying a `version` match string in a `begin` / `end` block.
+
+The language version string is sequence of numerical sub version numbers of arbitrary
+depth separated by periods. Examples of valid language version strings:
+
+    3
+    3.1
+    3.10
+    3.10.1
+
+The match string enables extremely rich partial matches in addition to exact matches
+through the use of the character `x` in the last sub version position to mean
+"and all sub versions below this", and two relational suffixes:
+
+|  +  | Matches the specified version and all higher version numbers. |
+|  -  | Matches the specified version and all lower version numbers.  |
+
+No whitespace is allowed within a version match string.
+
+Examples:
+
+    3.x          Version 3, 3.0 and all sub versions.
+    3.1.x        Version 3.1 and all sub versions.
+    3.1+         Version 3.1 and higher.
+    3.1.x+       Version 3.1 and higher. 
+    3.0-         Version 3.0 and lower.
+
+Therefore a conditional block requiring language version 2.0 and higher
+would look like this:
+
+    begin version 2.0+
+    # The symprini command exists only in version 2 and above.
+    symprini
+    end version 2.0+
 
 
 ### <a id="patch-comm"></a>`patch` — Run a patch file.

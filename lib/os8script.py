@@ -48,6 +48,11 @@ import subprocess
 from pidp8i import *
 from simh import *
 
+# Script Language Version
+# Update this version number as the language evolves.
+# Version 1.0 is the first public version.
+LANG_VERSION = "1.0"
+
 # Error Class Definitions ##############################################
 # Enables us to use exceptions from within this module.
 
@@ -75,17 +80,20 @@ class InputError(Error):
 
 # Identify a begin enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|default)\s+(.+)$")
+_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|default|version)\s+(.+)$")
   
 # Identify an end enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_end_en_dis_comm_re = re.compile ("^end\s+(enabled|default)\s+(.+)$")
+_end_en_dis_comm_re = re.compile ("^end\s+(enabled|default|version)\s+(.+)$")
   
 # Identify an end comm and put the rest of the line in group(1)
 _end_comm_re = re.compile ("^end\s+(.+)?$")
   
 # Identify an end option command and put the rest of the line in group(1)
 _end_option_comm_re = re.compile ("^end\s+option\s+(.+)$")
+
+# A valid version spec
+_version_parse_re = re.compile ("^((\d+\.)*)?(\d+|[xX])?([+-])?$")
   
 # Name of the DECtape image file we create
 _new_sys_tape_prefix = "system"
@@ -284,6 +292,19 @@ def save_if_needed(path):
       os.remove(save_path)
     os.rename(path, save_path)
   
+def version_to_array (version):
+  vers_array = []
+  this_str = ""
+
+  for c in version:
+    if c != ".":
+      this_str += c
+    else:
+      vers_array.append(this_str)
+      this_str = ""
+  if this_str != "": vers_array.append(this_str)
+  return vers_array
+
 
 class os8script:
   # Contains a simh object, other global state and methods
@@ -292,6 +313,7 @@ class os8script:
   
   
   def __init__ (self, simh, enabled_options, disabled_options, verbose=False, debug=True):
+    self.lang_version = LANG_VERSION
     self.verbose = verbose
     self.debug = debug
     self.simh = simh
@@ -327,6 +349,68 @@ class os8script:
       return None
     
 
+  def version_parse (self, test):
+    # Caller pre-tests this same match and is expected never to call us
+    # if the match would fail.
+    m = re.match (_version_parse_re, test)
+    partial = False
+    if m.group(1) != None:
+      test_str = m.group(1)
+      if m.group(3) != None:
+        if m.group(3).isdigit():
+          test_str += m.group(3)
+        else: partial = True       # Matching a.b.c.x matches a partial.
+    else:
+      test_str = m.group(3)
+    test_array = version_to_array(test_str)
+    version_array = version_to_array(self.lang_version)
+    relop = "="
+    if m.group(4) != None:
+      relop = m.group(4)
+    match = False
+    idx = 0
+    if self.debug: print "Partial = " + str(partial)
+    endpoint = max (len(test_array), len(version_array))
+    while idx < endpoint:
+      if idx >= len(version_array):
+        vers_item = "0"
+      else:
+        vers_item = version_array[idx]
+      if idx >= len(test_array):
+        test_item = "x"
+      else:
+        test_item = test_array[idx]
+      if self.debug: print  "match: " + str(match) + ", test_item: " + test_item + ", vers_item: " + vers_item
+      # Have we matched so far?  Have we matched enough? Is partial true? If so, return True.
+      if match and test_item == "x":
+        if relop == "+": return True
+        elif relop == "-":
+          if self.debug: print "version_array_len: " + str(len(version_array))
+          if int(vers_item) != 0: return False
+          else:
+            idx += 1
+            continue
+        else: return partial
+        
+      vers_num = int(vers_item)
+      test_num = int(test_item)
+      if relop == "+":
+        if vers_num > test_num: return True
+        elif vers_num == test_num: match = True
+        else: return False
+      elif relop == "-":
+        if vers_num < test_num: return True
+        elif vers_num == test_num: match = True
+        else: return False
+      else: # All other keys mean relop == "=":
+        if test_item == vers_item: match = True
+        else: return False
+
+      idx += 1
+    return match
+
+
+          
   #### basic_line_parse ################################################
   # Returns stripped line and any other cleanup we want.
   # Returns None if we should just 'continue' on to the next line.
@@ -348,6 +432,25 @@ class os8script:
       if self.debug: print "options_enabled: " + str (self.options_enabled)
       if self.debug: print "options_disabled: " + str (self.options_disabled)
 
+      vers_match = False
+      if en_dis == "version":
+        # Check for mal-formed version match first
+        if re.match (_version_parse_re, rest) == None:
+          print "Mal-formed version match string {" + rest + "} at line " + \
+            str(self.line_ct_stack[0]) + ". Ignoring this block."
+          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+          return None
+        vers_match = self.version_parse (rest)
+        if vers_match:
+          # Block is active. We push it onto the stack
+          if self.debug: print "Pushing version enabled block " + rest + " onto options_stack"
+          self.options_stack.insert(0, rest)
+        else:
+          # Option is inactive.  Ignore all subseqent lines
+          # until we get to an end command that matches our option.
+          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+        return None
+        
       if en_dis == "enabled":
         if rest in self.options_enabled:
           # Block is active. We push it onto the stack
@@ -735,6 +838,7 @@ class os8script:
   # end <sub-command>
   # print <output text>
   # exit <status>
+
   # Sub-commands:
   # build, fotp, absldr
   #
