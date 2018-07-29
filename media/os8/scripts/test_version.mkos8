@@ -1,2 +1,3 @@
 # Test operation of version detection.
+print Hello World
 exit hello

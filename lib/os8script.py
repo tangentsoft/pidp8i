@@ -684,6 +684,19 @@ class os8script:
     else: sys.exit(line)
 
 
+  #### print_command ###############################################
+  # Print text from the running script
+  # If verbose is set, say what line in the script containing
+  # the print command.
+
+  def print_command (self, line, script_file):
+    if self.verbose:
+      print "Line: " + str(self.line_ct_stack[0]) + ": " + line
+    else:
+      print line
+    return "success"
+
+
   #### _command ###########################################
   # 
 
@@ -720,7 +733,8 @@ class os8script:
   # restart
   # begin <sub-command> <os8-path>
   # end <sub-command>
-  #
+  # print <output text>
+  # exit <status>
   # Sub-commands:
   # build, fotp, absldr
   #
@@ -736,6 +750,7 @@ class os8script:
                 "begin": self.begin_command,
                 "end": self.end_command,
                 "exit": self.exit_command,
+                "print": self.print_command,
                 "umount": self.umount_command,
                 "simh": self.simh_command,
                 "configure": self.configure_command,

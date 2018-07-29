@@ -383,6 +383,7 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`os8`](#os8-comm)             | Run arbitrary OS/8 command.                      |
 | [`pal8`](#pal8-comm)           | Run OS/8 `PAL8` assembler.                       |
 | [`patch`](#patch-comm)         | Run a patch file.                                |
+| [`print`](#print-comm)         | Print information from running script.           |
 | [`resume`](#resume-comm)       | Resume OS/8 at Keyboard Monitor command level.   |
 | [`restart`](#restart-comm)     | Restart OS/8.                                    |
 | [`umount`](#umount-comm)       | Unmount a SIMH attached device image.            |
@@ -395,12 +396,21 @@ first simple and then complex scripts with `os8-run`.
 
 ## <a id="scripting"></a>Script Language Command Reference
 
+### <a id="print-comm"></a>`print` - Print information from a running script.
+
+`print` _output_
+
+The simplest script command is `print` which allows display of status
+information from the running script.  _output_ is simply displayed.
+If the `verbose` option to `os8-run` is set, the line number of the 
+print command is included in the output.
+
+
 ### <a id="exit-comm"></a>`exit` - Exit `os8-run` and send status.
 
 `exit` [_status_]
 
-The simplest script command is `exit`.  It allows immediate termination
-of the `os8-run` script.   
+The `exit` command allows immediate termination of the `os8-run` script.   
 
 The _status_ argument is optional.  If the argument is an integer, `os8-run`
 will return that status to the calling command shell.  This enables rich
