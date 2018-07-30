@@ -466,7 +466,6 @@ mediainstall: instdirs
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
 	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
-	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ media/os8/scripts/*.mkos8 @ABSPREFIX@/share/media/os8/scripts
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
 # No-dependencies versions of the bin/os8v3d-*.rk05 targets used by
