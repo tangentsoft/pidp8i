@@ -927,7 +927,7 @@ add-on by default.  We deal with this triple negative by setting
     end default futil_patch
 
 
-### <a id="vers-test"></a> version matching
+### <a id="vers-match"></a> version matching
 
 The `os8-run` scripting language is expected to evolve over time.  An internal
 language version number is kept, and incremented when major or minor changes
