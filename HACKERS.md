@@ -209,6 +209,10 @@ We used to relegate such discussions to private email, but that was not
 out of any wish to hide what we're doing. We just didn't have a good
 place to do this work in public until recently.
 
+You can sign up for the forums without having a developer login, and you
+can even post anonymously. If you have a login, you can [sign up for
+email alerts][alert] if you like.
+
 Keep in mind that posts to the Fossil forum are treated much the same
 way as ticket submissions and wiki articles. They are permanently
 archived with the project. The "edit" feature of Fossil forums just
@@ -216,7 +220,8 @@ creates a replacement record for a post, but the old post is still
 available in the repository. Don't post anything you wouldn't want made
 part of the permanent record of the project!
 
-[pfor]:   https://tangentsoft.com/pidp8i/forum/
+[pfor]:  https://tangentsoft.com/pidp8i/forum
+[alert]: https://tangentsoft.com/pidp8i/alerts
 
 
 <a id="branching"></a>
