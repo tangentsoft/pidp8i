@@ -814,9 +814,16 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 
 
 //// get_switch_register ///////////////////////////////////////////////
-// Return the current contents of the switch register
+// Return the current contents of the switch register.
+//
+// The sensed values are backwards due to the GPIO pull-ups, with 1=open
+// rather than closed, so we must flip the bits before returning it.  We
+// also must mask off the non-SR bits because our caller takes this
+// value and ORs it with its LAC register, which combines L and AC, and
+// we don't want to set L just because the next GPIO pin up past those
+// used for the SR happens to be set at the moment this is called.
 
 int32 get_switch_register (void)
 {
-    return switchstatus[0] ^ 07777;
+    return ~switchstatus[0] & 07777;
 }
