@@ -1,7 +1,7 @@
 # Takes an OS8 V3D binary rk05 image and applies patches.
 
-copy $os8mo/os8v3d-bin.rk05 $os8mo/os8v3d-patched.rk05
-mount rk0 $os8mo/os8v3d-patched.rk05 required
+copy $os8mo/v3d-dist.rk05 $os8mo/v3d.rk05
+mount rk0 $os8mo/v3d.rk05 required
 
 boot rk0
 

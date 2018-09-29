@@ -1,5 +1,5 @@
-mount rk0 $bin/os8v3d-patched.rk05 required
-mount dt0 $os8mo/test_copy.tu56 new
+mount rk0 $bin/v3d.rk05 required
+mount dt0 $os8mo/copy-test.tu56 new
 
 boot rk0
 

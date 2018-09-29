@@ -1,9 +1,9 @@
 # Comments begin with an octothorpe
 # Blank lines are ignored.
 
-mount rk0 $os8mo/os8v3d-patched.rk05 required
-copy $os8mo/os8-v3f-build.rk05 $os8mo/os8-v3f-made.rk05
-mount rk1 $os8mo/os8-v3f-made.rk05 required
+mount rk0 $os8mo/v3d.rk05 required
+copy $os8mo/v3f-build.rk05 $os8mo/v3f-made.rk05
+mount rk1 $os8mo/v3f-made.rk05 required
 
 boot rk0
 

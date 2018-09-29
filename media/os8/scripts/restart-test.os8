@@ -1,0 +1,16 @@
+mount rk0 $bin/v3d.rk05 required
+
+boot rk0
+
+mount dt0 $os8mo/copy-test.tu56
+
+restart
+
+os8 DIR DTA0:
+
+umount dt0
+mount dt0 v3f-tc08.tu56
+
+resume
+
+os8 DIR DTA0:

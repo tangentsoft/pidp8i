@@ -1,6 +1,6 @@
 # Provokes errors
 
-mount rk0 $bin/os8v3d-patched.rk05 required
+mount rk0 $bin/v3d.rk05 required
 mount dt0 $bin/scratch.tu56
 
 boot rk0

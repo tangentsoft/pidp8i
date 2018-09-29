@@ -4,7 +4,7 @@
 mount dt0 $os8mi/al-4711c-ba-os8-v3d-1.1978.tu56 required scratch
 mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 ro required
 
-mount rk0 $os8mo/os8v3d-bin.rk05 new
+mount rk0 $os8mo/v3d-dist.rk05 new
 
 boot dt0
 

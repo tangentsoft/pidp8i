@@ -1,4 +1,4 @@
-att	rk1	os8-v3f-build.rk05
+att	rk1	v3f-build.rk05
 a	BLOAD.PA	RKA1:
 a	BOOT.PA		RKA1:
 a	BPAT.PA		RKA1:

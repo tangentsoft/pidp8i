@@ -247,38 +247,37 @@ PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 OUTFILES := $(subst @srcdir@/,,$(INFILES))
 OUTFILES := $(subst .in,,$(OUTFILES))
 
-OS8_BIN_RK05 = bin/os8v3d-bin.rk05
+OS8_BIN_RK05 = bin/v3d-dist.rk05
 OS8_SRC_RK05 = @OS8_SRC_RK05@
 OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
 
 OS8_SCRIPTS_DIR = @srcdir@/media/os8/scripts
 
-MKOS8_BIN_SCRIPT = $(OS8_SCRIPTS_DIR)/os8v3d-bin.mkos8
-MKOS8_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/os8v3d-src.mkos8
+MKOS8_BIN_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-dist-rk05.os8
+MKOS8_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-src-rk05.os8
 ifneq (@MKOS8_BIN_PATCHES@,)
-	MKOS8_PATCH_SCRIPT = $(OS8_SCRIPTS_DIR)/os8v3d-patch.mkos8
+	MKOS8_PATCH_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-rk05.os8
 endif
 
 OS8CP := bin/os8-cp
 
 V3F_SRCDIR = @srcdir@/src/os8/v3f
-V3F_BUILD_RK05 = os8-v3f-build.rk05
+V3F_BUILD_RK05 = v3f-build.rk05
 V3F_MANIFEST = actions.txt
 
 # If we are not building the patched packs, don't build v3f.
 ifneq (@MKOS8_BIN_PATCHES@,)
-	V3F_MADE_RK05 = bin/os8-v3f-made.rk05
+	V3F_MADE_RK05 = bin/v3f-made.rk05
 endif
 
-V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.mkos8
+V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
 
-V3F_TC08_SCRIPT = $(OS8_SCRIPTS_DIR)/os8-v3f-tape.mkos8
-V3F_TD12K_SCRIPT = $(OS8_SCRIPTS_DIR)/os8-v3f-tape.mkos8 --enable td12k
+V3F_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/v3f-tape.os8
 
-SYS_DTCOPY_INCLUDE = $(OS8_SCRIPTS_DIR)/sys-dectape-copy.mkos8
+SYS_DTCOPY_INCLUDE = $(OS8_SCRIPTS_DIR)/v3f-tape-copyin.os8
 
-V3F_TCO8_TU56 = bin/system_v3f_tc08.tu56
-V3F_TD12K_TU56 = bin/system_v3f_td12k.tu56
+V3F_TCO8_TU56 = bin/v3f_tc08.tu56
+V3F_TD12K_TU56 = bin/v3f_td12k.tu56
 
 CLTXT = /boot/cmdline.txt
 
@@ -455,16 +454,16 @@ mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
 	@cd @srcdir@ ; \
 	find media \( \
-		-name \*.mkos8 -o \
+		-name \*.os8 -o \
 		-name \*.bin  -o \
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
-	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
+	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/v3d-*.rk05 @ABSPREFIX@/share/media/os8
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
-# No-dependencies versions of the bin/os8v3d-*.rk05 targets used by
+# No-dependencies versions of the bin/v3d-*.rk05 targets used by
 # tools/test-mkos8, because there's no point rebuilding the simulator
 # on each iteration.
 os8-bin:
@@ -542,12 +541,12 @@ $(V3F_MADE_RK05): bin/$(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(OS8RUN) $(V3F_MAKER)
 
 # Make a bootable OS/8 v3f TCO8 DECtape image
-$(V3F_TCO8_TU56): $(V3F_MADE_RK05) $(V3F_TC08_SCRIPT) $(SYS_DTCOPY_INCLUDE)
-	$(OS8RUN) $(V3F_TC08_SCRIPT)
+$(V3F_TCO8_TU56): $(V3F_MADE_RK05) $(V3F_TU56_SCRIPT) $(SYS_DTCOPY_INCLUDE)
+	$(OS8RUN) $(V3F_TU56_SCRIPT)
 
 # Make a bootable OS/8 v3f TD8E 12K DECtape image
-$(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(V3F_TD12K_SCRIPT) $(SYS_DTCOPY_INCLUDE)
-	$(OS8RUN) $(V3F_TD12K_SCRIPT)
+$(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(V3F_TU56_SCRIPT) $(SYS_DTCOPY_INCLUDE)
+	$(OS8RUN) $(V3F_TU56_SCRIPT) --enable td12k
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart

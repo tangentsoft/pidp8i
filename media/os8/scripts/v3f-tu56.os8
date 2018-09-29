@@ -1,5 +1,5 @@
 # Builds a bootable dectape image with pieces taken from:
-# os8v3d-patched.rk05, the os8v3d device driver distribution DECtape,
+# v3d.rk05, the os8v3d device driver distribution DECtape,
 # and the os8v3f-build rk05.
 # Building a bootable TD image is tricky, because our boot disk
 # is configured with TC08, not TD8E
@@ -9,8 +9,8 @@
 # Then from RKB1 to build the TD8E head,
 # Finally again from SYS to undo the first mess.
 
-mount rk0 $bin/os8v3d-patched.rk05 required
-mount rk1 $bin/os8-v3f-made.rk05 required
+mount rk0 $bin/v3d.rk05 required
+mount rk1 $bin/v3f-made.rk05 required
 mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 readonly required
 
 # We do tc08 by default
@@ -42,13 +42,13 @@ end build
 
 configure tape td
 
-mount td0 $os8mo/system_v3f_td12k.tu56 new
+mount td0 $os8mo/v3f-td12k.tu56 new
 mount td1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 readonly required
 end enabled td8e
 
 # Options decide what our output tape will be called.
 begin enabled tc08
-mount dt0 $os8mo/system_v3f_tc08.tu56 new
+mount dt0 $os8mo/v3f_tc08.tu56 new
 end enabled tc08
 
 boot rk0
