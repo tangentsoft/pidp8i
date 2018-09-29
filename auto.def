@@ -460,6 +460,7 @@ make-config-header src/config.h \
     -bare {ILS_MODE PCB_*}
 make-template Makefile.in
 make-template bin/pidp8i.in
+make-template bin/os8-cp.in
 make-template boot/0.script.in
 make-template boot/2.script.in
 make-template boot/3.script.in

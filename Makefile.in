@@ -97,6 +97,7 @@ SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
 OS8RUN        := bin/os8-run
 OS8SCRIPT      := lib/os8script.py
+OS8CP	      := bin/os8-cp
 MKOS8_PY_ALL  := $(GENNED_PY) $(OS8SCRIPT) $(SIMH_PY_SRC)
 MKOS8_SRCS    := $(OS8RUN) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
@@ -239,6 +240,7 @@ INFILES = \
 	@srcdir@/etc/usb-mount@.service.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
+	$(OS8CP) \
 	$(MKOS8_INFILES)
 MKOS8_OUTFILES := $(subst @srcdir@/,,$(MKOS8_INFILES))
 MKOS8_OUTFILES := $(subst .in,,$(MKOS8_OUTFILES))
