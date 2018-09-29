@@ -29,7 +29,7 @@ checked the patch against the source.  In a few cases the code was too
 obscure, and I marked the patch as "plausable" rather than "verified"
 in my spreadsheet.
 
-The file [`patch_list.txt`][pl] lists all of the patch files in
+The file [`patch-list.txt`][pl] lists all of the patch files in
 `media/os8/patches`.  Comments in that file begin with `#` and are
 used to disable patches we have rejected for one reason or another.
 Each rejected patch also has a comment that explains why that
@@ -45,12 +45,9 @@ You may want to examine this file to see if there are any decisions you
 would reverse.  After modifying that file, say "`make`" to rebuild the
 OS/8 binary RK05 disk image file with your choice of patches.
 
-You can disable all of these OS/8 patches by giving the
-`--disable-os8-patches` option to the `configure` script.
-
 [dsn]:     http://bitsavers.org/pdf/dec/pdp8/softwarenews/
 [dsn8010]: http://bitsavers.org/pdf/dec/pdp8/softwarenews/198010_PDP8swNews_AA-K629A-BA.pdf
-[pl]:      https://tangentsoft.com/pidp8i/doc/trunk/media/os8/patches/patch_list.txt
+[pl]:      https://tangentsoft.com/pidp8i/doc/trunk/media/os8/patches/patch-list.txt
 
 
 ## Review of Recommendations
@@ -147,7 +144,7 @@ support.  But if you happen to be using this setup under `TD8E` and
 ## Patch Application Order
 
 The `patch` routine in `mkos8` applies the patches in the order they
-appear in [`patch_list.txt`][pl].  That list is currently in
+appear in [`patch-list.txt`][pl].  That list is currently in
 alphabetical order.  However, there may in future emerge patches that
 impose an order.
 

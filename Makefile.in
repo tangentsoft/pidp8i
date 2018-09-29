@@ -255,9 +255,7 @@ OS8_SCRIPTS_DIR = @srcdir@/media/os8/scripts
 
 MKOS8_BIN_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-dist-rk05.os8
 MKOS8_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-src-rk05.os8
-ifneq (@MKOS8_BIN_PATCHES@,)
-	MKOS8_PATCH_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-rk05.os8
-endif
+MKOS8_PATCH_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-rk05.os8
 
 OS8CP := bin/os8-cp
 
@@ -265,10 +263,7 @@ V3F_SRCDIR = @srcdir@/src/os8/v3f
 V3F_BUILD_RK05 = v3f-build.rk05
 V3F_MANIFEST = actions.txt
 
-# If we are not building the patched packs, don't build v3f.
-ifneq (@MKOS8_BIN_PATCHES@,)
-	V3F_MADE_RK05 = bin/v3f-made.rk05
-endif
+V3F_MADE_RK05 = bin/v3f-made.rk05
 
 V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
 
@@ -510,11 +505,10 @@ OS8_BIN_SRCS := \
 	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
 	$(MKOS8_BIN_SCRIPT) \
+	$(MKOS8_PATCH_SCRIPT) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
-ifneq (@MKOS8_BIN_PATCHES@,)
-	OS8_BIN_SRCS += $(MKOS8_PATCH_SCRIPT)
-endif
+
 $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
 	$(OS8RUN)@MKOS8_OPTS@ $(MKOS8_BIN_SCRIPT) $(MKOS8_PATCH_SCRIPT)
 

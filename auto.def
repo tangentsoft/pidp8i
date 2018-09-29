@@ -166,15 +166,8 @@ if {$os8src} {
     msg-result "Will not build v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 {}
 }
-if {$os8min || ![opt-bool os8-patches]} {
-    msg-result "Will not patch OS/8 on the RK05 bin disk."
-    define OS8_BOOT_DISK "v3d-dist.rk05"
-    define MKOS8_BIN_PATCHES {}
-} else {
-    msg-result "Will apply OS/8 V3D patches to the RK05 bin disk."
-    define OS8_BOOT_DISK "v3d.rk05"
-    define MKOS8_BIN_PATCHES patch
-}
+# Define our boot image. (Note, we ALWAYS apply patches.)
+define OS8_BOOT_DISK "v3d.rk05"
 
 # React to remaining chosen command line options
 if {[opt-bool alt-serial-mod]} {

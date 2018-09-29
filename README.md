@@ -417,10 +417,6 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 *   **--disable-os8-macrel** - Leave the MACREL v2 assembler and its
     associated FUTIL V8B tool out.
 
-*   **--disable-os8-patches** - Do not apply any of the OS/8 V3D
-    patches published by DEC.  See the [documentation][os8p] for this
-    option for more information.
-
 *   **--disable-os8-src** - Do not build the `os8v3d-src.rk05` disk
     image from the OS/8 source tapes.  This is not controlled by
     `--os8-minimal` because that only affects `os8v3d-bin.rk05`.
@@ -625,12 +621,17 @@ You can read more about this [in the wiki][oce].
 
 ### Patches
 
-After the baseline disk image is created, `mkos8` makes a copy of it as
-`os8v3d-patched.rk05` and applies a [carefully selected set of official
-DEC patches][os8p] to it unless you give the `--disable-os8-patches`
-configuration option.  The IF=0 and IF=7 boot options boot from the
-patched disk unless you give that option.
+The build process creates a baseline disk image called `v3d-dist.rk05`.
+This is considered a read-only master. Then a copy is made called
+`v3d.rk05`. This is the default OS/8 rk05 image assigned to the IF=0 and IF=7
+boot options.
 
+In keeping with the standards of good systm management
+this image incorporates all mandatory patches, as well as
+optional patches appropriate to proper operation of the system.
+For details on the available patches, the selection criteria,
+and information about other optional patches see the [OS/8 system patches][os8p]
+document.
 
 [bdt2]:  https://tangentsoft.com/pidp8i/file/media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
 [cl]:    https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
