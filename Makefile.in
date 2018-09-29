@@ -89,19 +89,15 @@ PIDP8I_DIN  := @srcdir@/$(PIDP8I_DIRS).in
 GENNED_PY   := \
 	lib/pidp8i/__init__.py \
 	lib/pidp8i/ips.py \
+	lib/pidp8i/os8opts.py \
 	$(PIDP8I_DIRS)
 
 SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
 OS8RUN        := bin/os8-run
-MKOS8_LIB     := @srcdir@/lib/mkos8
-MKOS8_PY      := \
-	$(MKOS8_LIB)/__init__.py \
-	$(MKOS8_LIB)/argparser.py \
-	lib/mkos8/opts.py \
-	lib/mkos8/os8scripty.py
-MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY_SRC)
+OS8SCRIPT      := lib/os8script.py
+MKOS8_PY_ALL  := $(GENNED_PY) $(OS8SCRIPT) $(SIMH_PY_SRC)
 MKOS8_SRCS    := $(OS8RUN) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
 
 # If you edit this directory list, you should probably also edit

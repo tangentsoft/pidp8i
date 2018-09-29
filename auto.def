@@ -223,14 +223,13 @@ msg-result "Lowercase handling set to '$lv' mode."
 # We've purposely held off exporting the mkos8 option set until now
 # because some of the configuration options can affect the option set.
 define MKOS8_OPTS $os8_opts
-if {![file exists "lib/mkos8"]} { file mkdir "lib/mkos8" }
 write-if-changed "lib/pidp8i/os8opts.py" $os
 
 # Force a rebuild of the OS/8 media if the option set changed.
 if {![file exists "obj"]} { file mkdir "obj" }
 write-if-changed "obj/os8.opts" $os8_opts {
     file delete -force bin/os8v3d-bin.rk05
-    msg-result "mkos8 options changed; will rebuild OS/8 disk images."
+    msg-result "os8 options changed; will rebuild OS/8 disk images."
 }
 
 # High-level definitions
