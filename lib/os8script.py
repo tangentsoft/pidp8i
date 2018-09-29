@@ -349,9 +349,14 @@ class os8script:
       return None
     
 
+  #### version_test ######################################################
+  # Compare each component of the version test agains the actual version
+  # Return true if actual version is greater than or equal to the test
+  # version.
+  # Caller validates test with _version_parse_re so we only
+  # need to return True or False, not error.
+  
   def version_test (self, test):
-    # Caller validates test with _version_parse_re so we only
-    # need to return True or False, not error.
     test_array = version_to_array(test)
     version_array = version_to_array(self.lang_version)
     
@@ -361,84 +366,30 @@ class os8script:
     while idx < endpoint:
       # If version has more digits than test, the greater than test succeeds.
       if idx >= len(version_array):
-        return True
+           vers_item = "0"
       else:
-        vers_item = version_array[idx]
+         vers_item = version_array[idx]
       test_item = test_array[idx]
-      if self.debug: print  "test_item: " + test_item + ", vers_item: " + vers_item
+      if self.debug: print  "version_test: vers_item: " + vers_item + \
+         ", test_item: " + test_item
 
       vers_num = int(vers_item)
       test_num = int(test_item)
 
-      # First time test version component greater than actual -> failure.
-      if test_item > vers_item: return False
+      # First time version componet greater than test -> success.
+      if vers_num > test_num:
+        if self.debug: print "version_test: Success: version greater than test."
+        return True
+      # First time version component less than test -> failure.
+      elif test_num > vers_num:
+        if self.debug: print "version_test: Fails on sub compare."
+        return False
+      #Otherwise is equal. Keep going.
 
       idx += 1
     # Made it all the way through. Test succeeds.
+    if self.debug: print "version_test: Success. Made it thru test string."
     return True
-
-
-    
-  def fancy_version_test (self, test):
-    # Caller pre-tests this same match and is expected never to call us
-    # if the match would fail.
-    m = re.match (_version_parse_re, test)
-    partial = False
-    if m.group(1) != None:
-      test_str = m.group(1)
-      if m.group(3) != None:
-        if m.group(3).isdigit():
-          test_str += m.group(3)
-        else: partial = True       # Matching a.b.c.x matches a partial.
-    else:
-      test_str = m.group(3)
-    test_array = version_to_array(test_str)
-    version_array = version_to_array(self.lang_version)
-    relop = "="
-    if m.group(4) != None:
-      relop = m.group(4)
-    match = False
-    idx = 0
-    if self.debug: print "Partial = " + str(partial)
-    endpoint = max (len(test_array), len(version_array))
-    while idx < endpoint:
-      if idx >= len(version_array):
-        vers_item = "0"
-      else:
-        vers_item = version_array[idx]
-      if idx >= len(test_array):
-        test_item = "x"
-      else:
-        test_item = test_array[idx]
-      if self.debug: print  "match: " + str(match) + ", test_item: " + test_item + ", vers_item: " + vers_item
-      # Have we matched so far?  Have we matched enough? Is partial true? If so, return True.
-      if match and test_item == "x":
-        if relop == "+": return True
-        elif relop == "-":
-          if self.debug: print "version_array_len: " + str(len(version_array))
-          if int(vers_item) != 0: return False
-          else:
-            idx += 1
-            continue
-        else: return partial
-        
-      vers_num = int(vers_item)
-      test_num = int(test_item)
-      if relop == "+":
-        if vers_num > test_num: return True
-        elif vers_num == test_num: match = True
-        else: return False
-      elif relop == "-":
-        if vers_num < test_num: return True
-        elif vers_num == test_num: match = True
-        else: return False
-      else: # All other keys mean relop == "=":
-        if test_item == vers_item: match = True
-        else: return False
-
-      idx += 1
-    return match
-
 
           
   #### basic_line_parse ################################################
