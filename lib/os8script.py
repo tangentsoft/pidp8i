@@ -93,7 +93,7 @@ _end_comm_re = re.compile ("^end\s+(.+)?$")
 _end_option_comm_re = re.compile ("^end\s+option\s+(.+)$")
 
 # A valid version spec
-_version_parse_re = re.compile ("^((\d+\.)*)?(\d+|[xX])?([+-])?$")
+_version_parse_re = re.compile ("^((\d+\.)*)?(\d+)?$")
   
 # Name of the DECtape image file we create
 _new_sys_tape_prefix = "system"
@@ -349,7 +349,37 @@ class os8script:
       return None
     
 
-  def version_parse (self, test):
+  def version_test (self, test):
+    # Caller validates test with _version_parse_re so we only
+    # need to return True or False, not error.
+    test_array = version_to_array(test)
+    version_array = version_to_array(self.lang_version)
+    
+    idx = 0
+    endpoint = len(test_array)
+
+    while idx < endpoint:
+      # If version has more digits than test, the greater than test succeeds.
+      if idx >= len(version_array):
+        return True
+      else:
+        vers_item = version_array[idx]
+      test_item = test_array[idx]
+      if self.debug: print  "test_item: " + test_item + ", vers_item: " + vers_item
+
+      vers_num = int(vers_item)
+      test_num = int(test_item)
+
+      # First time test version component greater than actual -> failure.
+      if test_item > vers_item: return False
+
+      idx += 1
+    # Made it all the way through. Test succeeds.
+    return True
+
+
+    
+  def fancy_version_test (self, test):
     # Caller pre-tests this same match and is expected never to call us
     # if the match would fail.
     m = re.match (_version_parse_re, test)
@@ -440,7 +470,7 @@ class os8script:
             str(self.line_ct_stack[0]) + ". Ignoring this block."
           self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
           return None
-        vers_match = self.version_parse (rest)
+        vers_match = self.version_test (rest)
         if vers_match:
           # Block is active. We push it onto the stack
           if self.debug: print "Pushing version enabled block " + rest + " onto options_stack"
