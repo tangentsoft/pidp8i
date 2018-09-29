@@ -1245,7 +1245,7 @@ class os8script:
           while os.path.isfile(imagename):
             print "Found: " + imagename
             next_tape += 1
-            imagename =  base_imagename + "_" + str(next_tape) + extension
+            imagename =  base_imagename + "-" + str(next_tape) + extension
     if unit == None or unit == "":
       print "Need unit number for: " + line
       return "die"
