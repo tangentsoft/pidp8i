@@ -215,7 +215,7 @@ msg-result "Lowercase handling set to '$lv' mode."
 
 # We've purposely held off exporting the mkos8 option set until now
 # because some of the configuration options can affect the option set.
-define MKOS8_OPTS $os8_opts
+define OS8_OPTS $os8_opts
 write-if-changed "lib/pidp8i/os8opts.py" $os
 
 # Force a rebuild of the OS/8 media if the option set changed.
