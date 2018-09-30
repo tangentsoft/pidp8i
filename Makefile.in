@@ -298,7 +298,7 @@ clean:
 		$(OUTFILES) $(ADF) \
 		config.log cscope.out tags \
 		bin/*.pt bin/*.rk05 bin/*.save bin/txt2ptp \
-		lib/*.pyc lib/*/*.pyc \
+		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
 		obj/*.log obj/*.pt obj/os8.opts \
 		src/config.h \
 		@srcdir@/examples/*.err
