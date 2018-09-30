@@ -511,10 +511,15 @@ V3D_DIST_SRCS := \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 
+# Temporary: We depend on ALL the patches, but really we've picked them over.
+V3D_PATCHES := \
+	@srcdir@/media/os8/patches/*.patch8
+
+
 $(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
-$(OS8_BOOT_DISK): $(OS8_DIST_RK05) $(V3D_RK05_SCRIPT) | $(SIM) $(OS8RUN_OUTFILES)
+$(OS8_BOOT_DISK): $(OS8_DIST_RK05) $(V3D_RK05_SCRIPT) $(V3D_PATCHES) | $(SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
