@@ -349,6 +349,36 @@ class os8script:
       return None
     
 
+  #### print_expand ######################################################
+  # Close kin to path_expand.  Takes a string that may name a path
+  # substitution or the magic $version value and performs the appropriate
+  # value substitution.
+
+  def print_expand (self,str):
+    end = str.find("$")
+    if end == -1: return str
+
+    m = re.findall("\$\S+",str)
+    if m == None: return str
+
+    outstr = ""
+    start = 0
+
+    for name in m:
+      end = str.index(name, start)
+      outstr += str[start:end]
+
+      sub = getattr (dirs, name[1:], None)
+      if sub == None:
+        if name == "$version": sub = self.lang_version
+        else: sub = name
+
+      outstr += sub
+      start = end + len(name)
+
+    return outstr
+      
+
   #### version_test ######################################################
   # Compare each component of the version test agains the actual version
   # Return true if actual version is greater than or equal to the test
@@ -777,7 +807,7 @@ class os8script:
     if self.verbose:
       print "Line: " + str(self.line_ct_stack[0]) + ": " + line
     else:
-      print line
+      print self.print_expand(line)
     return "success"
 
 
