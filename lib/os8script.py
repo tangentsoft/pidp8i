@@ -1481,6 +1481,9 @@ class os8script:
          ": BUILD-> " + comm
 
       self.simh.os8_send_line (comm)
+      if self.debug:
+        print "sending to simh: " + comm
+        print "expecting: " + str(_build_replies)
       reply = self.simh._child.expect(_build_replies)
       if self.debug:
         print "reply: " + str(reply)
@@ -1495,7 +1498,10 @@ class os8script:
       if build_sub == "BOOT":
         if reply == 2:
           self.simh.os8_send_line("Y")
-        reply = self.simh._child.expect("SYS BUILT")
+        elif reply == 0:
+          reply = self.simh._child.expect("SYS BUILT")
+        elif reply == 1:
+          reply = self.simh._child.expect("\\.")
     print "Warning end of file encountered with no end of BUILD command block at line " + \
       str(self.line_ct_stack[0]) + "."
     return "fail"

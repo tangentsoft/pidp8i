@@ -48,7 +48,7 @@ end enabled td8e
 
 # Options decide what our output tape will be called.
 begin enabled tc08
-mount dt0 $os8mo/v3f_tc08.tu56 new
+mount dt0 $os8mo/v3f-tc08.tu56 new
 end enabled tc08
 
 boot rk0
@@ -131,7 +131,7 @@ end build
 
 os8 SAVE DTA0 BUILD.SV
 
-include $media/os8/scripts/sys-dectape-copy.mkos8
+include $media/os8/scripts/v3f-tape-copyin.os8
 
 begin enabled td8e
 # Put system image back to TC08

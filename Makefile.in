@@ -270,12 +270,12 @@ V3F_MADE_RK05 = bin/v3f-made.rk05
 
 V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
 
-V3F_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/v3f-tape.os8
+V3F_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/v3f-tu56.os8
 
 V3F_TAPE_COPY_SCRIPT = $(OS8_SCRIPTS_DIR)/v3f-tape-copyin.os8
 
-V3F_TCO8_TU56 = bin/v3f_tc08.tu56
-V3F_TD12K_TU56 = bin/v3f_td12k.tu56
+V3F_TCO8_TU56 = bin/v3f-tc08.tu56
+V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 
 CLTXT = /boot/cmdline.txt
 
@@ -291,7 +291,8 @@ all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
 	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
-	$(OS8_RK05S) $(V3F_MADE_RK05)
+	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_TCO8_TU56) \
+	$(V3F_TD12K_TU56)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
