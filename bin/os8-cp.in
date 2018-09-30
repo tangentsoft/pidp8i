@@ -59,7 +59,7 @@ VERBOSE = False
 QUIET = False
 
 # Default RK05 system image to attach if no sys specified.
-_default_sys_image = "v3d.rk05"
+_default_sys_image = "@OS8_BOOT_DISK@"
 _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = ["rk", "0", _default_sys_path]
 

@@ -485,4 +485,4 @@ make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
-exec chmod +x "$builddir/bin/pidp8i" "$builddir/tools/simh-update"
+exec chmod +x "$builddir/bin/pidp8i" "$builddir/tools/simh-update" "$builddir/bin/os8-cp"
