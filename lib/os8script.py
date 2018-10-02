@@ -430,9 +430,9 @@ class os8script:
   
   def basic_line_parse (self, line, script_file):
     self.line_ct_stack[0] += 1
-    if line[0] == "#": return None
     retval = line.strip()
     if retval == "": return None
+    elif retval[0] == "#": return None
     # First test if we are in a begin option block
     m = re.match (_begin_en_dis_comm_re, retval)
     if m != None:
@@ -442,6 +442,7 @@ class os8script:
          ": doing_begin_option: " + en_dis + " " + rest
       if self.debug: print "options_enabled: " + str (self.options_enabled)
       if self.debug: print "options_disabled: " + str (self.options_disabled)
+      if self.debug: print "options_stack: " + str(self.options_stack)
 
       vers_match = False
       if en_dis == "version":
@@ -449,28 +450,30 @@ class os8script:
         if re.match (_version_parse_re, rest) == None:
           print "Mal-formed version match string {" + rest + "} at line " + \
             str(self.line_ct_stack[0]) + ". Ignoring this block."
-          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+          self.ignore_to_subcomm_end (retval, script_file, en_dis + " " + rest)
           return None
         vers_match = self.version_test (rest)
         if vers_match:
           # Block is active. We push it onto the stack
           if self.debug: print "Pushing version enabled block " + rest + " onto options_stack"
           self.options_stack.insert(0, rest)
+          if self.debug: print " new options_stack: " + str(self.options_stack)
         else:
           # Option is inactive.  Ignore all subseqent lines
           # until we get to an end command that matches our option.
-          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+          self.ignore_to_subcomm_end (retval, script_file, en_dis + " " + rest)
         return None
         
-      if en_dis == "enabled":
+      elif en_dis == "enabled":
         if rest in self.options_enabled:
           # Block is active. We push it onto the stack
           if self.debug: print "Pushing enabled block " + rest + " onto options_stack"
           self.options_stack.insert(0, rest)
+          if self.debug: print "new options_stack: " + str(self.options_stack)
         else:
           # Option is inactive.  Ignore all subseqent lines
           # until we get to an end command that matches our option.
-          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+          self.ignore_to_subcomm_end (retval, script_file, en_dis + " " + rest)
 
         return None
       # only other choice is disabled because of our regex.
@@ -479,13 +482,14 @@ class os8script:
           # Block defaults to active. We push it onto the stack
           if self.debug: print "Pushing not_disabled block " + rest + " onto options_stack"
           self.options_stack.insert(0, rest)
+          if self.debug: print "new options_stack: " + str(self.options_stack)
         else:
           # Block is inactive.  Ignore all subseqent lines
           # until we get to an end command that matches our option.
-          self.ignore_to_subcomm_end (line, script_file, en_dis + " " + rest)
+          self.ignore_to_subcomm_end (retval, script_file, en_dis + " " + rest)
         return None
   
-    m = re.match(_end_en_dis_comm_re, line)
+    m = re.match(_end_en_dis_comm_re, retval)
     if m != None:
       rest = m.group(2)
       if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": end rest = " + rest
@@ -504,7 +508,8 @@ class os8script:
         return None
       else:
         if self.debug: print "Popping " + self.options_stack[0]
-        self.options_stack.pop()
+        self.options_stack.pop(0)
+        if self.debug: print "new options_stack: " + str(self.options_stack)
         return None
   
     return retval
