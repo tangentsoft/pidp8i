@@ -1533,10 +1533,23 @@ class os8script:
       if build_sub == "BOOT":
         if reply == 2:
           self.simh.os8_send_line("Y")
+          reply = self.simh._child.expect("SYS BUILT")
+          if self.debug:
+            print "ZeroDir: reply: " + str(reply)
+            print "before: " + self.simh._child.before.strip()
+            print "after: " + self.simh._child.after.strip()
         elif reply == 0:
           reply = self.simh._child.expect("SYS BUILT")
+          if self.debug:
+            print "$: reply: " + str(reply)
+            print "before: " + self.simh._child.before.strip()
+            print "after: " + self.simh._child.after.strip()
         elif reply == 1:
           reply = self.simh._child.expect("\\.")
+          if self.debug:
+            print "SysBuilt: reply: " + str(reply)
+            print "before: " + self.simh._child.before.strip()
+            print "after: " + self.simh._child.after.strip()
     print "Warning end of file encountered with no end of BUILD command block at line " + \
       str(self.line_ct_stack[0]) + "."
     return "fail"

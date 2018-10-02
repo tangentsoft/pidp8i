@@ -1,8 +1,0 @@
-# Common files to copy on any system DECtape we make
-
-begin cdprog RKA0:FOTP.SV
-DTA0:<RKA0:FOTP.SV
-DTA0:<RKA0:DIRECT.SV
-DTA0:<RKB1:CCL.SV
-DTA0:<RKB1:RESORC.SV
-end cdprog RKA0:FOTP.SV

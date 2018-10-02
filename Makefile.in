@@ -270,11 +270,13 @@ V3F_MADE_RK05 = bin/v3f-made.rk05
 
 V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
 
-V3F_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/v3f-tu56.os8
+ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
-V3F_TAPE_COPY_SCRIPT = $(OS8_SCRIPTS_DIR)/v3f-tape-copyin.os8
+CUSP_COPYIN_SCRIPT = $(OS8_SCRIPTS_DIR)/cusp-copyin.os8
 
-V3F_TCO8_TU56 = bin/v3f-tc08.tu56
+V3D_TC08_TU56 = bin/v3d-tc08.tu56
+V3D_TD12K_TU56 = bin/v3d-td12k.tu56
+V3F_TC08_TU56 = bin/v3f-tc08.tu56
 V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 
 CLTXT = /boot/cmdline.txt
@@ -291,8 +293,8 @@ all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
 	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
-	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_TCO8_TU56) \
-	$(V3F_TD12K_TU56)
+	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) 
+#	$(V3F_TD12K_TU56)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
@@ -548,12 +550,20 @@ $(V3F_MADE_RK05): bin/$(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(OS8RUN) $(V3F_MAKER)
 
 # Make a bootable OS/8 v3f TCO8 DECtape image
-$(V3F_TCO8_TU56): $(V3F_MADE_RK05) $(V3F_TU56_SCRIPT) $(V3F_TAPE_COPY_SCRIPT)
-	$(OS8RUN) $(V3F_TU56_SCRIPT)
+$(V3F_TC08_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable v3f
 
 # Make a bootable OS/8 v3f TD8E 12K DECtape image
-$(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(V3F_TU56_SCRIPT) $(V3F_TAPE_COPY_SCRIPT)
-	$(OS8RUN) $(V3F_TU56_SCRIPT) --enable td12k
+$(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable v3f --enable td12k
+
+# Make a bootable OS/8 v3d TCO8 DECtape image
+$(V3D_TC08_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+	$(OS8RUN) $(ALL_TU56_SCRIPT)
+
+# Make a bootable OS/8 v3d TD8E 12K DECtape image
+$(V3D_TD12K_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable td12k
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
