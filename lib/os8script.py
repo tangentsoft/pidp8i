@@ -1235,7 +1235,7 @@ class os8script:
               ", " + imagename + " must exist but was not found. Not mounting."
             return "die"
       if "scratch" in parts[1:]:
-        copy_imagename = base_imagename + "_copy" + extension
+        copy_imagename = base_imagename + "-copy" + extension
         try:
           shutil.copyfile(imagename, copy_imagename)
         except shutil.Error as e:
