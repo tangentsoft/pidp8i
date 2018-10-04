@@ -255,6 +255,19 @@ os8 SAVE DTA0 BUILD.SV
 # already present in the environment.
 include $media/os8/scripts/cusp-copyin.os8
 
+# Lastly copy in the appropriate DECtape utilities.
+begin cdprog RKA0:FOTP.SV
+  begin enabled tc08
+    DTA0:<RKA0:DTCOPY.SV
+    DTA0:<RKA0:DTFRMT.SV
+  end enabled tc08
+  begin enabled td8e
+    DTA0:<RKA0:DTCOPY.SV
+    DTA0:<RKA0:DTFRMT.SV
+  end enabled td8e
+end cdprog RKA0:FOTP.SV
+
+
 begin enabled td8e
   # Put system image back to TC08
   # The saved BUILD will just work.
