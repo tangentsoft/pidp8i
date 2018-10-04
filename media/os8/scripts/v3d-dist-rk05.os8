@@ -11,6 +11,14 @@ boot dt0
 begin build SYS:BUILD
 LOAD DTA1:RK8ESY.BN
 LOAD DTA1:PT8E.BN
+LOAD DTA1:TD8ESY.BN
+LOAD DTA1:ROMMSY.BN
+LOAD DTA1:TD8EA.BN
+# We could load more TD8E non-system drivers
+# But there is limited space, so we elect not to.
+# LOAD DTA1:TD8EB.BN
+# LOAD DTA1:TD8EC.BN
+# LOAD DTA1:TD8ED.BN
 DELETE SYS
 SYSTEM RK8E
 DELETE RXA1

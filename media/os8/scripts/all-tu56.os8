@@ -2,6 +2,9 @@
 # Pieces come from, as needed:
 # v3d.rk05, the os8v3d device driver distribution DECtape,
 # and the os8v3f-build rk05.
+# Keep this file in sync with v3d-dist.os8 which determines
+# which device drivers are available by default when running
+# BUILD.SV from SYS: in the v3d enabled sections below.
 
 # Control: We default to v3d unless externally overridden to enable v3f
 enable v3d
@@ -55,8 +58,8 @@ begin enabled td8e
   os8 SET SYS NO INIT
   
   begin build SYS:BUILD
-    # TD8E non-system handler.
-    LOAD DTA1:TD8EA.BN
+    # TD8E non-system handler should be present.
+    # LOAD DTA1:TD8EA.BN
     DELETE DTA0,DTA1
     INSERT TD8A,DTA0,DTA1
     BOOT
@@ -107,15 +110,16 @@ boot rk0
 begin enabled v3d
 
   begin build SYS:BUILD
-    LOAD DTA1:TD8EA.BN
+    # TD8EA.BN should already be present.
+    # LOAD DTA1:TD8EA.BN
 
-    # Load the appropriate TD8E System handler if any.
-    begin enabled td12k
-      LOAD DTA1:TD8ESY.BN
-    end enabled td12k
-    begin enabled tdrom
-      LOAD DTA1:ROMMSY.BN
-    end enabled tdrom
+    # The appropriate TD8E System handlers should already be present.
+    # begin enabled td12k
+    #  LOAD DTA1:TD8ESY.BN
+    # end enabled td12k
+    # begin enabled tdrom
+    #  LOAD DTA1:ROMMSY.BN
+    #end enabled tdrom
 
     # Necessary! Otherwise we mung the RK05 image!
     DELETE SYS
@@ -186,16 +190,20 @@ begin enabled v3f
     begin enabled tdrom
       LOAD DTA1:ROMMSY.BN
     end enabled tdrom
+
+    begin enabled td8e
+      # Additional TD8E non-system devices not on sys by default.
+      # But there might not be space. Leave them out for now.
+      # Units 2 and 3.
+      # LOAD DTA1:TD8EB.BN
+      # Units 4 and 5.
+      # LOAD DTA1:TD8EC.BN
+      # Units 6 and 7.
+      # LOAD DTA1:TD8ED.BN
+    end enabled td8e
     
-    # Additional TD8E non-system devices
-    # Units 2 and 3.
-    # LOAD DTA1:TD8EB.BN
-    # Units 4 and 5.
-    # LOAD DTA1:TD8EC.BN
-    # Units 6 and 7.
-    # LOAD DTA1:TD8ED.BN
     
-    # I think we want the RKB1 version of KL8E.BN
+    # I think we actually want the RKB1 version of KL8E.BN
     LOAD DTA1:KL8E.BN
     LOAD DTA1:LPSV.BN
     LOAD RKB1:RXSY2.BN
