@@ -615,7 +615,8 @@ def main ():
     exit (1)
   # s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
   s.set_logfile (open ("logfile.txt", 'w'))
-
+  if VERBOSE: s.verbose = True
+  
   # Perform sys attach
   att_spec = action_plan["sys"]
   if att_spec == None: att_spec = _default_att_spec

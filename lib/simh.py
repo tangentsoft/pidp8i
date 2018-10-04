@@ -173,6 +173,7 @@ class simh:
     self._os8_file_re = re.compile("(\S+):(\S+)?")
     self._os8_error_match_strings = []
     self._os8_fatal_check = []
+    self.verbose = False
 
     # We keep track of what our command context is so our caller does
     # not need to explicitly call back_to_cmd() or sendcontrol ('e').
@@ -424,7 +425,7 @@ class simh:
     did_conversion = False
     if option == "" or option == "/A":
       # Convert text file to SIMH paper tape format in current dir of path.
-      print "Format converting " + path
+      if self.verbose: print "Format converting " + path
       bdir = pidp8i.dirs.build
       pt   = path + ".pt_temp"
       tool = os.path.join (bdir, 'bin', 'txt2ptp')
@@ -525,7 +526,7 @@ class simh:
     self.os8_restart ()
 
     if option == "" or option == "/A":
-      print "Format converting " + path
+      if self.verbose: print "Format converting " + path
       # Convert text file to SIMH paper tape format
       bdir = pidp8i.dirs.build
       os.rename(path, path + ".temp")
@@ -843,7 +844,7 @@ class simh:
       print "Cannot set_tape_config for " + to_tape
       return False
 
-    print "Disable: " + from_tape + ", and enable: " + to_tape
+    if self.verbose: print "Disable: " + from_tape + ", and enable: " + to_tape
     
     lines = self.do_simh_show(from_tape)
     from_status = self.parse_show_tape_dev(lines)
@@ -864,7 +865,7 @@ class simh:
         for unit in attached_from.keys():
           if attached_from[unit] != "":
             det_comm = "det " + from_tape + unit
-            # print det_comm + "(Had: " + attached_from[unit] + ")"
+            if self.verbose: print det_comm + "(Had: " + attached_from[unit] + ")"
             self.send_cmd(det_comm)
         self.send_cmd("set " + from_tape + " disabled")
 
@@ -939,7 +940,7 @@ class simh:
       print "Cannot set_rx_config for " + to_rx
       return False
       
-    print "Switch rx driver: " + from_rx + ", to: " + to_rx
+    if self.verbose: print "Switch rx driver: " + from_rx + ", to: " + to_rx
     lines = self.do_simh_show("rx")
 
     rx_type = self.parse_show_rx_dev (lines)
@@ -948,7 +949,7 @@ class simh:
       self.do_print_lines(lines)
       return False
     elif rx_type == "disabled":
-      print "rx is disabled. Enabling..."
+      if self.verbose: print "rx is disabled. Enabling..."
       self.send_cmd("set rx enabled")
       # Retry getting rx info
       lines = self.do_simh_show("rx")
@@ -973,7 +974,7 @@ class simh:
       for unit in attached_rx.keys():
         if attached_rx[unit] != "":
           det_comm = "det rx" + unit
-          # print det_comm + "(Had: " + attached_rx[unit] + ")"
+          if self.verbose: print det_comm + "(Had: " + attached_rx[unit] + ")"
           self.send_cmd(det_comm)
 
     self.send_cmd("set rx " + to_rx)
@@ -1014,7 +1015,7 @@ class simh:
       print "Cannot set_tti_config to " + to_tti
       return
     
-    print "Switch tti driver from: " + from_tti + ", to: " + to_tti
+    if self.verbose: print "Switch tti driver from: " + from_tti + ", to: " + to_tti
 
     lines = self.do_simh_show("tti")
     tti_type = self.parse_show_tti (lines)

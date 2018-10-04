@@ -192,6 +192,7 @@ def main ():
   # console instead of the progress messages if -v was given using the
   # trick from https://stackoverflow.com/questions/21239338
   s = simh (dirs.build, True)
+  if VERBOSE: s.verbose = True
   s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'w') \
       if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
 

@@ -546,7 +546,7 @@ class os8script:
       print "Line " + str(self.line_ct_stack[0]) + \
         ": Could not find include file: " + path
       return "fail"
-    print "line: " + str(self.line_ct_stack[0]) + \
+    if self.verbose: print "line: " + str(self.line_ct_stack[0]) + \
        ": include " + line
     return self.run_script_file (path)
       
