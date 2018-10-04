@@ -40,7 +40,7 @@ end cdprog RKA0:FOTP.SV
 # v3d copies in from SYS: a.k.a. RKA0:
 begin enabled v3d
 begin cdprog RKA0:FOTP.SV
-DTA0:<ABSLDR.SV
+DTA0:<RKA0:ABSLDR.SV
 DTA0:<RKA0:CCL.SV
 DTA0:<RKA0:RESORC.SV
 end cdprog RKA0:FOTP.SV
