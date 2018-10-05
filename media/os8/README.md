@@ -30,7 +30,9 @@ If you give the following command to SIMH:
 ...this disk will appear as RKA1: and RKB1: under OS/8.
 
 
-## Willem van der Mark Archives
+## Distribution DECtape images
+
+Taken from the Willem van der Mark Archives.
 
 Willem van der Mark wrote a really cool [PDP-8 emulator in Java][vdms].
 He has a well organized archive of DEC media.  The following DECtapes
@@ -60,12 +62,30 @@ a project for an interested person.
 | `al-4760c-sa-os8-ext-2.1978.tu56`     | DEC OS/8 V3D Extensions **Source** Distribution  1/3
 | `al-5586c-sa-os8-ext-3.1978.tu56`     | DEC OS/8 V3D Extensions **Source** Distribution  1/3
 
+## Other Master DECtape images
+
+| DECtape Image File Name                       | Content Description
+| ----------------------------------------------|------------------------------
+| al-5642a-ba-macrel-linker.1978.tu56	        | Version 1 MACREL distribution. No longer used.
+| al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56  | Hand patched distribution of MACREL version 2. Contains critical, mandatory patch to FUTIL.
+
+## Subdirectories
+
+| Directory Name  | Content Description
+| ----------------|------------------------------------------------------------
+| patches	  | Contains the OS/8 patch files
+| scripts	  | Contains scripts fed to os8-run to automate various actions.
+| subsys	  | Images containing OS/8 subsystems such as Focal, Adventure, etc.
 
 ## Other Files
 
 | File Name       | Content Description
 | ----------------------------------------------------------------------------
 | `LICENSE.md`    | License provided by DEC that makes our use of OS/8 legal
+| `init.cm`	  | Command to type out the contents of INIT.TX. Used at startup by
+| 		  | various boot images.
+| `init.tx.in`	  | Baseline text typed out by init.cm.  Configuration in auto.def
+| 		  | establishes parameters that are substituted to create `init.tx`.
 | `local.tu56`    | Files created for or vetted by the PiDP-8/I project; used at build time
 
 [dga]:  http://www.pdp8online.com/images/images/misc_dectapes.shtml
