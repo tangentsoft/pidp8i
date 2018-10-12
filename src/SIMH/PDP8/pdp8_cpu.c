@@ -375,6 +375,11 @@ reason = 0;
 
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+// A copy of MA = PC | IR, held steady for the benefit of the PiDP-8/I
+// display update calls, unlike the simulator's MA register which has
+// the incorrect value at some of the set_pidp8i_leds() calls below.
+uint32 SteadyMA;
+
 // PiDP-8/I specific flag, set when the last instruction was an IOT
 // instruction to a real device.  SIMH doesn't track this, but the front
 // panel needs it.
@@ -409,12 +414,21 @@ while (reason == 0) {                                   /* loop until halted */
     if (sim_interval <= 0) {                            /* check clock queue */
         if ((reason = sim_process_event ())) {
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-            // We're about to leave the loop, so repaint one last time
-            // in case this is a Ctrl-E and we later get a "cont"
-            // command.  Set a flag that will let us auto-resume.
+            // We're about to leave the instruction decode loop, so
+            // pause the display driver thread and set it up so that it
+            // will resume correctly if user says "cont".
             extern int resumeFromInstructionLoopExit, swStop, swSingInst;
             resumeFromInstructionLoopExit = swStop = swSingInst = 1;
-            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+
+            // Repaint one last time in case the simulator is pausing —
+            // e.g. due to Ctrl-E — rather than about to exit.  Without
+            // this, the front panel won't show the correct state, a
+            // serious problem since it'll be stuck in that state for
+            // the user to study until the user gives a "cont" command.
+            //
+            // We're passing IR for the MB line on purpose.  MB doesn't
+            // have the correct value at this point.
+            set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
 
             // Also copy SR hardware value to software register in case
@@ -427,8 +441,8 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-    switch (handle_flow_control_switches(M, &PC, &MA, &MB, &LAC, &IF,
-            &DF, &int_req)) {
+    switch (handle_flow_control_switches(M, &PC, &SteadyMA, &MB, &LAC,
+            &IF, &DF, &int_req)) {
         case pft_stop:
             // Tell the SIMH event queue to keep running even though
             // we're stopped.  Without this, it will ignore Ctrl-E
@@ -440,7 +454,7 @@ while (reason == 0) {                                   /* loop until halted */
             // down, we'll put garbage onto the display for MA, MB, and
             // IR, but that's what the real hardware does, too.  See
             // https://github.com/simh/simh/issues/386
-            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+            set_pidp8i_leds (PC, SteadyMA, MB, IR, LAC, MQ, IF, DF, SC,
                     int_req, Pause);
 
             // Go no further in STOP mode.  In particular, fetch no more
@@ -475,6 +489,9 @@ while (reason == 0) {                                   /* loop until halted */
         }
 
     MA = IF | PC;                                       /* form PC */
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+    SteadyMA = MA;                                      /* latch it for PiDP-8/I display */
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
     if (sim_brk_summ && 
         sim_brk_test (MA, (1u << SIM_BKPT_V_SPC) | SWMASK ('E'))) { /* breakpoint? */
         reason = STOP_IBKPT;                            /* stop simulation */
@@ -1531,8 +1548,10 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         inst_count += skip_count;
         skip_count = 0;
 
-        // We need to update the LED data again
-        set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC, int_req, Pause);
+        // We need to update the LED data again.  Using IR for the MB
+        // line here for same reason as above.
+        set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF, SC,
+                int_req, Pause);
 
         // Has it been ~1s since we updated our max_skips value?
         time_t now;

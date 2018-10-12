@@ -251,7 +251,7 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
 //
 // Also update the LED brightness values based on those new states.
 
-void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint16_t sMB,
+void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint32_t sMB,
     uint16_t sIR, int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF,
     int32_t sSC, int32_t int_req, int Pause)
 {
@@ -265,7 +265,10 @@ void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint16_t sMB,
     display* pd = pdis_update;
     ++pd->inst_count;
 
-    // Rows 0-4, easy cases: single-register LED strings
+    // Rows 0-4, easy cases: single-register LED strings.
+    // 
+    // The values passed for rows 1 and 2 are non-obvious.  See the code
+    // calling us from ../SIMH/PDP8/pdp8_cpu.c for details.
     set_pidp8i_row_leds (pd, 0, sPC);
     set_pidp8i_row_leds (pd, 1, sMA);
     set_pidp8i_row_leds (pd, 2, sMB);
@@ -814,9 +817,16 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
 
 
 //// get_switch_register ///////////////////////////////////////////////
-// Return the current contents of the switch register
+// Return the current contents of the switch register.
+//
+// The sensed values are backwards due to the GPIO pull-ups, with 1=open
+// rather than closed, so we must flip the bits before returning it.  We
+// also must mask off the non-SR bits because our caller takes this
+// value and ORs it with its LAC register, which combines L and AC, and
+// we don't want to set L just because the next GPIO pin up past those
+// used for the SR happens to be set at the moment this is called.
 
 int32 get_switch_register (void)
 {
-    return switchstatus[0] ^ 07777;
+    return ~switchstatus[0] & 07777;
 }

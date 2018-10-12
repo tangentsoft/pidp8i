@@ -17,12 +17,8 @@ without tying you to a proprietary web service.
 This guide will introduce you to some of the basics, but you should also
 at least read the [Fossil Quick Start Guide][fqsg]. For a more thorough
 introduction, I recommend [the Schimpf book][fbook]. If you have
-questions, it is best to ask them on [its low-volume mailing list][fml],
-though you may also ask me, either on [the PiDP-8/I mailing list][ggml]
-or via private email.
-
-You must use Fossil version 2.1 or higher with our repository, or you
-will get an error.
+questions about Fossil, you can ask on [the Fossil forum][ffor], where
+I, your humble project maintainer, am active.
 
 If you started with one of our PiDP-8/I binary OS images made in or
 after April 2017, Fossil 2.x is already installed.
@@ -45,10 +41,9 @@ binaries from a third party, be sure it is Fossil 2.1 or higher.
 [fbin]:   https://fossil-scm.org/index.html/uv/download.html
 [dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
 [fbook]:  https://www.fossil-scm.org/schimpf-book/home
-[fml]:    https://mailinglists.sqlite.org/cgi-bin/mailman/listinfo/fossil-users
+[ffor]:   https://fossil-scm.org/forum/
 [fossil]: https://fossil-scm.org/
 [fqsg]:   https://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
-[ggml]:   https://groups.google.com/forum/#!forum/pidp-8
 
 
 <a id="fossil-anon"></a>
@@ -147,8 +142,8 @@ tangents.
 Fossil Developer Access
 ----
 
-If you have a developer account on tangentsoft.com's Fossil instance, just
-add your username to the URL like so:
+If you have a developer account on the `tangentsoft.com/pidp8i` Fossil
+instance, just add your username to the URL like so:
 
     $ fossil clone https://username@tangentsoft.com/pidp8i pidp8i.fossil
 
@@ -195,6 +190,38 @@ The administrator of this repository is Warren Young, whose email you
 can find on the [official PiDP-8/I project mailing list][ggml].  I
 generally give developer access to anyone who makes a reasonable
 request.
+
+[ggml]:   https://groups.google.com/forum/#!forum/pidp-8
+
+
+<a id="forum"></a>
+Developer Discussion Forum
+----
+
+The "[Forum][pfor]" link at the top of the Fossil web interface is for
+discussing the development of the PiDP-8/I software only. All other
+traffic should go to [the mailing list][ggml] instead.  We're not trying
+to split the community by providing a second discussion forum; we just
+think many development-related discussions are too low-level to be of
+any interest to most of the people on the mailing list.
+
+We used to relegate such discussions to private email, but that was not
+out of any wish to hide what we're doing. We just didn't have a good
+place to do this work in public until recently.
+
+You can sign up for the forums without having a developer login, and you
+can even post anonymously. If you have a login, you can [sign up for
+email alerts][alert] if you like.
+
+Keep in mind that posts to the Fossil forum are treated much the same
+way as ticket submissions and wiki articles. They are permanently
+archived with the project. The "edit" feature of Fossil forums just
+creates a replacement record for a post, but the old post is still
+available in the repository. Don't post anything you wouldn't want made
+part of the permanent record of the project!
+
+[pfor]:  https://tangentsoft.com/pidp8i/forum
+[alert]: https://tangentsoft.com/pidp8i/alerts
 
 
 <a id="branching"></a>
