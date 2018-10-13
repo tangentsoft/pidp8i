@@ -94,9 +94,23 @@ append alloptions {
     serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:         => "override the throttle values in the boot scripts"
     usb-automount=1   => "do not automatically mount USB drives for SING_STEP + DF"
+    boot-tape-config:  => "Boot tape configuration: tc08, or td12k"
+    boot-tape-version: => "OS/8 version for boot tape, either v3d or v3f"
 }
 
 options $alloptions
+
+# use btc and btv to set defaults because I can't get the documented
+# syntax of <name>:=<value> to work.
+
+# Default boot-tape-config is tc08
+set btc [opt-val boot-tape-config]
+if {$btc eq ""} {set btc "tc08"}
+
+# Default boot-tape-version is v3d
+set btv [opt-val boot-tape-version]
+if {$btv eq ""} {set btv "v3d"}
+
 define USB_AUTOMOUNT [opt-bool usb-automount]
 
 # Make our own array of os8 options so we can apply the meta options
@@ -168,6 +182,22 @@ if {$os8src} {
 }
 # Define our boot image. (Note, we ALWAYS apply patches.)
 define OS8_BOOT_DISK "v3d.rk05"
+
+# Compose our boot tape image name from boot-tape-config and boot-tape-version
+# Pull defaults from $btc for boot-tape-config, and $btv for boot-tape-version.
+
+set btn "$btv-$btc.tu56"
+
+msg-result "Boot tape name: $btn"
+
+define OS8_BOOT_TAPE $btn
+define OS8_TAPE_DEVICE $btc
+if {$btc eq "tc08"} {
+    define SIMH_TAPE_DEVICE "dt"
+} else {
+    define SIMH_TAPE_DEVICE "td"
+}    
+
 
 # React to remaining chosen command line options
 if {[opt-bool alt-serial-mod]} {

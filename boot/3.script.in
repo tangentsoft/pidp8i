@@ -3,10 +3,16 @@
 ;
 echo Loading OS/8 from DECtape...
 set df disabled
-set dt disabled
-set td enabled
 set cpu noidle
 @SET_THROTTLE@
 deposit int-throttle THROT_DELAY 3
-attach td0 @MEDIADIR@/os8/os8.tu56
-boot td0
+echo Device type @OS8_TAPE_DEVICE@
+@if SIMH_TAPE_DEVICE == td
+set dt disabled
+set td enabled
+@else
+set td disabled
+set dt enabled
+@endif
+attach @SIMH_TAPE_DEVICE@0 @MEDIADIR@/os8/@OS8_BOOT_TAPE@
+boot @SIMH_TAPE_DEVICE@0
