@@ -235,6 +235,7 @@ INFILES = \
 	@srcdir@/boot/6.script.in \
 	@srcdir@/boot/7.script.in \
 	@srcdir@/boot/run.script.in \
+	@srcdir@/boot/run-v3f.script.in \
 	@srcdir@/etc/pidp8i.service.in \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/etc/usb-mount@.service.in \
@@ -480,6 +481,9 @@ release: all
 
 run: $(SIM)
 	$(SIM) boot/run.script
+
+runf run-v3f: $(SIM) $(V3F_TC08_TU56)
+	$(SIM) boot/run-v3f.script
 
 run-tss8: $(SIM)
 	$(SIM) boot/tss8.script

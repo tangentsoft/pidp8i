@@ -1,0 +1,21 @@
+; Loads OS/8 V3F from DECtape, as opposed to the RK05 based environment
+; in 0.script.  Based on 3.script.in, which differs by being conditional
+; based on whether the user chooses at configure time whether to boot
+; OS/8 V3F or V3D.  This script also runs the tape image from the build
+; directory, rather than from the installation directory, since it's
+; normally run as "make run-v3f".
+;
+echo Loading OS/8 from DECtape type @OS8_TAPE_DEVICE@...
+set df disabled
+set cpu noidle
+@SET_THROTTLE@
+deposit int-throttle THROT_DELAY 3
+
+@if SIMH_TAPE_DEVICE == td
+set dt disabled
+set td enabled
+; else, default is correct, per p.4 in SIMH's pdp8_doc.doc.
+@endif
+
+attach @SIMH_TAPE_DEVICE@0 bin/v3f-@OS8_TAPE_DEVICE@.tu56
+boot @SIMH_TAPE_DEVICE@0

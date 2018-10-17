@@ -498,6 +498,7 @@ make-template boot/4.script.in
 make-template boot/6.script.in
 make-template boot/7.script.in
 make-template boot/run.script.in
+make-template boot/run-v3f.script.in
 make-template boot/tss8.script.in
 make-template etc/pidp8i.service.in
 make-template etc/sudoers.in
