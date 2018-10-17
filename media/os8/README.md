@@ -10,9 +10,14 @@ during the PiDP-8/I software build process. This is the disk image used
 by boot options IF=0 and IF=7. See the [top-level `README.md`
 file][tlrm] for instructions on controlling what goes into this image.
 
-`os8.tu56` — Bootable OS/8 DECtape image used by boot option IF=3.
+`v3*.tu56` — Bootable OS/8 DECtape image used by boot option IF=3.
 Primarily intended to demonstrate the uncommon "boot and run from tape"
-experience offered by early DEC systems.
+experience offered by early DEC systems. There will usually be only one
+of these files, with its name indicating whether it contains an OS/8 V3D
+or V3F operating system image, and whether it is built to expect a TC08
+or TD8E tape drive interface. For example, it may be called
+`v3f-tc08.tu56`, meaning OS/8 V3F built for a system with a TC08 tape
+interface.
 
 
 ## Data Disks
@@ -66,26 +71,26 @@ a project for an interested person.
 
 | DECtape Image File Name                       | Content Description
 | ----------------------------------------------|------------------------------
-| al-5642a-ba-macrel-linker.1978.tu56	        | Version 1 MACREL distribution. No longer used.
+| al-5642a-ba-macrel-linker.1978.tu56           | Version 1 MACREL distribution. No longer used.
 | al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56  | Hand patched distribution of MACREL version 2. Contains critical, mandatory patch to FUTIL.
 
 ## Subdirectories
 
 | Directory Name  | Content Description
 | ----------------|------------------------------------------------------------
-| patches	  | Contains the OS/8 patch files
-| scripts	  | Contains scripts fed to os8-run to automate various actions.
-| subsys	  | Images containing OS/8 subsystems such as Focal, Adventure, etc.
+| patches     | Contains the OS/8 patch files
+| scripts     | Contains scripts fed to os8-run to automate various actions.
+| subsys      | Images containing OS/8 subsystems such as Focal, Adventure, etc.
 
 ## Other Files
 
 | File Name       | Content Description
 | ----------------------------------------------------------------------------
 | `LICENSE.md`    | License provided by DEC that makes our use of OS/8 legal
-| `init.cm`	  | Command to type out the contents of INIT.TX. Used at startup by
-| 		  | various boot images.
-| `init.tx.in`	  | Baseline text typed out by init.cm.  Configuration in auto.def
-| 		  | establishes parameters that are substituted to create `init.tx`.
+| `init.cm`   | Command to type out the contents of INIT.TX. Used at startup by
+|         | various boot images.
+| `init.tx.in`    | Baseline text typed out by init.cm.  Configuration in auto.def
+|         | establishes parameters that are substituted to create `init.tx`.
 | `local.tu56`    | Files created for or vetted by the PiDP-8/I project; used at build time
 
 [dga]:  http://www.pdp8online.com/images/images/misc_dectapes.shtml

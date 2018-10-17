@@ -346,7 +346,7 @@ install: all instdirs
 			/sbin/setcap 'cap_sys_nice=eip' $$f ; \
 		done \
 	) || true
-	@test -e @MEDIADIR@/os8/os8.tu56 && \
+	@test -e @MEDIADIR@/os8/local.tu56 && \
 		echo "Skipping media image and SIMH boot script reinstall." || \
 		$(MAKE) mediainstall
 
