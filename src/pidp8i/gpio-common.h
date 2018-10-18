@@ -128,7 +128,7 @@ extern int pidp8i_simple_gpio_mode;
 extern void init_pidp8i_gpio (void);
 extern int map_gpio_for_pidp8i (int must_map);
 
-extern uint16_t switchstatus[];
+extern uint16_t switchstatus[NROWS];
 extern uint8_t cols[];
 extern uint8_t ledrows[];
 extern uint8_t rows[];
