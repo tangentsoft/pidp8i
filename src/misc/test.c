@@ -44,8 +44,6 @@
 typedef unsigned int uint32;
 typedef unsigned char uint8;
 
-static uint16_t lastswitchstatus[3];    // to watch for switch changes
-
 uint8 path[] = {
     0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x11, 0x12, 0x13, 0x14, 0x15,
     0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x2c, 0x2b, 0x2a, 0x29,
@@ -171,39 +169,62 @@ int led_col_on (int step, int col)
 
 int switch_scan (int step, int ignored)
 {
-    int path_idx = 0, led_row = 0, delay = 0;
+    int path_idx = 0, led_row = 0, debouncing = 1;
+    uint16_t last_ss[NROWS];
+    uint16_t stable_ss[NROWS];
 
     puts ("\r");
     banner ("Reading the switches.  Toggle any pattern desired.  "
             "Ctrl-C to quit.\r\n");
 
     memset (ledstatus, 0, sizeof(ledstatus));
-    for (int i = 0; i < NROWS; ++i)
-        lastswitchstatus[i] = switchstatus[i];
+    assert (sizeof   (last_ss) == sizeof (switchstatus));
+    assert (sizeof (stable_ss) == sizeof (switchstatus));
+    for (int i = 0; i < NROWS; ++i) {
+        last_ss[i] = switchstatus[i];
+    }
 
     for (;;) {
-        if (delay++ >= 30) {
-            delay = 0;
+        ledstatus[led_row] = 0;
+        ledstatus[led_row = (path[path_idx] >> 4) - 1] =
+                04000 >> ((path[path_idx] & 0x0F) - 1);
+        sleep_us (1);
+        if (++path_idx >= sizeof (path) / sizeof (path[0]))
+            path_idx = 0;
 
-            ledstatus[led_row] = 0;
-            ledstatus[led_row = (path[path_idx] >> 4) - 1] = 04000 >> ((path[path_idx] & 0x0F) - 1);
-            sleep_us (1);
-            KEY_CHECK;
-
-            if (++path_idx >= sizeof (path) / sizeof (path[0]))
-                path_idx = 0;
-        }
-
-        if (    lastswitchstatus[0] != switchstatus[0] ||
-                lastswitchstatus[1] != switchstatus[1] ||
-                lastswitchstatus[2] != switchstatus[2]) {
-            for (int i = 0; i < NROWS; ++i) {
-                printf ("%04o ", ~switchstatus[i] & 07777);
-                lastswitchstatus[i] = switchstatus[i];
+        if (debouncing) {
+            if (    last_ss[0]   != switchstatus[0] ||
+                    last_ss[1]   != switchstatus[1] ||
+                    last_ss[2]   != switchstatus[2] ||
+                    stable_ss[0] != switchstatus[0] ||
+                    stable_ss[1] != switchstatus[1] ||
+                    stable_ss[2] != switchstatus[2]) {
+                // Switches aren't stable yet, so clock the states
+                // through by one step.
+                memcpy (stable_ss, last_ss, sizeof (stable_ss));
+                memcpy (last_ss, switchstatus, sizeof (last_ss));
             }
-            printf ("\r\n");
+            else {
+                // The switches have remained in their new state for two
+                // cycles, so we can consider the switches debounced.
+                // Report the new stable state.
+                debouncing = 0;
+                for (int i = 0; i < NROWS; ++i) {
+                    printf ("%04o ", ~switchstatus[i] & 07777);
+                }
+                printf ("\r\n");
+            }
         }
-        sleep_us (1000);
+        else if (   last_ss[0] != switchstatus[0] ||
+                    last_ss[1] != switchstatus[1] ||
+                    last_ss[2] != switchstatus[2]) {
+            // Switch state change detected.  Wait for stabilization.
+            memcpy (last_ss, switchstatus, sizeof (last_ss));
+            debouncing = 1;
+        }
+
+        KEY_CHECK;
+        sleep_us (30000);
     }
 
     return step + 1;
@@ -212,8 +233,6 @@ int switch_scan (int step, int ignored)
 
 void start_gpio (void)
 {
-    assert (sizeof (lastswitchstatus == switchstatus));
-
     // Tell the GPIO thread we're updating the display via direct
     // ledstatus[] manipulation instead of set_pidp8i_leds calls.
     pidp8i_simple_gpio_mode = 1;
