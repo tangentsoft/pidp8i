@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/bash
 ########################################################################
 # corecount - Prints the number of CPU cores found on this system
 #
