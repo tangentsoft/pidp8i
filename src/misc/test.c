@@ -194,8 +194,9 @@ int switch_scan (int step, int ignored)
                 path_idx = 0;
         }
 
-        if (lastswitchstatus[0] != switchstatus[0] ||
-            lastswitchstatus[1] != switchstatus[1] || lastswitchstatus[2] != switchstatus[2]) {
+        if (    lastswitchstatus[0] != switchstatus[0] ||
+                lastswitchstatus[1] != switchstatus[1] ||
+                lastswitchstatus[2] != switchstatus[2]) {
             for (int i = 0; i < NROWS; ++i) {
                 printf ("%04o ", ~switchstatus[i] & 07777);
                 lastswitchstatus[i] = switchstatus[i];
