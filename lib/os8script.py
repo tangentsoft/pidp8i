@@ -1420,10 +1420,16 @@ class os8script:
     os8_comm = "RU " + old_line
     if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": " + \
        os8_comm
+    prompt_str = "\n\\$$"
+    if self.debug:
+      print "sending to simh: " + os8_comm
+      print " and expecting prompt: '\\n\\\\$$'"
     self.simh.os8_send_cmd ("\\.", os8_comm)
-    self.simh._child.expect("\n\\$$")
+    self.simh._child.expect(prompt_str)
     
     for line in script_file:
+      # if self.debug:
+      #  print "line: " + line
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1480,44 +1486,67 @@ class os8script:
           
           if self.verbose: print "Line " + str(self.line_ct_stack[0]) + \
              ": BUILD KBM: " + kbm_arg + ", CD: " + cd_arg
+          if self.debug:
+            print "sending to simh: BUILD"
           self.simh.os8_send_line ("BUILD")
 
           build_build_replies = ["LOAD OS/8: "]
           build_build_replies.extend(_build_replies)
           
+          if self.debug:
+            print "expecting: " + str(build_build_replies)
           reply = self.simh._child.expect(build_build_replies)
+          if self.debug:
+            print "reply: " + str(reply)
+            print "before: " + self.simh._child.before.strip()
+            print "after: " + self.simh._child.after.strip()
           if reply != 0:
             print "No prompt for LOAD OS/8 in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + "."
             print "Instead got: {" + self.simh._child.after + "}."
             print "Exiting BUILD."
             return "die"
+          if self.debug:
+            print "sending to simh: " + kbm_arg
           self.simh.os8_send_line (kbm_arg)
 
           build_build_replies = ["LOAD CD: "]
           build_build_replies.extend(_build_replies)
           
+          if self.debug:
+            print "expecting: " + str(build_build_replies)
           reply = self.simh._child.expect(build_build_replies)
+          if self.debug:
+            print "reply: " + str(reply)
+            print "before: " + self.simh._child.before.strip()
+            print "after: " + self.simh._child.after.strip()
           if reply != 0:
             print "No prompt for LOAD CD in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + "."
             print "Instead got: {" + self.simh._child.after + "}."
             print "Exiting BUILD."
             return "die"
+          if self.debug:
+            print "sending to simh: " + cd_arg
           self.simh.os8_send_line (cd_arg)
-          
-          build_build_replies = ["LOAD CD: "]
-          build_build_replies.extend(_build_replies)
 
+          # Done with BUILD command dialog within BUILD.SV
+          # Get that BUILD.SV prompt.
+          if self.debug:
+            print "Expecting prompt: '\\n\\\\$$'"
+          self.simh._child.expect(prompt_str)
+          if self.debug:
+            print "Resume BUILD.SV command loop."
           continue
 
       comm = build_sub + " " + rest
       if self.verbose: print "Line " + str(self.line_ct_stack[0]) + \
          ": BUILD-> " + comm
 
-      self.simh.os8_send_line (comm)
       if self.debug:
         print "sending to simh: " + comm
+      self.simh.os8_send_line (comm)
+      if self.debug:
         print "expecting: " + str(_build_replies)
       reply = self.simh._child.expect(_build_replies)
       if self.debug:
