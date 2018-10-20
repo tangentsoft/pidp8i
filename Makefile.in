@@ -275,6 +275,7 @@ ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
 CUSP_COPYIN_SCRIPT = $(OS8_SCRIPTS_DIR)/cusp-copyin.os8
 
+OS8_BOOT_TAPE = bin/@OS8_BOOT_TAPE@
 V3D_TC08_TU56 = bin/v3d-tc08.tu56
 V3D_TD12K_TU56 = bin/v3d-td12k.tu56
 V3F_TC08_TU56 = bin/v3f-tc08.tu56
@@ -482,7 +483,7 @@ release: all
 run: $(SIM)
 	$(SIM) boot/run.script
 
-runf run-v3f: $(SIM) $(V3F_TC08_TU56)
+runf run-v3f: $(SIM) $(OS8_BOOT_TAPE)
 	$(SIM) boot/run-v3f.script
 
 run-tss8: $(SIM)
