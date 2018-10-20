@@ -547,7 +547,7 @@ OS8_SRC_SRCS = \
 	$(V3D_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 
-$(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_DIST_RK05)
+$(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BOOT_RK05)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_SRC_SCRIPT)
 
 # Build the source disk for OS/8 V3F
