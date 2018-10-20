@@ -280,6 +280,7 @@ V3D_TC08_TU56 = bin/v3d-tc08.tu56
 V3D_TD12K_TU56 = bin/v3d-td12k.tu56
 V3F_TC08_TU56 = bin/v3f-tc08.tu56
 V3F_TD12K_TU56 = bin/v3f-td12k.tu56
+V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
 CLTXT = /boot/cmdline.txt
 
@@ -483,7 +484,7 @@ release: all
 run: $(SIM)
 	$(SIM) boot/run.script
 
-runf run-v3f: $(SIM) $(OS8_BOOT_TAPE)
+runf run-v3f: $(SIM) $(V3F_BOOT_TAPE)
 	$(SIM) boot/run-v3f.script
 
 run-tss8: $(SIM)
