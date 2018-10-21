@@ -17,5 +17,18 @@ set td enabled
 ; else, default is correct, per p.4 in SIMH's pdp8_doc.doc.
 @endif
 
+@if SIMH_PASS_LOWERCASE
+; The software was configured with either --lowercase=auto or =pass,
+; so send all text input to the simulator as 7-bit ASCII, including
+; lowercase.  Lowercase output from the simulator will be sent to the
+; console unchanged, as will non-printing chars.
+set tti 7b
+@else
+; The software was configured with --lowercase=upper, meaning the user
+; wants lowercase text to be forced to uppercase.  This is bidirectional,
+; affecting both input to the simulated PDP-8 and output from it.
+set tti ksr
+@endif
+
 attach @SIMH_TAPE_DEVICE@0 bin/v3f-@OS8_TAPE_DEVICE@.tu56
 boot @SIMH_TAPE_DEVICE@0

@@ -302,6 +302,19 @@ end enabled tc08
 
 os8 R CCL
 
+# Further system initialization
+
+os8 SET TTY COL 3
+
+begin default crt
+os8 SET TTY SCOPE
+end default crt
+
+begin default lcmod
+os8 SUBMIT SYS:LCSYS.BI
+# os8 SUBMIT SYS:LCBAS.BI
+end default lcmod
+
 begin enabled v3d
   os8 SET SYS NO INIT
 end enabled v3d

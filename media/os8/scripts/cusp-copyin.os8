@@ -40,6 +40,10 @@ DTA0:<RKA0:ABSLDR.SV
 DTA0:<RKA0:CCL.SV
 DTA0:<RKA0:RESORC.SV
 DTA0:<RKA0:BATCH.SV
+DTA0:<RKA0:?CSYS.BI
+begin default basic
+DTA0:<RKA0:?CBAS.BI
+end default basic
 end cdprog RKA0:FOTP.SV
 end enabled v3d
 
@@ -51,6 +55,10 @@ begin cdprog RKA0:FOTP.SV
 DTA0:<RKB1:CCL.SV
 DTA0:<RKB1:RESORC.SV
 DTA0:<RKB1:BATCH.SV
+DTA0:<RKA1:?CSYS.BI
+begin default basic
+DTA0:<RKA1:?CBAS.BI
+end default basic
 end cdprog RKA0:FOTP.SV
 end enabled v3f
 
