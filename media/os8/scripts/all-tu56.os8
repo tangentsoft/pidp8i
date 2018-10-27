@@ -315,6 +315,15 @@ os8 SUBMIT SYS:LCSYS.BI
 # os8 SUBMIT SYS:LCBAS.BI
 end default lcmod
 
+# INIT message setting stuf goes here
+begin enabled v3f
+cpto $os8mi/3finit.tx DSK:INIT.TX
+end enabled v3f
+
 begin enabled v3d
-  os8 SET SYS NO INIT
+cpto $os8mi/init.tx
 end enabled v3d
+
+cpto $os8mi/init.cm
+
+os8 SET SYS INIT

@@ -217,6 +217,7 @@ OS8RUN_INFILES = \
 	@srcdir@/lib/pidp8i/__init__.py.in \
 	@srcdir@/lib/pidp8i/ips.py.in \
 	@srcdir@/media/os8/init.tx.in \
+	@srcdir@/media/os8/3finit.tx.in \
 	@srcdir@/src/pidp8i/main.c.in \
 	$(PIDP8I_DIN)
 PRECIOUS_INFILES = \
@@ -647,6 +648,8 @@ libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-
 # help here (|) as that only affects the right hand side.
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
+	@AUTOREMAKE@ && $(MAKE)
+media/os8/3finit.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
 # Also do it if the autodep tool is newer than its output, suggesting
