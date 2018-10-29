@@ -101,6 +101,12 @@ _option_to_pip = dict(zip(
     [ '/' + opt.upper() for opt in _valid_pip_options ]
 ))
 
+# Matches if the string begins with a dollar sign, and has at least
+# one slash, returning the string between the dollar sign and the
+# first slash in group 1 and the rest in group 2.
+# No whitespace in the string.
+_expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
+
 
 #### abort_prog ########################################################
 # Print err_string and exit with -1 return status.
@@ -125,6 +131,29 @@ def parse_attach (action_plan, match, imagename):
       action_plan["sys"] = image_spec
   else:
     action_plan["mount"].append(image_spec)
+
+
+#### path_expand #######################################################
+# Originally developed in os8script.py, but useful here too.
+#
+# Simple minded variable substitution in a path.
+# A path beginning with a dollar sign parses the characters between
+# the dollar sign and the first slash seen becomes a name to
+# expand with a couple local names: $home and the anchor directories
+# defined in lib/pidp8i/dirs.py.
+# We abort if the path expansion fails.
+
+def path_expand (path):
+  m = re.match(_expandable_re, path)
+  if m == None: return path
+  var = m.group(1)
+
+  val = getattr (dirs, var, None)
+  if val != None:
+    return os.path.join(val,m.group(2))
+  else:
+    abort_prog ("{$" + var + "} is not a valid path expansion in " + path)
+ 
 
   
 #### parse_action_file #################################################
@@ -159,6 +188,9 @@ def parse_attach (action_plan, match, imagename):
 # att td0 boing.tu56
 # a pidp8i.in DTA0:
 # b ac-mq-blinker.pal.pt DTA0:
+#
+# A dollar sign appearing in a POSIX pathname is expanded with substitutions
+# from dirs.py.
 
 def parse_action_file(fname):
   try:
@@ -193,7 +225,7 @@ def parse_action_file(fname):
       m = re.match(_dev_actfile_re, source)
       if m== None:
         abort_prog ("Could not parse attach spec: " + source)
-      parse_attach (action_plan, m, destination)
+      parse_attach (action_plan, m, path_expand(destination))
     else:
       if len(option) != 1:
         print "Format options are only 1 letter in size. Ignoring line: " + ioline
@@ -272,6 +304,7 @@ def append_copy(action_plan, mode, source, destination):
     if "/" in source:
       abort_prog ("append_copy, out: Illegal OS/8 file spec containing a slash:" + source)
     source = source.upper()
+  else: source = path_expand(source)
 
   if ":" in destination:
     if copy_type == "from":
@@ -285,6 +318,8 @@ def append_copy(action_plan, mode, source, destination):
     
     if copy_type == "":
       abort_prog ("append_copy: No OS/8 file spec found with source: " + source + ", destination: " + destination)
+  else: destination = path_expand(destination)
+
   copyspec = [mode, source, destination, copy_type]
   action_plan["copy"].append (copyspec)
   
