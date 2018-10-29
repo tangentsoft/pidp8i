@@ -471,9 +471,9 @@ mediainstall: instdirs
 # No-dependencies versions of the bin/v3d-*.rk05 targets used by
 # tools/test-mkos8, because there's no point rebuilding the simulator
 # on each iteration. XXX This needs revision now that the packs are moved. XXX
-os8-bin:
+os8-bin: $(OS8_BOOT_DISK)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
-os8-patched:
+os8-patched: $(OS8_BOOT_DISK) $(OS8_DIST_RK05)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
@@ -535,7 +535,7 @@ V3F_SOURCES := \
 $(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
-$(OS8_BOOT_DISK): $(OS8_DIST_RK05) $(V3D_RK05_SCRIPT) $(V3D_PATCHES) | $(SIM) $(OS8RUN_OUTFILES)
+$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) | $(SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
@@ -550,7 +550,7 @@ OS8_SRC_SRCS = \
 	$(V3D_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 
-$(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BOOT_DISK)
+$(OS8_SRC_RK05): $(OS8_DIST_RK05) $(OS8_SRC_SRCS) | $(SIM) $(OS8_BOOT_DISK)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_SRC_SCRIPT)
 
 # Build the source disk for OS/8 V3F
@@ -559,23 +559,23 @@ bin/$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) $(OS8_BOOT_D
 	mv $(V3F_SRCDIR)/$(V3F_BUILD_RK05) bin
 
 # Make a disk with binaries assembled from the V3F source disk
-$(V3F_MADE_RK05): bin/$(V3F_BUILD_RK05) $(V3F_MAKER)
+$(V3F_MADE_RK05): $(OS8_BOOT_DISK) bin/$(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(OS8RUN) $(V3F_MAKER)
 
 # Make a bootable OS/8 v3f TCO8 DECtape image
-$(V3F_TC08_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+$(V3F_TC08_TU56): $(OS8_BOOT_DISK) $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
 	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable v3f
 
 # Make a bootable OS/8 v3f TD8E 12K DECtape image
-$(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+$(V3F_TD12K_TU56): $(OS8_BOOT_DISK) $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
 	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable v3f --enable td12k
 
 # Make a bootable OS/8 v3d TCO8 DECtape image
-$(V3D_TC08_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+$(V3D_TC08_TU56): $(OS8_BOOT_DISK) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
 	$(OS8RUN) $(ALL_TU56_SCRIPT)
 
 # Make a bootable OS/8 v3d TD8E 12K DECtape image
-$(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+$(V3D_TD12K_TU56): $(OS8_BOOT_DISK) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
 	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable td12k
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
