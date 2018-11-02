@@ -291,7 +291,7 @@ begin enabled td8e
     #   BOOT
     # end build
     # os8 SET SYS INIT
-  
+  end enabled never
   # The last thing we do is run CCL on the system tu56 we just made.
   boot td0
 end enabled td8e
