@@ -35,6 +35,7 @@
 # Bring in just the basics so we can bring in our local modules
 import os
 import sys
+import tempfile
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 sys.path.insert (0, os.getcwd () + '/lib')
 
@@ -1178,6 +1179,44 @@ class os8script:
     return "success"
 
 
+  #### make_scratch ####################################################
+  # Create a copy of the contents of image file using the python
+  # method to create a secure, named temp filename.
+  # The caller has split the image file name into a base path,
+  # and an extension which we use.
+  # After copying the source image, the file is closed and the name
+  # of the scratch file is returned.
+  def make_scratch (self, base_imagename, extension):
+    try:
+      src_image = open(base_imagename+extension, "rb")
+    except IOError:
+      print "Open of imagefile " + base_imagename + extension + " failed."
+      return None
+      
+    dest_image = tempfile.NamedTemporaryFile(mode='w+b', \
+                                             prefix=base_imagename+'-', \
+                                             suffix=extension, \
+                                             delete=False)
+    destname = dest_image.name
+    if self.debug: print "Temp file name is: " + destname
+
+    try:
+      shutil.copyfileobj(src_image, dest_image)
+    except shutil.Error as e:
+      print "Copy of imagefile " + base_imagename + extension + \
+        " to scratch failed with error: " + str(e)
+      return None
+    except IOError as e:
+      print "Copy of imagefile " + base_imagename + extension + \
+        ", failed with IOError: " + \
+        str(e)
+      return None
+    src_image.close()
+    dest_image.close()
+    self.scratch_list.append(destname)
+    return destname
+    
+
   #### mount_command ###################################################
   # mount <simh-device> <image-file> [option ...]
   #
@@ -1237,16 +1276,8 @@ class os8script:
               ", " + imagename + " must exist but was not found. Not mounting."
             return "die"
       if "scratch" in parts[1:]:
-        copy_imagename = base_imagename + "-copy" + extension
-        try:
-          shutil.copyfile(imagename, copy_imagename)
-        except shutil.Error as e:
-          print "creation of scratch image, " + copy_imagename + ", failed with error: " + str(e)
-          return "die"
-        except IOError as e:
-          print "creation scratch image, " + copy_imagename + ", failed with IOError: " + str(e)
-          return "die"
-        self.scratch_list.append(copy_imagename)
+        copy_imagename = self.make_scratch(base_imagename, extension)
+        if copy_imagename == None: return "die"
         imagename = copy_imagename
         
       if "readonly" in parts[1:] or "ro" in parts[1:]:
