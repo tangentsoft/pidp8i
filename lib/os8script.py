@@ -893,6 +893,7 @@ class os8script:
     # We append a new line number count of 0
     # onto our line_ct_stack
     self.line_ct_stack.insert(0, 0)
+    if self.debug: print "New line_ct_stack: " + str(self.line_ct_stack)
   
     for line in script_file:
       line = self.basic_line_parse (line, script_file)
@@ -920,7 +921,8 @@ class os8script:
         sys.exit(-1)
 
     # Done.  Pop the line count off our line_ct_stack
-    self.line_ct_stack.pop()
+    self.line_ct_stack.pop(0)
+    if self.debug: print "popped line_ct_stack: " + str(self.line_ct_stack)
     
     return "success"
 
