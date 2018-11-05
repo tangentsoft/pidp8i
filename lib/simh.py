@@ -33,7 +33,7 @@
 # authorization from those authors.
 ########################################################################
 
-import os.path
+import os
 import pexpect
 import pkg_resources
 import subprocess
@@ -392,7 +392,7 @@ class simh:
       # Non fatal error.  Exit pip to the monitor
       self.os8_send_ctrl ('[')      # exit PIP
 
-    
+
   #### os8_pip_to ###################################################
   # Send a copy of a local file to OS/8 using PIP.
   #
@@ -427,7 +427,8 @@ class simh:
       # Convert text file to SIMH paper tape format in current dir of path.
       if self.verbose: print "Format converting " + path
       bdir = pidp8i.dirs.build
-      pt   = path + ".pt_temp"
+      # Create uniquified temp path name.
+      pt   = path + "-" + str(os.getpid()) + ".pt_temp"
       tool = os.path.join (bdir, 'bin', 'txt2ptp')
       subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
       did_conversion = True
@@ -529,10 +530,12 @@ class simh:
       if self.verbose: print "Format converting " + path
       # Convert text file to SIMH paper tape format
       bdir = pidp8i.dirs.build
-      os.rename(path, path + ".temp")
+      # Create uniquified temp path name.
+      pf = path + "-" + str(os.getpid()) + ".pf_temp"
+      os.rename(path, pf)
       tool = os.path.join (bdir, 'bin', 'ptp2txt')
-      subprocess.call (tool + ' < ' + path + ".temp" + ' > ' + path, shell = True)
-      os.remove(path + ".temp")
+      subprocess.call (tool + ' < ' + pf + ' > ' + path, shell = True)
+      os.remove(pf)
 
 
   #### os8_send_line ###################################################

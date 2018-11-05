@@ -1194,7 +1194,7 @@ class os8script:
       return None
       
     dest_image = tempfile.NamedTemporaryFile(mode='w+b', \
-                                             prefix=base_imagename+'-', \
+                                             prefix=base_imagename+'-temp-', \
                                              suffix=extension, \
                                              delete=False)
     destname = dest_image.name

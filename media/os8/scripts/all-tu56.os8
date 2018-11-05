@@ -44,28 +44,17 @@ begin enabled td8e
   disable tc08
 end enabled td8e
 
-# To guard against creating a non-viable v3d.rk05 run image
-# when we change to TD8E support, when we build TD8E
-# images, we use a SCRATCH version of the v3d.rk05 image.
-# However, this does mean that we put off mounting rk0
-# until we have gone through the option setting for td8e.
+# This script can be run from a parallel make
+# So we create a scratch version of the system rk05 to prevent conflicts.
+# We have to do this anyway for TD8E since we change the DECtape configuration.
 
-begin enabled tc08
-  mount rk0 $bin/v3d.rk05 required
-end enabled tc08
+mount rk0 $bin/v3d.rk05 required scratch
+boot rk0
 
 begin enabled td8e
-  mount rk0 $bin/v3d.rk05 required scratch
-  # Building a bootable TD image is tricky, because our boot disk
-  # is configured with TC08, not TD8E
-
-  # For TD8E we run BUILD 3 times:
+  # For TD8E we run BUILD twice
   # First from SYS to change switch from TC08 to TD8E
   # Then  to build the TD8E head from either RKB1 for v3f or from SYS for v3d.
-  # Finally again from SYS to undo the first mess.
-  
-  # Switch from TC08 to TD8e
-  boot rk0
 
   os8 SET SYS NO INIT
   
@@ -131,7 +120,7 @@ begin enabled v3d
     # end enabled td12k
     # begin enabled tdrom
     #  LOAD DTA1:ROMMSY.BN
-    #end enabled tdrom
+    # end enabled tdrom
 
     # Necessary! Otherwise we mung the RK05 image!
     DELETE SYS
@@ -279,20 +268,9 @@ begin cdprog RKA0:FOTP.SV
   end enabled td8e
 end cdprog RKA0:FOTP.SV
 
+# The last thing we do is run CCL on the system tu56 we just made.
 
 begin enabled td8e
-  # TD8E uses scratch image that gets deleted
-  # Cleanups we used to do are no longer needed
-  begin enabled never 
-    # Put system image back to TC08
-    # The saved BUILD will just work.
-    # boot rk0
-    # begin build SYS:BUILD.SV
-    #   BOOT
-    # end build
-    # os8 SET SYS INIT
-  end enabled never
-  # The last thing we do is run CCL on the system tu56 we just made.
   boot td0
 end enabled td8e
 
