@@ -79,7 +79,7 @@ multiple instances os8-cp in parallel against the same boot image file.
 |           | system image file must exist, and contain a working boot
 |           | image.  Only one designated system device is allowed.
 | <_src_>   | **Source**: is a source file or wild card specification.
-| <_dest_>  | **Destination**: is a destination file if a single src file is specified;
+| <_dest_>  | **Destination**: is a destination file if a single _src_ file is specified;
 |           | if multiple <_src_> files are given, it is either a POSIX
 |           | directory or an OS/8 device name.
 
@@ -119,15 +119,17 @@ out: it requires at least one source and one destination.
 
 The `-a`, `-b`, `-i`, `-y`, and `-z` flags correspond to the OS/8 PIP options:
 
-| `/A` | ASCII format.  OS/8 and POSIX newlines are translated.
-|     | Such transfers are lossless if line endings are  well-formed.
-| `/B` | Binary OS/8 ABSLDR format with leader/trailer and other
-|      | specific formatting that is detected and enforced by PIP.
-| `/I` | Image mode.  Files are copied byte for byte verbatim.
-| `/Z` | ZERO directory of destination OS/8 device.
-| `/Y` | Yank system area from source to destination.
+| flag | `PIP` | Description
+|------|-------|----------------------------------------------------------
+| `-a` | `/A` | ASCII format.  OS/8 and POSIX newlines are translated.
+|      |      | Such transfers are lossless if line endings are  well-formed.
+| `-b` | `/B` | Binary OS/8 ABSLDR format with leader/trailer and other
+|      |      | specific formatting that is detected and enforced by PIP.
+| `-i` | `/I` | Image mode.  Files are copied byte for byte verbatim.
+| `-z` | `/Z` | ZERO directory of destination OS/8 device.
+| `-y` | `/Y` | Yank system area from source to destination.
 
-If no format flag is set, the default transfer format is /I.
+If no format flag is set, the default transfer format is `/I`.
 
 (This priogram currently uses PIP as its primary handler for the
 OS/8 side of the work.)  They must be followed by at least one source
