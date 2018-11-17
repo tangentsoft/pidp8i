@@ -474,9 +474,7 @@ mediainstall: instdirs
 # No-dependencies versions of the bin/v3d-*.rk05 targets used by
 # tools/test-mkos8, because there's no point rebuilding the simulator
 # on each iteration. XXX This needs revision now that the packs are moved. XXX
-os8-bin: $(OS8_BOOT_DISK)
-	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
-os8-patched: $(OS8_BOOT_DISK) $(OS8_DIST_RK05)
+os8-sys:
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:

@@ -210,12 +210,9 @@ sub do_test
     die "Could not mkdir $test->{hdir}: $!\n"
             unless -d $test->{hdir} || mkdir($test->{hdir});
 
-    # Are we building the -patched disk or the -bin disk?
-    my $patched = $test->{optstr} !~ m{--disable-os8-patches}x;
-    my $typestr = $patched ? 'patched' : 'bin';
-    my $currdsk = "bin/os8v3d-$typestr.rk05";
+    my $currdsk = "v3d.rk05";
     my $currdlz = substr ($currdsk, 0, length ($currdsk) - 2) . 'lz';
-    my $target  = 'os8-' . $typestr;
+    my $target  = 'os8-sys';
 
     # Configure the test disk image
     system "../../../configure $test->{optstr} > cfg.log 2>&1"
