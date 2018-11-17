@@ -422,7 +422,7 @@ set user $::env(USER)
 define BUILDUSER "$user@$host"
 define BUILDTS [clock format [clock seconds] -format "%Y.%m.%d at %T %Z"]
 
-# The mkos8 script requires Python and some non-core modules.
+# The os8-run script requires Python and some non-core modules.
 set status [catch {exec python -c exit} result]
 if {$status != 0} {
     user-error "Python does not appear to be installed here.  It is required."
@@ -450,6 +450,20 @@ if {$status != 0} {
     user-error $msg
 }
 msg-result "Python module pkg_resources is installed here."
+
+# Check for Perl and that it can run the test corpus builder.  Not fatal
+# if it can't, since only developers and deep testers need it.
+set status [catch {exec perl -e exit} result]
+if {$status == 0} {
+    set status [catch {exec perl -c "[get-define srcdir]/tools/test-mkos8" 2> /dev/null} result]
+    if {$status == 0} {
+        msg-result "Perl and its needed modules are installed; test-mkos8 will run here."
+    } else {
+        msg-result "test-mkos8 prereqs missing; fix with 'sudo cpanm --installdeps .'"
+    }
+} else {
+    msg-result "Perl is not available; you won't be able to run test-mkos8."
+}
 
 # Build Deeper Thought if we find it here
 if {[file exists "[get-define srcdir]/src/misc/deeper.c"]} {
