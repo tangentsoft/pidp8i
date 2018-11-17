@@ -246,6 +246,8 @@ msg-result "Lowercase handling set to '$lv' mode."
 # because some of the configuration options can affect the option set.
 define OS8_OPTS $os8_opts
 if {![file exists "lib/pidp8i"]} { file mkdir "lib/pidp8i" }
+if {![file exists "obj/pidp8i"]} { file mkdir "obj/pidp8i" }
+if {![file exists "obj/SIMH/PDP8"]} { file mkdir "obj/SIMH/PDP8" }
 write-if-changed "lib/pidp8i/os8opts.py" $os
 
 # Force a rebuild of the OS/8 media if the option set changed.

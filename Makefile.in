@@ -95,7 +95,7 @@ GENNED_PY   := \
 SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
-OS8RUN        := bin/os8-run
+OS8RUN        = bin/os8-run
 OS8SCRIPT      := lib/os8script.py
 OS8CP	      := bin/os8-cp
 OS8RUN_PY_ALL  := $(GENNED_PY) $(OS8SCRIPT) $(SIMH_PY_SRC)
@@ -438,7 +438,7 @@ endif
 
 	@# Install os8-run and its dependencies
 	@echo "Installing os8run..."
-	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8RUN) @prefix@/libexec
+	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8RUN) @prefix@/bin
 	@( for src in $(OS8RUN_PY_ALL) ; do \
 		test -e $$src || src=@srcdir@/$$src ; \
 		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
@@ -471,10 +471,14 @@ mediainstall: instdirs
 	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.tu56 @ABSPREFIX@/share/media/os8
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
-# No-dependencies versions of the bin/v3d-*.rk05 targets used by
-# tools/test-mkos8, because there's no point rebuilding the simulator
-# on each iteration. XXX This needs revision now that the packs are moved. XXX
-os8-sys:
+# No-dependencies versions of the targets used by tools/test-mkos8.
+# Rebuild only what is necessary, explicitly.
+# Install in the testing tmp subdir tools and libraries needed.
+
+TEST_TMP_BINS = bin/ptp2txt bin/pidp8i-sim bin/os8-run
+
+os8-sys: test-tmp-tools
+	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
@@ -497,6 +501,29 @@ simh-update simh-update-f:
 
 test-mkos8:
 	tools/test-mkos8
+
+test-tmp-tools:
+	@echo "Installing os8run dependencies..."
+	@( for src in $(OS8RUN_PY_ALL) ; do \
+		test -e $$src || src=@srcdir@/$$src ; \
+		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
+		echo "Installing $$src to $$dest..." ; \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
+	  done \
+	)
+	@( for src in $(TEST_TMP_BINS) ; do \
+		test -e $$src || src=@srcdir@/$$src ; \
+		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
+		echo "Installing $$src to $$dest..." ; \
+	    @INSTALL@ -m 755 -g @INSTGRP@ -D $${src}  $${dest}  ; \
+	  done \
+	)
+	@( cd ./bin ; \
+	   echo "Installing txt2ptp symlink..." ; \
+	   ln -f ptp2txt txt2ptp ; \
+	)
+
 
 
 # Build the OS/8 binary media needed by 0.script.

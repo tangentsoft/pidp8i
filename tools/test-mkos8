@@ -64,7 +64,7 @@ use Term::ANSIColor;
 my @tests;
 my $tests_mf;
 my (%generated, %tested);
-my $currlog = 'obj/mkos8-bin.log';
+my $currlog = 'obj/os8-run.log';
 my $cmplz = abs_path (dirname ($0)) . '/cmplz';
 
 # Command line option values
@@ -210,14 +210,15 @@ sub do_test
     die "Could not mkdir $test->{hdir}: $!\n"
             unless -d $test->{hdir} || mkdir($test->{hdir});
 
-    my $currdsk = "v3d.rk05";
+    my $currdsk = "bin/v3d.rk05";
     my $currdlz = substr ($currdsk, 0, length ($currdsk) - 2) . 'lz';
     my $target  = 'os8-sys';
 
     # Configure the test disk image
     system "../../../configure $test->{optstr} > cfg.log 2>&1"
             and die "Failed to configure $test->{name}!\n";
-    link "../../../bin/pidp8i-sim", "bin/pidp8i-sim";  # no sense rebuilding it
+    # We used to link binaries here, but there are more now.
+    # So our target, os8-sys now installs binaries and libraries we need.
     open my $itf, '>', 'media/os8/init.tx'             # avoid a pointless diff
             or die "Cannot overwrite init.tx with neutral version: $!\n";
     print $itf "TEST-MKOS8 BUILT THIS DISK IMAGE.\n\n";
