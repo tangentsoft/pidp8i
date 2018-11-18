@@ -496,11 +496,11 @@ run-tss8: $(SIM)
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
-# Enable this target only if all of the test-mkos8 prereqs
+# Enable this target only if all of the test-os8-run prereqs
 # were installed at configure time.
 ifeq (@CAN_TEST_OS8_RUN@, 1)
-test-mkos8:
-	tools/test-mkos8
+test-os8-run:
+	tools/test-os8-run
 endif
 
 test-tmp-tools:

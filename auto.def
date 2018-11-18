@@ -455,20 +455,20 @@ msg-result "Python module pkg_resources is installed here."
 # if it can't, since only developers and deep testers need it.
 set status [catch {exec perl -e exit} result]
 if {$status == 0} {
-    set status [catch {exec perl -c "[get-define srcdir]/tools/test-mkos8" 2> /dev/null} result]
+    set status [catch {exec perl -c "[get-define srcdir]/tools/test-os8-run" 2> /dev/null} result]
     if {$status == 0} {
         set status [catch {exec lz4 -e exit} result]
         if {$status == 0} {
-            msg-result "You can run test-mkos8 here: all prereqs available."
+            msg-result "All test-os8-run prereqs available here."
             define CAN_TEST_OS8_RUN 1
         } else {
-            msg-result "You can't run test-mkos8 until you install lz4; try liblz4-tool."
+            msg-result "Cannot test-os8-run without lz4; try apt install liblz4-tool."
         }
     } else {
-        msg-result "You can't run test-mkos8: fix with 'sudo cpanm --installdeps .'"
+        msg-result "Cannot test-os8-run: fix with 'sudo cpanm --installdeps .'"
     }
 } else {
-    msg-result "You can't run test-mkos8: Perl is not available."
+    msg-result "Cannot test-os8-run: Perl is not available."
 }
 
 # Build Deeper Thought if we find it here

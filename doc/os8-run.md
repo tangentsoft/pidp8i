@@ -69,7 +69,7 @@ The goals of the project are:
 
 [auth]: https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
 [rb]:   https://reproducible-builds.org/
-[tm]:   https://tangentsoft.com/pidp8i/doc/trunk/tools/test-mkos8
+[tm]:   https://tangentsoft.com/pidp8i/doc/trunk/tools/test-os8-run
 
 
 ## <a id="capabilities"></a>Capabilities

@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 ########################################################################
-# test-mkos8 - Collects the set of all --*-os8-* options from the
+# test-os8-run - Collects the set of all --*-os8-* options from the
 #   configure script, generates all unique subsets of that option set,
 #   runs configure with each of those subsets, and compares the output
 #   OS/8 bin RK05 disk to the previous run's version.  If there is a
@@ -11,7 +11,7 @@
 #   option subset is generated, we save the build results as the
 #   exemplar to use in later tests.
 #
-# Copyright © 2017 by Warren Young
+# Copyright © 2017-2018 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -221,7 +221,7 @@ sub do_test
     # So our target, os8-sys now installs binaries and libraries we need.
     open my $itf, '>', 'media/os8/init.tx'             # avoid a pointless diff
             or die "Cannot overwrite init.tx with neutral version: $!\n";
-    print $itf "TEST-MKOS8 BUILT THIS DISK IMAGE.\n\n";
+    print $itf "TEST-OS8-RUN BUILT THIS DISK IMAGE.\n\n";
     close $itf;
 
     # Build the test disk image
