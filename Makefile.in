@@ -182,6 +182,8 @@ ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
 
+TEST_TMP_BINS = bin/ptp2txt bin/pidp8i-sim bin/os8-run
+
 LIBS = -lm -ldl -lpthread
 
 ASM_PTS     := $(wildcard @srcdir@/src/asm/*.pal)
@@ -471,11 +473,6 @@ mediainstall: instdirs
 	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.tu56 @ABSPREFIX@/share/media/os8
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
-# No-dependencies versions of the targets used by tools/test-mkos8.
-# Rebuild only what is necessary, explicitly.
-# Install in the testing tmp subdir tools and libraries needed.
-
-TEST_TMP_BINS = bin/ptp2txt bin/pidp8i-sim bin/os8-run
 
 os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
@@ -499,8 +496,12 @@ run-tss8: $(SIM)
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
+# Enable this target only if all of the test-mkos8 prereqs
+# were installed at configure time.
+ifeq (@CAN_TEST_OS8_RUN@, 1)
 test-mkos8:
 	tools/test-mkos8
+endif
 
 test-tmp-tools:
 	@echo "Installing os8run dependencies..."
@@ -523,7 +524,6 @@ test-tmp-tools:
 	   echo "Installing txt2ptp symlink..." ; \
 	   ln -f ptp2txt txt2ptp ; \
 	)
-
 
 
 # Build the OS/8 binary media needed by 0.script.
