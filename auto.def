@@ -457,7 +457,7 @@ set status [catch {exec perl -e exit} result]
 if {$status == 0} {
     set status [catch {exec perl -c "[get-define srcdir]/tools/test-os8-run" 2> /dev/null} result]
     if {$status == 0} {
-        set status [catch {exec lz4 -e exit} result]
+        set status [catch {exec lz4 -h 2> /dev/null} result]
         if {$status == 0} {
             msg-result "All test-os8-run prereqs available here."
             define CAN_TEST_OS8_RUN 1
