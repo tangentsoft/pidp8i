@@ -146,7 +146,6 @@ end default chess
 
 # TECO VTEDIT setup
 begin enabled vtedit
-if args.enable_vtedit:
 os8 COPY RKA0:<DTA1:VTEDIT.*
 os8 COPY RKA0:<DTA1:TECO.IN
 end enabled vtedit
