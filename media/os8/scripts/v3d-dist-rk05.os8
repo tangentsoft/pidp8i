@@ -187,7 +187,16 @@ end default lcmod
 cpto $os8mi/init.tx
 cpto $os8mi/init.cm
 
+# Implement the config option to enable/disable INIT
+
+# By default we enable it.
+# We may be building from distribution media with INIT enabled.
+# So always SET SYS NO INIT
+# and undo it by default, to be overridden if --disable-os8-init is set.
+os8 SET SYS NO INIT
+begin default init
 os8 SET SYS INIT
+end default init
 
 # Squish of SYS and DSK goes here
 umount dt0
