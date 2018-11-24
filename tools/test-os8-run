@@ -215,7 +215,7 @@ sub do_test
     my $target  = 'os8-sys';
 
     # Configure the test disk image
-    system "../../../configure $test->{optstr} > cfg.log 2>&1"
+    system "../../../configure prefix=. $test->{optstr} > cfg.log 2>&1"
             and die "Failed to configure $test->{name}!\n";
     # We used to link binaries here, but there are more now.
     # So our target, os8-sys now installs binaries and libraries we need.
