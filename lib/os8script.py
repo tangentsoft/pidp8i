@@ -743,7 +743,7 @@ class os8script:
     if self.verbose: print "Resuming OS/8 at line " + \
        str(self.line_ct_stack[0]) + "."
 
-    self.simh.os8_resume()
+    self.simh.os8_restart()
     return "success"
 
 
