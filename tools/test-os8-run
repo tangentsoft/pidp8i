@@ -69,7 +69,7 @@ my $cmplz = abs_path (dirname ($0)) . '/cmplz';
 
 # Command line option values
 my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
-        $verbose);
+        $verbose, $test_count);
 
 
 #### sanitize_log ######################################################
@@ -345,13 +345,14 @@ sub report
 
 # Parse command line
 my %clopts;
-getopts('egnsv1', \%clopts) or die "Failed to parse command line!\n";
+getopts('egnsv1c:', \%clopts) or die "Failed to parse command line!\n";
 $dry_run = $clopts{n};
 $existing_only = $clopts{e};
 $generate_only = $clopts{g};
 $shuffle = $clopts{s};
 $verbose = $clopts{v};
 $single_core = $clopts{1};
+$test_count = $clopts{c};
 
 # Init global resources
 mkdir 'test';
@@ -388,6 +389,14 @@ chomp @cfgOpts;
 subsets \&construct_test, @cfgOpts;
 @tests = remove_missing(@tests) if $existing_only;
 @tests = shuffle @tests if $shuffle;
+
+if (defined $test_count) {
+    $#tests = $test_count - 1;  # Truncation from element zero.
+}
+
+if (defined $verbose) {
+    print "Will generate $#tests tests.\n";
+}
 
 # Run the tests
 my $tdir = abs_path(dirname($0));
