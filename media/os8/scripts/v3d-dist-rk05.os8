@@ -183,9 +183,12 @@ os8 SUBMIT SYS:LCSYS.BI
 os8 SUBMIT SYS:LCBAS.BI
 end default lcmod
 
-# INIT message setting stuf goes here
-cpto $os8mi/init.tx
+# INIT message setting stuff goes here
 cpto $os8mi/init.cm
+# Location of init.tx is funky so that test-os8-run will be able to
+# sanitize it.
+cpto $build/media/os8/init.tx
+
 
 # Implement the config option to enable/disable INIT
 
