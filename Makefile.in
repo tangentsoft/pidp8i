@@ -473,10 +473,15 @@ mediainstall: instdirs
 	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.tu56 @ABSPREFIX@/share/media/os8
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
-
+# For reasons I do not understand, the two runs of os8-run create new
+# log files rather than appending the second run to the first file.
+# We need both logs, so we take steps to get them with mv, and cat.
 os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
+	mv obj/os8-run.log obj/os8-run1.log
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
+	mv obj/os8-run.log obj/os8-run2.log
+	cat obj/os8-run1.log obj/os8-run2.log >obj/os8-run.log
 
 reconfig:
 	@AUTOREMAKE@
