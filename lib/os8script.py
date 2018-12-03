@@ -1616,14 +1616,14 @@ class os8script:
             print "ZeroDir: reply: " + str(reply)
             print "before: " + self.simh._child.before.strip()
             print "after: " + self.simh._child.after.strip()
-            need_exit = False
+          need_exit = False
         elif reply == 0:
           reply = self.simh._child.expect("SYS BUILT")
           if self.debug:
             print "$: reply: " + str(reply)
             print "before: " + self.simh._child.before.strip()
             print "after: " + self.simh._child.after.strip()
-            need_exit = False
+          need_exit = False
         elif reply == 1:
           reply = self.simh._child.expect("\\.")
           if self.debug:
