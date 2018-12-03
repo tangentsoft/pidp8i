@@ -1497,6 +1497,7 @@ class os8script:
         
         if self.verbose:
           print "Line " + str(self.line_ct_stack[0]) + ": end BUILD"
+        if self.debug:
           print "before: " + self.simh._child.before.strip()
           print "after: " + self.simh._child.after.strip()
         # Return to monitor level unless need_exit == False.
