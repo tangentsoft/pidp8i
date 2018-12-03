@@ -1495,9 +1495,10 @@ class os8script:
             str(self.line_ct_stack[0]) + ".\nEncountered end: {" + rest + "}. Exiting BUILD."
           return "fail"
         
-        if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": end BUILD"
-        print "before: " + self.simh._child.before.strip()
-        print "after: " + self.simh._child.after.strip()
+        if self.verbose:
+          print "Line " + str(self.line_ct_stack[0]) + ": end BUILD"
+          print "before: " + self.simh._child.before.strip()
+          print "after: " + self.simh._child.after.strip()
         # Return to monitor level unless need_exit == False.
         if need_exit:
           self.simh.os8_send_ctrl ('c')
