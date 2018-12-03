@@ -66,10 +66,56 @@ my $tests_mf;
 my (%generated, %tested);
 my $currlog = 'obj/os8-run.log';
 my $cmplz = abs_path (dirname ($0)) . '/cmplz';
+my $tdir = abs_path(dirname($0));
 
 # Command line option values
 my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
         $verbose, $test_count);
+
+# See Getopt::Std help
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+
+
+#### HELP_MESSAGE ######################################################
+# Called by getopts() on --help
+
+sub HELP_MESSAGE
+{
+    print <<USAGE;
+
+usage: test-os8-run [-c count] -[egnsv1]
+
+    Limit the number of tests generated with -c.
+
+    Re-test only existing tests in test/* with -e.
+
+    Generate new test examplars without re-testing existing ones with -g.
+
+    Show what would be done without doing any work with -n.  (Dry run.)
+
+    Shuffle test set with -s before starting work.  Affects the default
+    mode as well as -e and -g modes.
+
+    Get verbose output with -v.
+
+    Do all tests on a single CPU core with -1.  This entirely avoids
+    parallel calls to the simulator.
+
+USAGE
+
+    exit 0;
+}
+
+
+#### VERSION_MESSAGE ###################################################
+# Called by getopts() on --version
+
+sub VERSION_MESSAGE
+{
+    print "test-os8-run version ";
+    system($tdir . '/version');
+    return;
+}
 
 
 #### sanitize_log ######################################################
@@ -363,14 +409,14 @@ sub report
 
 # Parse command line
 my %clopts;
-getopts('egnsv1c:', \%clopts) or die "Failed to parse command line!\n";
-$dry_run = $clopts{n};
+getopts('c:egnsv1', \%clopts) or die "Failed to parse command line!\n";
+$test_count = $clopts{c};
 $existing_only = $clopts{e};
 $generate_only = $clopts{g};
+$dry_run = $clopts{n};
 $shuffle = $clopts{s};
 $verbose = $clopts{v};
 $single_core = $clopts{1};
-$test_count = $clopts{c};
 
 # Init global resources
 mkdir 'test';
@@ -417,7 +463,6 @@ if (defined $verbose) {
 }
 
 # Run the tests
-my $tdir = abs_path(dirname($0));
 my $cores = $single_core ? 1 : int(`$tdir/corecount`);
 my $pl = Parallel::Loops->new($cores);
 $pl->share (\%generated, \%tested);
