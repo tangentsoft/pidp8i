@@ -1363,7 +1363,7 @@ class os8script:
     if self.simh._context == "simh":
       self.resume_command(line, script_file)
 
-    self.simh.os8_send_cmd ("\\.", os8_comm)
+    self.simh.os8_send_cmd ("\\.", os8_comm, self.debug)
     return "success"
 
 
