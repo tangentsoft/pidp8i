@@ -409,7 +409,7 @@ sub report
 
 # Parse command line
 my %clopts;
-getopts('c:egnsv1', \%clopts) or die "Failed to parse command line!\n";
+getopts('c:egnsv1', \%clopts) or HELP_MESSAGE;
 $test_count = $clopts{c};
 $existing_only = $clopts{e};
 $generate_only = $clopts{g};
@@ -454,13 +454,9 @@ subsets \&construct_test, @cfgOpts;
 @tests = remove_missing(@tests) if $existing_only;
 @tests = shuffle @tests if $shuffle;
 
-if (defined $test_count) {
-    $#tests = $test_count - 1;  # Truncation from element zero.
-}
-
-if (defined $verbose) {
-    print "Will generate $#tests tests.\n";
-}
+# Truncate the test set with -c was given.  Mind the off-by-one!
+$#tests = $test_count - 1 if defined $test_count;
+print "Will generate $#tests tests.\n" if defined $verbose;
 
 # Run the tests
 my $cores = $single_core ? 1 : int(`$tdir/corecount`);
