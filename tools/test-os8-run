@@ -405,6 +405,49 @@ sub report
 }
 
 
+#### generate_tests ####################################################
+# Called when no non-option arguments are given: generates the set of
+# tests we'll try under the options given.
+
+sub generate_tests
+{
+    # Get all current --*-os8-* configuration options, filtering out:
+    #
+    # *   --os8-minimal because that just turns on all --disable-os8-*
+    #     options, so it's already covered.
+    #
+    # *   --disable-os8-src because we don't test the src disk; it's
+    #     always generated the same way.
+    # 
+    # *   --disable-os8-focal because it just disables two other FOCAL
+    #     options we're already going to test singly and together.
+    my @cmd = (
+        "./configure --help",
+        "grep -- -os8-",
+        "sed -Ee 's/^ +//'",
+        "cut -f1 -d' '",
+        "grep -v -e 'os8-minimal' -e 'os8-src' -e 'os8-focal\$'"
+    );
+    open my $ocmd, '-|', join('|', @cmd) or die "Failed to get os8 option set: $!\n";
+    my @cfgOpts = <$ocmd>;
+    close $ocmd;
+    chomp @cfgOpts;
+
+    # Generate all possible permutations of those options.
+    subsets \&construct_test, @cfgOpts;
+    @tests = remove_missing @tests if $existing_only;
+
+    # Shuffle them if requested.
+    @tests = shuffle @tests if $shuffle;
+
+    # Truncate the test set if requested.
+    $#tests = $test_count - 1 if defined $test_count;
+    print "Will generate $#tests tests.\n" if defined $verbose;
+
+    return;
+}
+
+
 #### main ##############################################################
 
 # Parse command line
@@ -427,36 +470,8 @@ open $tests_mf, '>>', 'test/tests-manifest.txt'
 $SIG{INT} = $SIG{TERM} = sub { report; exit 1 };
 $SIG{PIPE} = 'IGNORE';
 
-# Get all current --*-os8-* options, filtering out those we know should
-# not be tried for this:
-#
-# *   No --os8-minimal because that just turns on all --disable-os8-* 
-#     options, so it's already covered.
-# *   No --disable-os8-src because we don't test the src disk; it's
-#     always generated the same way.
-# *   No --disable-os8-focal because it disables the other two FOCAL
-#     options, which we're already going to test singly and together.
-my @cmd = (
-    "./configure --help",
-    "grep -- -os8-",
-    "sed -Ee 's/^ +//'",
-    "cut -f1 -d' '",
-    "grep -v -e 'os8-minimal' -e 'os8-src' -e 'os8-focal\$'"
-);
-open my $ocmd, '-|', join('|', @cmd) or die "Failed to get os8 option set: $!\n";
-my @cfgOpts = <$ocmd>;
-close $ocmd;
-chomp @cfgOpts;
-
-# Generate all possible permutations of those options.  Shuffle them if
-# requested.
-subsets \&construct_test, @cfgOpts;
-@tests = remove_missing(@tests) if $existing_only;
-@tests = shuffle @tests if $shuffle;
-
-# Truncate the test set with -c was given.  Mind the off-by-one!
-$#tests = $test_count - 1 if defined $test_count;
-print "Will generate $#tests tests.\n" if defined $verbose;
+# Generate the set of tests to try
+generate_tests;
 
 # Run the tests
 my $cores = $single_core ? 1 : int(`$tdir/corecount`);
