@@ -76,6 +76,15 @@ my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
 # See Getopt::Std help
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
+# Minimum number of characters needed to uniquely identify a given test
+# by its hash.  If the hash algorithm were maximally efficient, you'd
+# only need 4 characters for a 65536 test corpus, but we extend it a bit
+# in case there are a few early collisions to reduce the chance of those
+# collisions by the factor 2^(4*n-4) where n is this value.  In other
+# words, every character over 4 for such a test corpus reduces the
+# chances by a factor of 16, that being the number base of these hashes.
+my $THM = 6;
+
 
 #### HELP_MESSAGE ######################################################
 # Called by getopts() on --help
@@ -104,7 +113,8 @@ usage: test-os8-run [-c count] -[egnsv1] [hash...]
 
     All non-option arguments are taken as hashes of prior test exemplars
     to re-test, looked up in $TMF.  Giving hashes
-    overrides -c, -e, -g, and -s.
+    overrides -c, -e, -g, and -s.  You can give a prefix of as few as $THM
+    hash digits to uniquely identify the test meant.
 
 USAGE
 
@@ -208,7 +218,7 @@ sub construct_test
         hdir   => $rhdir,
         log    => "$rhdir/last.log",
         mlog   => "$rhdir/lastm.log",
-        name   => '{' . substr ($hash, 0, 12) . '}',
+        name   => '{' . substr ($hash, 0, $THM) . '}',
         optstr => $optstr,
         rklz   => "$rhdir/last.rklz",
     };
@@ -468,7 +478,7 @@ sub lookup_tests
     # Convert the non-option args to a lookup hash.
     my %wanted;
     for my $a (@::ARGV) {
-        $wanted{$a} = 1;
+        $wanted{substr($a, 0, $THM)} = 1;
     }
 
     # Schedule tests on the options looked up in the test manifest file
@@ -477,7 +487,7 @@ sub lookup_tests
     while (<$mf>) {
         chomp;
         my ($hash, @opts) = split ' ';
-        construct_test @opts if $wanted{$hash};
+        construct_test @opts if $wanted{substr($hash, 0, $THM)};
     }
     close $mf;
 
