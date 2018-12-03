@@ -67,6 +67,7 @@ my (%generated, %tested);
 my $currlog = 'obj/os8-run.log';
 my $cmplz = abs_path (dirname ($0)) . '/cmplz';
 my $tdir = abs_path(dirname($0));
+my $TMF = 'test/tests-manifest.txt';
 
 # Command line option values
 my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
@@ -83,7 +84,7 @@ sub HELP_MESSAGE
 {
     print <<USAGE;
 
-usage: test-os8-run [-c count] -[egnsv1]
+usage: test-os8-run [-c count] -[egnsv1] [hash...]
 
     Limit the number of tests generated with -c.
 
@@ -100,6 +101,10 @@ usage: test-os8-run [-c count] -[egnsv1]
 
     Do all tests on a single CPU core with -1.  This entirely avoids
     parallel calls to the simulator.
+
+    All non-option arguments are taken as hashes of prior test exemplars
+    to re-test, looked up in $TMF.  Giving hashes
+    overrides -c, -e, -g, and -s.
 
 USAGE
 
@@ -348,8 +353,7 @@ sub remove_missing
     # test output files.)
     my %existing;
     my $genned = 0;
-    my $mff = 'test/tests-manifest.txt';
-    open my $mf, '<', $mff or die "Could not read from $mff: $!\n";
+    open my $mf, '<', $TMF or die "Could not read from $TMF: $!\n";
     while (<$mf>) {
         chomp;
         my ($hash, @opts) = split ' ';
@@ -448,6 +452,39 @@ sub generate_tests
 }
 
 
+#### lookup_tests ######################################################
+# An alternative to generate_tests, called when non-option arguments are
+# given.
+#
+# We treat those arguments as hashes of prior-generated tests and try to
+# look up the corresponding option set so we can try them again.  This
+# lets you pass one or more prior test's hash on the command line.
+#
+# This is an alternative to -e mode, useful when you don't want to re-do
+# every existing test, only some subset.
+
+sub lookup_tests
+{
+    # Convert the non-option args to a lookup hash.
+    my %wanted;
+    for my $a (@::ARGV) {
+        $wanted{$a} = 1;
+    }
+
+    # Schedule tests on the options looked up in the test manifest file
+    # for each wanted test.
+    open my $mf, '<', $TMF or die "Could not read from $TMF: $!\n";
+    while (<$mf>) {
+        chomp;
+        my ($hash, @opts) = split ' ';
+        construct_test @opts if $wanted{$hash};
+    }
+    close $mf;
+
+    return;
+}
+
+
 #### main ##############################################################
 
 # Parse command line
@@ -465,18 +502,21 @@ $single_core = $clopts{1};
 mkdir 'test';
 system("rm -rf test/tmp");
 mkdir 'test/tmp';
-open $tests_mf, '>>', 'test/tests-manifest.txt'
-        or die "Cannot append to test manifest: $!\n";
+open $tests_mf, '>>', $TMF or die "Cannot append to test manifest: $!\n";
 $SIG{INT} = $SIG{TERM} = sub { report; exit 1 };
 $SIG{PIPE} = 'IGNORE';
 
-# Generate the set of tests to try
-generate_tests;
+# Work out which tests to try
+if (@ARGV) {
+    lookup_tests;
+}
+else {
+    generate_tests;
+}
 
 # Run the tests
-my $cores = $single_core ? 1 : int(`$tdir/corecount`);
-my $pl = Parallel::Loops->new($cores);
+my $pl = Parallel::Loops->new($single_core ? 1 : int(`$tdir/corecount`));
 $pl->share (\%generated, \%tested);
-$pl->foreach ( \@tests, \&do_test);
+$pl->foreach (\@tests, \&do_test);
 
 report;
