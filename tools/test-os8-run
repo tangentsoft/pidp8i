@@ -141,6 +141,7 @@ sub construct_test
         hash   => $hash,
         hdir   => $rhdir,
         log    => "$rhdir/last.log",
+        mlog   => "$rhdir/lastm.log",
         name   => '{' . substr ($hash, 0, 12) . '}',
         optstr => $optstr,
         rklz   => "$rhdir/last.rklz",
@@ -238,6 +239,7 @@ sub do_test
         # this optstr, to be compared to future builds.
         sanitize_log ($currlog, $test->{log});
         move ($currdlz, $test->{rklz});
+        copy ("make.log", $test->{mlog}); 
 
         # Log the mapping between the hash and the options it
         # represents, so the user can reverse it.
@@ -257,6 +259,7 @@ sub do_test
         my $faillog = "$test->{hdir}/fail.log";
         sanitize_log ($currlog, $faillog);
         move ($currdlz, $test->{hdir} . '/fail.rklz');
+        copy ("make.log", "$test->{hdir}/failm.log");
         system "diff -wu $test->{log} $faillog > $fdiff";
         print colored(['bold red'], 'RESULT DIFFERS!  See test/',
                 substr($fdiff, 6)), "\n";

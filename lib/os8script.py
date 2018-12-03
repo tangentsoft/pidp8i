@@ -1450,6 +1450,10 @@ class os8script:
   #### build_subcomm ###################################################
   
   def build_subcomm (self, old_line, script_file):
+    # A race condition results if we send ^C when we are already at
+    # Monitor level.  So need_exit gets set to False, when we know
+    # we have already exited build, and are at the monitor prompt.
+    need_exit = True
     os8_comm = "RU " + old_line
     if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": " + \
        os8_comm
@@ -1490,9 +1494,14 @@ class os8script:
           print "Warning! Mismatched begin/end blocks in BUILD at line " + \
             str(self.line_ct_stack[0]) + ".\nEncountered end: {" + rest + "}. Exiting BUILD."
           return "fail"
-        # Return to monitor level
-        self.simh.os8_send_ctrl ('c')
+        
         if self.verbose: print "Line " + str(self.line_ct_stack[0]) + ": end BUILD"
+        print "before: " + self.simh._child.before.strip()
+        print "after: " + self.simh._child.after.strip()
+        # Return to monitor level unless need_exit == False.
+        if need_exit:
+          self.simh.os8_send_ctrl ('c')
+
         return "success"
         
       build_re = _build_comm_regs[build_sub]
@@ -1594,18 +1603,25 @@ class os8script:
       # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
       if build_sub == "BOOT":
         if reply == 2:
+          if self.debug:
+            print "Boot received \"WRITE ZERO DIRECT?\""
+            print "sending to simh: Y"
           self.simh.os8_send_line("Y")
+          if self.debug:
+            print "Expecting \"SYS BUILT\""
           reply = self.simh._child.expect("SYS BUILT")
           if self.debug:
             print "ZeroDir: reply: " + str(reply)
             print "before: " + self.simh._child.before.strip()
             print "after: " + self.simh._child.after.strip()
+            need_exit = False
         elif reply == 0:
           reply = self.simh._child.expect("SYS BUILT")
           if self.debug:
             print "$: reply: " + str(reply)
             print "before: " + self.simh._child.before.strip()
             print "after: " + self.simh._child.after.strip()
+            need_exit = False
         elif reply == 1:
           reply = self.simh._child.expect("\\.")
           if self.debug:
