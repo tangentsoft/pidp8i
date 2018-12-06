@@ -292,7 +292,7 @@ class simh:
   # Therefore, os8_send_cmd requires you to be running OS/8, and does
   # not presume to try and get you there from SIMH.
 
-  def os8_send_cmd (self, prompt, line, debug=False):
+  def os8_send_cmd (self, prompt, line, debug=False, timeout=30):
     if self._context != 'os8': 
       print "OS/8 is not running. Cannot execute: " + line 
       return
@@ -300,7 +300,7 @@ class simh:
       print "os8_send_cmd: expecting: " + prompt
       print "\tLast match before: {" + self._child.before + "}"
       print "\tLast match after: {" + self._child.after + "}"
-    self._child.expect ("\n%s$" % prompt)
+    self._child.expect ("\n%s$" % prompt, timeout = timeout)
     self.os8_send_line (line)
 
 
