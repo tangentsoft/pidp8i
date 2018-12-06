@@ -89,19 +89,17 @@ PIDP8I_DIN  := @srcdir@/$(PIDP8I_DIRS).in
 GENNED_PY   := \
 	lib/pidp8i/__init__.py \
 	lib/pidp8i/ips.py \
+	lib/pidp8i/os8opts.py \
 	$(PIDP8I_DIRS)
 
 SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
-MKOS8         := @srcdir@/libexec/mkos8
-MKOS8_LIB     := @srcdir@/lib/mkos8
-MKOS8_PY      := \
-	$(MKOS8_LIB)/__init__.py \
-	$(MKOS8_LIB)/argparser.py \
-	lib/mkos8/opts.py
-MKOS8_PY_ALL  := $(GENNED_PY) $(MKOS8_PY) $(SIMH_PY_SRC)
-MKOS8_SRCS    := $(MKOS8) $(MKOS8_PY_ALL) $(PIDP8I_DIN)
+OS8RUN        = bin/os8-run
+OS8SCRIPT      := lib/os8script.py
+OS8CP	      := bin/os8-cp
+OS8RUN_PY_ALL  := $(GENNED_PY) $(OS8SCRIPT) $(SIMH_PY_SRC)
+OS8RUN_SRCS    := $(OS8RUN) $(OS8RUN_PY_ALL) $(PIDP8I_DIN)
 
 # If you edit this directory list, you should probably also edit
 # the argument list to the mkadrules call in auto.def!
@@ -116,7 +114,7 @@ BUILDDIRS := \
 	obj/SIMH \
 	obj/SIMH/PDP8
 
-INSTDIRS := bin etc lib/mkos8 lib/pidp8i libexec share/boot share/media share/include share/man/man1
+INSTDIRS := bin etc lib/pidp8i libexec share/boot share/media share/include share/man/man1
 
 SIM_OBJS := \
 	obj/pidp8i/gpio-common.o \
@@ -184,6 +182,8 @@ ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
 
+TEST_TMP_BINS = bin/ptp2txt bin/pidp8i-sim bin/os8-run
+
 LIBS = -lm -ldl -lpthread
 
 ASM_PTS     := $(wildcard @srcdir@/src/asm/*.pal)
@@ -206,7 +206,7 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 # (Makefile.in) which is handled separately.  This list should only
 # change when the list of "make-template" calls in auto.def changes.
 # 
-# The MKOS8_INFILES set of files are those which, if changed, require
+# The OS8RUN_INFILES set of files are those which, if changed, require
 # rebuilding the OS/8 media.  Touching the combined set merely causes
 # a reconfig and build.
 #
@@ -215,10 +215,11 @@ BOOTSCRIPTS := $(subst obj/,boot/,$(BOOTSCRIPTS)) \
 # rule being processed to create that target fails.
 # 
 # The rest have no special treatment.
-MKOS8_INFILES = \
+OS8RUN_INFILES = \
 	@srcdir@/lib/pidp8i/__init__.py.in \
 	@srcdir@/lib/pidp8i/ips.py.in \
 	@srcdir@/media/os8/init.tx.in \
+	@srcdir@/media/os8/3finit.tx.in \
 	@srcdir@/src/pidp8i/main.c.in \
 	$(PIDP8I_DIN)
 PRECIOUS_INFILES = \
@@ -237,22 +238,52 @@ INFILES = \
 	@srcdir@/boot/6.script.in \
 	@srcdir@/boot/7.script.in \
 	@srcdir@/boot/run.script.in \
+	@srcdir@/boot/run-v3f.script.in \
 	@srcdir@/etc/pidp8i.service.in \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/etc/usb-mount@.service.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
-	$(MKOS8_INFILES)
-MKOS8_OUTFILES := $(subst @srcdir@/,,$(MKOS8_INFILES))
-MKOS8_OUTFILES := $(subst .in,,$(MKOS8_OUTFILES))
+	$(OS8CP) \
+	$(OS8RUN_INFILES)
+OS8RUN_OUTFILES := $(subst @srcdir@/,,$(OS8RUN_INFILES))
+OS8RUN_OUTFILES := $(subst .in,,$(OS8RUN_OUTFILES))
 PRECIOUS_OUTFILES := $(subst @srcdir@/,,$(PRECIOUS_INFILES))
 PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 OUTFILES := $(subst @srcdir@/,,$(INFILES))
 OUTFILES := $(subst .in,,$(OUTFILES))
 
-OS8_BIN_RK05 = bin/os8v3d-bin.rk05
+OS8_DIST_RK05 = bin/v3d-dist.rk05
 OS8_SRC_RK05 = @OS8_SRC_RK05@
-OS8_RK05S = $(OS8_BIN_RK05) $(OS8_SRC_RK05)
+OS8_BOOT_DISK = bin/@OS8_BOOT_DISK@
+OS8_RK05S = $(OS8_DIST_RK05) $(OS8_BOOT_DISK) $(OS8_SRC_RK05)
+
+OS8_SCRIPTS_DIR = @srcdir@/media/os8/scripts
+
+V3D_DIST_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-dist-rk05.os8
+V3D_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-src-rk05.os8
+V3D_RK05_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-rk05.os8
+
+OS8CP := bin/os8-cp
+
+V3F_SRCDIR = @srcdir@/src/os8/v3f
+V3F_BUILD_RK05 = obj/v3f-build.rk05
+V3F_MANIFEST = actions.txt
+
+V3F_MADE_RK05 = bin/v3f-made.rk05
+
+V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
+
+ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
+
+CUSP_COPYIN_SCRIPT = $(OS8_SCRIPTS_DIR)/cusp-copyin.os8
+
+OS8_BOOT_TAPE = bin/@OS8_BOOT_TAPE@
+V3D_TC08_TU56 = bin/v3d-tc08.tu56
+V3D_TD12K_TU56 = bin/v3d-td12k.tu56
+V3F_TC08_TU56 = bin/v3f-tc08.tu56
+V3F_TD12K_TU56 = bin/v3f-td12k.tu56
+V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
 CLTXT = /boot/cmdline.txt
 
@@ -268,15 +299,18 @@ all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
 	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
-	$(OS8_RK05S)
+	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) \
+	$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
 		$(OUTFILES) $(ADF) \
+		$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_BUILD_RK05) $(V3D_TC08_TU56) \
+		$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) \
 		config.log cscope.out tags \
-		bin/*.pt bin/*.rk05 bin/*.save bin/txt2ptp \
-		lib/*.pyc lib/*/*.pyc lib/mkos8/opts.py \
-		obj/*.log obj/*.pt obj/mkos8.opts \
+		bin/*.pt  bin/*.save bin/txt2ptp \
+		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
+		obj/*.log obj/*.pt obj/os8.opts \
 		src/config.h \
 		@srcdir@/examples/*.err
 	@find obj \( -name \*.o -o -name \*.d \) -delete
@@ -290,7 +324,7 @@ distclean: clean
 		src/config.h
 
 ctags tags:
-	ctags -R @srcdir@/src @srcdir@/lib @srcdir@/libexec/mkos8
+	ctags -R @srcdir@/src @srcdir@/lib
 ifeq (@HAVE_PROG_CSCOPE@, 1)
 	@cscope -bR -s@srcdir@
 endif
@@ -319,7 +353,7 @@ install: all instdirs
 			/sbin/setcap 'cap_sys_nice=eip' $$f ; \
 		done \
 	) || true
-	@test -e @MEDIADIR@/os8/os8.tu56 && \
+	@test -e @MEDIADIR@/os8/local.tu56 && \
 		echo "Skipping media image and SIMH boot script reinstall." || \
 		$(MAKE) mediainstall
 
@@ -404,10 +438,10 @@ endif
 	@@INSTALL@ -m 755 bin/palbart @prefix@/bin
 	@@INSTALL@ -m 644 @srcdir@/src/palbart/palbart.1 @prefix@/share/man/man1
 
-	@# Install mkos8 and its dependencies
-	@echo "Installing mkos8..."
-	@@INSTALL@ -m 775 -g @INSTGRP@ $(MKOS8) @prefix@/libexec
-	@( for src in $(MKOS8_PY_ALL) ; do \
+	@# Install os8-run and its dependencies
+	@echo "Installing os8run..."
+	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8RUN) @prefix@/bin
+	@( for src in $(OS8RUN_PY_ALL) ; do \
 		test -e $$src || src=@srcdir@/$$src ; \
 		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
@@ -429,21 +463,25 @@ mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
 	@cd @srcdir@ ; \
 	find media \( \
+		-name \*.os8 -o \
 		-name \*.bin  -o \
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
 	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
-	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/os8v3d-*.rk05 @ABSPREFIX@/share/media/os8
+	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.rk05 @ABSPREFIX@/share/media/os8
+	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.tu56 @ABSPREFIX@/share/media/os8
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
-# No-dependencies versions of the bin/os8v3d-*.rk05 targets used by
-# tools/test-mkos8, because there's no point rebuilding the simulator
-# on each iteration.
-os8-bin:
-	$(MKOS8)@MKOS8_OPTS@ bin
-os8-patched:
-	$(MKOS8)@MKOS8_OPTS@ bin patch
+# For reasons I do not understand, the two runs of os8-run create new
+# log files rather than appending the second run to the first file.
+# We need both logs, so we take steps to get them with mv, and cat.
+os8-sys: test-tmp-tools
+	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
+	mv obj/os8-run.log obj/os8-run1.log
+	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
+	mv obj/os8-run.log obj/os8-run2.log
+	cat obj/os8-run1.log obj/os8-run2.log >obj/os8-run.log
 
 reconfig:
 	@AUTOREMAKE@
@@ -454,14 +492,43 @@ release: all
 run: $(SIM)
 	$(SIM) boot/run.script
 
+runf run-v3f: $(SIM) $(V3F_BOOT_TAPE)
+	$(SIM) boot/run-v3f.script
+
 run-tss8: $(SIM)
 	$(SIM) boot/tss8.script
 
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
 
-test-mkos8:
-	tools/test-mkos8
+# Enable this target only if all of the test-os8-run prereqs
+# were installed at configure time.
+ifeq (@CAN_TEST_OS8_RUN@, 1)
+test-os8-run:
+	tools/test-os8-run
+endif
+
+test-tmp-tools:
+	@echo "Installing os8run dependencies..."
+	@( for src in $(OS8RUN_PY_ALL) ; do \
+		test -e $$src || src=@srcdir@/$$src ; \
+		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
+		echo "Installing $$src to $$dest..." ; \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
+	  done \
+	)
+	@( for src in $(TEST_TMP_BINS) ; do \
+		test -e $$src || src=@srcdir@/$$src ; \
+		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
+		echo "Installing $$src to $$dest..." ; \
+	    @INSTALL@ -m 755 -g @INSTGRP@ -D $${src}  $${dest}  ; \
+	  done \
+	)
+	@( cd ./bin ; \
+	   echo "Installing txt2ptp symlink..." ; \
+	   ln -f ptp2txt txt2ptp ; \
+	)
 
 
 # Build the OS/8 binary media needed by 0.script.
@@ -480,16 +547,30 @@ test-mkos8:
 # the updated init.tx file, not before.  We needn't even make it an
 # order-only prereq because configure and the INFILES rules above ensure
 # that it always exists.
-OS8_BIN_SRCS := \
-	$(MKOS8) $(PIDP8I_DIN) \
+V3D_DIST_SRCS := \
+	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
+	$(V3D_DIST_SCRIPT) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
-ifneq (@MKOS8_BIN_PATCHES@,)
-	OS8_BIN_SRCS += @srcdir@/media/os8/patches/patch_list.txt
-endif
-$(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
-	$(MKOS8)@MKOS8_OPTS@ bin @MKOS8_BIN_PATCHES@
+
+# Temporary: We depend on ALL the patches, but really we've picked them over.
+V3D_PATCHES := \
+	@srcdir@/media/os8/patches/*.patch8
+
+# Dependency on the contents of the v3f source directory.
+V3F_SOURCES := \
+	@srcdir@/src/os8/v3f/*.PA \
+	@srcdir@/src/os8/v3f/*.MA \
+	@srcdir@/src/os8/v3f/*.BI
+
+
+$(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(SIM) $(OS8RUN_OUTFILES)
+	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
+
+$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) | $(SIM) $(OS8RUN_OUTFILES)
+	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
+
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
 # need to mount up the 7 source tapes in succession.
@@ -497,11 +578,37 @@ $(OS8_BIN_RK05): $(OS8_BIN_SRCS) | $(SIM) $(MKOS8_OUTFILES)
 # Using an order-only dependency for the simulator and the bin disk: we
 # only need *a* version of each, they don't have to be recent!
 OS8_SRC_SRCS = \
-	$(MKOS8) $(PIDP8I_DIN) \
+	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
+	$(V3D_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
-$(OS8_SRC_RK05): $(OS8_SRC_SRCS) | $(SIM) $(OS8_BIN_RK05)
-	$(MKOS8)@MKOS8_OPTS@ src
+
+$(OS8_SRC_RK05): $(OS8_DIST_RK05) $(OS8_SRC_SRCS) | $(SIM) $(OS8_BOOT_DISK)
+	$(OS8RUN)@OS8_OPTS@ $(V3D_SRC_SCRIPT)
+
+# Build the source disk for OS/8 V3F
+$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_BOOT_DISK)
+	cd $(V3F_SRCDIR); @builddir@/$(OS8CP) -v --action-file $(V3F_MANIFEST)
+
+# Make a disk with binaries assembled from the V3F source disk
+$(V3F_MADE_RK05): $(V3F_BUILD_RK05) $(V3F_MAKER)
+	$(OS8RUN) $(V3F_MAKER)
+
+# Make a bootable OS/8 v3f TCO8 DECtape image
+$(V3F_TC08_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable v3f
+
+# Make a bootable OS/8 v3f TD8E 12K DECtape image
+$(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
+	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable v3f --enable td12k
+
+# Make a bootable OS/8 v3d TCO8 DECtape image
+$(V3D_TC08_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK) 
+	$(OS8RUN) $(ALL_TU56_SCRIPT)
+
+# Make a bootable OS/8 v3d TD8E 12K DECtape image
+$(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK) 
+	$(OS8RUN) $(ALL_TU56_SCRIPT) --enable td12k
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
@@ -573,6 +680,8 @@ libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-
 # help here (|) as that only affects the right hand side.
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
+	@AUTOREMAKE@ && $(MAKE)
+media/os8/3finit.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
 
 # Also do it if the autodep tool is newer than its output, suggesting

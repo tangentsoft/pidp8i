@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 ########################################################################
-# test-mkos8 - Collects the set of all --*-os8-* options from the
+# test-os8-run - Collects the set of all --*-os8-* options from the
 #   configure script, generates all unique subsets of that option set,
 #   runs configure with each of those subsets, and compares the output
 #   OS/8 bin RK05 disk to the previous run's version.  If there is a
@@ -11,7 +11,7 @@
 #   option subset is generated, we save the build results as the
 #   exemplar to use in later tests.
 #
-# Copyright © 2017 by Warren Young
+# Copyright © 2017-2018 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -64,12 +64,73 @@ use Term::ANSIColor;
 my @tests;
 my $tests_mf;
 my (%generated, %tested);
-my $currlog = 'obj/mkos8-bin.log';
+my $currlog = 'obj/os8-run.log';
 my $cmplz = abs_path (dirname ($0)) . '/cmplz';
+my $tdir = abs_path(dirname($0));
+my $TMF = 'test/tests-manifest.txt';
 
 # Command line option values
 my ($dry_run, $existing_only, $generate_only, $single_core, $shuffle,
-        $verbose);
+        $verbose, $test_count);
+
+# See Getopt::Std help
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+
+# Minimum number of characters needed to uniquely identify a given test
+# by its hash.  If the hash algorithm were maximally efficient, you'd
+# only need 4 characters for a 65536 test corpus, but we extend it a bit
+# in case there are a few early collisions to reduce the chance of those
+# collisions by the factor 2^(4*n-4) where n is this value.  In other
+# words, every character over 4 for such a test corpus reduces the
+# chances by a factor of 16, that being the number base of these hashes.
+my $THM = 6;
+
+
+#### HELP_MESSAGE ######################################################
+# Called by getopts() on --help
+
+sub HELP_MESSAGE
+{
+    print <<USAGE;
+
+usage: test-os8-run [-c count] -[egnsv1] [hash...]
+
+    Limit the number of tests generated with -c.
+
+    Re-test only existing tests in test/* with -e.
+
+    Generate new test examplars without re-testing existing ones with -g.
+
+    Show what would be done without doing any work with -n.  (Dry run.)
+
+    Shuffle test set with -s before starting work.  Affects the default
+    mode as well as -e and -g modes.
+
+    Get verbose output with -v.
+
+    Do all tests on a single CPU core with -1.  This entirely avoids
+    parallel calls to the simulator.
+
+    All non-option arguments are taken as hashes of prior test exemplars
+    to re-test, looked up in $TMF.  Giving hashes
+    overrides -c, -e, -g, and -s.  You can give a prefix of as few as $THM
+    hash digits to uniquely identify the test meant.
+
+USAGE
+
+    exit 0;
+}
+
+
+#### VERSION_MESSAGE ###################################################
+# Called by getopts() on --version
+
+sub VERSION_MESSAGE
+{
+    print "test-os8-run version ";
+    system($tdir . '/version');
+    return;
+}
 
 
 #### sanitize_log ######################################################
@@ -86,6 +147,7 @@ sub sanitize_log
     while (<$if>) {
         # Strip all the CRs out.  We only need the LFs.
         s{\r}{}gs;
+        s{.\x08}{}gs;          # Remove silly backspaces sequences.
         my $original = $_;      # save it post-strip
 
         # Strip variable parts of SIMH line following each Ctrl-E:
@@ -99,17 +161,31 @@ sub sanitize_log
         # Rewrite SIMH ATTACH commands to remove pointless differences
         # in absolute paths between machines or Fossil checkouts.
         s{
-            (attach\ )           # SIMH command
+            (att\ |attach\ |attached\ )           # SIMH command
             (-r\ )?              # optional flag
             ([a-z0-9]+\ )        # SIMH device name
             (.*test/tmp/[0-9]+/) # noise parts of image file name thru PID
         }{$1$3.../}x;
         s{
-            (attach\ )
+            (att\ |attach\ |attached\ )
             (-r\ )?
             ([a-z0-9]+\ )
-            (.*/(media/os8)/)    # also squish this noise
-        }{$1$3.../$5/}x;
+            (.*/(media/os8/))    # also squish this noise
+            ((.*-temp-)(.*)(\.[a-z0-9]+))  # and noise parts of temp file name if present.
+        }{$1$3.../$5$7XXX$9}x;
+        s{
+            (?:(?!(.*\.pt_temp)|(.*-temp-)(.*)(\.[a-z0-9]+)))  # Cover the case where we dont.
+            (att\ |attach\ |attached\ )
+            (-r\ )?
+            ([a-z0-9]+\ )
+            (.*/(media/os8/))    # also squish this noise
+        }{$5$7.../}x;
+        s{
+            (att\ |attach\ |attached\ )
+            (-r\ )?
+            ([a-z0-9]+\ )
+            (.*/(media/os8/.*))-([0-9]+)\.pt_temp    # also squish this noise
+        }{$1$3.../$5-XXX.pt_temp}x;
 
         # Add cleaned line to ofile
         print $of $_;
@@ -141,7 +217,8 @@ sub construct_test
         hash   => $hash,
         hdir   => $rhdir,
         log    => "$rhdir/last.log",
-        name   => '{' . substr ($hash, 0, 12) . '}',
+        mlog   => "$rhdir/lastm.log",
+        name   => '{' . substr ($hash, 0, $THM) . '}',
         optstr => $optstr,
         rklz   => "$rhdir/last.rklz",
     };
@@ -210,20 +287,18 @@ sub do_test
     die "Could not mkdir $test->{hdir}: $!\n"
             unless -d $test->{hdir} || mkdir($test->{hdir});
 
-    # Are we building the -patched disk or the -bin disk?
-    my $patched = $test->{optstr} !~ m{--disable-os8-patches}x;
-    my $typestr = $patched ? 'patched' : 'bin';
-    my $currdsk = "bin/os8v3d-$typestr.rk05";
+    my $currdsk = "bin/v3d.rk05";
     my $currdlz = substr ($currdsk, 0, length ($currdsk) - 2) . 'lz';
-    my $target  = 'os8-' . $typestr;
+    my $target  = 'os8-sys';
 
     # Configure the test disk image
-    system "../../../configure $test->{optstr} > cfg.log 2>&1"
+    system "../../../configure prefix=. $test->{optstr} > cfg.log 2>&1"
             and die "Failed to configure $test->{name}!\n";
-    link "../../../bin/pidp8i-sim", "bin/pidp8i-sim";  # no sense rebuilding it
+    # We used to link binaries here, but there are more now.
+    # So our target, os8-sys now installs binaries and libraries we need.
     open my $itf, '>', 'media/os8/init.tx'             # avoid a pointless diff
             or die "Cannot overwrite init.tx with neutral version: $!\n";
-    print $itf "TEST-MKOS8 BUILT THIS DISK IMAGE.\n\n";
+    print $itf "TEST-OS8-RUN BUILT THIS DISK IMAGE.\n\n";
     close $itf;
 
     # Build the test disk image
@@ -240,6 +315,7 @@ sub do_test
         # this optstr, to be compared to future builds.
         sanitize_log ($currlog, $test->{log});
         move ($currdlz, $test->{rklz});
+        copy ("make.log", $test->{mlog}); 
 
         # Log the mapping between the hash and the options it
         # represents, so the user can reverse it.
@@ -259,6 +335,7 @@ sub do_test
         my $faillog = "$test->{hdir}/fail.log";
         sanitize_log ($currlog, $faillog);
         move ($currdlz, $test->{hdir} . '/fail.rklz');
+        copy ("make.log", "$test->{hdir}/failm.log");
         system "diff -wu $test->{log} $faillog > $fdiff";
         print colored(['bold red'], 'RESULT DIFFERS!  See test/',
                 substr($fdiff, 6)), "\n";
@@ -286,8 +363,7 @@ sub remove_missing
     # test output files.)
     my %existing;
     my $genned = 0;
-    my $mff = 'test/tests-manifest.txt';
-    open my $mf, '<', $mff or die "Could not read from $mff: $!\n";
+    open my $mf, '<', $TMF or die "Could not read from $TMF: $!\n";
     while (<$mf>) {
         chomp;
         my ($hash, @opts) = split ' ';
@@ -343,14 +419,91 @@ sub report
 }
 
 
+#### generate_tests ####################################################
+# Called when no non-option arguments are given: generates the set of
+# tests we'll try under the options given.
+
+sub generate_tests
+{
+    # Get all current --*-os8-* configuration options, filtering out:
+    #
+    # *   --os8-minimal because that just turns on all --disable-os8-*
+    #     options, so it's already covered.
+    #
+    # *   --disable-os8-src because we don't test the src disk; it's
+    #     always generated the same way.
+    # 
+    # *   --disable-os8-focal because it just disables two other FOCAL
+    #     options we're already going to test singly and together.
+    my @cmd = (
+        "./configure --help",
+        "grep -- -os8-",
+        "sed -Ee 's/^ +//'",
+        "cut -f1 -d' '",
+        "grep -v -e 'os8-minimal' -e 'os8-src' -e 'os8-focal\$'"
+    );
+    open my $ocmd, '-|', join('|', @cmd) or die "Failed to get os8 option set: $!\n";
+    my @cfgOpts = <$ocmd>;
+    close $ocmd;
+    chomp @cfgOpts;
+
+    # Generate all possible permutations of those options.
+    subsets \&construct_test, @cfgOpts;
+    @tests = remove_missing @tests if $existing_only;
+
+    # Shuffle them if requested.
+    @tests = shuffle @tests if $shuffle;
+
+    # Truncate the test set if requested.
+    $#tests = $test_count - 1 if defined $test_count;
+    print "Will generate $#tests tests.\n" if defined $verbose;
+
+    return;
+}
+
+
+#### lookup_tests ######################################################
+# An alternative to generate_tests, called when non-option arguments are
+# given.
+#
+# We treat those arguments as hashes of prior-generated tests and try to
+# look up the corresponding option set so we can try them again.  This
+# lets you pass one or more prior test's hash on the command line.
+#
+# This is an alternative to -e mode, useful when you don't want to re-do
+# every existing test, only some subset.
+
+sub lookup_tests
+{
+    # Convert the non-option args to a lookup hash.
+    my %wanted;
+    for my $a (@::ARGV) {
+        $wanted{substr($a, 0, $THM)} = 1;
+    }
+
+    # Schedule tests on the options looked up in the test manifest file
+    # for each wanted test.
+    open my $mf, '<', $TMF or die "Could not read from $TMF: $!\n";
+    while (<$mf>) {
+        chomp;
+        my ($hash, @opts) = split ' ';
+        construct_test @opts if $wanted{substr($hash, 0, $THM)};
+    }
+    close $mf;
+
+    return;
+}
+
+
 #### main ##############################################################
 
 # Parse command line
 my %clopts;
-getopts('egnsv1', \%clopts) or die "Failed to parse command line!\n";
-$dry_run = $clopts{n};
+getopts('c:egnsv1', \%clopts) or HELP_MESSAGE;
+$test_count = $clopts{c};
 $existing_only = $clopts{e};
 $generate_only = $clopts{g};
+$dry_run = $clopts{n};
 $shuffle = $clopts{s};
 $verbose = $clopts{v};
 $single_core = $clopts{1};
@@ -359,43 +512,21 @@ $single_core = $clopts{1};
 mkdir 'test';
 system("rm -rf test/tmp");
 mkdir 'test/tmp';
-open $tests_mf, '>>', 'test/tests-manifest.txt'
-        or die "Cannot append to test manifest: $!\n";
+open $tests_mf, '>>', $TMF or die "Cannot append to test manifest: $!\n";
 $SIG{INT} = $SIG{TERM} = sub { report; exit 1 };
 $SIG{PIPE} = 'IGNORE';
 
-# Get all current --*-os8-* options, filtering out those we know should
-# not be tried for this:
-#
-# *   No --os8-minimal because that just turns on all --disable-os8-* 
-#     options, so it's already covered.
-# *   No --disable-os8-src because we don't test the src disk; it's
-#     always generated the same way.
-# *   No --disable-os8-focal because it disables the other two FOCAL
-#     options, which we're already going to test singly and together.
-my @cmd = (
-    "./configure --help",
-    "grep -- -os8-",
-    "sed -Ee 's/^ +//'",
-    "cut -f1 -d' '",
-    "grep -v -e 'os8-minimal' -e 'os8-src' -e 'os8-focal\$'"
-);
-open my $ocmd, '-|', join('|', @cmd) or die "Failed to get os8 option set: $!\n";
-my @cfgOpts = <$ocmd>;
-close $ocmd;
-chomp @cfgOpts;
-
-# Generate all possible permutations of those options.  Shuffle them if
-# requested.
-subsets \&construct_test, @cfgOpts;
-@tests = remove_missing(@tests) if $existing_only;
-@tests = shuffle @tests if $shuffle;
+# Work out which tests to try
+if (@ARGV) {
+    lookup_tests;
+}
+else {
+    generate_tests;
+}
 
 # Run the tests
-my $tdir = abs_path(dirname($0));
-my $cores = $single_core ? 1 : int(`$tdir/corecount`);
-my $pl = Parallel::Loops->new($cores);
+my $pl = Parallel::Loops->new($single_core ? 1 : int(`$tdir/corecount`));
 $pl->share (\%generated, \%tested);
-$pl->foreach ( \@tests, \&do_test);
+$pl->foreach (\@tests, \&do_test);
 
 report;

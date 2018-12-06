@@ -1,0 +1,209 @@
+# Creates an OS/8 v3d binary rk05 image from distribution DECtapes.
+# Caution: the boot tape must be writeable.
+
+mount dt0 $os8mi/al-4711c-ba-os8-v3d-1.1978.tu56 required scratch
+mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 ro required
+
+mount rk0 $os8mo/v3d-dist.rk05 new
+
+boot dt0
+
+begin build SYS:BUILD
+LOAD DTA1:RK8ESY.BN
+LOAD DTA1:PT8E.BN
+LOAD DTA1:TD8ESY.BN
+LOAD DTA1:ROMMSY.BN
+LOAD DTA1:TD8EA.BN
+# We could load more TD8E non-system drivers
+# But there is limited space, so we elect not to.
+# LOAD DTA1:TD8EB.BN
+# LOAD DTA1:TD8EC.BN
+# LOAD DTA1:TD8ED.BN
+DELETE SYS
+SYSTEM RK8E
+DELETE RXA1
+INSERT PT8E,PTR
+INSERT PT8E,PTP
+DELETE RKA0
+DELETE RKB0
+INSERT RK8E,RKA0,RKB0
+INSERT RK05,RKA2,RKB2
+DELETE DTA0
+INSERT TC,DTA0
+DSK RK8E:RKB0
+PRINT
+BOOT
+end build
+
+# Note:
+# If we save BUILD to RKA0 it gets overwritten with our DTA0: copyin.
+# If we save BUILD to DTA0: that does not happen but then we modify
+# our tape. (It is supposed to be a scratch tape.)
+os8 SAVE DTA0 BUILD.SV
+
+boot dt0
+
+# System tape 1 of 2
+os8 COPY RKA0:<DTA0:*.*
+
+# Help files from tape 2 of 2.
+# Not enough room for everything on tape 2.
+# We just copy the help files.
+os8 COPY RKA0:<DTA1:*.HL
+
+# We can't express disabled yet.
+# Besides we need SABR for cc8
+# begin disabled fortran-ii
+# os8 DELETE RKA0:FORT.SV,LIBSET.SV,SABR.SV
+# end disabled fortran-ii
+
+begin default fortran-ii
+os8 COPY RKA0:<DTA1:*.RL
+end default fortran-ii
+
+umount dt1
+
+boot rk0
+
+os8 ZERO RKB0:
+
+# Do copyins here.
+
+# OS/8 V3D extensions
+umount dt0
+mount dt0 $os8mi/al-4761c-ba-os8-v3d-ext.1978.tu56 ro required
+# resume
+os8 COPY RKA0:<DTA0:*.*
+
+# Copying in Music score files and source code...
+begin enabled music
+umount dt1
+mount dt1 $os8mi/subsys/music.tu56 ro required
+# resume
+os8 COPY RKB0:<DTA1:*.*
+end enabled music
+
+# Adventure
+begin default advent
+umount dt1
+mount dt1 $os8mi/subsys/advent.tu56 ro required
+# resume
+os8 COPY RKB0:<DTA1:*.*
+end default advent
+
+# BASIC games and demos
+begin default ba
+umount dt1
+mount dt1 $os8mi/subsys/ba.tu56 ro required
+# resume
+os8 COPY RKB0:<DTA1:*.*
+end default ba
+
+# Ian Schofield's CC8 compiler
+begin default cc8
+umount dt1
+mount dt1 $os8mi/subsys/cc8.tu56 ro required
+# resume
+os8 COPY RKA0:<DTA1:*.SV
+os8 COPY RKB0:<DTA1:*.SV/V
+end default cc8
+
+# Kermit-12
+begin default k12
+umount dt1
+mount dt1 $os8mi/subsys/k12.tu56 ro required
+# resume
+os8 COPY RKA0:<DTA1:*.*
+end default k12
+
+# FORTRAN IV
+begin default fortran-iv
+umount dt1
+mount dt1 $os8mi/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 ro required
+# resume
+os8 COPY RKA0:<DTA1:*.*
+end default fortran-iv
+
+# MACREL V2 and new FUTIL V8B
+begin default macrel
+umount dt1
+mount dt1 $os8mi/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 ro required
+# resume
+os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA,FUTIL.SV
+end default macrel
+
+# Files from local.tu56
+umount dt1
+mount dt1 $os8mi/local.tu56 ro required
+# resume
+# Case conversion batch scripts
+os8 COPY RKA0:<DTA1:?CSYS.BI
+os8 COPY RKA0:<DTA1:?CBAS.BI
+
+begin default chess
+os8 COPY RKA0:<DTA1:CHESS.*
+end default chess
+
+# TECO VTEDIT setup
+begin enabled vtedit
+os8 COPY RKA0:<DTA1:VTEDIT.*
+os8 COPY RKA0:<DTA1:TECO.IN
+end enabled vtedit
+
+# DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV
+begin default dcp
+os8 COPY RKA0:<DTA1:DCP24.SV,DCP.SV,DCP16.SV
+end default dcp
+
+# FOCAL69 .BN files installed on DSK:
+begin enabled focal69
+umount dt1
+mount dt1 $os8mi/subsys/focal69.tu56 ro required
+os8 COPY RKB0:<DTA1:FOCAL.BN,4WORD.BN,4KVT.BN,8KVT.BN,8KNOVT.BN
+end enabled focal69
+
+# U/W FOCAL
+begin default uwfocal
+umount dt1
+mount dt1 $os8mi/subsys/uwfocal-v4e-2.tu56 ro required
+# resume
+os8 COPY RKA0:<DTA1:UWF16K.SV
+end default uwfocal
+
+# Further system initialization
+
+os8 SET TTY COL 3
+
+begin default crt
+os8 SET TTY SCOPE
+end default crt
+
+begin default lcmod
+os8 SUBMIT SYS:LCSYS.BI
+os8 SUBMIT SYS:LCBAS.BI
+end default lcmod
+
+# INIT message setting stuff goes here
+cpto $os8mi/init.cm
+# Location of init.tx is funky so that test-os8-run will be able to
+# sanitize it.
+cpto $build/media/os8/init.tx
+
+
+# Implement the config option to enable/disable INIT
+
+# By default we enable it.
+# We may be building from distribution media with INIT enabled.
+# So always SET SYS NO INIT
+# and undo it by default, to be overridden if --disable-os8-init is set.
+os8 SET SYS NO INIT
+begin default init
+os8 SET SYS INIT
+end default init
+
+# Squish of SYS and DSK goes here
+umount dt0
+umount dt1
+# resume
+os8 SQUISH DSK:/O
+os8 SQUISH SYS:/O

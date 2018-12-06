@@ -126,8 +126,13 @@ def main ():
     try:
       s.spin (10)
     except pexpect.TIMEOUT:
-      # Find out how many IPS was executing
+      # Explicitly shift back from OS/8 context to SIMH command context.
+      # We cannot rely on class simh to do this automatically because it
+      # expects to see a . prompt from the prior command, but we're
+      # still in TECO here, so we must be explicit.
       s.os8_send_ctrl ('e')
+
+      # Ask the simulator what IPS rate we ran that benchmark at.
       s.send_cmd ('show clocks')
       line = s.read_tail ('Execution Rate:')
       curr_ips = int (line.strip().replace(',', '').split(' ')[0])
@@ -143,11 +148,11 @@ def main ():
       print "or " + format (pdp_ratio, '.1f') + \
           " times faster than a PDP-8/I.\n"
   else:
-    # Normal mode.  Pop out to SIMH and throttle it down to a rate
-    # suitable for a blinkenlights demo.  1/17 means SIMH runs one
-    # instruction then waits for 17ms, yielding ~59 IPS.
-    time.sleep (0.02)   # FIXME: simulator chokes on 'cont' without this
-    s.os8_send_ctrl ('e')
+    # Normal mode.  Tell SIMH and throttle down to a rate suitable for a
+    # blinkenlights demo.  1/17 means SIMH runs one instruction then
+    # waits for 17ms, yielding ~59 IPS.
+    time.sleep (0.02)       # FIXME: simulator chokes on 'cont' without this
+    s.os8_send_ctrl ('e')   # same justification as above
     s.send_cmd ('set throttle 1/17')
 
     # You can't hit Ctrl-E while running this script in the foreground
