@@ -57,33 +57,32 @@
          language at this time than a programming language, so it should
          be much easier for non-programmers to learn.
 
-    We've been working on this new mechanism for many months now, during
-    which we did a lot of manual testing.  But as with `mkos8` before
-    it, we've also got an automatic tester for `test-os8`, which gives
-    us tested quality assurance on several axes:
+    *   We've been working on this new mechanism for many months now,
+        during which we did a lot of manual testing.  But as with `mkos8`
+        before it, we've also got an automatic tester for `test-os8`,
+        which gives us tested quality assurance on several axes:
 
-    *   This test system builds all 32768 configurations afforded by the
-        `configure --os8-*` options.  There is no combination of options
-        you can give that we haven't already tried.  We haven't run all
-        of these combinations manually, but they do all boot and emit
-        consistent and sensible output from one run to the next.
+        *   **Complete**: We've repeatedly tested all 32768 possible
+            OS/8 RK05 configurations afforded by the configure script.
 
-    *   The test system keeps those builds as exemplars and then lets us
-        re-test those same builds either on the same machine or on a
-        different one to verify that the builds are repeatable: given
-        the same inputs, you always get the same output, which assures
-        us that the build system is deterministic.  That sounds like it
-        should be obvious and easy, but it didn't come for free!
+        *   **Repeatable**: We've re-tested those builds on the original
+            build systems, on multiple computers at a site, and across
+            sites.  This assures us that the builds are deterministic:
+            given the same inputs, you always get the same outputs.
+            That sounds like it should be obvious and easy, but it
+            didn't come for free!
 
-    *   By copying these test exemplars between Pi and non-Pi systems
-        and re-testing, we've convinced ourselves that the build is
-        platform-independent, at least within the scope of the systems
-        we've tried it on.  (TODO: Test with more of the systems in the
-        [OS compatibility][osc] article.)
+        *   **Platform-Independent**: By copying these test exemplars
+            between Pi and non-Pi systems and re-testing, we've convinced
+            ourselves that the build is platform-independent, at least
+            within the scope of the systems we've tried it on.  (TODO:
+            Test with more of the systems in the [OS compatibility][osc]
+            article.)
 
-    *   By copying these exemplars between different Pi systems,
-        sometimes even between sites, we've come to expect that this new
-        mechanism will reliably build standard media on your Pi, too.
+        *   **Reliable**: Some of these configurations have been tested
+            many times over, and all of them have been built at least
+            four times.  We've come to expect that this new mechanism
+            will reliably build standard media on your Pi, too.
 
     All of this is largely the work of Bill Cattey.  I (Warren Young)
     mainly did bits of polishing and testing.
