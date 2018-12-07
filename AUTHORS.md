@@ -72,12 +72,13 @@
     builds the OS/8 disk images from source tapes.
 
 *   **[Bill Cattey](mailto:bill.cattey@gmail.com)** is the project lead
-    and primary developer of the system that builds the OS/8 RK05 disk
-    images from source tapes. He greatly extended the `mkos8` script,
-    curated the tape collection we ship as `media/.../*.tu56`, created
-    some of those tapes, and more. He has also contributed to other
-    areas of the software project. His contributions are made to the
-    project [as `poetnerd`][pncomm].
+    and primary developer of the system that builds the OS/8 media
+    images from source tapes. He first greatly extended the `mkos8`
+    script then replaced it entirely as `os8-run`. He curated the tape
+    collections we ship as `media/.../*.tu56`, created some of those
+    tapes, and more. He has also contributed to other areas of the
+    software project. His contributions are made to the project [as
+    `poetnerd`][pncomm].
 
 *   **[Warren Young](mailto:tangentsoft@gmail.com)** Did everything
     listed in [the change log][cl] that is not attributed to anyone
