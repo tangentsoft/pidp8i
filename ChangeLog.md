@@ -59,7 +59,7 @@
 
     *   We've been working on this new mechanism for many months now,
         during which we did a lot of manual testing.  But as with `mkos8`
-        before it, we've also got an automatic tester for `test-os8`,
+        before it, we've also got an automatic tester for `os8-run`,
         which gives us tested quality assurance on several axes:
 
         *   **Complete**: We've repeatedly tested all 32768 possible
