@@ -4,21 +4,23 @@
 ## Version 2018.12.xx — The "OS/8 V3F and os8-run" release
 
 *   The banner feature in this release is that Bill Cattey transformed
-    our `mkos8` tool into the `os8-run` script interpreter, giving us a
+    our `mkos8` tool into the `os8-run` script interpreter, giving us
     many new features and capabilities:
 
     *   The OS/8 V3D RK05 media build steps previously hard-coded in
         Python within `mkos8` are now in a series of scripts in the
         `os8-run` language.  This abstracts the process, making it
-        easier to understand and change.  You can take this script and
-        modify it much more easily than modifying the old `mkos8` script
-        to get custom results.
+        easier to understand and change.  Non-Python programmers can
+        examine these `os8-run` input scripts to learn how their media
+        are built.  It's easier to modify the `os8-run` scripts to get
+        custom results than to modify the prior release's `mkos8` Python
+        script.
 
     *   Replaced the hand-maintained `media/os8/os8.tu56` OS/8 V3D TU56
         tape image used by boot option IF=3 with an `os8-run` script
         that's run at build time to generate a similar tape image from
         pristine, curated source media, just like we did for the RK05
-        media in the prior 2017.12.22 release.
+        media in the prior release.
 
         You have two new options for this generated OS/8 boot tape:
 
@@ -31,32 +33,60 @@
 
             (Bootable V3F RK05 media are planned for a future release.)
 
-        *   You can ask to have the OS/8 tape driver switched from the
-            prior releasee's TD8E default to the TC08, which is the new
-            default.  The TC08 driver is more efficient, and it will
-            allow you to copy the medium image to an actual DECtape and
-            boot it on a PDP-8 with the TC08 or compatible tape drive
-            controller.
+        *   OS/8 is configured to use the TC08 driver by default now,
+            but you have the option to switch it back to the prior
+            release's TD8E default.
+
+            This new driver is more efficient and it will allow you to
+            copy the medium image to an actual DECtape and boot it on a
+            PDP-8 with the TC08 or compatible tape drive controller.
+            That wasn't possible before because the TD8E and TC08 share
+            the same IOT device ID, so you can have only one or the
+            other installed into OS/8 at a time, and that tape didn't
+            have `BUILD` on it, so the manually maintained tape image we
+            were running didn't allow you to easily switch it.
 
             TODO: What is TD12K, exactly?  The SIMH docs talk about TD8E
             instead.
 
     *    In the prior release, we offered the Python `simh` API for
          scripting OS/8 and SIMH, plus the `teco-pi-demo` script to show
-         off this API.  The `os8-run` command language is based on this,
-         offering a simpler method of achieving custom results.  The
-         `os8-run` script language is more like a command language at
-         this time than a programming language, so it should be much
-         easier for non-programmers to learn.
+         off this API.  The `os8-run` command language is based on this
+         same mechanism, offering a simpler method of achieving custom
+         results.  The `os8-run` script language is more like a command
+         language at this time than a programming language, so it should
+         be much easier for non-programmers to learn.
 
-    This new mechanism is both manually and programmatically tested.
-    All 32768 possible build configurations were automatically built and
-    re-built at least once on development and test systems owned by Bill
-    and I to verify that the builds are repeatable, both on the original
-    build machine and across machines.
+    We've been working on this new mechanism for many months now, during
+    which we did a lot of manual testing.  But as with `mkos8` before
+    it, we've also got an automatic tester for `test-os8`, which gives
+    us tested quality assurance on several axes:
 
-    This is largely the work of Bill Cattey.  I (Warren Young) mainly
-    did bits of polishing and testing.
+    *   This test system builds all 32768 configurations afforded by the
+        `configure --os8-*` options.  There is no combination of options
+        you can give that we haven't already tried.  We haven't run all
+        of these combinations manually, but they do all boot and emit
+        consistent and sensible output from one run to the next.
+
+    *   The test system keeps those builds as exemplars and then lets us
+        re-test those same builds either on the same machine or on a
+        different one to verify that the builds are repeatable: given
+        the same inputs, you always get the same output, which assures
+        us that the build system is deterministic.  That sounds like it
+        should be obvious and easy, but it didn't come for free!
+
+    *   By copying these test exemplars between Pi and non-Pi systems
+        and re-testing, we've convinced ourselves that the build is
+        platform-independent, at least within the scope of the systems
+        we've tried it on.  (TODO: Test with more of the systems in the
+        [OS compatibility][osc] article.)
+
+    *   By copying these exemplars between different Pi systems,
+        sometimes even between sites, we've come to expect that this new
+        mechanism will reliably build standard media on your Pi, too.
+
+    All of this is largely the work of Bill Cattey.  I (Warren Young)
+    mainly did bits of polishing and testing.
 
 *   Added Bill Cattey's `os8-cp` script, which makes it nearly as easy
     as `cp(1)` to get files into and out of a SIMH OS/8 media image.
@@ -147,7 +177,8 @@
 *   A year of maintenance and polishing, much of it resulting in
     documentation and build system improvements.
 
-[pv]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#systemd
+[osc]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
+[pv]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md#systemd
 
 
 <a id="20171222"></a>
