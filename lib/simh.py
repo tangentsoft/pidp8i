@@ -198,9 +198,8 @@ class simh:
     self._child.delaybeforesend = None if pev4 else 0
 
     # Wait for either an error or the simulator's configuration line.
-    if not self.try_wait (\
-                          '^PiDP-8/I [a-zA-Z].*\[.*\]', \
-        'Failed to lock /dev/gpiomem', timeout = 3):
+    if not self.try_wait ('^PiDP-8/I [a-zA-Z].*\[.*\]', \
+                          'Failed to lock /dev/gpiomem', timeout = 5):
       if ignore_gpio_lock:
         print "WARNING: Failed to lock GPIO for exclusive use.  Won't use front panel."
       else:
