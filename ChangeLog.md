@@ -165,11 +165,11 @@
         improve the startup behavior of the PDP-8 simulator.  Previously
         you could see large swings in simulation speed until the clock
         settled down, which was especially slow at the low clock rates
-        populare among blinkenlights fans.
+        popular among blinkenlights fans.
 
     *   Fixes upstream bug #545 affecting PDP-8 serial console handling.
 
-    *   TODO.
+    *   TODO: Update again and summarize the further diffs since 2017.
 
 *   Minor updates to the CC8 C compilers and the examples sent in by Ian
     Schofield.
