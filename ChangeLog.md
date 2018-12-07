@@ -141,7 +141,8 @@
     *   Gets us away from the SysV init backwards compatibility that may
         go away in a future release of Raspbian.
 
-    *   Automatic restarts on crashes.
+    *   Potentially, automatic restarts on crashes.  (TODO: Either make
+        `pidp8i.service` actually do that or remove the bullet point.)
 
 *   Applied a fix from Ian Schofield for a serious problem with the
     accuracy of the MB register lights in certain contexts, such as
