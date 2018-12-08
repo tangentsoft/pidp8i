@@ -114,7 +114,7 @@ BUILDDIRS := \
 	obj/SIMH \
 	obj/SIMH/PDP8
 
-INSTDIRS := bin etc lib/pidp8i libexec share/boot share/media share/include share/man/man1
+INSTDIRS := bin etc lib/pidp8i libexec share/boot share/media/os8 share/include share/man/man1
 
 SIM_OBJS := \
 	obj/pidp8i/gpio-common.o \
@@ -458,7 +458,7 @@ endif
 
 instdirs:
 	@echo "Creating installation directory tree..."
-	@for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -d @prefix@/$$d ; done
+	@for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -o @INSTUSR@ -g @INSTGRP@ -d @prefix@/$$d ; done
 
 mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
