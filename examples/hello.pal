@@ -1,9 +1,10 @@
-/ HELLO - "Hello, World!" program for PAL8 assembly, which also
-/         happens to test the PRINTS routine, included inline below.
+/ HELLO - "Hello, World!" program for PAL8 assembly.
+/
+/ This also happens to test the PRINTS routine, included inline below.
 /
 / Created by Warren Young of tangentsoft.com, 2016.11.30
 /
-/ Copyright © 2016 Warren Young
+/ Copyright © 2016, 2018 Warren Young
 /
 / Permission is hereby granted, free of charge, to any person obtaining a
 / copy of this software and associated documentation files (the "Software"),
@@ -51,23 +52,21 @@ HWSTR,	110; 105; 114; 114; 117;	/ HELLO
 
 //// PRINTS ////////////////////////////////////////////////////////////
 
-PRINTS,0
+TYPE,   0		/ helper routine for sending a single character
+	TSF
+	JMP .-1
+	TLS
+	CLA
+	JMP I TYPE
+
+SADDR=10		/ autoinc register for walking the string
+PRINTS, 0
 	DCA SADDR	/ save AC as string address
-PSNEXT,	TAD I SADDR	/ load next character
+PSNEXT, TAD I SADDR	/ load next character
 	SNA
 	JMP I PRINTS	/ found the null terminator; leave
-
-	TSF		/ wait for terminal to be ready
-	JMP .-1
-	TLS		/ write character to the terminal
-
-	CLA		/ increment string address pointer
-	TAD SADDR
-	IAC
-	DCA SADDR
-		
+	JMS TYPE	/ print that character
 	JMP PSNEXT	/ look at next character
-SADDR,	0
 
 
 //// END ///////////////////////////////////////////////////////////////
