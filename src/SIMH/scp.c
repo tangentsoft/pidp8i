@@ -276,6 +276,7 @@
 
 #ifdef PIDP8I
 #include <pidp8i.h>
+int use_pidp8i_extensions = 1;
 #endif
 
 #ifndef MAX
@@ -2277,7 +2278,8 @@ t_bool lookswitch;
 t_stat stat;
 
 #ifdef PIDP8I
-if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
+if (strstr (argv[0], "pidp8i-sim") == 0) use_pidp8i_extensions = 0;
+else if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
 #endif
 
 #if defined (__MWERKS__) && defined (macintosh)
@@ -2434,7 +2436,7 @@ fclose (stdnul);                                        /* close bit bucket file
 free (targv);                                           /* release any argv copy that was made */
 
 #ifdef PIDP8I
-stop_pidp8i_gpio_thread ();
+if (use_pidp8i_extensions) stop_pidp8i_gpio_thread ();
 #endif
 
 return 0;

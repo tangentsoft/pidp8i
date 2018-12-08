@@ -397,6 +397,18 @@ extern display display_bufs[2];
 memset (display_bufs, 0, sizeof(display_bufs));
 static size_t skip_count, dither, inst_count;
 skip_count = dither = inst_count = 0;
+
+// Copy a global flag set by main() to control whether we run the GPIO
+// stuff based on what name this program was called by.  We reference it
+// this way to clue the compiler into the fact that it doesn't change
+// once set: tests based on a stack constant are easier to optimize than
+// those involving a global variable (!) imported from another module.
+//
+// This flag can also be disabled if the GPIO thread is started but it
+// fails to attach the resources it needs.  No point doing any of the
+// work to feed the GPIO thread if it failed to start.
+extern int use_pidp8i_extensions;
+const int pidp8i_gpio = use_pidp8i_extensions && pidp8i_gpio_present;
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -428,12 +440,14 @@ while (reason == 0) {                                   /* loop until halted */
             //
             // We're passing IR for the MB line on purpose.  MB doesn't
             // have the correct value at this point.
-            set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF, SC,
-                    int_req, Pause);
+            if (pidp8i_gpio) {
+                set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF,
+                    SC, int_req, Pause);
 
-            // Also copy SR hardware value to software register in case
-            // the user tries poking at it from the sim> prompt.
-            SR = get_switch_register();
+                // Also copy SR hardware value to software register in
+                // case the user tries poking at it from the sim> prompt.
+                SR = get_switch_register();
+                }
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
             break;
             }
@@ -441,8 +455,8 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-    switch (handle_flow_control_switches(M, &PC, &SteadyMA, &MB, &LAC,
-            &IF, &DF, &int_req)) {
+    switch (pidp8i_gpio ? handle_flow_control_switches(M, &PC, &SteadyMA,
+            &MB, &LAC, &IF, &DF, &int_req) : pft_normal) {
         case pft_stop:
             // Tell the SIMH event queue to keep running even though
             // we're stopped.  Without this, it will ignore Ctrl-E
@@ -1053,7 +1067,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             else {
                 if (IR & 04) {                          /* OSR */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-                    SR = get_switch_register();         /* get current SR */
+                    if (pidp8i_gpio) SR = get_switch_register();  /* get current SR */
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                     LAC = LAC | SR;
                     }
@@ -1543,7 +1557,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // module and try to get GCC to inline it: that's good for a 1 MIPS
     // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
 
-    if (++skip_count >= (max_skips - dither)) {
+    if (pidp8i_gpio && (++skip_count >= (max_skips - dither))) {
         // Save skips to inst counter and reset
         inst_count += skip_count;
         skip_count = 0;
@@ -1576,7 +1590,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 //
 // If instead we're leaving for a simulator pause, as with a Ctrl-E
 // escape, leave the LEDs alone, so user can see the CPU's paused state.
-if (reason == SCPE_STOP && pidp8i_gpio_present) {
+if (pidp8i_gpio && reason == SCPE_STOP) {
     turn_off_pidp8i_leds ();
     }
 /* ---PiDP end---------------------------------------------------------------------------------------------- */

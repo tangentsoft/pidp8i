@@ -356,6 +356,7 @@ install: all instdirs
 	@test -e @MEDIADIR@/os8/local.tu56 && \
 		echo "Skipping media image and SIMH boot script reinstall." || \
 		$(MAKE) mediainstall
+	ln -f @prefix@/bin/pidp8i-sim @prefix@/bin/pdp8  # run w/o PiDP-8/I extensions
 
 	@# If this is a Debian-type system, install needed helper programs
 	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
