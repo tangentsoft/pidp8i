@@ -332,7 +332,7 @@ endif
 install: all instdirs
 	@echo Installing to @prefix@...
 
-	@# Install files into those dirs and set their perms
+	@# Install most bin/* stuff and set their perms
 	@for f in $(BINS) ; do \
 		dest=@prefix@/$$f ; \
 		echo "Installing binary $$dest..." ; \
@@ -439,7 +439,7 @@ endif
 	@@INSTALL@ -m 644 @srcdir@/src/palbart/palbart.1 @prefix@/share/man/man1
 
 	@# Install os8-run and its dependencies
-	@echo "Installing os8run..."
+	@echo "Installing os8-run..."
 	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8RUN) @prefix@/bin
 	@( for src in $(OS8RUN_PY_ALL) ; do \
 		test -e $$src || src=@srcdir@/$$src ; \
@@ -503,7 +503,7 @@ test-os8-run:
 endif
 
 test-tmp-tools:
-	@echo "Installing os8run dependencies..."
+	@echo "Installing os8-run dependencies..."
 	@( for src in $(OS8RUN_PY_ALL) ; do \
 		test -e $$src || src=@srcdir@/$$src ; \
 		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
