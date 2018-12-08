@@ -500,7 +500,7 @@ simh-update simh-update-f:
 # were installed at configure time.
 ifeq (@CAN_TEST_OS8_RUN@, 1)
 test-os8-run:
-	tools/test-os8-run
+	tools/test-os8-run -g && tools/test-os8-run -e
 endif
 
 test-tmp-tools:
