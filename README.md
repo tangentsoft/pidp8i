@@ -656,14 +656,6 @@ files:
     boots from, which in turn modifies this media image file out in the
     host operating environment.
 
-    There is an important exception here: when upgrading from v20170404
-    to v20171222 or newer, the old `os8.rk05` and `os8v3d-*.rk05`
-    disk images will be left untouched per the above, but because
-    `v3d*.rk05` does not exist yet, those will be copied alongside
-    the old images. However, the next item still holds, so that the
-    simulator will continue to use your prior disk image because it
-    will be booted by the preexisting scripts.
-
 2.  **The PDP-8 simulator configuration files**, installed as
     `$prefix/share/boot/*.script`, which may similarly have local
     changes, and thus be precious to you.
