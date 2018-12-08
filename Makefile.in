@@ -182,7 +182,7 @@ ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
 
-TEST_TMP_BINS = bin/ptp2txt bin/pidp8i-sim bin/os8-run
+TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
 LIBS = -lm -ldl -lpthread
 
