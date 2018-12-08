@@ -18,24 +18,27 @@
 
     *   Replaced the hand-maintained `media/os8/os8.tu56` OS/8 V3D TU56
         tape image used by boot option IF=3 with an `os8-run` script
-        that's run at build time to generate a similar tape image from
-        pristine, curated source media, just like we did for the RK05
-        media in the prior release.
+        that's run at build time to generate a series of four similar
+        tape images from pristine, curated source media, just like
+        we did for the RK05 media in the prior release.
 
-        You have two new options for this generated OS/8 boot tape:
+        These four tapes are the result of a 2×2 matrix of choices:
 
-        *   You can ask to have it built with OS/8 V3F instead of V3D.
-            This may be the first time that V3F was ever easily available to
-            SIMH users.  Previously, you had to assemble it from pieces
-            found all over the Internet.
+        *   You can ask to have the IF=3 boot option use the OS/8 V3F
+            tape instead of the OS/8 V3D default.  Both versions get
+            built, always, but only one gets to be the boot tape for
+            this option.  This may be the first time that V3F was
+            ever easily available to SIMH users.  Previously, you
+            had to assemble it from pieces found all over the Internet.
 
             TODO: Briefly list the differences between V3D and V3F.
 
             (Bootable V3F RK05 media are planned for a future release.)
 
-        *   OS/8 is configured to use the TC08 driver by default now,
-            but you have the option to switch it back to the prior
-            release's TD8E default.
+        *   You can also select whether the IF=3 boot option uses
+            the boot tape configured for a PDP-8 with the TD8E tape
+            controller instead of the default, which assumes a TC08.
+            The prior release was hard-coded for the TD8E.
 
             This new driver is more efficient and it will allow you to
             copy the medium image to an actual DECtape and boot it on a
