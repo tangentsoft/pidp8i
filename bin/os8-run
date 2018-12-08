@@ -188,12 +188,18 @@ def main ():
     print "options_enabled" + str(options_enabled)
     print "options_disabled" + str(options_disabled)
   
-  # Log SIMH and OS/8 output to a file by default, but send it to the
-  # console instead of the progress messages if -v was given using the
-  # trick from https://stackoverflow.com/questions/21239338
+  # Append SIMH and OS/8 output to a file by default.
+  #
+  # We append because we're run twice in each test directory via the
+  # os8-sys Makefile target called by test-os8-run, once for the "dist"
+  # media and once for the actual RK05 bootable media.  So, the second
+  # run must append its logs to the first run's log file.
+  #
+  # Send the log info to the console instead of the progress messages if
+  # -v was given.  See https://stackoverflow.com/questions/21239338
   s = simh (dirs.build, True)
   if VERBOSE: s.verbose = True
-  s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'w') \
+  s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'a') \
       if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
 
   os8 = os8script (s, options_enabled, options_disabled, verbose=VERBOSE, debug=DEBUG)
