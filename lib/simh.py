@@ -6,7 +6,8 @@
 #
 #   See ../doc/class-simh.md for a usage tutorial.
 #
-# Copyright © 2017 by Jonathan Trites, William Cattey, and Warren Young.
+# Copyright © 2017 by Jonathan Trites, © 2017-2018 by William Cattey
+# and Warren Young.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -40,6 +41,7 @@ import subprocess
 import tempfile
 import time
 import re
+import sys
 
 import pidp8i
 
@@ -158,17 +160,18 @@ class simh:
 
 
   #### ctor ############################################################
-  # The first parameter must be given as the parent of bin/pidp8i-sim.
+  # basedir is the parent of bin/{pdp8,pidp8i-sim}.
   #
-  # The second defaults to false, meaning that a failure to lock the
-  # GPIO for the caller's exclusive use is a fatal error.  If you pass
-  # True instead, we just complain if the GPIO is already locked and
-  # move on.  This tolerant mode is appropriate for programs that need
-  # the simulator alone, not actually the PiDP-8/I front panel display.
+  # Setting the skip_gpio flag to True causes us to use bin/pdp8 instead
+  # of bin/pidp8i-sim, which runs the simulator with the PiDP-8/I GPIO 
+  # thread disabled.  You might do this because you don't need any front
+  # panel interaction or because you know you're not running on an RPi
+  # in the first place.
   
-  def __init__ (self, basedir, ignore_gpio_lock = False):
+  def __init__ (self, basedir, skip_gpio = False):
     # Start the simulator instance
-    self._child = pexpect.spawn(basedir + '/bin/pidp8i-sim')
+    sim = 'pdp8' if skip_gpio else 'pidp8i-sim';
+    self._child = pexpect.spawn (os.path.join (basedir, 'bin', sim))
     self._valid_pip_options = ["/A", "/B", "/I"]
     self._os8_file_re = re.compile("(\S+):(\S+)?")
     self._os8_error_match_strings = []
@@ -197,13 +200,9 @@ class simh:
             pkg_resources.parse_version("4.0"))
     self._child.delaybeforesend = None if pev4 else 0
 
-    # Wait for either an error or the simulator's configuration line.
-    if not self.try_wait ('^PiDP-8/I [a-zA-Z].*\[.*\]', \
-                          'Failed to lock /dev/gpiomem', timeout = 5):
-      if ignore_gpio_lock:
-        print "WARNING: Failed to lock GPIO for exclusive use.  Won't use front panel."
-      else:
-        raise RuntimeError ('GPIO locked')
+    # Wait for the simulator's startup message.
+    if not self.try_wait ('PDP-8 simulator V.*git commit id: [0-9a-f]', 5):
+      raise RuntimeError ('Simulator failed to start')
 
 
   #### back_to_cmd ######################################################
@@ -708,11 +707,23 @@ class simh:
 
 
   #### try_wait ########################################################
-  # Wait for one of two strings to come back from SIMH, returning true
-  # if we get the first, else false.
+  # A wrapper around self._child.expect which catches exceptions and
+  # returns false on pexpect timeout.  If you pass a list instead of a
+  # string, it also returns true if the match wasn't for the first
+  # element, so you can pass [success, failure1, failure2, etc.] to
+  # check for a known-success case and one or more failure cases.
 
-  def try_wait (self, success, failure, timeout = -1):
-    return self._child.expect ([success, failure], timeout = timeout) == 0
+  def try_wait (self, matches, timeout = -1):
+    try:
+      return self._child.expect (matches, timeout = timeout) == 0
+    except pexpect.exceptions.TIMEOUT:
+      sys.stderr.write ("Exceeded " + str(timeout) + " sec timeout " +
+          "waiting for " + str(matches) + "\n")
+      return False
+    except:
+      sys.stderr.write ("Failed to match " + str(matches) + 
+          ": unknown exception.\n")
+      return False
 
 
   #### zero_core #######################################################

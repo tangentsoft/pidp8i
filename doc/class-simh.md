@@ -60,14 +60,32 @@ Python script under control of an instance of `class simh`:
 We call that instance `s` for short, because we will be calling its
 methods a lot in this script. 
 
-We pass `dirs.build` to its constructor, which tells it how to find the
-`pidp8i-sim` program, which is a version of the PDP-8 simulator from the
-SIMH project, configured and modified for the needs of the PiDP-8/I
-project. We call this the child program, which is what `class simh`
-controls from the outside.
+We pass `dirs.build` as the first parameter to the constructor, which
+tells it how to find the PDP-8 simulator program, derived from the
+code shipped on GitHub by the SIMH project, configured and modified
+for the needs of the PiDP-8/I project.  We call this the child program,
+as it is what `class simh` controls from the outside.
 
-(Currently, we don't have a way to make it use other versions of the
-SIMH `pdp8` simulator. Please send a patch if you do that.)
+There is an optional second parameter to the constructor, a Boolean
+flag that controls whether `class simh` starts the fully-featured
+PiDP-8/I simulator or falls back to something closer to the pristine
+upstream SIMH PDP-8 simulator.  By default, we do the former, so
+that the simulator updates front panel LEDs with internal simulator
+state, and toggling front panel switches affect the internal state
+of the simulator.
+
+If you don't want the PiDP-8/I GPIO thread to run while your script
+runs, pass True here instead, since this is the "skip GPIO" flag,
+and its default is therefore False.  We do that from programs like
+`os8-run` and `os8-cp` because we want them to run everywhere, even on
+an RPi while another simulator is running; we also don't want the front
+panel switches to affect these programs' operations.  If your program
+never runs on an RPi, passing True here might make it run a bit faster,
+since it doesn't try to start the useless GPIO thread, feed it data,
+or pull data is is expected to provide back into the simulator.
+
+
+## Logging
 
 The next step is to tell the `s` object where to send its logging
 output:
