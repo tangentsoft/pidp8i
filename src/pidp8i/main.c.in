@@ -1,7 +1,7 @@
 /* pidp8i.c: PiDP-8/I additions to the PDP-8 simulator
 
-   Copyright © 2015-2017 by Oscar Vermeulen, Ian Schofield, and
-   Warren Young
+   Copyright © 2015 by Oscar Vermeulen, © 2017 by Ian Schofield, and
+   © 2016-2018 by Warren Young
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -63,6 +63,49 @@ static enum {
 } insert_scp_cmd = CMD_NONE;
 
 
+//// get_this_executable_path //////////////////////////////////////////
+// Uses various non-portable tricks to come up with an absolute path to
+// the current executable.  We can't just copy argv[0] from main()
+// because that might be a path relative to a directory we aren't in any
+// more, it could be NULL, it could be entirely bogus, or it might only
+// work with our caller's non-exported PATH.
+//
+// This really only has to work on the Raspberry Pi running Raspbian,
+// since that's the only way you can get IF + SING_STEP currently.
+
+static const char* get_this_executable_path ()
+{
+    static char retpath[PATH_MAX] = { '\0' };
+
+#ifdef HAVE_DECL___PROGNAME
+    // Nonportable BSD method available here, so absolutize it.
+    return realpath (__progname, retpath);
+#else
+    // This method only works on Linux and on BSDs configured to export
+    // a Linux-compatible /proc.  It won't work on SVR4 /proc.
+    static const char* pse = "/proc/self/exe";
+    if (access (pse, R_OK) == 0) {
+        size_t rpmax = sizeof (retpath);
+        ssize_t n = readlink (pse, retpath, rpmax);
+        if (n > 0) {
+            retpath[n >= rpmax ? rpmax - 1 : n] = '\0';
+            return retpath;
+        }
+        else {
+            fprintf (stderr, "Failed to absolutize %s: %s!\n", pse,
+                    strerror(errno));
+        }
+    }
+    else {
+        fprintf (stderr, "Failed to read %s: %s!\n", pse,
+                strerror(errno));
+    }
+#endif
+
+    return 0;
+}
+
+
 //// build_pidp8i_scp_cmd //////////////////////////////////////////////
 // If insert_scp_cmd is nonzero, we return the corresponding SCP command 
 // we want run to make the simulator do something else.
@@ -75,12 +118,29 @@ char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
     else if ((insert_scp_cmd > 0) && (insert_scp_cmd <= 7)) {
         // We got one of the IF + SING_STEP combos, so restart the
         // simulator with the corresponding init script.
-        char path[256];
-        snprintf (path, sizeof (path), "@BOOTDIR@/%d.script", insert_scp_cmd);
+        char script_path[256];
+        snprintf (script_path, sizeof (script_path), "@BOOTDIR@/%d.script",
+                insert_scp_cmd);
         insert_scp_cmd = CMD_NONE;              // it's a one-shot
-        if (access(path, R_OK) == 0) {
-            snprintf (cbuf, cbufsize, "do %s", path);
-            return cbuf;
+        if (access (script_path, R_OK) == 0) {
+            // Rather than return a "do scriptname" command directly,
+            // clean up the current simulator and overwrite ourselves
+            // with a fresh simulator running the new script to ensure
+            // new script to avoid device conflicts.  For instance, if
+            // IF=0 assumes the tape device is TC08 and IF=3 TD8E, we'd
+            // get a device 77 conflict without this dance.
+            const char* self_path = get_this_executable_path ();
+            extern t_stat detach_all (int32 start, t_bool shutdown);
+            extern int use_pidp8i_extensions;
+            printf ("Relaunching %s with %s...\r\n", self_path, script_path);
+            detach_all (0, TRUE);
+            printf ("All devices detached...\r\n");
+            if (use_pidp8i_extensions) {
+                stop_pidp8i_gpio_thread ();
+                printf ("GPIO thread topped...\r\n");
+            }
+            execlp (self_path, self_path, script_path);
+            return 0;
         }
         else {
             // That boot script doesn't exist or isn't readable.
@@ -94,12 +154,12 @@ char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
             int access_errno = errno;      // preserve it from getcwd()
             char cwd[256];
             getcwd (cwd, sizeof (cwd));
-            printf ("Cannot read %s from %s: %s!\n", path, cwd,
-                    strerror (access_errno));
+            fprintf (stderr, "Cannot read %s from %s: %s!\n", script_path,
+                    cwd, strerror (access_errno));
         }
     }
     else if (insert_scp_cmd > CMD_EXIT) {
-        printf ("Invalid PiDP-8/I SCP command value %d given!\n",
+        fprintf (stderr, "Invalid PiDP-8/I SCP command value %d given!\n",
                 insert_scp_cmd);
     }
     else {
