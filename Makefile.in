@@ -677,8 +677,6 @@ libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 media/os8/init.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
 	@AUTOREMAKE@ && $(MAKE)
-media/os8/3finit.tx: $(INFILES) $(PRECIOUS_INFILES) @AUTODEPS@
-	@AUTOREMAKE@ && $(MAKE)
 
 # Also do it if the autodep tool is newer than its output, suggesting
 # that if re-run, it would generate different output.
