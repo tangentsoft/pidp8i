@@ -639,6 +639,7 @@ $(BUILDDIRS):
 
 $(SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ $^ $(LIBS)
+	ln -f bin/pidp8i-sim bin/pdp8
 
 bin/cc8: $(CC8_OBJS)
 	$(CC) -o $@ $^ $(LIBS)
