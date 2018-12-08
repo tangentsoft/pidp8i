@@ -2,23 +2,25 @@
 
 ## Introduction
 
-While we were building the `libexec/mkos8` tool, we built up a set of
-functionality for driving SIMH and OS/8 running under SIMH from the
-outside using [Python][py], a very powerful programming language well
-suited to scripting tasks. It certainly beats writing PDP-8 code to
-achieve the same ends!
+While we were building the `mkos8` tool (predecessor to
+[`os8-run`][ori]), we built a set of facilities for driving SIMH and
+OS/8 running under SIMH from the outside using [Python][py], a very
+powerful programming language well suited to scripting tasks. It
+certainly beats writing PDP-8 code to achieve the same ends!
 
-When someone on the mailing list asked for a way to automatically drive
-a demo script he'd found online, it was natural to generalize the core
-functionality of `mkos8` as a reusable Python class, then write a script
-to make use of it. The result is `class simh`, currently used by three
-different scripts, including `mkos8` and the `teco-pi-demo` demo script.
+When someone on the mailing list asked for a way to automatically
+drive a demo script he'd found online, it was natural to generalize
+the core functionality of `mkos8` as a reusable Python class, then
+write a script to make use of it. The result is `class simh`, currently
+used by six different scripts in the PiDP-8/I software distribution
+including `os8-run` and the `teco-pi-demo` demo script.
 
 This document describes how `teco-pi-demo` works, and through it, how
 `class simh` works, with an eye toward teaching you how to reuse this
 functionality for your own ends.
 
-[py]: https://www.python.org/
+[ori]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
+[py]:  https://www.python.org/
 
 
 ## Invocation
@@ -38,12 +40,6 @@ script:
 
 That adjusts the path, then imports all of the generic functionality
 from the PiDP-8/I `lib` directory into the current namespace.
-
-We do not pull the `mkos8` components into `teco-pi-demo` because they
-are intended only to be used by `libexec/mkos8`. If you find something
-in the `lib/mkos8` directory that you think is widely useful, make a
-case for it on the mailing list, and we'll see about moving it to either
-the `simh` or `pidp8i` namespace.
 
 The `sys.path.insert` business assumes that your script is installed
 into the PiDP-8/I's `bin` directory alongside `teco-pi-demo`. If you've
@@ -92,11 +88,16 @@ output:
 
     s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
 
-Contrast the corresponding line in `mkos8` which chooses whether to send
+Contrast the corresponding line in `os8-run` which chooses whether to send
 logging output to the console or to a log file:
 
-    s.set_logfile (open (dirs.log + 'mkos8-' + first_act + '.log', 'w') \
-        if progmsg else os.fdopen (sys.stdout.fileno (), 'w', 0))
+    s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'a') \
+        if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
+
+Note that this more complicated scheme appends to the log file instead
+of overwriting it because there are cases where `os8-run` gets run
+more than once with different script inputs, so we want to preserve
+the prior script outputs, not keep only the latest.
 
 
 ## Finding and Booting the OS/8 Media
@@ -104,8 +105,8 @@ logging output to the console or to a log file:
 If your program will use our OS/8 boot disk, you can find it
 programmatically by using the `dirs.os8mo` constant, which means "OS/8
 media output directory", where "output" refers to the worldview of
-`mkos8`.  Contrast `dirs.os8mi`, which points to the directory holding
-the input media for `mkos8`.
+`os8-run`.  Contrast `dirs.os8mi`, which points to the directory holding
+the input media for `os8-run`.
 
 This snippet shows how to use it:
 
@@ -186,7 +187,7 @@ While out in the SIMH context, you *could* continue to call the
 program can give it, it is best to use methods like `simh.send_cmd`
 which don't insert artificial delays.  For many programs, this
 difference won't matter, but it results in a major speed improvement in
-a program like `mkos8` which sends many SIMH and OS/8 commands
+a program like `os8-run` which sends many SIMH and OS/8 commands
 back-to-back!
 
 
@@ -235,7 +236,7 @@ point from SIMH context, which we've found through much testing is
 entirely reliable, as compared to sending a SIMH `cont` command without
 having delayed before escaping to SIMH context.
 
-`mkos8` uses this option extensively.
+`os8-run` uses this option extensively.
 
 
 ## Sending Escape Characters
@@ -256,7 +257,7 @@ better parties than I do.
 
 The above introduced you to most of the functionality of `class simh`
 used by `teco-pi-demo`, but there's more to the class than that,
-primarily because the `mkos8` script's needs are broader.  Rather than
+primarily because the `os8-run` script's needs are broader.  Rather than
 just recapitulate the class documentation here, please read through [the
 class's source code][ssc], paying particular attention to the method
 comments. It's a pretty simple class, making it a quick read.
