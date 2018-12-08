@@ -5,7 +5,7 @@
 
 The files in this directory are used during the PiDP-8/I software build
 process along with the DEC original tape images in [our parent
-directory](/files/media/os8) to build the `os8v3d-bin.rk05` disk image
+directory](/files/media/os8) to build the `v3d.rk05` disk image
 used by boot options IF=0 and IF=7.
 
 These files are here rather than one level up because they are not part

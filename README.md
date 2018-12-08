@@ -417,9 +417,9 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 *   **--disable-os8-macrel** - Leave the MACREL v2 assembler and its
     associated FUTIL V8B tool out.
 
-*   **--disable-os8-src** - Do not build the `os8v3d-src.rk05` disk
+*   **--disable-os8-src** - Do not build the `v3d-src.rk05` disk
     image from the OS/8 source tapes.  This is not controlled by
-    `--os8-minimal` because that only affects `os8v3d-bin.rk05`.
+    `--os8-minimal` because that only affects the bootable disk images.
 
 *   **--disable-os8-uwfocal** - Leave out the U/W FOCAL V4E programming
     environment normally installed to `RKA0:`.
@@ -547,10 +547,11 @@ the pieces of software on the disk worked properly with the other parts.
 It was also a reflection of the time it was created and used out in the
 world, which was not always what we would wish to use today.
 
-In late 2017 [several of us][aut] created the `mkos8` tool, which takes
-the `--*-os8-*` options documented above and generates the
-`os8v3d-*.rk05` RK05 disk image files with your chosen configuration
-options.
+In late 2017 [several of us][aut] created the `mkos8` tool, which was
+replaced during 2018 by Bill Cattey with the `os8-run` interpreter
+and its stock scripts. The `--*-os8-*` options documented above get
+passed into `os8-run` during the PiDP-8/I software build process,
+which controls how it generates the `v3d*.rk05` RK05 disk image files.
 
 This set of disk images entirely replaces the old `os8.rk05` disk
 image, in that all features of the old disk image are still available,
@@ -561,14 +562,15 @@ from the way they used to be on the old disk. Mostly, though, the
 new disk images are simply more functional than the old ones.
 
 If you wish to know the full details of how these disk images are
-created, the best documentation so far is [the source code for the
-`mkos8` script][mkos8] and the [documentation for `class simh`][cs].
+created, see the documentation for [`os8-run`][ori] and that for
+[`class simh`][cs].
 
 The remainder of this section describes some aspects of these disk
 images which are not clear from the descriptions of the `--*-os8-*`
 configuration options above.
 
 [aut]: https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
+[ori]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
 
 
 ### Baseline
@@ -577,9 +579,9 @@ The baseline for the bootable OS/8 disk images comes from a set of
 DECtapes distributed by Digital Equipment Corporation which are now
 included with the PiDP-8/I software; see the [`media/os8/*.tu56`
 files][os8mf]. From these files and your configuration options, the
-`mkos8` script creates the baseline `os8v3d-bin.rk05` disk image.
+`os8-run` script creates the baseline `v3d-dist.rk05` disk image.
 
-The default build creates a complete OS/8 system including `BUILD`
+The default build creates a complete OS/8 V3D system including `BUILD`
 support, FORTRAN IV, MACREL v2, and more.
 
 
@@ -621,10 +623,9 @@ You can read more about this [in the wiki][oce].
 
 ### Patches
 
-The build process creates a baseline disk image called `v3d-dist.rk05`.
-This is considered a read-only master. Then a copy is made called
-`v3d.rk05`. This is the default OS/8 rk05 image assigned to the IF=0 and IF=7
-boot options.
+The `v3d-dist.rk05` disk image referenced above is considered a
+read-only master. A copy is made called `v3d.rk05`. This is the
+default OS/8 rk05 image assigned to the IF=0 and IF=7 boot options.
 
 In keeping with the standards of good systm management
 this image incorporates all mandatory patches, as well as
@@ -656,11 +657,12 @@ files:
     host operating environment.
 
     There is an important exception here: when upgrading from v20170404
-    to v20171222 or newer, the old `os8.rk05` disk image will be left
-    untouched per the above, but because `os8v3d-*.rk05` does not exist
-    yet, those will be copied alongside `os8.rk05`. However, the next
-    item still holds, so that the simulator will continue to use
-    `os8.rk05` because it will be booted by the preexisting scripts.
+    to v20171222 or newer, the old `os8.rk05` and `os8v3d-*.rk05`
+    disk images will be left untouched per the above, but because
+    `v3d*.rk05` does not exist yet, those will be copied alongside
+    the old images. However, the next item still holds, so that the
+    simulator will continue to use your prior disk image because it
+    will be booted by the preexisting scripts.
 
 2.  **The PDP-8 simulator configuration files**, installed as
     `$prefix/share/boot/*.script`, which may similarly have local

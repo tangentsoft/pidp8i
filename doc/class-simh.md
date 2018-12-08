@@ -109,7 +109,7 @@ the input media for `mkos8`.
 
 This snippet shows how to use it:
 
-    rk = os.path.join (dirs.os8mo, 'os8v3d-bin.rk05')
+    rk = os.path.join (dirs.os8mo, 'v3d.rk05')
     if not os.path.isfile (rk):
         print "Could not find " + rk + "; OS/8 media not yet built?"
         exit (1)

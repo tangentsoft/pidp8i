@@ -3,14 +3,18 @@
 
 ## Bootable Systems
 
-`os8v3d-bin.rk05` — Bootable OS/8 system made from the binary DECtapes
+`v3d.rk05` — Bootable OS/8 system made from the binary DECtapes
 of OS/8 V3D in the Willem van der Mark Archives described below plus
 other tapes in the [`subsys` subdirectory](/file/media/os8/subsys)
 during the PiDP-8/I software build process. This is the disk image used
 by boot options IF=0 and IF=7. See the [top-level `README.md`
 file][tlrm] for instructions on controlling what goes into this image.
 
-`v3*.tu56` — Bootable OS/8 DECtape image used by boot option IF=3.
+`v3d-dist.rk05` — Pristine baseline for the above. Technically you can
+boot and use this, but we prefer that this remains untouched, so it can
+be reused by the build process to save time during repeated rebuilds.
+
+`v3[df]-*.tu56` — Bootable OS/8 DECtape image used by boot option IF=3.
 Primarily intended to demonstrate the uncommon "boot and run from tape"
 experience offered by early DEC systems. There will usually be only one
 of these files, with its name indicating whether it contains an OS/8 V3D
@@ -22,7 +26,7 @@ interface.
 
 ## Data Disks
 
-`os8v3d-src.rk05` — OS/8 Source RK05 pack made from the source DECtapes
+`v3d-src.rk05` — OS/8 Source RK05 pack made from the source DECtapes
 of OS/8 V3D in the Willem van der Mark Archives, described below. This
 is not a bootable OS/8 system. It is merely a convenience for use with a
 bootable OS/8 system, so you can avoid mounting the seven "Source"
@@ -30,7 +34,7 @@ distribution tapes in succession.
 
 If you give the following command to SIMH:
 
-    att rk1 media/os8/os8v3d-src.rk05
+    att rk1 media/os8/v3d-src.rk05
    
 ...this disk will appear as RKA1: and RKB1: under OS/8.
 

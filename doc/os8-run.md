@@ -172,7 +172,7 @@ being sent to the running system.
 In `7b` mode, all characters are passed to OS/8 without case conversion.
 
 The current OS/8 default OS/8 system image run with this software distribution
-is called `os8v3d-patched.rk05`. It is configured to be as modern as possible.
+is called `v3d.rk05`. It is configured to be as modern as possible.
 It contains patches to force lower case characters typed to the Keyboard Monitor
 to upper case so they will be understood.  A patch is made to OS/8
 BASIC to do the same thing.  However many programs available for use under
@@ -181,7 +181,7 @@ your keyboard.
 
 All of the example scripts specify OS/8 commands in upper case.  Such
 commands could have been specified in lower case, and would work just
-fine if run in the default `os8v3d-patched.rk05` system image.
+fine if run in the default `v3d.rk05` system image.
 However, since a basic use case of `os8-run` is to be able to run
 scripts against arbitrary system images (which probably will not have
 patches to deal with lower case), use of lower case for OS/8 commands,
@@ -216,7 +216,7 @@ Example 1: Begin work on a new RK05 image that gets an updated version
 of the OS/8 `BUILD` utility from POSIX source. (Perhaps it was found
 on the net.)
 
-    mount rk0 $bin/os8v3d-patched.rk05 required
+    mount rk0 $bin/v3d.rk05 required
     mount rk1 $bin/os8-v3f-build.rk05 preserve
     
     cpto $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
@@ -477,10 +477,10 @@ such actions might not be active until farther down in a complex script.
  
 #### `mount` Examples
 
-Mount the `os8v3d-patched.rk05` image, to be found in in the install directory
+Mount the `v3d.rk05` image, to be found in in the install directory
 for runable image files, which must exist, on SIMH `rk0`.
 
-    mount rk0 $bin/os8v3d-patched.rk05 required
+    mount rk0 $bin/v3d.rk05 required
 
 Mount the `advent.tu56` image, to be found in the media input directory,
 which must exist, on SIMH `dt1` in read only mode, which will protect
@@ -600,9 +600,10 @@ than the `CTRL/C` resume documented above.
 The most common activity for `os8-run` is to modify a system image.
 
 However, we often want to keep the original and modify a copy.
-For example, `os8v3d-patched.rk05`, a commonly used system image comes
-from modifying `os8v3d-bin.rk05`.  We keep the latter around so we
-don't have to keep rebuilding the baseline.
+For example, the PiDP-8/I software build system creates the default
+OS/8 RK05 disk image `v3d.rk05`, which in turn is a modified version
+of `v3d-dist.rk05`.  We keep the latter around so we don't have to
+keep rebuilding the baseline.
 
 Instead of requiring some external caller to carefully preserve the
 old file, the "make a copy with arbitrary name" functionality was
@@ -901,7 +902,7 @@ implement:  We normally apply patches to the version of `FUTIL` that
 came on the OS/8 v3d distribution DECtapes.  We also have an add-on
 for the `MACREL` assembler.  That add-on contains a version of `FUTIL`
 with updates required to work with binaries assembled with `MACREL` v2.
-The `os8v3d-patch.mkos8` script needed to either avoid trying to
+The `v3d-rk05.os8` script needed to either avoid trying to
 patch an updated `FUTIL` if `MACREL` was present, or to perform the
 patching action if `MACREL` was not present.
 
