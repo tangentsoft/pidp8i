@@ -116,6 +116,11 @@
     halted, so we might as well drop you down to the SIMH command
     prompt, which offers similar facilities.
 
+    If you install the PiDP-8/I software on a systemd-based Linux
+    system, if you say `pidp8i start` it will notice that there is no
+    PiDP-8/I front panel and call `pdp8` instead of `pidp8i-sim` for
+    you, since there would be no point in starting the GPIO thread.
+
 *   The Python `simh` API now supports automatic transitions between
     OS/8 and SIMH context, largely removing the need to manage this
     manually as in the prior release.  This is largely Bill Cattey's
