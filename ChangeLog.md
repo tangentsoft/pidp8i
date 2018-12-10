@@ -212,18 +212,22 @@
 
     *   Applied same high-bit improvement as for `hello.pal`.
 
-*   Updated SIMH to commit ID XXXXXX, with the following effects on the
-    PiDP-8/I:
+*   Updated SIMH to commit ID 86294db3 (2018-11-25).  There have been no
+    changes to the PDP-8 simulator since our prior release, but there
+    has been a lot of improvements to the SIMH core mechanisms.  Major
+    sections of note:
 
-    *   Big improvements to the core SIMH timing mechanisms which
-        improve the startup behavior of the PDP-8 simulator.  Previously
-        you could see large swings in simulation speed until the clock
-        settled down, which was especially slow at the low clock rates
-        popular among blinkenlights fans.
+    *   **SCP** (the Ctrl-E command processor) — This piece of SIMH has
+        seen a lot of work since our last release.  One new feature that
+        stood out to me is that there is now an "ELSE" command to go
+        with the preexisting "IF" command, which is especially useful in
+        SIMH boot scripts.
 
-    *   Fixes upstream bug #545 affecting PDP-8 serial console handling.
+    *   **Timing** — We expect the improvements here to improve the way
+        throttling works, especially when changing between "normal" IPS
+        rates and the very low rates favored for blinkenlights demos.
 
-    *   TODO: Update again and summarize the further diffs since 2017.
+    *   **Terminal Muxer** — Lots of small improvements.
 
 *   Minor updates to the CC8 C compilers and the examples sent in by Ian
     Schofield.
