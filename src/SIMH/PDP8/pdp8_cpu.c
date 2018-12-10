@@ -402,7 +402,7 @@ skip_count = dither = inst_count = 0;
 // stuff based on what name this program was called by.  We reference it
 // this way to clue the compiler into the fact that it doesn't change
 // once set: tests based on a stack constant are easier to optimize than
-// those involving a global variable (!) imported from another module.
+// those involving a non-const imported from another module.
 //
 // This flag can also be disabled if the GPIO thread is started but it
 // fails to attach the resources it needs.  No point doing any of the
