@@ -1073,9 +1073,18 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                     }
                 if (IR & 02) {                          /* HLT */
 //--- PiDP change-----------------------------------------------------------------------
-                    // reason = STOP_HALT;
-                    extern int swStop;
-                    swStop = 1;
+                    if (pidp8i_gpio) {
+                        // We've got a front panel, so treat HLT the
+                        // same as pressing the STOP key: CONT resumes.
+                        extern int swStop;
+                        swStop = 1;
+                        }
+                    else {
+                        // Fall back to pure SIMH behavior: drop to sim>
+                        // prompt where user can poke at the simulator
+                        // and resume with a "cont" command.
+                        reason = STOP_HALT;
+                        }
                     }
 //--- end of PiDP change----------------------------------------------------------------
                 }
