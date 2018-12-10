@@ -99,6 +99,23 @@
     filesystem and then comparing the files individually on the host.
     Imagine your own possibilities!
 
+*   Since the beginning of this project, we've called our modified
+    version of the SIMH PDP-8 simulator `pidp8i-sim`.  With this
+    release, we hard link that program to `pdp8`, the simulator's name
+    in the upstream distribution of SIMH.  When called by that name, our
+    simulator suppresses all of the PiDP-8/I extensions.
+
+    Calling the simulator this way also reverts a PiDP-8/I specific
+    change to the way the HLT instruction ("halt") is processed.  In a
+    real PDP-8/I, executing a HLT instruction stops the prcoessor just
+    as if the user had pressed the STOP key, so we do the same in
+    `pidp8i-sim`.  When you call the simulator as "`pdp8`", you are
+    telling it there is no front panel and thus have no way to continue
+    using the simulator.  That is, there are no CONT, DEP, or EXAM keys
+    to use as input and no indicator lamps to use as output while
+    halted, so we might as well drop you down to the SIMH command
+    prompt, which offers similar facilities.
+
 *   The Python `simh` API now supports automatic transitions between
     OS/8 and SIMH context, largely removing the need to manage this
     manually as in the prior release.  This is largely Bill Cattey's
@@ -164,10 +181,36 @@
 *   The `tools/mkbootscript` program which translates palbart assembly
     listing files into SIMH boot scripts was only writing a SIMH "dep"
     command for the first word.  This affected some of the tty output
-    from `hello.script` and `pep001.script`.  Since `examples/hello.pal`
-    is nothing *but* text output, it didn't behave correctly at all.
+    from `hello.script` and `pep001.script`.
 
     While in there, made several other improvements to the script.
+
+*   Fixed and improved the `examples/hello.pal` program:
+
+    *   It was skipping the first character ("H") in its output message.
+
+    *   Set the 8th bit set on the ASCII output bytes in case you use a
+        Teletype Model 33 ASR or similar, which requires mark parity.
+
+    *   It now uses the same optimized `PRINTS` routine as `pep001.pal`,
+        which we're also shipping as `examples/routines/prints.pal`.
+
+    Between these weakenesses and the `mkbootscript` bug fixed above,
+    this example was entirely broken since being shipped.  Our thanks
+    for the tests and diagnosis of these problems go to Greg Christie
+    and Bill Cattey.
+
+*   Improved `examples/pep001.pal`:
+
+    *   This program no longer gets stuck in the TSF loop on startup if
+        you run it with the terminal unready for output.  The terminal
+        would typically be ready when launching this program from within
+        OS/8, but it could get stuck in other conditions, such as when
+        running it under a freshly started simulator:
+
+             $ bin/pdp8 boot/pep001.script
+
+    *   Applied same high-bit improvement as for `hello.pal`.
 
 *   Updated SIMH to commit ID XXXXXX, with the following effects on the
     PiDP-8/I:
