@@ -499,7 +499,7 @@ first letter of any `OUTPUT` sub-command.
 In later versions of U/W FOCAL, they added a third level to some
 commands. We have `OPEN RESTART READ` and `OPEN RESUME INPUT`, for
 example. It may help to abbreviate the commands, as the first letter of
-each word is all that really matter: `O R R` is clearly not the same as
+each word is all that really matters: `O R R` is clearly not the same as
 `O R I`.
 
 There are other examples of this, such as `LIBRARY` and `LIST`. It is
