@@ -224,9 +224,9 @@ MAX,    999		/ check natural numbers CURR to MAX; must be < 2048!
 STMAX,  1024		/ subtotal max; avoids overflow of 12-bit signed int
 
 	OCTAL
-CRLF,   15;12;0		/ ASCII character values, zero-terminated
-PLUS,   40;53;40;0
-ANSWER, 101;116;123;127;105;122;72;40;0
+CRLF,   215;212;0	/ ASCIIZ character strings, 8th bit set
+PLUS,   240;253;240;0
+ANSWER, 301;316;323;327;305;322;272;240;0
 
 
 //// END ///////////////////////////////////////////////////////////////
