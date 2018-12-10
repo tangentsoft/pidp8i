@@ -44,11 +44,11 @@ typedef uint32          t_lba;                          /* disk logical block ad
 #define DKUF_V_WLK      (UNIT_V_UF + 0)                 /* write locked */
 #define DKUF_V_FMT      (UNIT_V_UF + 1)                 /* disk file format */
 #define DKUF_W_FMT      2                               /* 2b of formats */
-#define DKUF_N_FMT      (1u << DKUF_W_FMT)              /* number of formats */
 #define DKUF_M_FMT      ((1u << DKUF_W_FMT) - 1)
-#define DKUF_F_STD       0                              /* SIMH format */
-#define DKUF_F_RAW       1                              /* Raw Physical Disk Access */
-#define DKUF_F_VHD       2                              /* VHD format */
+#define DKUF_F_AUTO      0                              /* Auto detect format format */
+#define DKUF_F_STD       1                              /* SIMH format */
+#define DKUF_F_RAW       2                              /* Raw Physical Disk Access */
+#define DKUF_F_VHD       3                              /* VHD format */
 #define DKUF_V_UF       (DKUF_V_FMT + DKUF_W_FMT)
 #define DKUF_WLK        (1u << DKUF_V_WLK)
 #define DKUF_FMT        (DKUF_M_FMT << DKUF_V_FMT)
@@ -94,6 +94,7 @@ t_offset sim_disk_size (UNIT *uptr);
 t_bool sim_disk_vhd_support (void);
 t_bool sim_disk_raw_support (void);
 void sim_disk_data_trace (UNIT *uptr, const uint8 *data, size_t lba, size_t len, const char* txt, int detail, uint32 reason);
+t_stat sim_disk_test (DEVICE *dptr);
 
 #ifdef  __cplusplus
 }

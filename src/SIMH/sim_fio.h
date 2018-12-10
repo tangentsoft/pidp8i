@@ -41,6 +41,9 @@ extern "C" {
 #define fxread(a,b,c,d)         sim_fread (a, b, c, d)
 #define fxwrite(a,b,c,d)        sim_fwrite (a, b, c, d)
 
+#if ((defined (__linux) || defined (__linux__)) && (defined (__ANDROID_API__) && (__ANDROID_API__ < 24)))
+#define DONT_DO_LARGEFILE 1
+#endif
 int32 sim_finit (void);
 #if (defined (__linux) || defined (__linux__) || defined (__hpux) || defined (_AIX) ||         \
      (defined (VMS) && (defined (__ALPHA) || defined (__ia64)) && (__DECC_VER >= 60590001)) || \
@@ -67,12 +70,24 @@ t_offset sim_ftell (FILE *st);
 t_offset sim_fsize_ex (FILE *fptr);
 t_offset sim_fsize_name_ex (const char *fname);
 t_stat sim_copyfile (const char *source_file, const char *dest_file, t_bool overwrite_existing);
+char *sim_filepath_parts (const char *pathname, const char *parts);
+char *sim_getcwd (char *buf, size_t buf_size);
+#include <sys/stat.h>
+typedef void (*DIR_ENTRY_CALLBACK)(const char *directory, 
+                                   const char *filename,
+                                   t_offset FileSize,
+                                   const struct stat *filestat,
+                                   void *context);
+t_stat sim_dir_scan (const char *cptr, DIR_ENTRY_CALLBACK entry, void *context);
+
 void sim_buf_swap_data (void *bptr, size_t size, size_t count);
 void sim_buf_copy_swapped (void *dptr, const void *bptr, size_t size, size_t count);
 const char *sim_get_os_error_text (int error);
 typedef struct SHMEM SHMEM;
 t_stat sim_shmem_open (const char *name, size_t size, SHMEM **shmem, void **addr);
 void sim_shmem_close (SHMEM *shmem);
+int32 sim_shmem_atomic_add (int32 *ptr, int32 val);
+t_bool sim_shmem_atomic_cas (int32 *ptr, int32 oldv, int32 newv);
 
 extern t_bool sim_taddr_64;         /* t_addr is > 32b and Large File Support available */
 extern t_bool sim_toffset_64;       /* Large File (>2GB) file I/O support */

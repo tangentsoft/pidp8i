@@ -212,7 +212,7 @@
 
     *   Applied same high-bit improvement as for `hello.pal`.
 
-*   Updated SIMH to commit ID XXXXXX, with the following effects on the
+*   Updated SIMH to commit ID 86294db3, with the following effects on the
     PiDP-8/I:
 
     *   Big improvements to the core SIMH timing mechanisms which

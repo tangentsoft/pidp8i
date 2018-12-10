@@ -125,6 +125,14 @@ extern int sim_vax_snprintf(char *buf, size_t buf_size, const char *fmt, ...);
 #include <limits.h>
 #include <ctype.h>
 
+#ifndef EXIT_FAILURE
+#define EXIT_FAILURE 1
+#endif
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS 0
+#endif
+
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
@@ -239,10 +247,12 @@ typedef unsigned long           t_uint64;
 typedef t_int64         t_svalue;                       /* signed value */
 typedef t_uint64        t_value;                        /* value */
 #define T_VALUE_MAX     0xffffffffffffffffuLL
+#define T_SVALUE_MAX    0x7fffffffffffffffLL
 #else                                                   /* 32b data */
 typedef int32           t_svalue;
 typedef uint32          t_value;
 #define T_VALUE_MAX     0xffffffffUL
+#define T_SVALUE_MAX    0x7fffffffL
 #endif                                                  /* end 64b data */
 
 #if defined (USE_INT64) && defined (USE_ADDR64)         /* 64b address */
@@ -405,8 +415,9 @@ typedef uint32          t_addr;
 #define SCPE_EXPECT     (SCPE_BASE + 45)                /* expect matched */
 #define SCPE_AMBREG     (SCPE_BASE + 46)                /* ambiguous register */
 #define SCPE_REMOTE     (SCPE_BASE + 47)                /* remote console command */
+#define SCPE_INVEXPR    (SCPE_BASE + 48)                /* invalid expression */
 
-#define SCPE_MAX_ERR    (SCPE_BASE + 47)                /* Maximum SCPE Error Value */
+#define SCPE_MAX_ERR    (SCPE_BASE + 48)                /* Maximum SCPE Error Value */
 #define SCPE_KFLAG      0x10000000                      /* tti data flag */
 #define SCPE_BREAK      0x20000000                      /* tti break flag */
 #define SCPE_NOMESSAGE  0x40000000                      /* message display supression flag */
@@ -418,6 +429,8 @@ typedef uint32          t_addr;
 #define PV_RSPC         1                               /* right, space fill */
 #define PV_RCOMMA       2                               /* right, space fill. Comma separate every 3 */
 #define PV_LEFT         3                               /* left justify */
+#define PV_RCOMMASIGN   6                               /* right, space fill. Comma separate every 3 treat as signed */
+#define PV_LEFTSIGN     7                               /* left justify treat as signed */
 
 /* Default timing parameters */
 
@@ -512,11 +525,11 @@ struct DEVICE {
 #define DEV_V_DYNM      2                               /* mem size dynamic */
 #define DEV_V_DEBUG     3                               /* debug capability */
 #define DEV_V_TYPE      4                               /* Attach type */
-#define DEV_S_TYPE      3                               /* Width of Type Field */
-#define DEV_V_SECTORS   7                               /* Unit Capacity is in 512byte sectors */
-#define DEV_V_DONTAUTO  8                               /* Do not auto detach already attached units */
-#define DEV_V_FLATHELP  9                               /* Use traditional (unstructured) help */
-#define DEV_V_NOSAVE    10                              /* Don't save device state */
+#define DEV_S_TYPE      4                               /* Width of Type Field */
+#define DEV_V_SECTORS   8                               /* Unit Capacity is in 512byte sectors */
+#define DEV_V_DONTAUTO  9                               /* Do not auto detach already attached units */
+#define DEV_V_FLATHELP  10                              /* Use traditional (unstructured) help */
+#define DEV_V_NOSAVE    11                              /* Don't save device state */
 #define DEV_V_UF_31     12                              /* user flags, V3.1 */
 #define DEV_V_UF        16                              /* user flags */
 #define DEV_V_RSV       31                              /* reserved */
@@ -536,8 +549,9 @@ struct DEVICE {
 #define DEV_DISK        (1 << DEV_V_TYPE)               /* sim_disk Attach */
 #define DEV_TAPE        (2 << DEV_V_TYPE)               /* sim_tape Attach */
 #define DEV_MUX         (3 << DEV_V_TYPE)               /* sim_tmxr Attach */
-#define DEV_ETHER       (4 << DEV_V_TYPE)               /* Ethernet Device */
-#define DEV_DISPLAY     (5 << DEV_V_TYPE)               /* Display Device */
+#define DEV_CARD        (4 << DEV_V_TYPE)               /* sim_card Attach */
+#define DEV_ETHER       (5 << DEV_V_TYPE)               /* Ethernet Device */
+#define DEV_DISPLAY     (6 << DEV_V_TYPE)               /* Display Device */
 #define DEV_TYPE(dptr)  ((dptr)->flags & DEV_TYPEMASK)
 
 #define DEV_UFMASK_31   (((1u << DEV_V_RSV) - 1) & ~((1u << DEV_V_UF_31) - 1))
@@ -841,9 +855,13 @@ struct DEBTAB {
 #define DEBUG_PRI(d,m)  (sim_deb && (d.dctrl & (m)))
 #define DEBUG_PRJ(d,m)  (sim_deb && ((d)->dctrl & (m)))
 
-#define SIM_DBG_EVENT       0x10000
-#define SIM_DBG_ACTIVATE    0x20000
-#define SIM_DBG_AIO_QUEUE   0x40000
+#define SIM_DBG_EVENT       0x01000000      /* event dispatch activities */
+#define SIM_DBG_ACTIVATE    0x02000000      /* queue insertion activities */
+#define SIM_DBG_AIO_QUEUE   0x04000000      /* asynch event queue activities */
+#define SIM_DBG_EXP_STACK   0x08000000      /* expression stack activities */
+#define SIM_DBG_EXP_EVAL    0x10000000      /* expression evaluation activities */
+#define SIM_DBG_BRK_ACTION  0x20000000      /* action activities */
+#define SIM_DBG_DO          0x40000000      /* do activities */
 
 /* Open File Reference */
 struct FILEREF {
@@ -942,12 +960,12 @@ struct MEMFILE {
     _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,NULL,0,siz),((fl) | REG_STRUCT)
 #define STRDATADF(nm,loc,rdx,wd,off,dep,siz,fl,desc,flds) \
     _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,0,siz),((fl) | REG_STRUCT)
-#define BIT(nm)              {#nm, 0xffffffff, 1}             /* Single Bit definition */
-#define BITNC                {"",  0xffffffff, 1}             /* Don't care Bit definition */
-#define BITF(nm,sz)          {#nm, 0xffffffff, sz}            /* Bit Field definition */
-#define BITNCF(sz)           {"",  0xffffffff, sz}            /* Don't care Bit Field definition */
-#define BITFFMT(nm,sz,fmt)   {#nm, 0xffffffff, sz, NULL, #fmt}/* Bit Field definition with Output format */
-#define BITFNAM(nm,sz,names) {#nm, 0xffffffff, sz, names}     /* Bit Field definition with value->name map */
+#define BIT(nm)              {#nm, 0xffffffff, 1,  NULL, NULL}  /* Single Bit definition */
+#define BITNC                {"",  0xffffffff, 1,  NULL, NULL}  /* Don't care Bit definition */
+#define BITF(nm,sz)          {#nm, 0xffffffff, sz, NULL, NULL}  /* Bit Field definition */
+#define BITNCF(sz)           {"",  0xffffffff, sz, NULL, NULL}  /* Don't care Bit Field definition */
+#define BITFFMT(nm,sz,fmt)   {#nm, 0xffffffff, sz, NULL, #fmt}  /* Bit Field definition with Output format */
+#define BITFNAM(nm,sz,names) {#nm, 0xffffffff, sz, names,NULL}  /* Bit Field definition with value->name map */
 #else /* For non-STD-C compiler which can't stringify macro arguments with # */
 /* Generic Register declaration for all fields.  
    If the register structure is extended, this macro will be retained and a 
@@ -1019,12 +1037,12 @@ struct MEMFILE {
     _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,NULL,0,siz),((fl) | REG_STRUCT)
 #define STRDATADF(nm,loc,rdx,wd,off,dep,siz,fl,desc,flds) \
     _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,0,siz),((fl) | REG_STRUCT)
-#define BIT(nm)              {"nm", 0xffffffff, 1}              /* Single Bit definition */
-#define BITNC                {"",   0xffffffff, 1}              /* Don't care Bit definition */
-#define BITF(nm,sz)          {"nm", 0xffffffff, sz}             /* Bit Field definition */
-#define BITNCF(sz)           {"",   0xffffffff, sz}             /* Don't care Bit Field definition */
+#define BIT(nm)              {"nm", 0xffffffff, 1,  NULL, NULL} /* Single Bit definition */
+#define BITNC                {"",   0xffffffff, 1,  NULL, NULL} /* Don't care Bit definition */
+#define BITF(nm,sz)          {"nm", 0xffffffff, sz, NULL, NULL} /* Bit Field definition */
+#define BITNCF(sz)           {"",   0xffffffff, sz, NULL, NULL} /* Don't care Bit Field definition */
 #define BITFFMT(nm,sz,fmt)   {"nm", 0xffffffff, sz, NULL, "fmt"}/* Bit Field definition with Output format */
-#define BITFNAM(nm,sz,names) {"nm", 0xffffffff, sz, names}      /* Bit Field definition with value->name map */
+#define BITFNAM(nm,sz,names) {"nm", 0xffffffff, sz, names,NULL} /* Bit Field definition with value->name map */
 #endif
 #define ENDBITS {NULL}  /* end of bitfield list */
 
@@ -1089,7 +1107,8 @@ extern int32 sim_asynch_inst_latency;
                     sim_debug (SIM_DBG_EVENT, sim_dflt_dev, "Queue Corruption detected\n");\
                     fclose(sim_deb);                            \
                     }                                           \
-                sim_printf("Queue Corruption detected\n");      \
+                sim_printf("Queue Corruption detected in %s line %d\n",\
+                           __FILE__, __LINE);                   \
                 abort();                                        \
                 }                                               \
         if (lock)                                               \
@@ -1245,7 +1264,12 @@ extern int32 sim_asynch_inst_latency;
       return SCPE_OK;                                                  \
     } else (void)0
 #endif /* USE_AIO_INTRINSICS */
-#define AIO_VALIDATE if (!pthread_equal ( pthread_self(), sim_asynch_main_threadid )) {sim_printf("Improper thread context for operation\n"); abort();}
+#define AIO_VALIDATE(uptr)                                             \
+    if (!pthread_equal ( pthread_self(), sim_asynch_main_threadid )) { \
+      sim_printf("Improper thread context for operation on %s in %s line %d\n", \
+                   sim_uname(uptr), __FILE__, __LINE__);               \
+      abort();                                                         \
+      } else (void)0
 #define AIO_CHECK_EVENT                                                \
     if (0 > --sim_asynch_check) {                                      \
       AIO_UPDATE_QUEUE;                                                \
@@ -1261,7 +1285,7 @@ extern int32 sim_asynch_inst_latency;
 #define AIO_QUEUE_MODE "Asynchronous I/O is not available"
 #define AIO_UPDATE_QUEUE
 #define AIO_ACTIVATE(caller, uptr, event_time)
-#define AIO_VALIDATE
+#define AIO_VALIDATE(uptr)
 #define AIO_CHECK_EVENT
 #define AIO_INIT
 #define AIO_MAIN_THREAD TRUE

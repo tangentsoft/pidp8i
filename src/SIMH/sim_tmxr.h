@@ -114,9 +114,13 @@ typedef struct SERPORT *SERHANDLE;
 #define TMLN_SPD_7200_BPS     1388 /* usec per character */
 #define TMLN_SPD_9600_BPS     1041 /* usec per character */
 #define TMLN_SPD_19200_BPS     520 /* usec per character */
+#define TMLN_SPD_25000_BPS     400 /* usec per character */
 #define TMLN_SPD_38400_BPS     260 /* usec per character */
+#define TMLN_SPD_40000_BPS     250 /* usec per character */
+#define TMLN_SPD_50000_BPS     200 /* usec per character */
 #define TMLN_SPD_57600_BPS     173 /* usec per character */
 #define TMLN_SPD_76800_BPS     130 /* usec per character */
+#define TMLN_SPD_80000_BPS     125 /* usec per character */
 #define TMLN_SPD_115200_BPS     86 /* usec per character */
 
 
@@ -169,13 +173,14 @@ struct tmln {
     uint32              rxpbsize;                       /* rcv packet buffer size */
     uint32              rxpboffset;                     /* rcv packet buffer offset */
     uint32              rxbps;                          /* rcv bps speed (0 - unlimited) */
-    double              rxbpsfactor;                    /* receive speed factor (scaled to usecs) */
-#define TMXR_RX_BPS_UNIT_SCALE 1000000.0
-    uint32              rxdelta;                        /* rcv inter character min time (usecs) */
+    double              bpsfactor;                      /* receive speed factor (scaled to usecs) */
+#define USECS_PER_SECOND 1000000.0
+    uint32              rxdeltausecs;                   /* rcv inter character min time (usecs) */
     double              rxnexttime;                     /* min time for next receive character */
     uint32              txbps;                          /* xmt bps speed (0 - unlimited) */
-    uint32              txdelta;                        /* xmt inter character min time (usecs) */
+    uint32              txdeltausecs;                   /* xmt inter character min time (usecs) */
     double              txnexttime;                     /* min time for next transmit character */
+    t_bool              txdone;                         /* sent data complete indicator - private */
     uint8               *txpb;                          /* xmt packet buffer */
     uint32              txpbsize;                       /* xmt packet buffer size */
     uint32              txppsize;                       /* xmt packet packet size */
@@ -259,6 +264,7 @@ t_stat tmxr_set_line_halfduplex (TMLN *lp, t_bool enable_loopback);
 t_bool tmxr_get_line_halfduplex (TMLN *lp);
 t_stat tmxr_set_line_speed (TMLN *lp, CONST char *speed);
 t_stat tmxr_set_config_line (TMLN *lp, CONST char *config);
+t_stat tmxr_set_line_modem_control (TMLN *lp, t_bool enab_disab);
 t_stat tmxr_set_line_unit (TMXR *mp, int line, UNIT *uptr_poll);
 t_stat tmxr_set_line_output_unit (TMXR *mp, int line, UNIT *uptr_poll);
 t_stat tmxr_set_console_units (UNIT *rxuptr, UNIT *txuptr);
@@ -277,6 +283,7 @@ t_stat tmxr_dscln (UNIT *uptr, int32 val, CONST char *cptr, void *desc);
 int32 tmxr_rqln (const TMLN *lp);
 int32 tmxr_tqln (const TMLN *lp);
 int32 tmxr_tpqln (const TMLN *lp);
+int32 tmxr_txdone_ln (TMLN *lp);
 t_bool tmxr_tpbusyln (const TMLN *lp);
 t_stat tmxr_set_lnorder (UNIT *uptr, int32 val, CONST char *cptr, void *desc);
 t_stat tmxr_show_lnorder (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
@@ -295,6 +302,7 @@ t_stat tmxr_clock_coschedule_tmr_abs (UNIT *uptr, int32 tmr, int32 ticks);
 t_stat tmxr_change_async (void);
 t_stat tmxr_locate_line_send (const char *dev_line, SEND **snd);
 t_stat tmxr_locate_line_expect (const char *dev_line, EXPECT **exp);
+t_stat tmxr_locate_line (const char *dev_line, TMLN **lp);
 const char *tmxr_send_line_name (const SEND *snd);
 const char *tmxr_expect_line_name (const EXPECT *exp);
 t_stat tmxr_startup (void);
@@ -309,6 +317,7 @@ void _tmxr_debug (uint32 dbits, TMLN *lp, const char *msg, char *buf, int bufsiz
 #define tmxr_debug_trace_line(lp, msg) do {if (sim_deb && (lp)->mp && (lp)->mp->dptr && (TMXR_DBG_TRC & (lp)->mp->dptr->dctrl)) sim_debug (TMXR_DBG_TRC, (lp)->mp->dptr, "Ln%d:%s\n", (int)((lp)-(lp)->mp->ldsc), (msg)); } while (0)
 #define tmxr_debug_connect(mp, msg) do {if (sim_deb && (mp)->dptr && (TMXR_DBG_CON & (mp)->dptr->dctrl)) sim_debug (TMXR_DBG_CON, mp->dptr, "%s\n", (msg)); } while (0)
 #define tmxr_debug_connect_line(lp, msg) do {if (sim_deb && (lp)->mp && (lp)->mp->dptr && (TMXR_DBG_CON & (lp)->mp->dptr->dctrl)) sim_debug (TMXR_DBG_CON, (lp)->mp->dptr, "Ln%d:%s\n", (int)((lp)-(lp)->mp->ldsc), (msg)); } while (0)
+t_stat tmxr_add_debug (DEVICE *dptr);
 
 #if defined(SIM_ASYNCH_MUX) && !defined(SIM_ASYNCH_IO)
 #undef SIM_ASYNCH_MUX
