@@ -104,7 +104,8 @@ then
         bscript="$bootdir/""$rv"".script"
         echo "Booting from $bscript..."
     elif [ $rv -eq 127 ]; then
-        echo "PiDP-8/I panel not present.  Booting from 0.script..."
+        echo "PiDP-8/I panel not present.  Booting 0.script with pure SIMH..."
+        sim="$prefix/bin/pdp8"
         bscript="$bootdir/0.script"
     else
         echo "Bad return value $rv from $scanswitch!"
