@@ -161,6 +161,14 @@
     next GPIO pin up from those used by the SR lines happens to be set
     when you issue that instruction.
 
+*   The `tools/mkbootscript` program which translates palbart assembly
+    listing files into SIMH boot scripts was only writing a SIMH "dep"
+    command for the first word.  This affected some of the tty output
+    from `hello.script` and `pep001.script`.  Since `examples/hello.pal`
+    is nothing *but* text output, it didn't behave correctly at all.
+
+    While in there, made several other improvements to the script.
+
 *   Updated SIMH to commit ID XXXXXX, with the following effects on the
     PiDP-8/I:
 
