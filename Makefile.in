@@ -138,6 +138,7 @@ SIM_OBJS := \
 	obj/SIMH/PDP8/pdp8_tt.o \
 	obj/SIMH/PDP8/pdp8_ttx.o \
 	obj/SIMH/scp.o \
+	obj/SIMH/sim_card.o \
 	obj/SIMH/sim_console.o \
 	obj/SIMH/sim_disk.o \
 	obj/SIMH/sim_ether.o \
