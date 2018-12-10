@@ -36,8 +36,8 @@
 PAGE 1
 	CLA
 	TLS		/ send null character to terminal to prepare it
-	TAD (HWSTR)
-	JMS PRINTS
+	TAD (HWSTR-1)	/ point AC at word before output string
+	JMS PRINTS	/ print the string following it
 	HLT
 
 // "HELLO, WORLD!\r\n" in octal ASCIIZ with the 8th bit set per PDP-8
