@@ -393,6 +393,13 @@ if {![opt-bool debug-mode]} {
     }
 }
 
+# Among others, the tools/version script requires Perl
+set status [catch {exec perl -c exit} result]
+if {$status != 0} {
+    user-error "Perl does not appear to be installed here.  It is required."
+}
+msg-result "Perl is installed here."
+
 # Embed this software's Fossil-based version string into gpio-common.c.
 # Fail hard if we can't get this version string because all supported
 # configurations require Fossil and work from a Fossil checkout.  Don't
@@ -422,13 +429,6 @@ catch {exec hostname} host
 set user $::env(USER)
 define BUILDUSER "$user@$host"
 define BUILDTS [clock format [clock seconds] -format "%Y.%m.%d at %T %Z"]
-
-# Among others, the tools/version script requires Perl
-set status [catch {exec perl -c exit} result]
-if {$status != 0} {
-    user-error "Perl does not appear to be installed here.  It is required."
-}
-msg-result "Perl is installed here."
 
 # The os8-run script requires Python and some non-core modules.
 set status [catch {exec python -c exit} result]
