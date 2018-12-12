@@ -158,6 +158,9 @@ int resumeFromInstructionLoopExit = 0;
 
 
 // SCP's signal handlers, which we extend.
+#if !defined(HAVE_SIGHANDLER_T) && defined(HAVE_SIG_T)
+typedef sig_t sighandler_t;
+#endif
 static sighandler_t scp_int_handler = 0, scp_term_handler = 0;
 
 

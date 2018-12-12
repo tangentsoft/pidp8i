@@ -330,6 +330,9 @@ cc-check-includes time.h
 cc-check-function-in-lib clock_gettime rt
 cc-check-functions clock_nanosleep nanosleep usleep
 cc-check-functions sched_yield
+cc-with {-includes signal.h} {
+    cc-check-types sighandler_t sig_t
+}
 
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
