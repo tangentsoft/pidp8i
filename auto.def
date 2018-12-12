@@ -433,9 +433,9 @@ define BUILDTS [clock format [clock seconds] -format "%Y.%m.%d at %T %Z"]
 # The os8-run script requires Python and some non-core modules.
 set status [catch {exec python -c exit} result]
 if {$status != 0} {
-    user-error "Python does not appear to be installed here.  It is required."
+    user-error "Python 2 does not appear to be installed here.  It is required."
 }
-msg-result "Python is installed here."
+msg-result "Python 2 is installed here."
 set status [catch {exec python -c "import pexpect" 2> /dev/null} result]
 if {$status != 0} {
     set msg "The Python pexpect module is not installed here.  Fix with\n\n"
