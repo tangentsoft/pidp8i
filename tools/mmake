@@ -31,4 +31,11 @@
 
 MAKE=make
 if type -p gmake > /dev/null ; then MAKE=gmake ; fi
-$MAKE -j$(($("$(dirname "$0")"/corecount) * 15 / 10)) "$@"
+
+BDIR="$(dirname "$0")"
+if [ -z $BDIR -o $BDIR = '.' ]
+then
+    BDIR="$(dirname "$(type -p "$0")")"
+fi
+
+$MAKE -j$(($("$BDIR"/corecount) * 15 / 10)) "$@"
