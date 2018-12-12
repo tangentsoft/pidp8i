@@ -2472,11 +2472,6 @@ int32 i, sw;
 t_bool lookswitch;
 t_stat stat = SCPE_OK;
 
-#ifdef PIDP8I
-if (strstr (argv[0], "pidp8i-sim") == 0) use_pidp8i_extensions = 0;
-else if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
-#endif
-
 #if defined (__MWERKS__) && defined (macintosh)
 argc = ccommand (&argv);
 #endif
@@ -2582,6 +2577,12 @@ if (((sim_dflt_dev->flags & DEV_DEBUG) == 0) &&         /* default device withou
     sim_dflt_dev->flags |= DEV_DEBUG;                   /* connect default event debugging */
     sim_dflt_dev->debflags = sim_dflt_debug;
     }
+
+#ifdef PIDP8I
+if (strstr (argv[0], "pidp8i-sim") == 0) use_pidp8i_extensions = 0;
+else if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
+#endif
+
 if (*argv[0]) {                                         /* sim name arg? */
     char *np;                                           /* "path.ini" */
 

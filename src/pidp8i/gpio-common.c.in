@@ -44,6 +44,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -154,6 +155,10 @@ int suppressILS = 0;
 // Flag set when sim_instr() exits due to some SIMH event like Ctrl-E,
 // which lets us resume from our imposed "pause" display state.
 int resumeFromInstructionLoopExit = 0;
+
+
+// SCP's signal handlers, which we extend.
+static sighandler_t scp_int_handler = 0, scp_term_handler = 0;
 
 
 //// MEMORY MAPPED GPIO FUNCTIONS //////////////////////////////////////
@@ -716,6 +721,38 @@ int map_gpio_for_pidp8i (int must_map)
 }
 
 
+//// pidp8i_{int,term}_handler /////////////////////////////////////////
+// Handle SIGINT and SIGTERM by shutting down our GPIO thread, then pass
+// it on to SCP's handlers, if any.  SCP doesn't register SIGTERM under
+// all conditions, and this module isn't always linked with SCP.
+
+static void
+pidp8i_int_handler (int sig)
+{
+    turn_off_pidp8i_leds ();
+    stop_pidp8i_gpio_thread ();
+    if (scp_int_handler) {
+        scp_int_handler (sig);
+    }
+    else {
+        exit (0);
+    }
+}
+
+static void
+pidp8i_term_handler (int sig)
+{
+    turn_off_pidp8i_leds ();
+    stop_pidp8i_gpio_thread ();
+    if (scp_term_handler) {
+        scp_term_handler (sig);
+    }
+    else {
+        exit (0);
+    }
+}
+
+
 //// start/stop_pidp8i_gpio_thread /////////////////////////////////////
 // Start and stop gpio_thread().  We export these functions rather than
 // export gpio_thread() directly so this module's users don't have to
@@ -759,6 +796,10 @@ int start_pidp8i_gpio_thread (const char* must_map)
         pcerr = EACCES;
     }
     else {
+        // Shut the GPIO thread down gracefully on fatal signals.
+        scp_int_handler  = signal (SIGINT,  pidp8i_int_handler);
+        scp_term_handler = signal (SIGTERM, pidp8i_term_handler);
+
         // Don't return until GPIO thread is sufficiently initted.
         //
         // There are two possible sequences:
@@ -784,7 +825,10 @@ int start_pidp8i_gpio_thread (const char* must_map)
 void stop_pidp8i_gpio_thread ()
 {
     terminate_gpio_thread = 1;
-    if (pthread_join (gpio_thread_info, NULL)) {
+    if (pthread_join (gpio_thread_info, NULL) && pidp8i_gpio_present) {
+        // Warn only if we think it should succeed.  If we die due to a
+        // signal, we'll be called twice and this'll fail the second
+        // time, but the flag will be cleared, so we shouldn't complain.
         printf("\r\nError joining multiplex thread\r\n");
     }
     unmap_peripheral (&gpio);

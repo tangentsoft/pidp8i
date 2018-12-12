@@ -122,24 +122,42 @@ then
     exit $?
 elif [ "$verb" = "stop" ]
 then
-    # systemd is telling us to stop the background simulator.  Try
-    # stopping the simulator itself, gracefully at first, then
-    # increasingly forcefully if it doesn't die quickly.
-    for i in $(seq 8)
+    # Someone (maybe systemd) is telling us to stop the background
+    # simulator.  Try stopping the simulator itself, gracefully at
+    # first, then increasingly forcefully if it doesn't die quickly.
+    echo -n "Stopping simulator..."
+    pkill -INT pidp8i-sim
+    for i in $(seq 20)
     do
-        if [ $(pgrep -c pidp8i-sim) -gt 0 ]
+        if pkill -0 pidp8i-sim
         then
-            case $i in
-                [1-6]) sig=TERM ;;
-                7)     sig=INT  ;;
-                *)     sig=KILL ;;
-            esac
-            pkill -$sig pidp8i-sim
-            sleep "0.25s"
+            # It's still up, so give it a bit more time.
+            sleep "0.1s"
+            echo -n "."
         else
             break
         fi
     done
+
+    # If it didn't take our first hint, start getting stern.
+    if [ $(pgrep -c pidp8i-sim) -gt 0 ]
+    then
+        echo -n "  Trying harder..."
+
+        for i in $(seq 8)
+        do
+            if [ $(pgrep -c pidp8i-sim) -gt 0 ]
+            then
+                pkill -INT pidp8i-sim
+                sleep "0.25s"
+                echo -n "."
+            else
+                break
+            fi
+        done
+        killall -KILL pidp8i-sim
+    fi
+    echo
 
     # Now stop the screen(1) session if it's still alive, despite its
     # only child dying.
