@@ -201,7 +201,7 @@ class simh:
     self._child.delaybeforesend = None if pev4 else 0
 
     # Wait for the simulator's startup message.
-    if not self.try_wait ('PDP-8 simulator V.*git commit id: [0-9a-f]', 5):
+    if not self.try_wait ('PDP-8 simulator V.*git commit id: [0-9a-f]', 10):
       raise RuntimeError ('Simulator failed to start')
 
 
