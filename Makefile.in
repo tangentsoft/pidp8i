@@ -97,7 +97,6 @@ SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
 OS8RUN          = bin/os8-run
 OS8SCRIPT      := lib/os8script.py
-OS8CP	       := bin/os8-cp
 OS8RUN_PY_ALL  := $(GENNED_PY) $(OS8SCRIPT) $(SIMH_PY_SRC)
 OS8RUN_SRCS    := $(OS8RUN) $(OS8RUN_PY_ALL) $(PIDP8I_DIN)
 
@@ -265,8 +264,6 @@ OS8_SCRIPTS_DIR = @srcdir@/media/os8/scripts
 V3D_DIST_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-dist-rk05.os8
 V3D_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-src-rk05.os8
 V3D_RK05_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-rk05.os8
-
-OS8CP := bin/os8-cp
 
 V3F_SRCDIR = @srcdir@/src/os8/v3f
 V3F_BUILD_RK05 = obj/v3f-build.rk05
@@ -587,7 +584,7 @@ $(OS8_SRC_RK05): $(OS8_DIST_RK05) $(OS8_SRC_SRCS) | $(SIM) $(OS8_BOOT_DISK)
 
 # Build the source disk for OS/8 V3F
 $(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_BOOT_DISK)
-	cd $(V3F_SRCDIR); $(OS8CP) -v --action-file $(V3F_MANIFEST)
+	cd $(V3F_SRCDIR); @builddir@/bin/os8-cp -v --action-file $(V3F_MANIFEST)
 
 # Make a disk with binaries assembled from the V3F source disk
 $(V3F_MADE_RK05): $(V3F_BUILD_RK05) $(V3F_MAKER)
