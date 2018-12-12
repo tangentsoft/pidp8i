@@ -431,8 +431,9 @@ if {$status != 0} {
 msg-result "Python is installed here."
 set status [catch {exec python -c "import pexpect" 2> /dev/null} result]
 if {$status != 0} {
-    set msg "The Python pexpect module is not installed here.  Fix with\n"
-    append msg "\n    sudo pip install pexpect\n"
+    set msg "The Python pexpect module is not installed here.  Fix with\n\n"
+    append msg "    sudo apt install python-pip\n"
+    append msg "    sudo pip install pexpect\n"
     append msg "\nOR:\n"
     append msg "\n    sudo easy_install pexpect\n"
     append msg "\nOR:\n"
