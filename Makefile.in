@@ -95,9 +95,9 @@ GENNED_PY   := \
 SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
-OS8RUN        = bin/os8-run
+OS8RUN          = bin/os8-run
 OS8SCRIPT      := lib/os8script.py
-OS8CP	      := bin/os8-cp
+OS8CP	       := bin/os8-cp
 OS8RUN_PY_ALL  := $(GENNED_PY) $(OS8SCRIPT) $(SIMH_PY_SRC)
 OS8RUN_SRCS    := $(OS8RUN) $(OS8RUN_PY_ALL) $(PIDP8I_DIN)
 
@@ -231,6 +231,7 @@ PRECIOUS_INFILES = \
     @srcdir@/src/SIMH/Makefile.in \
     @srcdir@/src/SIMH/PDP8/Makefile.in
 INFILES = \
+	@srcdir@/bin/os8-cp.in \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
 	@srcdir@/boot/2.script.in \
@@ -240,12 +241,12 @@ INFILES = \
 	@srcdir@/boot/7.script.in \
 	@srcdir@/boot/run.script.in \
 	@srcdir@/boot/run-v3f.script.in \
+	@srcdir@/boot/tss8.script.in \
 	@srcdir@/etc/pidp8i.service.in \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/etc/usb-mount@.service.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
-	$(OS8CP) \
 	$(OS8RUN_INFILES)
 OS8RUN_OUTFILES := $(subst @srcdir@/,,$(OS8RUN_INFILES))
 OS8RUN_OUTFILES := $(subst .in,,$(OS8RUN_OUTFILES))
