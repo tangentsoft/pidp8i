@@ -200,7 +200,10 @@ optproc (int argc, char **argv)
 		nsegments = 0;
 		segments = NULL;
 
-		read (fd, tape, statbuf.st_size);
+		if (read (fd, tape, statbuf.st_size) < 0) {
+            fprintf (stderr, "%s:  read failed: %s\n", progname, strerror (errno));
+            return;
+        }
 		close (fd);
 
 		// dump the tape (this also reads the tape into "core" and disassembles)
