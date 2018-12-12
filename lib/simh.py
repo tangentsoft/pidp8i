@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ########################################################################
 # simh/__init__.py - A wrapper class around pexpect for communicating

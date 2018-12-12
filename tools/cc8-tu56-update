@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ########################################################################
 # cc8-tu56-update - Rebuilds cc8.tu56 from source code.

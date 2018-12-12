@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ########################################################################
 # simh-os8-script.py Library for scripting OS/8 under SIMH

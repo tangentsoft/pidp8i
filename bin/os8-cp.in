@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ########################################################################
 # Generalized facility to manipulate os8 device images from the POSIX

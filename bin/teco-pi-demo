@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ########################################################################
 # teco-pi-demo - Starts the simulator with the OS/8, sends one of the
