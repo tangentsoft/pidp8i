@@ -394,7 +394,7 @@ if {![opt-bool debug-mode]} {
 }
 
 # Among others, the tools/version script requires Perl
-set status [catch {exec perl -c exit} result]
+set status [catch {exec perl -e 'exit 0'} result]
 if {$status != 0} {
     user-error "Perl does not appear to be installed here.  It is required."
 }
