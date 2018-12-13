@@ -161,7 +161,7 @@ int resumeFromInstructionLoopExit = 0;
 #if !defined(HAVE_SIGHANDLER_T) && defined(HAVE_SIG_T)
 typedef sig_t sighandler_t;
 #endif
-static sighandler_t scp_int_handler = 0, scp_term_handler = 0;
+static sighandler_t scp_int_handler = 0;
 
 
 //// MEMORY MAPPED GPIO FUNCTIONS //////////////////////////////////////
@@ -724,10 +724,18 @@ int map_gpio_for_pidp8i (int must_map)
 }
 
 
-//// pidp8i_{int,term}_handler /////////////////////////////////////////
-// Handle SIGINT and SIGTERM by shutting down our GPIO thread, then pass
-// it on to SCP's handlers, if any.  SCP doesn't register SIGTERM under
-// all conditions, and this module isn't always linked with SCP.
+//// pidp8i_int_handler ////////////////////////////////////////////////
+// Handle SIGINT by shutting down our GPIO thread, then pass it on to
+// SCP's handler, if one is registered.
+//
+// We don't try to catch SIGTERM as well for a few reasons:
+//
+// 1. This module isn't always linked with SCP.
+//
+// 2. SCP doesn't register SIGTERM under all conditions.
+//
+// 3. There's a strange interaction with the way SCP uses it that makes
+//    it pointless for us to try and catch it.
 
 static void
 pidp8i_int_handler (int sig)
@@ -736,19 +744,6 @@ pidp8i_int_handler (int sig)
     stop_pidp8i_gpio_thread ();
     if (scp_int_handler) {
         scp_int_handler (sig);
-    }
-    else {
-        exit (0);
-    }
-}
-
-static void
-pidp8i_term_handler (int sig)
-{
-    turn_off_pidp8i_leds ();
-    stop_pidp8i_gpio_thread ();
-    if (scp_term_handler) {
-        scp_term_handler (sig);
     }
     else {
         exit (0);
@@ -801,7 +796,6 @@ int start_pidp8i_gpio_thread (const char* must_map)
     else {
         // Shut the GPIO thread down gracefully on fatal signals.
         scp_int_handler  = signal (SIGINT,  pidp8i_int_handler);
-        scp_term_handler = signal (SIGTERM, pidp8i_term_handler);
 
         // Don't return until GPIO thread is sufficiently initted.
         //
