@@ -377,8 +377,20 @@ sub remove_missing
 
     # Now filter the test set to remove those that do not exist
     my @filtered = grep { $existing{$_->{optstr}} } @tests;
-    print "Filtered $genned of $all tests down to ", scalar(@filtered),
-            " for -e.\n";
+    my $fc = @filtered;
+    if ($fc < $genned) {
+        print "Filtered $genned of $all exemplars down to $fc for -e.\n";
+    }
+    elsif (!$test_count) {
+        print "Re-testing all $all exemplars.\n";
+    }
+    elsif ($shuffle) {
+        print "Re-testing a random $test_count exemplar subset of the ",
+                $genned, " extant.\n";
+    }
+    else {
+        print "Re-testing the first $test_count of $genned exemplars.\n";
+    }
     return @filtered;
 }
 
