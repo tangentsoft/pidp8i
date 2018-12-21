@@ -50,8 +50,8 @@ bin   = os.path.join (build, "bin/")
 obj   = os.path.join (build, "obj/")
 log   = os.path.join (build, "obj/")
 media = os.path.join (src, "media/")
-os8mi = os.path.join (media, "os8/")    # mkos8 inputs
-os8mo = bin                             # mkos8 outputs
+os8mi = os.path.join (media, "os8/")    # os8 media inputs
+os8mo = bin                             # os8 media outputs
 
 # Adjust paths for the "installed" case
 if not os.path.exists(log):
@@ -62,8 +62,8 @@ if not os.path.exists(media):
     # We bury media one extra level deeper in the install tree
     media = media.replace('/media/', '/share/media/')
 
-    # mkos8 outputs *.rk05 into bin/ at build time, but then they're
-    # copied next to the os8/*.tu56 source tapes for installation.
+    # os8-run scripts output *.rk05 and *.tu56 into bin/ at build time.
+    # At install time, they are moved to media/os8 directory.
     # If we're building or modifying the OS/8 media in the installation
     # tree, though, we need to write straight to the media directory.
     os8 = media

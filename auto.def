@@ -41,16 +41,16 @@ define ABSPREFIX $abspfx
 define BOOTDIR  "$abspfx/share/boot"
 define MEDIADIR "$abspfx/share/media"
 
-# Define options the configure script shares with mkos8.  We insert a
+# Define options the configure script shares with os8-run.  We insert a
 # variant of each into the autosetup option list and also write a
-# version to a Python library file that mkos8 can read.  This avoids
+# version to a Python library file that os8-run can read.  This avoids
 # the need to define the options by hand in both places.
 #
 # Some of the --*-os8-* options are defined only for the configure
 # script because they are either meta-options, affecting the definition
 # of some of those we do define here, or they aren't passed as-is to the
-# mkos8 script, but instead must be translated.  (e.g. --disable-os8-src
-# suppresses the call to "mkos8 src" from the Makefile.)
+# os8-run script, but instead must be translated.  (e.g. --disable-os8-src
+# suppresses creation of the OS/8 src rk05 by the Makefile.)
 set os8opts {
     advent      1  "Adventure"
     ba          1  "*.BA BASIC games and demos"
@@ -135,7 +135,7 @@ if {$os8bool(cc8) && !$os8bool(fortran-ii)} {
     msg-result "WARNING: Re-enabling OS/8 FORTRAN II: OS/8 CC8 requires it."
 }
 
-# Now build the options to mkos8
+# Now build the options to os8-run
 set os8_opts ""
 foreach {opt def desc} $os8opts {
     set val $os8bool($opt)
@@ -150,7 +150,7 @@ foreach {opt def desc} $os8opts {
         set act ""
         if {!$def} {
             # User is enabling a normally-disabled option, so pass it along
-            # to mkos8 explicitly.
+            # to os8-run explicitly.
             append os8_opts " --enable $opt"
         }
     } else {
@@ -171,7 +171,7 @@ foreach {opt def desc} $os8opts {
 }
 append os "}\n"     ; # saved later!
 
-# Handle the OS/8 options not passed to mkos8 generically by above.
+# Handle the OS/8 options not passed to os8-run generically by above.
 if {$os8src} {
     msg-result "Building v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 bin/v3d-src.rk05
@@ -242,7 +242,7 @@ if {$lv == "auto"} {
 }
 msg-result "Lowercase handling set to '$lv' mode."
 
-# We've purposely held off exporting the mkos8 option set until now
+# We've purposely held off exporting the os8-run option set until now
 # because some of the configuration options can affect the option set.
 define OS8_OPTS $os8_opts
 if {![file exists "lib/pidp8i"]} { file mkdir "lib/pidp8i" }

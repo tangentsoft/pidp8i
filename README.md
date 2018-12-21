@@ -602,7 +602,7 @@ image and copy files in from it.
 The OS/8 RK05 disk image build process normally installs many software
 and data file sets to the disk image.  See the option descriptions
 above: the ["disable" option set](#disable-os8) effectively lists those
-packages that `mkos8` installs by default, and the following set of
+packages that are installed by default, and the following set of
 ["enable" option set](#enable-os8) lists those left out by default.
 
 
@@ -637,7 +637,6 @@ document.
 [bdt2]:  https://tangentsoft.com/pidp8i/file/media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
 [cl]:    https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
 [cs]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
-[mkos8]: https://tangentsoft.com/pidp8i/doc/trunk/libexec/mkos8
 [os8mf]: https://tangentsoft.com/pidp8i/file/media/os8
 [tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
 

@@ -41,9 +41,9 @@ The file `actions.txt` is to be submitted to our os8-cp utility as follows:
 
     ../../bin/os8-cp --action-file actions.txt
 
-This will create the rk05 image file `os8-v3f-build.rk05` with the sources in
-partition A.  We expect a builder script to be written, which may live in
-mkos8 will then build the components as they are validated.
+This will create the rk05 image file `v3f-build.rk05` with the sources
+in partition A.  A script `v3f-control.os8`, run by `os8-run` will
+build the components as they are validated.
 
 
 ## History

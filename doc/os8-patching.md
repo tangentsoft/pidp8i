@@ -22,12 +22,11 @@ patches.  Using OCR'd text from each relevant _DSN_ issue, I created a
 file per patch, which I then compared to the scanned PDF and corrected
 the OCR errors.
 
-Then I enhanced our `mkos8` script to apply the patches in an
-automated way.  Most of the patches were for programs available
-in source form, so I built the programs from source, and then bench
-checked the patch against the source.  In a few cases the code was too
-obscure, and I marked the patch as "plausable" rather than "verified"
-in my spreadsheet.
+Then I created a way to apply the patches in an automated way.  Most
+of the patches were for programs available in source form, so I built
+the programs from source, and then bench checked the patch against the
+source.  In a few cases the code was too obscure, and I marked the
+patch as "plausable" rather than "verified" in my spreadsheet.
 
 The file [`patch-list.txt`][pl] lists all of the patch files in
 `media/os8/patches`.  Comments in that file begin with `#` and are
@@ -143,10 +142,10 @@ support.  But if you happen to be using this setup under `TD8E` and
 
 ## Patch Application Order
 
-The `patch` routine in `mkos8` applies the patches in the order they
-appear in [`patch-list.txt`][pl].  That list is currently in
-alphabetical order.  However, there may in future emerge patches that
-impose an order.
+In the creation of `v3d.rk05` image booted by default, the
+script `v3d-rk05.os8` defines the order in which the patches are applied.
+It started off alphabetically by subsystem, but evolved as
+order dependencies emerged.
 
 For example, if the `ABSLDR` patch actually did work, it needs the
 `FUTIL 31.21.2 M` in order to patch into the `ABSLDR` overlay bits.
@@ -207,22 +206,22 @@ and so the OS/8 Core Control Block needed to change.
 
 Unfortunately, the `FUTIL.SV` distributed as version 8A had the wrong
 starting address and Job Status Word settings. It *hangs* when run
-under `BATCH`.  Our automated pack builder and patcher `mkos8` run
-`FUTIL` under `BATCH`.
+under `BATCH`.  Our automated pack builder and patcher script
+`v3d-rk05.os8` runs `FUTIL` under `BATCH`.
 
-The `MACREL` v2 DECtape image we use with `mkos8` contains a
+The `MACREL` v2 DECtape image we use with automated building contains a
 hand-applied patch `35.13.1M` that fixes this problem.
 
 Currently if you opt in to having `MACREL` on the system packs, you
-get `FUTIL` version 8B. If not, you get `FUTIL` version 7 and `mkos8`
-applies the relevant patches. If `FUTIL` version 8 is installed, the
-automated patch applier recognizes the version 7 patches don't fit and
-fails to install them.
+get `FUTIL` version 8B. If not, you get `FUTIL` version 7 and
+`v3d-rk05.os8` applies the relevant patches. If `FUTIL` version 8 is
+installed, the automated patch applier recognizes the version 7
+patches don't fit and fails to install them.
 
 ## One-off Patches
 
 Most of the patches are parsed and applied in an automated manner
-by mkos8.  However some are one-offs.
+by `v3d-rk05.os8`.  However some are one-offs.
 
 See the `FUTIL` section above with regards to patch `35.13.1M`.
 
@@ -232,8 +231,8 @@ file provides that line. It also provides instructions on how to use
 the old version of `DLOG` with the new one in `FORLIB.RL`.  I followed
 the instructions to hand-tool a patched `FORLIB.RL` which I then put
 in the `local.tu56` DECtape image along with the other local hacks.
-The `patch` routine `mkos8` has in-line code to replace `FORLIB.RL` on
-`SYS:` if installation of FORTRAN IV is enabled.
+The `v3d-rk05.os8` script has conditional code to replace `FORLIB.RL`
+on `SYS:` if installation of FORTRAN IV is enabled.
 
 
 ## Unfinished Business

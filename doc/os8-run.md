@@ -912,8 +912,8 @@ add-on by default.  We deal with this triple negative by setting
 
     # MACREL is enabled by default with no settings.
     # We need to avoid patching FUTIL in that default case
-    # So we have to set a disablement of that action by
-    # default as well.
+    # So we have to set a disablement of that action
+    # Conditional on macrel default as well.
     
     begin default macrel
     disable futil_patch
@@ -921,9 +921,9 @@ add-on by default.  We deal with this triple negative by setting
     
     begin default futil_patch
     # The two FUTIL patches only get applied to FUTIL V7 which comes with
-    # OS/8 V3D to bring it up to V7D.  MACREL V2 comes with FUTIL V8B, so
-    # these patches are skipped by mkos8 using an RE match on the file name
-    # when the user does not pass --disable os8-macrel to configure.
+    # OS/8 V3D to bring it up to V7D.
+    # MACREL V2 comes with FUTIL V8B, so these patches are skipped
+    # unless we pass --disable os8-macrel to configure.
     patch ../media/os8/patches/FUTIL-31.21.1M-v7B.patch8
     patch ../media/os8/patches/FUTIL-31.21.2M-v7D.patch8
     end default futil_patch

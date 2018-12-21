@@ -533,18 +533,11 @@ The directory structure of the PiDP-8/I project is as follows:
     primarily by other programs.  Whereas a file in `lib` might have its
     interface described by a programmer's reference manual, the
     interface of a program in `libexec` is described by its usage
-    message.  Examples:
-
-    *   <b>`mkos8`</b> - Run by the build system.
-    
-        <p>It is sometimes run by hand in development, but primarily
-        only to further its development.  Once it runs correctly after
-        adding some feature, we let <code>make</code> run it for us.</p>
+    message.  Example:
 
     *   <b>`scanswitch`</b> - Run by `etc/pidp8i`.
     
-        <p>As with <code>mkos8</code>, it is generally run by hand only
-        by developers modifying its behavior.</p>
+        <p>It is run by hand only by developers modifying its behavior.</p>
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
     *not* put into the user's `PATH`, on purpose.  If a program should
@@ -553,7 +546,7 @@ The directory structure of the PiDP-8/I project is as follows:
     helper.
 
 *   <b>`media`</b> - Binary media images used either by SIMH directly or
-    by tools like `mkos8` to produce media used by SIMH.
+    by tools like `os8-run` to produce media used by SIMH.
 
     The contents of this tree are installed to `$prefix/share/media`.
 

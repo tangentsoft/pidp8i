@@ -325,7 +325,7 @@ sub do_test
     elsif (compare_rklz ($currdlz, $test->{rklz})) {
         # We had this test examplar here already and on re-doing it we
         # got the same result.
-        print colored(['green'], "mkos8 $test->{name} test passed."), "\n";
+        print colored(['green'], "os8-run $test->{name} test passed."), "\n";
         $tested{$test->{hash}} = 1;
     }
     else {
@@ -349,7 +349,7 @@ sub do_test
 
 
 #### remove_missing ####################################################
-# Implements -e: given a list of mkos8 options, returns only those for
+# Implements -e: given a list of os8-run options, returns only those for
 # which we have a valid test set.
 
 sub remove_missing
