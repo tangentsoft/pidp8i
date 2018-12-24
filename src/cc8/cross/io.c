@@ -47,10 +47,15 @@ openout ()
 outfname (s)
 char    *s;
 {
+        char *os = s;
         while (*s)
                 s++;
         *--s = 's';
 
+	if ((s - os) < (NAMESIZE - 2)) {
+	  *++s = 'b';
+	  *++s = '\0';
+	}
 }
 
 /**
@@ -97,9 +102,9 @@ void readline () {
                         unit = input;
                 kill ();
                 while ((k = fgetc (unit)) != EOF) {
-                        if ((k == CR) || (k == LF) | (lptr >= LINEMAX))
+                        if ((k == LF) | (lptr >= LINEMAX))
                                 break;
-                        line[lptr++] = k;
+                        if (k != 13) line[lptr++] = k;
                 }
                 line[lptr] = 0;
 		if (output && cmode) {

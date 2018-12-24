@@ -101,7 +101,7 @@ output_line(char ptr[])
  * @return 
  */
 output_with_tab(char ptr[]) {
-    print_tab ();
+  // print_tab ();
     output_string (ptr);
 }
 

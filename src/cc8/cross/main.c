@@ -193,6 +193,7 @@ void compile(char *file) {
 /* Writes the frontend version to the output */
 
 frontend_version() {
+    gen_comment();
     output_line("Front End (2.7,84/11/28)");
     gen_comment();
     output_line("Front End for ASXXXX (2.8,13/01/20)");
@@ -279,6 +280,7 @@ do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
     return (1);
 }
 
+#ifdef NEVER
 /**
  * dump the literal pool
  */
@@ -304,21 +306,90 @@ void dumplits() {
     }
 }
 
-/**
- * dump all static variables
+#endif
+
+/*
+ *	dump the literal pool
+ */
+void dumplits ()
+{
+	int	j, k;
+
+/*	A loc containing the size */
+	output_line ("\tLAP");
+	output_with_tab ("\tCPAGE ");
+	output_number (2+litptr);
+	newline ();
+	output_byte('L');
+	print_label (litlab);
+	output_label_terminator ();
+	output_with_tab("\t");
+	output_number (-litptr);
+	newline ();
+	if (litptr == 0)
+		return;
+/*	Generate a loc containing the address of the literals */
+	output_byte('X');
+	print_label (litlab);
+	output_label_terminator();
+	output_with_tab("\t");
+	print_label (litlab);
+	newline();
+	print_label (litlab);
+	output_label_terminator ();
+	k = 0;
+	while (k < litptr) {
+		gen_def_byte ();
+		j = 8;
+		while (j--) {
+			output_number (litq[k++] & 127);
+			if ((j == 0) | (k >= litptr)) {
+				newline ();
+				break;
+			}
+			output_byte (';');
+		}
+	}
+	output_with_tab("\tEAP");
+    return;
+}
+
+
+/*
+ *	dump all static variables
+ * Current integration of old small C, smallc-85, and PDP-8 is gross.
+ * It looks like lots of code has been added and deleted by different
+ * people.  I will clean this up after I understand it better.
+ * For now let's get it to the point where it works as badly as the old
+ * port.
  */
 void dumpglbs() {
-    int dim, i, list_size, line_count, value;
+  int dim, i, list_size, line_count, value, j;
 
-    if (!glbflag)
+    if (!glbflag) {
+        output_with_tab("GBLS,\t0");
+	newline ();
         return;
+    }
     current_symbol_table_idx = rglobal_table_index;
     while (current_symbol_table_idx < global_table_index) {
         SYMBOL *symbol = &symbol_table[current_symbol_table_idx];
         if (symbol->identity != FUNCTION) {
             ppubext(symbol);
             if (symbol->storage != EXTERN) {
-                output_string(symbol->name);
+
+	        //prefix ();
+	        //outstr (cptr);
+	        //col ();
+	        //defstorage ();
+	        j = glint(symbol);
+		if ((symbol->type & CINT) ||
+		    (symbol->identity == POINTER))
+		  j = j * intsize();
+		//output_number (j);
+		//nl ();
+#ifdef NEVER
+	        output_string(symbol->name);
                 output_label_terminator();
                 dim = symbol->offset;
                 list_size = 0;
@@ -363,6 +434,7 @@ void dumpglbs() {
                     }
                 }
                 newline();
+#endif
             }
         } else {
             fpubext(symbol);
@@ -370,6 +442,7 @@ void dumpglbs() {
         current_symbol_table_idx++;
     }
 }
+
 
 /**
  * dump struct data
