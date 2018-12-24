@@ -140,12 +140,14 @@ CC8_OBJS := \
 	obj/cc8/cross/expr.o \
 	obj/cc8/cross/function.o \
 	obj/cc8/cross/gen.o \
+	obj/cc8/cross/initials.o \
 	obj/cc8/cross/io.o \
 	obj/cc8/cross/lex.o \
 	obj/cc8/cross/main.o \
 	obj/cc8/cross/preproc.o \
 	obj/cc8/cross/primary.o \
 	obj/cc8/cross/stmt.o \
+	obj/cc8/cross/struct.o \
 	obj/cc8/cross/sym.o \
 	obj/cc8/cross/while.o
 
