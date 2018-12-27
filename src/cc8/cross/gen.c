@@ -110,10 +110,34 @@ output_with_tab(char ptr[]) {
  * @param number
  * @return 
  */
-output_decimal(int number) {
-    fprintf(output, "%d", number);
-}
 
+void output_decimal(int number) {
+	int	k, zs;
+	char	c;
+
+        // fprintf(output, "%d", number);
+	if (number == -32768) {
+		output_string ("-32768");
+		return;
+	}
+	zs = 0;
+	k = 10000;
+	if (number < 0) {
+		number = (-number);
+		output_byte ('-');
+	}
+	while (k >= 1) {
+		c = number / k + '0';
+		if ((c != '0' | (k == 1) | zs)) {
+			zs = 1;
+			output_byte (c);
+		}
+		number = number % k;
+		k = k / 10;
+	}
+    return;
+}
+		
 /**
  * stores values into memory
  * @param lval

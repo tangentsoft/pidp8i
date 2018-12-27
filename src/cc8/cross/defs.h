@@ -196,7 +196,8 @@ void getarg ();
 void fixname ();
 void blanks ();
 void newline ();
-void output_label_prefix();
+void output_label_prefix ();
+void output_decimal ();
 
 void compile ();
 void dumplits ();

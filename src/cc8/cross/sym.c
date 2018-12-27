@@ -432,7 +432,7 @@ multidef (char *symbol_name) {
 }
 
 glint(SYMBOL *sym)  {
-        short l,u,r;
+        char l,u,r;
         l = sym->offset;
         u = sym->tagidx;
         r = (l & 0xff) + ((u << 8) & ~0x00ff);
