@@ -479,10 +479,10 @@ XC3,	AND (127
 		   puts("\b \b");
 		   p--;
 			}
-	       }    
+	}
 	putc(10);	/* newline */
 	return 1;		
-}		    
+}
 
 
 atoi(p,rsl)
