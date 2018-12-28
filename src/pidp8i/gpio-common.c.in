@@ -744,14 +744,13 @@ int map_gpio_for_pidp8i (int must_map)
 static void
 pidp8i_int_handler (int sig)
 {
-    if (pidp8i_gpio_present) {
-        turn_off_pidp8i_leds ();
-        stop_pidp8i_gpio_thread ();
-    }
+    if (pidp8i_gpio_present) turn_off_pidp8i_leds ();
+
     if (scp_int_handler) {
         scp_int_handler (sig);
     }
     else {
+        if (pidp8i_gpio_present) stop_pidp8i_gpio_thread ();
         exit (0);
     }
 }
@@ -801,7 +800,7 @@ int start_pidp8i_gpio_thread (const char* must_map)
     }
     else {
         // Shut the GPIO thread down gracefully on fatal signals.
-        scp_int_handler  = signal (SIGINT,  pidp8i_int_handler);
+        scp_int_handler = signal (SIGINT, pidp8i_int_handler);
 
         // Don't return until GPIO thread is sufficiently initted.
         //
