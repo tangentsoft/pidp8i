@@ -325,7 +325,7 @@ distclean: clean
 ctags tags:
 	ctags -R @srcdir@/src @srcdir@/lib
 ifeq (@HAVE_PROG_CSCOPE@, 1)
-	@cscope -bR -s@srcdir@
+	cscope -bR -s@srcdir@
 endif
 
 install: all instdirs
