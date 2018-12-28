@@ -138,6 +138,7 @@ void compile(char *file) {
         errcnt =
         ncmp =
         lastst =
+	gsize = 
 	inbreak =
         /*quote[1] =*/
         0;
@@ -350,7 +351,7 @@ void dumplits ()
 			output_byte (';');
 		}
 	}
-	output_with_tab("\tEAP");
+	output_line("\tEAP");
     return;
 }
 
@@ -441,6 +442,9 @@ void dumpglbs() {
         }
         current_symbol_table_idx++;
     }
+    output_with_tab("GBLS,\t");
+    output_number(gsize+128);
+    newline();
 }
 
 
@@ -503,7 +507,7 @@ errorsummary() {
     newline();
     gen_comment();
     output_with_tab("global pool:");
-    output_decimal(global_table_index - rglobal_table_index);
+    output_decimal((global_table_index - rglobal_table_index) * sizeof (SYMBOL));
     newline();
     gen_comment();
     output_with_tab("Macro pool:");

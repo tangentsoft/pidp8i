@@ -73,7 +73,7 @@ output_string(char ptr[]) {
     int k;
     k = 0;
     while (output_byte (ucase(ptr[k++])));
-    if (1) printf ("DBG: %s\n", ptr);
+    if (0) printf ("DBG: %s\n", ptr);
 }
 
 /**

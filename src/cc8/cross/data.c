@@ -23,7 +23,7 @@ char    macq[MACQSIZE];
 int     macptr;
 char    line[LINESIZE];
 char    mline[LINESIZE];
-int     lptr, mptr;
+int     lptr, mptr, gsize;
 
 TAG_SYMBOL  tag_table[NUMTAG]; /* start of structure tag table */
 int         tag_table_index; /* ptr to next entry */

@@ -570,7 +570,7 @@ void gen_def_storage ()
  */
 void gen_def_word ()
 {
-	output_with_tab ("\t");
+	return;
 }
 
 /*

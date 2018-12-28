@@ -247,7 +247,7 @@ void declare_local(int typ, int stclass, int otag) {
             if (stclass != LSTATIC) {
                 stkp = gen_modify_stack(stkp - k);
                 /* local structs need their tagidx set */
-                current_symbol_table_idx = add_local(sname, j, typ, stkp, AUTO);
+                current_symbol_table_idx = add_local(sname, j, typ, stkp+k-1, AUTO); /* Reversed stack for PDP8 */
                 if(typ == STRUCT) {
                     symbol_table[current_symbol_table_idx].tagidx = otag;
                 }
@@ -348,6 +348,7 @@ int add_global (char *sname, int identity, int type, int offset, int storage) {
     symbol->storage = storage;
     symbol->offset = offset;
     global_table_index++;
+    gsize += offset;
     return (current_symbol_table_idx);
 }
 
@@ -432,9 +433,5 @@ multidef (char *symbol_name) {
 }
 
 glint(SYMBOL *sym)  {
-        char l,u,r;
-        l = sym->offset;
-        u = sym->tagidx;
-        r = (l & 0xff) + ((u << 8) & ~0x00ff);
-        return (r);
+     return (sym->offset);
 }
