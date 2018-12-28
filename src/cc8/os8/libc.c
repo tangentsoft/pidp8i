@@ -1,10 +1,31 @@
+/*
+ * This file is part of the CC8 OS/8 C compiler.
+ *
+ * The CC8 OS/8 C compiler is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License 
+ * as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * The CC8 OS/8 C compiler is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with the CC8 OS/8 C compiler as ../GPL3.txt.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * PDP8/E LIBC routines for Small-C compiler.
+ *
+ * This is a complex collection of mixed C and SABR assembly routines.
+ * Some functions have been substantially shortened to save space
+ * relative to the original versions.  Eventually, most of the C will
+ * need to be rewritten in SABR and hand optimised; e.g. atoi().
+ */
+
 #asm
-/
-/	PDP8/E lIBC routines for Small c compiler
-/	THIS IS A COMPLEX COLLECTION OF MIXED C AND ASSEMBLER
-/	SOME FUNCTIONS HAVE BEEN SUBSTANTIALLY SHORTENED TO SAVE SPACE
-/	EVENTUALLY, MOST WILL NEED TO BE WRITTEN IN ASSEMBLER AND HAND OPTIMISED EG ATOI
-/
 ABSYM POP 147
 ABSYM PSH 150
 ABSYM JLC 151

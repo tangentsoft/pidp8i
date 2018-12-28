@@ -514,7 +514,7 @@ hier8 (LVALUE *lval) {
             gen_sub ();
             /* if both pointers, scale result */
             if ((lval->ptr_type & CINT) && (lval2->ptr_type & CINT)) {
-                gen_divide_by_two(); /* divide by intsize */
+	        gen_asr_int(); /* divide by intsize */
             }
             result (lval, lval2);
         } else

@@ -1,7 +1,24 @@
+/*
+ * This file is part of the CC8 OS/8 C compiler.
+ *
+ * The CC8 OS/8 C compiler is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License 
+ * as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * The CC8 OS/8 C compiler is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with the CC8 OS/8 C compiler as ../GPL3.txt.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
 
 
 #include <libc.h>
-#include <init.pa>
+#include <init.h>
 
 
 #define SMAX 10
@@ -260,16 +277,9 @@ Y(  ) {
 			}
 			return;
 		}
-		stri(21);
-		stri(o);
-		return;
+		tmp=21;
 	}
 	switch (*p) {
-		case 0:
-		case ',':
-		case ')':
-			tmp=-17;
-			break;
 		case '=':
 			if (*q=='=')
 				break;
@@ -278,7 +288,6 @@ Y(  ) {
 				tmp=-8;
 			ixf=0;
 			stkp++;
-		default:
 			break;
 	}
 	stri(tmp);
@@ -551,7 +560,7 @@ main()
 	char trm;
 
 	memset(ltbf,0,&ssz-ltbf);
-	fopen("CC.CC","r");
+	fopen("CC.C","r");
 	strcpy(tkn,"int if else while break return for ");
 	lctr = 10;
 	ectr = 900;

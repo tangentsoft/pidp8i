@@ -602,18 +602,35 @@ int	newstkp;
 /*
  *	multiply the primary register by INTSIZE
  */
+
+void gen_asl_int () {
+  return;
+}
+
+/*
+ * Multiply_by_two is target specific where INTSIZE=2
+
 void gen_multiply_by_two ()
 {
   output_line ("\tRAL");;
 }
+*/
+
 
 /*
  *	divide the primary register by INTSIZE
  */
+void gen_asr_int () {
+  return;
+}
+
+/*
+ * divide_by_two is target specific where INTSIZE=2
 void gen_divide_by_two()
 {
   output_line("\tCLL RAR");
 }
+*/
 
 /*
  *	Case jump instruction
@@ -1117,7 +1134,7 @@ gen_multiply(int type, int size) {
     switch (type) {
         case CINT:
         case UINT:
-            gen_multiply_by_two();
+	    gen_asl_int();
             break;
         case STRUCT:
             gen_immediate2();
