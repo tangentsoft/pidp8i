@@ -654,7 +654,10 @@ hier10 (LVALUE *lval) {
         }
         /* global and non-array */
         gen_immediate ();
-        output_string ((ptr = lval->symbol)->name);
+        // output_string ((ptr = lval->symbol)->name);
+	k = 128 + ptr->offset;
+	output_number(k);
+	output_with_tab("\t/Offset from stackbase at 128 (200(8)");
         newline ();
         lval->indirect = ptr->type;
         return (HL_REG);

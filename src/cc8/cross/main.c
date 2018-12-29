@@ -507,7 +507,7 @@ errorsummary() {
     newline();
     gen_comment();
     output_with_tab("global pool:");
-    output_decimal((global_table_index - rglobal_table_index) * sizeof (SYMBOL));
+    output_decimal(global_table_index * sizeof(SYMBOL));
     newline();
     gen_comment();
     output_with_tab("Macro pool:");

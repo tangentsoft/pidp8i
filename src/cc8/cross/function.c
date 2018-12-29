@@ -32,7 +32,7 @@ void newfunc() {
         else
             symbol_table[idx].offset = FUNCTION;
     } else
-        add_global(n, FUNCTION, CINT, FUNCTION, PUBLIC);
+        add_global(n, FUNCTION, CINT, 0, PUBLIC);   // Do not allocate any storage to global functions
     if (!match("("))
         error("missing open paren");
     prefix ();

@@ -108,7 +108,10 @@ primary (LVALUE *lval) {
                     return FETCH | HL_REG;
                 }
                 gen_immediate();
-                output_string(symbol->name);
+		output_number (128 + symbol->offset);
+		printf ("primary: %s offset: %d\n", symbol->name, 128+ symbol->offset);
+		output_with_tab("\t/Offset from stackbase at 128 (200(8)");
+                // output_string(symbol->name);
                 newline();
                 lval->indirect = symbol->type;
                 lval->ptr_type = symbol->type;
