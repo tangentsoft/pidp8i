@@ -1,4 +1,4 @@
-/*	File gen.c: 2.1 (83/03/20,16:02:06) */
+/*      File gen.c: 2.1 (83/03/20,16:02:06) */
 /*% cc -O -c %
  *
  */
@@ -9,163 +9,195 @@
 
 /* ToUpper routine */
 
-	ucase(ch)
-	int ch;
-	{
-		if ('a'>ch || ch>'z') return(ch);
-		return(ch-32);
-	}
-/*
- *	return next available internal label number
- *
+ucase(int ch) {
+  if ('a'>ch || ch>'z') return(ch);
+  return(ch-32);
+}
+
+/**
+ * return next available internal label number
  */
-getlabel ()
-{
-	return (nxtlab++);
+getlabel() {
+    return (nxtlab++);
 }
 
-/*
- *	print specified number as label
+/**
+ * print specified number as label
+ * @param label
  */
-printlabel (label)
-int	label;
-{
-	olprfix ();
-	outdec (label);
-    return 0;
+print_label(int label) {
+    output_label_prefix ();
+    output_decimal (label);
 }
 
-/*
- *	glabel - generate label
+/**
+ * glabel - generate label
+ * not used ?
+ * @param lab label number
  */
-glabel (lab)
-char	*lab;
-{
-	prefix ();
-	outstr (lab);
-	col ();
-	nl ();
-    return 0;
+glabel(char *lab) {
+    output_string (lab);
+    output_label_terminator ();
+    newline ();
 }
 
-/*
- *	gnlabel - generate numeric label
+/**
+ * generate_label - generate numeric label
+ * @param nlab label number
+ * @return 
  */
-gnlabel (nlab)
-int	nlab;
-{
-	printlabel (nlab);
-	col ();
-	nl ();
-    return 0;
+generate_label(int nlab) {
+    print_label (nlab);
+    output_label_terminator ();
+    newline ();
 }
 
-outbyte (c)
-char	c;
-{
-	if (c == 0)
-		return (0);
-	fputc (c, output);
-	return (c);
+/**
+ * outputs one byte
+ * @param c
+ * @return 
+ */
+output_byte(char c) {
+    if (c == 0)
+        return (0);
+    fputc (c, output);
+    return (c);
 }
 
-outstr (ptr)
-char	ptr[];
-{
-	int	k;
-
-	k = 0;
-	while (outbyte (ucase(ptr[k++])));
-    return 0;
+/**
+ * outputs a string
+ * @param ptr the string
+ * @return 
+ */
+output_string(char ptr[]) {
+    int k;
+    k = 0;
+    while (output_byte (ucase(ptr[k++])));
+    if (0) printf ("DBG: %s\n", ptr);
 }
 
-
-tab ()
-{
-	outbyte (9);
-    return 0;
+/**
+ * outputs a tab
+ * @return 
+ */
+print_tab() {
+    output_byte ('\t');
 }
 
-ol (ptr)
-char	ptr[];
+/**
+ * output line
+ * @param ptr
+ * @return 
+ */
+output_line(char ptr[])
 {
-	ot (ptr);
-	nl ();
-    return 0;
+    output_with_tab (ptr);
+    newline ();
 }
 
-ot (ptr)
-char	ptr[];
-{
-	outstr (ptr);
-    return 0;
+/**
+ * tabbed output
+ * @param ptr
+ * @return 
+ */
+output_with_tab(char ptr[]) {
+  // print_tab ();
+    output_string (ptr);
 }
 
-outdec (number)
-int	number;
-{
+/**
+ * output decimal number
+ * @param number
+ * @return 
+ */
+
+void output_decimal(int number) {
 	int	k, zs;
 	char	c;
 
+        // fprintf(output, "%d", number);
 	if (number == -32768) {
-		outstr ("-32768");
-		return 0;
+		output_string ("-32768");
+		return;
 	}
 	zs = 0;
 	k = 10000;
 	if (number < 0) {
 		number = (-number);
-		outbyte ('-');
+		output_byte ('-');
 	}
 	while (k >= 1) {
 		c = number / k + '0';
 		if ((c != '0' | (k == 1) | zs)) {
 			zs = 1;
-			outbyte (c);
+			output_byte (c);
 		}
 		number = number % k;
 		k = k / 10;
 	}
-    return 0;
+    return;
 }
 		
-store (lval)
-int	*lval;
-{
-	if (lval[1] == 0)
-		putmem (lval[0]);
-	else
-		putstk (lval[1]);
-    return 0;
+/**
+ * stores values into memory
+ * @param lval
+ * @return 
+ * Why does store use stack for indirect, and get use indirect?
+ */
+store(LVALUE *lval) {
+    if (lval->indirect == 0)
+        gen_put_memory (lval->symbol);
+    else
+        gen_put_stack (lval->indirect);
 }
 
-rvalue (lval)
-int	*lval;
-{
-	if ((lval[0] != 0) & (lval[1] == 0))
-		getmem (lval[0]);
-	else
-		indirect (lval[1]);
-    return 0;
+rvalue(LVALUE *lval, int reg) {
+    if ((lval->symbol != 0) & (lval->indirect == 0))
+        gen_get_memory (lval->symbol);
+    else
+        gen_get_indirect (lval->indirect);
+    return HL_REG;
 }
 
-rivalue (lval)
-int	*lval;
-{
-	if ((lval[0] != 0) & (lval[1] == 0))
-		getincmem (lval[0]);
-	else
-		incdirect (lval[1]);
-    return 0;
+rivalue(LVALUE *lval, int reg) {
+    if ((lval->symbol != 0) & (lval->indirect == 0))
+        gen_get_inc_memory (lval->symbol);
+    else
+        gen_inc_direct (lval->indirect, reg);
+    return HL_REG;
 }
 
-test (label, ft)
-int	label,
-	ft;
-{
-	needbrack ("(");
-	expression (YES);
-	needbrack (")");
-	testjump (label, ft);
-    return 0;
+
+/**
+ * parses test part "(expression)" input and generates assembly for jump
+ * @param label
+ * @param ft : false - test jz, true test jnz
+ * @return 
+ */
+test(int label, int ft) {
+    needbrack ("(");
+    expression (YES);
+    needbrack (")");
+    gen_test_jump (label, ft);
+}
+
+/**
+ * scale constant depending on type
+ * @param type
+ * @param otag
+ * @param size
+ * @return 
+ */
+scale_const(int type, int otag, int *size) {
+    switch (type) {
+        case CINT:
+        case UINT:
+            *size += *size;
+            break;
+        case STRUCT:
+            *size *= tag_table[otag].size;
+            break;
+        default:
+            break;
+    }
 }
