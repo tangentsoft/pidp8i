@@ -33,10 +33,9 @@ extern  int     nxtlab,
                 glbflag,
                 ctext,
                 cmode,
-                lastst,
-                inbreak;
+                lastst;
 
-extern  FILE    *input, *input2, *output, *bfile;
+extern  FILE    *input, *input2, *output;
 extern  FILE    *inclstk[];
 extern  int     inclsp;
 extern  char    fname[];

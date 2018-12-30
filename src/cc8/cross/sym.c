@@ -5,6 +5,14 @@
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
+
+/**
+ * Forward references to local procedures.
+ */
+int initials();
+void struct_init();
+int init();
 
 /**
  * declare a static variable
@@ -137,7 +145,7 @@ int initials(char *symbol_name, int type, int identity, int dim, int otag) {
  * initialise structure
  * @param tag
  */
-struct_init(TAG_SYMBOL *tag, char *symbol_name) {
+void struct_init(TAG_SYMBOL *tag, char *symbol_name) {
     int dim ;
     int member_idx;
 
@@ -164,7 +172,7 @@ struct_init(TAG_SYMBOL *tag, char *symbol_name) {
  * @param tag
  * @return
  */
-init(char *symbol_name, int type, int identity, int *dim, TAG_SYMBOL *tag) {
+int init(char *symbol_name, int type, int identity, int *dim, TAG_SYMBOL *tag) {
     int value, number_of_chars;
     if(identity == POINTER) {
         error("cannot assign to pointer");
@@ -269,7 +277,7 @@ void declare_local(int typ, int stclass, int otag) {
  * get required array size. [xx]
  * @return array size
  */
-needsub() {
+int needsub() {
     int num[1];
 
     if (match ("]"))
@@ -346,7 +354,7 @@ int add_global (char *sname, int identity, int type, int offset, int storage) {
     symbol->identity = identity;
     symbol->type = type;
     symbol->storage = storage;
-    symbol->offset = offset;
+    symbol->offset = gsize;
     global_table_index++;
     gsize += offset;
     return (current_symbol_table_idx);
@@ -400,7 +408,7 @@ int add_local(char *sname, int identity, int type, int offset,
 /**
  * test if next input string is legal symbol name
  */
-symname(char *sname) {
+int symname(char *sname) {
     int k;
 
     blanks();
@@ -416,7 +424,7 @@ symname(char *sname) {
 /**
  * print error message
  */
-illname() {
+void illname() {
     error ("illegal symbol name");
 }
 
@@ -425,13 +433,13 @@ illname() {
  * @param symbol_name
  * @return
  */
-multidef (char *symbol_name) {
+void multidef (char *symbol_name) {
     error ("already defined");
     gen_comment ();
     output_string (symbol_name);
     newline ();
 }
 
-glint(SYMBOL *sym)  {
+int glint(SYMBOL *sym)  {
      return (sym->offset);
 }

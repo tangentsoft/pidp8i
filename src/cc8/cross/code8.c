@@ -6,9 +6,10 @@
 #define unix
 
 #include <stdio.h>
+#include <string.h>
 #include "defs.h"
 #include "data.h"
-#include <string.h>
+#include "extern.h"
 
 /*	Define ASNM and LDNM to the names of the assembler and linker
 	respectively */
@@ -339,8 +340,9 @@ char	typeobj;
  *	register into the primary register
  *
  */
-void gen_get_indirect (typeobj)
+void gen_get_indirect (typeobj, reg)
 char	typeobj;
+int     reg;
 {
 	output_line("\tDCA JLC");
 /*	output_line("\tCDF1"); */
@@ -1050,7 +1052,7 @@ void gen_unsigned_less_or_equal ()
  *	greater than (unsigned)
  *
  */
-void gen_unsigned_greater_than ()
+void gen_usigned_greater_than ()
 {
 	gen_pop();
 	output_line("\tCLL CIA");
@@ -1101,7 +1103,7 @@ long	d; {
 //	newline (); */
 }
 
-assemble(s)
+int assemble(s)
 char	*s; {
 #ifdef	ASNM
 	char buf[100];
@@ -1119,7 +1121,7 @@ char	*s; {
  * add offset to primary register
  * @param val the value
  */
-add_offset(int val) {
+void add_offset(int val) {
     gen_immediate3();
     output_number(val);
     newline();
@@ -1130,7 +1132,7 @@ add_offset(int val) {
  * @param type
  * @param size
  */
-gen_multiply(int type, int size) {
+void gen_multiply(int type, int size) {
     switch (type) {
         case CINT:
         case UINT:

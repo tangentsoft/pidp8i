@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
 
 /* ToUpper routine */
 
@@ -17,7 +18,7 @@ ucase(int ch) {
 /**
  * return next available internal label number
  */
-getlabel() {
+int getlabel() {
     return (nxtlab++);
 }
 
@@ -25,7 +26,7 @@ getlabel() {
  * print specified number as label
  * @param label
  */
-print_label(int label) {
+void print_label(int label) {
     output_label_prefix ();
     output_decimal (label);
 }
@@ -35,7 +36,7 @@ print_label(int label) {
  * not used ?
  * @param lab label number
  */
-glabel(char *lab) {
+void glabel(char *lab) {
     output_string (lab);
     output_label_terminator ();
     newline ();
@@ -46,7 +47,7 @@ glabel(char *lab) {
  * @param nlab label number
  * @return 
  */
-generate_label(int nlab) {
+void generate_label(int nlab) {
     print_label (nlab);
     output_label_terminator ();
     newline ();
@@ -57,7 +58,7 @@ generate_label(int nlab) {
  * @param c
  * @return 
  */
-output_byte(char c) {
+char output_byte(char c) {
     if (c == 0)
         return (0);
     fputc (c, output);
@@ -69,7 +70,7 @@ output_byte(char c) {
  * @param ptr the string
  * @return 
  */
-output_string(char ptr[]) {
+void output_string(char ptr[]) {
     int k;
     k = 0;
     while (output_byte (ucase(ptr[k++])));
@@ -80,7 +81,7 @@ output_string(char ptr[]) {
  * outputs a tab
  * @return 
  */
-print_tab() {
+void print_tab() {
     output_byte ('\t');
 }
 
@@ -89,7 +90,7 @@ print_tab() {
  * @param ptr
  * @return 
  */
-output_line(char ptr[])
+void output_line(char ptr[])
 {
     output_with_tab (ptr);
     newline ();
@@ -100,8 +101,8 @@ output_line(char ptr[])
  * @param ptr
  * @return 
  */
-output_with_tab(char ptr[]) {
-  // print_tab ();
+void output_with_tab(char ptr[]) {
+    // print_tab ();
     output_string (ptr);
 }
 
@@ -110,12 +111,10 @@ output_with_tab(char ptr[]) {
  * @param number
  * @return 
  */
-
 void output_decimal(int number) {
 	int	k, zs;
 	char	c;
 
-        // fprintf(output, "%d", number);
 	if (number == -32768) {
 		output_string ("-32768");
 		return;
@@ -137,29 +136,29 @@ void output_decimal(int number) {
 	}
     return;
 }
-		
+
 /**
  * stores values into memory
  * @param lval
  * @return 
  * Why does store use stack for indirect, and get use indirect?
  */
-store(LVALUE *lval) {
+void store(LVALUE *lval) {
     if (lval->indirect == 0)
         gen_put_memory (lval->symbol);
     else
         gen_put_stack (lval->indirect);
 }
 
-rvalue(LVALUE *lval, int reg) {
+int rvalue(LVALUE *lval, int reg) {
     if ((lval->symbol != 0) & (lval->indirect == 0))
         gen_get_memory (lval->symbol);
     else
-        gen_get_indirect (lval->indirect);
+        gen_get_indirect (lval->indirect, reg);
     return HL_REG;
 }
 
-rivalue(LVALUE *lval, int reg) {
+int rivalue(LVALUE *lval, int reg) {
     if ((lval->symbol != 0) & (lval->indirect == 0))
         gen_get_inc_memory (lval->symbol);
     else
@@ -174,7 +173,7 @@ rivalue(LVALUE *lval, int reg) {
  * @param ft : false - test jz, true test jnz
  * @return 
  */
-test(int label, int ft) {
+void test(int label, int ft) {
     needbrack ("(");
     expression (YES);
     needbrack (")");
@@ -188,7 +187,7 @@ test(int label, int ft) {
  * @param size
  * @return 
  */
-scale_const(int type, int otag, int *size) {
+void scale_const(int type, int otag, int *size) {
     switch (type) {
         case CINT:
         case UINT:

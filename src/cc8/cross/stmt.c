@@ -5,6 +5,92 @@
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
+
+/**
+ * Forward references to local procedures.
+ */
+void dowhile ();
+void do_statement ();
+int statement_declare ();
+int do_local_declares ();
+void do_compound ();
+void dumpsw ();
+
+/**
+ * statement parser
+ * called whenever syntax requires a statement.  this routine
+ * performs that statement and returns a number telling which one
+ * @param func func is true if we require a "function_statement", which
+ * must be compound, and must contain "statement_list" (even if
+ * "declaration_list" is omitted)
+ * @return statement type
+ */
+int statement (int func) {
+    if ((ch () == 0) & feof (input))
+        return (0);
+    lastst = 0;
+    if (func) {
+        if (match ("{")) {
+            do_compound (YES);
+            return (lastst);
+        } else {
+            error ("function requires compound statement");
+	}
+    }
+    if (match ("{"))
+        do_compound (NO);
+    else
+        do_statement ();
+    return (lastst);
+}
+
+/**
+ * declaration
+ */
+int statement_declare() {
+    if (amatch("register", 8))
+        do_local_declares(DEFAUTO);
+    else if (amatch("auto", 4))
+        do_local_declares(DEFAUTO);
+    else if (amatch("static", 6))
+        do_local_declares(LSTATIC);
+    else if (do_local_declares(AUTO)) ;
+    else
+        return (NO);
+    return (YES);
+}
+
+/**
+ * local declarations
+ * @param stclass
+ * @return
+ */
+int do_local_declares(int stclass) {
+    int type = 0;
+    int otag;   /* tag of struct object being declared */
+    int sflag;  /* TRUE for struct definition, zero for union */
+    char sname[NAMESIZE];
+    blanks();
+    if ((sflag=amatch("struct", 6)) || amatch("union", 5)) {
+        if (symname(sname) == 0) { /* legal name ? */
+            illname();
+        }
+        if ((otag=find_tag(sname)) == -1) /* structure not previously defined */
+        {
+            otag = define_struct(sname, stclass, sflag);
+        }
+        declare_local(STRUCT, stclass, otag);
+    } else if ((type = get_type())) {
+        declare_local(type, stclass, -1);
+    } else if (stclass == LSTATIC || stclass == DEFAUTO) {
+        declare_local(CINT, stclass, -1);
+    } else {
+        return(0);
+    }
+    need_semicolon();
+    return(1);
+}
 
 /**
  * compound statement
@@ -150,38 +236,6 @@ void dofor() {
 }
 
 /**
- * dump switch table
- */
-void dumpsw(WHILE *ws) {
-        int     i,j;
-
-        data_segment_gdata ();
-        generate_label (ws->body_tab);
-        if (ws->case_test != swstp) {
-                j = ws->case_test;
-                while (j < swstp) {
-                        gen_def_word ();
-                        i = 4;
-                        while (i--) {
-			        gen_immediate3();
-                                output_number (swstcase[j]);
-                                newline ();
-				casejump ();
-				gen_jump (swstlab[j++]);
-                                if ((i == 0) | (j >= swstp)) {
-                                        newline ();
-                                        break;
-                                }
-                                newline ();
-                        }
-                }
-		gen_jump(ws->incr_def);
-        }
-        code_segment_gtext ();
-}
-
-
-/**
  * "switch" statement
  */
 void doswitch() {
@@ -242,7 +296,7 @@ void dodefault() {
         WHILE *ptr;
         int        lab;
 
-        if (ptr = readswitch ()) {
+        if ((ptr = readswitch ())) {
                 ptr->incr_def = lab = getlabel ();
                 generate_label (lab);
                 if (!match (":"))
@@ -288,9 +342,40 @@ void docont() {
 }
 
 /**
+ * dump switch table
+ */
+void dumpsw(WHILE *ws) {
+        int     i,j;
+
+        data_segment_gdata ();
+        generate_label (ws->body_tab);
+        if (ws->case_test != swstp) {
+                j = ws->case_test;
+                while (j < swstp) {
+                        gen_def_word ();
+                        i = 4;
+                        while (i--) {
+                                gen_immediate3();
+				output_number (swstcase[j]);
+                                newline ();
+				casejump ();
+				gen_jump (swstlab[j++]);
+                                if ((i == 0) | (j >= swstp)) {
+                                        newline ();
+                                        break;
+                                }
+                                newline ();
+                        }
+                }
+        gen_jump (ws->incr_def);
+        }
+        code_segment_gtext ();
+}
+
+/**
  * non-declaration statement
  */
-do_statement () {
+void do_statement () {
     if (amatch ("if", 2)) {
         doif ();
         lastst = STIF;
@@ -343,77 +428,3 @@ do_statement () {
 /*      }
 */  }
 }
-
-/**
- * statement parser
- * called whenever syntax requires a statement.  this routine
- * performs that statement and returns a number telling which one
- * @param func func is true if we require a "function_statement", which
- * must be compound, and must contain "statement_list" (even if
- * "declaration_list" is omitted)
- * @return statement type
- */
-statement (int func) {
-    if ((ch () == 0) & feof (input))
-        return (0);
-    lastst = 0;
-    if (func)
-        if (match ("{")) {
-            do_compound (YES);
-            return (lastst);
-        } else
-            error ("function requires compound statement");
-    if (match ("{"))
-        do_compound (NO);
-    else
-        do_statement ();
-    return (lastst);
-}
-
-/**
- * declaration
- */
-statement_declare() {
-    if (amatch("register", 8))
-        do_local_declares(DEFAUTO);
-    else if (amatch("auto", 4))
-        do_local_declares(DEFAUTO);
-    else if (amatch("static", 6))
-        do_local_declares(LSTATIC);
-    else if (do_local_declares(AUTO)) ;
-    else
-        return (NO);
-    return (YES);
-}
-
-/**
- * local declarations
- * @param stclass
- * @return
- */
-do_local_declares(int stclass) {
-    int type = 0;
-    int otag;   /* tag of struct object being declared */
-    int sflag;  /* TRUE for struct definition, zero for union */
-    char sname[NAMESIZE];
-    blanks();
-    if ((sflag=amatch("struct", 6)) || amatch("union", 5)) {
-        if (symname(sname) == 0) { /* legal name ? */
-            illname();
-        }
-        if ((otag=find_tag(sname)) == -1) /* structure not previously defined */
-        {
-            otag = define_struct(sname, stclass, sflag);
-        }
-        declare_local(STRUCT, stclass, otag);
-    } else if (type = get_type()) {
-        declare_local(type, stclass, -1);
-    } else if (stclass == LSTATIC || stclass == DEFAUTO) {
-        declare_local(CINT, stclass, -1);
-    } else {
-        return(0);
-    }
-    need_semicolon();
-    return(1);
-}
-

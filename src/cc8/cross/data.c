@@ -41,14 +41,12 @@ int     nxtlab,
         glbflag,
         ctext,
         cmode,
-        lastst,
-        inbreak;
+        lastst;
 
 FILE    *input, *input2, *output;
 FILE    *inclstk[INCLSIZ];
 int     inclsp;
 char    fname[NAMESIZE];
-FILE    *bfile;
 
 /*char    quote[2];
 char    *cptr;*/

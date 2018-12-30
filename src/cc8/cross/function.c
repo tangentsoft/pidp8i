@@ -5,8 +5,17 @@
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
 
 int argtop;
+
+/**
+ * Forward references to local functions.
+ */
+
+void multidef();
+int doAnsiArguments();
+void doLocalAnsiArgument();
 
 /**
  * begin a function
@@ -37,10 +46,6 @@ void newfunc() {
         error("missing open paren");
     prefix ();
     if (astreq(n,"main",4)) {
-      if (inbreak) {
-	output_line("\tEND");
-	output=bfile;
-      }
       output_string("xmain");
     }
     else output_string (n);
@@ -48,12 +53,6 @@ void newfunc() {
     output_label_terminator ();
     //	output_string("\t0");
     newline ();
-    if (inbreak) {
-      output_line("\tCLA CLL");
-      output_line("\tCALL 2,PGINIT");
-      output_line("\tARG STKP");
-      output_line("\tARG GBL");
-    }
     prologue (rtn);
 
     // output_string(n);
@@ -87,7 +86,7 @@ void newfunc() {
         stkp = 0;
         argtop = argstk;
         while (argstk) {
-            if (type = get_type()) {
+	  if ((type = get_type())) {
                 getarg(type);
                 need_semicolon();
             } else {
@@ -171,7 +170,7 @@ void getarg(int t) {
     }
 }
 
-doAnsiArguments() {
+int doAnsiArguments() {
     int type;
     type = get_type();
     if (type == 0) {
@@ -195,9 +194,10 @@ doAnsiArguments() {
             break;
         }
     }
+    return 1;
 }
 
-doLocalAnsiArgument(int type) {
+void doLocalAnsiArgument(int type) {
     char symbol_name[NAMESIZE];
     int identity, address, argptr, ptr, otag;
     /* if a struct is being passed, its tag must be read in before checking if

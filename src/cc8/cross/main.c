@@ -7,8 +7,20 @@
 #include <stdlib.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
 
 FILE *logFile = NULL;
+
+/**
+ * Forward references to local procedures.
+ */
+void compile();
+void usage();
+void parse();
+char filename_typeof();
+void dumplits();
+void dumpglbs();
+void errorsummary();
 
 /* Simple oputs function to replace the ugly fputs(foo, stdout) */
 
@@ -18,7 +30,7 @@ void oputs(char *str)
     fputs(str, stderr);
 }
 
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     char *param = NULL, *bp;
     int smacptr, i;
     macptr = 0;
@@ -72,7 +84,7 @@ main(int argc, char *argv[]) {
                             logFile = NULL;
                         }
 
-                        if(logFile = fopen(++param, "rb"))
+                        if((logFile = fopen(++param, "rb")))
                         {
                             fclose(logFile);
                             logFile = NULL;
@@ -139,7 +151,6 @@ void compile(char *file) {
         ncmp =
         lastst =
 	gsize = 
-	inbreak =
         /*quote[1] =*/
         0;
         input2 = NULL;
@@ -193,7 +204,7 @@ void compile(char *file) {
 
 /* Writes the frontend version to the output */
 
-frontend_version() {
+void frontend_version() {
     gen_comment();
     output_line("Front End (2.7,84/11/28)");
     gen_comment();
@@ -204,7 +215,7 @@ frontend_version() {
  * prints usage
  * @return exits the execution
  */
-usage() {
+void usage() {
     oputs("usage: sccXXXX [-tcsah] [-dSYM[=VALUE]] [-l[log]] files\n");
     oputs("-t: output c source as asm comments\n");
     oputs("-a: no argument count in A to function calls\n");
@@ -224,7 +235,7 @@ usage() {
  * at this level, only static declarations, defines, includes,
  * and function definitions are legal.
  */
-parse() {
+void parse() {
     while (!feof(input)) {
         if (amatch("extern", 6))
             do_declarations(EXTERN, NULL_TAG, 0);
@@ -254,7 +265,7 @@ parse() {
  * @param is_struct
  * @return
  */
-do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
+int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
     int type;
     int otag;   /* tag of struct object being declared */
     int sflag;      /* TRUE for struct definition, zero for union */
@@ -270,7 +281,7 @@ do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
             otag = define_struct(sname, stclass, sflag);
         }
         declare_global(STRUCT, stclass, mtag, otag, is_struct);
-    } else if (type = get_type()) {
+    } else if ((type = get_type())) {
         declare_global(type, stclass, mtag, NULL_TAG, is_struct);
     } else if (stclass == PUBLIC) {
         return (0);
@@ -447,13 +458,12 @@ void dumpglbs() {
     newline();
 }
 
-
 /**
  * dump struct data
  * @param symbol struct variable
  * @param position position of the struct in the array, or zero
  */
-dump_struct(SYMBOL *symbol, int position) {
+void dump_struct(SYMBOL *symbol, int position) {
     int i, number_of_members, value;
     number_of_members = tag_table[symbol->tagidx].number_of_members;
     newline();
@@ -492,7 +502,7 @@ dump_struct(SYMBOL *symbol, int position) {
 /**
  * report errors
  */
-errorsummary() {
+void errorsummary() {
     if (ncmp)
         error("missing closing bracket");
     newline();
@@ -507,7 +517,7 @@ errorsummary() {
     newline();
     gen_comment();
     output_with_tab("global pool:");
-    output_decimal(global_table_index * sizeof(SYMBOL));
+    output_decimal(global_table_index);
     newline();
     gen_comment();
     output_with_tab("Macro pool:");
@@ -522,7 +532,7 @@ errorsummary() {
  * @param s the filename
  * @return the last char if it contains dot, space otherwise
  */
-filename_typeof(char *s) {
+char filename_typeof(char *s) {
     s += strlen(s) - 2;
     if (*s == '.')
         return (*(s + 1));

@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include "defs.h"
 #include "data.h"
+#include "extern.h"
 
-primary (LVALUE *lval) {
+int primary (LVALUE *lval) {
     char    sname[NAMESIZE];
     int     num[1], k, symbol_table_idx, offset, reg, otag;
     SYMBOL *symbol;
@@ -109,8 +110,7 @@ primary (LVALUE *lval) {
                 }
                 gen_immediate();
 		output_number (128 + symbol->offset);
-		printf ("primary: %s offset: %d\n", symbol->name, 128+ symbol->offset);
-		output_with_tab("\t/Offset from stackbase at 128 (200(8)");
+		output_with_tab("\t/Offset from stackbase at 128 (200(8))");
                 // output_string(symbol->name);
                 newline();
                 lval->indirect = symbol->type;
@@ -149,7 +149,7 @@ primary (LVALUE *lval) {
  * @param val2
  * @return
  */
-dbltest (LVALUE *val1, LVALUE *val2) {
+int dbltest (LVALUE *val1, LVALUE *val2) {
     if (val1 == NULL)
         return (FALSE);
     if (val1->ptr_type) {
@@ -168,7 +168,7 @@ dbltest (LVALUE *val1, LVALUE *val2) {
  * @param lval2
  * @return
  */
-result (LVALUE *lval, LVALUE *lval2) {
+void result (LVALUE *lval, LVALUE *lval2) {
     if (lval->ptr_type && lval2->ptr_type)
         lval->ptr_type = 0;
     else if (lval2->ptr_type) {
@@ -180,7 +180,7 @@ result (LVALUE *lval, LVALUE *lval2) {
 /**
  *  8080 constant  Replaced by PDP-8 Constant 
 
-constant (int val[]) {
+int constant (int val[]) {
     if (number (val))
         gen_immediate ();
     else if (quoted_char (val))
@@ -267,7 +267,7 @@ number (int val[]) {
  * @param value returns the char found
  * @return 1 if we have, 0 otherwise
  */
-quoted_char (int *value) {
+int quoted_char (int *value) {
     int     k;
     char    c;
 
@@ -288,7 +288,7 @@ quoted_char (int *value) {
  * @param position returns beginning of the string
  * @return 1 if such string found, 0 otherwise
  */
-quoted_string (int *position) {
+int quoted_string (int *position) {
     char    c;
 
     if (!match ("\""))
@@ -315,7 +315,7 @@ quoted_string (int *position) {
 /**
  * decode special characters (preceeded by back slashes)
  */
-spechar() {
+char spechar() {
     char c;
     c = ch();
 
@@ -381,7 +381,7 @@ void callfunction (char *ptr) {
     stkp = gen_modify_stack (stkp + nargs);
 }
 
-needlval () {
+void needlval () {
     error ("must be lvalue");
 }
 
