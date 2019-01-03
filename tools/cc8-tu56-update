@@ -63,6 +63,15 @@ _syspack = "v3d"
 _sysext  = ".rk05"
 
 
+# The OS/8 version of CC8's C sources are listed
+# in dependency order, in case that later matters.
+_modules = [ 'libc', 'c8', 'n8', 'p8' ]
+
+# Example programs.
+# Listed here in the order we expect to install them.
+_examples = [ 'fib.c', 'calc.c', 'ps.c' ]
+
+
 #### cross_compile #####################################################
 # Cross-compile a *.c file on the local machine to a *.s file we can
 # send into the OS/8 instance.  The parameter should have no extension.
@@ -100,9 +109,8 @@ def main ():
 
   # Cross-compile the OS/8 version of CC8's C sources to SABR.  These
   # files are listed in dependency order, in case that later matters.
-  modules = [ 'libc', 'c8', 'n8', 'p8' ]
   try:
-    for m in modules: cross_compile (m)
+    for m in _modules: cross_compile (m)
   except OSError as e:
     print "Cross-compilation steps failed: " + e.strerror + '!'
     exit (1)
@@ -165,8 +173,14 @@ def main ():
   sfiles = ','.join([
     'SYS:{0}.SV'.format(f) for f in [ 'CC', 'CC1', 'CC2' ]
   ])
+
+  up_examples = []
+  for example in _examples:
+    up_examples.append (example.upper())
+
+  print
   dfiles = [ 
-    ','.join([ 'CALC.C', 'FIB.C', 'PS.C' ]),
+    ','.join(up_examples),
     ','.join([ 'HEADER.SB', 'LIBC.RL', 'CCR.BI' ]),
   ]
   tfiles = [
@@ -180,7 +194,7 @@ def main ():
 
   # Copy the SABR files produced above by the host-side cross-compiler
   # to the OS/8 environment's RK05 disk.
-  for m in modules:
+  for m in _modules:
     s.os8_send_file (m + '.sb')
 
   # Copy example programs in as well.
@@ -191,13 +205,12 @@ def main ():
   # We don't let os8_send_file build the destination file name because
   # the source is a random-named temp file.
   tool = os.path.join (dirs.bin, 'cc8-to-os8')
-  for src in glob.glob ('../examples/*.c'):
-    if 'basic.c' not in src:
-    # else: leave this one out.  The OS/8 compiler can't cope with it.
-      ctf = tempfile.NamedTemporaryFile ()
-      ctn = ctf.name
-      os.system (tool + ' < ' + src + ' > ' + ctn)
-      s.os8_send_file (ctn, os.path.basename (src).upper ())
+  for example in _examples:
+    src = '../examples/' + example
+    ctf = tempfile.NamedTemporaryFile ()
+    ctn = ctf.name
+    os.system (tool + ' < ' + src + ' > ' + ctn)
+    s.os8_send_file (ctn, os.path.basename (src).upper ())
 
   # Copy the remaining static OS/8 CC8 text files in.  We purposely do
   # not send init.h or libc.h because OS/8 CC8 doesn't process #include,
