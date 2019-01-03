@@ -184,20 +184,19 @@ os8 SUBMIT SYS:LCBAS.BI
 end default lcmod
 
 # INIT message setting stuff goes here
-cpto $os8mi/init.cm
-# Location of init.tx is funky so that test-os8-run will be able to
-# sanitize it.
-cpto $build/media/os8/init.tx
-
-
 # Implement the config option to enable/disable INIT
-
 # By default we enable it.
 # We may be building from distribution media with INIT enabled.
 # So always SET SYS NO INIT
 # and undo it by default, to be overridden if --disable-os8-init is set.
+# Only copy init.cm and init.tx if init is enabled.
+
 os8 SET SYS NO INIT
 begin default init
+cpto $os8mi/init.cm
+# Location of init.tx is funky so that test-os8-run will be able to
+# sanitize it.
+cpto $build/media/os8/init.tx
 os8 SET SYS INIT
 end default init
 

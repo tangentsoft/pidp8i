@@ -293,15 +293,25 @@ os8 SUBMIT SYS:LCSYS.BI
 # os8 SUBMIT SYS:LCBAS.BI
 end default lcmod
 
-# INIT message setting stuf goes here
-begin enabled v3f
-cpto $os8mi/3finit.tx DSK:INIT.TX
-end enabled v3f
+# INIT message setting stuff goes here
+# Implement the config option to enable/disable INIT
+# By default we enable it.
+# We may be building from distribution media with INIT enabled.
+# So always SET SYS NO INIT
+# and undo it by default, to be overridden if --disable-os8-init is set.
+# Only copy init.cm and init.tx if init is enabled.
 
-begin enabled v3d
-cpto $os8mi/init.tx
-end enabled v3d
+os8 SET SYS NO INIT
+begin default init
+  begin enabled v3f
+    cpto $os8mi/3finit.tx DSK:INIT.TX
+  end enabled v3f
 
-cpto $os8mi/init.cm
+  begin enabled v3d
+    cpto $os8mi/init.tx
+  end enabled v3d
 
-os8 SET SYS INIT
+  cpto $os8mi/init.cm
+
+  os8 SET SYS INIT
+end default init
