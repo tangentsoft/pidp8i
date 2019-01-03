@@ -49,7 +49,7 @@ use warnings;
 my $nblines = 0;        # number of non-blank lines written out
 
 while (<>) {
-    if (!m{^\#include } and length and $nblines) {
+    if (!m{^\#include }) {
         # Pass it through unchanged.
         print;
     }
