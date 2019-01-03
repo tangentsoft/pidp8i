@@ -4,6 +4,11 @@
 
 #define INTSIZE 1
 
+/**
+ * No Assemble or Link phase for PDP-8 targeting.
+ */
+#define NOASLD
+
 /* miscellaneous */
 #define FOREVER for(;;)
 #define FALSE   0
