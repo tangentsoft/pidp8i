@@ -48,6 +48,7 @@ from simh   import *
 # Other global Python modules
 import glob
 import subprocess
+import shutil
 
 
 #### GLOBALS AND CONSTANTS #############################################
@@ -62,7 +63,6 @@ cc8_src = os.path.join (dirs.src, 'src', 'cc8')
 _syspack = "v3d"
 _sysext  = ".rk05"
 
-
 # The OS/8 version of CC8's C sources are listed
 # in dependency order, in case that later matters.
 _modules = [ 'libc', 'c8', 'n8', 'p8' ]
@@ -72,6 +72,48 @@ _modules = [ 'libc', 'c8', 'n8', 'p8' ]
 _examples = [ 'fib.c', 'calc.c', 'ps.c' ]
 
 
+#### make_scratch ####################################################
+# Imported from os8script.py
+# Create a copy of the contents of image file using the python
+# method to create a secure, named temp filename.
+# The caller has split the image file name into a base path,
+# and an extension which we use.
+# After copying the source image, the file is closed and the name
+# of the scratch file is returned.
+def make_scratch (base_imagename, extension):
+  try:
+    src_image = open(base_imagename+extension, "rb")
+  except IOError:
+    print "Open of imagefile " + base_imagename + extension + " failed."
+    return None
+      
+  try:
+    dest_image = tempfile.NamedTemporaryFile(mode='w+b', \
+                                             prefix=base_imagename+'-temp-', \
+                                             suffix=extension, \
+                                             delete=False)
+  except:
+    print "NamedTemporaryFile failed."
+    
+  destname = dest_image.name
+  print "Temp file name is: " + destname
+
+  try:
+    shutil.copyfileobj(src_image, dest_image)
+  except shutil.Error as e:
+    print "Copy of imagefile " + base_imagename + extension + \
+      " to scratch failed with error: " + str(e)
+    return None
+  except IOError as e:
+    print "Copy of imagefile " + base_imagename + extension + \
+      ", failed with IOError: " + \
+      str(e)
+    return None
+  src_image.close()
+  dest_image.close()
+  return destname
+
+  
 #### cross_compile #####################################################
 # Cross-compile a *.c file on the local machine to a *.s file we can
 # send into the OS/8 instance.  The parameter should have no extension.
@@ -138,8 +180,10 @@ def main ():
   if not os.path.isfile (rk):
     print "Could not find " + rk + "; OS/8 media not yet built?"
     exit (1)
-  print "Booting " + rk + "..."
-  s.send_cmd ("att rk0 " + rk)
+  print "Using scratch copy of " + rk
+  rk_scratch = make_scratch (os.path.join (dirs.os8mo, _syspack), _sysext)
+  print "Booting " + rk_scratch + "..."
+  s.send_cmd ("att rk0 " + rk_scratch)
   s.send_cmd ("boot rk0")
 
   # The OS/8 disk image we're running this against might not be freshly
@@ -239,6 +283,8 @@ def main ():
   s.back_to_cmd ('\\.')
   s.send_cmd ('det dt0')
   s.send_cmd ('quit')
+  print "Removing scratch system image: " + rk_scratch
+  os.remove(rk_scratch)
 
 
 if __name__ == "__main__": main()
