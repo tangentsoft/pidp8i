@@ -58,6 +58,10 @@ cc8_cross = os.path.join (dirs.build, 'bin', 'cc8')
 # Path to the CC8 sources
 cc8_src = os.path.join (dirs.src, 'src', 'cc8')
 
+# Name and extension of system packs.
+_syspack = "v3d"
+_sysext  = ".rk05"
+
 
 #### cross_compile #####################################################
 # Cross-compile a *.c file on the local machine to a *.s file we can
@@ -72,7 +76,11 @@ def cross_compile (module):
     print outf + " up-to-date."
   else:
     print "Building " + outf + "..."
-    rc = subprocess.call ([cc8_cross, inf])
+    try:
+      rc = subprocess.call ([cc8_cross, inf])
+    except subprocess.Error as e:
+      print "Run of " + cc8_cross + " " + inf + " failed with error: " + str(e)
+    print "return call: " + str(rc)
     if rc == 0:
       print inf + " -> " + outf
     else:
@@ -118,7 +126,7 @@ def main ():
   # Find and boot the bootable OS/8 disk.  Use the "patched" version
   # because that is what "make run" uses; we use that command to
   # inspect this script's work.
-  rk = os.path.join (dirs.os8mo, 'os8v3d-patched.rk05')
+  rk = os.path.join (dirs.os8mo, _syspack + _sysext)
   if not os.path.isfile (rk):
     print "Could not find " + rk + "; OS/8 media not yet built?"
     exit (1)
