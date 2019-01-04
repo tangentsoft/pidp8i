@@ -240,6 +240,9 @@ def main ():
   # to the OS/8 environment's RK05 disk.
   for m in _modules:
     s.os8_send_file (m + '.sb')
+    # Clean up after os8_send_file format conversion.
+    os.remove(os.path.join (dirs.obj, m + ".sb.pt"))
+
 
   # Copy example programs in as well.
   #
@@ -255,12 +258,17 @@ def main ():
     ctn = ctf.name
     os.system (tool + ' < ' + src + ' > ' + ctn)
     s.os8_send_file (ctn, os.path.basename (src).upper ())
+    # Clean up after os8_send_file format conversion.
+    ctpt = os.path.join (dirs.obj, os.path.basename(ctn) + ".pt")
+    os.remove(ctpt)
 
   # Copy the remaining static OS/8 CC8 text files in.  We purposely do
   # not send init.h or libc.h because OS/8 CC8 doesn't process #include,
   # so it has those bits hard-coded into the compiler at the moment.
   for src in [ 'bldcc8.bi', 'ccr.bi', 'header.sb' ]:
     s.os8_send_file (src)
+    # Clean up after os8_send_file format conversion.
+    os.remove(os.path.join (dirs.obj, src + ".pt"))
 
   # Re-zero most of core.  See method comment for details.
   #
