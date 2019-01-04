@@ -129,7 +129,7 @@ def cross_compile (module):
     print "Building " + outf + "..."
     try:
       rc = subprocess.call ([cc8_cross, inf])
-    except subprocess.Error as e:
+    except subprocess.CalledProcessError as e:
       print "Run of " + cc8_cross + " " + inf + " failed with error: " + str(e)
     print "return call: " + str(rc)
     if rc == 0:
