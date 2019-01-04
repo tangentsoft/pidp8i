@@ -48,6 +48,7 @@ from simh   import *
 # Other global Python modules
 import glob
 import subprocess
+import shutil
 
 
 #### GLOBALS AND CONSTANTS #############################################
@@ -58,7 +59,61 @@ cc8_cross = os.path.join (dirs.build, 'bin', 'cc8')
 # Path to the CC8 sources
 cc8_src = os.path.join (dirs.src, 'src', 'cc8')
 
+# Name and extension of system packs.
+_syspack = "v3d"
+_sysext  = ".rk05"
 
+# The OS/8 version of CC8's C sources are listed
+# in dependency order, in case that later matters.
+_modules = [ 'libc', 'c8', 'n8', 'p8' ]
+
+# Example programs.
+# Listed here in the order we expect to install them.
+_examples = [ 'fib.c', 'calc.c', 'ps.c' ]
+
+
+#### make_scratch ####################################################
+# Imported from os8script.py
+# Create a copy of the contents of image file using the python
+# method to create a secure, named temp filename.
+# The caller has split the image file name into a base path,
+# and an extension which we use.
+# After copying the source image, the file is closed and the name
+# of the scratch file is returned.
+def make_scratch (base_imagename, extension):
+  try:
+    src_image = open(base_imagename+extension, "rb")
+  except IOError:
+    print "Open of imagefile " + base_imagename + extension + " failed."
+    return None
+      
+  try:
+    dest_image = tempfile.NamedTemporaryFile(mode='w+b', \
+                                             prefix=base_imagename+'-temp-', \
+                                             suffix=extension, \
+                                             delete=False)
+  except:
+    print "NamedTemporaryFile failed."
+    
+  destname = dest_image.name
+  print "Temp file name is: " + destname
+
+  try:
+    shutil.copyfileobj(src_image, dest_image)
+  except shutil.Error as e:
+    print "Copy of imagefile " + base_imagename + extension + \
+      " to scratch failed with error: " + str(e)
+    return None
+  except IOError as e:
+    print "Copy of imagefile " + base_imagename + extension + \
+      ", failed with IOError: " + \
+      str(e)
+    return None
+  src_image.close()
+  dest_image.close()
+  return destname
+
+  
 #### cross_compile #####################################################
 # Cross-compile a *.c file on the local machine to a *.s file we can
 # send into the OS/8 instance.  The parameter should have no extension.
@@ -72,7 +127,11 @@ def cross_compile (module):
     print outf + " up-to-date."
   else:
     print "Building " + outf + "..."
-    rc = subprocess.call ([cc8_cross, inf])
+    try:
+      rc = subprocess.call ([cc8_cross, inf])
+    except subprocess.Error as e:
+      print "Run of " + cc8_cross + " " + inf + " failed with error: " + str(e)
+    print "return call: " + str(rc)
     if rc == 0:
       print inf + " -> " + outf
     else:
@@ -92,9 +151,8 @@ def main ():
 
   # Cross-compile the OS/8 version of CC8's C sources to SABR.  These
   # files are listed in dependency order, in case that later matters.
-  modules = [ 'libc', 'c8', 'n8', 'p8' ]
   try:
-    for m in modules: cross_compile (m)
+    for m in _modules: cross_compile (m)
   except OSError as e:
     print "Cross-compilation steps failed: " + e.strerror + '!'
     exit (1)
@@ -118,12 +176,14 @@ def main ():
   # Find and boot the bootable OS/8 disk.  Use the "patched" version
   # because that is what "make run" uses; we use that command to
   # inspect this script's work.
-  rk = os.path.join (dirs.os8mo, 'os8v3d-patched.rk05')
+  rk = os.path.join (dirs.os8mo, _syspack + _sysext)
   if not os.path.isfile (rk):
     print "Could not find " + rk + "; OS/8 media not yet built?"
     exit (1)
-  print "Booting " + rk + "..."
-  s.send_cmd ("att rk0 " + rk)
+  print "Using scratch copy of " + rk
+  rk_scratch = make_scratch (os.path.join (dirs.os8mo, _syspack), _sysext)
+  print "Booting " + rk_scratch + "..."
+  s.send_cmd ("att rk0 " + rk_scratch)
   s.send_cmd ("boot rk0")
 
   # The OS/8 disk image we're running this against might not be freshly
@@ -157,8 +217,14 @@ def main ():
   sfiles = ','.join([
     'SYS:{0}.SV'.format(f) for f in [ 'CC', 'CC1', 'CC2' ]
   ])
+
+  up_examples = []
+  for example in _examples:
+    up_examples.append (example.upper())
+
+  print
   dfiles = [ 
-    ','.join([ 'CALC.C', 'FIB.C', 'PS.C' ]),
+    ','.join(up_examples),
     ','.join([ 'HEADER.SB', 'LIBC.RL', 'CCR.BI' ]),
   ]
   tfiles = [
@@ -172,8 +238,11 @@ def main ():
 
   # Copy the SABR files produced above by the host-side cross-compiler
   # to the OS/8 environment's RK05 disk.
-  for m in modules:
+  for m in _modules:
     s.os8_send_file (m + '.sb')
+    # Clean up after os8_send_file format conversion.
+    os.remove(os.path.join (dirs.obj, m + ".sb.pt"))
+
 
   # Copy example programs in as well.
   #
@@ -183,19 +252,23 @@ def main ():
   # We don't let os8_send_file build the destination file name because
   # the source is a random-named temp file.
   tool = os.path.join (dirs.bin, 'cc8-to-os8')
-  for src in glob.glob ('../examples/*.c'):
-    if 'basic.c' not in src:
-    # else: leave this one out.  The OS/8 compiler can't cope with it.
-      ctf = tempfile.NamedTemporaryFile ()
-      ctn = ctf.name
-      os.system (tool + ' < ' + src + ' > ' + ctn)
-      s.os8_send_file (ctn, os.path.basename (src).upper ())
+  for example in _examples:
+    src = '../examples/' + example
+    ctf = tempfile.NamedTemporaryFile ()
+    ctn = ctf.name
+    os.system (tool + ' < ' + src + ' > ' + ctn)
+    s.os8_send_file (ctn, os.path.basename (src).upper ())
+    # Clean up after os8_send_file format conversion.
+    ctpt = os.path.join (dirs.obj, os.path.basename(ctn) + ".pt")
+    os.remove(ctpt)
 
   # Copy the remaining static OS/8 CC8 text files in.  We purposely do
   # not send init.h or libc.h because OS/8 CC8 doesn't process #include,
   # so it has those bits hard-coded into the compiler at the moment.
   for src in [ 'bldcc8.bi', 'ccr.bi', 'header.sb' ]:
     s.os8_send_file (src)
+    # Clean up after os8_send_file format conversion.
+    os.remove(os.path.join (dirs.obj, src + ".pt"))
 
   # Re-zero most of core.  See method comment for details.
   #
@@ -218,6 +291,8 @@ def main ():
   s.back_to_cmd ('\\.')
   s.send_cmd ('det dt0')
   s.send_cmd ('quit')
+  print "Removing scratch system image: " + rk_scratch
+  os.remove(rk_scratch)
 
 
 if __name__ == "__main__": main()
