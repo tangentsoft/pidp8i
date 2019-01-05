@@ -1,0 +1,58 @@
+# Script to create the cc8.tu56 image that hosts the
+# OS/8 Native C compiler.
+# Note that because the patched, default system packs,
+# v3d.rk05 rely upon this image as a prerequisite, we
+# build with a copy of v3d-dist.rk05
+
+# copy $os8mo/v3d-dist.rk05 $os8mo/temp-v3d-dist.rk05
+# mount rk0 $os8mo/temp-v3d-dist.rk05 required
+mount rk0 $os8mo/v3d-dist.rk05 required scratch
+mount dt0 $os8mo/cc8.tu56 new
+boot rk0
+
+os8 ZERO DTA0:
+
+# Header .SB Assembler file used by compilations:
+# HEADER.SB
+
+# Modules : C source cross-compiled to .SB Assembler by cc8:
+# libc, c8, n8, p8
+
+# Example Programs:
+# fib.c, calc,c, ps.c
+
+# Copy source files into DSK for use.
+cpto $src/src/cc8/os8/header.sb DSK:
+cpto $obj/cc8/os8/libc.sb DSK:
+cpto $obj/cc8/os8/c8.sb DSK:
+cpto $obj/cc8/os8/n8.sb DSK:
+cpto $obj/cc8/os8/p8.sb DSK:
+
+# Assembly/Save phase taken from bldcc8.bi 
+
+os8 COPY DTA0:<DSK:HEADER.SB
+
+os8 COMP LIBC.SB
+os8 COPY DTA0:<LIBC.RL
+
+os8 COMP C8.SB
+begin cdprog SYS:LOADER
+C8,LIBC/I/O
+end  cdprog SYS:LOADER
+os8 SAVE DTA0 CC
+
+os8 COMP N8.SB
+begin cdprog SYS:LOADER
+N8,LIBC/I/O
+end  cdprog SYS:LOADER
+os8 SAVE DTA0 CC1
+
+os8 COMP P8.SB
+begin cdprog SYS:LOADER
+P8,LIBC/I/O
+end  cdprog SYS:LOADER
+os8 SAVE DTA0 CC2
+
+cpto $obj/cc8/os8/fib.c DTA0:
+cpto $obj/cc8/os8/calc.c DTA0:
+cpto $obj/cc8/os8/ps.c DTA0:

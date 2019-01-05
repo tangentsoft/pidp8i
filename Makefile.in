@@ -106,6 +106,7 @@ BUILDDIRS := \
 	bin \
 	libexec \
 	obj/cc8/cross \
+	obj/cc8/os8 \
 	obj/d8tape \
 	obj/misc \
 	obj/palbart \
@@ -166,6 +167,21 @@ CC8_OBJS := \
 	obj/cc8/cross/struct.o \
 	obj/cc8/cross/sym.o \
 	obj/cc8/cross/while.o
+
+CC_OS8_OBJS := \
+	obj/cc8/os8/libc.sb \
+	obj/cc8/os8/c8.sb \
+	obj/cc8/os8/n8.sb \
+	obj/cc8/os8/p8.sb
+
+CC_OS8_SRCS := \
+	@srcdir@/src/cc8/os8/header.sb
+
+CC_OS8_DEMOS := \
+	obj/cc8/os8/fib.c \
+	obj/cc8/os8/calc.c \
+	obj/cc8/os8/ps.c \
+
 
 D8TAPE_OBJS := \
 	obj/d8tape/dasm.o \
@@ -285,6 +301,9 @@ V3D_TD12K_TU56 = bin/v3d-td12k.tu56
 V3F_TC08_TU56 = bin/v3f-tc08.tu56
 V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
+
+CC8_TU56 = bin/cc8.tu56
+CC8_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/cc8-tu56.os8
 
 CLTXT = /boot/cmdline.txt
 
@@ -566,7 +585,7 @@ V3F_SOURCES := \
 $(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
-$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) | $(SIM) $(OS8RUN_OUTFILES)
+$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) $(CC8_TU56) | $(SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
@@ -608,6 +627,10 @@ $(V3D_TC08_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK)
 $(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK) 
 	$(OS8RUN)@OS8_OPTS@ $(ALL_TU56_SCRIPT) --enable td12k
 
+# Create the CC8 distribution DECtape image
+$(CC8_TU56): $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) | $(OS8_DIST_RK05)
+	$(OS8RUN) $(CC8_TU56_SCRIPT)
+
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
 	bin/palbart -lr $< || cat obj/$*.err
@@ -636,6 +659,17 @@ boot/1.script: boot/hs-rim-loader.script
 	ln -f $< $@
 boot/5.script: boot/ac-mq-blinker.script
 	ln -f $< $@
+
+# Rule for using the cross compiler to create SABR .sb files
+# CC8 builds in current working dir.  So we move the file.
+obj/cc8/os8/%.sb: @srcdir@/src/cc8/os8/%.c bin/cc8
+	cd @srcdir@/src/cc8/os8; ../../../bin/cc8 $*.c
+	mv  @srcdir@/src/cc8/os8/$*.sb $@
+
+# Rule for processing cc8 examples into a form usable
+# by the native OS/8 C compiler.
+obj/cc8/os8/%.c: @srcdir@/src/cc8/examples/%.c
+	sed '/^#include/d' $< > $@
 
 $(BUILDDIRS):
 	mkdir -p $@

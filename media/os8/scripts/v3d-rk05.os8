@@ -132,3 +132,15 @@ patch $os8mi/patches/TECO-31.20.13M-v5.08.patch8
 
 os8 SQUISH DSK:/O
 os8 SQUISH SYS:/O
+
+# Ian Schofield's CC8 compiler
+# Don't install this in v3d-dist because we need
+# v3d packs to build it.
+begin default cc8
+umount dt1
+mount dt1 $os8mo/cc8.tu56 ro required
+# resume
+os8 COPY RKA0:<DTA1:*.SV
+os8 COPY RKB0:<DTA1:*.SV/V
+end default cc8
+
