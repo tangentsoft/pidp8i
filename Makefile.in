@@ -496,8 +496,12 @@ mediainstall: instdirs
 	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.tu56 @ABSPREFIX@/share/media/os8
 	@@INSTALL@ -m 664 -o @INSTUSR@ -g @INSTGRP@ boot/*.script @BOOTDIR@
 
+# Called by test-os8-run
+# Minimizes dependencies to provoke minimal rebuilds.
+# Builds cc8.tu56, copying in rather than rebuilding source and demo files.
 os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
+	$(OS8RUN) $(CC8_TU56_SCRIPT)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
@@ -545,6 +549,10 @@ test-tmp-tools:
 	@( cd ./bin ; \
 	   echo "Installing txt2ptp symlink..." ; \
 	   ln -f ptp2txt txt2ptp ; \
+	)
+	@(  echo "To build cc8.tu56 copy in files from @srcdir@/obj/cc8/os8" ; \
+	    mkdir -p obj/cc8/os8 ;\
+	    cp -p @srcdir@/obj/cc8/os8/* obj/cc8/os8 ; \
 	)
 
 
