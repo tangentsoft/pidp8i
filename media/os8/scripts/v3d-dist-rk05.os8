@@ -99,15 +99,6 @@ mount dt1 $os8mi/subsys/ba.tu56 ro required
 os8 COPY RKB0:<DTA1:*.*
 end default ba
 
-# Ian Schofield's CC8 compiler
-begin default cc8
-umount dt1
-mount dt1 $os8mi/subsys/cc8.tu56 ro required
-# resume
-os8 COPY RKA0:<DTA1:*.SV
-os8 COPY RKB0:<DTA1:*.SV/V
-end default cc8
-
 # Kermit-12
 begin default k12
 umount dt1
