@@ -355,6 +355,17 @@ void callfunction (char *ptr) {
 	needbrack(")");
 	return;
     }
+    if (strcmp(ptr,"strd")==0) {
+	strd();
+	needbrack(")");
+	return;
+    }
+    if (strcmp(ptr,"strl")==0) {
+	strl();
+	needbrack(")");
+	return;
+    }
+
 
     nargs = 0;
     blanks ();

@@ -52,6 +52,7 @@ void header ()
 	output_line ("OPDEF SWP 7521");
 	output_line ("OPDEF CDF1 6211");
 	output_line ("OPDEF CDF0 6201");
+	output_line ("OPDEF CDF4 6241");
 	output_line ("OPDEF RIF 6224");
 	output_line ("OPDEF CAF0 6203");
 	output_line ("OPDEF BSW 7002");
@@ -178,7 +179,7 @@ void trailer ()
 	print_label (litlab);
 	newline ();
 	output_line("CCEND,\t0");
-	output_line ("END");
+	output_line ("\tEND");
 }
 
 
@@ -479,16 +480,28 @@ int		*nargs;
 	newline ();
 }
 
+/* Serial read/write routines for use of field 4 a a block of storage */
+
 void stri()
 {
-	output_line("\tDCAI 10");
+	output_line("\tJMSI PSTRI");
 }
 
 void iinit()
 {
-	output_line("\tCIA;CMA");
-	output_line("\tDCA 10");
+	output_line("\tJMSI PINIT");
 }
+
+void strd()
+{
+	output_line("\tJMSI PSTRD");
+}
+
+void strl()
+{
+	output_line("\tJMSI PSTRL");
+}
+
 
 /*
  *	return from subroutine
