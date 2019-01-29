@@ -2577,7 +2577,6 @@ if (((sim_dflt_dev->flags & DEV_DEBUG) == 0) &&         /* default device withou
     sim_dflt_dev->flags |= DEV_DEBUG;                   /* connect default event debugging */
     sim_dflt_dev->debflags = sim_dflt_debug;
     }
-
 if (*argv[0]) {                                         /* sim name arg? */
     char *np;                                           /* "path.ini" */
 
