@@ -330,7 +330,7 @@ subject to different rules than other branches:
     description page's "edit" link.  You can instead do it from the
     command line with the `fossil amend` command.
 
-[relpr]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCES.md
+[relpr]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCESS.md
 
 
 <a id="debug"></a>
