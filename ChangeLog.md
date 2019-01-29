@@ -65,27 +65,27 @@
         before it, we've also got an automatic tester for `os8-run`,
         which gives us tested quality assurance on several axes:
 
-        *   **Complete**: We've repeatedly tested all 32768 possible
-            OS/8 RK05 configurations afforded by the configure script.
+        *   <p>**Complete**: We've repeatedly tested all 32768 possible
+            OS/8 RK05 configurations afforded by the configure
+            script.</p>
 
-        *   **Repeatable**: We've re-tested those builds on the original
-            build systems, on multiple computers at a site, and across
-            sites.  This assures us that the builds are deterministic:
-            given the same inputs, you always get the same outputs.
-            That sounds like it should be obvious and easy, but it
-            didn't come for free!
+        *   <p>**Repeatable**: We've re-tested those builds on the
+            original build systems, on multiple computers at a site, and
+            across sites.  This assures us that the builds are
+            deterministic: given the same inputs, you always get the
+            same outputs.  That sounds like it should be obvious and
+            easy, but it didn't come for free!</p>
 
-        *   **Platform-Independent**: By copying these test exemplars
-            between Pi and non-Pi systems and re-testing, we've convinced
-            ourselves that the build is platform-independent, at least
-            within the scope of the systems we've tried it on.  (TODO:
-            Test with more of the systems in the [OS compatibility][osc]
-            article.)
+        *   <p>**Platform-Independent**: By copying these test exemplars
+            between Pi and non-Pi systems and re-testing, we've
+            convinced ourselves that the build is platform-independent,
+            at least within the scope of the systems we've tried it
+            on.</p>
 
-        *   **Reliable**: Some of these configurations have been tested
-            many times over, and all of them have been built at least
+        *   <p>**Reliable**: Some of these configurations have been
+            tested many times over, and all of them have been built at least
             four times.  We've come to expect that this new mechanism
-            will reliably build standard media on your Pi, too.
+            will reliably build standard media on your Pi, too.</p>
 
     All of this is largely the work of Bill Cattey.  I (Warren Young)
     mainly did bits of polishing and testing.
@@ -105,21 +105,23 @@
     in the upstream distribution of SIMH.  When called by that name, our
     simulator suppresses all of the PiDP-8/I extensions.
 
-    Calling the simulator this way also reverts a PiDP-8/I specific
-    change to the way the HLT instruction ("halt") is processed.  In a
-    real PDP-8/I, executing a HLT instruction stops the prcoessor just
-    as if the user had pressed the STOP key, so we do the same in
-    `pidp8i-sim`.  When you call the simulator as "`pdp8`", you are
-    telling it there is no front panel and thus have no way to continue
-    using the simulator.  That is, there are no CONT, DEP, or EXAM keys
-    to use as input and no indicator lamps to use as output while
-    halted, so we might as well drop you down to the SIMH command
-    prompt, which offers similar facilities.
+    This not only means we don’t start the GPIO thread that blinks the
+    LEDs and scans for switch changes, it means we revert behavioral
+    changes like the one that affects how the HLT instruction ("halt")
+    is processed: just as with the upstream version, this drops you down
+    to the SIMH command prompt when you call the simulator as `pdp8`,
+    rather than halt the processor and wait for a front panel CONT or
+    START keypress to get it out of STOP state.
 
-    If you install the PiDP-8/I software on a systemd-based Linux
-    system, if you say `pidp8i start` it will notice that there is no
-    PiDP-8/I front panel and call `pdp8` instead of `pidp8i-sim` for
-    you, since there would be no point in starting the GPIO thread.
+    If you install this software on a non-Raspbian systemd-based Linux
+    distribution, the new `pidp8i start` command will notice that there
+    is no PiDP-8/I front panel available and will run `pdp8` instead of
+    our extended `pidp8i-sim` simulator.
+
+    When the GPIO thread is not running, the simulator runs considerably
+    faster.  It’s not clear to me why that should be so on multi-core
+    boxes, since the expensive parts of the PiDP-8/I extensions are
+    running on a separate core, but the measurements are clear.
 
 *   The Python `simh` API now supports automatic transitions between
     OS/8 and SIMH context, largely removing the need to manage this
@@ -149,25 +151,27 @@
 *   Changed the SysV init script to a systemd unit file.  This gets us
     several new features:
 
-    *   It fixes a problem introduced between Raspbian Jessie and
+    *   <p>It fixes a problem introduced between Raspbian Jessie and
         Stretch that caused dangling `pidp8i-sim` processes when you
-        stopped the simulator.
+        stopped the simulator.</p>
 
-    *   SysV init was pretty much limited to use by root, so we had to
-        use `sudo` in many cases even though we'd largely divorced the
+    *   <p>SysV init was pretty much limited to use by root, so we had
+        to use `sudo` in many cases even though we'd largely divorced the
         PiDP-8/I software from needing root privileges itself.  systemd
         allows a service to be installed under the account of a normal
         user, which lets you start and stop the simulator without
-        needing root privilege.
+        needing root privilege.</p>
 
-    *   By offering a proper systemd unit file, commands like `systemctl
-        status pidp8i` give much more useful output than before.
+    *   <p>By offering a proper systemd unit file, commands like
+        `systemctl status pidp8i` give much more useful output than
+        before.</p>
 
-    *   Gets us away from the SysV init backwards compatibility that may
-        go away in a future release of Raspbian.
+    *   <p>Gets us away from the SysV init backwards compatibility that
+        may go away in a future release of Raspbian.</p>
 
-    *   Potentially, automatic restarts on crashes.  (TODO: Either make
-        `pidp8i.service` actually do that or remove the bullet point.)
+    *   <p>Potentially, automatic restarts on crashes.  (TODO: Either
+        make `pidp8i.service` actually do that or remove the bullet
+        point.)</p>
 
 *   Applied a fix from Ian Schofield for a serious problem with the
     accuracy of the MB register lights in certain contexts, such as
@@ -190,15 +194,17 @@
 
     While in there, made several other improvements to the script.
 
-*   Fixed and improved the `examples/hello.pal` program:
+*   The `examples/hello.pal` program was badly broken in prior releases.
 
-    *   It was skipping the first character ("H") in its output message.
+    *   <p>It was skipping the first character ("H") in its output
+        message.</p>
 
-    *   Set the 8th bit set on the ASCII output bytes in case you use a
-        Teletype Model 33 ASR or similar, which requires mark parity.
+    *   <p>Set the 8th bit set on the ASCII output bytes in case you use
+        a Teletype Model 33 ASR or similar, which requires mark parity.</p>
 
-    *   It now uses the same optimized `PRINTS` routine as `pep001.pal`,
-        which we're also shipping as `examples/routines/prints.pal`.
+    *   <p>It now uses the same optimized `PRINTS` routine as
+        `pep001.pal`, which we're also shipping as
+        `examples/routines/prints.pal`.</p>
 
     Between these weakenesses and the `mkbootscript` bug fixed above,
     this example was entirely broken since being shipped.  Our thanks
@@ -217,22 +223,24 @@
 
     *   Applied same high-bit improvement as for `hello.pal`.
 
-*   Updated SIMH to commit ID 86294db3 (2018-11-25).  There have been no
-    changes to the PDP-8 simulator since our prior release, but there
-    has been a lot of improvements to the SIMH core mechanisms.  Major
-    sections of note:
+*   Updated SIMH to commit ID 2f8fca49c6 (2019-01-23).  The only change
+    of note to the PDP-8 simulator proper since our prior release is
+    that devices now have description strings so that SIMH commands like
+    `SHOW FEATURES` gives more descriptive output.
 
-    *   **SCP** (the Ctrl-E command processor) — This piece of SIMH has
-        seen a lot of work since our last release.  One new feature that
+    The SIMH core mechanisms are much improved since the prior release.
+    Major areas of improvement are:
+
+    *   <p>**SCP** (the Ctrl-E command processor) — This piece of SIMH
+        has seen a lot of work since our last release.  One new feature that
         stood out to me is that there is now an "ELSE" command to go
         with the preexisting "IF" command, which is especially useful in
-        SIMH boot scripts.
+        SIMH boot scripts.</p>
 
-    *   **Timing** — We expect the improvements here to improve the way
-        throttling works, especially when changing between "normal" IPS
-        rates and the very low rates favored for blinkenlights demos.
+    *   <p>**Timing** — We expect the improvements here to improve the
+        way throttling works.</p>
 
-    *   **Terminal Muxer** — Lots of small improvements.
+    *   <p>**Terminal Muxer** — Lots of small improvements.</p>
 
 *   Minor updates to the CC8 C compilers and the examples sent in by Ian
     Schofield.
@@ -240,7 +248,6 @@
 *   A year of maintenance and polishing, much of it resulting in
     documentation and build system improvements.
 
-[osc]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 [pv]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md#systemd
 
 
