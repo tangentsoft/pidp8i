@@ -168,10 +168,13 @@ static t_stat sim_set_delay (int32 flag, CONST char *cptr);
 #define KMAP_WRU        0
 #define KMAP_BRK        1
 #define KMAP_DEL        2
+#define KMAP_DBGINT     3
 #define KMAP_MASK       0377
 #define KMAP_NZ         0400
 
 int32 sim_int_char = 005;                               /* interrupt character */
+int32 sim_dbg_int_char = 0;                             /* SIGINT char under debugger */
+static t_bool sigint_message_issued = FALSE;
 int32 sim_brk_char = 000;                               /* break character */
 int32 sim_tt_pchar = 0x00002780;
 #if defined (_WIN32) || defined (__OS2__) || (defined (__MWERKS__) && defined (macintosh))
@@ -300,18 +303,19 @@ return sim_set_notelnet (0, NULL);
 /* Set/show data structures */
 
 static CTAB set_con_tab[] = {
-    { "WRU", &sim_set_kmap, KMAP_WRU | KMAP_NZ },
-    { "BRK", &sim_set_kmap, KMAP_BRK },
-    { "DEL", &sim_set_kmap, KMAP_DEL |KMAP_NZ },
-    { "PCHAR", &sim_set_pchar, 0 },
-    { "SPEED", &sim_set_cons_speed, 0 },
-    { "TELNET", &sim_set_telnet, 0 },
+    { "WRU",     &sim_set_kmap, KMAP_WRU    | KMAP_NZ },
+    { "BRK",     &sim_set_kmap, KMAP_BRK },
+    { "DEL",     &sim_set_kmap, KMAP_DEL    | KMAP_NZ },
+    { "DBGINT",  &sim_set_kmap, KMAP_DBGINT | KMAP_NZ },
+    { "PCHAR",   &sim_set_pchar, 0 },
+    { "SPEED",   &sim_set_cons_speed, 0 },
+    { "TELNET",  &sim_set_telnet, 0 },
     { "NOTELNET", &sim_set_notelnet, 0 },
-    { "SERIAL", &sim_set_serial, 0 },
+    { "SERIAL",  &sim_set_serial, 0 },
     { "NOSERIAL", &sim_set_noserial, 0 },
-    { "LOG", &sim_set_logon, 0 },
-    { "NOLOG", &sim_set_logoff, 0 },
-    { "DEBUG", &sim_set_debon, 0 },
+    { "LOG",     &sim_set_logon, 0 },
+    { "NOLOG",   &sim_set_logoff, 0 },
+    { "DEBUG",   &sim_set_debon, 0 },
     { "NODEBUG", &sim_set_deboff, 0 },
 #define CMD_WANTSTR     0100000
     { "HALT", &sim_set_halt, 1 | CMD_WANTSTR },
@@ -337,6 +341,9 @@ static SHTAB show_con_tab[] = {
     { "WRU", &sim_show_kmap, KMAP_WRU },
     { "BRK", &sim_show_kmap, KMAP_BRK },
     { "DEL", &sim_show_kmap, KMAP_DEL },
+#if (defined(__GNUC__) && !defined(__OPTIMIZE__) && !defined(_WIN32))       /* Debug build? */
+    { "DBGINT", &sim_show_kmap, KMAP_DBGINT },
+#endif
     { "PCHAR", &sim_show_pchar, 0 },
     { "SPEED", &sim_show_cons_speed, 0 },
     { "LOG", &sim_show_cons_log, 0 },
@@ -369,7 +376,8 @@ static CTAB set_con_serial_tab[] = {
 static int32 *cons_kmap[] = {
     &sim_int_char,
     &sim_brk_char,
-    &sim_del_char
+    &sim_del_char,
+    &sim_dbg_int_char
     };
 
 /* Console I/O package.
@@ -1562,6 +1570,7 @@ for (i=(was_active_command ? sim_rem_cmd_active_line : 0);
                 case '\n':
                     if (rem->buf_ptr == 0)
                         break;
+                    /* fall through */
                 case '\r':
                     tmxr_linemsg (lp, "\r\n");
                     if (rem->buf_ptr+1 >= rem->buf_size) {
@@ -2075,13 +2084,16 @@ t_stat r;
 
 if ((cptr == NULL) || (*cptr == 0))
     return SCPE_2FARG;
-if (dptr->dradix == 16) rdx = 16;
-else rdx = 8;
+if (dptr->dradix == 16)
+    rdx = 16;
+else
+    rdx = 8;
 val = (int32) get_uint (cptr, rdx, 0177, &r);
 if ((r != SCPE_OK) ||
     ((val == 0) && (flag & KMAP_NZ)))
     return SCPE_ARG;
 *(cons_kmap[flag & KMAP_MASK]) = val;
+sigint_message_issued = FALSE;
 return SCPE_OK;
 }
 
@@ -2089,10 +2101,19 @@ return SCPE_OK;
 
 t_stat sim_show_kmap (FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, CONST char *cptr)
 {
+int32 kmap_char = *(cons_kmap[flag & KMAP_MASK]);
+
 if (sim_devices[0]->dradix == 16)
-    fprintf (st, "%s = %X\n", show_con_tab[flag].name, *(cons_kmap[flag & KMAP_MASK]));
+    fprintf (st, "%s = 0x%X", show_con_tab[flag].name, kmap_char);
 else
-    fprintf (st, "%s = %o\n", show_con_tab[flag].name, *(cons_kmap[flag & KMAP_MASK]));
+    fprintf (st, "%s = 0%o", show_con_tab[flag].name, kmap_char);
+if (isprint(kmap_char&0xFF))
+    fprintf (st, " = '%c'\n", kmap_char&0xFF);
+else
+    if (kmap_char <= 26)
+        fprintf (st, " = ^%c\n", '@' + (kmap_char&0xFF));
+    else
+        fprintf (st, "\n");
 return SCPE_OK;
 }
 
@@ -2560,7 +2581,8 @@ while (*cptr != 0) {                                    /* do all mods */
         if (serport != INVALID_HANDLE) {
             sim_close_serial (serport);
             if (r == SCPE_OK) {
-                char cbuf[CBUFSIZE];
+                char cbuf[CBUFSIZE+10];
+
                 if ((sim_con_tmxr.master) ||            /* already open? */
                     (sim_con_ldsc.serport))
                     sim_set_noserial (0, NULL);         /* close first */
@@ -2642,7 +2664,7 @@ else {
     if (!*pref)
         return SCPE_MEM;
     get_glyph_nc (filename, gbuf, 0);                   /* reparse */
-    strncpy ((*pref)->name, gbuf, sizeof((*pref)->name)-1);
+    strlcpy ((*pref)->name, gbuf, sizeof((*pref)->name));
     if (sim_switches & SWMASK ('N'))                    /* if a new log file is requested */
         *pf = sim_fopen (gbuf, (binary ? "w+b" : "w+"));/*   then open an empty file */
     else                                                /* otherwise */
@@ -3270,7 +3292,8 @@ status = sys$qiow (EFN, tty_chan,
     &iosb, 0, 0, buf, 1, 0, term, 0, 0);
 if ((status != SS$_NORMAL) || (iosb.status != SS$_NORMAL))
     return SCPE_OK;
-if (buf[0] == sim_int_char) return SCPE_STOP;
+if (buf[0] == sim_int_char)
+    return SCPE_STOP;
 if (sim_brk_char && (buf[0] == sim_brk_char))
     return SCPE_BREAK;
 return (buf[0] | SCPE_KFLAG);
@@ -3367,6 +3390,7 @@ ControlHandler(DWORD dwCtrlType)
         case CTRL_LOGOFF_EVENT:     // User is logging off
             if (!GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), &Mode))
                 return TRUE;        // Not our User, so ignore
+            /* fall through */
         case CTRL_SHUTDOWN_EVENT:   // System is shutting down
             int_handler(0);
             return TRUE;
@@ -3826,7 +3850,8 @@ if (!ps_kbhit ())
 c = ps_getch();
 if ((c & 0177) == sim_del_char)
     c = 0177;
-if ((c & 0177) == sim_int_char) return SCPE_STOP;
+if ((c & 0177) == sim_int_char)
+    return SCPE_STOP;
 if (sim_brk_char && ((c & 0177) == sim_brk_char))
     return SCPE_BREAK;
 return c | SCPE_KFLAG;
@@ -3901,7 +3926,26 @@ static t_stat sim_os_ttrun (void)
 {
 sim_debug (DBG_TRC, &sim_con_telnet, "sim_os_ttrun() - BSDTTY\n");
 
+#if (defined(__GNUC__) && !defined(__OPTIMIZE__))       /* Debug build? */
+if (sim_dbg_int_char == 0)
+    sim_dbg_int_char = sim_int_char + 1;
+runtchars.t_intrc = sim_dbg_int_char;                   /* let debugger get SIGINT with next highest char */
+if (!sigint_message_issued) {
+    char sigint_name[8];
+
+    if (isprint(sim_dbg_int_char&0xFF))
+        sprintf(sigint_name, "'%c'", sim_dbg_int_char&0xFF);
+    else
+        if (sim_dbg_int_char <= 26)
+            sprintf(sigint_name, "^%c", '@' + (sim_dbg_int_char&0xFF));
+        else
+            sprintf(sigint_name, "'\\%03o'", sim_dbg_int_char&0xFF);
+    sigint_message_issued = TRUE;
+    sim_messagef (SCPE_OK, "SIGINT will be delivered to your debugger when the %s character is entered\n", sigint_name);
+    }
+#else
 runtchars.t_intrc = sim_int_char;                       /* in case changed */
+#endif
 fcntl (0, F_SETFL, runfl);                              /* non-block mode */
 if (ioctl (0, TIOCSETP, &runtty) < 0)
     return SCPE_TTIERR;
@@ -3946,7 +3990,8 @@ unsigned char buf[1];
 sim_debug (DBG_TRC, &sim_con_telnet, "sim_os_poll_kbd() - BSDTTY\n");
 
 status = read (0, buf, 1);
-if (status != 1) return SCPE_OK;
+if (status != 1)
+    return SCPE_OK;
 if (sim_brk_char && (buf[0] == sim_brk_char))
     return SCPE_BREAK;
 if (sim_int_char && (buf[0] == sim_int_char))
@@ -4064,6 +4109,24 @@ runtty.c_cc[VINTR] = 0;                                 /* OS X doesn't deliver 
 #else
 runtty.c_cc[VINTR] = sim_int_char;                      /* in case changed */
 #endif
+#if (defined(__GNUC__) && !defined(__OPTIMIZE__))       /* Debug build? */
+if (sim_dbg_int_char == 0)
+    sim_dbg_int_char = sim_int_char + 1;
+runtty.c_cc[VINTR] = sim_dbg_int_char;                  /* let debugger get SIGINT with next highest char */
+if (!sigint_message_issued) {
+    char sigint_name[8];
+
+    if (isprint(sim_dbg_int_char&0xFF))
+        sprintf(sigint_name, "'%c'", sim_dbg_int_char&0xFF);
+    else
+        if (sim_dbg_int_char <= 26)
+            sprintf(sigint_name, "^%c", '@' + (sim_dbg_int_char&0xFF));
+        else
+            sprintf(sigint_name, "'\\%03o'", sim_dbg_int_char&0xFF);
+    sigint_message_issued = TRUE;
+    sim_messagef (SCPE_OK, "SIGINT will be delivered to your debugger when the %s character is entered\n", sigint_name);
+    }
+#endif
 if (tcsetattr (fileno(stdin), TCSETATTR_ACTION, &runtty) < 0)
     return SCPE_TTIERR;
 sim_os_set_thread_priority (PRIORITY_BELOW_NORMAL);     /* try to lower pri */
@@ -4101,7 +4164,8 @@ unsigned char buf[1];
 sim_debug (DBG_TRC, &sim_con_telnet, "sim_os_poll_kbd()\n");
 
 status = read (0, buf, 1);
-if (status != 1) return SCPE_OK;
+if (status != 1)
+    return SCPE_OK;
 if (sim_brk_char && (buf[0] == sim_brk_char))
     return SCPE_BREAK;
 if (sim_int_char && (buf[0] == sim_int_char))

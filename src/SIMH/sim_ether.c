@@ -1191,7 +1191,7 @@ int load_pcap(void) {
 
       if ((lib_loaded == 1) && (!eth_show_active)) {
         /* log successful load */
-        sim_printf("%s\n", p_pcap_lib_version());
+        sim_messagef (SCPE_OK, "%s\n", p_pcap_lib_version());
       }
       break;
     default:                /* loaded or failed */
@@ -1572,6 +1572,9 @@ static void eth_get_nic_hw_addr(ETH_DEV* dev, const char *devname)
         NULL};
 
     memset(command, 0, sizeof(command));
+    /* try to force an otherwise unused interface to be turned on */
+    snprintf(command, sizeof(command)-1, "ifconfig %s up", devname);
+    (void)system(command);
     for (i=0; patterns[i] && (0 == dev->have_host_nic_phy_addr); ++i) {
       snprintf(command, sizeof(command)-1, "ifconfig %s | %s  >NIC.hwaddr", devname, patterns[i]);
       (void)system(command);
@@ -1934,8 +1937,7 @@ t_stat eth_set_async (ETH_DEV *dev, int latency)
 {
 #if !defined(USE_READER_THREAD) || !defined(SIM_ASYNCH_IO)
 char *msg = "Eth: can't operate asynchronously, must poll\n";
-sim_printf ("%s", msg);
-return SCPE_NOFNC;
+return sim_messagef (SCPE_NOFNC, "%s", msg);
 #else
 int wakeup_needed;
 
@@ -2154,7 +2156,21 @@ else { /* !tap: */
       else { /* not udp:, so attempt to open the parameter as if it were an explicit device name */
 #if defined(HAVE_PCAP_NETWORK)
         *handle = (void*) pcap_open_live(savname, bufsz, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
-        if (!*handle)   /* can't open device */
+#if !defined(__CYGWIN__) && !defined(__VMS) && !defined(_WIN32)
+        if (!*handle) { /* can't open device */
+          if (strstr (errbuf, "That device is not up")) {
+            char command[1024];
+
+            /* try to force an otherwise unused interface to be turned on */
+            memset(command, 0, sizeof(command));
+            snprintf(command, sizeof(command)-1, "ifconfig %s up", savname);
+            (void)system(command);
+            errbuf[0] = '\0';
+            *handle = (void*) pcap_open_live(savname, bufsz, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
+            }
+          }
+#endif
+        if (!*handle)  /* can't open device */
           return sim_messagef (SCPE_OPENERR, "Eth: pcap_open_live error - %s\n", errbuf);
         *eth_api = ETH_API_PCAP;
 #if !defined(HAS_PCAP_SENDPACKET) && defined (xBSD) && !defined (__APPLE__)
@@ -2289,7 +2305,7 @@ if (r != SCPE_OK)
 
 if (!strcmp (desc, "No description available"))
     strcpy (desc, "");
-sim_printf ("Eth: opened OS device %s%s%s\n", savname, desc[0] ? " - " : "", desc);
+sim_messagef (SCPE_OK, "Eth: opened OS device %s%s%s\n", savname, desc[0] ? " - " : "", desc);
 
 /* get the NIC's hardware MAC address */
 eth_get_nic_hw_addr(dev, savname);
@@ -2400,7 +2416,7 @@ ethq_destroy (&dev->read_queue);         /* release FIFO queue */
 #endif
 
 _eth_close_port (dev->eth_api, pcap, pcap_fd);
-sim_printf ("Eth: closed %s\n", dev->name);
+sim_messagef (SCPE_OK, "Eth: closed %s\n", dev->name);
 
 /* clean up the mess */
 free(dev->name);
@@ -2445,8 +2461,10 @@ if (!rand_initialized)
 return (rand() & 0xFF);
 }
 
-t_stat eth_check_address_conflict (ETH_DEV* dev, 
-                                   ETH_MAC* const mac)
+t_stat eth_check_address_conflict_ex (ETH_DEV* dev, 
+                                      ETH_MAC* const mac,
+                                      int *reflections,
+                                      t_bool silent)
 {
 ETH_PACK send, recv;
 t_stat status;
@@ -2455,8 +2473,17 @@ int responses = 0;
 uint32 offset, function;
 char mac_string[32];
 
+if (reflections)
+    *reflections = 0;
 eth_mac_fmt(mac, mac_string);
 sim_debug(dev->dbit, dev->dptr, "Determining Address Conflict for MAC address: %s\n", mac_string);
+
+/* 00:00:00:00:00:00 or any address with a multi-cast address is invalid */
+if ((((*mac)[0] == 0) && ((*mac)[1] == 0) && ((*mac)[2] == 0) && 
+     ((*mac)[3] == 0) && ((*mac)[4] == 0) && ((*mac)[5] == 0)) ||
+     ((*mac)[0] & 1)) {
+  return sim_messagef (SCPE_ARG, "%s: Invalid NIC MAC Address: %s\n", sim_dname(dev->dptr), mac_string);
+  }
 
 /* The process of checking address conflicts is used in two ways:
    1) to determine the behavior of the currently running packet 
@@ -2542,13 +2569,12 @@ status = _eth_write (dev, &send, NULL);
 if (status != SCPE_OK) {
   const char *msg;
   msg = (dev->eth_api == ETH_API_PCAP) ?
-      "Eth: Error Transmitting packet: %s\n"
+      "%s: Eth: Error Transmitting packet: %s\n"
         "You may need to run as root, or install a libpcap version\n"
         "which is at least 0.9 from your OS vendor or www.tcpdump.org\n" :
-      "Eth: Error Transmitting packet: %s\n"
+      "%s: Eth: Error Transmitting packet: %s\n"
         "You may need to run as root.\n";
-  sim_printf(msg, strerror(errno));
-  return status;
+  return sim_messagef (SCPE_ARG, msg, sim_dname (dev->dptr), strerror(errno));
   }
 
 sim_os_ms_sleep (300);   /* time for a conflicting host to respond */
@@ -2572,11 +2598,28 @@ do {
   } while (recv.len > 0);
 
 sim_debug(dev->dbit, dev->dptr, "Address Conflict = %d\n", responses);
-return responses;
+if (responses && !silent)
+  return sim_messagef (SCPE_ARG, "%s: MAC Address Conflict on LAN for address %s, change the MAC address to a unique value\n", sim_dname (dev->dptr), mac_string);
+if (reflections)
+  *reflections = responses;
+return SCPE_OK;
+}
+
+t_stat eth_check_address_conflict (ETH_DEV* dev, 
+                                   ETH_MAC* const mac)
+{
+char mac_string[32];
+
+eth_mac_fmt(mac, mac_string);
+if (0 == memcmp (mac, dev->host_nic_phy_hw_addr, sizeof *mac))
+    return sim_messagef (SCPE_OK, "Sharing the host NIC MAC address %s may cause unexpected behavior\n", mac_string);
+return eth_check_address_conflict_ex (dev, mac, NULL, FALSE);
 }
 
 t_stat eth_reflect(ETH_DEV* dev)
 {
+t_stat r;
+
 /* Test with an address no NIC should have. */
 /* We do this to avoid reflections from the wire, */
 /* in the event that a simulated NIC has a MAC address conflict. */
@@ -2584,11 +2627,12 @@ static ETH_MAC mac = {0xfe,0xff,0xff,0xff,0xff,0xfe};
 
 sim_debug(dev->dbit, dev->dptr, "Determining Reflections...\n");
 
-dev->reflections = 0;
-dev->reflections = eth_check_address_conflict (dev, &mac);
+r = eth_check_address_conflict_ex (dev, &mac, &dev->reflections, TRUE);
+if (r != SCPE_OK)
+  return sim_messagef (r, "eth: Error determining reflection count\n");
 
 sim_debug(dev->dbit, dev->dptr, "Reflections = %d\n", dev->reflections);
-return dev->reflections;
+return SCPE_OK;
 }
 
 static void
@@ -3635,7 +3679,7 @@ else
 /* test reflections.  This is done early in this routine since eth_reflect */
 /* calls eth_filter recursively and thus changes the state of the device. */
 if (dev->reflections == -1)
-  status = eth_reflect(dev);
+  eth_reflect(dev);
 
 /* set new filter addresses */
 for (i = 0; i < addr_count; i++)

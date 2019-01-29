@@ -357,6 +357,40 @@ int use_pidp8i_extensions = 1;
     else if ((sim_switch_number >= 2) && (sim_switch_number <= 36)) val = sim_switch_number; \
     else val = dft;
 
+#define SIM_DBG_EVENT       0x02000000      /* event dispatch activities */
+#define SIM_DBG_ACTIVATE    0x04000000      /* queue insertion activities */
+#define SIM_DBG_AIO_QUEUE   0x08000000      /* asynch event queue activities */
+#define SIM_DBG_EXP_STACK   0x10000000      /* expression stack activities */
+#define SIM_DBG_EXP_EVAL    0x20000000      /* expression evaluation activities */
+#define SIM_DBG_BRK_ACTION  0x40000000      /* action activities */
+#define SIM_DBG_DO          0x80000000      /* do activities */
+
+static DEBTAB scp_debug[] = {
+  {"EVENT",     SIM_DBG_EVENT,      "Event Dispatch Activities"},
+  {"ACTIVATE",  SIM_DBG_ACTIVATE,   "Event Queue Insertion Activities"},
+  {"QUEUE",     SIM_DBG_AIO_QUEUE,  "Asynch Event Queue Activities"},
+  {"EXPSTACK",  SIM_DBG_EXP_STACK,  "Expression Stack Activities"},
+  {"EXPEVAL",   SIM_DBG_EXP_EVAL,   "Expression Evaluation Activities"},
+  {"ACTION",    SIM_DBG_BRK_ACTION, "If/Breakpoint/Expect Action Activities"},
+  {"DO",        SIM_DBG_DO,         "Do Command/Expansion Activities"},
+  {0}
+};
+
+static const char *sim_scp_description (DEVICE *dptr)
+{
+return "SCP Event and Internal Command Processing";
+}
+
+static UNIT scp_unit;
+
+DEVICE sim_scp_dev = {
+    "SCP-PROCESS", &scp_unit, NULL, NULL, 
+    1, 0, 0, 0, 0, 0, 
+    NULL, NULL, NULL, NULL, NULL, NULL, 
+    NULL, DEV_NOSAVE|DEV_DEBUG, 0, 
+    scp_debug, NULL, NULL, NULL, NULL, NULL,
+    sim_scp_description};
+
 /* Asynch I/O support */
 #if defined (SIM_ASYNCH_IO)
 pthread_mutex_t sim_asynch_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -386,7 +420,7 @@ if (AIO_QUEUE_VAL != QUEUE_LIST_END) {  /* List !Empty */
         q = AIO_QUEUE_VAL;
         } while (q != AIO_QUEUE_SET(QUEUE_LIST_END, q));
     while (q != QUEUE_LIST_END) {       /* List !Empty */
-        sim_debug (SIM_DBG_AIO_QUEUE, sim_dflt_dev, "Migrating Asynch event for %s after %d instructions\n", sim_uname(q), q->a_event_time);
+        sim_debug (SIM_DBG_AIO_QUEUE, &sim_scp_dev, "Migrating Asynch event for %s after %d instructions\n", sim_uname(q), q->a_event_time);
         ++migrated;
         uptr = q;
         q = q->a_next;
@@ -401,7 +435,7 @@ if (AIO_QUEUE_VAL != QUEUE_LIST_END) {  /* List !Empty */
         AIO_IUNLOCK;
         uptr->a_activate_call (uptr, a_event_time);
         if (uptr->a_check_completion) {
-            sim_debug (SIM_DBG_AIO_QUEUE, sim_dflt_dev, "Calling Completion Check for asynch event on %s\n", sim_uname(uptr));
+            sim_debug (SIM_DBG_AIO_QUEUE, &sim_scp_dev, "Calling Completion Check for asynch event on %s\n", sim_uname(uptr));
             uptr->a_check_completion (uptr);
             }
         AIO_ILOCK;
@@ -414,7 +448,7 @@ return migrated;
 void sim_aio_activate (ACTIVATE_API caller, UNIT *uptr, int32 event_time)
 {
 AIO_ILOCK;
-sim_debug (SIM_DBG_AIO_QUEUE, sim_dflt_dev, "Queueing Asynch event for %s after %d instructions\n", sim_uname(uptr), event_time);
+sim_debug (SIM_DBG_AIO_QUEUE, &sim_scp_dev, "Queueing Asynch event for %s after %d instructions\n", sim_uname(uptr), event_time);
 if (uptr->a_next) {
     uptr->a_activate_call = sim_activate_abs;
     }
@@ -641,13 +675,6 @@ struct timespec cmd_time;                               /*  */
 
 static SCHTAB sim_stabr;                                /* Register search specifier */
 static SCHTAB sim_staba;                                /* Memory search specifier */
-
-static DEBTAB sim_dflt_debug[] = {
-    {"EVENT",       SIM_DBG_EVENT,      "Event Dispatching"},
-    {"ACTIVATE",    SIM_DBG_ACTIVATE,   "Event Scheduling"},
-    {"AIO_QUEUE",   SIM_DBG_AIO_QUEUE,  "Asynchronous Event Queueing"},
-  {0}
-};
 
 static const char *sim_int_step_description (DEVICE *dptr)
 {
@@ -1177,6 +1204,9 @@ static const char simh_help[] =
       "+SET CONSOLE WRU=value       specify console drop to simh character\n"
       "+SET CONSOLE BRK=value       specify console Break character\n"
       "+SET CONSOLE DEL=value       specify console delete character\n"
+#if (defined(__GNUC__) && !defined(__OPTIMIZE__) && !defined(_WIN32))/* Debug build? */
+      "+SET CONSOLE DBGINT=value    specify SIGINT character in debugger\n"
+#endif
       "+SET CONSOLE PCHAR=bitmask   bit mask of printable characters in\n"
       "++++++++                     range [31,0]\n"
       "+SET CONSOLE SPEED=speed{*factor}\n"
@@ -2533,6 +2563,7 @@ if (sim_timer_init ()) {
     read_line_p ("Hit Return to exit: ", cbuf, sizeof (cbuf) - 1, stdin);
     return EXIT_FAILURE;
     }
+sim_register_internal_device (&sim_scp_dev);
 sim_register_internal_device (&sim_expect_dev);
 sim_register_internal_device (&sim_step_dev);
 
@@ -2572,11 +2603,6 @@ setenv ("SIM_REGEX_TYPE", "PCREPOSIX", 1);              /* Publish regex type */
 #elif defined (HAVE_REGEX_H)
 setenv ("SIM_REGEX_TYPE", "REGEX", 1);                  /* Publish regex type */
 #endif
-if (((sim_dflt_dev->flags & DEV_DEBUG) == 0) &&         /* default device without debug? */
-    (sim_dflt_dev->debflags == NULL)) {
-    sim_dflt_dev->flags |= DEV_DEBUG;                   /* connect default event debugging */
-    sim_dflt_dev->debflags = sim_dflt_debug;
-    }
 if (*argv[0]) {                                         /* sim name arg? */
     char *np;                                           /* "path.ini" */
 
@@ -3331,6 +3357,8 @@ if (*cptr) {
         UNIT *uptr;
         t_stat r;
 
+        if (0 == strcmp (gbuf, "DEVICE"))
+            cptr = get_glyph (cptr, gbuf, 0);
         dptr = find_unit (gbuf, &uptr);
         if (dptr == NULL) {
             dptr = find_dev (gbuf);
@@ -3560,7 +3588,7 @@ if (flag >= 0) {                                        /* Only bump nesting fro
         }
     }
 
-sim_debug (SIM_DBG_DO, sim_dflt_dev, "do_cmd_label(%d, flag=%d, '%s', '%s')\n", sim_do_depth, flag, fcptr, label ? label : "");
+sim_debug (SIM_DBG_DO, &sim_scp_dev, "do_cmd_label(%d, flag=%d, '%s', '%s')\n", sim_do_depth, flag, fcptr, label ? label : "");
 if (NULL == (c = sim_filepath_parts (cbuf, "f"))) {
     stat = SCPE_MEM;
     goto Cleanup_Return;
@@ -3605,9 +3633,9 @@ do {
         stat = SCPE_OK;                                 /* set good return */
         break;
         }
-    sim_debug (SIM_DBG_DO, sim_dflt_dev, "Input Command:    %s\n", cbuf);
+    sim_debug (SIM_DBG_DO, &sim_scp_dev, "Input Command:    %s\n", cbuf);
     sim_sub_args (cbuf, sizeof(cbuf), do_arg);          /* substitute args */
-    sim_debug (SIM_DBG_DO, sim_dflt_dev, "Expanded Command: %s\n", cbuf);
+    sim_debug (SIM_DBG_DO, &sim_scp_dev, "Expanded Command: %s\n", cbuf);
     if (*cptr == 0)                                     /* ignore blank */
         continue;
     if (echo)                                           /* echo if -v */
@@ -3641,7 +3669,7 @@ do {
         }
     else
         stat = SCPE_UNK;                                /* bad cmd given */
-    sim_debug (SIM_DBG_DO, sim_dflt_dev, "Command '%s', Result: 0x%X - %s\n", cmdp ? cmdp->name : "", stat, sim_error_text (stat));
+    sim_debug (SIM_DBG_DO, &sim_scp_dev, "Command '%s', Result: 0x%X - %s\n", cmdp ? cmdp->name : "", stat, sim_error_text (stat));
     echo = sim_do_echo;                                 /* Allow for SET VERIFY */
     stat_nomessage = stat & SCPE_NOMESSAGE;             /* extract possible message supression flag */
     stat_nomessage = stat_nomessage || (!sim_show_message);/* Apply global suppression */
@@ -3713,7 +3741,7 @@ if ((flag >= 0) || (!sim_on_inherit)) {
         }
     sim_on_check[sim_do_depth] = 0;                     /* clear on mode */
     }
-sim_debug (SIM_DBG_DO, sim_dflt_dev, "do_cmd_label - exiting - stat:%d (%d, flag=%d, '%s', '%s')\n", stat, sim_do_depth, flag, fcptr, label ? label : "");
+sim_debug (SIM_DBG_DO, &sim_scp_dev, "do_cmd_label - exiting - stat:%d (%d, flag=%d, '%s', '%s')\n", stat, sim_do_depth, flag, fcptr, label ? label : "");
 if (flag >= 0) {
     sim_brk_clract ();                                  /* defang breakpoint actions */
     --sim_do_depth;                                     /* unwind nesting */
@@ -6694,26 +6722,16 @@ for (i = 0; sim_internal_device_count && (dptr = sim_internal_devices[i]); ++i) 
 return SCPE_OK;
 }
 
-static DEBTAB scp_debug[] = {
-  {"EVENT",     SIM_DBG_EVENT,      "event dispatch activities"},
-  {"ACTIVATE",  SIM_DBG_ACTIVATE,   "queue insertion activities"},
-  {"QUEUE",     SIM_DBG_AIO_QUEUE,  "asynch event queue activities"},
-  {"EXPSTACK",  SIM_DBG_EXP_STACK,  "expression stack activities"},
-  {"EXPEVAL",   SIM_DBG_EXP_EVAL,   "expression evaluation activities"},
-  {"ACTION",    SIM_DBG_BRK_ACTION, "action activities"},
-  {"DO",        SIM_DBG_DO,         "do activities"},
-  {0}
-};
-
 t_stat sim_add_debug_flags (DEVICE *dptr, DEBTAB *debflags)
 {
 dptr->flags |= DEV_DEBUG;
-if (!dptr->debflags)
-    dptr->debflags = debflags;
+if (!dptr->debflags)                /* Current flags available */
+    dptr->debflags = debflags;      /* No, so just use new flags table */
 else {
     DEBTAB *cdptr, *sdptr, *ndptr;
 
     for (sdptr = debflags; sdptr->name; sdptr++) {
+        /* Find a new mask value that isn't in the existing table yet */
         for (cdptr = dptr->debflags; cdptr->name; cdptr++) {
             if (sdptr->mask == cdptr->mask)
                 break;
@@ -6722,19 +6740,23 @@ else {
             int i, dcount = 0;
 
             for (cdptr = dptr->debflags; cdptr->name; cdptr++)
-                dcount++;
+                dcount++;                       /* Count current table size */
             for (cdptr = debflags; cdptr->name; cdptr++)
-                dcount++;
+                dcount++;                       /* Count new table size */
+            /* Allocate enough to hold both plus the list end */
             ndptr = (DEBTAB *)calloc (1 + dcount, sizeof (*ndptr));
+            /* Copy current table to new array */
             for (dcount = 0, cdptr = dptr->debflags; cdptr->name; cdptr++)
                 ndptr[dcount++] = *cdptr;
+            /* for each element of the new list */
             for (cdptr = debflags; cdptr->name; cdptr++) {
+                /* check if new mask value */
                 for (i = 0; i < dcount; i++) {
                     if (cdptr->mask == ndptr[i].mask)
                         break;
                     }
                 if (i == dcount)
-                    ndptr[dcount++] = *cdptr;
+                    ndptr[dcount++] = *cdptr;   /* add new value to list */
                 }
             dptr->debflags = ndptr;
             break;
@@ -7272,6 +7294,7 @@ for (i = 0; i < (device_count + sim_internal_device_count); i++) {/* loop thru d
         WRITE_I (uptr->buf);
         WRITE_I (uptr->capac);                          /* [V3.5] capacity */
         fprintf (sfile, "%.0f\n", uptr->usecs_remaining);/* [V4.0] remaining wait */
+        WRITE_I (uptr->pos);
         if (uptr->flags & UNIT_ATT) {
             fputs (uptr->filename, sfile);
             if ((uptr->flags & UNIT_BUF) &&             /* writable buffered */
@@ -7527,6 +7550,7 @@ for ( ;; ) {                                            /* device loop */
         if (v40) {
             READ_S (buf);
             sscanf (buf, "%lf", &uptr->usecs_remaining);
+            READ_I (uptr->pos);
             }
         if (!v32)
             flg = ((flg & UNIT_UFMASK_31) << (UNIT_V_UF - UNIT_V_UF_31)) |
@@ -10643,7 +10667,7 @@ UPDATE_SIM_TIME;                                        /* update sim time */
 
 if (sim_clock_queue == QUEUE_LIST_END) {                /* queue empty? */
     sim_interval = noqueue_time = NOQUEUE_WAIT;         /* flag queue empty */
-    sim_debug (SIM_DBG_EVENT, sim_dflt_dev, "Queue Empty New Interval = %d\n", sim_interval);
+    sim_debug (SIM_DBG_EVENT, &sim_scp_dev, "Queue Empty New Interval = %d\n", sim_interval);
     return SCPE_OK;
     }
 sim_processing_event = TRUE;
@@ -10658,11 +10682,11 @@ do {
         sim_interval = noqueue_time = NOQUEUE_WAIT;
     AIO_EVENT_BEGIN(uptr);
     if (uptr->usecs_remaining) {
-        sim_debug (SIM_DBG_EVENT, sim_dflt_dev, "Requeueing %s after %.0f usecs\n", sim_uname (uptr), uptr->usecs_remaining);
+        sim_debug (SIM_DBG_EVENT, &sim_scp_dev, "Requeueing %s after %.0f usecs\n", sim_uname (uptr), uptr->usecs_remaining);
         reason = sim_timer_activate_after (uptr, uptr->usecs_remaining);
         }
     else {
-        sim_debug (SIM_DBG_EVENT, sim_dflt_dev, "Processing Event for %s\n", sim_uname (uptr));
+        sim_debug (SIM_DBG_EVENT, &sim_scp_dev, "Processing Event for %s\n", sim_uname (uptr));
         if (uptr->action != NULL)
             reason = uptr->action (uptr);
         else
@@ -10684,10 +10708,10 @@ do {
 
 if (sim_clock_queue == QUEUE_LIST_END) {                /* queue empty? */
     sim_interval = noqueue_time = NOQUEUE_WAIT;         /* flag queue empty */
-    sim_debug (SIM_DBG_EVENT, sim_dflt_dev, "Processing Queue Complete New Interval = %d\n", sim_interval);
+    sim_debug (SIM_DBG_EVENT, &sim_scp_dev, "Processing Queue Complete New Interval = %d\n", sim_interval);
     }
 else
-    sim_debug (SIM_DBG_EVENT, sim_dflt_dev, "Processing Queue Complete New Interval = %d(%s)\n", sim_interval, sim_uname(sim_clock_queue));
+    sim_debug (SIM_DBG_EVENT, &sim_scp_dev, "Processing Queue Complete New Interval = %d(%s)\n", sim_interval, sim_uname(sim_clock_queue));
 
 if ((reason == SCPE_OK) && stop_cpu) {
     stop_cpu = FALSE;
@@ -10723,7 +10747,7 @@ if (sim_is_active (uptr))                               /* already active? */
     return SCPE_OK;
 UPDATE_SIM_TIME;                                        /* update sim time */
 
-sim_debug (SIM_DBG_ACTIVATE, sim_dflt_dev, "Activating %s delay=%d\n", sim_uname (uptr), event_time);
+sim_debug (SIM_DBG_ACTIVATE, &sim_scp_dev, "Activating %s delay=%d\n", sim_uname (uptr), event_time);
 
 prvptr = NULL;
 accum = 0;
@@ -10857,7 +10881,7 @@ if (sim_clock_queue == QUEUE_LIST_END)
 UPDATE_SIM_TIME;                                        /* update sim time */
 if (!sim_is_active (uptr))
     return SCPE_OK;
-sim_debug (SIM_DBG_EVENT, sim_dflt_dev, "Canceling Event for %s\n", sim_uname(uptr));
+sim_debug (SIM_DBG_EVENT, &sim_scp_dev, "Canceling Event for %s\n", sim_uname(uptr));
 nptr = QUEUE_LIST_END;
 
 if (sim_clock_queue == uptr) {
@@ -11436,7 +11460,7 @@ else {
     sim_brk_clract ();                                  /* no more */
     }
 sim_trim_endspc (buf);
-sim_debug (SIM_DBG_BRK_ACTION, sim_dflt_dev, "sim_brk_getact(%d) - Returning: '%s'\n", sim_do_depth, buf);
+sim_debug (SIM_DBG_BRK_ACTION, &sim_scp_dev, "sim_brk_getact(%d) - Returning: '%s'\n", sim_do_depth, buf);
 return buf;
 }
 
@@ -11445,7 +11469,7 @@ return buf;
 char *sim_brk_clract (void)
 {
 if (sim_brk_act[sim_do_depth])
-    sim_debug (SIM_DBG_BRK_ACTION, sim_dflt_dev, "sim_brk_clract(%d) - Clearing: '%s'\n", sim_do_depth, sim_brk_act[sim_do_depth]);
+    sim_debug (SIM_DBG_BRK_ACTION, &sim_scp_dev, "sim_brk_clract(%d) - Clearing: '%s'\n", sim_do_depth, sim_brk_act[sim_do_depth]);
 free (sim_brk_act_buf[sim_do_depth]);
 return sim_brk_act[sim_do_depth] = sim_brk_act_buf[sim_do_depth] = NULL;
 }
@@ -11466,13 +11490,13 @@ if (action) {
         strlcpy (sim_brk_act_buf[sim_do_depth], action, new_size);
         strlcat (sim_brk_act_buf[sim_do_depth], "; ", new_size);
         strlcat (sim_brk_act_buf[sim_do_depth], old_action, new_size);
-        sim_debug (SIM_DBG_BRK_ACTION, sim_dflt_dev, "sim_brk_setact(%d) - Pushed: '%s' ahead of: '%s'\n", sim_do_depth, action, old_action);
+        sim_debug (SIM_DBG_BRK_ACTION, &sim_scp_dev, "sim_brk_setact(%d) - Pushed: '%s' ahead of: '%s'\n", sim_do_depth, action, old_action);
         free (old_action);
         }
     else {
         sim_brk_act_buf[sim_do_depth] = (char *)realloc (sim_brk_act_buf[sim_do_depth], strlen (action) + 1);
         strcpy (sim_brk_act_buf[sim_do_depth], action);
-        sim_debug (SIM_DBG_BRK_ACTION, sim_dflt_dev, "sim_brk_setact(%d) - Set to: '%s'\n", sim_do_depth, action);
+        sim_debug (SIM_DBG_BRK_ACTION, &sim_scp_dev, "sim_brk_setact(%d) - Set to: '%s'\n", sim_do_depth, action);
         }
     sim_brk_act[sim_do_depth] = sim_brk_act_buf[sim_do_depth];
     }
@@ -12314,6 +12338,7 @@ while ((eol = strchr (debug_line_buf, '\n')) || flush) {
         debug_line_count = 0;
         }
     else {
+        linesize = debug_line_offset;
         if (debug_line_count == 0) {
             debug_line_buf_last_endprefix_offset = endprefix - debug_line_buf;
             memcpy (debug_line_buf_last, debug_line_buf, linesize);
@@ -13103,10 +13128,9 @@ for (hblock = astrings; (htext = *hblock) != NULL; hblock++) {
                                 }
                             break;
                         case 'D':
-                            if (dptr) {
+                            if (dptr)
                                 appendText (topic, dptr->name, strlen (dptr->name));
-                                break;
-                                }
+                            break;
                         case 'S':
                             appendText (topic, sim_name, strlen (sim_name));
                             break;
@@ -13870,7 +13894,7 @@ void delete_Stack (Stack *sp)
 if (sp == NULL)
     return;
 
-sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d has been deallocated]\n", sp->id);
+sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d has been deallocated]\n", sp->id);
 
 /* Free the data that the stack was pointing at */
 free (sp->elements);
@@ -13895,7 +13919,7 @@ static Stack *new_Stack (void)
 Stack *this_Stack = (Stack *)calloc(1, sizeof(*this_Stack));
 
 this_Stack->id = ++stack_counter;
-sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d has been allocated]\n", this_Stack->id);
+sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d has been allocated]\n", this_Stack->id);
 
 return this_Stack; /* Returns created stack */
 }
@@ -13916,10 +13940,10 @@ strcpy (data, this_Stack->elements[this_Stack->pointer-1].data);
 --this_Stack->pointer;
 
 if (*op)
-    sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d - Popping '%s'(precedence %d)]\n", 
+    sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d - Popping '%s'(precedence %d)]\n", 
                                                 this_Stack->id, (*op)->string, (*op)->precedence);
 else
-    sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d - Popping %s]\n", 
+    sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d - Popping %s]\n", 
                                                 this_Stack->id, data);
 
 return TRUE;                      /* Success */
@@ -13944,10 +13968,10 @@ strlcpy (this_Stack->elements[this_Stack->pointer].data, data, sizeof (this_Stac
 ++this_Stack->pointer;
 
 if (op)
-    sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d - Pushing '%s'(precedence %d)]\n", 
+    sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d - Pushing '%s'(precedence %d)]\n", 
                                                 this_Stack->id, op->string, op->precedence);
 else
-    sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d - Pushing %s]\n", 
+    sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d - Pushing %s]\n", 
                                                 this_Stack->id, data);
 
 return TRUE;                      /* Success */
@@ -13965,10 +13989,10 @@ strcpy (data, this_Stack->elements[this_Stack->pointer-1].data);
 *op = this_Stack->elements[this_Stack->pointer-1].op;
 
 if (*op)
-    sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d - Topping '%s'(precedence %d)]\n", 
+    sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d - Topping '%s'(precedence %d)]\n", 
                                                 this_Stack->id, (*op)->string, (*op)->precedence);
 else
-    sim_debug (SIM_DBG_EXP_STACK, sim_dflt_dev, "[Stack %d - Topping %s]\n", 
+    sim_debug (SIM_DBG_EXP_STACK, &sim_scp_dev, "[Stack %d - Topping %s]\n", 
                                                 this_Stack->id, data);
 
 return TRUE;                      /* Success */
@@ -14278,7 +14302,7 @@ while (*cptr) {
         gbuf[0] = '0';
         cptr = last_cptr + 1;
         }
-    sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Glyph: %s]\n", op ? op->string : gbuf);
+    sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Glyph: %s]\n", op ? op->string : gbuf);
     if (!op) {
         push_Stack (stack1, gbuf, op);
         continue;
@@ -14361,13 +14385,13 @@ if (sim_isalpha (*data) || (*data == '_')) {
     if (rptr) {
         *svalue = (t_svalue)get_rval (rptr, 0);
         sprint_val (string, *svalue, 10, string_size - 1, PV_LEFTSIGN);
-        sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Value: %s=%s]\n", data, string);
+        sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Value: %s=%s]\n", data, string);
         return TRUE;
         }
     gptr = _sim_get_env_special (data, string, string_size - 1);
     if (gptr) {
         *svalue = strtotsv(string, &gptr, 0);
-        sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Value: %s=%s]\n", data, string);
+        sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Value: %s=%s]\n", data, string);
         return ((*gptr == '\0') && (*string));
         }
     else {
@@ -14382,12 +14406,12 @@ if ((data[0] == '"') && (data_size > 1) && (data[data_size - 1] == '"'))
     strlcpy (string, data, string_size);
 if (string[0] == '\0') {
     *svalue = strtotsv(data, &gptr, 0);
-    sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Value: %s=%s]\n", data, string);
+    sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Value: %s=%s]\n", data, string);
     return ((*gptr == '\0') && (*data));
     }
 sim_sub_args (string, string_size, sim_exp_argv);
 *svalue = strtotsv(string, &gptr, 0);
-sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Value: %s=%s]\n", data, string);
+sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Value: %s=%s]\n", data, string);
 return ((*gptr == '\0') && (*string));
 }
 
@@ -14407,10 +14431,10 @@ char temp_string[CBUFSIZE + 2];
 while (!isempty_Stack(stack1)) {
     pop_Stack (stack1, temp_data, &temp_op);
     if (temp_op)
-        sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Expression element: %s (%d)\n", 
+        sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Expression element: %s (%d)\n", 
                                                    temp_op->string, temp_op->precedence);
     else
-        sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Expression element: %s\n", 
+        sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Expression element: %s\n", 
                                                    temp_data);
     push_Stack (stack2, temp_data, temp_op);
     }
@@ -14472,7 +14496,7 @@ const char *sim_eval_expression (const char *cptr, t_svalue *value, t_bool paren
 const char *iptr = cptr;
 Stack *postfix = new_Stack (); /* for the postfix expression */
 
-sim_debug (SIM_DBG_EXP_EVAL, sim_dflt_dev, "[Evaluate Expression: %s\n", cptr);
+sim_debug (SIM_DBG_EXP_EVAL, &sim_scp_dev, "[Evaluate Expression: %s\n", cptr);
 *value = 0;
 cptr = sim_into_postfix (postfix, cptr, stat, parens_required);
 if (*stat != SCPE_OK) {

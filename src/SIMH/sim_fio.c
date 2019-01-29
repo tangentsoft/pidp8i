@@ -291,40 +291,12 @@ return (t_offset)(ftell (st));
 
 int sim_fseeko (FILE *st, t_offset offset, int whence)
 {
-fpos_t fileaddr;
-struct _stati64 statb;
-
-switch (whence) {
-
-    case SEEK_SET:
-        fileaddr = (fpos_t)offset;
-        break;
-
-    case SEEK_END:
-        if (_fstati64 (_fileno (st), &statb))
-            return (-1);
-        fileaddr = statb.st_size + offset;
-        break;
-    case SEEK_CUR:
-        if (fgetpos (st, &fileaddr))
-            return (-1);
-        fileaddr = fileaddr + offset;
-        break;
-
-    default:
-        errno = EINVAL;
-        return (-1);
-        }
-
-return fsetpos (st, &fileaddr);
+return _fseeki64 (st, (__int64)offset, whence);
 }
 
 t_offset sim_ftell (FILE *st)
 {
-fpos_t fileaddr;
-if (fgetpos (st, &fileaddr))
-    return (-1);
-return (t_offset)fileaddr;
+return (t_offset)_ftelli64 (st);
 }
 
 #endif                                                  /* end Windows */
@@ -917,7 +889,8 @@ if ((hFind =  FindFirstFileA (cptr, &File)) != INVALID_HANDLE_VALUE) {
     sprintf (&DirName[strlen (DirName)], "%c", *pathsep);
     do {
         FileSize = (((t_int64)(File.nFileSizeHigh)) << 32) | File.nFileSizeLow;
-        sprintf (FileName, "%s%s", DirName, File.cFileName);
+        strlcpy (FileName, DirName, sizeof (FileName));
+        strlcat (FileName, File.cFileName, sizeof (FileName));
         stat (FileName, &filestat);
         entry (DirName, File.cFileName, FileSize, &filestat, context);
         } while (FindNextFile (hFind, &File));
