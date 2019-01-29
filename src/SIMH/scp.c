@@ -2578,11 +2578,6 @@ if (((sim_dflt_dev->flags & DEV_DEBUG) == 0) &&         /* default device withou
     sim_dflt_dev->debflags = sim_dflt_debug;
     }
 
-#ifdef PIDP8I
-if (strstr (argv[0], "pidp8i-sim") == 0) use_pidp8i_extensions = 0;
-else if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
-#endif
-
 if (*argv[0]) {                                         /* sim name arg? */
     char *np;                                           /* "path.ini" */
 
@@ -2597,6 +2592,11 @@ if (*argv[0]) {                                         /* sim name arg? */
     if (np != NULL)
         setenv ("SIM_BIN_NAME", np+1, 1);               /* Publish simulator binary name */
     setenv ("SIM_BIN_PATH", argv[0], 1);
+
+#ifdef PIDP8I
+    if (strstr (argv[0], "pidp8i-sim") == 0) use_pidp8i_extensions = 0;
+    else if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
+#endif
     }
 sim_argv = argv;
 cptr = getenv("HOME");
