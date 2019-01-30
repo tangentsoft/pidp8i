@@ -140,6 +140,7 @@ void gen_immediate ();
 void gen_immediate2 ();
 void gen_immediate3 ();
 void gen_immediate4 ();
+int glint(struct symbol*);
 
 /**
  * push the primary register onto the stack
@@ -419,6 +420,7 @@ void add_offset();
  * @param size
  */
 void gen_multiply();
+void gen_asr_int();
 
 /*************************************************************************
  * error.c
@@ -436,6 +438,8 @@ void doerror ();
  * unsigned operand ?
  */
 int nosign(LVALUE *is);
+
+void gen_isz(LVALUE *lval);
 
 /**
  * assignment operators
@@ -467,6 +471,10 @@ void newfunc();
  */
 void getarg();
 
+void prefix();
+
+void prologue(char *sym);
+
 
 /*************************************************************************
  * gen.c
@@ -476,6 +484,8 @@ void getarg();
  * return next available internal label number
  */
 int getlabel();
+
+int rivalue(LVALUE *lval, int reg);
 
 /**
  * print specified number as label
@@ -564,6 +574,9 @@ void test();
  */
 void scale_const();
 
+void gen_put_stack(int);
+void gen_get_inc_memory(SYMBOL *sym);
+void gen_inc_direct(char);
 
 /*************************************************************************
  * initials.c
@@ -793,6 +806,8 @@ void dump_struct(SYMBOL *symbol, int position);
 
 void frontend_version();
 
+int intsize(void);
+
 /*************************************************************************
  * preproc.c
  */
@@ -882,6 +897,13 @@ void callfunction ();
 
 void needlval ();
 
+void cpri();
+void stkbase();
+void stri();
+void iinit();
+void strd();
+void strl();
+
 /*************************************************************************
  * stmt.c
  */
@@ -938,6 +960,8 @@ void add_member(char *sname, char identity, char type, int offset, int storage_c
 
 int define_struct();
 
+void casejump();
+
 /*************************************************************************
  * sym.c
  */
@@ -952,7 +976,7 @@ int define_struct();
  * @param is_struct struct or union or no meaning
  * @return
  */
-void declare_global();
+int declare_global();
 
 /**
  * declare local variables

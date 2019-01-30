@@ -222,10 +222,13 @@ int get_type() {
         return CCHAR;
     } else if (amatch ("int", 3)) {
         return CINT;
+	/* Include void. Interpreted as generic variable of type CINT. */
+    } else if (amatch ("void", 4)) {
+        return CINT;
     /* recognize structs being passed as a proper type */
     } else if (amatch ("struct", 6)) {
         return STRUCT;
-    }
+	}
     return 0;
 }
 

@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "defs.h"
 #include "data.h"
 #include "extern.h"

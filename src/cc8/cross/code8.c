@@ -2,8 +2,9 @@
 /*% cc -O -c %
  *
  */
-
+#ifndef unix
 #define unix
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -73,7 +74,7 @@ void initmac()
 	defmac("smallc\t1");
 }
 
-galign(t)
+int galign(t)
 long	t;
 {
 	return(t);
@@ -82,7 +83,7 @@ long	t;
 /*
  *	return size of an integer
  */
-intsize() {
+int intsize() {
 	return(INTSIZE);
 }
 
@@ -90,7 +91,7 @@ intsize() {
  *	return offset of ls byte within word
  *	(ie: 8080 & pdp11 is 0, 6809 is 1, 360 is 3)
  */
-byteoff() {
+int byteoff() {
 	return(BYTEOFF);
 }
 
@@ -186,7 +187,7 @@ void trailer ()
 /*
  *	function prologue
  */
-void prologue (SYMBOL *sym) {
+void prologue (char *sym) {
     return;
 }
 
@@ -253,10 +254,9 @@ char	*sym;
 }*/
 
 void gen_get_memory (SYMBOL *sym) {
-	int adr;
+
 	output_line ("\tCLA");
 	gen_immediate4 ();
-	adr=glint(sym)+128;
 	output_number (glint(sym)+128);
     newline ();
 }
@@ -281,7 +281,7 @@ void gen_get_inc_memory (SYMBOL *sym) {
  *	fetch the address of the specified symbol into the primary register
  *
  */
-gen_get_locale (SYMBOL *sym)  {
+int gen_get_locale (SYMBOL *sym)  {
 	output_line("\tCLA");
 	output_line("\tTAD STKP");
 	if (sym->storage == LSTATIC) {
@@ -592,7 +592,7 @@ void gen_def_word ()
  *	modify the stack pointer to the new value indicated
  *
  */
-gen_modify_stack (newstkp)
+int gen_modify_stack (newstkp)
 int	newstkp;
 {
 	int	k;
@@ -905,7 +905,7 @@ void gen_increment_primary_reg (LVALUE *lval) {
 
 void gen_isz (LVALUE *lval) {
 	int adr;
-	char *sym=lval->symbol;
+	struct symbol *sym=lval->symbol;
 
 	if (lval->indirect) {
 		output_line ("\tISZI JLC");

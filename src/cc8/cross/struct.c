@@ -70,7 +70,6 @@ void add_member(char *sname, char identity, char type, int offset, int storage_c
     symbol->offset = offset;
     /* set size for arrays */
     symbol->struct_size = member_size;
-
     member_table_index++;
 }
 
