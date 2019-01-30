@@ -222,7 +222,7 @@
         `pep001.pal`, which we're also shipping as
         `examples/routines/prints.pal`.</p>
 
-    Between these weakenesses and the `mkbootscript` bug fixed above,
+    Between these weaknesses and the `mkbootscript` bug fixed above,
     this example was entirely broken since being shipped.  Our thanks
     for the tests and diagnosis of these problems go to Greg Christie
     and Bill Cattey.
@@ -262,7 +262,7 @@
     toward support for FreeBSD for the Raspberry Pi: we haven’t tried to
     make the GPIO stuff work at all yet.  For now, it just lets this
     software be used on your FreeBSD desktop or server machine.  It may
-    allow building on other BSDs, but that is is untested.
+    allow building on other BSDs, but that is untested.
 
 *   A year of maintenance and polishing, much of it resulting in
     documentation and build system improvements.
