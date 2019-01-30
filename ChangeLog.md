@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
-<a id="201812xx"></a>
-## Version 2018.12.xx — The "OS/8 V3F and os8-run" release
+<a id="201902xx"></a>
+## Version 2019.02.xx — The "OS/8 V3F and os8-run" release
 
 *   The banner feature in this release is that Bill Cattey transformed
     our `mkos8` tool into the `os8-run` script interpreter, giving us
@@ -99,6 +99,21 @@
     filesystem and then comparing the files individually on the host.
     Imagine your own possibilities!
 
+*   Major updates to Ian Schofield’s CC8 compiler, done by Bill Cattey:
+
+    *   Retargeted the CC8 cross-compiler against SmallC-85, which
+        greatly improves the capabilty of the compiler.  It also allows
+        the cross-compiler to run without crashing on 64-bit hosts for
+        the first time.
+
+
+    *   Merged in some of the updates Ian has made to CC8, which affects
+        the native OS/8 compiler and its standard library.
+
+    *   The `cc8.tu56` DECtape image is now generated dynamically at
+        build time, as needed, rather than be shipped statically in the
+        Fossil code repository.  This is another benefit of `os8-run`.
+
 *   Since the beginning of this project, we've called our modified
     version of the SIMH PDP-8 simulator `pidp8i-sim`.  With this
     release, we hard link that program to `pdp8`, the simulator's name
@@ -137,10 +152,11 @@
     <kbd>Ctrl-E, q</kbd>) now turns off all front panel LEDs before
     shutting down.
 
-    No attempt has yet been made to do similar cleanups when killing the
-    simulator outright.  Aside from `killall pidp8i-sim` and similar
-    nastiness, this does mean a Pi reboot will leave the last state on
-    the front panel briefly.  TODO: Fix before release?
+    We’ve made no attempt to do similar cleanups when the simulator is
+    killed outright.  The most common case is during a Pi reboot, where
+    you’ll still see traces of the last state on the front panel
+    briefly.  We also make no attempt to cope with badness like `killall
+    pidp8i-sim`.
 
 *   The `pidp8i-test` program's scan-switch feature now debounces the
     switches in software so that each state change results in only one
@@ -242,8 +258,11 @@
 
     *   <p>**Terminal Muxer** — Lots of small improvements.</p>
 
-*   Minor updates to the CC8 C compilers and the examples sent in by Ian
-    Schofield.
+*   The software now builds and runs on FreeBSD.  This just a step
+    toward support for FreeBSD for the Raspberry Pi: we haven’t tried to
+    make the GPIO stuff work at all yet.  For now, it just lets this
+    software be used on your FreeBSD desktop or server machine.  It may
+    allow building on other BSDs, but that is is untested.
 
 *   A year of maintenance and polishing, much of it resulting in
     documentation and build system improvements.
