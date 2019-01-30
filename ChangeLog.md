@@ -101,18 +101,18 @@
 
 *   Major updates to Ian Schofield’s CC8 compiler, done by Bill Cattey:
 
-    *   Retargeted the CC8 cross-compiler against SmallC-85, which
+    *   <p>Retargeted the CC8 cross-compiler against SmallC-85, which
         greatly improves the capabilty of the compiler.  It also allows
         the cross-compiler to run without crashing on 64-bit hosts for
-        the first time.
+        the first time.</p>
 
+    *   <p>Merged in some of the updates Ian has made to CC8, which
+        affects the native OS/8 compiler and its standard library.</p>
 
-    *   Merged in some of the updates Ian has made to CC8, which affects
-        the native OS/8 compiler and its standard library.
-
-    *   The `cc8.tu56` DECtape image is now generated dynamically at
+    *   <p>The `cc8.tu56` DECtape image is now generated dynamically at
         build time, as needed, rather than be shipped statically in the
-        Fossil code repository.  This is another benefit of `os8-run`.
+        Fossil code repository.  This is another benefit of
+        `os8-run`.</p>
 
 *   Since the beginning of this project, we've called our modified
     version of the SIMH PDP-8 simulator `pidp8i-sim`.  With this
