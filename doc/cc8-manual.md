@@ -1,29 +1,48 @@
 # A Minimal Implementation of C for the DEC PDP-8 Processor
 
-## Introduction
+## A Bit of Grounding History
 
 The C language and its derivatives are now the industry standard for the
 development of operating systems and utilities. The language has evolved
-significantly since its initial specification in 1972. At this time, the
-PDP-7 was used for the initial implementation and the compiler ported to
-a number of other systems including the PDP-11. Also, the first
-glimmerings of Unix appeared following a re-write of the assembly
-language version in C and the rest is of course history. The PDP-8 was
-introduced by DEC in 1965 at the same time as the PDP-7 with the
-intention of being a small and cheap processor that could be used in a
-variety of environments. From this simple machine, the modern desktop
-device has evolved which I am using to type this document. Nonetheless,
-far from fading into obscurity, there is a very active group of
-enthusiasts who have looked to implementing the PDP-8 on modern hardware
-and the thanks to Oscar Vermuelen and others, we can all have a PDP8/I
-to play with. With this in mind, I thought it was time to have a modern
-language compiler running on the PDP-8 which as far as I can tell, the
-last native compiler developed for the PDP-8 was Pascal in 1979 by Heinz
-Stegbauer. In more recent times, one cross-compiler has been developed
-by Vince Slyngstad and updated by Paolo Maffei based on Ron Cain’s
-Small-C using a VM approach. [This code][sms] is most certainly worth
-examining, and I am delighted to acknowledge this work as I have used
-some of the C library code in this project.
+significantly since its initial specification in 1972.
+
+The first implementation of C was on the PDP-11 as part of the early
+work on the Unix operating system, and it was initially used to write
+system utilities that otherwise would have been written in assembly. A C
+language compiler first appeared publicly in Version 2 Unix, released
+later in 1972. Much of PDP-11 Unix remained written in assembly until
+its developers decided to rewrite the operating system in C, for Version
+4 Unix, released in 1973. That decision later lead to the operating
+system being ported to a wholly different platform — the Interdata 8/32
+— in 1978. That success lead to C’s own success fist as a systems
+programming language, and then later as a general-purpose programming
+language.
+
+The PDP-8 was introduced by DEC in 1965 with the intention of being a
+small and cheap processor that could be used in a variety of
+environments. From this simple machine, the modern desktop computer
+evolved, some of which were used in the writing of this document. The
+PDP-8 is also arguably the ancestor of the Raspberry Pi you may be using
+our CC8 compiler on, as part of the PiDP-8/I project.
+
+The PiDP-8/I project is part of an effort to prevent the PDP-8 from
+sliding into undeserved obscurity. Whether you consider it the ancestor
+of the desktop computer or the embedded processor, it is a machine worth
+understanding.
+
+
+## CC8’s Developmental Sparks
+
+With this in mind, the CC8 project’s creator (Ian Schofield) thought it
+was time to have a modern language compiler running on the PDP-8.  The
+last such compiler to be attempted for the PDP-8, as far as this
+document’s authors are aware, was Pascal in 1979 by Heinz Stegbauer.
+
+In more recent times, one cross-compiler has been developed by Vince
+Slyngstad and updated by Paolo Maffei based on Ron Cain’s Small-C using
+a VM approach. [This code][sms] is most certainly worth examining, and I
+am delighted to acknowledge this work as I have used some of his [C
+library code](#lib) in this project.
 
 [sms]: http://so-much-stuff.com/pdp8/C/C.php
 
@@ -31,38 +50,61 @@ Finally, I would refer the reader to Fabrice Bellard’s OTCC. It is this
 bit of remarkable software that suggested that there may be a chance to
 implement a native PDP-8 compiler.
 
-Developing a native compiler for the PDP-8 is not an easy task as this
-processor has a very limited address space and no hardware stack. And,
-although the option exists to write the whole thing in assembly language
-as has been the case for Pascal and Algol, this project has explored the
-option of writing the compiler itself in C. To this end, 2 compilers
-have been written. Firstly, a cross-compiler based again on Ron Cain’s
-Small-C which is used to compile the native OS/8 compiler and library.
-As yet, the native compiler has rather limited functionality and will
-not compile itself. The cross-compiler will compile itself but produces
-an enormous (28K) assembler file which cannot be run on the PDP-8.
+
+## The Project’s Products
+
+To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
+
+1.  A cross-compiler based initially on an early version of Ron Cain’s
+Small-C.
+
+2.  A native OS/8 compiler and library, compiled to assembly by the
+cross-compiler.
 
 
 <a id="cross" name="posix"></a>
-# The Cross-Compiler
+### The Cross-Compiler
 
-The code for this is in the `cross` subdirectory, and is built along
-with the top-level PiDP-8/I software. When installed, it is in your
-`PATH` as `cc8`.
+The features of the cross-compiler are basically that of Small-C itself,
+being a good approximation of K&R C (1978) minus:
 
-The CC8 cross-compiler is based upon Ron Cain’s famous Small-C
-compiler. This means it more or less adheres to the dialect of C
-as published in "The C Programming Language," by Kernighan and
-Ritche, first edition, 1978. The known limitations are [listed
-below](#cross-fl).
+*   most of the standard library (see [below](#lib) for what we *do*
+    have)
 
-The reader is directed to the extensive documentation of Small-C
-available on the web for further details. You may also find references
-for K&R C 1978 helpful.
+*   `struct` and `union`
 
-The key file is the PDP-8 code generator in `code8.c` which emits SABR —
-Symbolic Assembler for Binary Relocatable programmes — assembly code.
-SABR is normally used as the second pass of the OS/8 FORTRAN II system.
+*   function pointers
+
+*   `float` and `long`
+
+The code for this is in the `src/cc8/cross` subdirectory of the PiDP-8/I
+source tree, and it is built along with the top-level PiDP-8/I software.
+When installed, this compiler is in your `PATH` as `cc8`.
+
+Ian Schofield wrote the CC8 cross-compiler as a [SABR][sabr] code
+generator for Ron Cain’s famous Small-C compiler, originally published
+in [Dr Dobb’s Journal][ddj], with later versions published elsewhere.
+William Cattey later ported this code base to Small-C 85, a living
+project currently [available on GitHub][sc85].
+
+This means the cross compiler more or less adheres to the *language*
+dialect of C as published in "The C Programming Language," by Kernighan
+and Ritche, first edition, 1978. The reader is directed to the extensive
+documentation of Small-C available on the web for further details. You
+may also find references for K&R C 1978 helpful.
+
+We stress *language* above because we have not attempted to clone the C
+Standard Library as of K&R 1978.  CC8 has a [very limited standard
+library](#lib), and it has many weaknesses relative to even early
+versions of C.
+
+The CC8 cross-compiler can successfully compile itself, but it produces
+a SABR assembly file that is too large (28K) to be assembled on the
+PDP-8.  Thus [the separate native compiler](#native).
+
+The key file, relative to the base Small-C project, is the PDP-8 code
+generator in `code8.c` which emits SABR assembly code.  SABR is normally
+used as the second pass of the OS/8 FORTRAN II system.
 
 When you use the cross-compiler on a POSIX type system such as the
 Raspbian PiDP-8/I environment, the resulting `*.sb` files will have
@@ -78,9 +120,9 @@ to be called in the library.
 
 Several of the C programs in this distribution `#include <init.h>` which
 inserts an assembly language initialization routine into the program at
-that point using the `#asm` inline assembly feature. This file is
-symlinked into each directory that has a `*.c` file needing it since CC8
-doesn't have an include path feature, and it must be in the current
+that point using the `#asm` [inline assembly feature](#asm). This file
+is symlinked into each directory that has a `*.c` file needing it since
+CC8 doesn't have an include path feature, and it must be in the current
 directory in any case when using the OS/8 version of CC8.
 
 The `init.h` initialization routine defines some low-level subroutines,
@@ -107,9 +149,50 @@ Most commonly, it uses this scheme:
 Since this memory layout applies to the phases of the CC8 compiler as
 well, this means that each phase uses approximately 16 kWords of core.
 
+[ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
+[sabr]: https://tangentsoft.com/pidp8i/wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
+[sc85]: https://github.com/ncb85/SmallC-85
+
+
+<a id=”asm” name=”calling”></a>
+#### Inline Assembly Code and Calling Convention
+
+The cross-compiler allows SABR assembly code (**TBD:** true?) between
+`#asm` and `#endasm` markers in the C source code:
+
+    #asm
+        TAD (42      / add 42 to AC
+    #endasm
+
+You can write whole functions in inline assembly, though for simplicity,
+we recommend that you write the function wrapper in C syntax, with the
+body in assembly:
+
+    foo(a)
+    int a
+    {
+    #asm
+        / assembly body here
+    #endasm
+    }
+
+This declares a function `foo` taking a single integer parameter and
+returning an integer.
+
+The calling convention is for the first parameter to be passed in AC,
+with the return value also in AC. (There is no “`const`” in K&R C!)
+
+Inline assembly code is copied literally from the input C source file
+into the SABR output, so it must be written with that context in mind.
+(**TBD:** True?)
+
+Remember: inline assembly is a feature of the cross-compiler only. The
+native OS/8 compiler ignores all preprocessor directives, including
+`#asm`!
+
 
 <a id="native" name="os8"></a>
-## The Native Compiler
+### The Native OS/8 Compiler
 
 This compiler is supplied in both source and binary forms as part of the
 PiDP-8/I software distribution.
@@ -160,124 +243,15 @@ Input programs should go on `DSK:`. Compiler outputs are also placed on
 `DSK:`.
 
 
-<a id="examples"></a>
-## Trying the Examples
+<a id="nfeat" name=”features”></a>
+#### Features of the Native OS/8 Compiler
 
-The standard PiDP-8/I OS/8 RK05 boot disk contains several example
-C programs that the OS/8 version of CC8 is able to compile.
-
-To try the OS/8 version of CC8 out, boot OS/8 within the PiDP-8/I
-environment as you normally would, then try building one of the
-examples:
-
-    .EXE CCR   ⇠ BATCH wrapper around CC?.SV: "Compile C and Run"
-    >ps.c      ⇠ takes name of C program, builds, links, and runs it
-
-This example is particularly interesting. It generates
-Pascal’s triangle without using factorials, which are a bit out of
-range for 12 bits!
-
-The other examples preinstalled are:
-
-*   **<code>calc.c</code>** - A simple 4-function calculator program.
-
-*   **<code>fib.c</code>** - Calculates the first 10 Fibonacci numbers.
-    This implicitly demonstrates CC8's ability to handle recursive
-    function calls.
-
-If you look in `src/cc8/examples`, you will find these same programs
-plus `basic.c`, a simple BASIC language interpreter. This one is
-not preinstalled because its complexity is currently beyond the
-capability of the OS/8 version of CC8. To build it, you will have
-to use [the cross-compiler](#cross), then assemble the resulting
-`basic.sb` file under OS/8.
-
-Another set of examples not preinstalled on the OS/8 disk are
-`examples/pep001-*.c`, which are described [elsewhere][pce].
-
-[pce]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
-
-
-## Making Executables
-
-Executing `CCR.BI` loads, links, and runs your C program without
-producing an executable file on disk.  You need only a small variation
-on this BATCH file's contents to get an executable core image that
-you can run with the OS/8 `R` command:
-
-    .R CC                   ⇠ kinda like Unix cc(1)
-    >myprog.c
-    .COMP CC.SB
-    .R LOADER
-    *CC,LIBC/I/O$           ⇠ $ = Escape
-    .SAVE SYS:MYPROG
-
-If you've just run `EXE CCR` on `myprog.c`, you can skip the `CC` and
-`COMP` steps above, reusing the `CC.RL` file that was left behind.
-
-Basically, we leave the `/G` "go" switch off of the command to `LOADER`
-so that the program is left in its pre-run state in core so that
-`SAVE` can capture it to disk.
-
-
-<a id="warning"></a>
-## GOVERNMENT HEALTH WARNING
-
-**You are hereby warned**: The native OS/8 compiler does not contain any
-error checking whatsoever. If the source files contain an error or you
-mistype a build command, you may get:
-
-*   A runtime crash in the compiler
-*   SABR assembly output that won't assemble
-*   Output that assembles but won't run correctly
-
-Rarely will any of these failure modes give any kind of sensible hint as
-to the cause. OS/8 CC8 cannot afford the hundreds of kilobytes of error
-checking and text reporting that you get in a modern compiler like GCC
-or Clang. That would have required a roomful of core memory to achieve
-on a real PDP-8. Since we're working within the constraints of the old
-PDP-8 architecture, we only have about 3 kWords to construct the parse
-result, for example.
-
-In addition, the native OS/8 compiler is severely limited in code space,
-so it does not understand the full C language. It is less functional
-than K&R C 1978; we do not have a good benchmark for what it compares to
-in terms of other early C dialects, but we can sum it up in a single
-word: "primitive."
-
-Nonetheless, our highly limited C dialect is Turing complete. It might
-be better to think of it as a high-level assembly language that
-resembles C rather than as "C" proper.
-
-
-<a id="cross-fl"></a>
-### Features and Limitations of the Cross-Compiler
-
-The features of the cross-compiler are basically that of Small-C itself,
-the primary difference being in the PDP-8 SABR code generator, which
-doesn't affect its C language support.
-
-A good approximation is K&R C (1978) minus:
-
-*   most of the standard library
-
-*   `struct` and `union`
-
-*   function pointers
-
-*   `float` and `long`
-
-
-<a id="features"></a>
-### Features of the OS/8 CC8 Compiler
-
-The OS/8 version of CC8 is missing many features relative to the
-cross-compiler, and much more compared to modern C. Before we list
-those limitations, here is what is known to work:
+The following is the subset of C known to be understood by the native
+OS/8 CC8 compiler:
 
 1.  **Local and global variables**
 
-1.  **Pointers,** within limitations given in the following section.
+1.  **Pointers,** within limitations given below.
 
 1.  **Functions:** Parameter lists must be declared in K&R form:
 
@@ -288,8 +262,6 @@ those limitations, here is what is known to work:
         }
 
 1.  **Recursion:** See [`FIB.C`][fib] for an example of this.
-
-[fib]: https://tangentsoft.com/pidp8i/doc/src/cc8/examples/fib.c
 
 1.  **Simple arithmetic operators:** `+`, `-`, `*`, `/`, etc.
 
@@ -341,12 +313,14 @@ those limitations, here is what is known to work:
     supported, but they may not work as expected when deeply nested or
     in long `if/else if/...` chains.
 
+[fib]: https://tangentsoft.com/pidp8i/doc/src/cc8/examples/fib.c
 
-<a id="limitations"></a>
+
+<a id="nlim" name=”limitations”></a>
 ### Known Limitations of the OS/8 CC8 Compiler
 
-The OS/8 compiler has these known limitations relative to [those of the
-cross-compiler](#cross-fl):
+The OS/8 version of CC8 is missing many features relative to [the
+cross-compiler](#cross), and much more compared to modern C.
 
 1.  The language is typeless in that everything is a 12 bit integer and
     any variable/array can interpreted as `int`, `char` or pointer.  All
@@ -354,7 +328,7 @@ cross-compiler](#cross-fl):
     be left off of a function's definition; it is implicitly `int` in
     all cases, since `void` is not supported.
 
-    Further to this point, int the OS/8 version of CC8, it is optional
+    Further to this point, in the OS/8 version of CC8, it is optional
     to declare the types of the arguments to a function. For example,
     the following is likely to be rejected by a strictly conforming
     K&R C compiler, but it is legal in OS/8 CC8 because the types
@@ -501,6 +475,150 @@ cross-compiler](#cross-fl):
     to make this as reliable as modern C programmers expect.
 
 
+<a id="warning"></a>
+#### GOVERNMENT HEALTH WARNING
+
+**You are hereby warned**: The native OS/8 compiler does not contain any
+error checking whatsoever. If the source files contain an error or you
+mistype a build command, you may get:
+
+*   A runtime crash in the compiler
+*   SABR assembly output that won't assemble
+*   Output that assembles but won't run correctly
+
+Rarely will any of these failure modes give any kind of sensible hint as
+to the cause. OS/8 CC8 cannot afford the hundreds of kilobytes of error
+checking and text reporting that you get in a modern compiler like GCC
+or Clang. That would have required a roomful of core memory to achieve
+on a real PDP-8. Since we're working within the constraints of the old
+PDP-8 architecture, we only have about 3 kWords to construct the parse
+result, for example.
+
+In addition, the native OS/8 compiler is severely limited in code space,
+so it does not understand the full C language. It is less functional
+than K&R C 1978; we do not have a good benchmark for what it compares to
+in terms of other early C dialects, but we can sum it up in a single
+word: primitive.
+
+Nonetheless, our highly limited C dialect is Turing complete. It might
+be better to think of it as a high-level assembly language that
+resembles C rather than as "C" proper.
+
+
+<a id=”lib”></a>
+## The Standard Library
+
+CC8 offers a very limited standard library, shared between the native
+OS/8 and cross-compilers.  While some of its function names are the same
+as functions defined by Standard C, you should read the source code in
+`src/cc8/os8/libc.c` to find out what’s actually provided.  This section
+of the manual *attempts* to summarize the limitations relative to either
+K&R C’s standard library or to ISO C, but it is quite possible that we
+have overlooked some corner case that our library does not yet
+implement.
+
+Keep in mind that the library must fit in 4&nbsp;kWords. (**TBD:**
+True?) It is therefore unlikely that it will expand much or at all
+beyond the currently provided 31 functions, and those functions will
+likely not ever match what a modern C programmer expects of these
+functions in a modern programming environment.
+
+**WORK IN PROGRESSS**
+
+
+### `atoi`
+
+Takes a null-terminated ASCII character string pointer as a parameter
+and returns a 12-bit PDP-8 two’s complement signed integer.
+
+**Standard Violations:**
+
+*   Skips leading ASCII 32 (space) characters only, not those matched by
+    `isspace`, as the Standard requires.
+
+
+### `isspace`
+
+Takes an ASCII character and returns 1 if the character is considered a
+“whitespace” character.
+
+This function is not used by `atoi`: its whitespace matching is
+hard-coded internally.
+
+**Standard Violations:**
+
+*   Whitespace is currently defined as ASCII 1 through 32, inclusive.
+    Yes, yhis is certainly a vast overreach.
+
+
+### `itoa`
+
+Nonstandard. Converts 12-bit PDP-8 words to ASCII.
+
+**TBD**: Where’s the buffer? Does it take the input to be two’s
+complement or unsigned? No thousands separator, right?
+
+
+<a id="examples"></a>
+## Trying the Examples
+
+The standard PiDP-8/I OS/8 RK05 boot disk contains several example
+C programs that the OS/8 version of CC8 is able to compile.
+
+To try the OS/8 version of CC8 out, boot OS/8 within the PiDP-8/I
+environment as you normally would, then try building one of the
+examples:
+
+    .EXE CCR   ⇠ BATCH wrapper around CC?.SV: "Compile C and Run"
+    >ps.c      ⇠ takes name of C program, builds, links, and runs it
+
+This example is particularly interesting. It generates
+Pascal’s triangle without using factorials, which are a bit out of
+range for 12 bits!
+
+The other examples preinstalled are:
+
+*   **<code>calc.c</code>** - A simple 4-function calculator program.
+
+*   **<code>fib.c</code>** - Calculates the first 10 Fibonacci numbers.
+    This implicitly demonstrates CC8's ability to handle recursive
+    function calls.
+
+If you look in `src/cc8/examples`, you will find these same programs
+plus `basic.c`, a simple BASIC language interpreter. This one is
+not preinstalled because its complexity is currently beyond the
+capability of the OS/8 version of CC8. To build it, you will have
+to use [the cross-compiler](#cross), then assemble the resulting
+`basic.sb` file under OS/8.
+
+Another set of examples not preinstalled on the OS/8 disk are
+`examples/pep001-*.c`, which are described [elsewhere][pce].
+
+[pce]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
+
+
+## Making Executables
+
+Executing `CCR.BI` loads, links, and runs your C program without
+producing an executable file on disk.  You need only a small variation
+on this BATCH file's contents to get an executable core image that
+you can run with the OS/8 `R` command:
+
+    .R CC                   ⇠ kinda like Unix cc(1)
+    >myprog.c
+    .COMP CC.SB
+    .R LOADER
+    *CC,LIBC/I/O$           ⇠ $ = Escape
+    .SAVE SYS:MYPROG
+
+If you've just run `EXE CCR` on `myprog.c`, you can skip the `CC` and
+`COMP` steps above, reusing the `CC.RL` file that was left behind.
+
+Basically, we leave the `/G` "go" switch off of the command to `LOADER`
+so that the program is left in its pre-run state in core so that
+`SAVE` can capture it to disk.
+
+
 ## Conclusion
 
 This is a somewhat limited manual which attempts to give an outline of a
@@ -521,8 +639,8 @@ programs for OS/8.
 ## License
 
 This document is under the [GNU GPLv3 License][gpl], copyright © May,
-June, and November 2017 by [Ian Schofield][ian], with assorted updates
-by [Warren Young][wy] in 2017.
+June, and November 2017 by [Ian Schofield][ian], with later improvements
+by [Warren Young][wy] in 2017 and 2019.
 
 [gpl]: https://www.gnu.org/licenses/gpl.html
 [ian]: mailto:Isysxp@gmail.com
