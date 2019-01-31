@@ -19,7 +19,74 @@
 #include <libc.h>
 #include <init.h>
 
-/* C compiler driver: asks for input files, copies to CC.C & runs CC1 */
+/* C pre-processor stub for PDP/8 c compiler 2017 */
+/* Ask for input file, copy to CC.CC and run CC1 */
+/* Update Feb 2018: */
+/* 1. Read file line by line */
+/* 2. Exclude FF (12) */
+/* 3. Implement simple #define directive **Warning** quoted text is not ignored */
+/* 4. Implement #asm/#endasm directive */
+
+int ln[80],*p,*q,*tm,*dfp,tkbf[10],smbf[10];
+int dflst[1024],tmln[80];
+int asm[1024];
+
+
+skpsp()
+{
+	while (isspace(*p))
+		p++;
+}
+
+strlen(p)
+char *p;
+{
+	int n;
+
+	n=0;
+	while (*p++)
+		n++;
+	return n;
+}
+
+getsym()
+{
+	q=tkbf;
+	skpsp();
+	while (isalnum(*p))
+		*q++=*p++;
+	*q=0;
+	skpsp();
+	return *tkbf;
+}
+
+
+parse()
+{
+	getsym();
+	strcpy(dfp,tkbf);
+	getsym();
+	strcpy(dfp+512,tkbf);
+	dfp+=10;
+}
+
+dorep()
+{
+	p=dflst;
+	while (*p) {
+		q=strstr(ln,p);
+		if (q) {
+			memset(tmln,0,80);
+			if (q-p)
+				memcpy(tmln,ln,q-ln);
+			strcat(tmln,p+512);
+			strcat(tmln,q+strlen(p));
+			memcpy(ln,tmln,80);
+		}
+		p+=10;
+	}
+}
+
 
 main()
 {
@@ -30,11 +97,56 @@ main()
 	gets(fnm);
 	cupper(fnm);
 	fopen(fnm,"r");
-	fopen("CC.C","w");
-	while (bfr=fgetc())
-		if (bfr!=12)		/* Ignore form feed */
-			fputc(bfr);
+	fopen("CC.CC","w");
+	*asm=0;
+	memset(dflst,0,1024);
+	dfp=dflst;
+	while (1) {
+		fgets(p=ln);
+		if (!*ln)
+			break;
+
+		dorep();
+
+		while (*p) {
+			if (*p==12)
+				*p=' ';
+			p++;
+		}
+
+		p=strstr(ln,"#asm");
+		q=0;
+		while (p) {
+			fgets(ln);
+			q=strstr(ln,"#endasm");
+			if (q) {
+				strcpy(ln,"`\r\n");
+				break;
+			}
+			toupper(ln);
+			strcat(asm,ln);
+		}
+		if (p)
+			strcat(asm,"$");
+		
+		p=strstr(ln,"#define ");
+		if (p) {
+			p=p+8;
+			parse();
+		} else
+			fputs(ln);
+	}
 	fclose();
+	fopen("HEADER.SB","r");
+	fopen("CASM.TX","w");
+	while (bfr=fgetc())
+		fputc(bfr);
+	fputc('!');
+	p=asm;
+		while (*p)
+			fputc(*p++);
+	fclose();
+
 #asm	
 	CALL 1,CHAIN
 	ARG FNM

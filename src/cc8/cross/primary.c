@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "defs.h"
 #include "data.h"
 #include "extern.h"
@@ -198,7 +199,7 @@ int constant (int val[]) {
 
  */
 
-constant (int val[]) {
+int constant (int val[]) {
     if (number (val)) {
         if (val[0]==0) {
 	  output_line ("\t/ (0)");
@@ -222,7 +223,7 @@ constant (int val[]) {
 }
 
 
-number (int val[]) {
+int number (int val[]) {
     int     k, minus, base;
     char    c;
 
@@ -355,6 +356,17 @@ void callfunction (char *ptr) {
 	needbrack(")");
 	return;
     }
+    if (strcmp(ptr,"strd")==0) {
+	strd();
+	needbrack(")");
+	return;
+    }
+    if (strcmp(ptr,"strl")==0) {
+	strl();
+	needbrack(")");
+	return;
+    }
+
 
     nargs = 0;
     blanks ();

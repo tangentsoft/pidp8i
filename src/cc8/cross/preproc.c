@@ -59,7 +59,6 @@ FILE* fix_include_name () {
  */
 void doinclude ()
 {
-        char    *p;
         FILE    *inp2;
 
         blanks ();
@@ -319,7 +318,7 @@ void addmac ()
         }
         k = 0;
         while (putmac (sname[k++]));
-        while (ch () == ' ' | ch () == 9)
+        while (ch () == ' ' || ch () == 9)
                 gch ();
         /*while (putmac (gch ()));*/
         while (putmac(remove_one_line_comment(gch ())));

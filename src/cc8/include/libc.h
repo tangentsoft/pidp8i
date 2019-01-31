@@ -56,3 +56,5 @@
 #define strcmp libc28
 #define cupper libc29
 #define fgets libc30
+#define revcpy libc31
+#define toupper libc32

@@ -20,19 +20,17 @@
 #include <libc.h>
 #include <init.h>
 
-
 #define SMAX 10
-#define CMAX 256
+#define CMAX 280
 #define BMAX 64
 #define LMAX 32
 #define DMAX 32
 #define CBMX 1024
 #define LXMX 999
 
-int asm[CBMX];
 int ltbf[512];
 int xlt[CMAX];
-int gm[CMAX];		/* Global symbol table */
+int gm[512];		/* Global symbol table */
 int tkbf[LMAX];
 int *p,*q,*s,*ltpt;
 int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,cop;
@@ -70,8 +68,9 @@ getsym()
 /* recursive descent parser for arithmetic/logical expressions */
 
 S(  ) {
+int rtv;
 
-	cop=0;
+	cop=rtv=0;
 	J( );
 	switch(*p++){
 	case '=':
@@ -81,13 +80,15 @@ S(  ) {
 		break;
 	case ']':
 	case ')':
-		return 1;
+		rtv++;
+		break;
 	case ',':
 		break;
 	default: 
 		p--;
 	}
-	return 0;
+	skpsp();
+	return rtv;
 } /* end S */
 
 J(  ) {
@@ -154,6 +155,7 @@ Y(  ) {
 	if (cop) {
 		stri(19);
 		stkp++;
+		cop=0;
 	}
 
 	if (*p=='"') {
@@ -174,9 +176,7 @@ Y(  ) {
 		p++;
 		return;
 	}
-	n=q=p;
-	if (*p=='-')
-		p++;
+	q=p;
 	if(isdigit(*p)) {
 		while(isdigit(*p))
 			p++;
@@ -216,6 +216,10 @@ Y(  ) {
 				return;
 			case ')':
 				icd=1;
+				return;
+			case '-':
+				Y();
+				stri(27);
 				return;
 		}
 	}
@@ -292,8 +296,6 @@ Y(  ) {
 	}
 	stri(tmp);
 	stri(o);
-	if (*n=='-')
-		stri(27);
 	if (izf)
 		stri(15);
 	if (idf)
@@ -455,12 +457,13 @@ next()
 				while (*p) {
 					getsym();
 					addsym(tkbf,-1);
-					p++;
+					if (*p)
+						p++;
 					stkp+=2;
 				}
 				stkp=0;
 				tm=gettk();
-				cbrk=100;
+				cbrk=200;
 				break;
 			case ',':
 			case ';':
@@ -470,7 +473,7 @@ next()
 				}					/* end case 0: */
 				break;
 			case 4:
-				fflg=fflg+100;
+				fflg=fflg+200;
 			case 12:
 				fnbrk();
 				stri(5);
@@ -480,7 +483,7 @@ next()
 				stri(12);
 				stri(tm=*fptr+2);
 				*++fptr=cbrk;
-				if (fflg<100)
+				if (fflg<200)
 					cbrk=tm;
 				*++fptr=inproc;
 				lctr+=3;
@@ -495,10 +498,12 @@ next()
 				stri(cbrk);
 				break;
 			case 24:
-				procst(';');
-				stri(23);
-				stri(ectr);
-				tm=1;
+				if (tm-';') {
+					procst(';');
+					stri(-23);
+					stri(ectr);
+					tm=1;
+				}
 				break;
 			case 31:
 				fnbrk();
@@ -529,9 +534,12 @@ next()
 	} else
 		switch (tm) {
 				case '{':
-					tm=1;
 					inproc++;
+					tm=1;
 					break;
+				case '`':
+					tm=1;
+					stri(29);
 				case '}':
 					break;
 				case -1:
@@ -560,7 +568,7 @@ main()
 	char trm;
 
 	memset(ltbf,0,&ssz-ltbf);
-	fopen("CC.C","r");
+	fopen("CC.CC","r");
 	strcpy(tkn,"int if else while break return for ");
 	lctr = 10;
 	ectr = 900;
@@ -568,7 +576,7 @@ main()
 	fptr = fstk;
 	*fptr = -1;
 	gadr = 128; /* Start of globals */
-	iinit(asm);
+	iinit(128);
 	tm=gettk();
 	while (1) {
 		trm=next();
@@ -592,9 +600,9 @@ main()
 				stri(99);
 				if (!strcmp("else",tkbf)) {
 					stri(-23);
-					stri(100+lctr+2);
+					stri(200+lctr+2);
 					popfr();
-					*++fptr=100+lctr++;
+					*++fptr=200+lctr++;
 					*++fptr=cbrk;
 					*++fptr=inproc;
 				}

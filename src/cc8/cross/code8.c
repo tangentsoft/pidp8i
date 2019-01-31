@@ -2,8 +2,9 @@
 /*% cc -O -c %
  *
  */
-
+#ifndef unix
 #define unix
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -52,6 +53,7 @@ void header ()
 	output_line ("OPDEF SWP 7521");
 	output_line ("OPDEF CDF1 6211");
 	output_line ("OPDEF CDF0 6201");
+	output_line ("OPDEF CDF4 6241");
 	output_line ("OPDEF RIF 6224");
 	output_line ("OPDEF CAF0 6203");
 	output_line ("OPDEF BSW 7002");
@@ -72,7 +74,7 @@ void initmac()
 	defmac("smallc\t1");
 }
 
-galign(t)
+int galign(t)
 long	t;
 {
 	return(t);
@@ -81,7 +83,7 @@ long	t;
 /*
  *	return size of an integer
  */
-intsize() {
+int intsize() {
 	return(INTSIZE);
 }
 
@@ -89,7 +91,7 @@ intsize() {
  *	return offset of ls byte within word
  *	(ie: 8080 & pdp11 is 0, 6809 is 1, 360 is 3)
  */
-byteoff() {
+int byteoff() {
 	return(BYTEOFF);
 }
 
@@ -178,14 +180,14 @@ void trailer ()
 	print_label (litlab);
 	newline ();
 	output_line("CCEND,\t0");
-	output_line ("END");
+	output_line ("\tEND");
 }
 
 
 /*
  *	function prologue
  */
-void prologue (SYMBOL *sym) {
+void prologue (char *sym) {
     return;
 }
 
@@ -252,10 +254,9 @@ char	*sym;
 }*/
 
 void gen_get_memory (SYMBOL *sym) {
-	int adr;
+
 	output_line ("\tCLA");
 	gen_immediate4 ();
-	adr=glint(sym)+128;
 	output_number (glint(sym)+128);
     newline ();
 }
@@ -280,7 +281,7 @@ void gen_get_inc_memory (SYMBOL *sym) {
  *	fetch the address of the specified symbol into the primary register
  *
  */
-gen_get_locale (SYMBOL *sym)  {
+int gen_get_locale (SYMBOL *sym)  {
 	output_line("\tCLA");
 	output_line("\tTAD STKP");
 	if (sym->storage == LSTATIC) {
@@ -479,16 +480,28 @@ int		*nargs;
 	newline ();
 }
 
+/* Serial read/write routines for use of field 4 a a block of storage */
+
 void stri()
 {
-	output_line("\tDCAI 10");
+	output_line("\tJMSI PSTRI");
 }
 
 void iinit()
 {
-	output_line("\tCIA;CMA");
-	output_line("\tDCA 10");
+	output_line("\tJMSI PINIT");
 }
+
+void strd()
+{
+	output_line("\tJMSI PSTRD");
+}
+
+void strl()
+{
+	output_line("\tJMSI PSTRL");
+}
+
 
 /*
  *	return from subroutine
@@ -579,7 +592,7 @@ void gen_def_word ()
  *	modify the stack pointer to the new value indicated
  *
  */
-gen_modify_stack (newstkp)
+int gen_modify_stack (newstkp)
 int	newstkp;
 {
 	int	k;
@@ -892,7 +905,7 @@ void gen_increment_primary_reg (LVALUE *lval) {
 
 void gen_isz (LVALUE *lval) {
 	int adr;
-	char *sym=lval->symbol;
+	struct symbol *sym=lval->symbol;
 
 	if (lval->indirect) {
 		output_line ("\tISZI JLC");

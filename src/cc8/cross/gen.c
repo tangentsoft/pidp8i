@@ -10,7 +10,7 @@
 
 /* ToUpper routine */
 
-ucase(int ch) {
+int ucase(int ch) {
   if ('a'>ch || ch>'z') return(ch);
   return(ch-32);
 }
@@ -127,7 +127,7 @@ void output_decimal(int number) {
 	}
 	while (k >= 1) {
 		c = number / k + '0';
-		if ((c != '0' | (k == 1) | zs)) {
+		if ((c != '0' || (k == 1) || zs)) {
 			zs = 1;
 			output_byte (c);
 		}
@@ -162,7 +162,7 @@ int rivalue(LVALUE *lval, int reg) {
     if ((lval->symbol != 0) & (lval->indirect == 0))
         gen_get_inc_memory (lval->symbol);
     else
-        gen_inc_direct (lval->indirect, reg);
+        gen_inc_direct (lval->indirect);
     return HL_REG;
 }
 
@@ -191,7 +191,7 @@ void scale_const(int type, int otag, int *size) {
     switch (type) {
         case CINT:
         case UINT:
-            *size += *size;
+            *size *= *size;
             break;
         case STRUCT:
             *size *= tag_table[otag].size;

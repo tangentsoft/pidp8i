@@ -190,6 +190,8 @@ CLIST,	ITOA
 		STRCMP
 		CUPPER
 		FGETS
+		REVCPY
+		TOUPPER
 #endasm
 
 #define stdout 0
@@ -461,12 +463,20 @@ int x,y;
 getc()
 {
 #asm
-	CLA
+	 CLA CLL
 GT1, KSF
 	 JMP GT1
 	 KRB
+	 TAD (-254
+	 CLA
+	 KRB
+	 SNL			/ DO NOT ECHO BS
 	 TLS
-	 AND (127	/* 7 BIT! */
+	 TAD (-131		/ ? ^C
+	 SNA CLA
+	 JMP OSRET
+	 KRB
+	 AND (127		/ 7 BITS!
 #endasm
 }
 
@@ -477,23 +487,15 @@ int q,tm;
 		tm=1;
 		q=p;
 		while (tm) {
+		getc();
 #asm
-XC2,	CLA CLL
-		KSF
-		JMP XC2
-		KRB
-		TAD (-255
-		CLA
-		KRB
-		SNL			/ DO NOT ECHO BS
-		TLS
-XC3,	AND (127
+		AND (127
 		TAD (-13	/ CR IS END OF STRING -> 0
 		SZA
 		TAD (13
 	    DCAI STKP
 #endasm
-		if (tm!=127)
+		if (tm-127)	/* Handle BS */
 		  *p++=tm;
 		else
 			if (p-q) {
@@ -656,7 +658,7 @@ exit(retval)
 int retval;
 {
 #asm
-		CALL 0,EXIT
+OSRET,	CALL 0,EXIT
 		HLT
 #endasm
 }
@@ -741,6 +743,28 @@ CPP3,	ISZ ZTMP
 CPP2,
 #endasm
 }
+
+toupper(p)
+int p;
+{
+	p;
+#asm
+		DCA ZTMP
+		TAD ZTMP
+		TAD (-97
+		SPA
+		JMP TPP3
+		TAD (-26
+		SMA
+		JMP TPP3
+		TAD (91
+		JMP TPP2
+TPP3,	CLA CLL
+		TAD ZTMP
+TPP2,
+#endasm
+}
+
 
 /* Arbitrary fgets(). Read until LF, CR/LF are retained*/
 /* EOF returns null, else strlen(*p) */
@@ -886,7 +910,7 @@ PF1,	CLA
 
 /*
 ** itoa(n,s) - Convert n to characters in s 
-*/
+
 itoa(n, s) char *s; int n; {
   int sign;
   char *ptr;
@@ -899,6 +923,19 @@ itoa(n, s) char *s; int n; {
   *ptr = '\0';
   reverse(s);
   }
+*/
+
+itoa(n, s) char *s; int n; {
+  int sign;
+  char *ptr;
+  ptr = s;
+  if ((sign = n) < 0) {
+	  n = -n;
+	  *ptr++='-';
+  }
+  itoab(n,ptr,10);
+}
+
 
 /*
 ** itoab(n,s,b) - Convert "unsigned" n to characters in s using base b.
@@ -982,4 +1019,14 @@ sscanf(nxtarg) int nxtarg; {
     }
   return (ac);
   }
+
+revcpy(dst,src,cnt)
+int *dst,*src,cnt;
+{
+	dst+=cnt;
+	src+=cnt;
+	while (cnt--)
+		*dst--=*src--;
+}
+
 

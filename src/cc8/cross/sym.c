@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include "defs.h"
 #include "data.h"
 #include "extern.h"
@@ -24,15 +25,16 @@ int init();
  * @param is_struct struct or union or no meaning
  * @return
  */
-void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_struct)
+int declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_struct)
 {
     int     dim, identity;
     char    sname[NAMESIZE];
-
+	TAG_SYMBOL *symbol;
+	
     FOREVER {
         FOREVER {
             if (endst ())
-                return;
+                return 1;
             dim = 1;
             if (match ("*")) {
                 identity = POINTER;
@@ -43,7 +45,12 @@ void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_st
                 illname ();
             if (find_global (sname) > -1)
                 multidef (sname);
-            if (match ("[")) {
+ 			if (match ("(")) {
+				lptr -= strlen(sname)+1;
+				newfunc();
+				return 0;
+			}
+           if (match ("[")) {
                 dim = needsub ();
                 /*if (dim || storage == EXTERN) {*/
                     identity = ARRAY;
@@ -54,6 +61,14 @@ void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_st
             /* add symbol*/
             if (mtag == 0) { /* real variable, not a struct/union member */
                 identity = initials(sname, type, identity, dim, otag);
+				/* If declaration of variable of type structure, get actual size */
+				if (type == STRUCT) {
+					symbol = &tag_table[otag];
+					if (symbol)
+						dim = symbol->size;
+					else
+						error("Reference to undefined structure.");
+				}
                 add_global (sname, identity, type, (!dim ? -1 : dim), storage);
                 if (type == STRUCT) {
                     symbol_table[current_symbol_table_idx].tagidx = otag;
@@ -65,7 +80,8 @@ void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_st
                 /* store (correctly scaled) size of member in tag table entry */
                 if (identity == POINTER)
                     type = CINT;
-                scale_const(type, otag, &dim);
+				/* Scaling removed .. function unclear */
+                /* scale_const(type, otag, &dim); */
                 mtag->size += dim;
             }
             else {
@@ -74,14 +90,16 @@ void declare_global(int type, int storage, TAG_SYMBOL *mtag, int otag, int is_st
                 /* store maximum member size in tag table entry */
                 if (identity == POINTER)
                     type = CINT;
-                scale_const(type, otag, &dim);
+				/* Ditto */
+                /* scale_const(type, otag, &dim); */
                 if (mtag->size < dim)
                     mtag->size = dim;
             }
         }
         if (!match (","))
-            return;
+            return 1;
     }
+	return 1;
 }
 
 /**

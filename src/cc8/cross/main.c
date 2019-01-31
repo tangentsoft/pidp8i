@@ -270,6 +270,7 @@ int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
     int otag;   /* tag of struct object being declared */
     int sflag;      /* TRUE for struct definition, zero for union */
     char sname[NAMESIZE];
+	int rsl=0;		/* return value from declare_global 1=global variable 0=global function*/
 
     blanks();
     if ((sflag=amatch("struct", 6)) || amatch("union", 5)) {
@@ -280,15 +281,16 @@ int do_declarations(int stclass, TAG_SYMBOL *mtag, int is_struct) {
         if ((otag=find_tag(sname)) == -1) {
             otag = define_struct(sname, stclass, sflag);
         }
-        declare_global(STRUCT, stclass, mtag, otag, is_struct);
+        rsl=declare_global(STRUCT, stclass, mtag, otag, is_struct);
     } else if ((type = get_type())) {
-        declare_global(type, stclass, mtag, NULL_TAG, is_struct);
+        rsl=declare_global(type, stclass, mtag, NULL_TAG, is_struct);
     } else if (stclass == PUBLIC) {
         return (0);
     } else {
-        declare_global(CINT, stclass, mtag, NULL_TAG, is_struct);
+        rsl=declare_global(CINT, stclass, mtag, NULL_TAG, is_struct);
     }
-    need_semicolon();
+	if (rsl)
+		need_semicolon();
     return (1);
 }
 
@@ -376,7 +378,7 @@ void dumplits ()
  * port.
  */
 void dumpglbs() {
-  int dim, i, list_size, line_count, value, j;
+  int j;
 
     if (!glbflag) {
         output_with_tab("GBLS,\t0");
