@@ -154,7 +154,7 @@ well, this means that each phase uses approximately 16 kWords of core.
 [sc85]: https://github.com/ncb85/SmallC-85
 
 
-<a id=”asm” name=”calling”></a>
+<a id="asm" name="calling"></a>
 #### Inline Assembly Code and Calling Convention
 
 The cross-compiler allows SABR assembly code (**TBD:** true?) between
@@ -243,7 +243,7 @@ Input programs should go on `DSK:`. Compiler outputs are also placed on
 `DSK:`.
 
 
-<a id="nfeat" name=”features”></a>
+<a id="nfeat" name="features"></a>
 #### Features of the Native OS/8 Compiler
 
 The following is the subset of C known to be understood by the native
@@ -316,7 +316,7 @@ OS/8 CC8 compiler:
 [fib]: https://tangentsoft.com/pidp8i/doc/src/cc8/examples/fib.c
 
 
-<a id="nlim" name=”limitations”></a>
+<a id="nlim" name="limitations"></a>
 ### Known Limitations of the OS/8 CC8 Compiler
 
 The OS/8 version of CC8 is missing many features relative to [the
@@ -505,7 +505,7 @@ be better to think of it as a high-level assembly language that
 resembles C rather than as "C" proper.
 
 
-<a id=”lib”></a>
+<a id="lib"></a>
 ## The Standard Library
 
 CC8 offers a very limited standard library, shared between the native
