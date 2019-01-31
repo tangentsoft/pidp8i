@@ -11,7 +11,7 @@
 #   option subset is generated, we save the build results as the
 #   exemplar to use in later tests.
 #
-# Copyright © 2017-2018 by Warren Young
+# Copyright © 2017-2019 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -145,10 +145,15 @@ sub sanitize_log
     open my $of, '>', $ofile or die "Cannot write $ofile: $!\n";
 
     while (<$if>) {
+        # Skip line if it's one of those written by more recent SIMH
+        # versions, which has no effect on the binary output.
+        next if m{SIGINT will be delivered to your debugger};
+
         # Strip all the CRs out.  We only need the LFs.
         s{\r}{}gs;
-        s{.\x08}{}gs;          # Remove silly backspaces sequences.
-        my $original = $_;      # save it post-strip
+
+        # Remove silly backspace sequences.
+        s{.\x08}{}gs;
 
         # Strip variable parts of SIMH line following each Ctrl-E:
         #
@@ -158,34 +163,26 @@ sub sanitize_log
             ,\ PC:\ \d+\ \([A-Z]+(\ \d+)?\)  # variable bit
         }{$1.}x;
 
-        # Rewrite SIMH ATTACH commands to remove pointless differences
-        # in absolute paths between machines or Fossil checkouts.
+        # Rewrite SIMH ATTACH commands and SIMH's responses to them to
+        # remove pointless differences in absolute paths between file
+        # system layouts among machines or Fossil checkout structures.
+        no warnings 'uninitialized';         # some captures are optional
         s{
-            (att\ |attach\ |attached\ )           # SIMH command
-            (-r\ )?              # optional flag
-            ([a-z0-9]+\ )        # SIMH device name
-            (.*test/tmp/[0-9]+/) # noise parts of image file name thru PID
-        }{$1$3.../}x;
+            (att\ |attach\ )                 # SIMH command
+            (-r\ )?                          # optional flag
+            ([a-z0-9]+\ )                    # SIMH device name
+            ([\w./-]+)                       # path characters we use
+            /([\w.-]+)                       # attached file's parent dir
+            /([\w.-]+)                       # attached file's basename
+            (\s)                             # pattern end anchor
+        }{$1$2$3.../$5/$6$7}x;
         s{
-            (att\ |attach\ |attached\ )
-            (-r\ )?
-            ([a-z0-9]+\ )
-            (.*/(media/os8/))    # also squish this noise
-            ((.*-temp-)(.*)(\.[a-z0-9]+))  # and noise parts of temp file name if present.
-        }{$1$3.../$5$7XXX$9}x;
-        s{
-            (?:(?!(.*\.pt_temp)|(.*-temp-)(.*)(\.[a-z0-9]+)))  # Cover the case where we dont.
-            (att\ |attach\ |attached\ )
-            (-r\ )?
-            ([a-z0-9]+\ )
-            (.*/(media/os8/))    # also squish this noise
-        }{$5$7.../}x;
-        s{
-            (att\ |attach\ |attached\ )
-            (-r\ )?
-            ([a-z0-9]+\ )
-            (.*/(media/os8/.*))-([0-9]+)\.pt_temp    # also squish this noise
-        }{$1$3.../$5-XXX.pt_temp}x;
+            (attached\ to\ )                 # response from SIMH to att cmd
+            ([\w./-]+)                       # path characters we use
+            /([\w.-]+)                       # attached file's parent dir
+            /([\w.-]+)                       # attached file's basename
+            ([\s,])                          # pattern end anchor
+        }{$1.../$3/$4$5}x;
 
         # Add cleaned line to ofile
         print $of $_;

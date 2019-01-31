@@ -3464,15 +3464,16 @@ if ((sDynamic) &&
                     else
                         ParentName[i/2] = Pdata[i] ? Pdata[i] : Pdata[i+1];
                 free (Pdata);
+                memset (CheckPath, 0, sizeof (CheckPath));
                 if (0 == memcmp (sDynamic->ParentLocatorEntries[j].PlatformCode, "W2ku", 4))
-                    strncpy (CheckPath, ParentName, sizeof (CheckPath)-1);
+                    strlcpy (CheckPath, ParentName, sizeof (CheckPath));
                 else
                     if (0 == memcmp (sDynamic->ParentLocatorEntries[j].PlatformCode, "W2ru", 4)) {
                         const char *c;
 
                         if ((c = strrchr (szVHDPath, '\\'))) {
                             memcpy (CheckPath, szVHDPath, c-szVHDPath+1);
-                            strncpy (CheckPath+strlen(CheckPath), ParentName, sizeof (CheckPath)-(strlen (CheckPath)+1));
+                            strlcat (CheckPath, ParentName, sizeof (CheckPath));
                             }
                         }
                 VhdPathToHostPath (CheckPath, CheckPath, sizeof (CheckPath));
@@ -4142,10 +4143,10 @@ VhdPathToHostPath (const char *szVhdPath,
 char *c;
 char *d = szHostPath;
 
-strncpy (szHostPath, szVhdPath, HostPathSize-1);
+memmove (szHostPath, szVhdPath, HostPathSize);
 szHostPath[HostPathSize-1] = '\0';
 #if defined(VMS)
-c = strchr (szVhdPath, ':');
+c = strchr (szHostPath, ':');
 if (*(c+1) != '\\')
     return NULL;
 *(c+1) = '[';

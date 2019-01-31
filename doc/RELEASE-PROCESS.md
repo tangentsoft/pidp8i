@@ -50,10 +50,12 @@ home page.
 ## Update ChangeLog.md
 
 Trawl the Fossil timeline for user-visible changes since the last
-release, and write them up in user-focused form into the `ChangeLog.md`
-file.  If a regular user of the software cannot see a given change, it
-shouldn't go in the `ChangeLog.md`; let it be documented via the
+release, and write them up in user-focused form into [the `ChangeLog.md`
+file][cl]. If a regular user of the software cannot see a given change,
+it shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
+
+[cl]: https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
 
 
 ## Build and Update the Fossil Binary

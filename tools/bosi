@@ -97,7 +97,7 @@ function do_init() {
     if [ -z "$(type -p fossil)" ]
     then
         fb=/usr/local/bin/fossil
-        src=https://tangentsoft.com/pidp8i/uv/fossil-2.5-raspbian-9.3-stretch
+        src=https://tangentsoft.com/pidp8i/uv/fossil-2.7-raspbian-9.6-stretch
         wget -O $fb $src
         chmod +x $fb
         apt-get -y install libssl-dev    # user might rebuild Fossil later

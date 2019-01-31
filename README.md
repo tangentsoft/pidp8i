@@ -402,14 +402,10 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 
-*   **--disable-os8-init** - Generate `RKB0:INIT.TX` but do not display
-    it on OS/8 boot.  Rather than disable the default on-boot init
-    message, you may want to edit `media/os8/init.tx.in` to taste
+*   **--disable-os8-init** - Do not install `RKB0:INIT.TX` or its “show
+    on boot” script, `INIT.CM`.  Rather than disable the default on-boot
+    init message, you may want to edit `media/os8/init.tx.in` to taste
     and rebuild.
-
-    (We still build the file when you give this option in case you
-    later decide you want to enable the boot message, or you need to
-    call up configuration information stored in `INIT.TX`.)
 
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
