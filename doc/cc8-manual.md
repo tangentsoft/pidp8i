@@ -59,11 +59,11 @@ implement a native PDP-8 compiler.
 
 To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
 
-1.  A cross-compiler based initially on an early version of Ron Cain’s
-Small-C.
+1.  A cross-compiler that builds and runs on any host computer with a C
+    compiler that still understands K&R C.
 
 2.  A native OS/8 compiler and library, compiled to assembly by the
-cross-compiler.
+    cross-compiler.
 
 
 <a id="cross" name="posix"></a>
@@ -100,7 +100,8 @@ may also find references for K&R C 1978 helpful.
 We stress *language* above because we have not attempted to clone the C
 Standard Library as of K&R 1978.  CC8 has a [very limited standard
 library](#lib), and it has many weaknesses relative to even early
-versions of C.
+versions of C. See that section of this manual for details about known
+limitations, exclusions, and bugs.
 
 The CC8 cross-compiler can successfully compile itself, but it produces
 a SABR assembly file that is too large (28K) to be assembled on the
@@ -142,6 +143,7 @@ underlying implementation names.
 The linking loader determines the core layout for the built programs.
 Most commonly, it uses this scheme:
 
+<a id="fields"></a>
 **Field 0:** FOTRAN library utility functions and OS/8 I/O system
 
 **Field 1:** The programme’s runtime stack/globals/literals
@@ -159,7 +161,7 @@ well, this means that each phase uses approximately 16 kWords of core.
 
 
 <a id="asm" name="calling"></a>
-#### Inline Assembly Code and Calling Convention
+#### Inline Assembly Code and the CC8 Calling Convention
 
 The cross-compiler allows SABR assembly code (**TBD:** true?) between
 `#asm` and `#endasm` markers in the C source code:
@@ -175,20 +177,66 @@ body in assembly:
     foo(a)
     int a
     {
+        a;
     #asm
         / assembly body here
     #endasm
     }
 
 This declares a function `foo` taking a single integer parameter and
-returning an integer.
+returning an integer. 
 
-The calling convention is for the first parameter to be passed in AC,
-with the return value also in AC. (There is no “`const`” in K&R C!)
+The calling convention is for the parameters to be passed on [the
+stack](#fields), with the return value in AC.  It is common in C
+functions with inline assembly to not have explicit “`return`”
+statements, but instead to have set up AC just before the implicit
+return.
+
+The above `foo` example also shows another common technique in CC8
+functions using inline assembly: there being no “void context” in K&R C,
+the first line of that function has the nonstandard meaning “load `a`
+into AC.” In Standard C, that line would have no effect on the state of
+the program or its external environment, so it would simply be optimized
+out.
+
+This same technique is used in other ways in well-optimized CC8 code.
+For example, you may call a function that returns a value, but never
+explicitly store it anywhere if the call is immediately followed by
+inline assembly that looks for its input in the accumulator, knowing
+that’s where CC8 put the prior call’s return value.
 
 Inline assembly code is copied literally from the input C source file
 into the SABR output, so it must be written with that context in mind.
 (**TBD:** True?)
+
+A block of inline assembly functions as single statement in the C
+program, from a syntactic point of view. Consider the implementation of
+the Standard C function `puts` from the CC8 LIBC:
+
+    puts(p)
+    char *p;
+        {
+            while (*p++) 
+    #asm
+            TLS
+    XC1,    TSF
+            JMP XC1
+    #endasm
+        }
+
+Notice that there is no opening curly brace on the `while` loop: when
+the `TSF` opcode causes the `JMP` instruction to be skipped — meaning
+the console terminal is ready for another output character — control
+goes back to the top of the `while` loop. That is, these three
+instructions behave as if they were a single C statement and thus
+constitute the whole body of the `while` loop.
+
+Note also in the `puts` example that the statement `*p++` implicitly
+stores the value at the core memory location referred to by `p` in AC.
+Knowing what the compiler has done with values just prior to entering an
+inline assembly block is key to using CC8’s inline assembly feature
+successfully. Reading the resulting SABR output from the compiler can
+therefore be quite helpful in optimizing your code.
 
 Remember: inline assembly is a feature of the cross-compiler only. The
 native OS/8 compiler ignores all preprocessor directives, including
@@ -278,37 +326,9 @@ OS/8 CC8 compiler:
 
 1.  **A few 2-character operators:** `++`, `--` (postfix only) and `==`.
 
-1.  **Limited library:** See `libc.h` for allowed libc functions, of
-    which there are currently 31, including:
-
-    1.  **A subset of stdio:**
-
-        *   `fopen` is implemented as
-        
-                void fopen(char *filename, char *mode)
-                
-            The filename must be upper case. Mode is either "w" or "r".
-
-        *   Only 1 input file and 1 output may be open at any one time
-
-        *   `fclose()` only closes the output file.
-
-        *   Call `fopen` to open a new input file. The current file does
-            not need to be closed.
-
-        *   `fprintf`, `fputc`, and `fputs` are as expected.
-
-        *   `fgets` is implemented. It will read and retain CR/LF. It
-            returns a null string on EOF.
-
-        *   `fscanf` is not implemented. Read a line with `fgets()` and
-            then call `sscanf` on it.
-
-        *   `feof` is not implemented; `fgetc` and `fgets` will return a
-            null on EOF.
-
-    1.  **printf:**  See `libc.c` for the allowed format specifiers:
-        `%d`, `%s` etc.  Length and width.precision formatting is supported.
+1.  **Limited library:** See [below](#lib) for a list of library
+    functions provided, including their known limitations relative to
+    Standard C.
 
     There are many limitations in this library relative to Standard C or
     even K&R C, which are documented below.
@@ -323,8 +343,8 @@ OS/8 CC8 compiler:
 <a id="nlim" name="limitations"></a>
 ### Known Limitations of the OS/8 CC8 Compiler
 
-The OS/8 version of CC8 is missing many features relative to [the
-cross-compiler](#cross), and much more compared to modern C.
+The OS/8 version of CC8 is missing many language features relative to
+[the cross-compiler](#cross), and much more compared to modern C.
 
 1.  The language is typeless in that everything is a 12 bit integer and
     any variable/array can interpreted as `int`, `char` or pointer.  All
@@ -368,7 +388,7 @@ cross-compiler](#cross), and much more compared to modern C.
 
 4.  Unlike the CC8 cross-compiler, the OS/8 compiler currently ignores
     all C preprocessor directives: `#define`, `#ifdef`, `#include`,
-    etc.  This even includes inline assembly via `#asm`!
+    etc.  This even includes [inline assembly](#asm) via `#asm`!
 
     This means you cannot use `#include` directives to string multiple
     C modules into a single program.
@@ -444,24 +464,23 @@ cross-compiler](#cross), and much more compared to modern C.
     if you learn nothing else about Boolean algebra, you would be well
     served to memorize those rules.
 
-9.  `atoi` is non-standard: `int atoi(char *, int *)`, returning
-     the length of the numeric string.
+9. Dereferencing parenthesized expressions does not work: `*(<expr>)`
 
-10. `scanf` is not implemented; use `gets` then `sscanf`
-
-11. Dereferencing parenthesized expressions does not work: `*(<expr>)`
-
-12. The stack, which includes all globals and literals, is only 4 kwords.
+10. The stack, which includes all globals and literals, is only 4 kwords.
     Stack overflow is not detected.  Literals are inlcuded in this due
     to a limitation in the way `COMMN` is implemented in SABR.
 
-13. There is no argument list checking, not even for standard library
+11. There is no argument list checking, not even for standard library
     functions.
 
-14. `do/while` loops are parsed, but the code is not properly generated.
+12. `do/while` loops are parsed, but the code is not properly generated.
     Regular `while` loops work fine, however.
 
-15. `switch` doesn't work.
+13. `switch` doesn't work.
+
+The provided [LIBC library functions](#lib) is also quite limited and
+nonstandard compared to Standard C.  See the documentation for each
+individual library function for details.
 
 
 <a id="bugs"></a>
@@ -512,36 +531,211 @@ resembles C rather than as "C" proper.
 <a id="lib"></a>
 ## The Standard Library
 
-CC8 offers a very limited standard library, shared between the native
-OS/8 and cross-compilers.  While some of its function names are the same
-as functions defined by Standard C, you should read the source code in
-`src/cc8/os8/libc.c` to find out what’s actually provided.  This section
-of the manual *attempts* to summarize the limitations relative to either
-K&R C’s standard library or to ISO C, but it is quite possible that we
-have overlooked some corner case that our library does not yet
+CC8 offers a very limited standard library, which is shared between the
+two compilers, native and cross.  While some of its function names are
+the same as functions defined by Standard C, you should read the source
+code in `src/cc8/os8/libc.c` to find out what’s actually provided.  This
+section of the manual *attempts* to summarize the limitations relative
+to either K&R C’s standard library or to ISO C, but it is quite possible
+that we have overlooked some corner case that our library does not yet
 implement.
 
-Keep in mind that the library must fit in 4&nbsp;kWords. (**TBD:**
-True?) It is therefore unlikely that it will expand much or at all
-beyond the currently provided 31 functions, and those functions will
-likely not ever match what a modern C programmer expects of these
-functions in a modern programming environment.
+This is a **WORK IN PROGRESSS**. None of the documentation below has
+yet been cross-checked between the code and the ISO C Standard.
 
-**WORK IN PROGRESSS**
+In the following text, we use OS/8 device names as a handwavy kind of
+shorthand, even when the code would otherwise run on any PDP-8 in
+absence of OS/8. Where we use “`TTY:`”, for example, we’d be more
+precise to say instead “the console teleprinter, being the one that
+responds to IOT device code 3 for input and to device code 4 for
+output.” We’d rather not write all of that for every stdio function
+below, so we use this shorthand.
 
 
-### `atoi`
+### <a id="libclim"></a>General Limitations of the CC8 LIBC
 
-Takes a null-terminated ASCII character string pointer as a parameter
-and returns a 12-bit PDP-8 two’s complement signed integer.
+The stdio implementation currently assumes US-ASCII text I/O. Input
+characters have their upper 5 bits masked off. The functions accepting
+data for output will tolerate 8 bit data in some cases, but since you
+can’t read it back in safely with this current implementation, you
+probably should not do this.
+
+The stdio implementation only allows one file to be open for reading at
+a time, and one file for writing. The `fclose()` implementation takes no
+argument: it always closes the output file, if any. There is no need for
+`fclose()` on the input file (if any) because there is no standard input
+buffering in this implementation, so there is nothing to free before
+opening another file for input.
+
+A great many Standard C Library functions are not provided, including
+some you’d think would go along nicely with those we do provide, such as
+`feof()` or `fseek()`.  Keep in mind that the library must currently fit
+in [a single 4&nbsp;kWord field](#fields).  It is therefore unlikely
+that it will expand much or at all beyond the currently provided 33
+functions, and those functions will likely not ever match the behavior
+that a C programmer expects of functions with these names in a modern
+programming environment.
+
+
+### <a id="atoi"></a>`atoi(s, outlen)`
+
+Takes a null-terminated ASCII character string pointer `s` and returns a
+12-bit PDP-8 two’s complement signed integer. The length of the numeric
+string is returned in `*outlen`.
 
 **Standard Violations:**
 
 *   Skips leading ASCII 32 (space) characters only, not those matched by
-    `isspace`, as the Standard requires.
+    [`isspace()`](#isspace), as the Standard requires.
+
+*   The `outlen` parameter is nonstandard.
 
 
-### `isspace`
+### <a id="cupper"></a>`cupper`
+
+Like [`toupper()`](#toupper), but stores its result in the same memory
+location as you passed, saving a few instructions relative to using
+`toupper`, if that’s the result you wanted.
+
+**Nonstandard.** Conforming to...?
+
+
+### <a id="dispxy"></a>`dispxy`
+
+??
+
+**Nonstandard.** Conforming to...?
+
+
+### <a id="exit"></a>`exit(ret)`
+
+Exits the program.
+
+**TBD**: What does `CALL 0,EXIT` mean? Is that a FORTRAN II library
+thing? Can a user register something there to get `atexit` behavior?
+Is that why the `CALL` is followed by `HLT` rather than expecting the
+call to never return?
+
+**Standard Violations:**
+
+*   The passed return code is ignored.
+
+
+### <a id="fclose"></a>`fclose()`
+
+Closes the opened output file.
+
+**Standard Violations:**
+
+*   Does not take a `FILE*` argument.  (See [`fopen()`](#fopen) for
+    justification.)
+
+*   Always closes the last-opened *output* file: cannot close a file
+    opened for input with `fopen(name, "r")`.  If you want to open a
+    second input file, simply call [`fopen()`](#fopen) on it, implicitly
+    closing the prior input file.  There being no read buffering in LIBC
+    to speak of, there’s nothing to free with an `fclose()` call on an
+    input file.
+
+
+### <a id="fgets"></a>`fgets(s)`
+
+Reads a string of ASCII characters from the last file opened for input
+by [`fopen()`](#fopen), storing it at core memory location `s`. It reads
+until it encounters an LF character, storing that and a trailing NUL
+before returning, because it assumes the OS/8 convention of CR+LF
+terminated text files.
+
+Returns 0 on EOF, as Standard C requires.
+
+**Standard Violations:**
+
+*   Returns the number of characters read on success, rather than `s` as
+    Standard C requires.
+
+*   Since EOF is the only error exit case from this implementation of
+    `fgets()`, this LIBC does not provide `feof()`.
+
+
+### <a id="fopen"></a>`fopen(name, mode)`
+
+Opens an OS/8 file called `name`, which must be in all-uppercase.
+
+The file is opened for reading if `mode` points to an ”`r`” character,
+and it is opened for writing if `mode` points to a “`w`” character.
+
+**TBD:** Does it obey OS/8 device names, or is the file always on `DSK:`
+or similar?
+
+`flag` is a null-terminated ASCII string with one or more (?) letters in
+the following set, **TBD**.
+
+**Standard Violations:**
+
+*   Does not return a `FILE*`. Functions which, in Standard C, take a
+    `FILE*` argument do not do so in the CC8 LIBC, because there can be
+    only one opened input file and one opened output file at a time, so
+    the file that is meant is implicit in the call.
+
+
+### <a id="getc" name="fgetc"></a>`getc()`, `fgetc()`
+
+Reads a single ASCII character from `TTY:` or from the last file opened
+for input by [`fopen()`](#fopen), respectively.
+
+**Standard Violations:**
+
+*   `feof()` is not provided by CC8 LIBC: detect EOF with a null return
+    from `fgetc()`.
+
+
+### <a id="gets"></a>`gets(s)`
+
+Reads a string of ASCII characters from `TTY:`, up to and including the
+terminating CR character, storing it at core memory location `s`, and
+following the terminating CR with a NUL character.
+
+Backspace characters from the terminal remove the last character from
+the string.
+
+**Standard Violations:**
+
+*   `gets()` always returns 1 in this implementation, but it returns the
+    passed string pointer in Standard C libraries.
+
+
+### <a id="isalnum"></a>`isalnum(c)`
+
+Returns &gt; 1 if either [`isdigit()`](#isdigit) or
+[`isalpha()`](#isalpha) returns 1 for `c`.
+
+**Standard Violations:**
+
+*   None known.
+
+
+### <a id="isalpha"></a>`isalpha(c)`
+
+Returns true if the passed character `c` is either between 65 and 90 or
+between 97 and 122 inclusive, being the ASCII alphabetic characters.
+
+**Standard Violations:**
+
+*   Does not know anything about locales; assumes US-ASCII input.
+
+
+### <a id="isdigit" name="isnum"></a>`isdigit(c)`, `isnum(c)`
+
+Returns true if the passed character `c` is between 48 an 57, inclusive,
+being the ASCII decimal digit characters.
+
+**Standard Violations:**
+
+*   `isnum` is a nonstandard alias for `isdigit` conforming to **TBD**.
+    Both are implemented with the same LIBC code.
+
+
+### <a id="isspace"></a>`isspace`
 
 Takes an ASCII character and returns 1 if the character is considered a
 “whitespace” character.
@@ -555,12 +749,159 @@ hard-coded internally.
     Yes, yhis is certainly a vast overreach.
 
 
-### `itoa`
+### <a id="itoa"></a>`itoa`
 
-Nonstandard. Converts 12-bit PDP-8 words to ASCII.
+Converts 12-bit PDP-8 words to ASCII.
 
 **TBD**: Where’s the buffer? Does it take the input to be two’s
 complement or unsigned? No thousands separator, right?
+
+**Nonstandard.** Emulates a function most often found in compilers from
+the MS-DOS and Windows tradition.
+
+
+### <a id="kbhit"></a>`kbhit`
+
+Stops the program until a keystroke is detected on `TTY:`, which can
+subsequently be read by calling `getc`.
+
+**Nonstandard.** Emulates a function most often found in compilers from
+the MS-DOS and Windows tradition.
+
+
+### <a id="memcpy"></a>`memcpy`
+
+Copies a given number of words from one core memory location to another.
+
+**TBD**: Do we want to document the direction that is safe when copying
+overlapping buffers, nailing that in place?  Can it handle page
+transitions?  Field transitions?  If there are limitations there, does
+it work between whole fields/pages? That is, if it handles neither page
+nor field transitions, can it copy from one page to another as long as
+both buffers fit completely within their respective pages?
+
+**Standard Violations:**
+
+*   None known.
+
+
+### <a id="memset"></a>`memset(dst, c, len)`
+
+Sets a run of `len` core memory locations starting at `dst` to `c`.
+
+**TBD**: Can `dst+len` cross a field or page boundary from `dst`?
+
+**Standard Violations:**
+
+*   None known.
+
+
+### <a id="printf" name="fprintf"></a>`printf(fmt, args...)`,
+`fprintf(fmt, args...)`, `sprintf(outstr, fmt, args..)`
+
+Writes formatted values to `TTY:`, to the output file opened with
+`fopen`, or to the null-terminated ASCII string buffer `outstr`,
+respectively.
+
+See `src/cc8/os8/libc.c` for the allowed format specifiers: `%d`, `%s`
+etc.  Length and width.precision formatting is supported.
+
+**Standard Violations:**
+
+*   `fprintf` does not take a `FILE*` pointer as its first argument. It
+    simply writes to the one and only output file that can be opened at
+    a time by [`fopen()`](#fopen).
+
+*   **TBD**: There must be a whole lot defined by Standard C that this
+    implementation cannot handle: format specs, modifiers, the return
+    value, error handling...
+
+
+### <a id="puts" name="fputs"></a>`puts`, `fputs(fp)`
+
+Writes a null-terminated character string to `TTY:`. The characters
+pointed to are expected to be 7-bit ASCII bytes stored within each PDP-8
+word, with the top 5 bits unset.
+
+**Standard Violations:**
+
+*   None known.
+
+
+### <a id="revcpy"></a>`revcpy`
+
+??
+
+**Nonstandard.** Conforming to...?
+
+
+### <a id="sscanf"></a>`sscanf`
+
+Reads formatted input from a file.
+
+**Standard Violations:**
+
+*   `[f]scanf()` is not provided. Call [`[f]gets()`](#gets) to get a
+    string and then call `sscanf()` on it.
+
+*   This list cannot possibly be complete.
+
+
+### <a id="strcat"></a>`strcat`
+
+Concatenates one null-terminated character string to the end of another.
+
+**TBD**: Much the same as `memcpy`: do both strings have to be in the
+same page/field, are page/field crossings legal, etc.?
+
+**Standard Violations:**
+
+*   None known.
+
+
+### <a id="strcpy"></a>`strcpy`
+
+Copies a null-terminated character string from one memory location to
+another.
+
+**TBD**: Same as `memcpy`.
+
+**Standard Violations:**
+
+*   None known.
+
+
+### <a id="strstr"></a>`strstr(haystack, needle)`
+
+Attempts to find a given null-terminated substring within another.
+
+**TBD**: Much the same as `strcpy`, plus: naive algorithm, not BMH,
+right? Does it blow up if the needle is bigger than the haystack? Is it
+actually a word string comparison function, or does it mask off the top
+4 or 5 bits to be a *character* comparison function?
+
+**Standard Violations:**
+
+*   None known.
+
+
+### <a id="toupper"></a>`toupper(c)`
+
+Returns the uppercase form of ASCII character `c` if it is lowercase,
+Otherwise, returns `c` unchanged.
+
+**Standard Violations:**
+
+*   There is no `tolower()` in the CC8 LIBC.
+
+*   Does not know anything about locales; assumes US-ASCII input.
+
+
+### <a id="xinit"></a>`xinit`
+
+??
+
+**Nonstandard.** Conforming to...?
 
 
 <a id="examples"></a>
