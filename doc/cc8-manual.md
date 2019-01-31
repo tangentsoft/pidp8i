@@ -1,4 +1,7 @@
-# A Minimal Implementation of C for the DEC PDP-8 Processor
+# CC8 Manual
+
+CC8 is a C subset implementation for the DEC PDP-8 processor.
+
 
 ## A Bit of Grounding History
 
@@ -12,11 +15,12 @@ system utilities that otherwise would have been written in assembly. A C
 language compiler first appeared publicly in Version 2 Unix, released
 later in 1972. Much of PDP-11 Unix remained written in assembly until
 its developers decided to rewrite the operating system in C, for Version
-4 Unix, released in 1973. That decision later lead to the operating
-system being ported to a wholly different platform — the Interdata 8/32
-— in 1978. That success lead to C’s own success fist as a systems
-programming language, and then later as a general-purpose programming
-language.
+4 Unix, released in 1973. That decision allowed Unix to be relatively
+easily ported to a wholly different platform — the Interdata 8/32 — in
+1978 by writing a new code generator for the C compiler, then
+cross-compiling everything. That success in porting Unix lead to C’s own
+success first as a systems programming language, and then later as a
+general-purpose programming language.
 
 The PDP-8 was introduced by DEC in 1965 with the intention of being a
 small and cheap processor that could be used in a variety of
