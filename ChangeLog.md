@@ -647,7 +647,7 @@
 *   Assorted portability, build system, and documentation improvements.
 
 [apt]:   https://linux.die.net/man/8/apt
-[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
+[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [dibas]: https://tangentsoft.com/pidp8i/wiki?name=Demos+in+BASIC
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
