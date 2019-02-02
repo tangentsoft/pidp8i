@@ -186,12 +186,10 @@ attempting to sync when you know it will fail.
 Getting Developer Access
 ----
 
-The administrator of this repository is Warren Young, whose email you
-can find on the [official PiDP-8/I project mailing list][ggml].  I
-generally give developer access to anyone who makes a reasonable
-request.
-
-[ggml]:   https://groups.google.com/forum/#!forum/pidp-8
+We are pretty open about giving developer access to someone who’s
+provided at least one good, substantial [patch](#patches) to the
+software. If we’ve accepted one of your patches, just ask for a
+developer account [on the forum][pfor].
 
 
 <a id="forum"></a>
@@ -220,6 +218,7 @@ creates a replacement record for a post, but the old post is still
 available in the repository. Don't post anything you wouldn't want made
 part of the permanent record of the project!
 
+[ggml]:  https://groups.google.com/forum/#!forum/pidp-8
 [pfor]:  https://tangentsoft.com/pidp8i/forum
 [alert]: https://tangentsoft.com/pidp8i/alerts
 
@@ -608,10 +607,14 @@ trunk of PiDP-8/I:
 
     $ fossil diff > my-changes.patch
 
-Then attach that file to a new [PiDP-8/I mailing list][ggml] message
-along with a declaration of the license you wish to contribute your
-changes under.  We suggest using the [SIMH license][simhl], but any
-[non-viral][viral] [OSI-approved license][osil] should suffice.
+Then either upload that file somewhere (e.g. Pastebin) and point to it
+from a [forum post][pfor] or attach the patch to a new [PiDP-8/I mailing
+list][ggml] message. Either way, include a declaration of the license
+you wish to contribute your changes under.  We suggest using the [SIMH
+license][simhl], but any [non-viral][viral] [OSI-approved license][osil]
+should suffice. We’re willing to tolerate viral licenses for standalone
+products; for example, CC8 is under the GPL, but it’s fine because it
+isn’t hard-linked into any other part of the PiDP-8/I software system.
 
 If your change is more than a small patch, `fossil diff` might not
 incorporate all of the changes you have made.  The old unified `diff`
@@ -635,8 +638,8 @@ Because you are working on a branch on your private copy of the
 PiDP-8/I Fossil repository, you are free to make as many checkins as
 you like on the new branch before giving the `bundle export` command.
 
-Once you are done with the bundle, send it to the mailing list just as
-with the patch.
+Once you are done with the bundle, send it to the developers the same
+way you should a patch file.
 
 If you provide a quality patch, we are likely to offer you a developer
 login on [the repository][repo] so you don't have to continue with the
@@ -761,7 +764,7 @@ SIMH occasionally exceeds 100-column lines.  I recommend breaking
 long lines at 72 columns.  Call me an 80-column traditionalist.
 
 When in doubt, mimic what you see in the current code.  When still in
-doubt, ask on the mailing list.
+doubt, ask on the [project forum][pfor].
 
 [indent]: http://linux.die.net/man/1/indent
 
@@ -821,7 +824,7 @@ for a ticket: while Status is not Closed, Resolution should be Open.
 When Resolution changes from Open, Status should change to either Review
 or, preferentially, Closed.  A resolution is an end state, not an
 expression of changeable intent: no more ceremony than setting a
-ticket’s Resolution from Open and changing its Status to Closed is
+ticket’s Resolution state *away* from Open and its Status *to* Closed is
 required.
 
 If you do not intend to close a ticket but wish to advocate for a
