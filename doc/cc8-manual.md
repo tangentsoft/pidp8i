@@ -55,7 +55,7 @@ bit of remarkable software that suggested that there may be a chance to
 implement a native PDP-8 compiler.
 
 
-## The Project’s Products
+## The Project’s Major Products
 
 To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
 
@@ -74,8 +74,6 @@ being a good approximation of K&R C (1978) minus:
 
 *   most of the standard library (see [below](#lib) for what we *do*
     have)
-
-*   `struct` and `union`
 
 *   function pointers
 
@@ -118,11 +116,6 @@ utility program included with the PiDP-8/I distribution will
 automatically do that conversion for you when making a SIMH paper tape
 image file, which you can then read into the OS/8 environment.
 
-The cross-compiler has some non-standard features to enable the
-interface between the main programme and the C library. This constitutes
-a compile time linkage system to allow for standard and vararg functions
-to be called in the library.
-
 Several of the C programs in this distribution `#include <init.h>` which
 inserts an assembly language initialization routine into the program at
 that point using the `#asm` [inline assembly feature](#asm). This file
@@ -158,6 +151,29 @@ well, this means that each phase uses approximately 16 kWords of core.
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
 [sabr]: https://tangentsoft.com/pidp8i/wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
 [sc85]: https://github.com/ncb85/SmallC-85
+
+
+<a id="cpp"></a>
+#### The Cross-Compiler’s Preprocessor Features
+
+Unlike [the native OS/8 compiler](#native), the cross-compiler does have
+rudimentary C preprocessor features:
+
+*   Literal `#define` only.  You cannot define parameterized macros.
+    There are no `-D` or `-U` flags to define and undefine macros from
+    the command line.
+
+*   `#include`, but only for files in the current directory.  There is
+    no include path, either hard-coded within the compiler or modifiable
+    via the traditional `-I` compiler flag.
+
+*   [Inline assembly](#asm) via `#asm`.
+
+*   **TBD:** `#if` and such?
+
+*   **TDB:** Token pasting?
+
+*   **TDB:** Stringization?
 
 
 <a id="asm" name="calling"></a>
@@ -238,6 +254,12 @@ inline assembly block is key to using CC8’s inline assembly feature
 successfully. Reading the resulting SABR output from the compiler can
 therefore be quite helpful in optimizing your code.
 
+Related to all of this, the cross-compiler has some non-standard
+features to enable the interface between the main programme and the C
+library. This constitutes a compile time linkage system to allow for
+standard and vararg functions to be called in the library. **TODO:**
+Explain this.
+
 Remember: inline assembly is a feature of the cross-compiler only. The
 native OS/8 compiler ignores all preprocessor directives, including
 `#asm`!
@@ -265,7 +287,7 @@ cross-compiler to produce SABR assembly files for each stage of the OS/8
 CC8 compiler, which it then copies into the OS/8 environment, then it
 assembles, links, and saves the result as `CC?.SV`:
 
-2.  `c8.c` &rarr; `c8.sb` &rarr; `CC.SV`: The compiler driver: accepts
+1.  `c8.c` &rarr; `c8.sb` &rarr; `CC.SV`: The compiler driver: accepts
     the input file name from the user, and calls the first proper
     compiler stage, `CC1`.
 
@@ -390,6 +412,10 @@ The OS/8 version of CC8 is missing many language features relative to
     all C preprocessor directives: `#define`, `#ifdef`, `#include`,
     etc.  This even includes [inline assembly](#asm) via `#asm`!
 
+    There is a compiler stub in `src/cc8/os8/c8.c` which implements
+    some simple C preprocessor stuff, but it’s pretty much [broken and
+    useless at the moment][os8pre].
+
     This means you cannot use `#include` directives to string multiple
     C modules into a single program.
 
@@ -429,9 +455,10 @@ The OS/8 version of CC8 is missing many language features relative to
         int i;
         i = 5;
 
-8.  There is no `&&` nor &brvbar;&brvbar;.  Neither is there support for
-    complex relational operators like `>=` nor even `!=`.  Abandon all
-    hope for complex assignment operators like `+=`.
+8.  There is no `&&` nor &brvbar;&brvbar;, nor are there plans to add
+    them in the future.  Neither is there support for complex relational
+    operators like `>=` nor even `!=`.  Abandon all hope for complex
+    assignment operators like `+=`.
 
     Most of this can be worked around through clever coding. For
     example, this:
@@ -474,13 +501,20 @@ The OS/8 version of CC8 is missing many language features relative to
     functions.
 
 12. `do/while` loops are parsed, but the code is not properly generated.
-    Regular `while` loops work fine, however.
+    Regular `while` loops work, as does `break`, so one workaround for a
+    lack of `do/while` is:
+
+        `while (1) { /* do something useful */; if (cond) break; }
+
+    We have no intention to fix this.
 
 13. `switch` doesn't work.
 
 The provided [LIBC library functions](#lib) is also quite limited and
 nonstandard compared to Standard C.  See the documentation for each
 individual library function for details.
+
+[os8pre]: https://tangentsoft.com/pidp8i/tktview/4a1bf30628
 
 
 <a id="bugs"></a>
@@ -554,6 +588,8 @@ below, so we use this shorthand.
 
 ### <a id="libclim"></a>General Limitations of the CC8 LIBC
 
+#### stdio
+
 The stdio implementation currently assumes US-ASCII text I/O. Input
 characters have their upper 5 bits masked off. The functions accepting
 data for output will tolerate 8 bit data in some cases, but since you
@@ -566,6 +602,21 @@ argument: it always closes the output file, if any. There is no need for
 `fclose()` on the input file (if any) because there is no standard input
 buffering in this implementation, so there is nothing to free before
 opening another file for input.
+
+
+#### Ctrl-C Handling
+
+Unlike on modern operating systems, there is nothing like `SIGINT` in
+OS/8, which means Ctrl-C only kills the program if it checks for that.
+The keyboard input loop in the CC8 LIBC standard library does do this.
+
+The thing to be aware of is, this won’t happen while a program is stuck
+in an infinite loop or similar. The only way to get out of such a
+program is to either restart OS/8 — assuming the broken program hasn’t
+corrupted the OS’s resident parts — or restart the PDP-8.
+
+
+#### Missing Functions
 
 A great many Standard C Library functions are not provided, including
 some you’d think would go along nicely with those we do provide, such as
