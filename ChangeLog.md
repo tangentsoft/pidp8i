@@ -22,7 +22,101 @@
         tape images from pristine, curated source media, just like
         we did for the RK05 media in the prior release.
 
-        These four tapes are the result of a 2×2 matrix of choices:
+        These four tapes are the result of a 2×2 matrix of choices
+	between which virtual DECtape hardware (TC08 or TD8E) and
+	which OS/8 version (v3d or v3f).
+
+	__TD8E versus TC08__
+
+	The previous os8.tu56 was a an image created from a DECtape
+	found running on someone's PDP-8 system.  That system had
+	a TD8E "Simple DECtape" controller that required the CPU
+	to monitor the tape as it sped past the heads, and transferred
+	data through the AC, not by using Direct Memory Access.
+
+	Most surviving PDP-8e hardware has that single-card DECtape
+	controller.  However there is another controller available
+	for the PDP-8, the TC08 which offloads to hardware more of
+	the tape motion, and uses DMA to transfer data.  Before the
+	advent of the PDP-8 OMNIBUS, TC08 was the only controller
+	option available.  But it was expensive.
+
+	Here's where the interesting tradeoff comes from:  Emulating
+	a DMA device in SIMH is quick and easy.  Your driver gets
+	the pointer to the blocks and copies them.  The TCO8 emulator
+	for SIMH is simple and runs as fast as a byte copy.
+
+	Emulating the TD8E is harder.  You listen for the commands
+	to start the tape moving, and then for the desired block
+	number.  Then you wait for each 12 bit word to go into that
+	block to come to you through the emulation of a programmed
+	I/O instruction that put that word in the PDP-8 AC.
+
+	If all you ever want to do is play with DECtape under SIMH,
+	choose the TC08 device. It's a LOT faster. However if you
+	are using SIMH and the PiDP-8/i to create TU56 images for
+	use on real hardware, you may want to choose TD8E, because
+	it's the more commonly found DECtape controller.
+
+	__OS/8 V3D versus V3f__
+
+	OS/8 version 3D is the release most commonly found in the wild.
+	There was additional development of OS/8 to support such things as:
+	*   a bigger memory address space on the PDP8a hardware
+	    (the successor to the PDP8e).
+	*   new devices such as the double density RX02 floppy and
+	    the RL02 cartridge disk drive.
+	*   Additional bug fixes, and enhanced functionality.
+	*   Ports to new hardware such as the VT78 word processing system.
+
+	The device drivers were made available as the "OS/8
+	Device Extensions Kit."
+
+	Eventually the separately sold FORTRAN IV, MACREL, and BASIC
+	language packs, the Device Extensions and all known bug fix
+	patches were integrated into one product sold as the "OS/8
+	Combined Kit."  But by that time, very few customers were
+	interested in paying for such an incremental update, and there
+	were very few new OS/8 customers buying new hardware and spending
+	the big bucks for a source license.
+
+	Although images of pristine OS/8 v3d distribution media kits
+	for both source and binary have long been available if you knew
+	where to look, the "Combined Kit" was thought to have been lost.
+
+	A snapshot of most of the sources of the V3D Device Extensions
+	Kit was available in the internet as a self-extracting archive
+	os8v3f.exe.  When fear of executables with malware took hold,
+	this archive was nearly lost as it was purged from various
+	PDP-8 software archive sites.
+
+	Heres's the exciting bit:
+
+	The os8v3f.exe archive was found, and is in the process of being
+	assembled integrated and validated.  That work is documented in
+	os8-v3d-device-extensions.md. The v3f choice you make gives you a
+	bootable TU56 image with the OS/8 Device Extensions.  It is required
+	if you care to work with rx02 floppy disk images.
+
+	VERY recently, we've connected up with folks who have made
+	significant progress recovering source and binary of the OS/8
+	Combined Kit.  If all goes as planned, the next OS/8 packs
+	after this release will contain that kit.
+
+	The primary driver in the development of the os8-run scripting
+	language was to make it easy to build OS/8 from source that would
+	be managed ina modern source code enviornment but then to generate
+	system images in arbitrary formats with arbitrary configurations
+	and contents.
+
+	The 4 tu56 images:
+
+	V3D TC08
+	V3D TD8E
+	V3F TC08
+	V3F TD8E
+
+	are the result of this work.
 
         *   You can ask to have the IF=3 boot option use the OS/8 V3F
             tape instead of the OS/8 V3D default.  Both versions get
