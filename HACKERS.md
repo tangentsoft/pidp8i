@@ -807,28 +807,27 @@ someone to check out the change before closing it, or go straight to
 Closed status. Closing a ticket hides it from the Wishes and Bugs ticket
 reports.
 
-Larger teams oftem require all ticket changes to go through Review
+Larger teams often require all ticket changes to go through Review
 status before getting to Closed, but the PiDP-8/I project is too small
 to require such ceremony: if we’ve given you a developer account on the
-repository, you’re expected to resolve and close tickets most of the
-time. If you cannot confidently close a ticket when resolving it, you
-should probably not be assigning a resolution yet anyway. Do whatever
-you have to with tests and such to *become* certain before you resolve a
-ticket.
+repository, you’re expected to resolve and close tickets in the same
+step, most of the time. If you cannot confidently close a ticket when
+resolving it, you should probably not be assigning a resolution yet
+anyway. Do whatever you have to with tests and such to *become* certain
+before you resolve a ticket.
 
-There is a process interlock between the Resolution and Status states.
-While Status is not Closed, Resolution should be Open. When you edit a
-ticket to change its Resolution to anything other than Open, you should
-also change its Status to either Review or to Closed.  Because the
-PiDP-8/I project is small, developers have a lot of power, so they
-should normally change the Status to Closed when assigning a resolution
-to a ticket. A resolution is an end state: no more ceremony than
-updating the ticket is required.
+There is a process interlock between the Resolution and Status settings
+for a ticket: while Status is not Closed, Resolution should be Open.
+When Resolution changes from Open, Status should change to either Review
+or, preferentially, Closed.  A resolution is an end state, not an
+expression of changeable intent: no more ceremony than setting a
+ticket’s Resolution from Open and changing its Status to Closed is
+required.
 
 If you do not intend to close a ticket but wish to advocate for a
-particular resolution, just make a comment and let someone else close
-the ticket, or not. Don’t change the Resolution value until the issue
-has been, well, *resolved*.
+particular resolution, just add a comment to the ticket and let someone
+else choose whether to close the ticket or not. Don’t change the
+Resolution value until the issue has been *resolved* for good.
 
 For example, the resolution "Works as Designed" does not merely mean,
 “Yes, we know it works that way,” it also implies “...and we have no
@@ -836,3 +835,18 @@ intention to change that behavior, ever.”  If there is a chance that the
 behavior described in the ticket could change, you should not assign any
 resolution. Just leave it open until someone decides to do something
 final with the ticket.
+
+This is not to say that a ticket can never be re-opened once it’s had a
+resolution assigned and been closed, but that this is a rare occurrence.
+When a developer makes a decision about a ticket, it should be difficult
+to re-open the issue. A rejected ticket probably shouldn’t be re-opened
+with anything short of a working patch, for example:
+
+> User A: I want feature X.
+
+> Dev B: No, we’re not going to do that. Ticket closed and rejected.
+
+> User C: Here’s a patch to implement feature X.
+
+> Dev B: Well, that’s different, then. Thanks for the patch! Ticket
+> marked Implemented, but still Closed.
