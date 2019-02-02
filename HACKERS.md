@@ -782,3 +782,57 @@ File types: `md`, `txt`
     [Fossil's Markdown interpreter][fmd].
 
 [fmd]: https://tangentsoft.com/pidp8i/md_rules
+
+
+<a id="tickets"></a>
+Ticket Processes
+----
+Normal end users of the Fossil ticket system are not expected to
+understand it properly or to fill out tickets properly. Without certain
+permissions, it is in fact not possible to completely fill out a ticket
+properly.
+
+Therefore, the first thing that should happen to a ticket is that
+someone with sufficient privilege should triage it and fix up any
+incorrect settings.
+
+The Status of a ticket initially starts out as Open. If the person
+triaging a ticket takes the time to check that the problem actually
+occurs as the ticket filer claims or that the requested feature is in
+fact missing, the Status should change to Verified.
+
+If a developer implements a fix or feature in response to a ticket, he
+has two choices: change the ticket’s Status to “Review” if he wants
+someone to check out the change before closing it, or go straight to
+Closed status. Closing a ticket hides it from the Wishes and Bugs ticket
+reports.
+
+Larger teams oftem require all ticket changes to go through Review
+status before getting to Closed, but the PiDP-8/I project is too small
+to require such ceremony: if we’ve given you a developer account on the
+repository, you’re expected to resolve and close tickets most of the
+time. If you cannot confidently close a ticket when resolving it, you
+should probably not be assigning a resolution yet anyway. Do whatever
+you have to with tests and such to *become* certain before you resolve a
+ticket.
+
+There is a process interlock between the Resolution and Status states.
+While Status is not Closed, Resolution should be Open. When you edit a
+ticket to change its Resolution to anything other than Open, you should
+also change its Status to either Review or to Closed.  Because the
+PiDP-8/I project is small, developers have a lot of power, so they
+should normally change the Status to Closed when assigning a resolution
+to a ticket. A resolution is an end state: no more ceremony than
+updating the ticket is required.
+
+If you do not intend to close a ticket but wish to advocate for a
+particular resolution, just make a comment and let someone else close
+the ticket, or not. Don’t change the Resolution value until the issue
+has been, well, *resolved*.
+
+For example, the resolution "Works as Designed" does not merely mean,
+“Yes, we know it works that way,” it also implies “...and we have no
+intention to change that behavior, ever.”  If there is a chance that the
+behavior described in the ticket could change, you should not assign any
+resolution. Just leave it open until someone decides to do something
+final with the ticket.
