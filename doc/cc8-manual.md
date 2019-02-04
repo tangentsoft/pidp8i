@@ -70,11 +70,11 @@ To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
 
 The CC8 system generally assumes the availability of:
 
-*   16 kWords of core.
+*   16&nbsp;kWords of core.
 
     (CC8 provides no built-in way to use more memory than this, so you
     will probably have to resort to [inline assembly](#asm) or FORTRAN
-    II library linkage to get access to more than 16 kWords of core.)
+    II library linkage to get access to more than 16&nbsp;kWords of core.)
 
 *   A PDP-8 with the MQ register, being either a PDP-8/e or higher class
     processor or an older processor design with the EAE option
@@ -90,13 +90,13 @@ The CC8 system generally assumes the availability of:
     PDP-8/I simulation underneath that pretty front panel, we’re sorry
     to pop your bubble, but those are the facts of the matter.)
 
-*   At build time, the OS/8 FORTRAN II/SABR subystem must be available.
+*   At build time, the OS/8 FORTRAN II/SABR subsystem must be available.
 
 *   At run time, any [stdio](#stdio) operation involving file I/O
     assumes it is running atop OS/8. For instance, file name arguments
     to [`fopen()`](#fopen) are passed to OS/8 for interpretation.
 
-There is likley a subset of CC8-built programs which will run
+There is likely a subset of CC8-built programs which will run
 independently of OS/8, but the bounds on that class of programs is not
 currently clear to us.
 
@@ -126,7 +126,7 @@ project currently [available on GitHub][sc85].
 
 This means the cross compiler more or less adheres to the *language*
 dialect of C as published in "The C Programming Language," by Kernighan
-and Ritche, first edition, 1978. The reader is directed to the extensive
+and Ritchie, first edition, 1978. The reader is directed to the extensive
 documentation of Small-C available on the web for further details. You
 may also find references for K&R C 1978 helpful.
 
@@ -181,7 +181,7 @@ Most commonly, it uses this scheme:
 **Field 3:** The LIBC library code
 
 Since this memory layout applies to the phases of the CC8 compiler as
-well, this means that each phase uses approximately 16 kWords of core.
+well, this means that each phase uses approximately 16&nbsp;kWords of core.
 
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
 [sabr]: https://tangentsoft.com/pidp8i/wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
@@ -258,7 +258,6 @@ that’s where CC8 put the prior call’s return value.
 
 Inline assembly code is copied literally from the input C source file
 into the SABR output, so it must be written with that context in mind.
-(**TBD:** True?)
 
 A block of inline assembly functions as single statement in the C
 program, from a syntactic point of view. Consider the implementation of
@@ -528,7 +527,7 @@ The OS/8 version of CC8 is missing many language features relative to
 
 9. Dereferencing parenthesized expressions does not work: `*(<expr>)`
 
-10. The stack, which includes all globals and literals, is only 4 kwords.
+10. The stack, which includes all globals and literals, is only 4&nbsp;kWords.
     Stack overflow is not detected.  Literals are inlcuded in this due
     to a limitation in the way `COMMN` is implemented in SABR.
 
@@ -583,7 +582,7 @@ to the cause. OS/8 CC8 cannot afford the hundreds of kilobytes of error
 checking and text reporting that you get in a modern compiler like GCC
 or Clang. That would have required a roomful of core memory to achieve
 on a real PDP-8. Since we're working within the constraints of the old
-PDP-8 architecture, we only have about 3 kWords to construct the parse
+PDP-8 architecture, we only have about 3&nbsp;kWords to construct the parse
 result, for example.
 
 In addition, the native OS/8 compiler is severely limited in code space,
@@ -682,11 +681,12 @@ The bulk of the Standard C Library is not provided, including some
 functions you’d think would go along nicely with those we do provide,
 such as `feof()` or `fseek()`.  Keep in mind that the library is
 currently restricted to [a single 4&nbsp;kWord field](#fields), and we
-don’t want to lift that restriction. It is therefore unlikely that it
-will expand much or at all beyond the currently provided 33 functions,
-and the limitations we’ve identified below with respect to published C
-standards are unlikely to be fixed.  Do not bring your modern C
-environment expectations to CC8!
+don’t want to lift that restriction. Since the current implementation
+nearly fills that space, it is unlikely that we’ll add much more
+functionality beyond the currently provided 33 functions. If we ever fix
+any of the limitations we’ve identified below, consider it “gravy”
+rather than any kind of obligation fulfilled.  Do not bring your modern
+C environment expectations to CC8!
 
 
 ## <a id="libref"></a>The CC8 C Library: Reference

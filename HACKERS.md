@@ -24,13 +24,13 @@ If you started with one of our PiDP-8/I binary OS images made in or
 after April 2017, Fossil 2.x is already installed.
 
 If you're starting from some other OS, you either won't have Fossil
-installed at all, or you'll most likley be using an older version, since
+installed at all, or you'll most likely be using an older version, since
 the Debian project is still shipping version 1.37 and likely will
 continue to do so until 2020 or so in accordance with their software
 stability policy.  You could build Fossil from source, or you could just
-go grab a prebuilt binary we keep on the project site:
+go grab a pre-built binary we keep on the project site:
 
-    $ wget https://tangentsoft.com/pidp8i/uv/fossil-2.5-raspbian-9.3-stretch
+    $ wget https://tangentsoft.com/pidp8i/uv/fossil-2.7-raspbian-9.6-stretch
     $ sudo install -m 755 fossil-* /usr/local/bin/fossil
 
 Fossil is also available for all common desktop platforms.  One of [the
@@ -158,7 +158,7 @@ Either way, Fossil will ask you for the password for `username` on the
 remote Fossil instance, and it will offer to remember it for you.  If
 you let it remember the password, operation from then on is scarcely
 different from working with an anonymous clone, except that on checkin,
-your changes will be sync'd back to the repository on tangentsoft.com if
+your changes will be sync’d back to the repository on tangentsoft.com if
 you're online at the time, and you'll get credit under your developer
 account name for the checkin.
 
@@ -371,7 +371,7 @@ modifying it.
 
 If you do not have Tcl installed on your system, `configure` builds a
 minimal Tcl interpreter called `jimsh0`, based on the [Jim Tcl][jim]
-project.  Developers working on the build system are encoruaged to use
+project.  Developers working on the build system are encouraged to use
 this stripped-down version of Tcl rather than "real" Tcl because Jim Tcl
 is more or less a strict subset of Tcl, so any changes you make that
 work with the `jimsh0` interpreter should also work with "real" Tcl, but
@@ -385,7 +385,7 @@ achieve compatibility with other `make` programs, though in the future
 we may need it to work with [BSD `make`][bmake] as well, so if you are
 adding features, you might want to stick to the common subset of
 features implemented by both the GNU and BSD flavors of `make`.  We do
-not anticpate any need to support any other `make` flavors.
+not anticipate any need to support any other `make` flavors.
 
 This, by the way, is why we're not using some heavy-weight build system
 such as the GNU Autotools, CMake, etc.  The primary advantage of GNU
@@ -394,7 +394,7 @@ and build on weird and ancient flavors of Unix; we don't need that.
 Cross-platform build systems such as CMake ease building the same
 software on multiple disparate platforms straightforward, but the
 PiDP-8/I software is built primarily on and for a single operating
-system, Rasbpian Linux.  It also happens to build and run on [several
+system, Raspbian Linux.  It also happens to build and run on [several
 other OSes][oscomp], for which we also do not need the full power of
 something like CMake.  Autosetup and GNU `make` suffice for our purposes
 here.
@@ -446,7 +446,7 @@ The directory structure of the PiDP-8/I project is as follows:
 
     The content of this directory is copied to `$prefix/bin` at
     installation time, which is added to the user's `PATH` by the
-    installer.
+    `make install` script.
 
 *   <b>`boot`</b> - SIMH initialization scripts.  The `*.script.in`
     files are written by the project developers but have local
@@ -461,7 +461,7 @@ The directory structure of the PiDP-8/I project is as follows:
     `make mediainstall` which runs automatically from `make install`
     when we detect that the binary media and SIMH boot scripts have
     never been installed at this site before.  On subsequent installs,
-    The user choosed whether to run `make mediainstall` by hand to
+    the user chooses whether to run `make mediainstall` by hand to
     overwrite all of this.
 
 *   <b>`doc`</b> - Documentation files sufficiently unimportant to a new
