@@ -137,11 +137,11 @@ The linking loader determines the core layout for the built programs.
 Most commonly, it uses this scheme:
 
 <a id="fields"></a>
-**Field 0:** FOTRAN library utility functions and OS/8 I/O system
+**Field 0:** FORTRAN library utility functions and OS/8 I/O system
 
-**Field 1:** The programme’s runtime stack/globals/literals
+**Field 1:** The program’s runtime stack/globals/literals
 
-**Field 2:** The programme's executable code
+**Field 2:** The program's executable code
 
 **Field 3:** The LIBC library code
 
@@ -255,7 +255,7 @@ successfully. Reading the resulting SABR output from the compiler can
 therefore be quite helpful in optimizing your code.
 
 Related to all of this, the cross-compiler has some non-standard
-features to enable the interface between the main programme and the C
+features to enable the interface between the main program and the C
 library. This constitutes a compile time linkage system to allow for
 standard and vararg functions to be called in the library. **TODO:**
 Explain this.
@@ -562,20 +562,115 @@ be better to think of it as a high-level assembly language that
 resembles C rather than as "C" proper.
 
 
-<a id="lib"></a>
-## The Standard Library
+## <a id="libdoc"></a>The CC8 C Library: Documentation
+
+In this section, we will explain some high-level matters that cut across
+multiple functions in the C library. This material is therefore not
+appropriate to repeat below, in the [C library function
+reference](#libref).
+
+
+### <a id="ctype"></a>ctype
+
+The ISO C Standard does not define what the `is*()` functions do when
+the passed character is not representable as `unsigned char`. Since this
+C compiler does not distinguish types, our `is*()` functions return
+false for any value outside of the ASCII range, 0-127.
+
+
+### <a id="stdio"></a>stdio
+
+The stdio implementation currently assumes US-ASCII 7-bit text I/O.
+
+Input characters have their upper 5 bits masked off so that only the
+lower 7 bits are valid in the returned 12 bit PDP-8 word. Code using
+[`fgetc`](#fgetc) cannot be used on arbitrary binary data because its
+“end of file” return case is indistinguishable from reading a 0 byte.
+
+The output functions will attempt to store 8-bit data, but since you
+can’t read it back in safely with this current implementation, per
+above, you should only write ASCII text to output files with this
+implementation. Even if you are reading your files with some other code
+which is capable of handling 8-bit data, there are further difficulties
+such as a lack of functions taking an explicit length, like `fwrite()`,
+which makes dealing with ASCII NUL difficult. You could write a NUL to
+an output file with `fputc()`, but not with `fputs()`, since NUL
+terminates the output string.
+
+The stdio implementation only allows one file to be open at a time for
+reading and one for writing. Since there is no input buffering to speak
+of in the stdio implementation, there is no need to close files opened
+for input, there being no resources to free. Together, those two facts
+explains why [the `fclose()` implementation](#fclose) takes no argument:
+it always closes the lone output file, if any.
+
+This means that to open multiple output files, you have to `fclose` each
+file before calling [`fopen("FILENA.ME", "w")`](#fopen) to open the next.
+To open multiple input files, simply call `fopen()` to open each
+subsequent file, implicitly closing the prior input file.
+
+The CC8 LIBC file I/O implementation is built atop the OS/8 FORTRAN II
+subsystem’s file I/O functions. This has some important implications in
+the documentation below:
+
+1.  We have not tried to “hoist” descriptions of what the FORTRAN II
+    subsystem does up into this documentation. It may be necessary for
+    you to read the FORTRAN II documentation in the OS/8 manual to
+    understand how the CC8 LIBC’s stdio file I/O functions behave in
+    certain respects.
+
+2.  Programs built with CC8 which use its file I/O functions are
+    dependent upon OS/8 and its FORTRAN II subsystem.
+
+    (The limitations on the inverse proposition are not yet clear to us:
+    that is, it must be possible to write a class of programs with CC8
+    which are independent of OS/8 and its FORTRAN II subsystem, but we
+    currently have no clear picture on the bounds of that class of
+    program.)
+
+
+#### Ctrl-C Handling
+
+Unlike on modern operating systems, there is nothing like `SIGINT` in
+OS/8, which means Ctrl-C only kills program that explicitly check for
+it.  The keyboard input loop in the CC8 LIBC standard library does do
+this.
+
+The thing to be aware of is, this won’t happen while a program is stuck
+in an infinite loop or similar. The only way to get out of such a
+program is to either restart OS/8 — assuming the broken program hasn’t
+corrupted the OS’s resident parts — or restart the PDP-8.
+
+(You can restart OS/8 by causing a jump to core memory location 07600.
+Within the `pidp8i` environment, you can hit Ctrl-E, then say “`go
+7600`”.  From the front panel, press the Stop key, toggle 7600 into the
+switch register, press the Load Add key, then press the Start key.)
+
+
+### Missing Functions
+
+The bulk of the Standard C Library is not provided, including some
+functions you’d think would go along nicely with those we do provide,
+such as `feof()` or `fseek()`.  Keep in mind that the library is
+currently restricted to [a single 4&nbsp;kWord field](#fields), and we
+don’t want to lift that restriction. It is therefore unlikely that it
+will expand much or at all beyond the currently provided 33 functions,
+and the limitations we’ve identified below with respect to published C
+standards are unlikely to be fixed.  Do not bring your modern C
+environment expectations to CC8!
+
+
+## <a id="libref"></a>The CC8 C Library: Reference
 
 CC8 offers a very limited standard library, which is shared between the
-two compilers, native and cross.  While some of its function names are
-the same as functions defined by Standard C, you should read the source
-code in `src/cc8/os8/libc.c` to find out what’s actually provided.  This
-section of the manual *attempts* to summarize the limitations relative
-to either K&R C’s standard library or to ISO C, but it is quite possible
-that we have overlooked some corner case that our library does not yet
-implement.
-
-This is a **WORK IN PROGRESSS**. None of the documentation below has
-yet been cross-checked between the code and the ISO C Standard.
+native and cross-compilers.  While some of its function names are the
+same as functions defined by Standard C, these functions generally do
+not conform completely to any given standard due to the severe resource
+constraints imposed by the PDP-8 architecture. This section of the
+manual documents the known limitations of these functions relative to
+[the current C standard as interpreted by `cppreference.com`][cppr], but
+it is likely that we have overlooked corner cases that our library does
+not yet implement.  When in doubt, [read the source][libcsrc].
 
 In the following text, we use OS/8 device names as a handwavy kind of
 shorthand, even when the code would otherwise run on any PDP-8 in
@@ -585,47 +680,12 @@ responds to IOT device code 3 for input and to device code 4 for
 output.” We’d rather not write all of that for every stdio function
 below, so we use this shorthand.
 
+[cppr]:    https://en.cppreference.com/w/c
+[libcsrc]: /doc/trunk/src/cc8/os8/libc.c
 
-### <a id="libclim"></a>General Limitations of the CC8 LIBC
-
-#### stdio
-
-The stdio implementation currently assumes US-ASCII text I/O. Input
-characters have their upper 5 bits masked off. The functions accepting
-data for output will tolerate 8 bit data in some cases, but since you
-can’t read it back in safely with this current implementation, you
-probably should not do this.
-
-The stdio implementation only allows one file to be open for reading at
-a time, and one file for writing. The `fclose()` implementation takes no
-argument: it always closes the output file, if any. There is no need for
-`fclose()` on the input file (if any) because there is no standard input
-buffering in this implementation, so there is nothing to free before
-opening another file for input.
-
-
-#### Ctrl-C Handling
-
-Unlike on modern operating systems, there is nothing like `SIGINT` in
-OS/8, which means Ctrl-C only kills the program if it checks for that.
-The keyboard input loop in the CC8 LIBC standard library does do this.
-
-The thing to be aware of is, this won’t happen while a program is stuck
-in an infinite loop or similar. The only way to get out of such a
-program is to either restart OS/8 — assuming the broken program hasn’t
-corrupted the OS’s resident parts — or restart the PDP-8.
-
-
-#### Missing Functions
-
-A great many Standard C Library functions are not provided, including
-some you’d think would go along nicely with those we do provide, such as
-`feof()` or `fseek()`.  Keep in mind that the library must currently fit
-in [a single 4&nbsp;kWord field](#fields).  It is therefore unlikely
-that it will expand much or at all beyond the currently provided 33
-functions, and those functions will likely not ever match the behavior
-that a C programmer expects of functions with these names in a modern
-programming environment.
+Functions which are either not yet completely documented or which have
+not yet checked for conformance to any particular standard are marked
+**DOCUMENTATION INCOMPLETE**.
 
 
 ### <a id="atoi"></a>`atoi(s, outlen)`
@@ -650,12 +710,16 @@ location as you passed, saving a few instructions relative to using
 
 **Nonstandard.** Conforming to...?
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="dispxy"></a>`dispxy`
 
 ??
 
 **Nonstandard.** Conforming to...?
+
+**DOCUMENTATION INCOMPLETE**
 
 
 ### <a id="exit"></a>`exit(ret)`
@@ -671,22 +735,21 @@ call to never return?
 
 *   The passed return code is ignored.
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="fclose"></a>`fclose()`
 
-Closes the opened output file.
+Closes the currently-opened output file.
 
 **Standard Violations:**
 
 *   Does not take a `FILE*` argument.  (See [`fopen()`](#fopen) for
     justification.)
 
-*   Always closes the last-opened *output* file: cannot close a file
-    opened for input with `fopen(name, "r")`.  If you want to open a
-    second input file, simply call [`fopen()`](#fopen) on it, implicitly
-    closing the prior input file.  There being no read buffering in LIBC
-    to speak of, there’s nothing to free with an `fclose()` call on an
-    input file.
+*   Always closes the last-opened *output* file, only, there being
+    [no point](#stdio) in explicitly closing input files in this
+    implementation.
 
 
 ### <a id="fgets"></a>`fgets(s)`
@@ -728,6 +791,8 @@ the following set, **TBD**.
     only one opened input file and one opened output file at a time, so
     the file that is meant is implicit in the call.
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="getc" name="fgetc"></a>`getc()`, `fgetc()`
 
@@ -736,8 +801,12 @@ for input by [`fopen()`](#fopen), respectively.
 
 **Standard Violations:**
 
-*   `feof()` is not provided by CC8 LIBC: detect EOF with a null return
-    from `fgetc()`.
+*   Returns ASCII NUL (0) to signal EOF, not an implementation-defined
+    out-of-range EOF constant.  (Most commonly -1 in other C library
+    implementations.)  Since there is no `feof()` function in CC8 LIBC
+    to disambiguate the cases, this function cannot safely be called for
+    files that could contain a 0 byte, since it will result in a false
+    truncation.
 
 
 ### <a id="gets"></a>`gets(s)`
@@ -764,6 +833,8 @@ Returns &gt; 1 if either [`isdigit()`](#isdigit) or
 
 *   None known.
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="isalpha"></a>`isalpha(c)`
 
@@ -786,10 +857,10 @@ being the ASCII decimal digit characters.
     Both are implemented with the same LIBC code.
 
 
-### <a id="isspace"></a>`isspace`
+### <a id="isspace"></a>`isspace(c)`
 
-Takes an ASCII character and returns 1 if the character is considered a
-“whitespace” character.
+Returns 1 if the passed character `c` is considered a “whitespace”
+character.
 
 This function is not used by `atoi`: its whitespace matching is
 hard-coded internally.
@@ -797,7 +868,7 @@ hard-coded internally.
 **Standard Violations:**
 
 *   Whitespace is currently defined as ASCII 1 through 32, inclusive.
-    Yes, yhis is certainly a vast overreach.
+    Yes, this is a *vast* overreach.
 
 
 ### <a id="itoa"></a>`itoa`
@@ -810,6 +881,8 @@ complement or unsigned? No thousands separator, right?
 **Nonstandard.** Emulates a function most often found in compilers from
 the MS-DOS and Windows tradition.
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="kbhit"></a>`kbhit`
 
@@ -818,6 +891,8 @@ subsequently be read by calling `getc`.
 
 **Nonstandard.** Emulates a function most often found in compilers from
 the MS-DOS and Windows tradition.
+
+**DOCUMENTATION INCOMPLETE**
 
 
 ### <a id="memcpy"></a>`memcpy`
@@ -835,6 +910,8 @@ both buffers fit completely within their respective pages?
 
 *   None known.
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="memset"></a>`memset(dst, c, len)`
 
@@ -845,6 +922,8 @@ Sets a run of `len` core memory locations starting at `dst` to `c`.
 **Standard Violations:**
 
 *   None known.
+
+**DOCUMENTATION INCOMPLETE**
 
 
 ### <a id="printf" name="fprintf"></a>`printf(fmt, args...)`,
@@ -867,16 +946,37 @@ etc.  Length and width.precision formatting is supported.
     implementation cannot handle: format specs, modifiers, the return
     value, error handling...
 
+**DOCUMENTATION INCOMPLETE**
 
-### <a id="puts" name="fputs"></a>`puts`, `fputs(fp)`
 
-Writes a null-terminated character string to `TTY:`. The characters
-pointed to are expected to be 7-bit ASCII bytes stored within each PDP-8
-word, with the top 5 bits unset.
+### <a id="puts" name="fputs"></a>`puts(s)`, `fputs(s)`
+
+Writes a null-terminated character string `s` either to `TTY:` or to the
+currently-opened output file.
+
+The characters pointed to are expected to be 7-bit ASCII bytes stored
+within each PDP-8 word, with the top 5 bits unset.
 
 **Standard Violations:**
 
-*   None known.
+*   The `puts()` implementation does not write a newline after the
+    passed string.
+
+    (Neither does our `fputs()`, but that’s actually Standard behavior.)
+
+*   Both `puts()` and `fputs()` are supposed to return nonzero on
+    success, but this implementation returns 0.
+    
+    Technically, these functions aren’t explicitly “returning” anything,
+    they’re just leaving 0 in AC, that being the ASCII NUL character
+    that terminated the loop inside each function’s implementation.
+
+*   `fputs()` detects no I/O error conditions, and thus cannot return
+    EOF to signal an error. It always returns 0, whether an error
+    occurred or not.
+
+*   `fputs()` does not take a `FILE*` as its first parameter due to the
+    [implicit single output file](#stdio).
 
 
 ### <a id="revcpy"></a>`revcpy`
@@ -884,6 +984,8 @@ word, with the top 5 bits unset.
 ??
 
 **Nonstandard.** Conforming to...?
+
+**DOCUMENTATION INCOMPLETE**
 
 
 ### <a id="sscanf"></a>`sscanf`
@@ -897,6 +999,8 @@ Reads formatted input from a file.
 
 *   This list cannot possibly be complete.
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="strcat"></a>`strcat`
 
@@ -909,6 +1013,8 @@ same page/field, are page/field crossings legal, etc.?
 
 *   None known.
 
+**DOCUMENTATION INCOMPLETE**
+
 
 ### <a id="strcpy"></a>`strcpy`
 
@@ -920,6 +1026,8 @@ another.
 **Standard Violations:**
 
 *   None known.
+
+**DOCUMENTATION INCOMPLETE**
 
 
 ### <a id="strstr"></a>`strstr(haystack, needle)`
@@ -934,6 +1042,8 @@ actually a word string comparison function, or does it mask off the top
 **Standard Violations:**
 
 *   None known.
+
+**DOCUMENTATION INCOMPLETE**
 
 
 ### <a id="toupper"></a>`toupper(c)`
@@ -953,6 +1063,8 @@ Otherwise, returns `c` unchanged.
 ??
 
 **Nonstandard.** Conforming to...?
+
+**DOCUMENTATION INCOMPLETE**
 
 
 <a id="examples"></a>
