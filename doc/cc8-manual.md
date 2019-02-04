@@ -66,6 +66,41 @@ To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
     cross-compiler.
 
 
+## Requirements
+
+The CC8 system generally assumes the availability of:
+
+*   16 kWords of core.
+
+    (CC8 provides no built-in way to use more memory than this, so you
+    will probably have to resort to [inline assembly](#asm) or FORTRAN
+    II library linkage to get access to more than 16 kWords of core.)
+
+*   A PDP-8 with the MQ register, being either a PDP-8/e or higher class
+    processor or an older processor design with the EAE option
+    installed.
+
+    (This includes anything based on SIMH’s PDP-8 simulator, since it is
+    catholic in its support for PDP-8 family features: it doesn’t
+    simulate any single PDP-8 family member exclusively. It is probably
+    closest in behavior to a highly tricked-out PDP-8/e. Many of these
+    features are hard-coded into the instruction decoding loop, so that
+    there is no way to disable them at run time with configuration
+    directives. If you have a PiDP-8/I and were expecting a strict
+    PDP-8/I simulation underneath that pretty front panel, we’re sorry
+    to pop your bubble, but those are the facts of the matter.)
+
+*   At build time, the OS/8 FORTRAN II/SABR subystem must be available.
+
+*   At run time, any [stdio](#stdio) operation involving file I/O
+    assumes it is running atop OS/8. For instance, file name arguments
+    to [`fopen()`](#fopen) are passed to OS/8 for interpretation.
+
+There is likley a subset of CC8-built programs which will run
+independently of OS/8, but the bounds on that class of programs is not
+currently clear to us.
+
+
 <a id="cross" name="posix"></a>
 ### The Cross-Compiler
 
@@ -179,8 +214,8 @@ rudimentary C preprocessor features:
 <a id="asm" name="calling"></a>
 #### Inline Assembly Code and the CC8 Calling Convention
 
-The cross-compiler allows SABR assembly code (**TBD:** true?) between
-`#asm` and `#endasm` markers in the C source code:
+The cross-compiler allows [SABR][sabr] assembly code between `#asm` and
+`#endasm` markers in the C source code:
 
     #asm
         TAD (42      / add 42 to AC
@@ -620,13 +655,7 @@ the documentation below:
     certain respects.
 
 2.  Programs built with CC8 which use its file I/O functions are
-    dependent upon OS/8 and its FORTRAN II subsystem.
-
-    (The limitations on the inverse proposition are not yet clear to us:
-    that is, it must be possible to write a class of programs with CC8
-    which are independent of OS/8 and its FORTRAN II subsystem, but we
-    currently have no clear picture on the bounds of that class of
-    program.)
+    dependent upon OS/8.
 
 
 #### Ctrl-C Handling
@@ -676,16 +705,16 @@ In the following text, we use OS/8 device names as a handwavy kind of
 shorthand, even when the code would otherwise run on any PDP-8 in
 absence of OS/8. Where we use “`TTY:`”, for example, we’d be more
 precise to say instead “the console teleprinter, being the one that
-responds to IOT device code 3 for input and to device code 4 for
+responds to [IOT device code][iot] 3 for input and to device code 4 for
 output.” We’d rather not write all of that for every stdio function
 below, so we use this shorthand.
 
 [cppr]:    https://en.cppreference.com/w/c
 [libcsrc]: /doc/trunk/src/cc8/os8/libc.c
 
-Functions which are either not yet completely documented or which have
-not yet checked for conformance to any particular standard are marked
-**DOCUMENTATION INCOMPLETE**.
+Functions which are either not yet completely documented or which we
+have not yet checked for conformance to any particular standard are
+marked **DOCUMENTATION INCOMPLETE**.
 
 
 ### <a id="atoi"></a>`atoi(s, outlen)`
@@ -702,24 +731,35 @@ string is returned in `*outlen`.
 *   The `outlen` parameter is nonstandard.
 
 
-### <a id="cupper"></a>`cupper`
+### <a id="cupper"></a>`cupper(p)`
 
-Like [`toupper()`](#toupper), but stores its result in the same memory
-location as you passed, saving a few instructions relative to using
-`toupper`, if that’s the result you wanted.
+Like [`toupper()`](#toupper) except that it takes the core memory
+location `p` of a character in the current data page and stores the
+resulting converted character in the same core memory location.
 
-**Nonstandard.** Conforming to...?
+This function’s implementation is currently 3 instructions longer than
+that of `toupper()`, but it’s probably more efficient as the core of a
+“string to uppercase” function, since the caller doesn’t need to keep
+loading the next character from core and then storing it back.
 
-**DOCUMENTATION INCOMPLETE**
+Do not depend on the return value. There is a predictable mapping, but
+it has no inherent meaning, so we are not documenting that mapping here.
+If CC8 had a “`void`” return type feature, we’d be using that here.
+
+**Nonstandard.** No known analog in any other C library.
 
 
-### <a id="dispxy"></a>`dispxy`
+### <a id="dispxy"></a>`dispxy(x,y)`
 
-??
+Plot a point at coordinate (x,y) on a point-plot display.
 
-**Nonstandard.** Conforming to...?
+Beware: The current code does not work with [VC8E interface][vc8e]
+required by the PiDP-8/I Spacewar! implementation.
 
-**DOCUMENTATION INCOMPLETE**
+**Nonstandard.**
+
+[dixy]: http://homepage.divms.uiowa.edu/~jones/pdp8/man/vc8e.html
+[vc8e]: http://www.pdp8.net/pdp8em/vc8e.shtml
 
 
 ### <a id="exit"></a>`exit(ret)`
@@ -1065,6 +1105,8 @@ Otherwise, returns `c` unchanged.
 **Nonstandard.** Conforming to...?
 
 **DOCUMENTATION INCOMPLETE**
+
+[iot]: /wiki?name=IOT+Device+Assignments
 
 
 <a id="examples"></a>
