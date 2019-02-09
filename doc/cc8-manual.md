@@ -751,15 +751,19 @@ If CC8 had a “`void`” return type feature, we’d be using that here.
 
 ### <a id="dispxy"></a>`dispxy(x,y)`
 
-Plot a point at coordinate (x,y) on a point-plot display.
+Plot a point at coordinate (x,y) on a [VC8E point-plot display][vc8e].
 
-Beware: The current code does not work with [VC8E interface][vc8e]
-required by the PiDP-8/I Spacewar! implementation.
+This is the display type assumed by the PiDP-8/I Spacewar!
+implementation. There were many other display types designed for and
+sold with PDP-8 family computers, which generally used different IOT
+codes. If you’re trying to control something other than a VC8E, you
+might want to replace this routine’s internals rather than code a
+separate implementation, leading to wasted space in your LIBC.
 
 **Nonstandard.**
 
 [dixy]: http://homepage.divms.uiowa.edu/~jones/pdp8/man/vc8e.html
-[vc8e]: http://www.pdp8.net/pdp8em/vc8e.shtml
+[vc8e]: https://homepage.divms.uiowa.edu/~jones/pdp8/man/vc8e.html
 
 
 ### <a id="exit"></a>`exit(ret)`

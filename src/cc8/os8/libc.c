@@ -449,14 +449,14 @@ XC1,	TSF
 dispxy(x,y)
 int x,y;
 {
-	x;
+	x;      /* put x param in AC */
 #asm
-	3115	/ DIX
+	3115	/ 6053 octal (we're in DECIM mode!) so DILX, load display X reg
 #endasm
 	y;
 #asm
-	3116	/ DIY
-	3117	/ DIL
+	3116	/ 6054 octal, DILY, load display Y reg from AC = y param
+	3117	/ 6055 octal, DIXY: pulse display at loaded X,Y coordinate
 #endasm
 }
 
