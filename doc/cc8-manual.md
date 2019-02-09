@@ -704,7 +704,7 @@ manual documents the known limitations of these functions relative to
 it is likely that we have overlooked corner cases that our library does
 not yet implement.  When in doubt, [read the source][libcsrc].
 
-[The LIBC implementation][libsrc] is currently stored in the same source
+[The LIBC implementation][libcsrc] is currently stored in the same source
 tree directory as the native compiler, even though it’s shared between
 the two compilers. This is because the two compilers differ only above
 the linkage layer: if you cross-compile a program, you must still *link*
