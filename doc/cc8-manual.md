@@ -735,10 +735,10 @@ string is returned in `*outlen`.
 
 Implements this loop more efficiently:
 
-    char* p = some_string;
-    while (*p) {
-        *p = toupper(*p);
-        ++p;
+    char* tmp = p;
+    while (*tmp) {
+        *tmp = toupper(*tmp);
+        ++tmp;
     }
 
 That is, it does an in-place conversion of the passed NUL-terminated
@@ -746,10 +746,11 @@ character buffer to all-uppercase.
 
 This function exists in LIBC because it is useful for ensuring that file
 names are uppercase, as OS/8 requires. With the current CC8 compiler
-implementation, the equivalent code above requires 84 more instructions!
-That more than pays for the 21 instructions and one extra jump table
-slot this function requires in LIBC. Therefore, use `cupper()` instead
-of a loop around [`toupper()`](#toupper) where possible.
+implementation, the equivalent code above requires 84 more instructions
+than calling `cupper()` instead!  That more than pays for the 21
+instructions and one extra jump table slot this function requires in
+LIBC. Therefore, use `cupper()` instead of a loop around
+[`toupper()`](#toupper) where possible.
 
 Do not depend on the return value. There is a predictable mapping, but
 it has no inherent meaning, so we are not documenting that mapping here.
