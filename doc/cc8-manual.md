@@ -749,11 +749,11 @@ character buffer to all-uppercase.
 
 This function exists in LIBC because it is useful for ensuring that file
 names are uppercase, as OS/8 requires. With the current CC8 compiler
-implementation, the equivalent code above requires 84 more instructions
-than calling `cupper()` instead!  That more than pays for the 21
-instructions and one extra jump table slot this function requires in
-LIBC. Therefore, use `cupper()` instead of a loop around
-[`toupper()`](#toupper) where possible.
+implementation, the equivalent code above requires 24 more instructions
+than calling `cupper()` instead, best-case! That means a single call
+converted from a loop around [`toupper()`](#toupper) to a `cupper()`
+call more than pays for the 21 instructions and one extra jump table
+slot this function requires in LIBC.
 
 Do not depend on the return value. There is a predictable mapping, but
 it has no inherent meaning, so we are not documenting that mapping here.
