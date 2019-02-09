@@ -79,19 +79,27 @@ The CC8 system generally assumes the availability of:
     will probably have to resort to [inline assembly](#asm) or FORTRAN
     II library linkage to get access to more than 16&nbsp;kWords of core.)
 
-*   A PDP-8 with the MQ register, being either a PDP-8/e or higher class
-    processor or an older processor design with the EAE option
-    installed.
+*   A PDP-8/e or higher class processor.  The CC8 compiler code and its
+    [LIBC implementation](#libref) make liberal use of the MQ register
+    and the BSW OPR instruction introduced with the PDP-8/e.
 
-    (This includes anything based on SIMH’s PDP-8 simulator, since it is
-    catholic in its support for PDP-8 family features: it doesn’t
-    simulate any single PDP-8 family member exclusively. It is probably
-    closest in behavior to a highly tricked-out PDP-8/e. Many of these
-    features are hard-coded into the instruction decoding loop, so that
-    there is no way to disable them at run time with configuration
-    directives. If you have a PiDP-8/I and were expecting a strict
-    PDP-8/I simulation underneath that pretty front panel, we’re sorry
-    to pop your bubble, but those are the facts of the matter.)
+    This code will not run on, for example, a PDP-8/I with the EAE
+    option installed, because although the EAE adds the MQ register, it
+    does not give the older processor the BSW instruction.
+
+    CC8 works on the PiDP-8/I because it is only the front panel that
+    emulates a PDP-8/I. The underlying SIMH PDP-8 simulator is catholic
+    in its support for PDP-8 family features: it doesn’t simulate any
+    single PDP-8 family member exclusively. It is probably closest in
+    behavior to a highly tricked-out PDP-8/a, meaning in part that it
+    does support the MQ register and the BSW instruction.
+
+    (Many of the CPU features of the SIMH PDP-8 simulator are hard-coded
+    into the instruction decoding loop, so that there is no way to
+    disable them at run time with configuration directives. If you have
+    a PiDP-8/I and were expecting a strict PDP-8/I simulation underneath
+    that pretty front panel, we’re sorry to pop your bubble, but the
+    fact of the matter is that a PiDP-8/I is a Family-of-8 mongrel.)
 
 *   At build time, the OS/8 FORTRAN II/SABR subsystem must be available.
 
@@ -704,12 +712,12 @@ manual documents the known limitations of these functions relative to
 it is likely that we have overlooked corner cases that our library does
 not yet implement.  When in doubt, [read the source][libcsrc].
 
-[The LIBC implementation][libcsrc] is currently stored in the same source
-tree directory as the native compiler, even though it’s shared between
-the two compilers. This is because the two compilers differ only above
-the linkage layer: if you cross-compile a program, you must still *link*
-it under OS/8, which means using the `LIBC.RL` binary produced for use
-by the native compiler.
+[The LIBC implementation][libcsrc] is currently stored in the same
+source tree directory as the native compiler, even though it’s shared
+between the two compilers. This is because the two compilers differ only
+from the code generation layer up: if you cross-compile a C program with
+`bin/cc8`, you must still *assemble and link* it under OS/8, which means
+using the `LIBC.RL` binary produced for use by the native compiler.
 
 Contrast [the `libc.h` file][libch] which is symlinked or copied
 everywhere it needs to be. This is because neither version of CC8 has
@@ -796,21 +804,28 @@ separate implementation, leading to wasted space in your LIBC.
 
 Exits the program.
 
-**TBD**: What does `CALL 0,EXIT` mean? Is that a FORTRAN II library
-thing? Can a user register something there to get `atexit` behavior?
-Is that why the `CALL` is followed by `HLT` rather than expecting the
-call to never return?
+This function is implemented in terms of the [FORTRAN II library
+subroutine `EXIT`][f2exit], which in the OS/8 implementation simply
+returns control to the OS/8 keyboard monitor.
+
+If `EXIT` returns for any reason, LIBC halts the processor.
 
 **Standard Violations:**
 
-*   The passed return code is ignored.
+*   The passed return code is ignored, there being no such thing as a
+    program’s “status code” in OS/8.
 
-**DOCUMENTATION INCOMPLETE**
+*   There is no `atexit()` mechanism in the CC8 LIBC.
+
+[f2exit]: https://archive.org/details/bitsavers_decpdp8os8_39414792/page/n702
 
 
 ### <a id="fclose"></a>`fclose()`
 
 Closes the currently-opened output file.
+
+This function simply calls the OS/8 FORTRAN II library subroutine
+[`OCLOSE`][f2fio].
 
 **Standard Violations:**
 
@@ -820,6 +835,8 @@ Closes the currently-opened output file.
 *   Always closes the last-opened *output* file, only, there being
     [no point](#stdio) in explicitly closing input files in this
     implementation.
+
+[f2fio]: https://archive.org/details/bitsavers_decpdp8os8_39414792/page/n700
 
 
 ### <a id="fgets"></a>`fgets(s)`
@@ -843,16 +860,23 @@ Returns 0 on EOF, as Standard C requires.
 
 ### <a id="fopen"></a>`fopen(name, mode)`
 
-Opens an OS/8 file called `name`, which must be in all-uppercase.
+Opens OS/8 file `DSK:name.DA`.
+
+The `name` parameter must point to at most 6 NUL-terminated uppercase
+characters.  (See [`cupper()`](#cupper).)
 
 The file is opened for reading if `mode` points to an ”`r`” character,
-and it is opened for writing if `mode` points to a “`w`” character.
+and it is opened for writing if `mode` points to a “`w`” character. This
+need only point to a single character; it is not required that it point
+to a NUL-terminated string, since only that one memory location is ever
+referenced.
 
-**TBD:** Does it obey OS/8 device names, or is the file always on `DSK:`
-or similar?
-
-`flag` is a null-terminated ASCII string with one or more (?) letters in
-the following set, **TBD**.
+The OS/8 device name and file name extension are hard-coded, the former
+by the current `fopen()` implementation and the latter by the OS/8
+FORTRAN II [`IOPEN` and `OOPEN`][f2fio] subroutines that `fopen()` is
+implemented in terms of. This means there is currently no way to use
+this `stdio` implementation to read from or write to files on OS/8
+devices other than `DSK:` or to files with extensions other than `.DA`.
 
 **Standard Violations:**
 
@@ -861,7 +885,27 @@ the following set, **TBD**.
     only one opened input file and one opened output file at a time, so
     the file that is meant is implicit in the call.
 
-**DOCUMENTATION INCOMPLETE**
+    This also means `fopen()` has no way to signal a failure to open the
+    requested file name!  ...Which is just as well, since there is also
+    no `ferror()` or `errno` in our LIBC.
+
+*   Does not accept the standard mode `a`, for append.  Since there is
+    also no `fseek()` in CC8’s LIBC, a preexisting file named for
+    writing is always overwritten.
+
+*   Does not accept the standard `+` modifier to combine read/write
+    modes: files are only readable or only writeable under this
+    implementation.  Neither is it possible to give “`rw`”, the
+    nonstandard but widely supported way to specify “open for
+    read/write”.
+
+*   Does not support the `b` modifier for binary I/O: files are assumed
+    to contain ASCII text only.
+
+*   Does not diagnose null pointers as required by the Standard: it will
+    probably do something silly like reference [core memory location 0 in
+    field 1](#memory), then return without having done anything useful,
+    causing the subsequent I/O calls on that file to fail.
 
 
 ### <a id="getc" name="fgetc"></a>`getc()`, `fgetc()`
@@ -898,20 +942,18 @@ Returns the passed string pointer on success.
 
 ### <a id="isalnum"></a>`isalnum(c)`
 
-Returns &gt; 1 if either [`isdigit()`](#isdigit) or
-[`isalpha()`](#isalpha) returns 1 for `c`.
+Returns nonzero if either [`isdigit()`](#isdigit) or
+[`isalpha()`](#isalpha) returns nonzero for `c`.
 
 **Standard Violations:**
 
-*   None known.
-
-**DOCUMENTATION INCOMPLETE**
+*   Does not know anything about locales; assumes US-ASCII input.
 
 
 ### <a id="isalpha"></a>`isalpha(c)`
 
-Returns true if the passed character `c` is either between 65 and 90 or
-between 97 and 122 inclusive, being the ASCII alphabetic characters.
+Returns nonzero if the passed character `c` is either between 65 and 90
+or between 97 and 122 inclusive, being the ASCII alphabetic characters.
 
 **Standard Violations:**
 
@@ -920,18 +962,21 @@ between 97 and 122 inclusive, being the ASCII alphabetic characters.
 
 ### <a id="isdigit" name="isnum"></a>`isdigit(c)`, `isnum(c)`
 
-Returns true if the passed character `c` is between 48 an 57, inclusive,
-being the ASCII decimal digit characters.
+Returns nonzero if the passed character `c` is between 48 an 57,
+inclusive, being the ASCII decimal digit characters.
 
 **Standard Violations:**
 
-*   `isnum` is a nonstandard alias for `isdigit` conforming to **TBD**.
-    Both are implemented with the same LIBC code.
+*   `isnum` is a nonstandard alias for `isdigit` conforming to no other
+    known C library implementation.  Both are implemented with the same
+    LIBC code.
+
+*   Does not know anything about locales; assumes US-ASCII input.
 
 
 ### <a id="isspace"></a>`isspace(c)`
 
-Returns 1 if the passed character `c` is considered a “whitespace”
+Returns nonzero if the passed character `c` is considered a “whitespace”
 character.
 
 This function is not used by `atoi`: its whitespace matching is
@@ -943,28 +988,40 @@ hard-coded internally.
     Yes, this is a *vast* overreach.
 
 
-### <a id="itoa"></a>`itoa`
+### <a id="itoa"></a>`itoa(num, str)`
 
-Converts 12-bit PDP-8 words to ASCII.
+Convert a 12-bit PDP-8 two’s complement integer `num` to a
+NUL-terminated ASCII string pointed to by `str`.
 
-**TBD**: Where’s the buffer? Does it take the input to be two’s
-complement or unsigned? No thousands separator, right?
+If `num` is an arbitrary integer, `str` should point to 6 words of
+memory to cover the worst-case condition, e.g. "-2048\\0".
 
-**Nonstandard.** Emulates a function most often found in compilers from
-the MS-DOS and Windows tradition.
+There is no thousands separator in the output string.
 
-**DOCUMENTATION INCOMPLETE**
+**Nonstandard.** The `itoa()` function in the [Visual C++][itoam] and
+[Embarcadero C++][itoae] environments takes a third parameter, the
+radix.
+
+[itoae]: http://docs.embarcadero.com/products/rad_studio/radstudio2007/RS2007_helpupdates/HUpdate4/EN/html/devwin32/itoa_xml.html
+[itoam]: https://docs.microsoft.com/cpp/c-runtime-library/reference/itoa-itow
 
 
 ### <a id="kbhit"></a>`kbhit`
 
-Stops the program until a keystroke is detected on `TTY:`, which can
-subsequently be read by calling `getc`.
+Returns nonzero if `TTY:` has sent an input character that has not yet
+been read, which may then be read by a subsequent call to
+[`getc()`]((#getc). Returns 0 otherwise.
 
-**Nonstandard.** Emulates a function most often found in compilers from
-the MS-DOS and Windows tradition.
+This function’s intended purpose is to let the program do work while
+waiting for keyboard, since calling `getc()` before input is available
+would block the program.
 
-**DOCUMENTATION INCOMPLETE**
+**Nonstandard.** Emulates a function common in DOS C libraries or those
+descended from them, such as [Embarcadero C++][kbhite] and [Visual
+C++][kbhitm].
+
+[kbhite]: http://docs.embarcadero.com/products/rad_studio/radstudio2007/RS2007_helpupdates/HUpdate4/EN/html/devwin32/kbhit_xml.html
+[kbhitm]: https://docs.microsoft.com/cpp/c-runtime-library/reference/kbhit
 
 
 ### <a id="memcpy"></a>`memcpy`

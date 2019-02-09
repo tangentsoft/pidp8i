@@ -926,10 +926,9 @@ itoa(n, s) char *s; int n; {
 */
 
 itoa(n, s) char *s; int n; {
-  int sign;
   char *ptr;
   ptr = s;
-  if ((sign = n) < 0) {
+  if (n < 0) {
 	  n = -n;
 	  *ptr++='-';
   }
