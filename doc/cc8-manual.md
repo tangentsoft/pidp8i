@@ -692,10 +692,10 @@ rather than any kind of obligation fulfilled.  Do not bring your modern
 C environment expectations to CC8!
 
 
-## <a id="libref"></a>The CC8 C Library: Reference
+## <a id="libref" name="libc"></a>The CC8 C Library: Reference
 
 CC8 offers a very limited standard library, which is shared between the
-native and cross-compilers.  While some of its function names are the
+native and cross-compilers. While some of its function names are the
 same as functions defined by Standard C, these functions generally do
 not conform completely to any given standard due to the severe resource
 constraints imposed by the PDP-8 architecture. This section of the
@@ -703,6 +703,18 @@ manual documents the known limitations of these functions relative to
 [the current C standard as interpreted by `cppreference.com`][cppr], but
 it is likely that we have overlooked corner cases that our library does
 not yet implement.  When in doubt, [read the source][libcsrc].
+
+[The LIBC implementation][libsrc] is currently stored in the same source
+tree directory as the native compiler, even though it’s shared between
+the two compilers. This is because the two compilers differ only above
+the linkage layer: if you cross-compile a program, you must still *link*
+it under OS/8, which means using the `LIBC.RL` binary produced for use
+by the native compiler.
+
+Contrast [the `libc.h` file][libch] which is symlinked or copied
+everywhere it needs to be. This is because neither version of CC8 has
+the notion of an include path. This file must therefore be available in
+the same directory as each C file that uses it.
 
 In the following text, we use OS/8 device names as a handwavy kind of
 shorthand, even when the code would otherwise run on any PDP-8 in
@@ -713,6 +725,7 @@ output.” We’d rather not write all of that for every stdio function
 below, so we use this shorthand.
 
 [cppr]:    https://en.cppreference.com/w/c
+[libch]:   /doc/trunk/src/cc8/include/libc.h
 [libcsrc]: /doc/trunk/src/cc8/os8/libc.c
 
 Functions which are either not yet completely documented or which we
