@@ -59,11 +59,14 @@ implement a native PDP-8 compiler.
 
 To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
 
-1.  A cross-compiler that builds and runs on any host computer with a C
-    compiler that still understands K&R C.
+1.  A [cross-compiler](#cross) that builds and runs on any host computer
+    with a C compiler that still understands K&R C.
 
-2.  A native OS/8 compiler and library, compiled to assembly by the
+2.  A [native OS/8 compiler](#native), compiled to assembly by the
     cross-compiler.
+
+Ian also collected and wrote the LIBC implementation common to both
+compilers.
 
 
 ## Requirements
@@ -168,21 +171,6 @@ The file `include/libc.h` is likewise copied to `DSK:LIBC.H`. It defines
 the mappings between the familiar C library routine names and their
 underlying implementation names.
 
-The linking loader determines the core layout for the built programs.
-Most commonly, it uses this scheme:
-
-<a id="fields"></a>
-**Field 0:** FORTRAN library utility functions and OS/8 I/O system
-
-**Field 1:** The program’s runtime stack/globals/literals
-
-**Field 2:** The program's executable code
-
-**Field 3:** The LIBC library code
-
-Since this memory layout applies to the phases of the CC8 compiler as
-well, this means that each phase uses approximately 16&nbsp;kWords of core.
-
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
 [sabr]: https://tangentsoft.com/pidp8i/wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
 [sc85]: https://github.com/ncb85/SmallC-85
@@ -238,7 +226,7 @@ This declares a function `foo` taking a single integer parameter and
 returning an integer. 
 
 The calling convention is for the parameters to be passed on [the
-stack](#fields), with the return value in AC.  It is common in C
+stack](#memory), with the return value in AC.  It is common in C
 functions with inline assembly to not have explicit “`return`”
 statements, but instead to have set up AC just before the implicit
 return.
@@ -304,6 +292,21 @@ native OS/8 compiler ignores all preprocessor directives, including
 
 This compiler is supplied in both source and binary forms as part of the
 PiDP-8/I software distribution.
+
+The native CC8 compiler is built from source code to SABR assembly by
+the CC8 cross-compiler unless you pass `--disable-os8-cc8` to the
+PiDP-8/I distribution’s `configure` script to suppress it. Those SABR
+files are then copied to a virtual DECtape image, which is attached to
+the PDP-8 simulator, assembled, and linked to produce the CC8 native
+OS/8 compiler by the [`cc8-tu56.os8`][cctu] script run by
+[`os8-run`](./os8-run.md). Take a look at that script and the `os8-run`
+docs if you want to learn more about this process.
+
+[cctu]: /file?fn=media/os8/scripts/cc8-tu56.os8
+
+Because the CC8 native is compiled *by* CC8, the [standard memory
+layout](#memory) applies to the compiler itself. Among other things,
+this means each phase requires approximately 16&nbsp;kWords of core.
 
 We ship pre-built binaries to avoid a chicken-and-egg problem: the
 binaries require a working OS/8 environment to be built, but when the
@@ -680,7 +683,7 @@ switch register, press the Load Add key, then press the Start key.)
 The bulk of the Standard C Library is not provided, including some
 functions you’d think would go along nicely with those we do provide,
 such as `feof()` or `fseek()`.  Keep in mind that the library is
-currently restricted to [a single 4&nbsp;kWord field](#fields), and we
+currently restricted to [a single 4&nbsp;kWord field](#memory), and we
 don’t want to lift that restriction. Since the current implementation
 nearly fills that space, it is unlikely that we’ll add much more
 functionality beyond the currently provided 33 functions. If we ever fix
@@ -1183,6 +1186,30 @@ If you've just run `EXE CCR` on `myprog.c`, you can skip the `CC` and
 Basically, we leave the `/G` "go" switch off of the command to `LOADER`
 so that the program is left in its pre-run state in core so that
 `SAVE` can capture it to disk.
+
+
+## <a id="memory"></a>Memory Model
+
+The OS/8 FORTRAN II linking loader (`LOADER.SV`) determines the core
+memory layout for the built programs.  Most commonly, it uses this
+scheme:
+
+**Field 0:** FORTRAN library utility functions and OS/8 I/O system
+
+**Field 1:** The program’s runtime stack/globals/literals
+
+**Field 2:** The program's executable code
+
+**Field 3:** The LIBC library code
+
+The first page of field 1 is currently unused. That means it is not
+possible to have a valid pointer declared either as a C global or on the
+stack with value 0000₈. This has practical positive consequences such as
+the fact that you can depend on a call to [`gets()`](#gets) to always
+return a truthy value provided you pass it a normal C pointer.  If you
+hand-craft a pointer that happens to point to the first core memory
+location in a field, which is therefore confusable with `NULL`, then on
+your head be the consequences!
 
 
 ## Conclusion
