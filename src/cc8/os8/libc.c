@@ -504,7 +504,7 @@ int q,tm;
 			}
 	}
 	putc(10);	/* newline */
-	return 1;		
+	return q;		
 }
 
 

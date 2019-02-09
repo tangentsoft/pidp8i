@@ -872,10 +872,12 @@ following the terminating CR with a NUL character.
 Backspace characters from the terminal remove the last character from
 the string.
 
+Returns the passed string pointer on success.
+
 **Standard Violations:**
 
-*   `gets()` always returns 1 in this implementation, but it returns the
-    passed string pointer in Standard C libraries.
+*   Cannot return 0 for “no input” as Standard C requires: always
+    succeeds.
 
 
 ### <a id="isalnum"></a>`isalnum(c)`
