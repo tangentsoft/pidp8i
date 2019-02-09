@@ -1024,35 +1024,55 @@ C++][kbhitm].
 [kbhitm]: https://docs.microsoft.com/cpp/c-runtime-library/reference/kbhit
 
 
-### <a id="memcpy"></a>`memcpy`
+### <a id="memcpy"></a>`memcpy(dst, src, n)`
 
-Copies a given number of words from one core memory location to another.
+Copies `n` words from core memory location `src` to `dst`.
 
-**TBD**: Do we want to document the direction that is safe when copying
-overlapping buffers, nailing that in place?  Can it handle page
-transitions?  Field transitions?  If there are limitations there, does
-it work between whole fields/pages? That is, if it handles neither page
-nor field transitions, can it copy from one page to another as long as
-both buffers fit completely within their respective pages?
+Both the `dst` and `src` buffer pointers are offsets within the current
+data field, [normally field 1](#memory). This function will not copy
+data between fields. It *will* copy data between pages within the same
+field.
+
+If either `src+n` or `dst+n` is 4096 or larger (the size of a core
+memory field in the PDP-8) the copy will wrap around to the beginning of
+the data field.
+
+The `dst` buffer can safely overlap the `src` buffer only if it is at a
+lower address in memory. (Note that there is no `memmove()` in this
+implementation.)
+
+Uses autoincrement registers 12₈, 13₈, and 14₈.
 
 **Standard Violations:**
 
-*   None known.
+*   Returns 0 instead of the `dst` pointer as required by the Standard.
+    A NULL return is specified as a failure condition by the Standard.
 
-**DOCUMENTATION INCOMPLETE**
+    This function has no internally-detected failure cases, so there is
+    no ambiguity in the meaning of the return value.
 
 
 ### <a id="memset"></a>`memset(dst, c, len)`
 
 Sets a run of `len` core memory locations starting at `dst` to `c`.
 
-**TBD**: Can `dst+len` cross a field or page boundary from `dst`?
+The `dst` pointer is an offset within the current data field, [normally
+field 1](#memory). This function will cross page boundaries but not
+field boundaries. If `dst+len-1` is 4096 or larger (the size of a core
+memory field in the PDP-8) the function will wrap around to the
+beginning of the data field, not cross into the next field.
 
 **Standard Violations:**
 
-*   None known.
+*   Returns 0 instead of the `dst` pointer as required by the Standard.
 
-**DOCUMENTATION INCOMPLETE**
+*   This function has no internally-detected failure cases, so the
+    Standard’s requirement that this function return 0 in error cases
+    means there is no ambiguity in the meaning of the return value.
+
+    If we ever fix the prior violation, there will still be no ambiguity
+    with the error case since [a valid pointer in CC8 cannot be
+    zero](#memory).
 
 
 ### <a id="printf" name="fprintf"></a>`printf(fmt, args...)`,
@@ -1280,6 +1300,10 @@ return a truthy value provided you pass it a normal C pointer.  If you
 hand-craft a pointer that happens to point to the first core memory
 location in a field, which is therefore confusable with `NULL`, then on
 your head be the consequences!
+
+LIBC uses zero page memory locations 147₈ through the end of the page.
+Functions which use the autoincrement locations 10₈ through 17₈ are
+so-documented above.
 
 
 ## Conclusion
