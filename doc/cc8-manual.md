@@ -733,14 +733,23 @@ string is returned in `*outlen`.
 
 ### <a id="cupper"></a>`cupper(p)`
 
-Like [`toupper()`](#toupper) except that it takes the core memory
-location `p` of a character in the current data page and stores the
-resulting converted character in the same core memory location.
+Implements this loop more efficiently:
 
-This function’s implementation is currently 3 instructions longer than
-that of `toupper()`, but it’s probably more efficient as the core of a
-“string to uppercase” function, since the caller doesn’t need to keep
-loading the next character from core and then storing it back.
+    char* p = some_string;
+    while (*p) {
+        *p = toupper(*p);
+        ++p;
+    }
+
+That is, it does an in-place conversion of the passed NUL-terminated
+character buffer to all-uppercase. 
+
+This function exists in LIBC because it is useful for ensuring that file
+names are uppercase, as OS/8 requires. With the current CC8 compiler
+implementation, the equivalent code above requires 84 more instructions!
+That more than pays for the 21 instructions and one extra jump table
+slot this function requires in LIBC. Therefore, use `cupper()` instead
+of a loop around [`toupper()`](#toupper) where possible.
 
 Do not depend on the return value. There is a predictable mapping, but
 it has no inherent meaning, so we are not documenting that mapping here.
