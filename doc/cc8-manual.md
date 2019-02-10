@@ -180,7 +180,7 @@ the mappings between the familiar C library routine names and their
 underlying implementation names.
 
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
-[sabr]: https://tangentsoft.com/pidp8i/wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
+[sabr]: /wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
 [sc85]: https://github.com/ncb85/SmallC-85
 
 
@@ -205,94 +205,6 @@ rudimentary C preprocessor features:
 *   **TDB:** Token pasting?
 
 *   **TDB:** Stringization?
-
-
-<a id="asm" name="calling"></a>
-#### Inline Assembly Code and the CC8 Calling Convention
-
-The cross-compiler allows [SABR][sabr] assembly code between `#asm` and
-`#endasm` markers in the C source code:
-
-    #asm
-        TAD (42      / add 42 to AC
-    #endasm
-
-You can write whole functions in inline assembly, though for simplicity,
-we recommend that you write the function wrapper in C syntax, with the
-body in assembly:
-
-    foo(a)
-    int a
-    {
-        a;
-    #asm
-        / assembly body here
-    #endasm
-    }
-
-This declares a function `foo` taking a single integer parameter and
-returning an integer. 
-
-The calling convention is for the parameters to be passed on [the
-stack](#memory), with the return value in AC.  It is common in C
-functions with inline assembly to not have explicit “`return`”
-statements, but instead to have set up AC just before the implicit
-return.
-
-The above `foo` example also shows another common technique in CC8
-functions using inline assembly: there being no “void context” in K&R C,
-the first line of that function has the nonstandard meaning “load `a`
-into AC.” In Standard C, that line would have no effect on the state of
-the program or its external environment, so it would simply be optimized
-out.
-
-This same technique is used in other ways in well-optimized CC8 code.
-For example, you may call a function that returns a value, but never
-explicitly store it anywhere if the call is immediately followed by
-inline assembly that looks for its input in the accumulator, knowing
-that’s where CC8 put the prior call’s return value.
-
-Inline assembly code is copied literally from the input C source file
-into the SABR output, so it must be written with that context in mind.
-
-A block of inline assembly functions as single statement in the C
-program, from a syntactic point of view. Consider the implementation of
-the Standard C function `puts` from the CC8 LIBC:
-
-    puts(p)
-    char *p;
-        {
-            while (*p++) 
-    #asm
-            TLS
-    XC1,    TSF
-            JMP XC1
-    #endasm
-        }
-
-Notice that there is no opening curly brace on the `while` loop: when
-the `TSF` opcode causes the `JMP` instruction to be skipped — meaning
-the console terminal is ready for another output character — control
-goes back to the top of the `while` loop. That is, these three
-instructions behave as if they were a single C statement and thus
-constitute the whole body of the `while` loop.
-
-Note also in the `puts` example that the statement `*p++` implicitly
-stores the value at the core memory location referred to by `p` in AC.
-Knowing what the compiler has done with values just prior to entering an
-inline assembly block is key to using CC8’s inline assembly feature
-successfully. Reading the resulting SABR output from the compiler can
-therefore be quite helpful in optimizing your code.
-
-Related to all of this, the cross-compiler has some non-standard
-features to enable the interface between the main program and the C
-library. This constitutes a compile time linkage system to allow for
-standard and vararg functions to be called in the library. **TODO:**
-Explain this.
-
-Remember: inline assembly is a feature of the cross-compiler only. The
-native OS/8 compiler ignores all preprocessor directives, including
-`#asm`!
 
 
 <a id="native" name="os8"></a>
@@ -404,7 +316,7 @@ OS/8 CC8 compiler:
     supported, but they may not work as expected when deeply nested or
     in long `if/else if/...` chains.
 
-[fib]: https://tangentsoft.com/pidp8i/doc/src/cc8/examples/fib.c
+[fib]: /doc/src/cc8/examples/fib.c
 
 
 <a id="nlim" name="limitations"></a>
@@ -413,11 +325,11 @@ OS/8 CC8 compiler:
 The OS/8 version of CC8 is missing many language features relative to
 [the cross-compiler](#cross), and much more compared to modern C.
 
-1.  The language is typeless in that everything is a 12 bit integer and
-    any variable/array can interpreted as `int`, `char` or pointer.  All
-    variables and arrays must be declared as `int`.  The return type may
-    be left off of a function's definition; it is implicitly `int` in
-    all cases, since `void` is not supported.
+1.  <a id="typeless"></a>The language is typeless in that everything is
+    a 12 bit integer and any variable/array can interpreted as `int`, `char`
+    or pointer.  All variables and arrays must be declared as `int`.
+    The return type may be left off of a function's definition; it is
+    implicitly `int` in all cases, since `void` is not supported.
 
     Further to this point, in the OS/8 version of CC8, it is optional
     to declare the types of the arguments to a function. For example,
@@ -453,9 +365,10 @@ The OS/8 version of CC8 is missing many language features relative to
     OS/8 `*.RL` format and link them with the OS/8 LOADER, but because
     of the previous limitation, only one of these can be written in C.
 
-4.  Unlike the CC8 cross-compiler, the OS/8 compiler currently ignores
-    all C preprocessor directives: `#define`, `#ifdef`, `#include`,
-    etc.  This even includes [inline assembly](#asm) via `#asm`!
+4.  <a id="os8pp"></a>Unlike the CC8 cross-compiler, the OS/8 compiler
+    currently ignores all C preprocessor directives: `#define`, `#ifdef`,
+    `#include`, etc.  This even includes [inline assembly](#asm) via
+    `#asm`!
 
     There is a compiler stub in `src/cc8/os8/c8.c` which implements
     some simple C preprocessor stuff, but it’s pretty much [broken and
@@ -559,7 +472,7 @@ The provided [LIBC library functions](#lib) is also quite limited and
 nonstandard compared to Standard C.  See the documentation for each
 individual library function for details.
 
-[os8pre]: https://tangentsoft.com/pidp8i/tktview/4a1bf30628
+[os8pre]: /tktview/4a1bf30628
 
 
 <a id="bugs"></a>
@@ -1324,7 +1237,7 @@ to use [the cross-compiler](#cross), then assemble the resulting
 Another set of examples not preinstalled on the OS/8 disk are
 `examples/pep001-*.c`, which are described [elsewhere][pce].
 
-[pce]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
+[pce]: /wiki?name=PEP001.C
 
 
 ## Making Executables
@@ -1375,6 +1288,126 @@ your head be the consequences!
 LIBC uses zero page memory locations 147₈ through the end of the page.
 Functions which use the autoincrement locations 10₈ through 17₈ are
 so-documented above.
+
+
+<a id="asm"></a>
+## Inline Assembly Code
+
+The [cross-compiler](#cross) — and not the [native compiler!](#os8pp) —
+allows [SABR][sabr] assembly code between `#asm` and `#endasm` markers
+in the C source code:
+
+    #asm
+        TAD (42      / add 42 to AC
+    #endasm
+
+Such code is copied literally from the input C source file into the
+compiler’s SABR output file, so it must be written with that context in
+mind.
+
+
+### <a id="calling"></a>The CC8 Calling Convention
+
+You can write whole functions in inline assembly, though for simplicity,
+we recommend that you write the function wrapper in C syntax, with the
+body in assembly:
+
+    add48(a)
+    int a
+    {
+        a;          /* load 'a' into AC; explained below */
+    #asm
+        TAD (48
+    #endasm
+    }
+
+Doing it this way saves you from having to understand the way the CC8
+software stack works, which we’ve chosen not to document here yet, apart
+from [its approximate location in core memory](#memory). All you need to
+know is that parameters are passed on the stack and *somehow* extracted
+when they’re referenced in C code.
+
+CC8 returns values from functions in AC, so our example does not require
+an explicit “`return`” statement: we’ve arranged for our intended return
+value to be in AC at the end of the function body, so the implicit
+return does what we want here.
+
+The above snippet therefore declares a function `add48` taking a single
+parameter “`a`” and returning `a+48`.
+
+Keep in mind when reading such code that CC8 is [essentially
+typeless](#typeless): it’s tempting to think of the above code as taking
+an integer and returning an integer, but you can equally correctly think
+of it as taking a character and returning a character. Indeed, that
+function will take a value in the range 0 thru 9 and return the
+equivalent ASCII digit! CC8’s typeless nature mates well with K&R C’s
+indifference toward return type declaration.
+
+
+### Equivalence to Statements
+
+A block of inline assembly functions as single statement in the C
+program, from a syntactic point of view. Consider the implementation of
+the Standard C function `puts` from the CC8 LIBC:
+
+    puts(p)
+    char *p;
+        {
+            while (*p++) 
+    #asm
+            TLS
+    XC1,    TSF
+            JMP XC1
+    #endasm
+        }
+
+Notice that there is no opening curly brace on the `while` loop: when
+the `TSF` opcode causes the `JMP` instruction to be skipped — meaning
+the console terminal is ready for another output character — control
+goes back to the top of the `while` loop. That is, these three
+instructions behave as if they were a single C statement and thus
+constitute the whole body of the `while` loop.
+
+
+### Optimization
+
+There are several clever optimizations in the examples above that you
+might want to use in your own programs:
+
+*   In the `add42` example the line “`a;`” means “load `a` into AC”. In
+    a Standard C compiler, this would be considered use of a variable in
+    `void` context and thus be optimized out, but K&R C has no such
+    notion, so it has this nonstandard meaning in CC8.  This technique
+    is used quite a lot in our [LIBC](#libref), so you can be sure the
+    behavior won’t be going away.
+
+*   Knowing that functions return their value in AC, you can call
+    another C function from the middle of a block of assembly code but
+    never store its return value explicitly: just use its return value
+    directly from AC.
+
+*   In the `puts` example, the statement `*p++` implicitly stores the
+    value at the core memory location referred to by `p` in AC, so we
+    can use it within the assembly body of that loop without ever
+    explicitly referring to `p`.
+
+It is worth reading the SABR output from the compiler to discover tricks
+such as these.
+
+Beware that CC8 isn’t a particularly smart compiler. It will not even
+try to pull of many of the automatic tricks you’d expect from a modern C
+compiler. The bulk of the CC8 optimizer’s code is located in its user’s
+brain, at the moment.
+
+
+### Library Linkage and Varargs
+
+CC8 has some non-standard features to enable the interface between the
+main program and the C library. This constitutes a compile time linkage
+system to allow for standard and vararg functions to be called in the
+library.
+
+**TODO:** Explain this.
 
 
 ## Conclusion
