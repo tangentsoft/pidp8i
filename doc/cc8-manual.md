@@ -185,9 +185,9 @@ rudimentary C preprocessor features:
 
 *   **TBD:** `#if` and such?
 
-*   **TDB:** Token pasting?
+*   **TBD:** Token pasting?
 
-*   **TDB:** Stringization?
+*   **TBD:** Stringization?
 
 
 ### <a id="nhead"></a>Necessary Headers
