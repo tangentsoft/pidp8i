@@ -1180,6 +1180,9 @@ of the same field. This also has effects on the behavior of
     `g` format specifiers (and their capitalized variants) cannot be
     supported.
 
+*   Since CC8 does not support the `long` integer type qualifier, this
+    function does not support the `l` format specifier.
+
 *   The standard `n` and `p` format specifiers could be supported, but
     currently are not.
 
