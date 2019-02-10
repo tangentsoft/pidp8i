@@ -713,6 +713,7 @@ output.” We’d rather not write all of that for every stdio function
 below, so we use this shorthand.
 
 [cppr]:    https://en.cppreference.com/w/c
+[iot]:     /wiki?name=IOT+Device+Assignments
 [libch]:   /doc/trunk/src/cc8/include/libc.h
 [libcsrc]: /doc/trunk/src/cc8/os8/libc.c
 
@@ -1292,15 +1293,12 @@ Otherwise, returns `c` unchanged.
 *   Does not know anything about locales; assumes US-ASCII input.
 
 
-### <a id="xinit"></a>`xinit`
+### <a id="xinit"></a>`xinit()`
 
-??
+Prints the CC8 compiler’s banner message. This is in LIBC only because
+it’s called from several places within CC8 itself.
 
-**Nonstandard.** Conforming to...?
-
-**DOCUMENTATION INCOMPLETE**
-
-[iot]: /wiki?name=IOT+Device+Assignments
+**Nonstandard.**
 
 
 <a id="examples"></a>
