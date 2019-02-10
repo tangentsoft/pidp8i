@@ -23,6 +23,7 @@ os8 ZERO DTA0:
 
 # Copy source files into DSK for use.
 cpto $src/src/cc8/os8/header.sb DSK:
+cpto $src/src/cc8/os8/ccr.bi DSK:
 cpto $obj/cc8/os8/libc.sb DSK:
 cpto $obj/cc8/os8/c8.sb DSK:
 cpto $obj/cc8/os8/n8.sb DSK:
@@ -31,6 +32,7 @@ cpto $obj/cc8/os8/p8.sb DSK:
 # Assembly/Save phase taken from bldcc8.bi 
 
 os8 COPY DTA0:<DSK:HEADER.SB
+os8 COPY DTA0:<DSK:CCR.BI
 
 os8 COMP LIBC.SB
 
