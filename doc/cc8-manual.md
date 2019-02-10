@@ -950,7 +950,7 @@ radix.
 [itoam]: https://docs.microsoft.com/cpp/c-runtime-library/reference/itoa-itow
 
 
-### <a id="kbhit"></a>`kbhit`
+### <a id="kbhit"></a>`kbhit()`
 
 Returns nonzero if `TTY:` has sent an input character that has not yet
 been read, which may then be read by a subsequent call to
@@ -977,9 +977,9 @@ data field, [normally field 1](#memory). This function will not copy
 data between fields. It *will* copy data between pages within the same
 field.
 
-If either `src+n` or `dst+n` is 4096 or larger (the size of a core
-memory field in the PDP-8) the copy will wrap around to the beginning of
-the data field.
+If either `src+n` or `dst+n` &ge; 4096 (the size of a core memory field
+in the PDP-8) the copy will wrap around to the beginning of the data
+field.
 
 The `dst` buffer can safely overlap the `src` buffer only if it is at a
 lower address in memory. (Note that there is no `memmove()` in this
@@ -1002,9 +1002,9 @@ Sets a run of `len` core memory locations starting at `dst` to `c`.
 
 The `dst` pointer is an offset within the current data field, [normally
 field 1](#memory). This function will cross page boundaries but not
-field boundaries. If `dst+len-1` is 4096 or larger (the size of a core
-memory field in the PDP-8) the function will wrap around to the
-beginning of the data field, not cross into the next field.
+field boundaries. If `dst+len-1` &ge; 4096 (the size of a core memory
+field in the PDP-8) the function will wrap around to the beginning of
+the data field, not cross into the next field.
 
 **Standard Violations:**
 
@@ -1065,41 +1065,16 @@ within each PDP-8 word, with the top 5 bits unset.
     [implicit single output file](#stdio).
 
 
-### <a id="revcpy"></a>`revcpy`
+### <a id="revcpy"></a>`revcpy(dst, src, n)`
 
-??
+For non-overlapping buffers, has the same effect as
+[`memcpy()`](#memcpy), using less efficient code.
 
-**Nonstandard.** Conforming to...?
+Because it copies words in the opposite order from `memcpy()`, you may
+be willing to pay its efficiency hit when copying between overlapping
+buffers when the destination follows the source.
 
-**DOCUMENTATION INCOMPLETE**
-
-
-### <a id="sscanf"></a>`sscanf`
-
-Reads formatted input from a file.
-
-**Standard Violations:**
-
-*   `[f]scanf()` is not provided. Call [`[f]gets()`](#gets) to get a
-    string and then call `sscanf()` on it.
-
-*   This list cannot possibly be complete.
-
-**DOCUMENTATION INCOMPLETE**
-
-
-### <a id="strcat"></a>`strcat`
-
-Concatenates one null-terminated character string to the end of another.
-
-**TBD**: Much the same as `memcpy`: do both strings have to be in the
-same page/field, are page/field crossings legal, etc.?
-
-**Standard Violations:**
-
-*   None known.
-
-**DOCUMENTATION INCOMPLETE**
+**Nonstandard.** Conforms to no known C library implementation.
 
 
 ### <a id="sprintf"></a>`sprintf(outstr, fmt, args...)`
@@ -1157,18 +1132,73 @@ of the same field. This also has effects on the behavior of
 *   There is no `snprintf()`, `vprintf()`, etc.
 
 
-### <a id="strcpy"></a>`strcpy`
+### <a id="sscanf"></a>`sscanf`
 
-Copies a null-terminated character string from one memory location to
-another.
+Reads formatted input from a file.
 
-**TBD**: Same as `memcpy`.
+**Standard Violations:**
+
+*   `[f]scanf()` is not provided. Call [`[f]gets()`](#gets) to get a
+    string and then call `sscanf()` on it.
+
+*   This list cannot possibly be complete.
+
+**DOCUMENTATION INCOMPLETE**
+
+
+### <a id="strcat"></a>`strcat(dst, src)`
+
+Concatenates one NUL-terminated character string to the end of another.
+
+Both the `dst` and `src` buffer pointers are offsets within the current
+data field, [normally field 1](#memory). This function will not copy
+data between fields. It *will* copy data between pages within the same
+field.
+
+If the terminating NUL character is not found in `dst` by the end of the
+current field, it will wrap around to the start of the field and resume
+searching there; the concatenation will occur wherever it does find a 0
+word. If there happen to be no 0 words in the field, it will iterate
+forever!
+
+If `dst + strlen(dst) + strlen(src)` &ge; 4096 (the size of a core
+memory field in the PDP-8) the copy will wrap around to the beginning of
+the data field and stomp on whatever’s there.
+
+These are not technically violations of Standard C as it leaves such
+matters undefined.
+
+Returns a copy of `dst`.
 
 **Standard Violations:**
 
 *   None known.
 
-**DOCUMENTATION INCOMPLETE**
+
+### <a id="strcpy"></a>`strcpy(dst, src)`
+
+Copies a null-terminated character string from one memory location to
+another.
+
+Both the `dst` and `src` buffer pointers are offsets within the current
+data field, [normally field 1](#memory). This function will not copy
+data between fields. It *will* copy data between pages within the same
+field.
+
+If either `src+strlen(src)` or `dst+strlen(dst)` &ge; 4096 (the size of
+a core memory field in the PDP-8) the copy will wrap around to the
+beginning of the data field and copy from/to there, respectively. (Alas,
+there is no `strlen()` in LIBC at the moment.)
+
+The `dst` buffer can safely overlap the `src` buffer only if it is at a
+lower address in memory.
+
+Unlike [`memcpy()`](#memcpy) the current implementation does not use any
+autoincrement registers.
+
+**Standard Violations:**
+
+*   Returns 0, not a copy of `dst` as the Standard requires.
 
 
 ### <a id="strstr"></a>`strstr(haystack, needle)`
