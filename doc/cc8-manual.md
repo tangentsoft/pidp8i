@@ -113,7 +113,7 @@ currently clear to us.
 
 
 <a id="cross" name="posix"></a>
-### The Cross-Compiler
+## The Cross-Compiler
 
 The features of the cross-compiler are basically that of Small-C itself,
 being a good approximation of K&R C (1978) minus:
@@ -162,30 +162,13 @@ utility program included with the PiDP-8/I distribution will
 automatically do that conversion for you when making a SIMH paper tape
 image file, which you can then read into the OS/8 environment.
 
-Several of the C programs in this distribution `#include <init.h>` which
-inserts an assembly language initialization routine into the program at
-that point using the `#asm` [inline assembly feature](#asm). This file
-is symlinked into each directory that has a `*.c` file needing it since
-CC8 doesn't have an include path feature, and it must be in the current
-directory in any case when using the OS/8 version of CC8.
-
-The `init.h` initialization routine defines some low-level subroutines,
-initializes the environment for the programs, and calls into the LIBC
-initialization code. This file was copied to the OS/8 boot disk as
-`DSK:INIT.H` unless you gave `--disable-os8-cc8` when configuring the
-PiDP-8/I software.
-
-The file `include/libc.h` is likewise copied to `DSK:LIBC.H`. It defines
-the mappings between the familiar C library routine names and their
-underlying implementation names.
-
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
 [sabr]: /wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
 [sc85]: https://github.com/ncb85/SmallC-85
 
 
 <a id="cpp"></a>
-#### The Cross-Compiler’s Preprocessor Features
+### The Cross-Compiler’s Preprocessor Features
 
 Unlike [the native OS/8 compiler](#native), the cross-compiler does have
 rudimentary C preprocessor features:
@@ -207,8 +190,43 @@ rudimentary C preprocessor features:
 *   **TDB:** Stringization?
 
 
+### <a id="nhead"></a>Necessary Headers
+
+There are two header files shipped with CC8, intended to be used only by
+users of the cross-compiler:
+
+*   `libc.h` — Declares the entry points used by [LIBC](#libref) using
+    CC8 [library linkage directives](#linkage). If your program makes
+    use of any library functions, you must `#include` this at the top of
+    your program.
+
+*   `init.h` — Inserts a block of [inline assembly](#asm) startup code
+    into your program, which initializes the program environment, sets
+    up LIBC, and defines a few low-level routines. Certain programs may
+    get away without this code, but the rules for which programs and why
+    are not currently clear to us.  **TODO:** Find out the rules that
+    govern whether this is necessary.
+
+As a rule, all cross-compiler users should include both of these at the
+top of every program.
+
+Because the cross-compiler lacks an include path feature, you generally
+want to symlink these files to the directory where your source files
+are. This is already done for the CC8 examples and such.
+
+If you compare the examples in the source tree (`src/cc8/examples`) to
+those with uppercased versions of those same names on the OS/8 `DSK:`
+volume, you’ll notice that these `#include` statements were stripped
+out. This is [necessary](#os8pp); the linked documentation tells you why
+and how the OS/8 version of CC8 gets away without a `#include` feature.
+
+The tool that strips these `#includes` out for us is called
+`bin/cc8-to-os8`, which you might find useful if you’re frequently
+working with programs that need to work under both compilers.
+
+
 <a id="native" name="os8"></a>
-### The Native OS/8 Compiler
+## The Native OS/8 Compiler
 
 This compiler is supplied in both source and binary forms as part of the
 PiDP-8/I software distribution.
@@ -275,7 +293,7 @@ Input programs should go on `DSK:`. Compiler outputs are also placed on
 
 
 <a id="nfeat" name="features"></a>
-#### Features of the Native OS/8 Compiler
+### Features of the Native OS/8 Compiler
 
 The following is the subset of C known to be understood by the native
 OS/8 CC8 compiler:
@@ -366,38 +384,28 @@ The OS/8 version of CC8 is missing many language features relative to
     of the previous limitation, only one of these can be written in C.
 
 4.  <a id="os8pp"></a>Unlike the CC8 cross-compiler, the OS/8 compiler
-    currently ignores all C preprocessor directives: `#define`, `#ifdef`,
-    `#include`, etc.  This even includes [inline assembly](#asm) via
-    `#asm`!
+    has no functional implementation for any C preprocessor directive:
+    `#define`, `#ifdef`, `#include`, etc.  This even includes [inline
+    assembly](#asm) via `#asm`!
 
-    There is a compiler stub in `src/cc8/os8/c8.c` which implements
-    some simple C preprocessor stuff, but it’s pretty much [broken and
-    useless at the moment][os8pre].
-
+    It is important to realize that there is a *start* at a native
+    preprocessor in `src/cc8/os8/c8.c`, but it’s pretty much [broken and
+    useless at the moment][os8pre], which means if you try to make use
+    of it, the compiler will likely do stupid or wrong things. 
+    
     This means you cannot use `#include` directives to string multiple
     C modules into a single program.
 
-    If that then makes you wonder how the OS/8 compiler looks up the
-    stock library functions defined in `libc.h` — note that I've
-    resisted using the word "standard" here, for they are anything but
-    that in the Standard C sense — it is that the entry point mappings
-    declared in `libc.h` are hard-coded into the `CC2` compiler stage,
-    implemented in `p8.c`.
+    It also means that if you take a program that the cross-compiler
+    handles correctly and just copy it straight into OS/8 and try to
+    compile it, it probably still has the `#include <libc.h>` line and
+    possibly one for `init.h` as well. *Such code will fail to compile.*
+    You must strip such lines out when copying C files into OS/8.
 
-    Similarly, the program initialization code defined in `init.h` is
-    inserted into the program directly by the compiler rather than being
-    pulled in via the preprocessor.
-
-    Both of these header files must be included when building with the
-    cross-compiler. The examples have these `#include` statements
-    stripped out as they are copied to the OS/8 RK05 disk during the
-    build process. This is done by `bin/cc8-to-os8`, a tool you may find
-    use for yourself if you use both compilers on a single source
-    program.
-
-    If you have a program that is compiled using both the cross-compiler
-    and the OS/8 compiler, you may wish to use `#include` statements,
-    since the cross-compiler does process them.
+    (The native compiler emits startup code automatically, and it
+    hard-codes the LIBC call table in the `CC2` compiler stage,
+    implemented in `p8.c`, so it doesn’t need `#include` to make these
+    things work.)
 
 5.  Variables are implicitly `static`, even when local.
 
@@ -1400,7 +1408,7 @@ compiler. The bulk of the CC8 optimizer’s code is located in its user’s
 brain, at the moment.
 
 
-### Library Linkage and Varargs
+### <a id="linkage" name="varargs"></a>Library Linkage and Varargs
 
 CC8 has some non-standard features to enable the interface between the
 main program and the C library. This constitutes a compile time linkage
