@@ -38,26 +38,8 @@ understanding.
 CC8 is a C subset implementation for the DEC PDP-8 processor.
 
 The CC8 project’s creator (Ian Schofield) thought it was time to have a
-modern language compiler running on the PDP-8.  The last such compiler
-to be attempted for the PDP-8, as far as this document’s authors are
-aware, was Pascal in 1979 by Heinz Stegbauer.
-
-In more recent times, one cross-compiler has been developed by Vince
-Slyngstad and updated by Paolo Maffei based on Ron Cain’s Small-C using
-a VM approach. [This code][sms] is most certainly worth examining, and I
-am delighted to acknowledge this work as I have used some of his [C
-library code](#lib) in this project.
-
-[sms]: http://so-much-stuff.com/pdp8/C/C.php
-
-Finally, I would refer the reader to Fabrice Bellard’s OTCC. It is this
-bit of remarkable software that suggested that there may be a chance to
-implement a native PDP-8 compiler.
-
-
-## The Project’s Major Products
-
-To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
+modern language compiler running on the PDP-8. Ian actually wrote *two*
+C compilers:
 
 1.  A [cross-compiler](#cross) that builds and runs on any host computer
     with a C compiler that still understands K&R C.
@@ -65,8 +47,26 @@ To this end, one of us (Ian Schofield) wrote two C compilers for the PDP-8:
 2.  A [native OS/8 compiler](#native), compiled to assembly by the
     cross-compiler.
 
-Ian also collected and wrote the LIBC implementation common to both
-compilers.
+Ian also collected and wrote the [LIBC implementation](#libc) common to
+both compilers.
+
+The last high-level language compiler to be attempted for the PDP-8, as
+far as this document’s authors are aware, was Pascal in 1979 by Heinz
+Stegbauer.
+
+In more recent times, Vince Slyngstad and Paolo Maffei wrote a C
+cross-compiler based on Ron Cain’s Small-C using a VM approach. [This
+code][sms] is most certainly worth examining, and we are delighted to
+acknowledge this work as we have used some of their C library code in
+this project.
+
+Finally, we would like to refer the reader to [Fabrice Bellard’s
+OTCC][otcc]. Although it targets the i386, it was this bit of remarkable
+software that suggested that there may be a chance to implement a native
+PDP-8 compiler.
+
+[otcc]: https://bellard.org/otcc/
+[sms]:  http://so-much-stuff.com/pdp8/C/C.php
 
 
 ## Requirements
@@ -118,7 +118,7 @@ currently clear to us.
 The features of the cross-compiler are basically that of Small-C itself,
 being a good approximation of K&R C (1978) minus:
 
-*   most of the standard library (see [below](#lib) for what we *do*
+*   most of the standard library (see [below](#libc) for what we *do*
     have)
 
 *   function pointers
@@ -143,7 +143,7 @@ may also find references for K&R C 1978 helpful.
 
 We stress *language* above because we have not attempted to clone the C
 Standard Library as of K&R 1978.  CC8 has a [very limited standard
-library](#lib), and it has many weaknesses relative to even early
+library](#libc), and it has many weaknesses relative to even early
 versions of C. See that section of this manual for details about known
 limitations, exclusions, and bugs.
 
@@ -323,7 +323,7 @@ OS/8 CC8 compiler:
 
 1.  **A few 2-character operators:** `++`, `--` (postfix only) and `==`.
 
-1.  **Limited library:** See [below](#lib) for a list of library
+1.  **Limited library:** See [below](#libc) for a list of library
     functions provided, including their known limitations relative to
     Standard C.
 
@@ -476,7 +476,7 @@ The OS/8 version of CC8 is missing many language features relative to
 
 13. `switch` doesn't work.
 
-The provided [LIBC library functions](#lib) is also quite limited and
+The provided [LIBC library functions](#libc) is also quite limited and
 nonstandard compared to Standard C.  See the documentation for each
 individual library function for details.
 
@@ -492,7 +492,7 @@ individual library function for details.
 2.  Don’t forget to handle form feed.  See `c8.c`.
 
 3.  For some obscure reason, always open the input file first, then the
-    output file. I suspect a fault in `libc.c`, which you are welcome to
+    output file. We suspect a fault in `libc.c`, which you are welcome to
     fix, keeping in mind that we're using every trick in the book to fit
     as much functionality in as we currently do.  It may not be possible
     to make this as reliable as modern C programmers expect.
@@ -1526,14 +1526,14 @@ library.
 ## Conclusion
 
 This is a somewhat limited manual which attempts to give an outline of a
-very simple compiler for which I apologise as the source code is obscure
-and badly commented. However, the native OS/8 compiler/tokeniser
+very simple compiler for which we apologise as the source code is
+obscure and badly commented. However, the native OS/8 compiler/tokeniser
 (`n8.c`) is only 600 lines which is a nothing in the scale of things
-these days.  However, I hope this project gives some insight into
+these days.  However, we hope this project gives some insight into
 compiler design and code generation strategies to target a most
-remarkable computer. I would also like to give credit to the builders of
-OS/8 and in particular the FORTRAN II system which was never designed to
-survive the onslaught of this kind of modern software.
+remarkable computer. We would also like to give credit to the builders
+of OS/8 and in particular the FORTRAN II system which was never designed
+to survive the onslaught of this kind of modern software.
 
 Don’t expect too much! This compiler will not build this week’s bleeding
 edge kernel. But, it may be used to build any number of useful utility
