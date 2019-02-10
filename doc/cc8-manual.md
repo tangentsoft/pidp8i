@@ -841,23 +841,28 @@ Returns 0 on EOF, as Standard C requires.
 
 ### <a id="fopen"></a>`fopen(name, mode)`
 
-Opens OS/8 file `DSK:name.DA`.
+Opens OS/8 file `DSK:NA.ME`.
 
-The `name` parameter must point to at most six 0-terminated uppercase
-characters, [one character per word](#wordstr).  (See
-[`cupper()`](#cupper).)
+The `name` parameter must point to at most six 0-terminated characters,
+[one character per word](#wordstr), plus a 2-letter file name extension,
+all in upper case.  (See [`cupper()`](#cupper).)
 
 The file is opened for reading if `mode` points to an ”`r`” character,
 and it is opened for writing if `mode` points to a “`w`” character. This
 need only point to a single character, since only that one memory
 location is ever referenced. No terminator is required.
 
-The OS/8 device name and file name extension are hard-coded, the former
-by the current `fopen()` implementation and the latter by the OS/8
+The OS/8 device name is hard-coded, despite the fact that the OS/8
 FORTRAN II [`IOPEN` and `OOPEN`][f2fio] subroutines that `fopen()` is
-implemented in terms of. This means there is currently no way to use
-this `stdio` implementation to read from or write to files on OS/8
-devices other than `DSK:` or to files with extensions other than `.DA`.
+implemented in terms of accept a device name parameter. This means there
+is currently no way to use this `stdio` implementation to read from or
+write to files on OS/8 devices other than `DSK:`.
+
+The underlying FORTRAN II routines are documented as hard-coding the
+file name extension to `DA`, but inspection of the code reveals that
+this LIBC does some hackery to overwrite that, allowing aribtrary
+extensions.  **TODO:** Verify this for both read and write.
+
 
 **Standard Violations:**
 
@@ -869,6 +874,10 @@ devices other than `DSK:` or to files with extensions other than `.DA`.
     This also means `fopen()` has no way to signal a failure to open the
     requested file name!  ...Which is just as well, since there is also
     no `ferror()` or `errno` in our LIBC.
+
+    This function will return -1 if no file name extension is given,
+    which is good in that it means this function does have *some* error
+    checking, it’s a nonstandard way to signal it.
 
 *   Does not accept the standard mode `a`, for append.  Since there is
     also no `fseek()` in CC8’s LIBC, a preexisting file named for
