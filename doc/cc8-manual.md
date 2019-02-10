@@ -80,7 +80,7 @@ The CC8 system generally assumes the availability of:
     II library linkage to get access to more than 16&nbsp;kWords of core.)
 
 *   A PDP-8/e or higher class processor.  The CC8 compiler code and its
-    [LIBC implementation](#libref) make liberal use of the MQ register
+    [LIBC implementation](#libc) make liberal use of the MQ register
     and the BSW OPR instruction introduced with the PDP-8/e.
 
     This code will not run on, for example, a PDP-8/I with the EAE
@@ -195,7 +195,7 @@ rudimentary C preprocessor features:
 There are two header files shipped with CC8, intended to be used only by
 users of the cross-compiler:
 
-*   `libc.h` — Declares the entry points used by [LIBC](#libref) using
+*   `libc.h` — Declares the entry points used by [LIBC](#libc) using
     CC8 [library linkage directives](#linkage). If your program makes
     use of any library functions, you must `#include` this at the top of
     your program.
@@ -528,7 +528,7 @@ be better to think of it as a high-level assembly language that
 resembles C rather than as "C" proper.
 
 
-## <a id="libdoc"></a>The CC8 C Library: Documentation
+## <a id="libc"></a>The CC8 C Library: Documentation
 
 In this section, we will explain some high-level matters that cut across
 multiple functions in the C library. This material is therefore not
@@ -607,6 +607,29 @@ Within the `pidp8i` environment, you can hit Ctrl-E, then say “`go
 switch register, press the Load Add key, then press the Start key.)
 
 
+### <a id="wordstr"></a>Strings are of Words, Not of Bytes or Characters
+
+In several places, the Standard says a conforming C library is supposed
+to operate on “bytes” or “characters,” at least according to [our chosen
+interpretation][cppr]. Except for the text I/O restrictions called out
+[above](#stdio), LIBC operates on strings of PDP-8 words, not on this
+more modern notion of fixed 8-bit bytes the nebulous concept of
+“characters.”
+
+Because someone may be used to the idea that string and memory functions
+like [`memcpy()`](#memcpy) and [`strcat()`](#strcat) will operate on
+bytes, we’ve marked all of these cases with a reference back to this
+section.
+
+By the same token, most functions that operate on NUL-terminated string
+buffers in a conforming C library implementation actually check for 0
+words in this implementation. The distinction is that these routines
+aren’t carefully masking off the top 4 or 5 bits to check *only* against
+a 7- or 8-bit NUL character, they’re checking for a word equal to zero.
+
+This is another manifestation of [CC8’s typeless nature](#typeless).
+
+
 ### Missing Functions
 
 The bulk of the Standard C Library is not provided, including some
@@ -621,7 +644,7 @@ rather than any kind of obligation fulfilled.  Do not bring your modern
 C environment expectations to CC8!
 
 
-## <a id="libref" name="libc"></a>The CC8 C Library: Reference
+## <a id="libref"></a>The CC8 C Library: Reference
 
 CC8 offers a very limited standard library, which is shared between the
 native and cross-compilers. While some of its function names are the
@@ -686,8 +709,8 @@ Implements this loop more efficiently:
         ++tmp;
     }
 
-That is, it does an in-place conversion of the passed NUL-terminated
-character buffer to all-uppercase. 
+That is, it does an in-place conversion of the passed [0-terminated word
+string](#wordstr) to all-uppercase.
 
 This function exists in LIBC because it is useful for ensuring that file
 names are uppercase, as OS/8 requires. With the current CC8 compiler
@@ -783,14 +806,14 @@ Returns 0 on EOF, as Standard C requires.
 
 Opens OS/8 file `DSK:name.DA`.
 
-The `name` parameter must point to at most 6 NUL-terminated uppercase
-characters.  (See [`cupper()`](#cupper).)
+The `name` parameter must point to at most six 0-terminated uppercase
+characters, [one character per word](#wordstr).  (See
+[`cupper()`](#cupper).)
 
 The file is opened for reading if `mode` points to an ”`r`” character,
 and it is opened for writing if `mode` points to a “`w`” character. This
-need only point to a single character; it is not required that it point
-to a NUL-terminated string, since only that one memory location is ever
-referenced.
+need only point to a single character, since only that one memory
+location is ever referenced. No terminator is required.
 
 The OS/8 device name and file name extension are hard-coded, the former
 by the current `fopen()` implementation and the latter by the OS/8
@@ -934,8 +957,8 @@ hard-coded internally.
 
 ### <a id="itoa"></a>`itoa(num, str)`
 
-Convert a 12-bit PDP-8 two’s complement integer `num` to a
-NUL-terminated ASCII string pointed to by `str`.
+Convert a 12-bit PDP-8 two’s complement integer `num` to an [ASCII word
+string](#wordstr) in memory pointed to by `str`.
 
 If `num` is an arbitrary integer, `str` should point to 6 words of
 memory to cover the worst-case condition, e.g. "-2048\\0".
@@ -970,12 +993,10 @@ C++][kbhitm].
 
 ### <a id="memcpy"></a>`memcpy(dst, src, n)`
 
-Copies `n` words from core memory location `src` to `dst`.
+Copies `n` words from core memory location `src` to `dst` in the same
+data field, [normally field 1](#memory).
 
-Both the `dst` and `src` buffer pointers are offsets within the current
-data field, [normally field 1](#memory). This function will not copy
-data between fields. It *will* copy data between pages within the same
-field.
+This function will not copy data between fields.
 
 If either `src+n` or `dst+n` &ge; 4096 (the size of a core memory field
 in the PDP-8) the copy will wrap around to the beginning of the data
@@ -1148,14 +1169,12 @@ Reads formatted input from a file.
 
 ### <a id="strcat"></a>`strcat(dst, src)`
 
-Concatenates one NUL-terminated character string to the end of another.
+Concatenates one [0-terminated word string](#wordstr) to the end of
+another in the same data field, [normally field 1](#memory).
 
-Both the `dst` and `src` buffer pointers are offsets within the current
-data field, [normally field 1](#memory). This function will not copy
-data between fields. It *will* copy data between pages within the same
-field.
+This function will not copy data between fields.
 
-If the terminating NUL character is not found in `dst` by the end of the
+If the terminating 0 word is not found in `dst` by the end of the
 current field, it will wrap around to the start of the field and resume
 searching there; the concatenation will occur wherever it does find a 0
 word. If there happen to be no 0 words in the field, it will iterate
@@ -1177,13 +1196,10 @@ Returns a copy of `dst`.
 
 ### <a id="strcpy"></a>`strcpy(dst, src)`
 
-Copies a null-terminated character string from one memory location to
-another.
+Copies one [0-terminated word string](#wordstr) to another memory
+location in the same data field, [normally field 1](#memory).
 
-Both the `dst` and `src` buffer pointers are offsets within the current
-data field, [normally field 1](#memory). This function will not copy
-data between fields. It *will* copy data between pages within the same
-field.
+This function will not copy data between fields.
 
 If either `src+strlen(src)` or `dst+strlen(dst)` &ge; 4096 (the size of
 a core memory field in the PDP-8) the copy will wrap around to the
@@ -1203,18 +1219,39 @@ autoincrement registers.
 
 ### <a id="strstr"></a>`strstr(haystack, needle)`
 
-Attempts to find a given null-terminated substring within another.
+Attempts to find the first instance of `needle` within `haystack`, which
+are [0-terminated word strings](#wordstr). This function’s behavior is
+undefined if either buffer is not 0-terminated.
 
-**TBD**: Much the same as `strcpy`, plus: naive algorithm, not BMH,
-right? Does it blow up if the needle is bigger than the haystack? Is it
-actually a word string comparison function, or does it mask off the top
-4 or 5 bits to be a *character* comparison function?
+The implementation uses the [naïve string search algorithm][nssa], so
+the typical execution time is O(n+m), but the worst case time is
+&Theta(nm). Don’t go expecting us to buy execution speed with
+preprocessing steps as with [BMH][bmh] or [KMP][kmp]!
+
+Both the `haystack` and `needle` buffer pointers are offsets within the
+current data field, [normally field 1](#memory).
+
+If either `haystack+strlen(haystack)` or `needle+strlen(needle)` &ge;
+4096 (the size of a core memory field in the PDP-8) the copy will wrap
+around to the beginning of the data field and continue the search or
+match, respectively, from that point. (Alas, there is no `strlen()` in
+LIBC at the moment.)
+
+**Returns:**
+
+*   *a pointer to the first needle*, if one is found within the haystack
+
+*   *zero* if either no needle is in the haystack, *or* the haystack is
+    zero-length (i.e. `*haystack == '\0'`), *or* the needle is bigger
+    than the haystack
 
 **Standard Violations:**
 
 *   None known.
 
-**DOCUMENTATION INCOMPLETE**
+[bmh]:  https://en.wikipedia.org/wiki/Boyer%E2%80%93Moore%E2%80%93Horspool_algorithm
+[kmp]:  https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
+[nssa]: https://en.wikipedia.org/wiki/String-searching_algorithm#Na%C3%AFve_string_search
 
 
 ### <a id="toupper"></a>`toupper(c)`
@@ -1416,7 +1453,7 @@ might want to use in your own programs:
     a Standard C compiler, this would be considered use of a variable in
     `void` context and thus be optimized out, but K&R C has no such
     notion, so it has this nonstandard meaning in CC8.  This technique
-    is used quite a lot in our [LIBC](#libref), so you can be sure the
+    is used quite a lot in our [LIBC](#libc), so you can be sure the
     behavior won’t be going away.
 
 *   Knowing that functions return their value in AC, you can call

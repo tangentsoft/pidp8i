@@ -650,7 +650,7 @@ char *s , *o ;
 char *x , *y , *z ;
  for ( x = s ; * x ; x ++ ) {
   for ( y = x , z = o ; * z && * y == * z ; y ++ ) z ++ ;
-  if ( z > o && ! * z ) return x ;
+  if ( z >= o && ! * z ) return x ;
  } return 0 ;
 }
 
