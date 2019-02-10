@@ -457,7 +457,7 @@ The OS/8 version of CC8 is missing many language features relative to
     Regular `while` loops work, as does `break`, so one workaround for a
     lack of `do/while` is:
 
-        `while (1) { /* do something useful */; if (cond) break; }
+        while (1) { /* do something useful */; if (cond) break; }
 
     We have no intention to fix this.
 
