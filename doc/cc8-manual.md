@@ -1,7 +1,5 @@
 # CC8 Manual
 
-CC8 is a C subset implementation for the DEC PDP-8 processor.
-
 
 ## A Bit of Grounding History
 
@@ -37,10 +35,12 @@ understanding.
 
 ## CC8’s Developmental Sparks
 
-With this in mind, the CC8 project’s creator (Ian Schofield) thought it
-was time to have a modern language compiler running on the PDP-8.  The
-last such compiler to be attempted for the PDP-8, as far as this
-document’s authors are aware, was Pascal in 1979 by Heinz Stegbauer.
+CC8 is a C subset implementation for the DEC PDP-8 processor.
+
+The CC8 project’s creator (Ian Schofield) thought it was time to have a
+modern language compiler running on the PDP-8.  The last such compiler
+to be attempted for the PDP-8, as far as this document’s authors are
+aware, was Pascal in 1979 by Heinz Stegbauer.
 
 In more recent times, one cross-compiler has been developed by Vince
 Slyngstad and updated by Paolo Maffei based on Ron Cain’s Small-C using
