@@ -908,6 +908,29 @@ devices other than `DSK:` or to files with extensions other than `.DA`.
     causing the subsequent I/O calls on that file to fail.
 
 
+### <a id="fprintf"></a>`fprintf(fmt, args...)`
+
+Writes its arguments (`args`...) to the currently-opened output file
+according to format string `fmt`.
+
+Returns the number of characters written to the output file.
+
+This function is just a simple wrapper around [`printf()`](#printf)
+which sets a flag that causes `printf()` to write its results to the
+current output file instead of `TTY:`, so you must read its
+documentation to fully understand `fprintf()`. Since `printf()` is in
+turn based on [`sprintf()`](#sprintf), you must read that function’s
+documentation as well.
+
+**Standard Violations:**
+
+*   `fprintf` does not take a `FILE*` pointer as its first argument. It
+    simply writes to the one and only output file that can be opened at
+    a time by [`fopen()`](#fopen).
+
+*   File I/O errors are not diagnosed.
+
+
 ### <a id="getc" name="fgetc"></a>`getc()`, `fgetc()`
 
 Reads a single ASCII character from `TTY:` or from the last file opened
@@ -1075,27 +1098,20 @@ beginning of the data field, not cross into the next field.
     zero](#memory).
 
 
-### <a id="printf" name="fprintf"></a>`printf(fmt, args...)`,
-`fprintf(fmt, args...)`, `sprintf(outstr, fmt, args..)`
+### <a id="printf" name="fprintf"></a>`printf(fmt, args...)`
 
-Writes formatted values to `TTY:`, to the output file opened with
-`fopen`, or to the null-terminated ASCII string buffer `outstr`,
-respectively.
+Writes its arguments (`args`) formatted according to format string `fmt`
+to `TTY:`.
 
-See `src/cc8/os8/libc.c` for the allowed format specifiers: `%d`, `%s`
-etc.  Length and width.precision formatting is supported.
+This function is implemented in terms of [`sprintf()`](#sprintf), so see
+its documentation for further details.
 
-**Standard Violations:**
-
-*   `fprintf` does not take a `FILE*` pointer as its first argument. It
-    simply writes to the one and only output file that can be opened at
-    a time by [`fopen()`](#fopen).
-
-*   **TBD**: There must be a whole lot defined by Standard C that this
-    implementation cannot handle: format specs, modifiers, the return
-    value, error handling...
-
-**DOCUMENTATION INCOMPLETE**
+**WARNING:** Because `printf()` is implemented in terms of `sprintf()`
+and it points at a static buffer high up in field 1, which has other
+data following it, you can only print up to *64* bytes at a time with
+`printf()`. Printing more will first overwrite data precious to either
+SABR or the FORTRAN II subsystem, and then it will wrap around and begin
+stomping on the start of field 1.
 
 
 ### <a id="puts" name="fputs"></a>`puts(s)`, `fputs(s)`
@@ -1163,6 +1179,61 @@ same page/field, are page/field crossings legal, etc.?
 *   None known.
 
 **DOCUMENTATION INCOMPLETE**
+
+
+### <a id="sprintf"></a>`sprintf(outstr, fmt, args...)`
+
+Formats its arguments (`args`) for output to `outstr` based on format
+string `fmt`.
+
+The allowed standard conversion specifiers are `%`, `c`, `d`, `o`, `s`,
+`u`, and `x`.  See your favorite C manual for their meaning.
+
+The CC8 LIBC does support one nonstandard conversion specifier, `b`,
+meaning binary output. Think of it like `x`, but in base 2.
+
+The `d` specifier is implemented in terms of [`itoa()`](#itoa). The `b`,
+`o`, `u`, and `x` specifiers are implemented in terms of the
+unsigned-only internal helper function at the core of `itoa()`.
+
+Left and right-justified padding is supported. Space and zero-padding
+is supported.
+
+Width prefixes are obeyed.
+
+Precision specifiers are parsed but have no effect on the output.
+**TODO**: Claim based on code inspection; verify with tests.
+
+Returns the number of characters written to the output stream, not
+including the trailing NUL character.
+
+**WARNING:** This function does not check its buffer pointer for
+end-of-field, so if you cause it to print more than can be stored at the
+end of a field, it will wrap around and begin writing at the beginning
+of the same field. This also has effects on the behavior of
+[`printf()`](#printf) and [`fprintf()`](#fprintf).
+
+**Standard Violations:**
+
+*   The `x` specifier is supposed to result in lowercase hexadecimal
+    output, but it gives uppercase A-F for the upper 6 hex digits. It
+    therefore behaves like `%X` in conforming implementations.
+
+*   As long as CC8 has no floating-point support, the `a`, `e`, `f`, and
+    `g` format specifiers (and their capitalized variants) cannot be
+    supported.
+
+*   The standard `n` and `p` format specifiers could be supported, but
+    currently are not.
+
+*   The `i` alias for the more common `d` specifier is not supported.
+
+*   Unsupported input specifiers cause the function to return the number
+    of characters written so far, not a negative value as the Standard
+    requires.  In the case of `sprintf()`, this means the trailing NUL
+    character will not be written!
+
+*   There is no `snprintf()`, `vprintf()`, etc.
 
 
 ### <a id="strcpy"></a>`strcpy`
