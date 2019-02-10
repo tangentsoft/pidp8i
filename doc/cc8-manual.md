@@ -321,7 +321,7 @@ OS/8 CC8 compiler:
     supported, but they may not work as expected when deeply nested or
     in long `if/else if/...` chains.
 
-[fib]: /doc/src/cc8/examples/fib.c
+[fib]: /doc/trunk/src/cc8/examples/fib.c
 
 
 <a id="nlim" name="limitations"></a>
