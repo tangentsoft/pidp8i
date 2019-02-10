@@ -228,39 +228,27 @@ working with programs that need to work under both compilers.
 <a id="native" name="os8"></a>
 ## The Native OS/8 Compiler
 
-This compiler is supplied in both source and binary forms as part of the
+This compiler’s source code is in the `src/cc8/os8` subdirectory of the
 PiDP-8/I software distribution.
 
-The native CC8 compiler is built from source code to SABR assembly by
-the CC8 cross-compiler unless you pass `--disable-os8-cc8` to the
-PiDP-8/I distribution’s `configure` script to suppress it. Those SABR
-files are then copied to a virtual DECtape image, which is attached to
-the PDP-8 simulator, assembled, and linked to produce the CC8 native
-OS/8 compiler by the [`cc8-tu56.os8`][cctu] script run by
-[`os8-run`](./os8-run.md). Take a look at that script and the `os8-run`
-docs if you want to learn more about this process.
+Unlike in the original CC8 distribution or in past distributions of the
+PiDP-8/I software, we no longer need to ship binaries for the compiler
+to bootstrap the system. Due to the power of [`os8-run`][os8r] and the
+PiDP-8/I software build system, we now bootstrap CC8 environment
+entirely from source code unless the user passes the `--disable-os8-cc8`
+option to the `configure` script.  This process is controlled by the
+[`cc8-tu56.os8`][cctu] script, which you may want to examine along with
+the `os8-run` documentation to understand this process better.
 
-[cctu]: /file?fn=media/os8/scripts/cc8-tu56.os8
+If you change the OS/8 CC8 source code, saying `make` at the PiDP-8/I
+build root will update `bin/v3d.rk05` with new binaries automatically.
 
-Because the CC8 native is compiled *by* CC8, the [standard memory
-layout](#memory) applies to the compiler itself. Among other things,
-this means each phase requires approximately 16&nbsp;kWords of core.
+Because the CC8 native compiler is compiled by the CC8 *cross*-compiler,
+the [standard memory layout](#memory) applies to both.  Among other
+things, this means each phase of the native compiler requires
+approximately 16&nbsp;kWords of core.
 
-We ship pre-built binaries to avoid a chicken-and-egg problem: the
-binaries require a working OS/8 environment to be built, but when the
-PiDP-8/I build system goes to build the bootable OS/8 media, it expects
-to have the OS/8 CC8 binaries at hand so it can copy them to the RK05
-disk it is building. It's trivial to deal with that on our development
-systems, since we normally have a working `os8v3d-*.rk05` disk set from
-the previous build sitting around to bootstrap the process, so we break
-the cycle at that point rather than do a two-stage RK05 bootstrap build
-on end-user systems.
-
-These pre-built binaries are saved as `media/os8/subsys/cc8.tu56` by the
-`tools/cc8-tu56-update` script. Basically, that script uses the
-cross-compiler to produce SABR assembly files for each stage of the OS/8
-CC8 compiler, which it then copies into the OS/8 environment, then it
-assembles, links, and saves the result as `CC?.SV`:
+The phases are:
 
 1.  `c8.c` &rarr; `c8.sb` &rarr; `CC.SV`: The compiler driver: accepts
     the input file name from the user, and calls the first proper
@@ -276,20 +264,19 @@ assembles, links, and saves the result as `CC?.SV`:
 3.  `p8.c` &rarr; `p8.sb` &rarr; `CC2.SV`: The token to SABR code
     converter section of the compiler.
 
-4.  `libc.c` &rarr; `libc.sb` &rarr; `LIBC.RL`: The C library linked to
-    any program built with CC8, including the stages above, but also to
-    your own programs.
+There is also `libc.c` &rarr; `libc.sb` &rarr; `LIBC.RL`, the [C
+library](#libc) linked to any program built with CC8, including the
+stages above, but also to your own programs.
 
-If you are not changing the OS/8 CC8 source code, you needn't run the
-`cc8-tu56-update` script or build the OS/8 version of CC8 by hand.
-
-The PiDP-8/I build system's OS/8 RK05 media build script copies those
-files and the other files required for building C programs under OS/8 to
-the appropriate OS/8 volumes: `CC?.SV` on `SYS:`, and everything else on
-`DSK:`. 
+All of these binaries end up on the automatically-built OS/8 boot disk:
+`CC?.SV` on `SYS:`, and everything else on `DSK:`, based on the defaults
+our OS/8 distribution is configured to use when seeking out files.
 
 Input programs should go on `DSK:`. Compiler outputs are also placed on
 `DSK:`.
+
+[cctu]: /file?fn=media/os8/scripts/cc8-tu56.os8
+[os8r]: ./os8-run.md
 
 
 <a id="nfeat" name="features"></a>
