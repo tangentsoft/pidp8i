@@ -470,21 +470,6 @@ individual library function for details.
 [os8pre]: /tktview/4a1bf30628
 
 
-<a id="bugs"></a>
-### Known Bugs in the OS/8 CC8 Compiler
-
-1.  Binary file I/O is not always reliable.  You are strongly encouraged
-    to limit I/O to text files.
-
-2.  Don’t forget to handle form feed.  See `c8.c`.
-
-3.  For some obscure reason, always open the input file first, then the
-    output file. We suspect a fault in `libc.c`, which you are welcome to
-    fix, keeping in mind that we're using every trick in the book to fit
-    as much functionality in as we currently do.  It may not be possible
-    to make this as reliable as modern C programmers expect.
-
-
 <a id="warning"></a>
 #### GOVERNMENT HEALTH WARNING
 
@@ -815,6 +800,12 @@ until it encounters an LF character, storing that and a trailing NUL
 before returning, because it assumes the OS/8 convention of CR+LF
 terminated text files.
 
+OS/8 text files frequently include form feed characters — ASCII 12 —
+owing to the PDP-8’s close association with teleprinters. `fgets()` does
+not do anything with these other than give them to the program
+literally. These should typically be removed from input or replaced with
+an ASCII space character, 32.
+
 Returns 0 on EOF, as Standard C requires.
 
 **Standard Violations:**
@@ -883,6 +874,14 @@ extensions.  **TODO:** Verify this for both read and write.
     probably do something silly like reference [core memory location 0 in
     field 1](#memory), then return without having done anything useful,
     causing the subsequent I/O calls on that file to fail.
+
+*   There appears to be a bug in the current implementation that
+    requires you to open the input file before opening an output file
+    when you need both.  It may not be possible to fix this within the
+    current limitations on the library, but if you come up with
+    something, [we accept patches][hakp].
+
+[hakp]: /doc/trunk/HACKERS.md#patches
 
 
 ### <a id="fprintf"></a>`fprintf(fmt, args...)`
