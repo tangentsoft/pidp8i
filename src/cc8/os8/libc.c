@@ -870,7 +870,7 @@ sprintf(nxtarg) int nxtarg; {
     switch(*ctl++) {
       case 'c': str[0] = arg; str[1] = NULL; break;
       case 's': sptr = arg;        break;
-      case 'd': itoa(arg,str);     break;
+      case 'd': itoa(arg,str,10);  break;
       case 'b': itoab(arg,str,2);  break;
       case 'o': itoab(arg,str,8);  break;
       case 'u': itoab(arg,str,10); break;
