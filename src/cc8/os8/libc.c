@@ -811,7 +811,7 @@ reverse(s) char *s; {
 	as below, located at the end of the stack (7500 .. 64 locs). In addition,
 	another page zero location (ZPTR) is required. This is always risky as the
 	SABR/LOADER system uses a lot of locations here. See how this goes as it is possible
-	to use arbitrary localions on the stack as well.
+	to use arbitrary locations on the stack as well.
 */
 
 fprintf(nxtarg) int nxtarg;
