@@ -630,6 +630,16 @@ programs built with CC8 need not concern themselves with [page
 boundaries][memadd].
 
 
+### <a id="heap"></a>There Is No Heap
+
+There is no `malloc()` in this C library and no space reserved [in field
+1](#memory) for a heap. Everything in a CC8 program is
+statically-allocated, if you’re using stock C-level mechanisms. If your
+program needs additional dynamically-allocated memory, you’ll need to
+arrange access to it some other way, such as [via inline
+assembly](#asm).
+
+
 ### <a id="missing"></a>Missing Functions
 
 The bulk of the Standard C Library is not provided, including some
@@ -1159,8 +1169,10 @@ Width prefixes are obeyed.
 Precision specifiers are parsed but have no effect on the output.
 **TODO**: Claim based on code inspection; verify with tests.
 
-Returns the number of characters written to the output stream, not
-including the trailing NUL character.
+On success, it returns the number of characters written to the output
+stream, not including the trailing NUL character. If it encounters an
+unknown format specifier, it terminates the output string with a NUL and
+returns -1.
 
 **WARNING:** This function does not check its buffer pointer for
 end-of-field, so if you cause it to print more than can be stored at the
