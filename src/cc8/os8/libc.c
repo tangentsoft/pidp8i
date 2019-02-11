@@ -875,6 +875,7 @@ sprintf(nxtarg) int nxtarg; {
       case 'o': itoab(arg,str,8);  break;
       case 'u': itoab(arg,str,10); break;
       case 'x': itoab(arg,str,16); break;
+      case 'X': itoab(arg,str,16); cupper(str); break;
       default:  return (cc);
       }
     len = strlen(sptr);

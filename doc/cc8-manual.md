@@ -1141,14 +1141,15 @@ Formats its arguments (`args`) for output to `outstr` based on format
 string `fmt`.
 
 The allowed standard conversion specifiers are `%`, `c`, `d`, `o`, `s`,
-`u`, and `x`.  See your favorite C manual for their meaning.
+`u`, `x`, and `X`.  See your favorite C manual for their meaning.
 
 The CC8 LIBC does support one nonstandard conversion specifier, `b`,
 meaning binary output. Think of it like `x`, but in base 2.
 
-The `d` specifier is implemented in terms of [`itoa()`](#itoa). The `b`,
-`o`, `u`, and `x` specifiers are implemented in terms of the
-unsigned-only internal helper function at the core of `itoa()`.
+The `b`, `d`, `o`, `u`, `x`, and `X` specifiers are implemented in terms
+of [`itoa()`](#itoa). Our `%X` therefore involves a call to
+[`cupper()`](#cupper) after `itoa()`, making `%x` the more efficient
+option.
 
 Left and right-justified padding is supported. Space and zero-padding
 is supported.
@@ -1168,10 +1169,6 @@ of the same field. This also has effects on the behavior of
 [`printf()`](#printf) and [`fprintf()`](#fprintf).
 
 **Standard Violations:**
-
-*   The `x` specifier is supposed to result in lowercase hexadecimal
-    output, but it gives uppercase A-F for the upper 6 hex digits. It
-    therefore behaves like `%X` in conforming implementations.
 
 *   As long as CC8 has no floating-point support, the `a`, `e`, `f`, and
     `g` format specifiers (and their capitalized variants) cannot be
