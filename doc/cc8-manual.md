@@ -1493,8 +1493,8 @@ constitute the whole body of the `while` loop.
 
 ### Optimization
 
-There are several clever optimizations in the examples above that you
-might want to use in your own programs:
+There are several clever optimizations that you might want to use in
+your own programs, some of which are shown in the examples above:
 
 *   In the `add48` example the line “`a;`” means “load `a` into AC”. In
     a Standard C compiler, this would be considered use of a variable in
@@ -1503,23 +1503,29 @@ might want to use in your own programs:
     is used quite a lot in our [LIBC](#libc), so you can be sure the
     behavior won’t be going away.
 
-*   Knowing that functions return their value in AC, you can call
-    another C function from the middle of a block of assembly code but
-    never store its return value explicitly: just use its return value
-    directly from AC.
-
 *   In the `puts` example, the statement `*p++` implicitly stores the
     value at the core memory location referred to by `p` in AC, so we
     can use it within the assembly body of that loop without ever
     explicitly referring to `p`.
 
-It is worth reading the SABR output from the compiler to discover tricks
-such as these.
+*   Knowing that functions return their value in AC, you can call
+    another C function from the middle of a block of assembly code but
+    never store its return value explicitly: just use its return value
+    directly from AC to save space on the stack.
 
-Beware that CC8 isn’t a particularly smart compiler. It will not even
-try to pull of many of the automatic tricks you’d expect from a modern C
-compiler. The bulk of the CC8 optimizer’s code is located in its user’s
-brain, at the moment.
+Beware that CC8 isn’t a particularly smart compiler. It performs few of
+the automatic tricks you’d expect from a modern C compiler, not even
+handling simple things like constant expression reduction:
+
+    char c = 'a' - 10;      /* save ASCII character 10 back from “a” */
+    char c = 87;            /* same effect, but gives shorter output! */
+
+That example is based on real code, the implementation of
+[`itoa()`](#itoa) for radices beyond 10: we tried it both ways and ended
+up doing it the obscure way to save code space in LIBC.
+
+For the most part, CC8 currently leaves the task of optimization to the
+end user.
 
 
 ### <a id="linkage" name="varargs"></a>Library Linkage and Varargs
