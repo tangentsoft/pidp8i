@@ -1496,7 +1496,7 @@ constitute the whole body of the `while` loop.
 There are several clever optimizations in the examples above that you
 might want to use in your own programs:
 
-*   In the `add42` example the line “`a;`” means “load `a` into AC”. In
+*   In the `add48` example the line “`a;`” means “load `a` into AC”. In
     a Standard C compiler, this would be considered use of a variable in
     `void` context and thus be optimized out, but K&R C has no such
     notion, so it has this nonstandard meaning in CC8.  This technique
