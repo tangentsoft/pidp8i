@@ -73,11 +73,13 @@ PDP-8 compiler.
 
 The CC8 system generally assumes the availability of:
 
-*   20&nbsp;kWords of core.
+*   At least 16&nbsp;kWords of core at run time for programs compiled
+    with CC8.  For the native OS/8 version of CC8, it currently requires
+    20&nbsp;kWords to compile programs.
 
-    (CC8 provides no built-in way to use more memory than this, so you
+    CC8 provides no built-in way to use more memory than this, so you
     will probably have to resort to [inline assembly](#asm) or FORTRAN
-    II library linkage to get access to more than 16&nbsp;kWords of core.)
+    II library linkage to get access to more than 16&nbsp;kWords of core.
 
 *   A PDP-8/e or higher class processor.  The CC8 compiler code and its
     [LIBC implementation](#libc) make liberal use of the MQ register
@@ -386,27 +388,28 @@ The OS/8 version of CC8 is missing many language features relative to
 4.  <a id="os8pp"></a>The OS/8 compiler has extremely rudimentary
     support for preprocessor directives.
 
-    *   Literal `#define`  (but no `#undef`).
+    *   Literal `#define` only: no parameterized macros, and no `#undef`.
 
-    *  [In-line inclusion of SABR assembly code](#asm) within a block
-    delimited by `#asm` and `#endasm`
+    *   `#include` is not supported and must not appear in the C source
+        code fed to the Native OS/8 Compiler.
 
-    *   As mentioned elsewhere, `#include` is not supported and must
-    not appear in the C source code fed to the Native OS/8 Compiler.
-    
-    You cannot use `#include` directives to string multiple
-    C modules into a single program.
+        You cannot use `#include` directives to string multiple C modules
+        into a single program.
 
-    It also means that if you take a program that the cross-compiler
-    handles correctly and just copy it straight into OS/8 and try to
-    compile it, it probably still has the `#include <libc.h>` line and
-    possibly one for `init.h` as well. *Such code will fail to compile.*
-    You must strip such lines out when copying C files into OS/8.
+        It also means that if you take a program that the cross-compiler
+        handles correctly and just copy it straight into OS/8 and try to
+        compile it, it probably still has the `#include <libc.h>` line and
+        possibly one for `init.h` as well. *Such code will fail to compile.*
+        You must strip such lines out when copying C files into OS/8.
 
-    (The native compiler emits startup code automatically, and it
-    hard-codes the LIBC call table in the `CC2` compiler stage,
-    implemented in `p8.c`, so it doesn’t need `#include` to make these
-    things work.)
+        (The native compiler emits startup code automatically, and it
+        hard-codes the LIBC call table in the `CC2` compiler stage,
+        implemented in `p8.c`, so it doesn’t need `#include` to make these
+        things work.)
+
+    *   [Broken](#os8asm) handling of [inline assmembly](#asm) via `#asm`.
+
+    *   No support for `#if`, `#ifdef`, etc.
 
 5.  Variables are implicitly `static`, even when local.
 
@@ -1427,9 +1430,8 @@ Addressing][memadd].
 <a id="asm"></a>
 ## Inline Assembly Code
 
-Both the [cross-compiler](#cross) and the [native compiler](#os8pp)
-allow [SABR][sabr] assembly code between `#asm` and `#endasm` markers
-in the C source code:
+The [cross-compiler](#cross) allows [SABR][sabr] assembly code between
+`#asm` and `#endasm` markers in the C source code:
 
     #asm
         TAD (42      / add 42 to AC
@@ -1548,6 +1550,30 @@ system to allow for standard and vararg functions to be called in the
 library.
 
 **TODO:** Explain this.
+
+
+### <a id="os8asm"></a>Inline Assembly and the OS/8 CC8 Compiler
+
+The native CC8 compiler does not properly do any of the above.
+
+There is a start at handling of `#asm` in this compiler, but it isn’t
+properly integrated into the code generation stage. Instead, the
+preprocessing stage just gathers up what it finds and dumps it to a
+temporary file, which the code generation stage unceremoniously dumps in
+at the *end* of the resulting `CC.SB` output file.
+
+Furthermore, this process is currently limited to 1&nbsp;kiB of total
+text: if the preprocessor gathers any more than that, it’s likely to
+crash the preprocessor.
+
+Since such code is not injected inline into the output SABR code at a
+corresponding point to where it’s coded in the C source file, it’s not
+even clear to us how you’d call such code. It may be possible to declare
+an assembly subroutine this way, but we currently don’t know how you’d
+call an assembly function that has no prototype in the C code.
+
+At this time, we recommend that only low-level experimenters attempt to
+use this feature of the native OS/8 CC8 compiler.
 
 
 ### <a id="opdef"></a>Predefined OPDEFs
