@@ -983,19 +983,34 @@ hard-coded internally.
     Yes, this is a *vast* overreach.
 
 
-### <a id="itoa"></a>`itoa(num, str)`
+### <a id="itoa"></a>`itoa(num, str, radix)`
 
-Convert a 12-bit PDP-8 two’s complement integer `num` to an [ASCII word
-string](#wordstr) in memory pointed to by `str`.
+Convert a 12-bit PDP-8 integer `num` to an [ASCII word string](#wordstr)
+expressing that number in the given `radix`, stored in memory pointed to
+by `str`.
 
-If `num` is an arbitrary integer, `str` should point to 6 words of
-memory to cover the worst-case condition, e.g. "-2048\\0".
+If `radix` is 10, `num` is treated as a two’s complement integer, so
+that `str[0] == '-'` for negative numbers.
+
+For other radices, `num` is treated as an unsigned value.
+
+Radices beyond 10 use ASCII characters in the range “`a`” upward for
+digits, giving a practical limit of base 36, though this is not checked
+in the code.  We chose to use lowercase letters because conversion to
+uppercase is easily done with the existing [`cupper()`](#cupper)
+function, which we need anyway, whereas the reverse conversion would
+have required extra code space, a precious commodity in the PDP-8.
+
+This function does not check for sufficient buffer space before
+beginning work. For radix 10, if the bounds on `num` are not known in
+advance, `str` should point to 6 words of memory to cover the worst-case
+condition, e.g. "-1234\\0". Lower radices generally require more
+storage space.
 
 There is no thousands separator in the output string.
 
-**Nonstandard.** The `itoa()` function in the [Visual C++][itoam] and
-[Embarcadero C++][itoae] environments takes a third parameter, the
-radix.
+**Nonstandard.** Emulates the `itoa()` function as defined in the
+[Visual C++][itoam] and [Embarcadero C++][itoae] reference manuals.
 
 [itoae]: http://docs.embarcadero.com/products/rad_studio/radstudio2007/RS2007_helpupdates/HUpdate4/EN/html/devwin32/itoa_xml.html
 [itoam]: https://docs.microsoft.com/cpp/c-runtime-library/reference/itoa-itow

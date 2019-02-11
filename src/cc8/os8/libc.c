@@ -909,30 +909,17 @@ PF1,	CLA
   }
 
 /*
-** itoa(n,s) - Convert n to characters in s 
-
-itoa(n, s) char *s; int n; {
-  int sign;
-  char *ptr;
-  ptr = s;
-  if ((sign = n) < 0) n = -n;
-  do {
-    *ptr++ = n % 10 + '0';
-    } while ((n = n / 10) > 0);
-  if (sign < 0) *ptr++ = '-';
-  *ptr = '\0';
-  reverse(s);
-  }
+** itoa(n,s,r) - Convert n to numeric string form in s, radix r
 */
 
-itoa(n, s) char *s; int n; {
+itoa(n, s, r) char *s; int n; int r; {
   char *ptr;
   ptr = s;
-  if (n < 0) {
+  if (r == 10 && n < 0) {
 	  n = -n;
 	  *ptr++='-';
   }
-  itoab(n,ptr,10);
+  itoab(n,ptr,r);
 }
 
 
@@ -949,7 +936,7 @@ itoab(n, s, b) int n; char *s; int b; {
     lowbit = n & 1;
     n = (n >> 1) & 4095;
     *ptr = ((n % b) << 1) + lowbit;
-    if(*ptr < 10) *ptr += '0'; else *ptr += 55;
+    if(*ptr < 10) *ptr += '0'; else *ptr += 87; /* 87 == 'a' - 10 */
     ++ptr;
     } while(n /= b);
   *ptr = 0;
