@@ -73,7 +73,7 @@ PDP-8 compiler.
 
 The CC8 system generally assumes the availability of:
 
-*   16&nbsp;kWords of core.
+*   20&nbsp;kWords of core.
 
     (CC8 provides no built-in way to use more memory than this, so you
     will probably have to resort to [inline assembly](#asm) or FORTRAN
@@ -151,9 +151,14 @@ The CC8 cross-compiler can successfully compile itself, but it produces
 a SABR assembly file that is too large (28K) to be assembled on the
 PDP-8.  Thus [the separate native compiler](#native).
 
-The key file, relative to the base Small-C project, is the PDP-8 code
-generator in `code8.c` which emits SABR assembly code.  SABR is normally
-used as the second pass of the OS/8 FORTRAN II system.
+The key module for targeting Small-C to the PDP-8 is `code8.c`. It
+does the code generation to emit SABR assembly code. However, the
+targeting is not confined to that one file. There is code in various
+of the other modules that is specific to the PDP-8 port that should be
+abstracted out and cleaned up in the fullness of time.
+
+SABR is normally used as the second pass of the OS/8 FORTRAN II
+system.
 
 When you use the cross-compiler on a POSIX type system such as the
 Raspbian PiDP-8/I environment, the resulting `*.sb` files will have
@@ -170,20 +175,24 @@ image file, which you can then read into the OS/8 environment.
 <a id="cpp"></a>
 ### The Cross-Compiler’s Preprocessor Features
 
-Unlike [the native OS/8 compiler](#native), the cross-compiler does have
-rudimentary C preprocessor features:
+The cross-compiler has rudimentary C preprocessor features:
 
 *   Literal `#define` only.  You cannot define parameterized macros.
     There are no `-D` or `-U` flags to define and undefine macros from
     the command line.
 
+*   `#undef` to remove a symbol previously defined with `#define`
+
 *   `#include`, but only for files in the current directory.  There is
     no include path, either hard-coded within the compiler or modifiable
-    via the traditional `-I` compiler flag.
+    via the traditional `-I` compiler flag. #include can appear within
+    an included file but limited to 3 levels deep.
 
 *   [Inline assembly](#asm) via `#asm`.
 
-*   **TBD:** `#if` and such?
+*   Simple `#ifdef` and `#ifndef` with direct match of symbol or macro
+    names but not expressions. `#endif` is requried. `#else` is allowed.
+    There is no support for `#if`.
 
 *   **TBD:** Token pasting?
 
@@ -224,6 +233,9 @@ The tool that strips these `#includes` out for us is called
 `bin/cc8-to-os8`, which you might find useful if you’re frequently
 working with programs that need to work under both compilers.
 
+Alternatively a simple `sed` script could be used:
+
+    sed '/^#include/d' <yourfile>
 
 <a id="native" name="os8"></a>
 ## The Native OS/8 Compiler
@@ -246,7 +258,7 @@ build root will update `bin/v3d.rk05` with new binaries automatically.
 Because the CC8 native compiler is compiled by the CC8 *cross*-compiler,
 the [standard memory layout](#memory) applies to both.  Among other
 things, this means each phase of the native compiler requires
-approximately 16&nbsp;kWords of core.
+approximately 20&nbsp;kWords of core.
 
 The phases are:
 
@@ -254,15 +266,14 @@ The phases are:
     the input file name from the user, and calls the first proper
     compiler stage, `CC1`.
 
-    If we should add a preprocessor feature, it might become part of
-    `CC.SV`, or it might be a separate program, probably called either
-    `CC0.SV` or `CPP.SV`, which `CC.SV` calls before calling `CC1`.
-
 2.  `n8.c` &rarr; `n8.sb` &rarr; `CC1.SV`: The parser/tokeniser section
     of the compiler.
 
 3.  `p8.c` &rarr; `p8.sb` &rarr; `CC2.SV`: The token to SABR code
     converter section of the compiler.
+
+`CC.SV` contains extremely rudimentary preprocessor features
+documented [below](#os8pp).
 
 There is also `libc.c` &rarr; `libc.sb` &rarr; `LIBC.RL`, the [C
 library](#libc) linked to any program built with CC8, including the
@@ -336,6 +347,8 @@ The OS/8 version of CC8 is missing many language features relative to
     The return type may be left off of a function's definition; it is
     implicitly `int` in all cases, since `void` is not supported.
 
+    **TBD** A recent update may have added void.
+
     Further to this point, in the OS/8 version of CC8, it is optional
     to declare the types of the arguments to a function. For example,
     the following is likely to be rejected by a strictly conforming
@@ -370,17 +383,18 @@ The OS/8 version of CC8 is missing many language features relative to
     OS/8 `*.RL` format and link them with the OS/8 LOADER, but because
     of the previous limitation, only one of these can be written in C.
 
-4.  <a id="os8pp"></a>Unlike the CC8 cross-compiler, the OS/8 compiler
-    has no functional implementation for any C preprocessor directive:
-    `#define`, `#ifdef`, `#include`, etc.  This even includes [inline
-    assembly](#asm) via `#asm`!
+4.  <a id="os8pp"></a>The OS/8 compiler has extremely rudimentary
+    support for preprocessor directives.
 
-    It is important to realize that there is a *start* at a native
-    preprocessor in `src/cc8/os8/c8.c`, but it’s pretty much [broken and
-    useless at the moment][os8pre], which means if you try to make use
-    of it, the compiler will likely do stupid or wrong things. 
+    *   Literal `#define`  (but no `#undef`).
+
+    *  [In-line inclusion of SABR assembly code](#asm) within a block
+    delimited by `#asm` and `#endasm`
+
+    *   As mentioned elsewhere, `#include` is not supported and must
+    not appear in the C source code fed to the Native OS/8 Compiler.
     
-    This means you cannot use `#include` directives to string multiple
+    You cannot use `#include` directives to string multiple
     C modules into a single program.
 
     It also means that if you take a program that the cross-compiler
@@ -466,8 +480,6 @@ The OS/8 version of CC8 is missing many language features relative to
 The provided [LIBC library functions](#libc) is also quite limited and
 nonstandard compared to Standard C.  See the documentation for each
 individual library function for details.
-
-[os8pre]: /tktview/4a1bf30628
 
 
 <a id="warning"></a>
@@ -1415,8 +1427,8 @@ Addressing][memadd].
 <a id="asm"></a>
 ## Inline Assembly Code
 
-The [cross-compiler](#cross) — and not the [native compiler!](#os8pp) —
-allows [SABR][sabr] assembly code between `#asm` and `#endasm` markers
+Both the [cross-compiler](#cross) and the [native compiler](#os8pp)
+allow [SABR][sabr] assembly code between `#asm` and `#endasm` markers
 in the C source code:
 
     #asm
