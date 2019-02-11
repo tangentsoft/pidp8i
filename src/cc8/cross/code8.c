@@ -48,8 +48,8 @@ void header ()
 	output_line ("OPDEF JMSI 4400");
 	output_line ("OPDEF JMPI 5400");
 	output_line ("OPDEF MQL 7421");
-	output_line ("OPDEF MQA 7701");
-	output_line ("OPDEF MQO 7501");
+	output_line ("OPDEF ACL 7701");
+	output_line ("OPDEF MQA 7501");
 	output_line ("OPDEF SWP 7521");
 	output_line ("OPDEF CDF1 6211");
 	output_line ("OPDEF CDF0 6201");
@@ -309,7 +309,7 @@ char	*sym;
 		output_number (glint(sym)+128);
 		newline ();
 		output_line("\tDCA JLC");
-		output_line("\tMQA");
+		output_line("\tACL");
 		output_line("\tDCAI JLC");
 		output_line("\tTADI JLC");
 }
@@ -664,7 +664,7 @@ void gen_add (lval,lval2) long *lval,*lval2;
 /*	if (lval==0) output_line("\tCIA");*/
 	output_line("\tDCA JLC");
 	output_line("\tJMSI POP");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	stkp = stkp + INTSIZE;
 }
@@ -678,7 +678,7 @@ void gen_sub ()
 	output_line("\tCIA");
 	output_line("\tDCA JLC");
 	output_line("\tJMSI POP");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	stkp = stkp + INTSIZE;
 }
@@ -692,7 +692,7 @@ void gen_mult ()
 {
 	output_line("\tDCA JLC");
 	output_line("\tJMSI POP");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tCALL 1,MPY");
 	output_line("\tARG JLC");
 	output_line("\tCDF1");
@@ -708,7 +708,7 @@ void gen_div ()
 {
 	output_line("\tDCA JLC");
 	output_line("\tJMSI POP");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tCALL 1,DIV");
 	output_line("\tARG JLC");
 	output_line("\tCDF1");
@@ -734,7 +734,7 @@ void gen_mod ()
 {
 	output_line("\tDCA JLC");
 	output_line("\tJMSI POP");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tCALL 1,DIV");
 	output_line("\tARG JLC");
 	output_line("\tCALL 1,IREM");
@@ -759,7 +759,7 @@ void gen_umod ()
 void gen_or ()
 {
 	output_line("\tJMSI POP");
-	output_line("\tMQA");
+	output_line("\tACL");
 	stkp = stkp + INTSIZE;
 }
 
@@ -784,7 +784,7 @@ void gen_and ()
 {
 	output_line("\tDCA JLC");
 	output_line("\tJMSI POP");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tAND JLC");
 	stkp = stkp + INTSIZE;
 }
@@ -965,7 +965,7 @@ void gen_not_equal ()
         gen_pop();
 	output_line("\tCIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 }
 
@@ -978,7 +978,7 @@ void gen_less_than ()
         gen_pop();
 	output_line("\tCIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tAND (2048");
 }
@@ -992,7 +992,7 @@ void gen_less_or_equal ()
         gen_pop();
 	output_line("\tCIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tSNA");
 	output_line("\tCLA CMA");
@@ -1009,7 +1009,7 @@ void gen_greater_than ()
 	output_line("\tSWP");
 	output_line("\tCIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tAND (2048");
 }
@@ -1024,7 +1024,7 @@ void gen_greater_or_equal ()
 	output_line("\tSWP");
 	output_line("\tCIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tSNA");
 	output_line("\tCLA CMA");
@@ -1040,7 +1040,7 @@ void gen_unsigned_less_than ()
 	gen_pop();
 	output_line("\tCLL CIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tSNL CLA");
 	output_line("\tIAC");
@@ -1055,7 +1055,7 @@ void gen_unsigned_less_or_equal ()
 	gen_pop();
 	output_line("\tCLL CIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tSNL CLA");
 	output_line("\tIAC");
@@ -1070,7 +1070,7 @@ void gen_usigned_greater_than ()
 	gen_pop();
 	output_line("\tCLL CIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tSNA SZL CLA");
 	output_line("\tIAC");
@@ -1086,7 +1086,7 @@ void gen_unsigned_greater_or_equal ()
 	output_line("\tSWP");
 	output_line("\tCLL CIA");
 	output_line("\tDCA JLC");
-	output_line("\tMQA");
+	output_line("\tACL");
 	output_line("\tTAD JLC");
 	output_line("\tSNL CLA");
 	output_line("\tIAC");
