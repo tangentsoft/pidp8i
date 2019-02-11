@@ -1484,7 +1484,7 @@ the Standard C function `puts` from the CC8 LIBC:
         }
 
 Notice that there is no opening curly brace on the `while` loop: when
-the `TSF` opcode causes the `JMP` instruction to be skipped — meaning
+the `TSF` op-code causes the `JMP` instruction to be skipped — meaning
 the console terminal is ready for another output character — control
 goes back to the top of the `while` loop. That is, these three
 instructions behave as if they were a single C statement and thus
@@ -1530,6 +1530,35 @@ system to allow for standard and vararg functions to be called in the
 library.
 
 **TODO:** Explain this.
+
+
+### <a id="opdef"></a>Predefined OPDEFs
+
+In addition to the op-codes predefined for SABR — which you can find in
+[Appendix C of the OS/8 Handbook, 1974 edition][os8hac] — the following
+`OPDEF` directives are inserted at the top of every SABR file output
+from CC8, allowing your SABR code to use these as well:
+
+|op-code|value|meaning|
+|-------|-----|-------|
+|`ANDI` |0400 |alias for `AND I`|
+|`TADI` |1400 |alias for `TAD I`|
+|`ISZI` |2400 |alias for `ISZ I`|
+|`DCAI` |3400 |alias for `DCA I`|
+|`JMSI` |4400 |alias for `JMS I`|
+|`JMPI` |5400 |alias for `JMP I`|
+|`MQL`  |7421 |load MQ from AC, clear AC|
+|`ACL`  |7701 |load AC from MQ (use `CLA SWP` to give inverse of `MQL`)|
+|`MQA`  |7501 |OR MQ with AC, result in MQ|
+|`SWP`  |7521 |swap AC and MQ|
+|`CDF0` |6201 |change DF to field 0|
+|`CDF1` |6211 |change DF to field 1|
+|`CAF0` |6203 |change both IF and DF to field 0|
+|`RIF`  |6224 |read instruction field: OR IF with bits 6-8 of AC|
+|`BSW`  |7002 |exchange the high and low 6 bits of AC|
+|`CAM`  |7621 |clear AC and MQ|
+
+[os8hac]: https://archive.org/details/bitsavers_decpdp8os8_39414792/page/n875
 
 
 ## Conclusion
