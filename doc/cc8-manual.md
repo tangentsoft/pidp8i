@@ -1480,7 +1480,7 @@ an example using the `ps.c` example program:
     >ps.c
     .COMP CC.SB
     .R LOADER
-    CC,LIBC/I/O/M
+    *CC,LIBC/I/O/M
     V 4A
     MAIN    01000
     LIBC    20204
