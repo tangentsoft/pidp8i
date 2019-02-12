@@ -60,46 +60,46 @@ main()
 		*tmstr=0;
 		switch (strd()) {
 			case 99:
-				fputs("/\r");
+				fputs("/\r\n");
 				break; 
 			case 1:
-				fputs("\tJMSI PTSK\r");
+				fputs("\tJMSI PTSK\r\n");
 				break;
 			case 3:
-				strcpy(tmstr,"\tCIA\r");
+				strcpy(tmstr,"\tCIA\r\n");
 			case 2:
-				fprintf("%s\tTADI STKP\r\tJMSI POP\r",tmstr);
+				fprintf("%s\tTADI STKP\r\n\tJMSI POP\r\n",tmstr);
 				break;
 			case 4:
-				fprintf("\tCLA\r\tTAD (%d\r",strd());
+				fprintf("\tCLA\r\n\tTAD (%d\r\n",strd());
 				break;
 			case 5:
 				tm=strd();
 				if (tm<0)
 					tm=200-tm;
-				fprintf("CC%d,\r",tm);
+				fprintf("CC%d,\r\n",tm);
 				break;
 			case 6:
 				if (strl()>1)
-					fprintf("\tTAD STKP\r\tTAD (%d\r\tDCA STKP\r",strl());
+					fprintf("\tTAD STKP\r\n\tTAD (%d\r\n\tDCA STKP\r\n",strl());
 				else
 					if (strl()>0)
-						fputs("\tISZ STKP\r");
+						fputs("\tISZ STKP\r\n");
 				strd();
 				break;
 			case 7:
 				p=gm+strd();
 				while (*p-' ')
 					fputc(*p++);
-				fputs(",\r");
+				fputs(",\r\n");
 				break;
 			case -8:
-				strcpy(tmstr,"\tDCA JLC\r\tTADI JLC\r");
+				strcpy(tmstr,"\tDCA JLC\r\n\tTADI JLC\r\n");
 			case 8:
 				if (strl()>0)
-					fprintf("\tCLA\r\tTAD (%d\r%s\tJMSI PSH\r",strd(),tmstr);
+					fprintf("\tCLA\r\n\tTAD (%d\r\n%s\tJMSI PSH\r\n",strd(),tmstr);
 				else
-					fprintf("\tCLA\r\tTAD STKP\r\tTAD (%d\r%s\tJMSI PSH\r",strd(),tmstr);
+					fprintf("\tCLA\r\n\tTAD STKP\r\n\tTAD (%d\r\n%s\tJMSI PSH\r\n",strd(),tmstr);
 				break;
 			case 9:
 				tm=strd();
@@ -109,89 +109,89 @@ main()
 				if (p=strstr(xlt,tkbf)) {
 					t=(p-xlt)>>3;
 					if ((t==6) + (t==17) + (t==23)) 
-						fprintf("\tCLA\r\tTAD (%d\r\tJMSI PSH\r",tm++);
-					fprintf("\tCLA\r\tTAD (%d\r\tMQL\r\tCALL 1,LIBC\r\tARG STKP\r\tCDF1\r",t);
+						fprintf("\tCLA\r\n\tTAD (%d\r\n\tJMSI PSH\r\n",tm++);
+					fprintf("\tCLA\r\n\tTAD (%d\r\n\tMQL\r\n\tCALL 1,LIBC\r\n\tARG STKP\r\n\tCDF1\r\n",t);
 				}
 				else
-					fprintf("\tCPAGE 2\r\tJMSI PCAL\r\t%s\r",tkbf);
+					fprintf("\tCPAGE 2\r\n\tJMSI PCAL\r\n\t%s\r\n",tkbf);
 				if (tm)
-				    fprintf("\tMQL\r\tTAD (%d\r\tTAD STKP\r\tDCA STKP\r\tSWP\r",-tm);
+				    fprintf("\tMQL\r\n\tTAD (%d\r\n\tTAD STKP\r\n\tDCA STKP\r\n\tSWP\r\n",-tm);
 				break;
 			case 10:
-				fprintf("\tCLA\r\tTAD GBL\r\tTAD (%d\r",strd());
+				fprintf("\tCLA\r\n\tTAD GBL\r\n\tTAD (%d\r\n",strd());
 				break;
 			case -11:
-				fputs("\tCIA\r\tTADI STKP\r\tJMSI POP\r\tSMA SZA CLA\r\tCMA\r");
+				fputs("\tCIA\r\n\tTADI STKP\r\n\tJMSI POP\r\n\tSMA SZA CLA\r\n\tCMA\r\n");
 				break;
 			case 11:
-				fputs("\tCIA\r\tTADI STKP\r\tJMSI POP\r\tSPA CLA\r\tCMA\r");
+				fputs("\tCIA\r\n\tTADI STKP\r\n\tJMSI POP\r\n\tSPA CLA\r\n\tCMA\r\n");
 				break;
 			case 12:
-					fprintf("\tSNA\r\tJMP CC%d\r",strd());
+					fprintf("\tSNA\r\n\tJMP CC%d\r\n",strd());
 				break;
 			case 13:
-				fputs("\tJMSI POP\r\tDCA JLC\r\tSWP\r\tCALL 1,MPY\r\tARG JLC\r\tCDF1\r");
+				fputs("\tJMSI POP\r\n\tDCA JLC\r\n\tSWP\r\n\tCALL 1,MPY\r\n\tARG JLC\r\n\tCDF1\r\n");
 				break;
 			case -14:
-				fputs("\tCALL 1,IREM\r\tARG 0\r\tCDF1\r");
+				fputs("\tCALL 1,IREM\r\n\tARG 0\r\n\tCDF1\r\n");
 				break;
 			case 14:
-				fputs("\tJMSI POP\r\tDCA JLC\r\tSWP\r\tCALL 1,DIV\r\tARG JLC\r\tCDF1\r");
+				fputs("\tJMSI POP\r\n\tDCA JLC\r\n\tSWP\r\n\tCALL 1,DIV\r\n\tARG JLC\r\n\tCDF1\r\n");
 				break;
 			case 15:
-				fputs("\tISZI JLC\r\tNOP\r");
+				fputs("\tISZI JLC\r\n\tNOP\r\n");
 				break;
 			case 16:
-				fprintf("\tMQL\r\tTAD STKP\r\tTAD (%d\r\tDCA STKP\r\tSWP\r\tJMPI POPR\r/\r",strd());
+				fprintf("\tMQL\r\n\tTAD STKP\r\n\tTAD (%d\r\n\tDCA STKP\r\n\tSWP\r\n\tJMPI POPR\r\n/\r\n",strd());
 				break;
 			case 17:
 				pflg++;
 			case -17:
 				if (strl()>0) 
-					fprintf("\tCLA\r\tTAD (%d\r\tDCA JLC\r\tTADI JLC\r",strd());
+					fprintf("\tCLA\r\n\tTAD (%d\r\n\tDCA JLC\r\n\tTADI JLC\r\n",strd());
 				else
-					fprintf("\tCLA\r\tTAD STKP\r\tTAD (%d\r\tDCA JLC\r\tTADI JLC\r",strd());
+					fprintf("\tCLA\r\n\tTAD STKP\r\n\tTAD (%d\r\n\tDCA JLC\r\n\tTADI JLC\r\n",strd());
 				if (pflg==0)
 					break;
 			case 19:
-				fputs("\tJMSI PSH\r");
+				fputs("\tJMSI PSH\r\n");
 				break;
 			case 20:
-				fputs("\tANDI STKP\r\tJMSI POP\r");
+				fputs("\tANDI STKP\r\n\tJMSI POP\r\n");
 				break;
 			case -20:
-				fputs("\tJMSI POP\r\tMQO\r");
+				fputs("\tJMSI POP\r\n\tMQO\r\n");
 				break;
 			case 21:
 				if (strl()>0) 
-					fprintf("\tCLA\r\tTAD (%d\r",strd());
+					fprintf("\tCLA\r\n\tTAD (%d\r\n",strd());
 				else
-					fprintf("\tCLA\r\tTAD STKP\r\tTAD (%d\r",strd());
+					fprintf("\tCLA\r\n\tTAD STKP\r\n\tTAD (%d\r\n",strd());
 				break;
 			case 22:
-				fputs("\tDCA JLC\r\tTADI JLC\r");
+				fputs("\tDCA JLC\r\n\tTADI JLC\r\n");
 				break;
 			case 23:
 				if (strl()<200)
-					fprintf("\tJMP CC%d\r",strl());
+					fprintf("\tJMP CC%d\r\n",strl());
 				strd();
 				break;
 			case -23:
-					fprintf("\tJMP CC%d\r",strd());
+					fprintf("\tJMP CC%d\r\n",strd());
 				break;
 			case 24:
-				fputs("\tCIA\r\tTADI STKP\r\tJMSI POP\r\tSNA CLA\r\tCMA\r");
+				fputs("\tCIA\r\n\tTADI STKP\r\n\tJMSI POP\r\n\tSNA CLA\r\n\tCMA\r\n");
 				break;
 			case 25:
-				fputs("\tMQL\r\tCMA\r\tTADI JLC\r\tDCAI JLC\r\tSWP\r");
+				fputs("\tMQL\r\n\tCMA\r\n\tTADI JLC\r\n\tDCAI JLC\r\n\tSWP\r\n");
 				break;
 			case 26:
-				fputs("\tSNA CLA\r");
+				fputs("\tSNA CLA\r\n");
 			case -26:
-				fputs("\tCMA\r");
+				fputs("\tCMA\r\n");
 				break;
 			case 27:
-				fputs("\tCIA\r");
+				fputs("\tCIA\r\n");
 				break;
 			case 29:
 				while (1) {
@@ -203,7 +203,7 @@ main()
 		}
 	}
 	ltsz=ltpt-ltbf;
-	fprintf("\tLAP\r\tCPAGE %d\rLCC0,\t%d\rXCC0,\tCC0\rCC0,\t\r",ltsz+2,-ltsz);
+	fprintf("\tLAP\r\n\tCPAGE %d\r\nLCC0,\t%d\r\nXCC0,\tCC0\r\nCC0,\t\r\n",ltsz+2,-ltsz);
 	p=ltbf;
 	while (ltsz) {
 		fprintf("%d",*p++);
@@ -213,9 +213,9 @@ main()
 			fputc(13);
 		ltsz--;
 	}
-	fprintf("\r\tEAP\rGBLS,\t%d\r",gadr);
-	fputs("\rMCC0,\t0\r\tCDF1\r\tTAD LCC0\r\tSNA CLA\r\tJMP I MCC0\r\tTAD XCC0\r\tDCA JLC\rDCC0,\tCDF0\r\tTADI JLC\r");
-	fputs("\tJMSI PSH\r\tCLA\r\tISZ JLC\r\tISZ LCC0\r\tJMP DCC0\r\tJMP I MCC0\rCCEND,\t0\r\t\END\r");
+	fprintf("\r\n\tEAP\r\nGBLS,\t%d\r\n",gadr);
+	fputs("\r\nMCC0,\t0\r\n\tCDF1\r\n\tTAD LCC0\r\n\tSNA CLA\r\n\tJMP I MCC0\r\n\tTAD XCC0\r\n\tDCA JLC\r\nDCC0,\tCDF0\r\n\tTADI JLC\r\n");
+	fputs("\tJMSI PSH\r\n\tCLA\r\n\tISZ JLC\r\n\tISZ LCC0\r\n\tJMP DCC0\r\n\tJMP I MCC0\r\nCCEND,\t0\r\n\t\END\r\n");
 
 	fclose();
 }
