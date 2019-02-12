@@ -1480,7 +1480,7 @@ an example using the `ps.c` example program:
     >ps.c
     .COMP CC.SB
     .R LOADER
-    CC,LIBC/I/O/G/M
+    CC,LIBC/I/O/M
     V 4A
     MAIN    01000
     LIBC    20204
@@ -1509,7 +1509,7 @@ was told to produce the core map. (U = “undefined.”)
 
 If we want to pin down the location of those FORTRAN II routines, we can
 ask the loader to give us the map *after* it’s finalized everything by
-telling it to run the program, then give us the map:
+telling it to run the program (`/G`), then give us the map:
 
     *CC,LIBC/I/O/G/M
     V 4A
