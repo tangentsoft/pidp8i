@@ -1111,11 +1111,11 @@ This function is implemented in terms of [`sprintf()`](#sprintf), so see
 its documentation for further details.
 
 **WARNING:** Because `printf()` is implemented in terms of `sprintf()`
-and it points at a static buffer high up in field 1, which has other
-data following it, you can only print up to *64* bytes at a time with
-`printf()`. Printing more will first overwrite data precious to either
-SABR or the FORTRAN II subsystem, and then it will wrap around and begin
-stomping on the start of field 1.
+and it points at [a static buffer high up in field 1](#memory), you can
+only safely print up to *64* bytes at a time with `printf()`. Printing
+more will first overwrite space reserved by OS/8 for device handlers,
+then wrap around to the first page of field 1 which *may* be used by
+SABR or the FORTRAN II subsystem.
 
 
 ### <a id="puts" name="fputs"></a>`puts(s)`, `fputs(s)`
@@ -1249,7 +1249,7 @@ Beware that this function will [wrap around](#ptrwrap) if
 at the start of the field.
 
 These are not technically violations of Standard C as it leaves such
-matters undefined.
+matters [undefined][ub].
 
 Returns a copy of `dst`.
 
@@ -1283,7 +1283,7 @@ autoincrement registers.
 
 Attempts to find the first instance of `needle` within `haystack`, which
 are [0-terminated word strings](#wordstr). This function’s behavior is
-undefined if either buffer is not 0-terminated.
+[undefined][ub] if either buffer is not 0-terminated.
 
 The implementation uses the [naïve string search algorithm][nssa], so
 the typical execution time is O(n+m), but the worst case time is
@@ -1372,8 +1372,7 @@ Another set of examples not preinstalled on the OS/8 disk are
 [pce]: /wiki?name=PEP001.C
 
 
-## Making Executables
-
+## Making Executables 
 Executing `CCR.BI` loads, links, and runs your C program without
 producing an executable file on disk.  You need only a small variation
 on this BATCH file's contents to get an executable core image that
@@ -1408,23 +1407,37 @@ scheme:
 
 **Field 3:** The LIBC library code
 
-The first page of field 1 is currently unused. That means it is not
-possible to have a valid pointer declared either as a C global or on the
-stack with value 0000₈. This has practical positive consequences such as
-the fact that you can depend on a call to [`gets()`](#gets) to always
-return a truthy value provided you pass it a normal C pointer.  If you
-hand-craft a pointer that happens to point to the first core memory
-location in a field, which is therefore confusable with `NULL`, then on
-your head be the consequences!
+The layout of field 1 breaks down like this:
 
-LIBC uses zero page memory locations 147₈ through the end of the page.
-Functions which use the autoincrement locations 10₈ through 17₈ are
-so-documented above.
+| range         | use |
+| ------------- | --- |
+| `10000-10177` | first page of field 1: unused by CC8; used by SABR or FORTRAN II? |
+| `10200-xxxxx` | globals first, then literals packed together at the bottom |
+| `xxxxx-17477` | user stack, grows downward from the end of this range |
+| `17500-17577` | [`[f]printf()`](#printf) output buffer passed to [`sprintf()`](#sprintf) |
+| `17600-17777` | last page of field 1: OS/8 device handlers |
+
+Because the first page of field 1 is currently unused and a valid
+pointer points at something in either global, literal, or stack space,
+it can never have value 0000₈, preserving the expected falsy nature of a
+C NULL pointer. This has practical positive consequences such as the
+fact that you can depend on a call to [`gets()`](#gets) to always return
+a truthy value on success, provided you’ve passed it a normal C pointer.
+You could hand-craft a pointer to that unused first page in field 1,
+creating a valid pointer that’s confusable with NULL, but you’re out in
+[undefined behavior][ub] territory by that point, so on your head be the
+consequences!
+
+LIBC uses [zero page][zp] memory locations 147₈ through the end of the
+page.  Functions which use the autoincrement locations 10₈ through 17₈
+are so-documented above.
 
 For more on this topic, see the companion article [PDP-8 Memory
 Addressing][memadd].
 
 [memadd]: /wiki?name=PDP-8+Memory+Addressing
+[ub]:     https://en.wikipedia.org/wiki/Undefined_behavior
+[zp]:     https://homepage.divms.uiowa.edu/~jones/pdp8/man/mri.html#pagezero
 
 
 <a id="asm"></a>
