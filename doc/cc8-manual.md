@@ -1585,12 +1585,12 @@ from CC8, allowing your SABR code to use these as well:
 
 |op-code|value|meaning|
 |-------|-----|-------|
-|`ANDI` |0400 |alias for `AND I`|
-|`TADI` |1400 |alias for `TAD I`|
-|`ISZI` |2400 |alias for `ISZ I`|
-|`DCAI` |3400 |alias for `DCA I`|
-|`JMSI` |4400 |alias for `JMS I`|
-|`JMPI` |5400 |alias for `JMP I`|
+|`ANDI` |0400 |same as `AND I` in PAL8|
+|`TADI` |1400 |same as `TAD I` in PAL8|
+|`ISZI` |2400 |same as `ISZ I` in PAL8|
+|`DCAI` |3400 |same as `DCA I` in PAL8|
+|`JMSI` |4400 |same as `JMS I` in PAL8|
+|`JMPI` |5400 |same as `JMP I` in PAL8|
 |`MQL`  |7421 |load MQ from AC, clear AC|
 |`ACL`  |7701 |load AC from MQ (use `CLA SWP` to give inverse of `MQL`)|
 |`MQA`  |7501 |OR MQ with AC, result in MQ|
@@ -1601,6 +1601,13 @@ from CC8, allowing your SABR code to use these as well:
 |`RIF`  |6224 |read instruction field: OR IF with bits 6-8 of AC|
 |`BSW`  |7002 |exchange the high and low 6 bits of AC|
 |`CAM`  |7621 |clear AC and MQ|
+
+The first six operations require some explanation. SABR tries to present
+a flat memory model to the user, which means that if you write something
+like `TAD I VAL` it doesn’t emit a single instruction like simpler PDP-8
+assemblers will. These PAL8 emulating op-codes allow the programmer to
+bypass this behavior of SABR when it isn’t helpful. See the
+documentation on SABR link generation in the OS/8 Handbook.
 
 [os8hac]: https://archive.org/details/bitsavers_decpdp8os8_39414792/page/n875
 
