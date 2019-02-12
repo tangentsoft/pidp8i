@@ -1560,7 +1560,7 @@ the LOADER considers these spaces hands-off as far as loading other
 code.
 
 The value 36₈ in the remaining lines reflects the way the loader works.
-The size of a core memory page in the PDP-8 is 40₈ pages. The OS/8
+The size of a core memory field in the PDP-8 is 40₈ pages. The OS/8
 Handbook tells us that the lowest page is set aside for use by LOADER
 itself; it isn’t clear on exactly what that space is used for. The
 remaining 3 pages per field are due to our use of device-independent
