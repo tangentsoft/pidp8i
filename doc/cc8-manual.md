@@ -1395,13 +1395,13 @@ above.
 
 The layout of the user data field (1) breaks down like this:
 
-| range       | use |
-| ----------- | --- |
-| `0000-0177` | first page of UDF reserved for use by LOADER run-time routines |
-| `0200-xxxx` | globals first, then literals packed together at the bottom |
-| `xxxx-7477` | user stack, grows downward from the end of this range |
-| `7500-7577` | [`[f]printf()`](#printf) output buffer passed to [`sprintf()`](#sprintf) |
-| `7600-7777` | last page of UDF reserved by OS/8 ([see above](#os8res)) |
+| range         | use |
+| ------------- | --- |
+| `10000-10177` | first page of UDF reserved for use by LOADER run-time routines |
+| `10200-1xxxx` | globals first, then literals packed together at the bottom |
+| `1xxxx-17477` | user stack, grows downward from the end of this range |
+| `17500-17577` | [`[f]printf()`](#printf) output buffer passed to [`sprintf()`](#sprintf) |
+| `17600-17777` | last page of UDF reserved by OS/8 ([see above](#os8res)) |
 
 The maximum size of globals + literals + stack in a CC8 program is
 therefore 7300₈, or 3776 words.
