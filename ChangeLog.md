@@ -99,20 +99,37 @@
     filesystem and then comparing the files individually on the host.
     Imagine your own possibilities!
 
-*   Major updates to Ian Schofield’s CC8 compiler, done by Bill Cattey:
+*   Major improvements to Ian Schofield’s CC8 compiler:
 
-    *   <p>Retargeted the CC8 cross-compiler against SmallC-85, which
-        greatly improves the capabilty of the compiler.  It also allows
-        the cross-compiler to run without crashing on 64-bit hosts for
-        the first time.</p>
+    *   <p>Bill Cattey retargeted the CC8 cross-compiler against
+        [SmallC-85][sc85], which greatly improves the capabilty of the
+        compiler.  It also allows this compiler to run without crashing
+        on 64-bit hosts for the first time.</p>
 
-    *   <p>Merged in some of the updates Ian has made to CC8, which
+    *   <p>Bill merged in some of the updates Ian has made to CC8, which
         affects the native OS/8 compiler and its standard library.</p>
 
-    *   <p>The `cc8.tu56` DECtape image is now generated dynamically at
-        build time, as needed, rather than be shipped statically in the
-        Fossil code repository.  This is another benefit of
-        `os8-run`.</p>
+    *   <p>Bill wrote an `os8-run` script to generate the `cc8.tu56`
+        DECtape image dynamically at build time, as needed, rather than
+        use a static binary image shipped in the Fossil code repository.
+        The primary practical upshot of this is that you can now change
+        the native OS/8 CC8 source code on the host side and just say
+        “`make`” to get a new RK05 disk pack with the new code running
+        in it. If you don’t get how cool this is, you don’t understand
+        it properly. :)</p>
+
+    *   <p>Warren Young greatly expanded the [CC8 user manual][cc8m]. It
+        now answers many more questions, reveals many previously hidden
+        details, fully documents LIBC’s behaviors, and documents the CC8
+        memory model.</p>
+
+    *   <p>Warren and Ian collaborated on fixes to the native compiler
+        and its LIBC to fix a bunch of bugs and improve its conformance
+        to Standard C. It’s still miles from passing any ISO C
+        conformance suite, but it should violate fewer expectations now.
+        This work does change the API and ABI of CC8’s LIBC somewhat, so
+        if you have existing code, you might want to read the new manual
+        to work out what’s needed to port that code.</p>
 
 *   Since the beginning of this project, we've called our modified
     version of the SIMH PDP-8 simulator `pidp8i-sim`.  With this
@@ -267,7 +284,9 @@
 *   A year of maintenance and polishing, much of it resulting in
     documentation and build system improvements.
 
+[cc8m]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
 [pv]:   https://tangentsoft.com/pidp8i/doc/trunk/README.md#systemd
+[sc85]: https://github.com/ncb85/SmallC-85
 [tctd]: https://tangentsoft.com/pidp8i/wiki?name=TD8E+vs+TC08
 [v3df]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+V3D+vs+V3F
 
