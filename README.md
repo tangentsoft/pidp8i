@@ -378,17 +378,19 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     implies that it is the OS/8 BASIC subsystem that is being left out,
     which is not even currently an option.)
 
-*   **--disable-os8-chess** — Leave out John Comeau's
-    [CHECKMO-II chess implementation][chess].
-
 *   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
     compiler and all of its ancillary files.
+
+*   **--disable-os8-chess** — Leave out John Comeau's
+    [CHECKMO-II chess implementation][chess].
 
 *   **--disable-os8-crt** — Suppress the [console rubout behavior][tty]
     enabled while building the OS/8 binary RK05 disk image. You
     probably only want to do this if you have attached a real teletype
     to your PiDP-8/I, and thus do not want video terminal style rubout
     processing.
+
+*   **--disable-os8-dcp** — Leave out the DCP disassembler.
 
 *   **--disable-os8-focal** - Do not install any version of FOCAL on the
     OS/8 system disk. This option sets `--disable-os8-uwfocal` and
@@ -398,7 +400,7 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     SABR, the linking loader (`LOADER`), the `LIBSET` tool, and the
     `*.RL` library files.  This option is ignored unless you also give
     `--disable-os8-cc8` because the OS/8 version of CC8 is built atop
-    parts of the OS/8 FORTRAN II subsystem.
+    this subsystem.
 
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 
@@ -533,7 +535,7 @@ This option does not control some things you might think it should:
 Run `./configure --help` for more information on your options here.
 
 
-## <a id="os8di"></a>OS/8 Disk Images
+## <a id="os8di"></a>The OS/8 RK05 Disk Image
 
 For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
 image included with the PiDP-8/I software (called `os8.rk05`) was based
@@ -635,6 +637,31 @@ document.
 [cs]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [os8mf]: https://tangentsoft.com/pidp8i/file/media/os8
 [tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
+## <a id="os8ti"></a>The OS/8 TU56 Tape Image
+
+As with the [OS/8 disk image](#os8di), this distribution’s build system
+can create custom TU56 tape images from pristine source media.  This
+replaces the old `os8.tu56` binary image previously distributed with
+this software.
+
+The build system actually creates four such tape images according to a
+2×2 matrix of choices:
+
+*   **--boot-tape-version** — The default value is “`v3f`”, meaning
+    that the boot tape is based on OS/8 V3F. Give “`v3d`” to boot from
+    a OS/8 V3D tape instead. See the wiki article [OS/8 V3D vs
+    V3F][os8ver] for the implications of this choice.
+
+*    **--boot-tape-config** — The default value is “`tc08`”. Give
+    “`td12k`” to use a tape image configured with the TD12K DECtape
+    controller driver built in. See the wiki article [TC08 vs
+    TD12K][os8td] for the reason you’re given a choice here.
+
+[os8td]:  https://tangentsoft.com/pidp8i/wiki?name=TD8E+vs+TC08
+[os8ver]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+V3D+vs+V3F
+
 
 
 <a id="overwrite-setup"></a>
