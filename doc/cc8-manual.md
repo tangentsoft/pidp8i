@@ -74,8 +74,8 @@ PDP-8 compiler.
 The CC8 system generally assumes the availability of:
 
 *   [At least 12&nbsp;kWords of core](#memory) at run time for programs
-    compiled with CC8.  The stages of the native OS/8 CC8 compiler require
-    20&nbsp;kWords to compile programs.
+    compiled with CC8.  The [native OS/8 CC8 compiler passes](#ncpass)
+    require 20&nbsp;kWords to compile programs.
 
     CC8 provides no built-in way to use more memory than this, so you
     will probably have to resort to [inline assembly](#asm) or FORTRAN
@@ -259,14 +259,14 @@ build root will update `bin/v3d.rk05` with new binaries automatically.
 
 Because the CC8 native compiler is compiled by the CC8 *cross*-compiler,
 the [standard memory layout](#memory) applies to both.  Among other
-things, this means each phase of the native compiler requires
+things, this means each pass of the native compiler requires
 approximately 20&nbsp;kWords of core.
 
-The phases are:
+<a id="ncpass"></a>The compiler passes are:
 
 1.  `c8.c` &rarr; `c8.sb` &rarr; `CC.SV`: The compiler driver: accepts
     the input file name from the user, and calls the first proper
-    compiler stage, `CC1`.
+    compiler pass, `CC1`.
 
 2.  `n8.c` &rarr; `n8.sb` &rarr; `CC1.SV`: The parser/tokeniser section
     of the compiler.
@@ -279,7 +279,7 @@ documented [below](#os8pp).
 
 There is also `libc.c` &rarr; `libc.sb` &rarr; `LIBC.RL`, the [C
 library](#libc) linked to any program built with CC8, including the
-stages above, but also to your own programs.
+passes above, but also to your own programs.
 
 All of these binaries end up on the automatically-built OS/8 boot disk:
 `CC?.SV` on `SYS:`, and everything else on `DSK:`, based on the defaults
@@ -403,9 +403,9 @@ The OS/8 version of CC8 is missing many language features relative to
         You must strip such lines out when copying C files into OS/8.
 
         (The native compiler emits startup code automatically, and it
-        hard-codes the LIBC call table in the `CC2` compiler stage,
-        implemented in `p8.c`, so it doesn’t need `#include` to make these
-        things work.)
+        hard-codes the LIBC call table in the [final compiler
+        pass](#ncpass), implemented in `p8.c`, so it doesn’t need
+        `#include` to make these things work.)
 
     *   [Broken](#os8asm) handling of [inline assmembly](#asm) via `#asm`.
 
@@ -1582,8 +1582,9 @@ Addressing][memadd].
 <a id="asm"></a>
 ## Inline Assembly Code
 
-The [cross-compiler](#cross) allows [SABR][sabr] assembly code between
-`#asm` and `#endasm` markers in the C source code:
+Both the [cross-compiler](#cross) and the [native compiler](#native)
+allow inline [SABR][sabr] assembly code between `#asm` and `#endasm`
+markers in the C source code:
 
     #asm
         TAD (42      / add 42 to AC
@@ -1605,7 +1606,7 @@ body in assembly:
     {
         a;          /* load 'a' into AC; explained below */
     #asm
-        TAD (48
+        TAD (D48
     #endasm
     }
 
@@ -1704,28 +1705,66 @@ library.
 **TODO:** Explain this.
 
 
-### <a id="os8asm"></a>Inline Assembly and the OS/8 CC8 Compiler
+### <a id="os8asm"></a>Inline Assembly in the Native CC8 Compiler
 
-The native CC8 compiler does not properly do any of the above.
+#### Limitations
 
-There is a start at handling of `#asm` in this compiler, but it isn’t
-properly integrated into the code generation stage. Instead, the
-preprocessing stage just gathers up what it finds and dumps it to a
-temporary file, which the code generation stage unceremoniously dumps in
-at the *end* of the resulting `CC.SB` output file.
+The native compiler has some significant limitations in the way it
+handles inline assembly.
 
-Furthermore, this process is currently limited to 1&nbsp;kiB of total
-text: if the preprocessor gathers any more than that, it’s likely to
-crash the preprocessor.
+The primary one is that snippets of inline assembly are gathered by the
+[first pass](#ncpass) of the compiler in a core memory buffer that’s
+only 1024 characters in size. If the total amount of inline assembly in
+your program exceeds this amount, `CC.SV` will overrun this buffer and
+produce corrupt output.
 
-Since such code is not injected inline into the output SABR code at a
-corresponding point to where it’s coded in the C source file, it’s not
-even clear to us how you’d call such code. It may be possible to declare
-an assembly subroutine this way, but we currently don’t know how you’d
-call an assembly function that has no prototype in the C code.
+It’s difficult to justify increasing the size of that buffer, because
+it’s already over [&frac14; the space given](#udf) in CC8 to global
+variables.
 
-At this time, we recommend that only low-level experimenters attempt to
-use this feature of the native OS/8 CC8 compiler.
+It all has to be gathered in one pass, because this 1&nbsp;kWord buffer
+is written to a text file (`CASM.TX`) at the end of the [first compiler
+pass](#ncpass), where it waits for the final compiler pass to read it
+back in to be inserted into the output SABR code.  Since LIBC’s
+[`fopen()`](#fopen) is limited to a [single output file at a
+time](#stdio) and it cannot append to an existing file, it’s got one
+shot to write everything it collected.
+
+This is one reason the CC8 LIBC has to be cross-compiled: its inline
+assembly is over 6&times; the size of this buffer.
+
+
+#### Incompatibilities
+
+The only known incompatibility between the compilers in the way they
+handle inline assembly is that the native compiler inserts a `DECIM`
+directive early in its SABR output, so all constants in inline assembly
+that aren’t specifically given a radix are treated as decimal numbers:
+
+    #asm
+        TAD (42
+    #endasm
+
+That instruction adds 42 decimal to AC when compiled with the native
+compiler, but it adds 34 decimal (42₈) with the cross-compiler because
+the cross-compiler leaves SABR in its default octal mode!
+
+If you want code to work with both, use the SABR-specific `D` and `K`
+prefix feature on constants:
+
+    #asm
+        TAD (D42      / add 42 *decimal* to AC
+    #endasm
+
+We cannot recommend using the `DECIM` and `OCTAL` SABR pseudo-ops in
+code that has to work with both compilers because there’s no way to tell
+what directive to give at the end of the `#asm` block to restore prior
+behavior. If you switch the mode without switching it back properly,
+SABR code emitted by the compiler itself will be misinterpreted.
+
+There’s a `DECIM` directive high up in the implementation of LIBC, but
+that’s fine since it knows it will be compiled by the cross-compiler
+only.
 
 
 ### <a id="opdef"></a>Predefined OPDEFs
