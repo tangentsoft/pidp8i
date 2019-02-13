@@ -551,6 +551,28 @@ an output file with `fputc()`, but not with `fputs()`, since NUL
 terminates the output string.
 
 
+### <a id="wordstr"></a>Strings are of Words, Not of Bytes or Characters
+
+In several places, the Standard says a conforming C library is supposed
+to operate on “bytes” or “characters,” at least according to [our chosen
+interpretation][cppr]. Except for the text I/O restrictions called out
+[above](#cset), LIBC operates on strings of PDP-8 words, not on these
+modern notions of fixed 8-bit bytes or the ever-nebulous “characters.”
+
+Because you may be used to the idea that string and memory functions
+like [`memcpy()`](#memcpy) and [`strcat()`](#strcat) will operate on
+bytes, we’ve marked all of these cases with a reference back to this
+section.
+
+By the same token, most functions that operate on NUL-terminated string
+buffers in a conforming C library implementation actually check for a
+word equal to 0000₈ in this implementation. The key thing to understand
+is that these routines are not carefully masking off the top 4 or 5 bits
+to check *only* against a 7- or 8-bit NUL character.
+
+This is another manifestation of [CC8’s typeless nature](#typeless).
+
+
 ### <a id="fiolim"></a>File I/O Limitations
 
 Because LIBC’s stdio implementation is built atop the OS/8 FORTRAN II
@@ -606,28 +628,6 @@ corrupted the OS’s resident parts — or restart the PDP-8.
 Within the `pidp8i` environment, you can hit Ctrl-E, then say “`go
 7600`”.  From the front panel, press the Stop key, toggle 7600 into the
 switch register, press the Load Add key, then press the Start key.)
-
-
-### <a id="wordstr"></a>Strings are of Words, Not of Bytes or Characters
-
-In several places, the Standard says a conforming C library is supposed
-to operate on “bytes” or “characters,” at least according to [our chosen
-interpretation][cppr]. Except for the text I/O restrictions called out
-[above](#cset), LIBC operates on strings of PDP-8 words, not on these
-modern notions of fixed 8-bit bytes or the ever-nebulous “characters.”
-
-Because you may be used to the idea that string and memory functions
-like [`memcpy()`](#memcpy) and [`strcat()`](#strcat) will operate on
-bytes, we’ve marked all of these cases with a reference back to this
-section.
-
-By the same token, most functions that operate on NUL-terminated string
-buffers in a conforming C library implementation actually check for a
-word equal to 0000₈ in this implementation. The key thing to understand
-is that these routines are not carefully masking off the top 4 or 5 bits
-to check *only* against a 7- or 8-bit NUL character.
-
-This is another manifestation of [CC8’s typeless nature](#typeless).
 
 
 ### <a id="missing"></a>Missing Functions
