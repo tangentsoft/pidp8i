@@ -105,7 +105,7 @@ The CC8 system generally assumes the availability of:
 
 *   At build time, the OS/8 FORTRAN II/SABR subsystem must be available.
 
-*   At run time, any [stdio](#stdio) operation involving file I/O
+*   At run time, any [stdio](#fiolim) operation involving file I/O
     assumes it is running atop OS/8. For instance, file name arguments
     to [`fopen()`](#fopen) are passed to OS/8 for interpretation.
 
@@ -531,7 +531,7 @@ C compiler [does not distinguish types](#typeless), our `is*()`
 functions return false for any value outside of the ASCII range, 0-127.
 
 
-### <a id="stdio"></a>stdio
+### <a id="cset"></a>Character Set
 
 The stdio implementation currently assumes US-ASCII 7-bit text I/O.
 
@@ -550,33 +550,47 @@ which makes dealing with ASCII NUL difficult. You could write a NUL to
 an output file with `fputc()`, but not with `fputs()`, since NUL
 terminates the output string.
 
-The stdio implementation only allows one file to be open at a time for
-reading and one for writing. Since there is no input buffering to speak
-of in the stdio implementation, there is no need to close files opened
-for input, there being no resources to free. Together, those two facts
-explain why [the `fclose()` implementation](#fclose) takes no argument:
-it always closes the lone output file, if any.
 
-This means that to open multiple output files, you have to `fclose` each
-file before calling [`fopen("FILENA.ME", "w")`](#fopen) to open the next.
-To open multiple input files, simply call `fopen()` to open each
-subsequent file, implicitly closing the prior input file.
+### <a id="fiolim"></a>File I/O Limitations
 
-The CC8 LIBC file I/O implementation is built atop the OS/8 FORTRAN II
-subsystem’s file I/O functions. This has some important implications in
-the documentation below:
+Because LIBC’s stdio implementation is built atop the OS/8 FORTRAN II
+library, it only allows one file to be open at a time for reading and
+one for writing. OS/8’s underlying limit is 5 output files and 9 input
+files, which appears to be an accommodation specifically for its FORTRAN
+IV implementation, so it is possible that a future CC8 would be
+retargeted at FORTRAN IV to lift this limitation, but it would be a
+nontrivial amount of work.
 
-1.  We have not tried to “hoist” descriptions of what the FORTRAN II
-    subsystem does up into this documentation where that documentation
-    is correct and complete already. It may be necessary for you to read
-    the FORTRAN II documentation in the OS/8 manual to understand how
-    the CC8 LIBC’s stdio file I/O functions behave in certain respects.
+Meanwhile, we generally defer to the OS/8 FORTRAN II manual where it
+comes to documentation of these functions behavior.  The only time we
+bring it up in this manual is when there is either a mismatch between
+expected C behavior and actual FORTRAN II behavior or between the way
+OS/8 FORTRAN II is documented and the way things actually work when it’s
+being driven by CC8.
 
-2.  Programs built with CC8 which use its file I/O functions are
-    dependent upon OS/8.
+This underlying base has an important implication: programs built with
+CC8 which use its file I/O functions are dependent upon OS/8.  That
+underlying base determines how file names are interpreted, what devices
+get used, etc.
+
+Because of this single-file limitation, the stdio functions operating on
+files do not take a `FILE*` argument as in Standard C, there being no
+need to specify which file is meant. Output functions use the one and
+only output file, and input functions use the one and only input file.
+Our [`fopen()`](#fopen) doesn’t return a `FILE*` because the caller
+doesn’t need one to pass to any of the other functions. That leaves only
+[`fclose()`](#fclose), which would be an ambiguous call without a
+`FILE*` argument if it wasn’t for the fact that OS/8 FORTRAN II doesn’t
+have an `ICLOSE` library function, there apparently being no resources
+to free on closing an input file.
+
+All of this means that to open multiple output files, you have to
+`fclose` each file before calling [`fopen("FILENA.ME", "w")`](#fopen) to
+open the next.  To open multiple input files, simply call `fopen()` to
+open each subsequent file, implicitly closing the prior input file.
 
 
-#### Ctrl-C Handling
+### <a id="ctrlc"></a>Ctrl-C Handling
 
 Unlike on modern operating systems, there is nothing like `SIGINT` in
 OS/8, which means Ctrl-C only kills programs that explicitly check for
@@ -599,7 +613,7 @@ switch register, press the Load Add key, then press the Start key.)
 In several places, the Standard says a conforming C library is supposed
 to operate on “bytes” or “characters,” at least according to [our chosen
 interpretation][cppr]. Except for the text I/O restrictions called out
-[above](#stdio), LIBC operates on strings of PDP-8 words, not on these
+[above](#cset), LIBC operates on strings of PDP-8 words, not on these
 modern notions of fixed 8-bit bytes or the ever-nebulous “characters.”
 
 Because you may be used to the idea that string and memory functions
@@ -768,7 +782,7 @@ This function simply calls the OS/8 FORTRAN II library subroutine
     justification.)
 
 *   Always closes the last-opened *output* file, only, there being
-    [no point](#stdio) in explicitly closing input files in this
+    [no point](#fiolim) in explicitly closing input files in this
     implementation.
 
 [f2fio]: https://archive.org/details/bitsavers_decpdp8os8_39414792/page/n700
@@ -1108,7 +1122,7 @@ within each PDP-8 word, with the top 5 bits unset.
     occurred or not.
 
 *   `fputs()` does not take a `FILE*` as its first parameter due to the
-    [implicit single output file](#stdio).
+    [implicit single output file](#fiolim).
 
 
 ### <a id="revcpy"></a>`revcpy(dst, src, n)`
@@ -1727,7 +1741,7 @@ is written to a text file (`CASM.TX`) at the end of the [first compiler
 pass](#ncpass), where it waits for the final compiler pass to read it
 back in to be inserted into the output SABR code.  Since LIBC’s
 [`fopen()`](#fopen) is limited to a [single output file at a
-time](#stdio) and it cannot append to an existing file, it’s got one
+time](#fiolim) and it cannot append to an existing file, it’s got one
 shot to write everything it collected.
 
 This is one reason the CC8 LIBC has to be cross-compiled: its inline
