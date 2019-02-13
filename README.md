@@ -355,10 +355,10 @@ USB setup rather than conflicting with it.)
 Give this option if you do not want to build Ian Schofield's `cc8` C
 cross-compiler on the host.
 
-Note that this is different from `--disable-os8-cc8`, which disables the
-*native OS/8* C compiler. They are two different C compilers: one runs
-outside the SIMH PDP-8 simulator and the other runs inside the simulator
-under OS/8.
+Because the cross-compiler is needed to build the CC8 native OS/8
+compiler, disabling the cross-compiler also causes the native compiler
+to be left off the bootable OS/8 RK05 disk image, as if you’d passed the
+`--disable-os8-cc8` configuration option.
 
 
 <a id="disable-os8"></a>
@@ -382,7 +382,7 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     [CHECKMO-II chess implementation][chess].
 
 *   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
-    compiler normally installed to `SYS:`.
+    compiler and all of its ancillary files.
 
 *   **--disable-os8-crt** — Suppress the [console rubout behavior][tty]
     enabled while building the OS/8 binary RK05 disk image. You

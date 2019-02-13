@@ -122,8 +122,8 @@ set os8bool(src) [opt-bool os8-src]
 set os8min [opt-bool os8-minimal]
 set os8src [opt-bool os8-src]
 if {![opt-bool os8-focal]} {
-    set os8bool(focal69) 0
-    set os8bool(uwfocal) 0
+    set os8bool(focal69) "0"
+    set os8bool(uwfocal) "0"
 }
 
 # -- do not use opt-bool os8-* below this point
@@ -133,6 +133,20 @@ if {![opt-bool os8-focal]} {
 if {$os8bool(cc8) && !$os8bool(fortran-ii)} {
     set $os8bool(fortran-ii) 1
     msg-result "WARNING: Re-enabling OS/8 FORTRAN II: OS/8 CC8 requires it."
+}
+define CC8_TU56 {}
+if {[opt-bool cc8-cross]} {
+    define CC8_CROSS bin/cc8
+    if {$os8bool(cc8)} {
+        define CC8_TU56 bin/cc8.tu56
+    }
+} else {
+    define CC8_CROSS {}
+    msg-result "Will not build the CC8 cross-compiler."
+    if {$os8bool(cc8)} {
+        msg-result "Also disabling OS/8 CC8: can't cross-compile it now."
+        set os8bool(cc8) "0"
+    }
 }
 
 # Now build the options to os8-run
@@ -211,13 +225,6 @@ if {[opt-bool alt-serial-mod]} {
     msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
     define PCB_SERIAL_MOD_OV
     define PCB_SERIAL_MOD_ANY
-}
-
-if {[opt-bool cc8-cross]} {
-    define CC8_CROSS bin/cc8
-} else {
-    define CC8_CROSS {}
-    msg-result "Will not build the cc8 cross-compiler."
 }
 
 if {[opt-bool debug-mode]} {
