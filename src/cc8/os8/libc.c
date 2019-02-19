@@ -26,19 +26,24 @@
  */
 
 #asm
-ABSYM POP 147
-ABSYM PSH 150
-ABSYM JLC 151
-ABSYM STKP 152
-ABSYM PTSK 153
-ABSYM POPR 154
-ABSYM PCAL 155
-ABSYM TMP 156
-ABSYM GBL 157
-ABSYM ZTMP 146
-ABSYM ZPTR 145
-ABSYM ZCTR 144
-ABSYM FPTR 160
+// DECLARE LIBC GLOBALS.  BEWARE: THESE MUST MATCH THOSE IN header.sb !
+/ 000 AND 001 BELONG TO THE PDP-8 INTERRUPT SYSTEM
+/ 002 THRU 007 ARE RESERVED FOR USER CODE
+/ 010-017 ARE THE PDP-8 AUTO-INDEX REGISTERS; YES, IN ALL FIELDS!
+/ 020-162 BELONG TO [F]PRINTF; SEE BELOW
+ABSYM ZCTR 163
+ABSYM ZPTR 164
+ABSYM ZTMP 165
+ABSYM POP  166
+ABSYM PSH  167
+ABSYM JLC  170
+ABSYM STKP 171
+ABSYM PTSK 172
+ABSYM POPR 173
+ABSYM PCAL 174
+ABSYM TMP  175
+ABSYM GBL  176
+ABSYM FPTR 177
 /
 	DECIM
 /
@@ -154,7 +159,7 @@ PVR,	POPRET
 PVC,	PCALL
 /
 CPNT,	CLIST
-		CPAGE 24
+		CPAGE 33        / # OF ENTRIES IN CLIST BELOW
 /
 /		THIS IS THE DISPATCH LIST FOR THIS LIBRARY
 /		MAKE SURE LIBC.H MATCHES
@@ -806,12 +811,19 @@ reverse(s) char *s; {
   }
 
 /*
-	This is somewhat involved in that the vararg system in SmallC is rather limited.
-	For printf and sprintf, a char buffer is required supplied by the user or,
-	as below, located at the end of the stack (7500 .. 64 locs). In addition,
-	another page zero location (ZPTR) is required. This is always risky as the
-	SABR/LOADER system uses a lot of locations here. See how this goes as it is possible
-	to use arbitrary locations on the stack as well.
+    This is somewhat involved in that the vararg system in SmallC is
+    rather limited.
+
+    For printf and fprintf, we pass a static buffer to sprintf(), which
+    isn't formally allocated at the SABR level.  We use just locations
+    10020-10170, (104 chars + NUL terminator) which is otherwise unused.
+    
+    The first 20 (octal) locations and the last several on this page are
+    taken: see the ABSYM declarations the top of of this file.
+    
+    LOADER also reserves this space for itself, placing a small library
+    of routines here, but none of the code in this module calls them,
+    so we can safely stomp over them.  (They're used by FORTRAN II.)
 */
 
 fprintf(nxtarg) int nxtarg;
@@ -826,8 +838,8 @@ fprintf(nxtarg) int nxtarg;
 printf(nxtarg) int nxtarg;
 {
 #asm
-	TAD (3904	/ THIS IS THE PRINT BUFFER AT 7500 ON THE STACK
-	DCA ZPTR
+	TAD (K20      / SEE BLOCK COMMENT ABOVE
+	DCA ZPTR      / SPRINTF EXPECTS ITS BUFFER LOCATION IN ZPTR
 	JMP SPRINTF
 #endasm
 }
