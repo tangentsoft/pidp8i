@@ -1422,7 +1422,7 @@ therefore 7400₈ words. (3840 decimal.)
 The `[f]printf()` static buffer above sits in space that `LOADER`
 reserves for itself, placing a small library of common routines in this
 first page of each field it uses, but since LIBC doesn’t call any of
-these routines, we can safely overwrite it with this buffer.
+these routines, we can safely overwrite these routines with this buffer.
 
 (You can see this by examining the `LOADER.PA` file on the included
 DECtape image `media/os8/al-4691c-sa-os8-v3d-1.1978.tu56`. Look for the
