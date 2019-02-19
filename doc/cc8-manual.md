@@ -1047,8 +1047,6 @@ The `dst` buffer can safely overlap the `src` buffer only if it is at a
 lower address in memory. (Note that there is no `memmove()` in this
 implementation.)
 
-Uses auto-index registers 12₈, 13₈, and 14₈.
-
 **Standard Violations:**
 
 *   Returns 0 instead of the `dst` pointer as required by the Standard.
@@ -1088,11 +1086,9 @@ its documentation for further details.
 
 **WARNING:** Because `printf()` is implemented in terms of `sprintf()`
 and it points at [a static buffer in the user data field](#memory), you
-can only safely print up to *93* characters at a time with `printf()`.
-Printing more will first overwrite space reserved by OS/8 for device
-handlers, then wrap around to overwrite space reserved for use by the
-technology stack CC8 is built atop: the FORTRAN II libraries, SABR, and
-the linking loader.
+can only safely print up to *112* characters at a time with `printf()`.
+Printing more will corrupt program data and most likely crash the
+program.
 
 
 ### <a id="puts" name="fputs"></a>`puts(s)`, `fputs(s)`
@@ -1248,9 +1244,6 @@ Beware that this function will [wrap around](#ptrwrap) if either
 The `dst` buffer can safely overlap the `src` buffer only if it is at a
 lower address in memory.
 
-Unlike [`memcpy()`](#memcpy) the current implementation does not use any
-auto-index registers.
-
 **Standard Violations:**
 
 *   Returns 0, not a copy of `dst` as the Standard requires.
@@ -1397,18 +1390,43 @@ file table][os8oft] is at 17600₈, and [the USR][os8usr] is at 17700₈.
 The resident parts of device drivers also live up here.
 
 
+### <a id="zeropg"></a>Zero Page Usage
+
+The first thing to get clear in your mind is that there are at least
+*three* zero pages involved here, and possibly four, depending on how
+`LOADER` chooses to arrange your program in memory. (We get into the
+nitty gritty of that [below](#flayout).) There are different rules for
+each field.
+
+The CC8 program initialization code — `init.h` for the cross-compiler,
+`header.sb` for the native compiler — uses several locations high up in
+the zero page of the field containing it for its own internal purposes.
+(From here on, we’ll refer to this code generically as INIT.) This code
+is placed just before your program’s `main()` function begins, so it’s
+always in your user code’s field. Your own code should therefore stay
+away from INIT’s locations, from 0150 through the end of the zero page.
+
+[LIBC](#libc) uses many zero page locations, but the details are
+unimportant from an end user perspective since `LOADER` will never place
+end user code in the same field as LIBC. Since user code should not be
+writing to LIBC’s field, there is no conflict between what it does and
+what your end user code does, nor between LIBC and INIT.
+
+The [user data field](#udf) is always isolated from all of the above, so
+the use of the zero page in that field does not conflict with any of the
+above.
+
+
 ### <a id="udf"></a>The User Data Field
 
-The layout of the user data field (1) breaks down like this:
+The user data field is always field 1. Its layout breaks down like this:
 
 | range         | use |
 | ------------- | --- |
-| `00000-00001` | PDP-8 interrupt handling; see Small Computer Handbook |
-| `00002-00007` | zero-page locations reserved for user code |
-| `00010-00017` | PDP-8 auto-index registers; see Small Computer Handbook |
-| `00020-00155` | static output buffer used by [`[f]printf()`](#printf) in [`sprintf()`](#sprintf) call |
-| `00156-00177` | LIBC and INIT global variables; might grow downward in future versions |
-| `10000-10177` | first page of UDF reserved for use by LOADER run-time routines |
+| `10000-10001` | PDP-8 interrupt handling; see Small Computer Handbook |
+| `10002-10007` | reserved for future LIBC use |
+| `10010-10017` | PDP-8 auto-index registers; see Small Computer Handbook |
+| `10020-10177` | static output buffer used by [`[f]printf()`](#printf) in [`sprintf()`](#sprintf) call |
 | `10200-1xxxx` | globals first, then literals packed together at the bottom |
 | `1xxxx-17577` | user stack, grows upward from end of literals |
 | `17600-17777` | last page of UDF reserved by OS/8 ([see above](#os8res)) |
@@ -1482,7 +1500,7 @@ arrange access to it some other way, such as [via inline
 assembly](#asm).
 
 
-### Field Layout, Concrete Example
+### <a id="flayout"></a>Field Layout, Concrete Example
 
 The field layout given [at the start of this section](#memory) is not
 fixed. The linking loader is free to use any layout it likes, consistent
