@@ -1088,7 +1088,7 @@ its documentation for further details.
 
 **WARNING:** Because `printf()` is implemented in terms of `sprintf()`
 and it points at [a static buffer in the user data field](#memory), you
-can only safely print up to *98* characters at a time with `printf()`.
+can only safely print up to *93* characters at a time with `printf()`.
 Printing more will first overwrite space reserved by OS/8 for device
 handlers, then wrap around to overwrite space reserved for use by the
 technology stack CC8 is built atop: the FORTRAN II libraries, SABR, and
@@ -1406,8 +1406,8 @@ The layout of the user data field (1) breaks down like this:
 | `00000-00001` | PDP-8 interrupt handling; see Small Computer Handbook |
 | `00002-00007` | zero-page locations reserved for user code |
 | `00010-00017` | PDP-8 auto-index registers; see Small Computer Handbook |
-| `00020-00162` | static output buffer used by [`[f]printf()`](#printf) in [`sprintf()`](#sprintf) call |
-| `00163-00177` | LIBC global variables; might grow downward in future versions |
+| `00020-00155` | static output buffer used by [`[f]printf()`](#printf) in [`sprintf()`](#sprintf) call |
+| `00156-00177` | LIBC and INIT global variables; might grow downward in future versions |
 | `10000-10177` | first page of UDF reserved for use by LOADER run-time routines |
 | `10200-1xxxx` | globals first, then literals packed together at the bottom |
 | `1xxxx-17577` | user stack, grows upward from end of literals |
