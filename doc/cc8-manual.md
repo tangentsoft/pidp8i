@@ -1087,12 +1087,12 @@ This function is implemented in terms of [`sprintf()`](#sprintf), so see
 its documentation for further details.
 
 **WARNING:** Because `printf()` is implemented in terms of `sprintf()`
-and it points at [a static buffer high up in the user data
-field](#memory), you can only safely print up to *64* bytes at a time
-with `printf()`. Printing more will first overwrite space reserved by
-OS/8 for device handlers, then wrap around to overwrite space reserved
-for use by the technology stack CC8 is built atop: the FORTRAN II
-libraries, SABR, and the linking loader.
+and it points at [a static buffer in the user data field](#memory), you
+can only safely print up to *104* characters at a time with `printf()`.
+Printing more will first overwrite space reserved by OS/8 for device
+handlers, then wrap around to overwrite space reserved for use by the
+technology stack CC8 is built atop: the FORTRAN II libraries, SABR, and
+the linking loader.
 
 
 ### <a id="puts" name="fputs"></a>`puts(s)`, `fputs(s)`
@@ -1397,50 +1397,50 @@ file table][os8oft] is at 17600₈, and [the USR][os8usr] is at 17700₈.
 The resident parts of device drivers also live up here.
 
 
-### CC8’s Use of the Zero Page
-
-Field 0 also contains the special [zero page][zp] on the PDP-8. LIBC
-uses memory locations 147₈ through the end of the zero page.  Functions
-which use the autoincrement locations 10₈ through 17₈ are so-documented
-above.
-
-
 ### <a id="udf"></a>The User Data Field
 
 The layout of the user data field (1) breaks down like this:
 
 | range         | use |
 | ------------- | --- |
+| `00000-00001` | PDP-8 interrupt handling; see Small Computer Handbook |
+| `00002-00007` | LIBC global variables; see `libc.c` |
+| `00010-00017` | PDP-8 auto-index registers; see Small Computer Handbook |
+| `00020-00170` | static buffer passed from [`[f]printf()`](#printf) to [`sprintf()`](#sprintf) |
+| `00171-00177` | more LIBC global variables; might grow downward in future versions |
 | `10000-10177` | first page of UDF reserved for use by LOADER run-time routines |
 | `10200-1xxxx` | globals first, then literals packed together at the bottom |
-| `1xxxx-17477` | user stack, grows downward from the end of this range |
-| `17500-17577` | [`[f]printf()`](#printf) output buffer passed to [`sprintf()`](#sprintf) |
+| `1xxxx-17577` | user stack, grows upward from end of literals |
 | `17600-17777` | last page of UDF reserved by OS/8 ([see above](#os8res)) |
 
 The maximum size of globals + literals + stack in a CC8 program is
-therefore 7300₈, or 3776 words.
+therefore 7400₈ words. (3840 decimal.)
 
 
 #### <a id="ldrts"></a>`LOADER` Run-Time System Reservation
 
-The first page of the UDF is reserved for use by `LOADER`, which places
-a small library of common routines in the first page of each field it
-uses. You can see this by examining the `LOADER.PA` file on the included
+The `[f]printf()` static buffer above sits in space that `LOADER`
+reserves for itself, placing a small library of common routines in this
+first page of each field it uses, but since LIBC doesn’t call any of
+these routines, we can safely overwrite it with this buffer.
+
+(You can see this by examining the `LOADER.PA` file on the included
 DECtape image `media/os8/al-4691c-sa-os8-v3d-1.1978.tu56`. Look for the
-line `RUN-TIME SYSTEM PAGE 0 - PROPAGATED TROUGH ALL FIELDS`.
+line `RUN-TIME SYSTEM PAGE 0 - PROPAGATED TROUGH ALL FIELDS`.)
 
 
 #### <a id="nulptr"></a>C NULL Pointers
 
-Because the first page of the UDF is never used by CC8 proper, a valid C
-pointer can never have value 0000₈, preserving the expected falsy nature
-of a C NULL pointer. This has practical positive consequences such as
-the fact that you can depend on a call to [`gets()`](#gets) to always
-return a truthy value on success, provided you’ve passed it a normal C
-pointer.  You could hand-craft a pointer to that unused first page in
-the user data field, creating a valid pointer that’s confusable with
-NULL, but you’re out in [undefined behavior][ub] territory by that
-point, so on your head be the consequences!
+Because the PDP-8 interrupt system sets aside the first two locations of
+each field for itself, and CC8 plays along, a valid C pointer can never
+have value 0, preserving the expected falsy nature of a C NULL pointer.
+This has practical positive consequences such as the fact that you can
+depend on a call to [`gets()`](#gets) to always return a truthy value on
+success, provided you’ve passed it a normal C pointer.
+
+C gives you plenty of power to create a pointer equal to 0 and
+dereference it, but you’d be out in [undefined behavior][ub] territory
+by that point, so on your head be the consequences!
 
 
 ### <a id="ptrwrap"></a>Pointers Wrap Around
