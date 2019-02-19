@@ -542,11 +542,11 @@ void output_line();
 void output_with_tab();
 
 /**
- * output decimal number
+ * output octal number
  * @param number
  * @return 
  */
-void output_decimal();
+void output_octal();
 
 /**
  * stores values into memory

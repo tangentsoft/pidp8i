@@ -45,7 +45,6 @@ ABSYM TMP  175
 ABSYM GBL  176
 ABSYM FPTR 177
 /
-	DECIM
 /
 /
 /
@@ -84,8 +83,8 @@ LIBC,	BLOCK 2
 		TAD PVC
 		DCA PCAL
 		RIF
-		TAD (3201
-		DCA PCL1
+		TAD (6201		/ BUILD CDF + IF INSTR...
+		DCA PCL1		/ ...AND SAVE AS FIRST OF PCL1 SUBROUTINE
 		TAD PCL1
 		DCA DCC0
 		JMS MCC0
@@ -159,7 +158,7 @@ PVR,	POPRET
 PVC,	PCALL
 /
 CPNT,	CLIST
-		CPAGE 33        / # OF ENTRIES IN CLIST BELOW
+		CPAGE 41        / # OF ENTRIES IN CLIST BELOW, IN OCTAL
 /
 /		THIS IS THE DISPATCH LIST FOR THIS LIBRARY
 /		MAKE SURE LIBC.H MATCHES
@@ -214,7 +213,7 @@ fgetc()
 	ARG (-4
 	ARG FRSL
 	TAD FRSL
-	TAD (-26		/^Z
+	TAD (D-26		/^Z
 	SNA CLA
 	DCA FRSL
 	TAD FRSL
@@ -254,14 +253,14 @@ ADDR,	0
 
 RCHAR,	CIA		/READ A CHAR.
 	JMS SETDEV
-	1024		/SET BIT FOR READ. (8 UNITS NOW!)
+	2000		/SET BIT FOR READ. (8 UNITS NOW!)
 	JMS GETP
 	CLA
 	TAD CDFB
 	DCA CDFCH
 	JMS CHSUB
 CDFCH,	HLT
-	AND (127	/ 7 BIT FOR NOW
+	AND (177	/ 7 BIT FOR NOW
 	DCAI ADDR
 XIT,	CLA
 	RETRN CHRIO
@@ -277,7 +276,7 @@ SETDEV,	0
 
 CHSUB,	0
 	TAD ICHAR
-	AND (255
+	AND (377	/ DEAL IN 8 BIT CHARS, MAX
 	TAD IDEV
 	CALL 0,GENIO
 	JMP I CHSUB
@@ -316,13 +315,13 @@ char *p;
 {
 	*p++;
 #asm
-		AND (63
+		AND (77		/ MASK OFF LOWER 6 BITS
 		BSW
 		MQL
 #endasm
 	*p;
 #asm
-		AND (63
+		AND (77
 		MQA
 #endasm
 }
@@ -371,20 +370,19 @@ FC3,	CDF1
 	sixbit(p);
 #asm
 		PAGE
-		/ OFFSET IOPEN+81 = FILEEX
 		DCA ZTMP
 		TAD FC2#		/ CODE
-		AND (63
-		TAD (128
+		AND (77
+		TAD (200
 		DCA FDCT
 		CDF0
 		TADI FDCT
 		DCA FEX1
 		TAD FDCT
-		TAD (64
+		TAD (100
 		DCA FDCT
 		TADI FDCT
-		TAD (81			/ OFFSET OF EXTENSION
+		TAD (121		/ OFFSET OF EXTENSION (FILEEX) IN IOPEN CODE
 		DCA FDCT
 FEX1,	HLT
 		TAD ZTMP
@@ -402,12 +400,12 @@ FP1,	CAM
 		TADI ZTMP
 		SNA
 		JMP FP2
-		AND (63
+		AND (77		/ MASK OFF LOWER 7 BITS
 		BSW
 		MQL
 		ISZ ZTMP
 FP2,	TADI ZTMP	/ WILL USE STACK FIELD
-		AND (63
+		AND (77
 		SZA
 		ISZ ZTMP
 		MQA
@@ -415,7 +413,7 @@ FP4,	DCA FFNM
 		ISZ FP4
 		ISZ FDCT
 		JMP FP1
-		TAD (46
+		TAD (56     / ASCII '.'
 		DCAI ZTMP	/ PUT . BACK INTO FNM
 		CLA CLL CMA
 		TAD STKP
@@ -472,16 +470,16 @@ getc()
 GT1, KSF
 	 JMP GT1
 	 KRB
-	 TAD (-254
+	 TAD (D-254
 	 CLA
 	 KRB
 	 SNL			/ DO NOT ECHO BS
 	 TLS
-	 TAD (-131		/ ? ^C
+	 TAD (D-131		/ ? ^C
 	 SNA CLA
 	 JMP OSRET
 	 KRB
-	 AND (127		/ 7 BITS!
+	 AND (177		/ 7 BITS!
 #endasm
 }
 
@@ -494,10 +492,10 @@ int q,tm;
 		while (tm) {
 		getc();
 #asm
-		AND (127
-		TAD (-13	/ CR IS END OF STRING -> 0
+		AND (177
+		TAD (D-13	/ CR IS END OF STRING -> 0
 		SZA
-		TAD (13
+		TAD (D13
 	    DCAI STKP
 #endasm
 		if (tm-127)	/* Handle BS */
@@ -520,7 +518,7 @@ int *rsl;
 #asm
 	DCA ZTMP
 	DCA ZCTR
-	TAD (3584		/ NOP
+	TAD (7000		/ NOP
 	DCA XINV
 	CDF1			/ Change DF back to 1 in case SABR changes it!
 #endasm
@@ -529,20 +527,20 @@ int *rsl;
 	if (*p=='-') {
 #asm
 	CLA
-	TAD (3617
-	DCA XINV		/ CIA
+	TAD (7041       / CIA
+	DCA XINV
 	CDF1
 #endasm
 	p++;
 	}
 	while (*p++) {
 #asm
-	TAD (-48		/ '0' ... SEE CODE
+	TAD (D-48		/ ASCII '0'
 	DCA JLC
 	TAD JLC
 	SPA CLA
 	JMP XRET
-	TAD (-10
+	TAD (D-10       / # OF DECIMAL DIGITS
 	TAD JLC
 	SMA CLA
 	JMP XRET		/ EXIT IF NOT NUMBER
@@ -584,18 +582,18 @@ int dst,src,cnt;
 	CLA
 	TAD STKP
 	TAD (-4
+	DCA 14
+	CMA
+	TADI 14
+	DCA 13
+	CMA
+	TADI 14
 	DCA 12
-	CMA
-	TADI 12
-	DCA 11
-	CMA
-	TADI 12
-	DCA 10
-	TADI 12
+	TADI 14
 	CIA
 	DCA ZTMP
-CP1,	TADI 10
-		DCAI 11
+CP1,	TADI 12
+		DCAI 13
 		ISZ ZTMP
 		JMP CP1
 #endasm
@@ -679,10 +677,10 @@ int vl;
 {
 		vl;
 #asm
-		TAD (-48
+		TAD (D-48		/ ASCII '0'
 		SPA
 		JMP XNO
-		TAD (-10
+		TAD (D-10		/ # OF DECIMAL DIGITS
 		SMA CLA
 XNO,	CLA SKP
 		IAC
@@ -696,7 +694,7 @@ int vl;
 #asm
 		SNA
 		JMP YNO
-		TAD (-33
+		TAD (D-33		/ ONE PAST ASCII ' '
 		SMA CLA
 YNO,	CLA SKP
 		IAC
@@ -709,16 +707,16 @@ int vl;
 {
 		vl;				/* Include '?' and '@' as alpha vars */
 #asm
-		TAD (-65
+		TAD (D-65		/ ASCII 'A'
 		SPA
 		JMP ANO
-		TAD (-26
+		TAD (D-26		/ # OF UPPERCASE ENGLISH LETTERS
 		SPA
 		JMP BNO
-		TAD (-6
+		TAD (D-6		/ 'a' - 'Z' IN ASCII
 		SPA
 		JMP ANO
-		TAD (-26
+		TAD (D-26		/ # OF LOWERCASE ENGLISH LETTERS
 BNO,	SMA CLA
 ANO,	CLA SKP
 		IAC
@@ -735,13 +733,13 @@ CPP1,	CLA
 		TADI ZTMP
 		SNA
 		JMP CPP2
-		TAD (-97
+		TAD (D-97		/ ASCII 'a'
 		SPA
 		JMP CPP3
-		TAD (-26
+		TAD (D-26		/ # OF LOWERCASE ENGLISH LETTERS
 		SMA
 		JMP CPP3
-		TAD (91
+		TAD (D91		/ 97 + 26 - 91 = 32 = ('a' - 'A')
 		DCAI ZTMP
 CPP3,	ISZ ZTMP
 		JMP CPP1
@@ -756,13 +754,13 @@ int p;
 #asm
 		DCA ZTMP
 		TAD ZTMP
-		TAD (-97
+		TAD (D-97		/ SEE cupper() COMMENTARY
 		SPA
 		JMP TPP3
-		TAD (-26
+		TAD (D-26
 		SMA
 		JMP TPP3
-		TAD (91
+		TAD (D91
 		JMP TPP2
 TPP3,	CLA CLL
 		TAD ZTMP
@@ -1027,5 +1025,3 @@ int *dst,*src,cnt;
 	while (cnt--)
 		*dst--=*src--;
 }
-
-
