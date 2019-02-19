@@ -1800,6 +1800,9 @@ from CC8, allowing your SABR code to use these as well:
 |`ACL`  |7701 |load AC from MQ (use `CLA SWP` to give inverse of `MQL`)|
 |`MQA`  |7501 |OR MQ with AC, result in MQ|
 |`SWP`  |7521 |swap AC and MQ|
+|`DILX` |6053 |set VC8E X coordinate (used by [`dispxy()`](#dispxy)|
+|`DILY` |6054 |set VC8E Y coordinate|
+|`DIXY` |6054 |pulse VC8E at (X,Y) set by `DIXY`,`DILY`|
 |`CDF0` |6201 |change DF to field 0|
 |`CDF1` |6211 |change DF to field 1|
 |`CAF0` |6203 |change both IF and DF to field 0|

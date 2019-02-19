@@ -41,6 +41,15 @@ void header ()
 	newline ();
 	frontend_version();
 	newline ();
+
+    /* Define some useful op-codes SABR doesn't provide, some for use by
+     * LIBC, some also useful to end user code.  We document these in
+     * the CC8 user manual, here:
+     * 
+     * https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md#opdef
+     *
+     * BEWARE: Also change the copy in ../os8/header.sb !
+     */
 	output_line ("OPDEF ANDI 0400");
 	output_line ("OPDEF TADI 1400");
 	output_line ("OPDEF ISZI 2400");
@@ -58,6 +67,10 @@ void header ()
 	output_line ("OPDEF CAF0 6203");
 	output_line ("OPDEF BSW 7002");
 	output_line ("OPDEF CAM 7621");
+	output_line ("OPDEF DILX 6053");
+	output_line ("OPDEF DILY 6054");
+	output_line ("OPDEF DIXY 6055");
+
 	output_line ("/");
 }
 
