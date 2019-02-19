@@ -18,7 +18,7 @@
 
 #asm
 /
-/	PDP8/E Run time routines for the Small-C compiler.  SABR syntax.
+/   PDP8/E Run time routines for the Small-C compiler.  SABR syntax.
 /
 ABSYM STRV 153
 ABSYM PSTRL 154
@@ -36,123 +36,123 @@ ABSYM TMP 167
 ABSYM GBL 170
 ABSYM ZTMP 171
 /
-	DECIM
+        DECIM
 /
-STK,	COMMN 3840
+STK,    COMMN 3840
 /
 /
 /
-		ENTRY MAIN
-MAIN,	BLOCK 2
-		TAD GBLS
-		DCA STKP
-		TAD GBLS
-		DCA GBL
-		ISZ GBL		/ LOCAL LITERALS = STKP+1
-		TAD PVL
-		DCA PSH
-		TAD OVL
-		DCA POP
-		TAD MVL
-		DCA PTSK
-		TAD PVR
-		DCA POPR
-		TAD PVC
-		DCA PCAL
-		TAD SII
-		DCA PINIT
-		TAD SRI
-		DCA PSTRI
-		TAD SRD
-		DCA PSTRD
-		TAD SRL
-		DCA PSTRL
-		RIF
-		TAD (3201
-		DCA PCL1
-		TAD PCL1
-		DCA DCC0
-		JMS MCC0
-		CLA CMA
-		MQL
-		CALL 1,LIBC
-		ARG STKP
-		CALL 0,OPEN
-		JMSI PCAL
-		XMAIN
-		CALL 0,EXIT
+        ENTRY MAIN
+MAIN,   BLOCK 2
+        TAD GBLS
+        DCA STKP
+        TAD GBLS
+        DCA GBL
+        ISZ GBL     / LOCAL LITERALS = STKP+1
+        TAD PVL
+        DCA PSH
+        TAD OVL
+        DCA POP
+        TAD MVL
+        DCA PTSK
+        TAD PVR
+        DCA POPR
+        TAD PVC
+        DCA PCAL
+        TAD SII
+        DCA PINIT
+        TAD SRI
+        DCA PSTRI
+        TAD SRD
+        DCA PSTRD
+        TAD SRL
+        DCA PSTRL
+        RIF
+        TAD (3201
+        DCA PCL1
+        TAD PCL1
+        DCA DCC0
+        JMS MCC0
+        CLA CMA
+        MQL
+        CALL 1,LIBC
+        ARG STKP
+        CALL 0,OPEN
+        JMSI PCAL
+        XMAIN
+        CALL 0,EXIT
 /
-PUSH,	0
-		CDF1
-		ISZ STKP
-		DCAI STKP
-		TADI STKP
-		JMPI PUSH
-PPOP,	0
-		CDF1
-		DCA TMP
-		TADI STKP
-		MQL
-		CMA
-		TAD STKP
-		DCA STKP
-		TAD TMP
-		JMPI PPOP
-PUTSTK,	0
-		JMSI POP
-		SWP
-		DCA JLC
-		SWP
-		DCAI JLC
-		TADI JLC
-		JMPI PUTSTK
-POPRET,	JMSI POP
-		SWP
-		DCA ZTMP
-		SWP
-		JMPI ZTMP
-PCALL,	0
-		CLA CLL
-PCL1,	0
-		TADI PCALL
-		DCA ZTMP
-		TAD PCALL
-		IAC
-		JMSI PSH		/ PUSH RETURN
-		CLA
-		JMPI ZTMP
-IINIT,	0
-		DCA STRV
-		JMPI IINIT
-STRI,	0
-		CDF4
-		DCAI STRV
-		CDF1
-		ISZ STRV
-		JMPI STRI
-STRD,	0
-		CDF4
-		CLA
-		TADI STRV
-		CDF1
-		ISZ STRV
-		JMPI STRD		
-STRL,	0
-		CDF4
-		CLA
-		TADI STRV
-		CDF1
-		JMPI STRL		
-PVL,	PUSH
-OVL,	PPOP
-MVL,	PUTSTK
-SVL,	STK
-PVR,	POPRET
-PVC,	PCALL
-SII,	IINIT
-SRI,	STRI
-SRD,	STRD
-SRL,	STRL
+PUSH,   0
+        CDF1
+        ISZ STKP
+        DCAI STKP
+        TADI STKP
+        JMPI PUSH
+PPOP,   0
+        CDF1
+        DCA TMP
+        TADI STKP
+        MQL
+        CMA
+        TAD STKP
+        DCA STKP
+        TAD TMP
+        JMPI PPOP
+PUTSTK, 0
+        JMSI POP
+        SWP
+        DCA JLC
+        SWP
+        DCAI JLC
+        TADI JLC
+        JMPI PUTSTK
+POPRET, JMSI POP
+        SWP
+        DCA ZTMP
+        SWP
+        JMPI ZTMP
+PCALL,  0
+        CLA CLL
+PCL1,   0
+        TADI PCALL
+        DCA ZTMP
+        TAD PCALL
+        IAC
+        JMSI PSH        / PUSH RETURN
+        CLA
+        JMPI ZTMP
+IINIT,  0
+        DCA STRV
+        JMPI IINIT
+STRI,   0
+        CDF4
+        DCAI STRV
+        CDF1
+        ISZ STRV
+        JMPI STRI
+STRD,   0
+        CDF4
+        CLA
+        TADI STRV
+        CDF1
+        ISZ STRV
+        JMPI STRD       
+STRL,   0
+        CDF4
+        CLA
+        TADI STRV
+        CDF1
+        JMPI STRL       
+PVL,    PUSH
+OVL,    PPOP
+MVL,    PUTSTK
+SVL,    STK
+PVR,    POPRET
+PVC,    PCALL
+SII,    IINIT
+SRI,    STRI
+SRD,    STRD
+SRL,    STRL
 /
 #endasm
 
