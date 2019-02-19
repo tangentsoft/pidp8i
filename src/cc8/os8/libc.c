@@ -451,12 +451,12 @@ int x,y;
 {
 	x;      /* put x param in AC */
 #asm
-	3115	/ 6053 octal (we're in DECIM mode!) so DILX, load display X reg
+	DILX	/ load x into display X reg
 #endasm
 	y;
 #asm
-	3116	/ 6054 octal, DILY, load display Y reg from AC = y param
-	3117	/ 6055 octal, DIXY: pulse display at loaded X,Y coordinate
+	DILY	/ load y into display Y reg
+	DIXY	/ pulse display at loaded X,Y coordinate
 #endasm
 }
 
