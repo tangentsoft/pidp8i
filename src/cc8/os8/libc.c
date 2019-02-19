@@ -21,8 +21,8 @@
  *
  * This is a complex collection of mixed C and SABR assembly routines.
  * Some functions have been substantially shortened to save space
- * relative to the original versions.  Eventually, most of the C will
- * need to be rewritten in SABR and hand optimised; e.g. atoi().
+ * relative to the original versions.  Over time, we expect to rewrite
+ * the remaining pure C routines in hand-optimized SABR.
  */
 
 #asm
