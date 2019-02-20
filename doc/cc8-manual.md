@@ -1047,8 +1047,6 @@ The `dst` buffer can safely overlap the `src` buffer only if it is at a
 lower address in memory. (Note that there is no `memmove()` in this
 implementation.)
 
-Uses auto-index registers 12₈, 13₈, and 14₈.
-
 **Standard Violations:**
 
 *   Returns 0 instead of the `dst` pointer as required by the Standard.
@@ -1088,11 +1086,9 @@ its documentation for further details.
 
 **WARNING:** Because `printf()` is implemented in terms of `sprintf()`
 and it points at [a static buffer in the user data field](#memory), you
-can only safely print up to *93* characters at a time with `printf()`.
-Printing more will first overwrite space reserved by OS/8 for device
-handlers, then wrap around to overwrite space reserved for use by the
-technology stack CC8 is built atop: the FORTRAN II libraries, SABR, and
-the linking loader.
+can only safely print up to *112* characters at a time with `printf()`.
+Printing more will corrupt program data and most likely crash the
+program.
 
 
 ### <a id="puts" name="fputs"></a>`puts(s)`, `fputs(s)`
@@ -1248,9 +1244,6 @@ Beware that this function will [wrap around](#ptrwrap) if either
 The `dst` buffer can safely overlap the `src` buffer only if it is at a
 lower address in memory.
 
-Unlike [`memcpy()`](#memcpy) the current implementation does not use any
-auto-index registers.
-
 **Standard Violations:**
 
 *   Returns 0, not a copy of `dst` as the Standard requires.
@@ -1366,7 +1359,7 @@ you can run with the OS/8 `R` command:
 If you've just run `EXE CCR` on `myprog.c`, you can skip the `CC` and
 `COMP` steps above, reusing the `CC.RL` file that was left behind.
 
-Basically, we leave the `/G` "go" switch off of the command to `LOADER`
+Basically, we leave the `/G` "go" switch off of the command to LOADER
 so that the program is left in its pre-run state in core so that
 `SAVE` can capture it to disk.
 
@@ -1397,36 +1390,61 @@ file table][os8oft] is at 17600₈, and [the USR][os8usr] is at 17700₈.
 The resident parts of device drivers also live up here.
 
 
+### <a id="zeropg"></a>Zero Page Usage
+
+The first thing to get clear in your mind is that there are at least
+*three* zero pages involved here, and possibly four, depending on how
+`LOADER.SV` chooses to arrange your program in memory. (We get into the
+nitty gritty of that [below](#flayout).) There are different rules for
+each field.
+
+The field containing the user’s executable code can also have code from
+the FORTRAN II run time library in it, especially when the user’s
+program is small and its use of FORTRAN II based library routines is
+modest. (We give an example of this [below](#flayout).) In such fields,
+LOADER places a small library of routines, which to a first
+approximation means user code should not use the zero page.
+
+Some of the space in the user code field’s zero page is left unused by
+LOADER, so we use it for a small number of internal globals maintained
+by the CC8 program initialization code: `init.h` for the cross-compiler,
+and `header.sb` for the native compiler, which we’ll refer to
+generically as “INIT” from here on.
+
+It is not currently clear to us if, between LOADER and INIT, if there is
+any space at all left over in the user code field. We’ll need to
+undertake a mapping quest to work this out. We’ll report the results
+here if our quest party manages to return alive. :)
+
+None of this applies to the field containing LIBC because it contains no
+FORTRAN II code, hence no LOADER internal helper routines or the globals
+for those routines. LIBC therefore uses the zero page in its field for
+entirely different purposes, which we do not document here because it
+never conflicts with the end user code and data fields. If you want to
+know how LIBC uses its field’s zero page, see `src/cc8/os8/libc.c`.
+
+The [user data field](#udf) also runs on entirely different rules from
+the above, since it contains no executable code at all, hence no prior
+reservations by LOADER or LIBC. See the next section for how the UDF
+uses its zero page.
+
+
 ### <a id="udf"></a>The User Data Field
 
-The layout of the user data field (1) breaks down like this:
+The user data field is always field 1. Its layout breaks down like this:
 
 | range         | use |
 | ------------- | --- |
-| `00000-00001` | PDP-8 interrupt handling; see Small Computer Handbook |
-| `00002-00007` | zero-page locations reserved for user code |
-| `00010-00017` | PDP-8 auto-index registers; see Small Computer Handbook |
-| `00020-00155` | static output buffer used by [`[f]printf()`](#printf) in [`sprintf()`](#sprintf) call |
-| `00156-00177` | LIBC and INIT global variables; might grow downward in future versions |
-| `10000-10177` | first page of UDF reserved for use by LOADER run-time routines |
+| `10000-10001` | PDP-8 interrupt handling; see Small Computer Handbook |
+| `10002-10007` | reserved for future LIBC use |
+| `10010-10017` | PDP-8 auto-index registers; see Small Computer Handbook |
+| `10020-10177` | static output buffer used by [`[f]printf()`](#printf) in [`sprintf()`](#sprintf) call |
 | `10200-1xxxx` | globals first, then literals packed together at the bottom |
 | `1xxxx-17577` | user stack, grows upward from end of literals |
 | `17600-17777` | last page of UDF reserved by OS/8 ([see above](#os8res)) |
 
 The maximum size of globals + literals + stack in a CC8 program is
 therefore 7400₈ words. (3840 decimal.)
-
-
-#### <a id="ldrts"></a>`LOADER` Run-Time System Reservation
-
-The `[f]printf()` static buffer above sits in space that `LOADER`
-reserves for itself, placing a small library of common routines in this
-first page of each field it uses, but since LIBC doesn’t call any of
-these routines, we can safely overwrite these routines with this buffer.
-
-(You can see this by examining the `LOADER.PA` file on the included
-DECtape image `media/os8/al-4691c-sa-os8-v3d-1.1978.tu56`. Look for the
-line `RUN-TIME SYSTEM PAGE 0 - PROPAGATED TROUGH ALL FIELDS`.)
 
 
 #### <a id="nulptr"></a>C NULL Pointers
@@ -1482,7 +1500,7 @@ arrange access to it some other way, such as [via inline
 assembly](#asm).
 
 
-### Field Layout, Concrete Example
+### <a id="flayout"></a>Field Layout, Concrete Example
 
 The field layout given [at the start of this section](#memory) is not
 fixed. The linking loader is free to use any layout it likes, consistent
@@ -1577,7 +1595,7 @@ The value 36₈ in the remaining lines reflects the way the loader works.
 The size of a core memory field in the PDP-8 is 40₈ pages. The lowest
 page is [set aside for use by LOADER itself](#ldrts). The remaining 3
 pages per field are due to our use of device-independent I/O, requested
-from `LOADER` with the `/I/O` flags. Programs not needing that can save
+from LOADER with the `/I/O` flags. Programs not needing that can save
 between 1 and 3 of these pages per field.
 
 For more on this topic, see the companion article [PDP-8 Memory
