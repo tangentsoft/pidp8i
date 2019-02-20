@@ -1359,7 +1359,7 @@ you can run with the OS/8 `R` command:
 If you've just run `EXE CCR` on `myprog.c`, you can skip the `CC` and
 `COMP` steps above, reusing the `CC.RL` file that was left behind.
 
-Basically, we leave the `/G` "go" switch off of the command to `LOADER`
+Basically, we leave the `/G` "go" switch off of the command to LOADER
 so that the program is left in its pre-run state in core so that
 `SAVE` can capture it to disk.
 
@@ -1394,27 +1394,39 @@ The resident parts of device drivers also live up here.
 
 The first thing to get clear in your mind is that there are at least
 *three* zero pages involved here, and possibly four, depending on how
-`LOADER` chooses to arrange your program in memory. (We get into the
+`LOADER.SV` chooses to arrange your program in memory. (We get into the
 nitty gritty of that [below](#flayout).) There are different rules for
 each field.
 
-The CC8 program initialization code — `init.h` for the cross-compiler,
-`header.sb` for the native compiler — uses several locations high up in
-the zero page of the field containing it for its own internal purposes.
-(From here on, we’ll refer to this code generically as INIT.) This code
-is placed just before your program’s `main()` function begins, so it’s
-always in your user code’s field. Your own code should therefore stay
-away from INIT’s locations, from 0150 through the end of the zero page.
+The field containing the user’s executable code can also have code from
+the FORTRAN II run time library in it, especially when the user’s
+program is small and its use of FORTRAN II based library routines is
+modest. (We give an example of this [below](#flayout).) In such fields,
+LOADER places a small library of routines, which to a first
+approximation means user code should not use the zero page.
 
-[LIBC](#libc) uses many zero page locations, but the details are
-unimportant from an end user perspective since `LOADER` will never place
-end user code in the same field as LIBC. Since user code should not be
-writing to LIBC’s field, there is no conflict between what it does and
-what your end user code does, nor between LIBC and INIT.
+Some of the space in the user code field’s zero page is left unused by
+LOADER, so we use it for a small number of internal globals maintained
+by the CC8 program initialization code: `init.h` for the cross-compiler,
+and `header.sb` for the native compiler, which we’ll refer to
+generically as “INIT” from here on.
 
-The [user data field](#udf) is always isolated from all of the above, so
-the use of the zero page in that field does not conflict with any of the
-above.
+It is not currently clear to us if, between LOADER and INIT, if there is
+any space at all left over in the user code field. We’ll need to
+undertake a mapping quest to work this out. We’ll report the results
+here if our quest party manages to return alive. :)
+
+None of this applies to the field containing LIBC because it contains no
+FORTRAN II code, hence no LOADER internal helper routines or the globals
+for those routines. LIBC therefore uses the zero page in its field for
+entirely different purposes, which we do not document here because it
+never conflicts with the end user code and data fields. If you want to
+know how LIBC uses its field’s zero page, see `src/cc8/os8/libc.c`.
+
+The [user data field](#udf) also runs on entirely different rules from
+the above, since it contains no executable code at all, hence no prior
+reservations by LOADER or LIBC. See the next section for how the UDF
+uses its zero page.
 
 
 ### <a id="udf"></a>The User Data Field
@@ -1433,18 +1445,6 @@ The user data field is always field 1. Its layout breaks down like this:
 
 The maximum size of globals + literals + stack in a CC8 program is
 therefore 7400₈ words. (3840 decimal.)
-
-
-#### <a id="ldrts"></a>`LOADER` Run-Time System Reservation
-
-The `[f]printf()` static buffer above sits in space that `LOADER`
-reserves for itself, placing a small library of common routines in this
-first page of each field it uses, but since LIBC doesn’t call any of
-these routines, we can safely overwrite these routines with this buffer.
-
-(You can see this by examining the `LOADER.PA` file on the included
-DECtape image `media/os8/al-4691c-sa-os8-v3d-1.1978.tu56`. Look for the
-line `RUN-TIME SYSTEM PAGE 0 - PROPAGATED TROUGH ALL FIELDS`.)
 
 
 #### <a id="nulptr"></a>C NULL Pointers
@@ -1595,7 +1595,7 @@ The value 36₈ in the remaining lines reflects the way the loader works.
 The size of a core memory field in the PDP-8 is 40₈ pages. The lowest
 page is [set aside for use by LOADER itself](#ldrts). The remaining 3
 pages per field are due to our use of device-independent I/O, requested
-from `LOADER` with the `/I/O` flags. Programs not needing that can save
+from LOADER with the `/I/O` flags. Programs not needing that can save
 between 1 and 3 of these pages per field.
 
 For more on this topic, see the companion article [PDP-8 Memory
