@@ -3,9 +3,25 @@
 
 ## A Bit of Grounding History
 
-The C language and its derivatives are now the industry standard for the
-development of operating systems and utilities. The language has evolved
-significantly since its initial specification in 1972.
+The PDP-8 was introduced by DEC in 1965 with the intention of being a
+small and cheap processor that could be used in a variety of use cases
+that were, at the time, considered low end, compared to where the rest
+of the minicomputer world was at the time. It filled niches at the time
+that today we’d fill with either desktop computers or embedded
+processors. That makes the PDP-8 the spiritual ancestor of the iMac I’m
+typing this on and of the Raspberry Pi this software is intended to run
+on.
+
+The PiDP-8/I project is part of an effort to prevent the PDP-8 from
+sliding into undeserved obscurity. Whether you consider it the ancestor
+of the desktop computer or the embedded processor, it is a machine worth
+understanding.
+
+The PDP-8 was roughly contemporaneous with a much more famous machine,
+the PDP-11, upon which the C programming language was created. Although
+a low-end PDP-11 is more powerful than even a high-end PDP-8, the fact
+that their commercial lifetimes overlapped by so many years made one of
+us (Ian Schofield) wonder if the PDP-8 could also support a C compiler.
 
 The first implementation of C was on the PDP-11 as part of the early
 work on the Unix operating system, and it was initially used to write
@@ -20,17 +36,9 @@ cross-compiling everything. That success in porting Unix lead to C’s own
 success first as a systems programming language, and then later as a
 general-purpose programming language.
 
-The PDP-8 was introduced by DEC in 1965 with the intention of being a
-small and cheap processor that could be used in a variety of
-environments. From this simple machine, the modern desktop computer
-evolved, some of which were used in the writing of this document. The
-PDP-8 is also arguably the ancestor of the Raspberry Pi you may be using
-our CC8 compiler on, as part of the PiDP-8/I project.
-
-The PiDP-8/I project is part of an effort to prevent the PDP-8 from
-sliding into undeserved obscurity. Whether you consider it the ancestor
-of the desktop computer or the embedded processor, it is a machine worth
-understanding.
+Although we are not likely to use CC8 to write a portable operating
+system for the PDP-8, it is powerful enough to fill C’s original niche
+in writing system utilities for a preexisting OS written in assembly.
 
 
 ## CC8’s Developmental Sparks
