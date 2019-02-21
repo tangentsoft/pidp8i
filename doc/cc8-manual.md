@@ -1727,6 +1727,28 @@ For the most part, CC8 currently leaves the task of optimization to the
 end user.
 
 
+### <a id="asmoct"></a>Inline Assembly is in Octal
+
+Like the OS/8 FORTRAN II compiler, the CC8 compilers leave SABR in its
+default octal mode. All integer constants emited by both compilers are
+in octal.  (Even those in generated labels and in error output
+messages!) This means integer constants in your inline assembly also get
+interpreted as octal, by default.
+
+If you use the `DECIM` SABR pseudo-op to get around this, you must be
+careful to add an `OCTAL` op before the block ends to shift the mode
+back. The compiler doesn’t detect use of `DECIM`, and it doesn’t blindly
+inject `OCTAL` ops after every inline assembly block to force the mode
+back on the off chance that the user had shifted the assembler into
+decimal mode. If you leave the assembler in `DECIM` mode at the end of
+an inline assembly block, the resulting SABR output will probably
+assemble but won’t run correctly because all integer constants from that
+point on will be misinterpreted.
+
+It’s safer, if you wan a given constant to be interpreted as decimal, to
+prefix it with a `D`. See the SABR manual for more details on this.
+
+
 ### <a id="linkage" name="varargs"></a>Library Linkage and Varargs
 
 CC8 has some non-standard features to enable the interface between the
@@ -1737,9 +1759,7 @@ library.
 **TODO:** Explain this.
 
 
-### <a id="os8asm"></a>Inline Assembly in the Native CC8 Compiler
-
-#### Limitations
+### <a id="os8asm"></a>Inline Assembly Limitations in the Native CC8 Compiler
 
 The native compiler has some significant limitations in the way it
 handles inline assembly.
@@ -1765,38 +1785,14 @@ shot to write everything it collected.
 This is one reason the CC8 LIBC has to be cross-compiled: its inline
 assembly is over 6&times; the size of this buffer.
 
-
-#### Incompatibilities
-
-The only known incompatibility between the compilers in the way they
-handle inline assembly is that the native compiler inserts a `DECIM`
-directive early in its SABR output, so all constants in inline assembly
-that aren’t specifically given a radix are treated as decimal numbers:
-
-    #asm
-        TAD (42
-    #endasm
-
-That instruction adds 42 decimal to AC when compiled with the native
-compiler, but it adds 34 decimal (42₈) with the cross-compiler because
-the cross-compiler leaves SABR in its default octal mode!
-
-If you want code to work with both, use the SABR-specific `D` and `K`
-prefix feature on constants:
-
-    #asm
-        TAD (D42      / add 42 *decimal* to AC
-    #endasm
-
-We cannot recommend using the `DECIM` and `OCTAL` SABR pseudo-ops in
-code that has to work with both compilers because there’s no way to tell
-what directive to give at the end of the `#asm` block to restore prior
-behavior. If you switch the mode without switching it back properly,
-SABR code emitted by the compiler itself will be misinterpreted.
-
-There’s a `DECIM` directive high up in the implementation of LIBC, but
-that’s fine since it knows it will be compiled by the cross-compiler
-only.
+Another problem to watch out for is that this inline assembly buffer is
+broken into sections with `!` and `$` characters so that the final pass
+of the compiler can break the `CASM.TX` file up into sections for
+insertion into the SABR output. It is therefore unsafe to use these
+characters in your inline assembly, lest they be seen as separators,
+causing incorrect output.  This is especially easy to do in comments;
+watch out! (See how easy it is to use an exclamation point when making
+comments?)
 
 
 ### <a id="opdef"></a>Predefined OPDEFs
