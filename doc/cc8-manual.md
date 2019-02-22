@@ -1508,13 +1508,18 @@ program needs additional dynamically-allocated memory, you’ll need to
 arrange access to it some other way, such as [via inline
 assembly](#asm).
 
-(Fun trivia: there was no `malloc()` in K&R C, either! An appendix in
-the first edition of “[The C Programming Language”][krc] gave a function
-called `alloc()` that worked in terms of the old Unix syscall
-[`sbrk(2)`][sbrk]. Early parts of the book gave a trivial version of
-`alloc()` that was implemented in terms of a static buffer declared at
-the top of the program, which was made big enough for the program’s
-needs.  Sounds a lot like the way CC8 operates, yes?)
+(Fun trivia: there is no “`malloc()`” in K&R C, either, at least as far
+as the first edition of “[The C Programming Language”][krc] goes. Early
+in the book they give a simple function called `alloc()` that just
+divvied up a large static `char[]` array for its callers. Then in an
+appendix, they give a smarter alternative based on the old Unix syscall
+[`sbrk(2)`][sbrk]. The impression given is that memory allocation isn’t
+part of the language, it’s part of the operating system, and different
+implementations of C were expected to provide this facility in local
+ways. In the roughly contemporaneous UNIX V7, there *is* a `malloc()`
+implementation in its `libc` that works on the same basic principles,
+though if K&R `alloc()` is the ancestor of V7 `malloc()`, there’s a long
+evolutionary chain between them.)
 
 [sbrk]: https://pubs.opengroup.org/onlinepubs/7908799/xsh/brk.html
 
