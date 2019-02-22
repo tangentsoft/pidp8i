@@ -1508,20 +1508,40 @@ program needs additional dynamically-allocated memory, you’ll need to
 arrange access to it some other way, such as [via inline
 assembly](#asm).
 
-(Fun trivia: there is no “`malloc()`” in K&R C, either, at least as far
-as the first edition of “[The C Programming Language”][krc] goes. Early
-in the book they give a simple function called `alloc()` that just
-divvied up a large static `char[]` array for its callers. Then in an
-appendix, they give a smarter alternative based on the old Unix syscall
-[`sbrk(2)`][sbrk]. The impression given is that memory allocation isn’t
-part of the language, it’s part of the operating system, and different
-implementations of C were expected to provide this facility in local
-ways. In the roughly contemporaneous UNIX V7, there *is* a `malloc()`
-implementation in its `libc` that works on the same basic principles,
-though if K&R `alloc()` is the ancestor of V7 `malloc()`, there’s a long
-evolutionary chain between them.)
+
+#### Fun Trivia: The History of `malloc()`
+
+There is no “`malloc()`” in K&R C, either, at least as far as the first
+edition of “[The C Programming Language”][krc] goes. About halfway into
+the book they give a simple function called `alloc()` that just
+determined whether the requested amount of space was available within a
+large static `char[]` array it managed for its callers. If so, it
+advanced the pointer that much farther into the buffer and returned that
+pointer. The corresponding `free()` implementation just chopped the
+globally-allocated space off again, so if you called that `alloc()`
+twice and freed the first pointer, the second would be invalid, too!
+
+Then in Appendix A, Kernighan & Ritchie give a much smarter alternative
+based on the old Unix syscall [`sbrk(2)`][sbrk]. The impression given is
+that memory allocation isn’t part of the language, it’s part of the
+operating system, and different implementations of C were expected to
+provide this facility in local ways.
+
+[V6 UNIX][v6ux] preceded K&R C by several years, and there is no
+`malloc()` there, either. There’s an `alloc()` implementation in its
+`libc` that’s scarcely more complicated than the `char[]` based one
+first presented in K&R. There is no `free()` in V6: new allocations just
+keep extending the amount of core requested.
+
+`malloc()` apparently first appeared about a year after K&R was
+published, in [V7 UNIX][v7ux]. It and its corresponding `free()` call
+are based on similar techniques to the `sbrk()`-based `alloc()` and
+`free()` published in K&R Appendix A, though clearly with quite a lot of
+evolution between the two.
 
 [sbrk]: https://pubs.opengroup.org/onlinepubs/7908799/xsh/brk.html
+[v6ux]: https://en.wikipedia.org/wiki/Version_6_Unix
+[v7ux]: https://en.wikipedia.org/wiki/Version_7_Unix
 
 
 ### <a id="vonn"></a>There Are No Storage Type Distinctions
