@@ -85,7 +85,7 @@ by the previous step, so they begin shipping the new release immediately
 after tagging it.
 
 
-## Produce the Normal Binary OS Image
+## <a id="bosi"></a>Produce the Normal Binary OS Image
 
 Start with the latest version of [Raspbian Lite][os] on a multi-core
 Raspberry Pi.
