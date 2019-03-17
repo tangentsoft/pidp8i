@@ -28,7 +28,7 @@ int getlabel() {
  */
 void print_label(int label) {
     output_label_prefix ();
-    output_decimal (label);
+    output_octal (label);
 }
 
 /**
@@ -107,20 +107,16 @@ void output_with_tab(char ptr[]) {
 }
 
 /**
- * output decimal number
+ * output octal number
  * @param number
  * @return 
  */
-void output_decimal(int number) {
+void output_octal(int number) {
 	int	k, zs;
 	char	c;
 
-	if (number == -32768) {
-		output_string ("-32768");
-		return;
-	}
 	zs = 0;
-	k = 10000;
+	k = 01000;
 	if (number < 0) {
 		number = (-number);
 		output_byte ('-');
@@ -132,7 +128,7 @@ void output_decimal(int number) {
 			output_byte (c);
 		}
 		number = number % k;
-		k = k / 10;
+		k = k / 8;
 	}
     return;
 }

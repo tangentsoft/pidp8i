@@ -22,8 +22,19 @@
  * Please note: no function declarations are made, so make sure the
  * arg lists are correct in the calling code.
  * 
-*/
+ */
 
+/*
+ * WARNING: The following values are indices into the function call
+ * table declared in libc.c.  (Search for "CLIST".)  These two lists
+ * must match.
+ *
+ * The indices are in octal, and it is *critical* that they be be so,
+ * because these values are treated as text by the compiler, not as C
+ * integers.  The compiler emits these numeric strings in the generated
+ * SABR code to call through the CLIST table, so since SABR runs in
+ * octal mode under CC8, the following indices also have to be in octal.
+ */
 #define itoa libc0
 #define	puts libc1
 #define	dispxy libc2
@@ -32,29 +43,31 @@
 #define	atoi libc5
 #define	sscanf vlibc6
 #define	xinit libc7
-#define	memcpy libc8
-#define	kbhit libc9
-#define	putc libc10
-#define	strcpy libc11
-#define	strcat libc12
-#define	strstr libc13
-#define	exit libc14
-#define	isnum libc15
-#define isdigit libc15
-#define	isalpha libc16
-#define	sprintf vlibc17
-#define	memset libc18
-#define	fgetc libc19
-#define	fopen libc20
-#define fputc libc21
-#define fclose libc22
-#define printf vlibc23
-#define isalnum libc24
-#define isspace libc25
-#define fprintf vlibc26
-#define	fputs libc27
-#define strcmp libc28
-#define cupper libc29
-#define fgets libc30
-#define revcpy libc31
-#define toupper libc32
+#define	memcpy libc10
+#define	kbhit libc11
+#define	putc libc12
+#define	strcpy libc13
+#define	strcat libc14
+#define	strstr libc15
+#define	exit libc16
+#define	isnum libc17
+#define	isalpha libc20
+#define	sprintf vlibc21
+#define	memset libc22
+#define	fgetc libc23
+#define	fopen libc24
+#define fputc libc25
+#define fclose libc26
+#define printf vlibc27
+#define isalnum libc30
+#define isspace libc31
+#define fprintf vlibc32
+#define	fputs libc33
+#define strcmp libc34
+#define cupper libc35
+#define fgets libc36
+#define revcpy libc37
+#define toupper libc40
+
+/* Declare function aliases. */ 
+#define isdigit isnum

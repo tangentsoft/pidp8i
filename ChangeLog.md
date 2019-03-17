@@ -118,10 +118,10 @@
         in it. If you don’t get how cool this is, you don’t understand
         it properly. :)</p>
 
-    *   <p>Warren Young greatly expanded the [CC8 user manual][cc8m]. It
-        now answers many more questions, reveals many previously hidden
-        details, fully documents LIBC’s behaviors, and documents the CC8
-        memory model.</p>
+    *   <p>Warren Young quadrupled the size of the [CC8 user manual][cc8m].
+        It now answers many more questions, reveals many previously
+        hidden details, fully documents LIBC’s interfaces and internal
+        behaviors, and documents the CC8 memory model.</p>
 
     *   <p>Warren and Ian collaborated on fixes to the native compiler
         and its LIBC to fix a bunch of bugs and improve its conformance
@@ -130,6 +130,31 @@
         This work does change the API and ABI of CC8’s LIBC somewhat, so
         if you have existing code, you might want to read the new manual
         to work out what’s needed to port that code.</p>
+
+        <p>Notable improvements are that <tt>itoa()</tt> now takes a
+        radix parameter to match its implementation in other C
+        libraries; <tt>sprintf()</tt> returns an error code when the
+        format string contains an unsupported format specifier; and the
+        <tt>printf()</tt> family of functions now handle <tt>%x</tt> and
+        <tt>%X</tt> properly. In the prior release, only <tt>%x</tt>
+        was supported, and it gave uppercase output, not lowercase as
+        the Standard requires.</p>
+
+    *   <p>Warren changed CC8 to use octal when generating constants in
+        SABR output, that being SABR’s default radix. Since this means
+        SABR is always in octal mode, the primary user benefit of this
+        is that inline assembly now behaves the same in CC8 as in OS/8
+        FORTRAN II, which is also built atop SABR. That is to say, your
+        inline assembly code can safely assume that the assembler is in
+        octal mode when it processes your code.</p>
+
+        <p>This does mean that if you had C programs built with CC8 that
+        had inline assembly and that code had integer constants within
+        it, it will have to be changed to work with the new
+        compilers.</p>
+
+        <p>The default radix for C code remains 10, so if you were not
+        using inline assembly, this change does not affect you.</p>
 
 *   Since the beginning of this project, we've called our modified
     version of the SIMH PDP-8 simulator `pidp8i-sim`.  With this
@@ -222,8 +247,11 @@
 
 *   The `tools/mkbootscript` program which translates palbart assembly
     listing files into SIMH boot scripts was only writing a SIMH "dep"
-    command for the first word.  This affected some of the tty output
-    from `hello.script` and `pep001.script`.
+    command for the first word on a line of listing output.  It’s legal
+    in PAL format listings to have multiple words on a line, as is
+    common with data arrays and such. Any program that makes use of that
+    feature is affected, including the tty output from `hello.script`
+    and `pep001.script`.
 
     While in there, made several other improvements to the script.
 
@@ -281,7 +309,7 @@
     software be used on your FreeBSD desktop or server machine.  It may
     allow building on other BSDs, but that is untested.
 
-*   A year of maintenance and polishing, much of it resulting in
+*   Over a year of maintenance and polishing, much of it resulting in
     documentation and build system improvements.
 
 [cc8m]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md

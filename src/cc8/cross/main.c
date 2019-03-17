@@ -509,21 +509,21 @@ void errorsummary() {
         error("missing closing bracket");
     newline();
     gen_comment();
-    output_decimal(errcnt);
+    output_octal(errcnt);
     if (errcnt) errfile = YES;
     output_string(" error(s) in compilation");
     newline();
     gen_comment();
     output_with_tab("literal pool:");
-    output_decimal(litptr);
+    output_octal(litptr);
     newline();
     gen_comment();
     output_with_tab("global pool:");
-    output_decimal(global_table_index);
+    output_octal(global_table_index);
     newline();
     gen_comment();
     output_with_tab("Macro pool:");
-    output_decimal(macptr);
+    output_octal(macptr);
     newline();
     if (errcnt > 0)
         pl("Error(s)");

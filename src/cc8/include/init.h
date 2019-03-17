@@ -45,11 +45,9 @@ ABSYM TMP 167
 ABSYM GBL 170
 ABSYM ZTMP 171
 
-
 /
-        DECIM
 /
-STK,    COMMN 3840
+STK,    COMMN 7400
 /
 /
 /
@@ -79,7 +77,7 @@ MAIN,   BLOCK 2
         TAD SRL
         DCA PSTRL
         RIF
-        TAD (3201
+        TAD (6201           / BUILD CDF + IF INSTR
         DCA PCL1
         TAD PCL1
         DCA DCC0

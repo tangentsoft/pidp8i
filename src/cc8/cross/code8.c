@@ -244,10 +244,10 @@ void fpubext(SYMBOL *scptr) {
 }
 
 /*
- *  Output a decimal number to the assembler file
+ *  Output an octal number to the assembler file
  */
 void output_number (num) int num; {
-	output_decimal (num);	/* pdp11 needs a "." here */
+	output_octal (num);
 }
 
 
@@ -304,7 +304,7 @@ int gen_get_locale (SYMBOL *sym)  {
 	} else {
 		if (stkp-glint(sym)==0) output_string ("/");
 		gen_immediate3 ();
-		output_decimal (stkp-glint(sym));
+		output_octal (stkp-glint(sym));
 		newline ();
 	}
     return 0;
@@ -467,7 +467,7 @@ int		*nargs;
 	if (strstr(sname,"vlibc")) {
 	gen_immediate();
 	sname++;
-	output_decimal (*nargs);
+	output_octal (*nargs);
 	output_string ("\t/ PUSH ARG COUNT");
 	newline ();
 	output_line("\tJMSI PSH");
@@ -619,7 +619,7 @@ int	newstkp;
 	}
 	output_line ("\tMQL");
 	gen_immediate3 ();
-	output_decimal (k);
+	output_octal (k);
 	newline ();
 	output_line ("\tTAD STKP");
 	output_line ("\tDCA STKP");
@@ -993,7 +993,7 @@ void gen_less_than ()
 	output_line("\tDCA JLC");
 	output_line("\tACL");
 	output_line("\tTAD JLC");
-	output_line("\tAND (2048");
+	output_line("\tAND (4000");
 }
 
 /*
@@ -1009,7 +1009,7 @@ void gen_less_or_equal ()
 	output_line("\tTAD JLC");
 	output_line("\tSNA");
 	output_line("\tCLA CMA");
-	output_line("\tAND (2048");
+	output_line("\tAND (4000");
 }
 
 /*
@@ -1024,7 +1024,7 @@ void gen_greater_than ()
 	output_line("\tDCA JLC");
 	output_line("\tACL");
 	output_line("\tTAD JLC");
-	output_line("\tAND (2048");
+	output_line("\tAND (4000");
 }
 
 /*
@@ -1041,7 +1041,7 @@ void gen_greater_or_equal ()
 	output_line("\tTAD JLC");
 	output_line("\tSNA");
 	output_line("\tCLA CMA");
-	output_line("\tAND (2048");
+	output_line("\tAND (4000");
 }
 
 /*

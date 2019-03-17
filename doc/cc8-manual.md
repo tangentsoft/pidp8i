@@ -3,9 +3,25 @@
 
 ## A Bit of Grounding History
 
-The C language and its derivatives are now the industry standard for the
-development of operating systems and utilities. The language has evolved
-significantly since its initial specification in 1972.
+The PDP-8 was introduced by DEC in 1965 with the intention of being a
+small and cheap processor that could be used in a variety of use cases
+that were, at the time, considered low end, compared to where the rest
+of the minicomputer world was at the time. It filled niches at the time
+that today we’d fill with either desktop computers or embedded
+processors. That makes the PDP-8 the spiritual ancestor of the iMac I’m
+typing this on and of the Raspberry Pi this software is intended to run
+on.
+
+The PiDP-8/I project is part of an effort to prevent the PDP-8 from
+sliding into undeserved obscurity. Whether you consider it the ancestor
+of the desktop computer or the embedded processor, it is a machine worth
+understanding.
+
+The PDP-8 was roughly contemporaneous with a much more famous machine,
+the PDP-11, upon which the C programming language was created. Although
+a low-end PDP-11 is more powerful than even a high-end PDP-8, the fact
+that their commercial lifetimes overlapped by so many years made one of
+us (Ian Schofield) wonder if the PDP-8 could also support a C compiler.
 
 The first implementation of C was on the PDP-11 as part of the early
 work on the Unix operating system, and it was initially used to write
@@ -20,35 +36,29 @@ cross-compiling everything. That success in porting Unix lead to C’s own
 success first as a systems programming language, and then later as a
 general-purpose programming language.
 
-The PDP-8 was introduced by DEC in 1965 with the intention of being a
-small and cheap processor that could be used in a variety of
-environments. From this simple machine, the modern desktop computer
-evolved, some of which were used in the writing of this document. The
-PDP-8 is also arguably the ancestor of the Raspberry Pi you may be using
-our CC8 compiler on, as part of the PiDP-8/I project.
+Although we are not likely to use CC8 to write a portable operating
+system for the PDP-8, it is powerful enough to fill C’s original niche
+in writing system utilities for a preexisting OS written in assembly.
 
-The PiDP-8/I project is part of an effort to prevent the PDP-8 from
-sliding into undeserved obscurity. Whether you consider it the ancestor
-of the desktop computer or the embedded processor, it is a machine worth
-understanding.
+
+## What Is CC8?
+
+The CC8 system includes two different compilers, each of which
+understands a different dialect of C:
+
+1.  A [cross-compiler](#cross) that builds and runs on any host computer
+    with a C compiler that still understands K&R C. This compiler
+    understands most of K&R C itself, with the exceptions documented
+    below.
+
+2.  A [native OS/8 compiler](#native), cross-compiled on the host
+    machine to PDP-8 assembly code by the cross-compiler. This compiler
+    is [quite limited](#nlim) compared to the cross-compiler.
+
+CC8 also includes [a small C library](#libc) shared by both compilers.
 
 
 ## CC8’s Developmental Sparks
-
-CC8 is a C subset implementation for the DEC PDP-8 processor.
-
-The CC8 project’s creator (Ian Schofield) thought it was time to have a
-modern language compiler running on the PDP-8. Ian actually wrote *two*
-C compilers:
-
-1.  A [cross-compiler](#cross) that builds and runs on any host computer
-    with a C compiler that still understands K&R C.
-
-2.  A [native OS/8 compiler](#native), compiled to assembly by the
-    cross-compiler.
-
-Ian also collected and wrote the [LIBC implementation](#libc) common to
-both compilers.
 
 The last high-level language compiler to be attempted for the PDP-8, as
 far as this document’s authors are aware, was Pascal in 1979 by Heinz
@@ -117,37 +127,26 @@ currently clear to us.
 <a id="cross" name="posix"></a>
 ## The Cross-Compiler
 
-The features of the cross-compiler are basically that of Small-C itself,
-being a good approximation of K&R C (1978) minus:
-
-*   most of the standard library (see [below](#libc) for what we *do*
-    have)
-
-*   function pointers
-
-*   `float` and `long`
+The CC8 cross-compiler is the [SmallC-85 C compiler][sc85] with a PDP-8
+[SABR][sabr] code generator strapped to its back end. That means the C
+language dialect understood by the CC8 cross-compiler is [K&R C
+(1978)][krc] minus function pointers and the `float` and `long` data
+types.
 
 The code for this is in the `src/cc8/cross` subdirectory of the PiDP-8/I
 source tree, and it is built along with the top-level PiDP-8/I software.
 When installed, this compiler is in your `PATH` as `cc8`.
 
-Ian Schofield wrote the CC8 cross-compiler as a [SABR][sabr] code
-generator for Ron Cain’s famous Small-C compiler, originally published
-in [Dr Dobb’s Journal][ddj], with later versions published elsewhere.
-William Cattey later ported this code base to Small-C 85, a living
-project currently [available on GitHub][sc85].
+CC8 also includes a [small C library](#libc) in the files
+`src/cc8/os8/libc.[ch]`, which is shared with the [native OS/8
+compiler](#native). This library covers only a small fraction of what
+the K&R C library does, in part due to system resource constraints.
 
-This means the cross compiler more or less adheres to the *language*
-dialect of C as published in "The C Programming Language," by Kernighan
-and Ritchie, first edition, 1978. The reader is directed to the extensive
-documentation of Small-C available on the web for further details. You
-may also find references for K&R C 1978 helpful.
-
-We stress *language* above because we have not attempted to clone the C
-Standard Library as of K&R 1978.  CC8 has a [very limited standard
-library](#libc), and it has many weaknesses relative to even early
-versions of C. See that section of this manual for details about known
-limitations, exclusions, and bugs.
+Ian Schofield originally wrote the SABR code generator atop a version of
+Ron Cain’s famous [Small-C compiler][sc80], originally published in [Dr
+Dobb’s Journal][ddj], with later versions published elsewhere.  William
+Cattey later ported this code base to SmallC-85, a living project
+currently [available on GitHub][sc85].
 
 The CC8 cross-compiler can successfully compile itself, but it produces
 a SABR assembly file that is too large (28K) to be assembled on the
@@ -159,18 +158,25 @@ targeting is not confined to that one file. There is code in various
 of the other modules that is specific to the PDP-8 port that should be
 abstracted out and cleaned up in the fullness of time.
 
-SABR is normally used as the second pass of the OS/8 FORTRAN II
-system.
+[Currently](/tktview?name=e1f6a5e4fe), the simplest way to get SABR
+outputs from the CC8 cross-compiler into the PiDP-8/I simulator is to
+use our `os8-cp` program in ASCII mode to copy SABR outputs from the
+cross-compiler onto the simulator’s disk image:
 
-When you use the cross-compiler on a POSIX type system such as the
-Raspbian PiDP-8/I environment, the resulting `*.sb` files will have
-LF-only line endings, but OS/8 expects CR+LF line endings. The `txt2ptp`
-utility program included with the PiDP-8/I distribution will
-automatically do that conversion for you when making a SIMH paper tape
-image file, which you can then read into the OS/8 environment.
+    $ os8-cp -a -rk0s /opt/pidp8i/share/media/os8/v3d.rk05 \
+      src/cc8/examples/ps.sb dsk:
+
+That results in a file `DSK:PS.SB` with the POSIX LF-only line endings
+translated to the CRLF line endings OS/8 wants. You can then assemble,
+link, and run within the simulator, as described [below](#exes).
+
+For related ideas, see the PiDP-8/I wiki article “[Getting Text In][gti].”
 
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
+[gti]:  http://localhost:8080/wiki?name=Getting+Text+In
+[krc]:  https://en.wikipedia.org/wiki/The_C_Programming_Language
 [sabr]: /wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
+[sc80]: https://en.wikipedia.org/wiki/Small-C
 [sc85]: https://github.com/ncb85/SmallC-85
 
 
@@ -180,31 +186,34 @@ image file, which you can then read into the OS/8 environment.
 The cross-compiler has rudimentary C preprocessor features:
 
 *   Literal `#define` only.  You cannot define parameterized macros.
-    There are no `-D` or `-U` flags to define and undefine macros from
-    the command line.
 
-*   `#undef` to remove a symbol previously defined with `#define`
+*   There are no token pasting (`##`), stringization (`#`), or
+    charization (`#@`) features, there being little point to these
+    featuers of the C preprocessor without parameterized macros.
+
+*   `#undef` removes a symbol previously defined with `#define`
+
+*   There are no `-D` or `-U` flags to define and undefine macros from
+    the command line.
 
 *   `#include`, but only for files in the current directory.  There is
     no include path, either hard-coded within the compiler or modifiable
-    via the traditional `-I` compiler flag. #include can appear within
-    an included file but limited to 3 levels deep.
+    via the traditional `-I` compiler flag. It is legal to nest `#include`
+    statements, but the depth is currently limited to 3 levels, maximum.
 
 *   [Inline assembly](#asm) via `#asm`.
 
-*   Simple `#ifdef` and `#ifndef` with direct match of symbol or macro
-    names but not expressions. `#endif` is requried. `#else` is allowed.
-    There is no support for `#if`.
+*   `#ifdef`, `#ifndef`, `#else` and `#endif` work as expected, within
+    the limitations on macros given above.
 
-*   **TBD:** Token pasting?
-
-*   **TBD:** Stringization?
+*   There is no support for `#if`, not even for simple things like `#if
+    0`, much less for expressions such as `#if defined(XXX) &&
+    !defined(YYY)`
 
 
 ### <a id="nhead"></a>Necessary Headers
 
-There are two header files shipped with CC8, intended to be used only by
-users of the cross-compiler:
+There are two header files, for use with the cross-compiler only:
 
 *   `libc.h` — Declares the entry points used by [LIBC](#libc) using
     CC8 [library linkage directives](#linkage). If your program makes
@@ -213,13 +222,10 @@ users of the cross-compiler:
 
 *   `init.h` — Inserts a block of [inline assembly](#asm) startup code
     into your program, which initializes the program environment, sets
-    up LIBC, and defines a few low-level routines. Certain programs may
-    get away without this code, but the rules for which programs and why
-    are not currently clear to us.  **TODO:** Find out the rules that
-    govern whether this is necessary.
-
-As a rule, all cross-compiler users should include both of these at the
-top of every program.
+    up LIBC, and defines a few low-level routines. Unless you know this
+    file’s contents and have determined that you do not need any of what
+    it does for you, you probably cannot write a valid CC8 program that
+    does not `#include` this header.
 
 Because the cross-compiler lacks an include path feature, you generally
 want to symlink these files to the directory where your source files
@@ -227,32 +233,41 @@ are. This is already done for the CC8 examples and such.
 
 If you compare the examples in the source tree (`src/cc8/examples`) to
 those with uppercased versions of those same names on the OS/8 `DSK:`
-volume, you’ll notice that these `#include` statements were stripped
-out. This is [necessary](#os8pp); the linked documentation tells you why
-and how the OS/8 version of CC8 gets away without a `#include` feature.
+volume, you’ll notice that these `#include` statements were stripped out
+as part of the disk pack build process. This is [necessary](#os8pp); the
+linked documentation tells you why and how the OS/8 version of CC8 gets
+away without a `#include` feature.
 
-The tool that strips these `#includes` out for us is called
-`bin/cc8-to-os8`, which you might find useful if you’re frequently
-working with programs that need to work under both compilers.
+If you need to write C programs that build with both compilers, you can
+convert the files like so:
 
-Alternatively a simple `sed` script could be used:
+    sed '/^#include/d' < my-program-cross.c > MYPROG.C
 
-    sed '/^#include/d' <yourfile>
 
 <a id="native" name="os8"></a>
 ## The Native OS/8 Compiler
 
-This compiler’s source code is in the `src/cc8/os8` subdirectory of the
-PiDP-8/I software distribution.
+Whereas the [CC8 cross-compiler](#cross) is basically just a PDP-8 code
+generator strapped to the preexisting Small-C compiler, the native OS/8
+CC8 compiler was written from scratch by Ian Schofield. It gets
+cross-compiled, assembled, linked, and saved to the OS/8 disk packs as
+part of the PiDP-8/I software build process. Thereafter, it is a
+standalone system using only OS/8 resources.
 
-Unlike in the original CC8 distribution or in past distributions of the
-PiDP-8/I software, we no longer need to ship binaries for the compiler
-to bootstrap the system. Due to the power of [`os8-run`][os8r] and the
-PiDP-8/I software build system, we now bootstrap CC8 environment
-entirely from source code unless the user passes the `--disable-os8-cc8`
-option to the `configure` script.  This process is controlled by the
-[`cc8-tu56.os8`][cctu] script, which you may want to examine along with
-the `os8-run` documentation to understand this process better.
+Because this compiler must work entirely within the stringent limits of
+the PDP-8 computer architecture and its OS/8 operating system, it speaks
+a [much simpler dialect of C](#nfeat) than the cross-compiler, which
+gets to use your host’s much greater resources.
+
+Unlike with the original CC8 software distribution, the PiDP-8/I
+software project does not ship any pre-built CC8 binaries.  Instead, we
+bootstrap CC8 binaries from source code with the powerful
+[`os8-run`][os8r] scripting language interpreter and the PiDP-8/I
+software build system.  (You can suppress this by passing the
+`--disable-os8-cc8` option to the `configure` script.) This process is
+controlled by the [`cc8-tu56.os8`][cctu] script, which you may want to
+examine along with the `os8-run` documentation to understand this
+process better.
 
 If you change the OS/8 CC8 source code, saying `make` at the PiDP-8/I
 build root will update `bin/v3d.rk05` with new binaries automatically.
@@ -262,20 +277,21 @@ the [standard memory layout](#memory) applies to both.  Among other
 things, this means each pass of the native compiler requires
 approximately 20&nbsp;kWords of core.
 
+The native OS/8 CC8 compiler’s source code is in the `src/cc8/os8`
+subdirectory of the PiDP-8/I software distribution.
+
 <a id="ncpass"></a>The compiler passes are:
 
 1.  `c8.c` &rarr; `c8.sb` &rarr; `CC.SV`: The compiler driver: accepts
-    the input file name from the user, and calls the first proper
-    compiler pass, `CC1`.
+    the input file name from the user, does some [rudimentary
+    preprocessing](#os8pp) on it, and calls the first proper compiler
+    pass, `CC1`.
 
 2.  `n8.c` &rarr; `n8.sb` &rarr; `CC1.SV`: The parser/tokeniser section
     of the compiler.
 
 3.  `p8.c` &rarr; `p8.sb` &rarr; `CC2.SV`: The token to SABR code
     converter section of the compiler.
-
-`CC.SV` contains extremely rudimentary preprocessor features
-documented [below](#os8pp).
 
 There is also `libc.c` &rarr; `libc.sb` &rarr; `LIBC.RL`, the [C
 library](#libc) linked to any program built with CC8, including the
@@ -317,7 +333,7 @@ OS/8 CC8 compiler:
 1.  **Bitwise operators:** `&`, &brvbar;, `~` and `!`
 
 1.  **Simple comparison operators:** False expressions evaluate as 0 and
-    true as -1 in twos complement form, meaning all 1's in binary form.
+    true as -1 in two’s complement form, meaning all 1's in binary form.
     See the list of limitations below for the operators excluded by our
     "simple" qualifier.
 
@@ -340,37 +356,36 @@ OS/8 CC8 compiler:
 <a id="nlim" name="limitations"></a>
 ### Known Limitations of the OS/8 CC8 Compiler
 
-The OS/8 version of CC8 is missing many language features relative to
-[the cross-compiler](#cross), and much more compared to modern C.
+The OS/8 version of CC8 supports a subset of the C dialect understood by
+[the cross-compiler](#cross), and thus of K&R C:
 
 1.  <a id="typeless"></a>The language is typeless in that everything is
-    a 12 bit integer and any variable/array can interpreted as `int`, `char`
-    or pointer.  All variables and arrays must be declared as `int`.
-    The return type may be left off of a function's definition; it is
-    implicitly `int` in all cases, since `void` is not supported.
+    a 12 bit integer, and any variable/array can interpreted as `int`,
+    `char` or pointer.  All variables and arrays must be declared as
+    `int`. As with K&R C, the return type may be left off of a
+    function's definition; it is implicitly `int` in all cases.
 
-    **TBD** A recent update may have added void.
+    Because the types are already known, it is not necessary to give
+    types when declaring function arguments:
 
-    Further to this point, in the OS/8 version of CC8, it is optional
-    to declare the types of the arguments to a function. For example,
-    the following is likely to be rejected by a strictly conforming
-    K&R C compiler, but it is legal in OS/8 CC8 because the types
-    are already known, there being only one data tyype in OS/8 CC8:
-
-        myfn(n) { /* do something with n; optionally return something */ }
+        myfn(n) { /* do something with n */ }
 
     This declares a function taking an `int` called `n` and returning
-    an `int`. Contrast the CC8 cross-compiler, which requires the
-    function's argument type to be declared, if not the return type:
+    an `int`.
+    
+    Contrast the CC8 cross-compiler, which requires function argument
+    types to be declared, if not the return type, per K&R C rules:
 
         myfn(n)
         int n;
         {
-            /* do something with n; optionally return something */
+            /* do something with n */
         }
 
-    (The return type cannot be `void` since there is no `void` in
-    K&R C as published in 1978, thus not in CC8, either.)
+    The cross-compiler supports `void` as an extension to K&R C, but the
+    native compiler does not, and it is not yet smart enough to flag
+    code including it with an error. It will simply generate bad code
+    when you try to use `void`.
 
 2.  There must be an `int main()`, and it must be the last function
     in the single input C file.
@@ -393,8 +408,8 @@ The OS/8 version of CC8 is missing many language features relative to
     *   `#include` is not supported and must not appear in the C source
         code fed to the Native OS/8 Compiler.
 
-        You cannot use `#include` directives to string multiple C modules
-        into a single program.
+        This means you cannot use `#include` directives to string
+        multiple C modules into a single program.
 
         It also means that if you take a program that the cross-compiler
         handles correctly and just copy it straight into OS/8 and try to
@@ -407,9 +422,9 @@ The OS/8 version of CC8 is missing many language features relative to
         pass](#ncpass), implemented in `p8.c`, so it doesn’t need
         `#include` to make these things work.)
 
-    *   [Broken](#os8asm) handling of [inline assmembly](#asm) via `#asm`.
+    *   No conditional compilation: `#if`, `#ifdef`, `#else`, etc.
 
-    *   No support for `#if`, `#ifdef`, etc.
+    *   [Inline assmembly](#asm) via `#asm`.
 
 5.  Variables are implicitly `static`, even when local.
 
@@ -463,14 +478,13 @@ The OS/8 version of CC8 is missing many language features relative to
 
 9. Dereferencing parenthesized expressions does not work: `*(<expr>)`
 
-10. The stack, which includes all globals and literals, is only 4&nbsp;kWords.
-    Stack overflow is not detected.  Literals are inlcuded in this due
-    to a limitation in the way `COMMN` is implemented in SABR.
+10. There is no argument list checking, not even for functions
+    previously declared in the same C file. If we did fix this, the
+    problem would still exist for functions in other modules, such as
+    [`LIBC`](#libc), since K&R C doesn’t have prototypes; ANSI added
+    that feature to C.
 
-11. There is no argument list checking, not even for standard library
-    functions.
-
-12. `do/while` loops are parsed, but the code is not properly generated.
+11. `do/while` loops are parsed, but the code is not properly generated.
     Regular `while` loops work, as does `break`, so one workaround for a
     lack of `do/while` is:
 
@@ -478,11 +492,7 @@ The OS/8 version of CC8 is missing many language features relative to
 
     We have no intention to fix this.
 
-13. `switch` doesn't work.
-
-The provided [LIBC library functions](#libc) is also quite limited and
-nonstandard compared to Standard C.  See the documentation for each
-individual library function for details.
+12. `switch` doesn't work.
 
 
 <a id="warning"></a>
@@ -1342,7 +1352,7 @@ Another set of examples not preinstalled on the OS/8 disk are
 [pce]: /wiki?name=PEP001.C
 
 
-## Making Executables 
+## <a id="exes"></a>Making Executables 
 
 Executing `CCR.BI` loads, links, and runs your C program without
 producing an executable file on disk.  You need only a small variation
@@ -1471,12 +1481,11 @@ what type of data or code it’s trying to access.
 This means it is possible to iterate a pointer past the end of a 4096
 word core memory field, causing it to wrap around to 0 and continue
 blithely along.  Since the last page of the user data field [is reserved
-for use by OS/8](#os8res) and the first page of each field is [reserved
-by the LOADER run time system](#ldrts), programs that do this will most
-likely crash and may even destroy data. Our [LIBC implementation](#libc)
-generally does not try to check for such wraparound problems, much less
-signal errors when it happens. The programmer is expected to avoid doing
-this.
+for use by OS/8](#os8res) and the first page of the UDF has [several
+special uses](#udf), programs that do this will most likely crash and
+may even destroy data. Our [LIBC implementation](#libc) generally does
+not try to check for such wraparound problems, much less signal errors
+when it happens. The programmer is expected to avoid doing this.
 
 Code that operates on pointers will generally only do its work within
 the user data field. You will likely need to resort to [inline
@@ -1498,6 +1507,70 @@ statically-allocated, if you’re using stock C-level mechanisms. If your
 program needs additional dynamically-allocated memory, you’ll need to
 arrange access to it some other way, such as [via inline
 assembly](#asm).
+
+
+#### Fun Trivia: The History of `malloc()`
+
+There is no “`malloc()`” in K&R C, either, at least as far as the first
+edition of “[The C Programming Language”][krc] goes. About halfway into
+the book they give a simple function called `alloc()` that just
+determined whether the requested amount of space was available within a
+large static `char[]` array it managed for its callers. If so, it
+advanced the pointer that much farther into the buffer and returned that
+pointer. The corresponding `free()` implementation just chopped the
+globally-allocated space off again, so if you called that `alloc()`
+twice and freed the first pointer, the second would be invalid, too!
+
+Then in Appendix A, Kernighan & Ritchie give a much smarter alternative
+based on the old Unix syscall [`sbrk(2)`][sbrk]. The impression given is
+that memory allocation isn’t part of the language, it’s part of the
+operating system, and different implementations of C were expected to
+provide this facility in local ways.
+
+[V6 UNIX][v6ux] preceded K&R C by several years, and there is no
+`malloc()` there, either. There’s an `alloc()` implementation in its
+`libc` that’s scarcely more complicated than the `char[]` based one
+first presented in K&R. There is no `free()` in V6: new allocations just
+keep extending the amount of core requested.
+
+`malloc()` apparently first appeared about a year after K&R was
+published, in [V7 UNIX][v7ux]. It and its corresponding `free()` call
+are based on similar techniques to the `sbrk()`-based `alloc()` and
+`free()` published in K&R Appendix A, though clearly with quite a lot of
+evolution between the two.
+
+[sbrk]: https://pubs.opengroup.org/onlinepubs/7908799/xsh/brk.html
+[v6ux]: https://en.wikipedia.org/wiki/Version_6_Unix
+[v7ux]: https://en.wikipedia.org/wiki/Version_7_Unix
+
+
+### <a id="vonn"></a>There Are No Storage Type Distinctions
+
+It may surprise you to learn that literals are placed in the same field
+as globals and the call stack.
+
+Other C compilers place literals in among the executable code instead, a
+fact that’s especially helpful on [Harvard architecture
+microcontrollers][harch] with limited RAM. We don’t do it that way in
+CC8 because literals are implemented in terms of the SABR `COMMN`
+feature, which in turn is how OS/8 FORTRAN II implements `COMMON`. These
+subsystems have no concept of “storage type” as in modern C compilers.
+
+
+### <a id="sover"></a>Stack Overflow
+
+Since CC8 places the call stack immediately after the last literal
+stored in core, a program with many globals and/or literals will have
+less usable stack space than a program with fewer of each.
+
+Neither version of CC8 generates code to detect stack overflow. If you
+try to push too much onto the stack, it will simply begin overwriting
+the page OS/8 is using at the top of field 1. If you manage to blow the
+stack by more than a page without crashing the program or the computer
+first, the [stack pointer will wrap around](#ptrwrap) and the stack will
+begin overwriting the first page of field 1.
+
+[harch]: https://en.wikipedia.org/wiki/Harvard_architecture
 
 
 ### <a id="flayout"></a>Field Layout, Concrete Example
@@ -1727,6 +1800,28 @@ For the most part, CC8 currently leaves the task of optimization to the
 end user.
 
 
+### <a id="asmoct"></a>Inline Assembly is in Octal
+
+Like the OS/8 FORTRAN II compiler, the CC8 compilers leave SABR in its
+default octal mode. All integer constants emited by both compilers are
+in octal.  (Even those in generated labels and in error output
+messages!) This means integer constants in your inline assembly also get
+interpreted as octal, by default.
+
+If you use the `DECIM` SABR pseudo-op to get around this, you must be
+careful to add an `OCTAL` op before the block ends to shift the mode
+back. The compiler doesn’t detect use of `DECIM`, and it doesn’t blindly
+inject `OCTAL` ops after every inline assembly block to force the mode
+back on the off chance that the user had shifted the assembler into
+decimal mode. If you leave the assembler in `DECIM` mode at the end of
+an inline assembly block, the resulting SABR output will probably
+assemble but won’t run correctly because all integer constants from that
+point on will be misinterpreted.
+
+It’s safer, if you wan a given constant to be interpreted as decimal, to
+prefix it with a `D`. See the SABR manual for more details on this.
+
+
 ### <a id="linkage" name="varargs"></a>Library Linkage and Varargs
 
 CC8 has some non-standard features to enable the interface between the
@@ -1737,9 +1832,7 @@ library.
 **TODO:** Explain this.
 
 
-### <a id="os8asm"></a>Inline Assembly in the Native CC8 Compiler
-
-#### Limitations
+### <a id="os8asm"></a>Inline Assembly Limitations in the Native CC8 Compiler
 
 The native compiler has some significant limitations in the way it
 handles inline assembly.
@@ -1765,38 +1858,14 @@ shot to write everything it collected.
 This is one reason the CC8 LIBC has to be cross-compiled: its inline
 assembly is over 6&times; the size of this buffer.
 
-
-#### Incompatibilities
-
-The only known incompatibility between the compilers in the way they
-handle inline assembly is that the native compiler inserts a `DECIM`
-directive early in its SABR output, so all constants in inline assembly
-that aren’t specifically given a radix are treated as decimal numbers:
-
-    #asm
-        TAD (42
-    #endasm
-
-That instruction adds 42 decimal to AC when compiled with the native
-compiler, but it adds 34 decimal (42₈) with the cross-compiler because
-the cross-compiler leaves SABR in its default octal mode!
-
-If you want code to work with both, use the SABR-specific `D` and `K`
-prefix feature on constants:
-
-    #asm
-        TAD (D42      / add 42 *decimal* to AC
-    #endasm
-
-We cannot recommend using the `DECIM` and `OCTAL` SABR pseudo-ops in
-code that has to work with both compilers because there’s no way to tell
-what directive to give at the end of the `#asm` block to restore prior
-behavior. If you switch the mode without switching it back properly,
-SABR code emitted by the compiler itself will be misinterpreted.
-
-There’s a `DECIM` directive high up in the implementation of LIBC, but
-that’s fine since it knows it will be compiled by the cross-compiler
-only.
+Another problem to watch out for is that this inline assembly buffer is
+broken into sections with `!` and `$` characters so that the final pass
+of the compiler can break the `CASM.TX` file up into sections for
+insertion into the SABR output. It is therefore unsafe to use these
+characters in your inline assembly, lest they be seen as separators,
+causing incorrect output.  This is especially easy to do in comments;
+watch out! (See how easy it is to use an exclamation point when making
+comments?)
 
 
 ### <a id="opdef"></a>Predefined OPDEFs
