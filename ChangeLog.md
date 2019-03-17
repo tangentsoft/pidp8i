@@ -141,8 +141,8 @@
         the Standard requires.</p>
 
     *   <p>Warren changed CC8 to use octal when generating constants in
-        SABR output, that being SABR’s default radix. Since this means
-        SABR is always in octal mode, the primary user benefit of this
+        SABR output, that being SABR’s default radix. Since CC8 leaves
+        SABR in its default octal mode, the primary user benefit of this
         is that inline assembly now behaves the same in CC8 as in OS/8
         FORTRAN II, which is also built atop SABR. That is to say, your
         inline assembly code can safely assume that the assembler is in
