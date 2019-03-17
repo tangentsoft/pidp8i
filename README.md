@@ -874,7 +874,7 @@ install and enable the replacement systemd user service.
 
 ## License
 
-Copyright © 2016-2018 by Warren Young. This document is licensed under
+Copyright © 2016-2019 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 

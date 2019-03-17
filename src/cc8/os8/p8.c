@@ -159,7 +159,7 @@ main()
 				fputs("\tANDI STKP\r\n\tJMSI POP\r\n");
 				break;
 			case -20:
-				fputs("\tJMSI POP\r\n\tMQO\r\n");
+				fputs("\tJMSI POP\r\n\tMQA\r\n");
 				break;
 			case 21:
 				if (strl()>0) 
