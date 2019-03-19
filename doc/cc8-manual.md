@@ -899,11 +899,12 @@ according to format string `fmt`.
 Returns the number of characters written to the output file.
 
 This function is just a simple wrapper around [`printf()`](#printf)
-which sets a flag that causes `printf()` to write its results to the
-current output file instead of `TTY:`, so you must read its
-documentation to fully understand `fprintf()`. Since `printf()` is in
-turn based on [`sprintf()`](#sprintf), you must read that function’s
-documentation as well.
+which sets a flag that causes `printf()` to write the formatted string
+to the current output file using [`fputs()`](#fputs) instead of to
+`TTY:`, so you must read those two functions’ documentation to fully
+understand `fprintf()`. Since `printf()` is in turn based on
+[`sprintf()`](#sprintf), you must read that function’s documentation as
+well.
 
 **Standard Violations:**
 
@@ -1086,13 +1087,17 @@ Beware that this function will [wrap around](#ptrwrap) if `dst+len-1`
     zero](#memory).
 
 
-### <a id="printf" name="fprintf"></a>`printf(fmt, args...)`
+### <a id="printf"></a>`printf(fmt, args...)`
 
 Writes its arguments (`args`) formatted according to format string `fmt`
 to `TTY:`.
 
 This function is implemented in terms of [`sprintf()`](#sprintf), so see
-its documentation for further details.
+its documentation for details on string formatting.
+
+This function calls [`puts()`](#puts) after formatting the output
+string, so see its documentation for information on how LIBC writes raw
+character strings.
 
 **WARNING:** Because `printf()` is implemented in terms of `sprintf()`
 and it points at [a static buffer in the user data field](#memory), you
