@@ -622,6 +622,18 @@ open the next.  To open multiple input files, simply call `fopen()` to
 open each subsequent file, implicitly closing the prior input file.
 
 
+### <a id="crlf"></a>CR+LF Handling
+
+Because the PDP-8 started life in a world where “terminal” was
+synonymous with “Teletype,” OS/8 uses CR+LF line endings, and its
+FORTRAN II implementation does not translate bare LF to CR+LF on output.
+This means that in order to properly write text files, you must use an
+explicit “`\r\n`” sequence in programs compiled with CC8.
+
+We’ve tried fixing it, and it’s messy to do a complete job of it given
+the constraints involved.
+
+
 ### <a id="ctrlc"></a>Ctrl-C Handling
 
 Unlike on modern operating systems, there is nothing like `SIGINT` in
