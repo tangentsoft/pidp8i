@@ -1101,6 +1101,27 @@ Printing more will corrupt program data and most likely crash the
 program.
 
 
+### <a id="putc" name="fputc"></a>`putc(c)`, `fputc(c)`
+
+Writes a character `c` either to `TTY:` or to the currently-opened
+output file.
+
+The characters pointed to are expected to be 7-bit ASCII bytes stored
+within each PDP-8 word, with the top 5 bits unset, but no attempt is
+currently made to enforce this.
+
+Both functions return the written character.
+
+**Standard Violations:**
+
+*   Neither function can fail without locking up the computer or
+    crashing the program, so an EOF return can never happen.
+
+*   Neither function take a `FILE*` as their second parameter. `putc()`
+    always writes to `TTY:`, and `fputc()` always writes to the
+    currently-opened output file.
+
+
 ### <a id="puts" name="fputs"></a>`puts(s)`, `fputs(s)`
 
 Writes a null-terminated character string `s` either to `TTY:` or to the
