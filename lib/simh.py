@@ -145,6 +145,7 @@ class simh:
     ["NO ROOM, SKIPPING \\((\S+)\\)", False],
     ["SYSTEM ERROR-CLOSING FILE", False],
     ["USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
+    ["LINE TOO LONG IN FILE#\d+", False],
   ]
 
   # Pattern to match a SIMH command.  The command verb ends up in
