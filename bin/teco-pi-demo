@@ -5,7 +5,7 @@
 #   famous TECO "calculate pi" program to it, and starts it running at
 #   a very slow rate of speed to act as a blinkenlights demo.
 #
-# Copyright © 2017-2018 by Warren Young.
+# Copyright © 2017-2019 by Warren Young.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -107,7 +107,7 @@ def main ():
   last  = macro.pop ()
 
   # Send the first line of the macro; implicitly awaits 1st TECO prompt
-  s.os8_send_cmd ('\*', first)
+  s.os8_send_cmd ('\\*', first)
 
   # Blindly send core lines of the macro; TECO gives no prompts for 'em.
   for line in macro: 

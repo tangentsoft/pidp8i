@@ -6,7 +6,7 @@
 #
 #   See ../doc/class-simh.md for a usage tutorial.
 #
-# Copyright © 2017 by Jonathan Trites, © 2017-2018 by William Cattey
+# Copyright © 2017 by Jonathan Trites, © 2017-2019 by William Cattey
 # and Warren Young.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -624,7 +624,7 @@ class simh:
   # Wraps the OS/8 SQUISH command for a given device.
 
   def os8_squish (self, device):
-    self.os8_send_cmd ("\.", "SQUISH " + device + ":")
+    self.os8_send_cmd ('\\.', "SQUISH " + device + ":")
     self.os8_kbd_delay ()
     self._child.send ("Y\r");
 
