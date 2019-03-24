@@ -287,20 +287,31 @@ class simh:
   # escape *it*.  So, '\\$' is a reasonable thing to pass as the prompt
   # value, meaning "look for a literal $ character."
   #
-  # This routine cannot reasonably detect when it is in SIMH context and
-  # when it is in OS/8 context because that synchronization requires
-  # provoking an additional command prompt.  You might then think we
-  # could force that by sending something innocuous like a backspace
-  # character, this does not work in practice due to the possible
-  # complications from the multiple levels of context: what state SIMH
-  # is in, what state OS/8 is in, and what state the program currently
-  # being run under OS/8 is in.  For example, sending Ctrl-C at the OS/8
-  # level provokes another prompt, but sending it while a program is
-  # running under OS/8 may kill the program, or may not, or...
+  # This routine requires the caller to ensure that the system is in
+  # OS/8 Keyboard Monitor context — that is, ready for another OS/8
+  # command — before calling it.  While this routine is able to check
+  # whether we're in OS/8 context as a prerequisite, it is not practical
+  # for us to return the system to OS/8 context automatically from some
+  # other context because that would require us to know the current
+  # context in detail, but only the caller has that full knowledge.
+  # 
+  # Part of the problem is that in order to synchronize this object's
+  # internal state machine with the SIMH + OS/8 + running program state,
+  # we have to somehow provoke a prompt character from the running
+  # program.  How do we do that without knowing the current context?
+  # In some contexts, a CR or LF will do it, in others BS, and in others
+  # it'll take Ctrl-C.  Then you have a new problem, with is that those
+  # same characters aren't harmless: they'll change the very context
+  # we're trying to probe!  For instance, a Ctrl-C sent to the OS/8
+  # Keyboard Monitor just results in another prompt, but a Ctrl-C sent
+  # to a program running *under* OS/8 might kill it.  Or it might be
+  # treated as input.  Or it might be ignored entirely.
   #
-  # Therefore, we rely on the caller to ensure that the system is in
-  # OS/8 context before calling this function; we do not presume to
-  # return you to that context from another.
+  # There is no magic sequence we can send to SIMH or OS/8 to return the
+  # system to OS/8 Keyboard Monitor context without either changing the
+  # context in some way that might break the caller's needed state (e.g.
+  # Ctrl-E, go 7600) or lose data (e.g. Ctrl-C) or fail entirely (e.g.
+  # Enter.)  It's up to the caller to arrange this.
 
   def os8_send_cmd (self, prompt, line, debug=False, timeout=60):
     if self._context != 'os8': 
