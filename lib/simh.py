@@ -271,25 +271,36 @@ class simh:
   # Wait for an OS/8 command prompt running within SIMH, then send the
   # given line.
   #
-  # The prompt string is passed in because OS/8 has several different
-  # prompt types.
+  # The default timeout may seem excessive, but it is based on hard
+  # experience: when SIMH is running on a slow host with slow devices
+  # (e.g. the byte-by-byte transfer of the TD8E tape controller) a
+  # single OS/8 command can take a very long time if it requires a lot
+  # of I/O.  If you are calling this for a command that you know for a
+  # fact takes less time on all hosts and with all practical device
+  # configurations, we encourage you to pass a smaller value.
   #
-  # A previous version of this routine attempted to detect when
-  # OS/8 was suspended, and we were in the SIMH context.
-  # Unfortunately, re-synchronizing OS/8 with python expect requires
-  # provoking an additional prompt.
+  # The caller must pass a prompt string because OS/8 has several
+  # different prompt types: ., *, $, and #, at least.  Beware in passing
+  # these that they're treated as regular expressions, so characters
+  # special in Python REs must be escaped.  And then since the RE escape
+  # character (\) is also special in Python strings, you must double-
+  # escape *it*.  So, '\\$' is a reasonable thing to pass as the prompt
+  # value, meaning "look for a literal $ character."
   #
-  # Although it would be expected that sending a character delete
-  # or line delete would provoke a prompt, this does not work.
-  # At the Keyboard Monitor command level, pausing after sending
-  # the SIMH 'continue' command, then sending ^C, then pausing again
-  # then sending \n\r does provoke a command prompt.
-  # However, if you had escaped to SIMH from inside another program,
-  # that command sequence would kill your program and return you to
-  # the OS/8 keyboard monitor.
+  # This routine cannot reasonably detect when it is in SIMH context and
+  # when it is in OS/8 context because that synchronization requires
+  # provoking an additional command prompt.  You might then think we
+  # could force that by sending something innocuous like a backspace
+  # character, this does not work in practice due to the possible
+  # complications from the multiple levels of context: what state SIMH
+  # is in, what state OS/8 is in, and what state the program currently
+  # being run under OS/8 is in.  For example, sending Ctrl-C at the OS/8
+  # level provokes another prompt, but sending it while a program is
+  # running under OS/8 may kill the program, or may not, or...
   #
-  # Therefore, os8_send_cmd requires you to be running OS/8, and does
-  # not presume to try and get you there from SIMH.
+  # Therefore, we rely on the caller to ensure that the system is in
+  # OS/8 context before calling this function; we do not presume to
+  # return you to that context from another.
 
   def os8_send_cmd (self, prompt, line, debug=False, timeout=30):
     if self._context != 'os8': 
