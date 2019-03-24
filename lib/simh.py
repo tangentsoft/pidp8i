@@ -302,7 +302,7 @@ class simh:
   # OS/8 context before calling this function; we do not presume to
   # return you to that context from another.
 
-  def os8_send_cmd (self, prompt, line, debug=False, timeout=30):
+  def os8_send_cmd (self, prompt, line, debug=False, timeout=60):
     if self._context != 'os8': 
       print "OS/8 is not running. Cannot execute: " + line 
       return
