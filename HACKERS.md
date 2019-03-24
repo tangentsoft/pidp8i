@@ -853,3 +853,11 @@ with anything short of a working patch, for example:
 
 > Dev B: Well, that’s different, then. Thanks for the patch! Ticket
 > marked Implemented, but still Closed.
+
+
+## License
+
+Copyright © 2016-2019 by Warren Young. This document is licensed under
+the terms of [the SIMH license][sl].
+
+[sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
