@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
-<a id="201903xx"></a>
-## Version 2019.03.xx — The "OS/8 V3F and os8-run" release
+<a id="201904xx"></a>
+## Version 2019.04.xx — The "OS/8 V3F and os8-run" release
 
 *   The banner feature in this release is that Bill Cattey transformed
     our `mkos8` tool into the `os8-run` script interpreter, giving us
@@ -284,7 +284,7 @@
 
     *   Applied same high-bit improvement as for `hello.pal`.
 
-*   Updated SIMH to commit ID 2f8fca49c6 (2019-01-23).  The only change
+*   Updated SIMH to commit ID 2f0db744 (2019-04-13).  The only change
     of note to the PDP-8 simulator proper since our prior release is
     that devices now have description strings so that SIMH commands like
     `SHOW FEATURES` gives more descriptive output.

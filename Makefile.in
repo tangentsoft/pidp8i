@@ -7,7 +7,7 @@
 # re-build Makefile from that modified Makefile.in before proceeding to
 # do the "make" operation.
 #
-# Copyright © 2015 by Oscar Vermeulen, © 2016-2018 by Warren Young
+# Copyright © 2015 by Oscar Vermeulen, © 2016-2019 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -36,8 +36,8 @@
 
 # Git commit ID and time of the latest version of the SIMH 4 project on
 # GitHub that has been merged into this source base.
-SGCID=2f8fca49c6bfa4999d40a4adc50d6a2ad55464a3
-SGCTM=2019-01-23T15:17:19-08:00
+SGCID=2f0db74483bead32a9a6ef9c1606ba3162f63fc5
+SGCTM=2019-04-13T12:49:43-07:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 SIM_CFLAGS := @CFLAGS@ @BUILDMODE@ \
