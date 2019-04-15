@@ -111,9 +111,9 @@ def parse_args (script_files, options_enabled, options_disabled):
 
   # Add arguments corresponding to --*-os8-* configure script options
   max_obn_len = 0
-  for obn, vals in os8opts.opts.iteritems():
+  for obn, vals in os8opts.opts.items():
     max_obn_len = max(max_obn_len, len(obn))
-  for obn, vals in os8opts.opts.iteritems():
+  for obn, vals in os8opts.opts.items():
     if vals[0]:
       # Enable option
       pad_str = (max_obn_len - len (obn)) * " "
