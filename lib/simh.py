@@ -315,12 +315,12 @@ class simh:
 
   def os8_send_cmd (self, prompt, line, debug=False, timeout=60):
     if self._context != 'os8': 
-      print "OS/8 is not running. Cannot execute: " + line 
+      print("OS/8 is not running. Cannot execute: " + lin)
       return
     if debug:
-      print "os8_send_cmd: expecting: " + prompt
-      print "\tLast match before: {" + self._child.before + "}"
-      print "\tLast match after: {" + self._child.after + "}"
+      print("os8_send_cmd: expecting: " + prompt)
+      print("\tLast match before: {" + self._child.before + "}")
+      print("\tLast match after: {" + self._child.after + "}")
     self._child.expect ("\n%s$" % prompt, timeout = timeout)
     self.os8_send_line (line)
 
@@ -403,9 +403,9 @@ class simh:
   # Common error handler for os8_pip_to and os8_pip_from
 
   def pip_error_handler(self, caller, reply):
-    print "PIP error from inside " + caller + ": "
-    print "\t" + self._child.before.strip()
-    print "\t" + self._child.after.strip()
+    print("PIP error from inside " + caller + ": ")
+    print("\t" + self._child.before.strip())
+    print("\t" + self._child.after.strip())
     
     # Was this error fatal or do we need to clean up?
     # Remember we subtract 1 from reply to get index into error tables.
@@ -435,7 +435,7 @@ class simh:
     # If os8name is just a device, synthesize an upcased name from
     # the POSIX file basename.
     if not os.path.exists(path):
-      print path + " not found. Skipping."
+      print(path + " not found. Skipping.")
       return
     m = re.match(self._os8_file_re, os8name)
     if m != None and (m.group(2) == None or m.group(2) == ""):
@@ -446,7 +446,7 @@ class simh:
     did_conversion = False
     if option == "" or option == "/A":
       # Convert text file to SIMH paper tape format in current dir of path.
-      if self.verbose: print "Format converting " + path
+      if self.verbose: print("Format converting " + path)
       bdir = pidp8i.dirs.build
       # Create uniquified temp path name.
       pt   = path + "-" + str(os.getpid()) + ".pt_temp"
@@ -454,7 +454,8 @@ class simh:
       subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
       did_conversion = True
     elif option not in self._valid_pip_options:
-      print "Invalid PIP option: " + option + ". Ignoring: " + path + " to OS/8."
+      print("Invalid PIP option: " + option + ". Ignoring: " + path + \
+          " to OS/8.")
       return
     else:
       pt = path
@@ -519,7 +520,8 @@ class simh:
         path = path + "/" + os8name[colon+1:]
 
     if option != "" and option not in self._valid_pip_options:
-      print "Invalid PIP option: " + option + ". Ignoring os8_pip_from on: " + path
+      print("Invalid PIP option: " + option + \
+          ". Ignoring os8_pip_from on: " + path)
       return
 
     self.back_to_cmd ('\\.')
@@ -548,7 +550,7 @@ class simh:
     self.os8_restart ()
 
     if option == "" or option == "/A":
-      if self.verbose: print "Format converting " + path
+      if self.verbose: print("Format converting " + path)
       # Convert text file to SIMH paper tape format
       bdir = pidp8i.dirs.build
       # Create uniquified temp path name.
@@ -848,7 +850,7 @@ class simh:
   # Debugging aid. Prints what we parsed out of _child.after.
   def do_print_lines (self, lines):
     for line in lines:
-      print line
+      print(line)
 
   #### simh_configure routines #########################################
   # These routines affect the state of device configuration in SIMH.
@@ -877,31 +879,36 @@ class simh:
     if to_tape == "dt": from_tape = "td"
     elif to_tape == "td": from_tape = "dt"
     else:
-      print "Cannot set_tape_config for " + to_tape
+      print("Cannot set_tape_config for " + to_tape)
       return False
 
-    if self.verbose: print "Disable: " + from_tape + ", and enable: " + to_tape
+    if self.verbose:
+      print("Disable: " + from_tape + ", and enable: " + to_tape)
     
     lines = self.do_simh_show(from_tape)
     from_status = self.parse_show_tape_dev(lines)
 
     if from_status == None:
-      print "do_tape_change: Trouble parsing \'show " + from_tape + "\' output from simh. Giving up on:"
+      print("do_tape_change: Trouble parsing \'show " + from_tape + \
+          "\' output from simh. Giving up on:")
       self.do_print_lines (lines)
       return False
 
-    if from_status == "disabled": print from_tape + " already is disabled."
+    if from_status == "disabled":
+      print(from_tape + " already is disabled.")
     else:
       attached_from = self.parse_show_tape_attached(lines)
       if attached_from == None:
-        print "do_tape_change: Trouble parsing \'show " + from_tape + "\' output from simh. Giving up on:"
+        print("do_tape_change: Trouble parsing \'show " + from_tape + \
+            "\' output from simh. Giving up on:")
         self.do_print_lines (lines)
         return False
       else:
         for unit in attached_from.keys():
           if attached_from[unit] != "":
             det_comm = "det " + from_tape + unit
-            if self.verbose: print det_comm + "(Had: " + attached_from[unit] + ")"
+            if self.verbose:
+              print(det_comm + "(Had: " + attached_from[unit] + ")")
             self.send_cmd(det_comm)
         self.send_cmd("set " + from_tape + " disabled")
 
@@ -909,10 +916,12 @@ class simh:
     to_status = self.parse_show_tape_dev(lines)
 
     if to_status == None:
-      print "do_tape_change: Trouble parsing \'show " + to_tape + "\' output from simh. Giving up on:"
+      print("do_tape_change: Trouble parsing \'show " + to_tape + \
+          "\' output from simh. Giving up on:")
       self.do_print_lines (lines)
       return False
-    elif to_status != "disabled": print to_tape + " already is enabled."
+    elif to_status != "disabled":
+      print(to_tape + " already is enabled.")
     else:
       self.send_cmd("set " + to_tape + " enabled")    
 
@@ -922,11 +931,12 @@ class simh:
     to_status = self.parse_show_tape_dev(lines)
 
     if to_status == None:
-      print "Failed enable of " + to_tape + ". Parse fail on \'show " + to_tape + "\'. Got:"
+      print("Failed enable of " + to_tape + \
+          ". Parse fail on \'show " + to_tape + "\'. Got:")
       self.do_print_lines (lines)
       return False
     elif to_status == "disabled":
-      print "Failed enable of " + to_tape + ". Device still disabled."
+      print("Failed enable of " + to_tape + ". Device still disabled.")
       return False
     else: 
       return True
@@ -973,44 +983,46 @@ class simh:
       to_rx = "rx28"
       from_rx = "rx8e"
     else:
-      print "Cannot set_rx_config for " + to_rx
+      print("Cannot set_rx_config for " + to_rx)
       return False
       
-    if self.verbose: print "Switch rx driver: " + from_rx + ", to: " + to_rx
+    if self.verbose:
+      print("Switch rx driver: " + from_rx + ", to: " + to_rx)
     lines = self.do_simh_show("rx")
 
     rx_type = self.parse_show_rx_dev (lines)
     if rx_type == None:
-      print "do_rx_change: Trouble parsing \'show rx\' output from simh. Giving up on:"
+      print("do_rx_change: Trouble parsing \'show rx\' output from simh.  Giving up on:")
       self.do_print_lines(lines)
       return False
     elif rx_type == "disabled":
-      if self.verbose: print "rx is disabled. Enabling..."
+      if self.verbose: print("rx is disabled. Enabling...")
       self.send_cmd("set rx enabled")
       # Retry getting rx info
       lines = self.do_simh_show("rx")
       rx_type = self.parse_show_rx_dev (lines)
       if rx_type == None:
-        print "do_rx_change after re-enable: Trouble parsing \`show rx\` output from simh. Giving up on:"
+        print("do_rx_change after re-enable: Trouble parsing \`show rx\` output from simh. Giving up on:")
         self.do_print_lines(lines)
         return False
       elif rx_type == "disabled":
-        print "do_rx_change re-enable of rx failed. Giving up."
+        print("do_rx_change re-enable of rx failed. Giving up.")
         return False
 
     if rx_type.lower() == to_rx:
-      print "rx device is already set to " + to_rx
+      print("rx device is already set to " + to_rx)
       return None
       
     attached_rx= self.parse_show_rx_attached(lines)
     if attached_rx == None:
-      print "do_rx_change: Trouble parsing /'show rx\' from simh to find rx attachments. Got:"
+      print("do_rx_change: Trouble parsing /'show rx\' from simh to find rx attachments. Got:")
       self.do_print_lines(lines)
     else:
       for unit in attached_rx.keys():
         if attached_rx[unit] != "":
           det_comm = "det rx" + unit
-          if self.verbose: print det_comm + "(Had: " + attached_rx[unit] + ")"
+          if self.verbose:
+            print(det_comm + "(Had: " + attached_rx[unit] + ")")
           self.send_cmd(det_comm)
 
     self.send_cmd("set rx " + to_rx)
@@ -1020,10 +1032,12 @@ class simh:
     rx_type = self.parse_show_rx_dev (lines)
 
     if rx_type == None:
-      print "Failed change of rx to " + to_rx + ". Parse fail on \'show rx\'."
+      print("Failed change of rx to " + to_rx + \
+          ". Parse fail on \'show rx\'.")
       return False
     elif rx_type.lower() != to_rx: 
-      print "Failed change of rx to " + to_rx + ". Instead got: " + rx_type
+      print("Failed change of rx to " + to_rx + ". Instead got: " + \
+          rx_type)
       return False
     return True
 
@@ -1048,19 +1062,20 @@ class simh:
     if to_tti == "KSR": from_tti = "7b"
     elif to_tti == "7b": from_tti = "KSR"
     else:
-      print "Cannot set_tti_config to " + to_tti
+      print("Cannot set_tti_config to " + to_tti)
       return
     
-    if self.verbose: print "Switch tti driver from: " + from_tti + ", to: " + to_tti
+    if self.verbose:
+      print("Switch tti driver from: " + from_tti + ", to: " + to_tti)
 
     lines = self.do_simh_show("tti")
     tti_type = self.parse_show_tti (lines)
     if tti_type == None:
-      print "do_tti_change: Trouble parsing \'show tti\' output from simh. Giving up on:"
+      print("do_tti_change: Trouble parsing \'show tti\' output from simh. Giving up on:")
       self.do_print_lines(lines)
       return False
     elif tti_type == to_tti:
-      print "tti device is already set to " + to_tti
+      print("tti device is already set to " + to_tti)
       return None
 
     self.send_cmd("set tti " + to_tti)
@@ -1070,10 +1085,12 @@ class simh:
     tti_type = self.parse_show_tti (lines)
     
     if tti_type == None:
-      print "Failed change of tti to " + to_tti + ". Parse fail on \'show tti\'."
+      print("Failed change of tti to " + to_tti + \
+          ". Parse fail on \'show tti\'.")
       return False
     elif tti_type != to_tti: 
-      print "Failed change of tti to " + to_tti + ". Instead got: " + tti_type
+      print("Failed change of tti to " + to_tti + ". Instead got: " + \
+          tti_type)
       return False
     else:
       return True

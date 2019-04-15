@@ -667,7 +667,7 @@ if (c >= 0) {                                           /* poll connect */
     TMLN *lp = rem->lp;
     char wru_name[8];
 
-    sim_activate_after(uptr+1, 1000000);                /* start data poll after 1 second */
+    sim_activate_after(rem_con_data_unit, 1000000);     /* start data poll after 1 second */
     lp->rcve = 1;                                       /* rcv enabled */
     rem->buf_ptr = 0;                                   /* start with empty command buffer */
     rem->single_mode = TRUE;                            /* start in single command mode */
@@ -873,7 +873,7 @@ int line = rem->line;
 
 if ((!sim_oline) && (sim_log)) {
     fflush (sim_log);
-    sim_fseeko (sim_log, sim_rem_cmd_log_start, SEEK_SET);
+    (void)sim_fseeko (sim_log, sim_rem_cmd_log_start, SEEK_SET);
     cbuf[sizeof(cbuf)-1] = '\0';
     while (fgets (cbuf, sizeof(cbuf)-1, sim_log))
         tmxr_linemsgf (lp, "%s", cbuf);
@@ -1412,6 +1412,7 @@ for (i=(was_active_command ? sim_rem_cmd_active_line : 0);
             sim_is_running = FALSE;
             sim_rem_collect_all_registers ();
             sim_stop_timer_services ();
+            sim_flush_buffered_files ();
             if (rem->act == NULL) {
                 for (j=0; j < sim_rem_con_tmxr.lines; j++) {
                     TMLN *lpj = &sim_rem_con_tmxr.ldsc[j];
@@ -1437,6 +1438,7 @@ for (i=(was_active_command ? sim_rem_cmd_active_line : 0);
                     sim_is_running = FALSE;
                     sim_rem_collect_all_registers ();
                     sim_stop_timer_services ();
+                    sim_flush_buffered_files ();
                     stat = SCPE_STOP;
                     _sim_rem_message ("RUN", stat);
                     _sim_rem_log_out (lp);
@@ -2240,6 +2242,21 @@ else
 return SCPE_OK;
 }
 
+/* Set debug switches */
+
+int32 sim_set_deb_switches (int32 switches)
+{
+int32 old_deb_switches = sim_deb_switches;
+
+sim_deb_switches = switches & 
+                   (SWMASK ('R') | SWMASK ('P') | 
+                    SWMASK ('T') | SWMASK ('A') | 
+                    SWMASK ('F') | SWMASK ('N') |
+                    SWMASK ('B') | SWMASK ('E') |
+                    SWMASK ('D') );                 /* save debug switches */
+return old_deb_switches;
+}
+
 /* Set debug routine */
 
 t_stat sim_set_debon (int32 flag, CONST char *cptr)
@@ -2265,11 +2282,8 @@ r = sim_open_logfile (gbuf, FALSE, &sim_deb, &sim_deb_ref);
 if (r != SCPE_OK)
     return r;
 
-sim_deb_switches = sim_switches & 
-                   (SWMASK ('R') | SWMASK ('P') | 
-                    SWMASK ('T') | SWMASK ('A') | 
-                    SWMASK ('F') | SWMASK ('N') |
-                    SWMASK ('B'));                  /* save debug switches */
+sim_set_deb_switches (sim_switches);
+
 if (sim_deb_switches & SWMASK ('R')) {
     struct tm loc_tm, gmt_tm;
     time_t time_t_now;

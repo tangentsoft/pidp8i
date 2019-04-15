@@ -231,6 +231,14 @@ size_t sim_strlcpy (char *dst, const char *src, size_t size);
 #ifndef strcasecmp
 #define strcasecmp(str1, str2) sim_strcasecmp ((str1), (str2))
 #endif
+void sim_srand (unsigned int seed);
+int sim_rand (void);
+#ifdef RAND_MAX
+#undef RAND_MAX
+#endif
+#define RAND_MAX 2147483646
+#define rand sim_rand
+#define srand(seed) sim_srand(seed)
 CONST char *get_sim_opt (int32 opt, CONST char *cptr, t_stat *st);
 CONST char *get_sim_sw (CONST char *cptr);
 const char *put_switches (char *buf, size_t bufsize, uint32 sw);
@@ -297,6 +305,7 @@ t_stat sim_exp_show (FILE *st, CONST EXPECT *exp, const char *match);
 t_stat sim_exp_showall (FILE *st, const EXPECT *exp);
 t_stat sim_exp_check (EXPECT *exp, uint8 data);
 CONST char *match_ext (CONST char *fnam, const char *ext);
+int sim_cmp_string (const char *s1, const char *s2);
 t_stat show_version (FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, CONST char *cptr);
 t_stat set_dev_debug (DEVICE *dptr, UNIT *uptr, int32 flag, CONST char *cptr);
 t_stat show_dev_debug (FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, CONST char *cptr);
@@ -326,6 +335,7 @@ void _sim_debug_device (uint32 dbits, DEVICE* dptr, const char* fmt, ...) GCC_FM
 #define sim_debug(dbits, dptr, ...) do { if (sim_deb && dptr && ((dptr)->dctrl & (dbits))) _sim_debug_device (dbits, dptr, __VA_ARGS__);} while (0)
 #define sim_debug_unit(dbits, uptr, ...) do { if (sim_deb && uptr && (((uptr)->dctrl | (uptr)->dptr->dctrl) & (dbits))) _sim_debug_unit (dbits, uptr, __VA_ARGS__);} while (0)
 #endif
+void sim_flush_buffered_files (void);
 
 void fprint_stopped_gen (FILE *st, t_stat v, REG *pc, DEVICE *dptr);
 #define SCP_HELP_FLAT   (1u << 31)       /* Force flat help when prompting is not possible */
