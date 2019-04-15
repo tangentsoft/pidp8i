@@ -19,7 +19,7 @@
 # This program is based on the old cc8-tu56-update program, last
 # shipped by this project in release v20171222.
 #
-# Copyright © 2017 by Warren Young and Bill Cattey
+# Copyright © 2017-2019 by Warren Young and Bill Cattey
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -111,7 +111,7 @@ def main ():
   except (RuntimeError) as e:
     print "Could not start simulator: " + e.message + '!'
     exit (1)
-  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
   # Attach a clean version of the image to the simulator
   if os.path.exists (imagename):

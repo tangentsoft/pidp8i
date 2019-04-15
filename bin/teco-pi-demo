@@ -59,7 +59,7 @@ def main ():
   except (RuntimeError) as e:
     print "Could not start simulator: " + e.message + '!'
     exit (1)
-  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
   # Find and boot the built OS/8 bin disk
   rk = os.path.join (dirs.os8mo, 'v3d.rk05')

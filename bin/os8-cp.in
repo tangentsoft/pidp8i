@@ -6,7 +6,7 @@
 #
 # See USAGE message below for details.
 #
-# Copyright © 2018 by Bill Cattey and Warren Young
+# Copyright © 2018-2019 by Bill Cattey and Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -648,8 +648,8 @@ def main ():
   except (RuntimeError) as e:
     print "Could not start simulator: " + e.message + '!'
     exit (1)
-  # s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
-  s.set_logfile (open ("logfile.txt", 'w'))
+  # s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
+  s.set_logfile (open ("logfile.txt", 'wb'))
   if VERBOSE: s.verbose = True
   
   # Perform sys attach

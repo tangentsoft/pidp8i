@@ -199,8 +199,8 @@ def main ():
   # -v was given.  See https://stackoverflow.com/questions/21239338
   s = simh (dirs.build, True)
   if VERBOSE: s.verbose = True
-  s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'a') \
-      if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
+  s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'ab') \
+      if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
   os8 = os8script (s, options_enabled, options_disabled, verbose=VERBOSE, debug=DEBUG)
 
