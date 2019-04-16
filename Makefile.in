@@ -70,8 +70,9 @@ MISC_CFLAGS = -I @srcdir@/src/pidp8i -I src/pidp8i @BUILDMODE@ -std=c99
 # Even simpler options for palbart.
 PALBART_CFLAGS = @BUILDMODE@
 
-SIM = bin/pidp8i-sim
-BINS = $(SIM) @CC8_CROSS@ \
+PIDP8I_SIM = bin/pidp8i-sim
+PDP8_SIM = bin/pdp8
+BINS = $(PIDP8I_SIM) @CC8_CROSS@ \
 	bin/d8tape \
 	bin/palbart \
 	bin/pidp8i-test \
@@ -509,14 +510,16 @@ reconfig:
 release: all
 	@srcdir@/tools/mkrel
 
-run: $(SIM)
-	$(SIM) boot/run.script
+run: $(PIDP8I_SIM)
+	@-libexec/scanswitch > /dev/null ; \
+		if [ $$? = 127 ] ; then $(PDP8_SIM) boot/run.script ; \
+                         else $(PIDP8I_SIM) boot/run.script ; fi 
 
-runf run-v3f: $(SIM) $(V3F_BOOT_TAPE)
-	$(SIM) boot/run-v3f.script
+runf run-v3f: $(PIDP8I_SIM) $(V3F_BOOT_TAPE)
+	$(PIDP8I_SIM) boot/run-v3f.script
 
-run-tss8: $(SIM)
-	$(SIM) boot/tss8.script
+run-tss8: $(PIDP8I_SIM)
+	$(PIDP8I_SIM) boot/tss8.script
 
 simh-update simh-update-f:
 	@@srcdir@/tools/simh-update $(subst simh-update,,$@)
@@ -589,10 +592,10 @@ V3F_SOURCES := \
 	@srcdir@/src/os8/v3f/*.BI
 
 
-$(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(SIM) $(OS8RUN_OUTFILES)
+$(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
-$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) @CC8_TU56@ | $(SIM) $(OS8RUN_OUTFILES)
+$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) @CC8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
@@ -607,7 +610,7 @@ OS8_SRC_SRCS = \
 	$(V3D_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 
-$(OS8_SRC_RK05): $(OS8_DIST_RK05) $(OS8_SRC_SRCS) | $(SIM) $(OS8_BOOT_DISK)
+$(OS8_SRC_RK05): $(OS8_DIST_RK05) $(OS8_SRC_SRCS) | $(PIDP8I_SIM) $(OS8_BOOT_DISK)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_SRC_SCRIPT)
 
 # Build the source disk for OS/8 V3F
@@ -681,7 +684,7 @@ obj/cc8/os8/%.c: @srcdir@/src/cc8/examples/%.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
+$(PIDP8I_SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ $^ $(LIBS)
 	ln -f bin/pidp8i-sim bin/pdp8
 
