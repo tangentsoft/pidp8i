@@ -1353,10 +1353,12 @@ class os8script:
     if retval == 1:
       print("Attempt to boot non-existent device: " + line)
       return "die"
+    reply = self.simh._child.after.decode('ascii')
     m = re.match("^(\S+)\s(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
-                 self.simh._child.after)
+        reply)
     if m == None:
-      print("Could not determine if device " + line + " is attached.")
+      print("Could not determine if device " + line + " is attached; " +
+          "got '" + reply + "'")
       return "die"
 
     # Caution match group we want ends with a space.
