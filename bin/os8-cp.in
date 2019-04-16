@@ -112,7 +112,7 @@ _expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
 # Print err_string and exit with -1 return status.
 
 def abort_prog (err_str):
-  print "Abort: " + err_str
+  print("Abort: " + err_str)
   sys.exit(-1)
 
 
@@ -126,7 +126,7 @@ def parse_attach (action_plan, match, imagename):
   image_spec = [match.group(1), match.group(2), imagename]
   if match.group(3) == 's': 
     if action_plan ["sys"] != None:
-      print ("Already specified system device. Ignoring sys mount of: " + imagename)
+      print("Already specified system device. Ignoring sys mount of: " + imagename)
     else:
       action_plan["sys"] = image_spec
   else:
@@ -196,7 +196,7 @@ def parse_action_file(fname):
   try:
     manifest = open(fname, "r")
   except IOError:
-    print fname + " not found. Skipping."
+    print(fname + " not found. Skipping.")
     return None
 
   ioline_re = re.compile("(\S+)\s+(\S+)\s+(\S+)")
@@ -208,13 +208,13 @@ def parse_action_file(fname):
 
   for line in manifest:
     ioline = line.strip()
-    if DEBUG: print "parse_action_file: ioline: " + ioline
+    if DEBUG: print("parse_action_file: ioline: " + ioline)
     if ioline == "": continue
     if ioline[0] == '#': continue                  # Allow comments
 
     m=re.match(ioline_re, ioline)
     if m== None: 
-      print "Ignoring line: " + ioline
+      print("Ignoring line: " + ioline)
       continue
 
     option = m.group(1)
@@ -223,18 +223,19 @@ def parse_action_file(fname):
     
     if option == "att":
       m = re.match(_dev_actfile_re, source)
-      if m== None:
+      if m == None:
         abort_prog ("Could not parse attach spec: " + source)
       parse_attach (action_plan, m, path_expand(destination))
     else:
       if len(option) != 1:
-        print "Format options are only 1 letter in size. Ignoring line: " + ioline
+        print("Format options are only 1 letter in size. " + \
+                "Ignoring line: " + ioline)
       elif option[0] not in _valid_pip_options:
-        print "Unrecognize option in line: " + ioline
+        print("Unrecognize option in line: " + ioline)
       elif source == None:
-        print "Null value of source. Ignoring line: " + ioline
+        print("Null value of source. Ignoring line: " + ioline)
       elif destination == None:
-        print "Null value of destination. Ignoring line: " + ioline
+        print("Null value of destination. Ignoring line: " + ioline)
       else:
         append_copy(action_plan, option, source, destination)
 
@@ -256,12 +257,12 @@ def is_directory(path):
   if DEBUG: "is_directory (" + path + ")"
   m = re.match(_os8_file_re, path)
   if m != None:
-    if DEBUG: print "OS/8 Match: DEV: " + m.group(1) + ", File: " + str(m.group(2))
+    if DEBUG: print("OS/8 Match: DEV: " + m.group(1) + ", File: " + str(m.group(2)))
     if m.group(2) == None or m.group(2) == "": 
       return True     # Just a device so yes it's a directory.
     else: return False
   if has_os8_wildcards(path):
-    if DEBUG: print "Has wildcards."
+    if DEBUG: print("Has wildcards.")
     return False
   return os.path.isdir(path)
 
@@ -288,7 +289,7 @@ def file_list_from_expect(before):
     if line == "": continue
     m = re.match("(\S+)\s*\.(\S+)", line)
     if m == None: continue
-    # if DEBUG: print "file_list_from_expect: group 1: " + m.group(1) + ", group 2: " + m.group(2)
+    # if DEBUG: print("file_list_from_expect: group 1: " + m.group(1) + ", group 2: " + m.group(2))
     fname = m.group(1) + "." + m.group(2)
     file_list.append(fname)
   return file_list
@@ -312,7 +313,8 @@ def append_copy(action_plan, mode, source, destination):
     else:
       copy_type = "into"
     if "/" in destination:
-      print "append_copy, into: Illegal OS/8 file spec containing a slash:" + destination
+      print("append_copy, into: Illegal OS/8 file spec containing " + \
+            "a slash:" + destination)
       sys.exit(-1)
     destination = destination.upper()
     
@@ -515,9 +517,9 @@ def parse_args ():
       DEBUG = True
     elif arg == "-h":
       if VERBOSE:
-        print VERBOSE_USAGE
+        print(VERBOSE_USAGE)
       else:
-        print USAGE
+        print(USAGE)
       sys.exit(0)
     elif arg == "-q":
       QUIET = True
@@ -528,8 +530,8 @@ def parse_args ():
     elif arg in _arg_to_option:
       new_opt = _arg_to_option[arg]
       if mode_opt == new_opt:
-        print "Warning redundant reset of mode option to " + \
-          _pip_option_info[new_opt]
+        print("Warning redundant reset of mode option to " + \
+          _pip_option_info[new_opt])
       mode_opt = new_opt
 
     # Not a simple bit set option.
@@ -555,25 +557,30 @@ def parse_args ():
       # Do file parser if we didn't get an OS/8 attach spec.
       else:
 
-        if DEBUG: print "File parsing of: " + arg
+        if DEBUG: print("File parsing of: " + arg)
         
         # Need to know if arg is Linux. If so, we need to do globbing.
         # If you want OS/8 globbing, specify a device to prevent globbing
         # from being run.
         m = re.match(_os8_file_re, arg)
         if m == None:          # Yup, it's POSIX.  Glob it.
-          if DEBUG: print arg + " is POSIX."
+          if DEBUG: print(arg + " is POSIX.")
           more_files = glob.glob(arg)
           if more_files == []:
-            if DEBUG: print "No more files in POSIX Glob. Our file is: " + arg
+            if DEBUG:
+              print("No more files in POSIX Glob. Our file is: " + arg)
             more_files.append(arg)  # If file not found may be an OS/8 internal xfer.
           for new_file in more_files:
             if filespec_seen == 0:
               source = new_file
               first_mode = mode_opt
-              if DEBUG: print "Globber: Setting initial source: " + source + " and mode: " + first_mode
+              if DEBUG:
+                print("Globber: Setting initial source: " + source + \
+                    " and mode: " + first_mode)
             elif filespec_seen == 1:
-              if DEBUG: print "Globber: Setting initial destination: " + destination
+              if DEBUG:
+                print("Globber: Setting initial destination: " + \
+                    destination)
               destination = new_file  
             else:
               if DEBUG: "Globber: Appending destination to list. New file is: " + new_file
@@ -584,10 +591,12 @@ def parse_args ():
           if filespec_seen == 0:
             source = arg
             first_mode = mode_opt
-            if DEBUG: print "Setting initial source: " + source + " and mode: " + first_mode
+            if DEBUG:
+              print("Setting initial source: " + source + \
+                  " and mode: " + first_mode)
           elif filespec_seen == 1:
             destination = arg
-            if DEBUG: print "Setting initial destination: " + destination
+            if DEBUG: print("Setting initial destination: " + destination)
           else:
             file_and_mode_list.append([mode_opt, destination])
             destination = arg
@@ -605,7 +614,7 @@ def parse_args ():
   # If source is OS/8, and has OS/8 wild cards, the destination must be a directory.
   else:
     # If more than 2 files, the destination must be either an OS/8 device or a Linux directory.
-    if DEBUG: print "Destination: " + destination
+    if DEBUG: print("Destination: " + destination)
     if filespec_seen > 2 and is_directory(destination) == False:
       abort_prog ("Destination must be a Linux directory or OS/8 device for multiple source files.")
 
@@ -640,13 +649,13 @@ def main ():
   action_plan = parse_args()
   if action_plan == None:
     abort_prog ("No action plan was parsed.")
-  if DEBUG: print str(action_plan)
+  if DEBUG: print(str(action_plan))
 
   # Create the SIMH child instance and tell it where to send log output
   try:
     s = simh (dirs.build, True)
   except (RuntimeError) as e:
-    print "Could not start simulator: " + e.message + '!'
+    print("Could not start simulator: " + e.message + '!')
     exit (1)
   # s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
   s.set_logfile (open ("logfile.txt", 'wb'))
@@ -660,7 +669,7 @@ def main ():
   if not os.path.exists (imagename):
     abort_prog ("Requested boot image file: " + imagename + " not found.")
   if VERBOSE or DEBUG:
-    print "Attaching " + simh_boot_dev + " to " + imagename
+    print("Attaching " + simh_boot_dev + " to " + imagename)
   s.send_cmd ("att " + simh_boot_dev + " " + imagename)
 
   images_to_zero = []
@@ -670,16 +679,18 @@ def main ():
     simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
     imagename = att_spec[2]
     if os.path.exists (imagename):
-      if VERBOSE or DEBUG: print "Modifying existing " + simh_dev + " image " + imagename
+      if VERBOSE or DEBUG:
+        print("Modifying existing " + simh_dev + " image " + imagename)
     else:
-      if VERBOSE or DEBUG: print "Will create a new image file named: " + imagename
+      if VERBOSE or DEBUG:
+        print("Will create a new image file named: " + imagename)
       # Save this att_spec so we can zero it later.
       images_to_zero.append (att_spec)
     if VERBOSE or DEBUG:
-      print "Attaching " + simh_dev + " to " + imagename      
+      print("Attaching " + simh_dev + " to " + imagename)
     s.send_cmd ("att " + simh_dev + " " + imagename)
 
-  if VERBOSE or DEBUG: print "Booting " + simh_boot_dev + "..."
+  if VERBOSE or DEBUG: print("Booting " + simh_boot_dev + "...")
   s.send_cmd ("boot " + simh_boot_dev)
 
   for att_spec in images_to_zero:
@@ -687,11 +698,15 @@ def main ():
     if os8dev in _os8_partitions:
       for partition in _os8_partitions[os8dev]:
         os8name = os8dev + partition + att_spec[1] + ":"
-        if VERBOSE or DEBUG: print "Initializing directory of " + os8name + " in " + imagename
+        if VERBOSE or DEBUG:
+          print("Initializing directory of " + os8name + " in " + \
+              imagename)
         s.os8_send_cmd ('\\.', "ZERO " + os8name)
     else:
       os8name = os8dev + att_spec[1] + ":"
-      if VERBOSE or DEBUG: print "Initializing directory of " + os8name + " in " + imagename
+      if VERBOSE or DEBUG:
+        print("Initializing directory of " + os8name + " in " + \
+            imagename)
       s.os8_send_cmd ('\\.', "ZERO " + os8name)
 
   # Perform copy operations
@@ -705,7 +720,9 @@ def main ():
     else:
       abort_prog ("Unrecognized mode option: " + mode_opt)
 
-    if DEBUG: print "Source: " + source + ", Destination: " + destination + ", Mode: " + mode_opt + "."
+    if DEBUG:
+      print("Source: " + source + ", Destination: " + destination + \
+          ", Mode: " + mode_opt + ".")
     # Is this "from" OS/8 to POSIX, "into" OS/8 from POSIX or "within" OS/8?
     # "into" -- Attach source to simh ptr
     # If we are operating "from" and source has wild cards,
@@ -719,9 +736,10 @@ def main ():
       if has_os8_wildcards(source):
         # Split off device from source:
         os8dev = source[0:source.index(":")+1]
-        if DEBUG: print "Wild card dev: " + os8dev
+        if DEBUG: print("Wild card dev: " + os8dev)
         # Use OS/8 Direct to enumerate our input files.
-        if DEBUG: print "Calling OS/8 DIRECT on wild card filespec: " + source
+        if DEBUG:
+          print("Calling OS/8 DIRECT on wild card filespec: " + source)
         s.os8_send_cmd ('\\.', "DIR " + source + "/F=1")
         # Now harvest direct output.  One file per line.  Ignore blank lines.
         # Maybe parse the FREE BLOCKS Output.
@@ -730,17 +748,18 @@ def main ():
         files = file_list_from_expect(s._child.before)
         for filename in files:
           if VERBOSE or DEBUG:
-            print "Wildcard call os8_pip_from: copy from: {" + os8dev + "}{" + filename + "}" + \
-              " to: " + destination + ", mode: " + pip_option 
+            print("Wildcard call os8_pip_from: copy from: " + \
+                "{" + os8dev + "}{" + filename + "}" + \
+                " to: " + destination + ", mode: " + pip_option)
           s.os8_pip_from(os8dev + filename, destination, pip_option)
       else:
         if VERBOSE or DEBUG:
-          print "Call os8_pip_from: copy from: " + source + " to " + destination + \
-            ", mode: " + pip_option 
+          print("Call os8_pip_from: copy from: " + source + " to " + \
+              destination + ", mode: " + pip_option)
         s.os8_pip_from(source, destination, pip_option)
     elif copy_type == "within":
       if VERBOSE or DEBUG:
-        print "Call COPY of: " + source + " to " + destination
+        print("Call COPY of: " + source + " to " + destination)
       s.os8_send_cmd ('\\.', "COPY " + destination + "< " + source)
     else:
       abort_prog ("Unrecognized copy type: " + copy_type)  # Should never happen.
@@ -750,15 +769,15 @@ def main ():
   for att_spec in action_plan["mount"]:
     simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
     if VERBOSE or DEBUG:
-      print "Detaching " + simh_dev
+      print("Detaching " + simh_dev)
     s.send_cmd ("det " + simh_dev)
   if VERBOSE or DEBUG:
-    print "Detaching " + simh_boot_dev
+    print("Detaching " + simh_boot_dev)
   s.send_cmd ("det " + simh_boot_dev)
 
   # And shut down the simulator.
   if VERBOSE or DEBUG:
-    print "Quitting simh."
+    print("Quitting simh.")
   s.send_cmd ('quit')
 
 if __name__ == "__main__": main()
