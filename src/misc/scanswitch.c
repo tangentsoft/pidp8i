@@ -44,7 +44,7 @@ int main()
 	extern struct bcm2835_peripheral gpio;
     if (map_gpio_for_pidp8i (1) != 0)
 	{	printf("Failed to map the GPIO SoC peripheral into our VM space.\n");
-		return -1;
+		return 127;
 	}
     init_pidp8i_gpio();
 
