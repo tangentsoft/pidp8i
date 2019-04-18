@@ -35,3 +35,5 @@ set tti ksr
 
 attach @SIMH_TAPE_DEVICE@0 bin/v3f-@OS8_TAPE_DEVICE@.tu56
 boot @SIMH_TAPE_DEVICE@0
+
+:end

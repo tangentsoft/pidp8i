@@ -50,3 +50,5 @@ set tti ksr
 
 att rk0 @MEDIADIR@/os8/@OS8_BOOT_DISK@
 boot rk0
+
+:end

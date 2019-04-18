@@ -29,3 +29,5 @@ set ttox0 8b
 
 load @MEDIADIR@/spacewar/spacewar.bin
 g 200
+
+:end

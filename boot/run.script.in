@@ -21,3 +21,5 @@ set tti ksr
 
 att rk0 bin/@OS8_BOOT_DISK@
 boot rk0
+
+:end

@@ -16,3 +16,5 @@ load @MEDIADIR@/tss8/tss8_init.bin
 attach rf @MEDIADIR@/tss8/tss8_rf.dsk
 attach ttix 4000
 run 24200
+
+:end

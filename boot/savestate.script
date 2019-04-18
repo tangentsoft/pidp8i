@@ -10,8 +10,7 @@
     SET ENV statefile=%HOME%/.pidp8i-@SHORTNAME@.state
 
     SET ON
-    ON STOP  SAVE %statefile%
-    ON ERROR CALL handle_error
+    ON STOP SAVE %statefile%
 
     IF NOT EXIST %statefile% GOTO boot
 
@@ -19,10 +18,7 @@
     RESTORE %statefile%
     DELETE  %statefile%
     CONTINUE
-
-:handle_error
-    IF "%STATUS%" == "00000000" RETURN
-    ELSE ECHO Simulator died: %STATUS% - %TSTATUS% ; EXIT
+    GOTO end
 
 :boot
 

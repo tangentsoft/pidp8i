@@ -21,3 +21,5 @@ load bin/tss8_init.bin
 attach rf bin/tss8_rf.dsk
 attach ttix 4000
 run 24200
+
+:end
