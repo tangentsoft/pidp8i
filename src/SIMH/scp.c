@@ -4990,12 +4990,12 @@ else {
             return sim_messagef (SCPE_ARG, "Invalid argument: %s\n", gbuf);
         }
     }
-if (cond == SCPE_OK)
-    return sim_messagef (SCPE_ARG, "Invalid argument: %s\n", gbuf);
 if ((NULL == cptr) || ('\0' == *cptr)) {                /* Empty Action */
     free(sim_on_actions[sim_do_depth][cond]);           /* Clear existing condition */
     sim_on_actions[sim_do_depth][cond] = NULL; }
 else {
+    if ((cptr > sim_sub_instr_buf) && ((size_t)(cptr - sim_sub_instr_buf) < sim_sub_instr_size))
+        cptr = &sim_sub_instr[sim_sub_instr_off[cptr - sim_sub_instr_buf]]; /* get un-substituted string */
     sim_on_actions[sim_do_depth][cond] = 
         (char *)realloc(sim_on_actions[sim_do_depth][cond], 1+strlen(cptr));
     strcpy(sim_on_actions[sim_do_depth][cond], cptr);
@@ -7335,6 +7335,7 @@ for (i = 0; i < (device_count + sim_internal_device_count); i++) {/* loop thru d
         WRITE_I (uptr->wait);
         WRITE_I (uptr->buf);
         WRITE_I (uptr->recsize);
+        WRITE_I (uptr->tape_eom);
         WRITE_I (uptr->capac);                          /* [V3.5] capacity */
         fprintf (sfile, "%.0f\n", uptr->usecs_remaining);/* [V4.0] remaining wait */
         WRITE_I (uptr->pos);
@@ -7586,6 +7587,7 @@ for ( ;; ) {                                            /* device loop */
             READ_I (uptr->wait);
             READ_I (uptr->buf);
             READ_I (uptr->recsize);
+            READ_I (uptr->tape_eom);
             }
         old_capac = uptr->capac;                        /* save current capacity */
         if (v35) {                                      /* [V3.5+] capacity */
