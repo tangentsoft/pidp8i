@@ -7,7 +7,7 @@ set cpu noidle
 @SET_THROTTLE@
 deposit int-throttle THROT_DELAY 3
 
-@if SIMH_TAPE_DEVICE == td
+@if SIMH_TAPE_DEVICE eq "td"
 set dt disabled
 set td enabled
 ; else, default is correct, per p.4 in SIMH's pdp8_doc.doc.

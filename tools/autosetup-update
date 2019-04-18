@@ -1,5 +1,6 @@
 #!/bin/bash
-~/src/autosetup/autosetup --install || exit 1
-chmod -x         $(fossil status --meta    autosetup | grep ^EXEC | cut -c8-)
+srcdir=`pwd`
+( cd ~/src/autosetup && git pull > /dev/null && ./autosetup --install=$srcdir ) || exit 1
+chmod -x         $(fossil status --meta    autosetup | grep ^EXEC | cut -c8-) $0
 fossil rm --hard $(fossil status --missing autosetup | grep ^MISS | cut -c8-)
 fossil add autosetup/*
