@@ -10,7 +10,7 @@
     SET ENV statefile=%HOME%/.pidp8i-@SHORTNAME@.state
 
     SET ON
-    ON STOP  SAVE %statefile% ; ECHO
+    ON STOP  SAVE %statefile%
     ON ERROR CALL handle_error
 
     IF NOT EXIST %statefile% GOTO boot
