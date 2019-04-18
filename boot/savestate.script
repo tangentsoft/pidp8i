@@ -1,0 +1,31 @@
+@if SAVESTATE
+
+#### BEGIN savestate.script ############################################
+
+# Common elements for saving PDP-8 CPU and core states to disk, included
+# into all generated *.script files.  Based on a post by Mark Pizzolato:
+# https://github.com/simh/simh/issues/681#issuecomment-483735676
+# with modifications by Warren Young.
+
+    SET ENV statefile=%HOME%/.pidp8i-@SHORTNAME@.state
+
+    SET ON
+    ON STOP  SAVE %statefile% ; ECHO
+    ON ERROR CALL handle_error
+
+    IF NOT EXIST %statefile% GOTO boot
+
+:restore
+    RESTORE %statefile%
+    DELETE  %statefile%
+    CONTINUE
+
+:handle_error
+    IF "%STATUS%" == "00000000" RETURN
+    ELSE ECHO Simulator died: %STATUS% - %TSTATUS% ; EXIT
+
+:boot
+
+#### END savestate.script ##############################################
+
+@endif

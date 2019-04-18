@@ -30,5 +30,8 @@ set tti 7b
 set tti ksr
 @endif
 
+@define SHORTNAME run-v3f
+@include @srcdir@/boot/savestate.script
+
 attach @SIMH_TAPE_DEVICE@0 bin/v3f-@OS8_TAPE_DEVICE@.tu56
 boot @SIMH_TAPE_DEVICE@0

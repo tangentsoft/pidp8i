@@ -180,6 +180,8 @@
     boxes, since the expensive parts of the PiDP-8/I extensions are
     running on a separate core, but the measurements are clear.
 
+*   Added the [`--enable-savestate`][esco] configuration option.
+
 *   The Python `simh` API now supports automatic transitions between
     OS/8 and SIMH context, largely removing the need to manage this
     manually as in the prior release.  This is largely Bill Cattey's
@@ -312,6 +314,7 @@
     documentation and build system improvements.
 
 [cc8m]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
+[esco]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#savestate
 [pv]:   https://tangentsoft.com/pidp8i/doc/trunk/README.md#systemd
 [sc85]: https://github.com/ncb85/SmallC-85
 [tctd]: https://tangentsoft.com/pidp8i/wiki?name=TD8E+vs+TC08

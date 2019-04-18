@@ -16,5 +16,8 @@ set tti 7b
 set tti ksr
 @endif
 
+@define SHORTNAME run
+@include @srcdir@/boot/savestate.script
+
 att rk0 bin/@OS8_BOOT_DISK@
 boot rk0
