@@ -127,25 +127,31 @@ then
     # Someone (maybe the user via "pidp8i stop", maybe systemd via
     # "systemctl pidp8i stop") is telling us to stop the background
     # simulator.
-    echo -n "Stopping simulator..."
+    #
+    # First figure out what the simulator is called and send it the
+    # signal that shuts it down gracefully.
+    for sim in pdp8 pidp8i-sim
+    do
+        if pkill -0 $sim
+        then
+            # Give it the signal to start shutting down gracefully: stop
+            # GPIO thread, save simulator state if savestate enabled...
+            # Then give it time to complete.
+            echo -n "Stopping $sim simulator..."
+            pkill -INT $sim
+            sleep 1
 
-    # Figure out what the simulator is called.
-    $scanswitch > /dev/null 2>&1
-    if [ $? = 127 ] ; then sim=pdp8 ; else sim=pidp8i-sim ; fi 
+            # SIMH currently responds to SIGTERM the same as SIGINT,
+            # which is wrong (https://github.com/simh/simh/issues/681)
+            # but until that's fixed, we just have to nuke it.
+            pkill -KILL $sim
+            sleep 1
 
-@if SAVESTATE
-    # The savestate feature is enabled, so stop the simulator's CPU and
-    # give it time to write the system state to disk.
-    pkill -INT $sim
-    sleep 2
-@endif
+            # screen(1) might still be running despite its only child
+            # dying.  Nuke it hard if so.
+            if is_running ; then screen -S pidp8i -X quit ; fi
 
-    # SIMH currently responds to SIGTERM the same as SIGINT, which is
-    # wrong (https://github.com/simh/simh/issues/681) but until that's
-    # fixed, we just have to nuke it.
-    pkill -KILL $sim
-
-    # Now stop the screen(1) session if it's still alive, despite its
-    # only child dying.
-    if is_running ; then screen -S pidp8i -X quit ; fi
+            exit 0
+        fi
+    done 
 fi
