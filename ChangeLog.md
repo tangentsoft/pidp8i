@@ -286,7 +286,7 @@
 
     *   Applied same high-bit improvement as for `hello.pal`.
 
-*   Updated SIMH to commit ID 8d172a40 (2019-04-17).  The only change
+*   Updated SIMH to commit ID 4e0450cff (2019-04-18).  The only change
     of note to the PDP-8 simulator proper since our prior release is
     that devices now have description strings so that SIMH commands like
     `SHOW FEATURES` gives more descriptive output.
@@ -297,7 +297,7 @@
     *   <p>**SCP** (the Ctrl-E command processor) — This piece of SIMH
         has seen a lot of work since our last release, and this release
         makes use of two of these improvements: `ELSE` directives in
-        command scripts and a fix to `ON ERROR` handling.</p>
+        command scripts and `ON SIGTERM` handling.</p>
 
     *   <p>**Timing** — We expect the improvements here to improve the
         way throttling works.</p>
