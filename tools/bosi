@@ -141,6 +141,7 @@ function do_build() {
         fossil update release
     else
         fossil open ~/museum/$repo.fossil release
+        fossil set autosync pullonly
         ./configure
     fi
 
