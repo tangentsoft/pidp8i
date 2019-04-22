@@ -136,16 +136,10 @@ then
         then
             # Give it the signal to start shutting down gracefully: stop
             # GPIO thread, save simulator state if savestate enabled...
-            # Then give it time to complete.
+            # Give it time to complete, then kill it hard in case it
+            # doesn't die on its own.
             echo -n "Stopping $sim simulator..."
-            pkill -INT $sim
-            sleep 1
-
-            # SIMH currently responds to SIGTERM the same as SIGINT,
-            # which is wrong (https://github.com/simh/simh/issues/681)
-            # but until that's fixed, we just have to nuke it.
-            pkill -KILL $sim
-            sleep 1
+            for sig in TERM KILL ; do pkill -$sig $sim ; sleep 1 ; done
 
             # screen(1) might still be running despite its only child
             # dying.  Nuke it hard if so.

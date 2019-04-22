@@ -2,19 +2,8 @@
 ; build directory, not the one in the installation directory.  Used
 ; by "make run" so you don't have to "make mediainstall" first.
 ;
-reset
 echo Loading OS/8 from the RK05 cartridge disk in the build directory...
-set cpu 32k
-set cpu noidle
-set df disabled
-@SET_THROTTLE@
-deposit int-throttle THROT_DELAY 3
-
-@if SIMH_PASS_LOWERCASE
-set tti 7b
-@else
-set tti ksr
-@endif
+@include @srcdir@/boot/common.script
 
 @define SHORTNAME run
 @include @srcdir@/boot/savestate.script

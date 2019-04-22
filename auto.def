@@ -536,11 +536,15 @@ if {$status == 0} {
 # We're listing the top-level Makefile.in last because the templates
 # ahead of it may have @include directives which modify the @AUTODEPS@
 # value substituted into the top-level Makefile.in's autoreconf target.
+#
+# The boot/common.script must precede the rest of boot/*, because they
+# @include the output version.
 make-config-header src/config.h \
     -auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
     -bare {ILS_MODE PCB_*}
 make-template bin/pidp8i.in
 make-template bin/os8-cp.in
+make-template boot/common.script.in
 make-template boot/0.script.in
 make-template boot/2.script.in
 make-template boot/3.script.in

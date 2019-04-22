@@ -1,12 +1,8 @@
 ; This script loads ETOS V5B from the RK05 cartridge disk drive.
 ;
 echo Loading ETOS from the RK05 cartridge disk drive...
-reset
-set cpu 32k
-set cpu noidle
-@SET_THROTTLE@
-deposit int-throttle THROT_DELAY 3
-set df disabled
+@include @srcdir@/boot/common.script
+
 set tsc enabled
 attach ttix 4000
 
