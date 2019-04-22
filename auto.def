@@ -38,6 +38,7 @@ use cc-shared
 # Canonicalize some paths which may be relative and generate others from them
 set abspfx [file-normalize [get-define prefix]]
 define ABSPREFIX $abspfx
+define SHAREDIR "$abspfx/share"
 define BOOTDIR  "$abspfx/share/boot"
 define MEDIADIR "$abspfx/share/media"
 
