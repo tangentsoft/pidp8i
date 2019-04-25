@@ -302,7 +302,7 @@
 
 *   `scanswitch` now returns 127 on “no GPIO” rather than 255.
 
-*   17 months of maintenance and polishing: better documentation, build
+*   16 months of maintenance and polishing: better documentation, build
     system improvements, etc.
 
 [cc8m]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
