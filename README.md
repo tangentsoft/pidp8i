@@ -1,5 +1,25 @@
 # Getting Started with the PiDP-8/I Software
 
+## Orientation
+
+You will be reading this file from one of several likely places:
+
+*   [Online][tlrm], within [the Fossil project repository][home].
+
+*   As a text file within the [source packages][src].
+
+*   In the read-only [GitHub mirror][ghm].
+
+The source packages and the GitHub mirror are secondary outputs from the
+Fossil repository, which is the primary home for the PiDP-8/I software
+development project.
+
+[ghm]:  https://github.com/tangentsoft/pidp8i
+[home]: https://tangentsoft.com/pidp8i/
+[src]:  https://tangentsoft.com/pidp8i/#src
+[tlrm]: https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
 ## Prerequisites
 
 *   A Raspberry Pi with the 40-pin GPIO connector.  That rules out the
@@ -9,16 +29,8 @@
 *   An SD card containing [a compatible OS][os].
 
 *   This software distribution, unpacked somewhere convenient within the
-    filesystem on the Raspberry Pi.
-
-    We recommend that you unpack it somewhere your user has read/write
-    access like `$HOME/src/pidp8i`. Since it installs as a system
-    service, you might prefer `/usr/local/src` or `/opt/src`, though
-    you'll have to adjust permissions for that.
-
-    The [old stable 2015.12.15 release][osd] required that you unpack
-    the software into `/opt/pidp8`, but we now neither require nor
-    recommend that.
+    filesystem on the Raspberry Pi.  We recommend that you unpack it
+    somewhere your user has read/write access like `$HOME/src/pidp8i`.
 
 *   We require several tools and libraries that aren't always installed:
 
