@@ -12,5 +12,5 @@ The compiler does not have any consequential command line options.
 
 The output file is `myfile.s` which is in SABR assembly code, intended
 to be assembled within the PiDP-8/I OS/8 environment. See the `test`
-subdirectory and [the top-level README][/doc/trunk/cc8/README.md] for
+subdirectory and [the CC8 manual][/doc/trunk/doc/cc8-manual.md] for
 further details.

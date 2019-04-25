@@ -21,11 +21,20 @@
  *
  * This is a complex collection of mixed C and SABR assembly routines.
  * Some functions have been substantially shortened to save space
- * relative to the original versions.  Eventually, most of the C will
- * need to be rewritten in SABR and hand optimised; e.g. atoi().
+ * relative to the original versions.  Over time, we expect to rewrite
+ * the remaining pure C routines in hand-optimized SABR.
  */
 
 #asm
+// DECLARE LIBC GLOBALS.  ALTHOUGH THESE OVERLAP THOSE DECLARED IN
+// INIT.H AND HEADER.SB, THOSE ARE IN A DIFFERENT FIELD AND BELONG
+// TO CODE IN THAT FIELD.  THERE IS NO PARTICULAR NEED FOR THESE
+// VARIABLES TO MATCH UP TO THOSE IN ANY WAY.  CODE IN NEITHER FIELD
+// MODIFIES THE OTHER'S GLOBALS.
+/ 000 AND 001 BELONG TO THE PDP-8 INTERRUPT SYSTEM
+/ 002 THRU 007 ARE RESERVED FOR USER CODE
+/ 010-017 ARE THE PDP-8 AUTO-INDEX REGISTERS; YES, IN ALL FIELDS!
+/ 020-177 BELONG TO [F]PRINTF; SEE BELOW
 ABSYM POP 147
 ABSYM PSH 150
 ABSYM JLC 151
@@ -40,7 +49,6 @@ ABSYM ZPTR 145
 ABSYM ZCTR 144
 ABSYM FPTR 160
 /
-	DECIM
 /
 /
 /
@@ -79,8 +87,8 @@ LIBC,	BLOCK 2
 		TAD PVC
 		DCA PCAL
 		RIF
-		TAD (3201
-		DCA PCL1
+		TAD (6201		/ BUILD CDF + IF INSTR...
+		DCA PCL1		/ ...AND SAVE AS FIRST OF PCL1 SUBROUTINE
 		TAD PCL1
 		DCA DCC0
 		JMS MCC0
@@ -88,7 +96,7 @@ LIBC,	BLOCK 2
 		DCA I ARGST		/ UPDATE MASTER STKP
 		DCA ZPTR		/ INIT PRINTF FLAG
 		DCA FPTR		/ INIT FPRINTF FLAG
-LB1,	MQA				/ CALL INDEX IN MQ
+LB1,	ACL				/ CALL INDEX IN MQ
 		SPA
 		JMP LRET
 		TAD CPNT
@@ -154,7 +162,7 @@ PVR,	POPRET
 PVC,	PCALL
 /
 CPNT,	CLIST
-		CPAGE 24
+		CPAGE 41        / # OF ENTRIES IN CLIST BELOW, IN OCTAL
 /
 /		THIS IS THE DISPATCH LIST FOR THIS LIBRARY
 /		MAKE SURE LIBC.H MATCHES
@@ -190,6 +198,8 @@ CLIST,	ITOA
 		STRCMP
 		CUPPER
 		FGETS
+		REVCPY
+		TOUPPER
 #endasm
 
 #define stdout 0
@@ -207,7 +217,7 @@ fgetc()
 	ARG (-4
 	ARG FRSL
 	TAD FRSL
-	TAD (-26		/^Z
+	TAD (D-26		/^Z
 	SNA CLA
 	DCA FRSL
 	TAD FRSL
@@ -247,14 +257,14 @@ ADDR,	0
 
 RCHAR,	CIA		/READ A CHAR.
 	JMS SETDEV
-	1024		/SET BIT FOR READ. (8 UNITS NOW!)
+	2000		/SET BIT FOR READ. (8 UNITS NOW!)
 	JMS GETP
 	CLA
 	TAD CDFB
 	DCA CDFCH
 	JMS CHSUB
 CDFCH,	HLT
-	AND (127	/ 7 BIT FOR NOW
+	AND (177	/ 7 BIT FOR NOW
 	DCAI ADDR
 XIT,	CLA
 	RETRN CHRIO
@@ -270,7 +280,7 @@ SETDEV,	0
 
 CHSUB,	0
 	TAD ICHAR
-	AND (255
+	AND (377	/ DEAL IN 8 BIT CHARS, MAX
 	TAD IDEV
 	CALL 0,GENIO
 	JMP I CHSUB
@@ -309,14 +319,14 @@ char *p;
 {
 	*p++;
 #asm
-		AND (63
+		AND (77		/ MASK OFF LOWER 6 BITS
 		BSW
 		MQL
 #endasm
 	*p;
 #asm
-		AND (63
-		MQO
+		AND (77
+		MQA
 #endasm
 }
 
@@ -364,20 +374,19 @@ FC3,	CDF1
 	sixbit(p);
 #asm
 		PAGE
-		/ OFFSET IOPEN+81 = FILEEX
 		DCA ZTMP
 		TAD FC2#		/ CODE
-		AND (63
-		TAD (128
+		AND (77
+		TAD (200
 		DCA FDCT
 		CDF0
 		TADI FDCT
 		DCA FEX1
 		TAD FDCT
-		TAD (64
+		TAD (100
 		DCA FDCT
 		TADI FDCT
-		TAD (81			/ OFFSET OF EXTENSION
+		TAD (121		/ OFFSET OF EXTENSION (FILEEX) IN IOPEN CODE
 		DCA FDCT
 FEX1,	HLT
 		TAD ZTMP
@@ -395,20 +404,20 @@ FP1,	CAM
 		TADI ZTMP
 		SNA
 		JMP FP2
-		AND (63
+		AND (77		/ MASK OFF LOWER 7 BITS
 		BSW
 		MQL
 		ISZ ZTMP
 FP2,	TADI ZTMP	/ WILL USE STACK FIELD
-		AND (63
+		AND (77
 		SZA
 		ISZ ZTMP
-		MQO
+		MQA
 FP4,	DCA FFNM
 		ISZ FP4
 		ISZ FDCT
 		JMP FP1
-		TAD (46
+		TAD (56     / ASCII '.'
 		DCAI ZTMP	/ PUT . BACK INTO FNM
 		CLA CLL CMA
 		TAD STKP
@@ -447,26 +456,34 @@ XC1,	TSF
 dispxy(x,y)
 int x,y;
 {
-	x;
+	x;      /* put x param in AC */
 #asm
-	3115	/ DIX
+	DILX	/ load x into display X reg
 #endasm
 	y;
 #asm
-	3116	/ DIY
-	3117	/ DIL
+	DILY	/ load y into display Y reg
+	DIXY	/ pulse display at loaded X,Y coordinate
 #endasm
 }
 
 getc()
 {
 #asm
-	CLA
+	 CLA CLL
 GT1, KSF
 	 JMP GT1
 	 KRB
+	 TAD (D-254
+	 CLA
+	 KRB
+	 SNL			/ DO NOT ECHO BS
 	 TLS
-	 AND (127	/* 7 BIT! */
+	 TAD (D-131		/ ? ^C
+	 SNA CLA
+	 JMP OSRET
+	 KRB
+	 AND (177		/ 7 BITS!
 #endasm
 }
 
@@ -477,23 +494,15 @@ int q,tm;
 		tm=1;
 		q=p;
 		while (tm) {
+		getc();
 #asm
-XC2,	CLA CLL
-		KSF
-		JMP XC2
-		KRB
-		TAD (-255
-		CLA
-		KRB
-		SNL			/ DO NOT ECHO BS
-		TLS
-XC3,	AND (127
-		TAD (-13	/ CR IS END OF STRING -> 0
+		AND (177
+		TAD (D-13	/ CR IS END OF STRING -> 0
 		SZA
-		TAD (13
+		TAD (D13
 	    DCAI STKP
 #endasm
-		if (tm!=127)
+		if (tm-127)	/* Handle BS */
 		  *p++=tm;
 		else
 			if (p-q) {
@@ -502,7 +511,7 @@ XC3,	AND (127
 			}
 	}
 	putc(10);	/* newline */
-	return 1;		
+	return q;		
 }
 
 
@@ -513,7 +522,7 @@ int *rsl;
 #asm
 	DCA ZTMP
 	DCA ZCTR
-	TAD (3584		/ NOP
+	TAD (7000		/ NOP
 	DCA XINV
 	CDF1			/ Change DF back to 1 in case SABR changes it!
 #endasm
@@ -522,20 +531,20 @@ int *rsl;
 	if (*p=='-') {
 #asm
 	CLA
-	TAD (3617
-	DCA XINV		/ CIA
+	TAD (7041       / CIA
+	DCA XINV
 	CDF1
 #endasm
 	p++;
 	}
 	while (*p++) {
 #asm
-	TAD (-48		/ '0' ... SEE CODE
+	TAD (D-48		/ ASCII '0'
 	DCA JLC
 	TAD JLC
 	SPA CLA
 	JMP XRET
-	TAD (-10
+	TAD (D-10       / # OF DECIMAL DIGITS
 	TAD JLC
 	SMA CLA
 	JMP XRET		/ EXIT IF NOT NUMBER
@@ -559,7 +568,7 @@ XRET,	TAD ZCTR
 		TAD ZTMP
 XINV,	NOP
 		DCAI TMP	/ WRITE RSL
-		MQA			/ RETURN LENGTH
+		ACL			/ RETURN LENGTH
 #endasm
 }
 
@@ -577,18 +586,18 @@ int dst,src,cnt;
 	CLA
 	TAD STKP
 	TAD (-4
+	DCA 14
+	CMA
+	TADI 14
+	DCA 13
+	CMA
+	TADI 14
 	DCA 12
-	CMA
-	TADI 12
-	DCA 11
-	CMA
-	TADI 12
-	DCA 10
-	TADI 12
+	TADI 14
 	CIA
 	DCA ZTMP
-CP1,	TADI 10
-		DCAI 11
+CP1,	TADI 12
+		DCAI 13
 		ISZ ZTMP
 		JMP CP1
 #endasm
@@ -648,7 +657,7 @@ char *s , *o ;
 char *x , *y , *z ;
  for ( x = s ; * x ; x ++ ) {
   for ( y = x , z = o ; * z && * y == * z ; y ++ ) z ++ ;
-  if ( z > o && ! * z ) return x ;
+  if ( z >= o && ! * z ) return x ;
  } return 0 ;
 }
 
@@ -656,7 +665,7 @@ exit(retval)
 int retval;
 {
 #asm
-		CALL 0,EXIT
+OSRET,	CALL 0,EXIT
 		HLT
 #endasm
 }
@@ -672,10 +681,10 @@ int vl;
 {
 		vl;
 #asm
-		TAD (-48
+		TAD (D-48		/ ASCII '0'
 		SPA
 		JMP XNO
-		TAD (-10
+		TAD (D-10		/ # OF DECIMAL DIGITS
 		SMA CLA
 XNO,	CLA SKP
 		IAC
@@ -689,7 +698,7 @@ int vl;
 #asm
 		SNA
 		JMP YNO
-		TAD (-33
+		TAD (D-33		/ ONE PAST ASCII ' '
 		SMA CLA
 YNO,	CLA SKP
 		IAC
@@ -702,16 +711,16 @@ int vl;
 {
 		vl;				/* Include '?' and '@' as alpha vars */
 #asm
-		TAD (-65
+		TAD (D-65		/ ASCII 'A'
 		SPA
 		JMP ANO
-		TAD (-26
+		TAD (D-26		/ # OF UPPERCASE ENGLISH LETTERS
 		SPA
 		JMP BNO
-		TAD (-6
+		TAD (D-6		/ 'a' - 'Z' IN ASCII
 		SPA
 		JMP ANO
-		TAD (-26
+		TAD (D-26		/ # OF LOWERCASE ENGLISH LETTERS
 BNO,	SMA CLA
 ANO,	CLA SKP
 		IAC
@@ -728,19 +737,41 @@ CPP1,	CLA
 		TADI ZTMP
 		SNA
 		JMP CPP2
-		TAD (-97
+		TAD (D-97		/ ASCII 'a'
 		SPA
 		JMP CPP3
-		TAD (-26
+		TAD (D-26		/ # OF LOWERCASE ENGLISH LETTERS
 		SMA
 		JMP CPP3
-		TAD (91
+		TAD (D91		/ 97 + 26 - 91 = 32 = ('a' - 'A')
 		DCAI ZTMP
 CPP3,	ISZ ZTMP
 		JMP CPP1
 CPP2,
 #endasm
 }
+
+toupper(p)
+int p;
+{
+	p;
+#asm
+		DCA ZTMP
+		TAD ZTMP
+		TAD (D-97		/ SEE cupper() COMMENTARY
+		SPA
+		JMP TPP3
+		TAD (D-26
+		SMA
+		JMP TPP3
+		TAD (D91
+		JMP TPP2
+TPP3,	CLA CLL
+		TAD ZTMP
+TPP2,
+#endasm
+}
+
 
 /* Arbitrary fgets(). Read until LF, CR/LF are retained*/
 /* EOF returns null, else strlen(*p) */
@@ -782,12 +813,19 @@ reverse(s) char *s; {
   }
 
 /*
-	This is somewhat involved in that the vararg system in SmallC is rather limited.
-	For printf and sprintf, a char buffer is required supplied by the user or,
-	as below, located at the end of the stack (7500 .. 64 locs). In addition,
-	another page zero location (ZPTR) is required. This is always risky as the
-	SABR/LOADER system uses a lot of locations here. See how this goes as it is possible
-	to use arbitrary localions on the stack as well.
+    This is somewhat involved in that the vararg system in SmallC is
+    rather limited.
+
+    For printf and fprintf, we pass a static buffer to sprintf(), which
+    isn't formally allocated at the SABR level.  We use just locations
+    10020-10170, (104 chars + NUL terminator) which is otherwise unused.
+    
+    The first 20 (octal) locations and the last several on this page are
+    taken: see the ABSYM declarations the top of of this file.
+    
+    LOADER also reserves this space for itself, placing a small library
+    of routines here, but none of the code in this module calls them,
+    so we can safely stomp over them.  (They're used by FORTRAN II.)
 */
 
 fprintf(nxtarg) int nxtarg;
@@ -802,8 +840,8 @@ fprintf(nxtarg) int nxtarg;
 printf(nxtarg) int nxtarg;
 {
 #asm
-	TAD (3904	/ THIS IS THE PRINT BUFFER AT 7500 ON THE STACK
-	DCA ZPTR
+	TAD (K20      / SEE BLOCK COMMENT ABOVE
+	DCA ZPTR      / SPRINTF EXPECTS ITS BUFFER LOCATION IN ZPTR
 	JMP SPRINTF
 #endasm
 }
@@ -846,12 +884,13 @@ sprintf(nxtarg) int nxtarg; {
     switch(*ctl++) {
       case 'c': str[0] = arg; str[1] = NULL; break;
       case 's': sptr = arg;        break;
-      case 'd': itoa(arg,str);     break;
+      case 'd': itoa(arg,str,10);  break;
       case 'b': itoab(arg,str,2);  break;
       case 'o': itoab(arg,str,8);  break;
       case 'u': itoab(arg,str,10); break;
       case 'x': itoab(arg,str,16); break;
-      default:  return (cc);
+      case 'X': itoab(arg,str,16); cupper(str); break;
+      default:  return -1;
       }
     len = strlen(sptr);
     if(maxchr && maxchr<len) len = maxchr;
@@ -885,20 +924,19 @@ PF1,	CLA
   }
 
 /*
-** itoa(n,s) - Convert n to characters in s 
+** itoa(n,s,r) - Convert n to numeric string form in s, radix r
 */
-itoa(n, s) char *s; int n; {
-  int sign;
+
+itoa(n, s, r) char *s; int n; int r; {
   char *ptr;
   ptr = s;
-  if ((sign = n) < 0) n = -n;
-  do {
-    *ptr++ = n % 10 + '0';
-    } while ((n = n / 10) > 0);
-  if (sign < 0) *ptr++ = '-';
-  *ptr = '\0';
-  reverse(s);
+  if (r == 10 && n < 0) {
+	  n = -n;
+	  *ptr++='-';
   }
+  itoab(n,ptr,r);
+}
+
 
 /*
 ** itoab(n,s,b) - Convert "unsigned" n to characters in s using base b.
@@ -913,7 +951,7 @@ itoab(n, s, b) int n; char *s; int b; {
     lowbit = n & 1;
     n = (n >> 1) & 4095;
     *ptr = ((n % b) << 1) + lowbit;
-    if(*ptr < 10) *ptr += '0'; else *ptr += 55;
+    if(*ptr < 10) *ptr += '0'; else *ptr += 87; /* 87 == 'a' - 10 */
     ++ptr;
     } while(n /= b);
   *ptr = 0;
@@ -983,3 +1021,11 @@ sscanf(nxtarg) int nxtarg; {
   return (ac);
   }
 
+revcpy(dst,src,cnt)
+int *dst,*src,cnt;
+{
+	dst+=cnt;
+	src+=cnt;
+	while (cnt--)
+		*dst--=*src--;
+}

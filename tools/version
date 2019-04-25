@@ -35,7 +35,7 @@ use warnings;
 use Cwd qw(abs_path getcwd);
 use File::Basename;
 
-# Give dummy result when run via test-mkos8.  A proper version string
+# Give dummy result when run via test-os8-run.  A proper version string
 # isn't helpful, and fossil isn't intended to be run in parallel
 # multiple times in the same directory.  We could retry several times
 # until we succeed, but again, it doesn't really help us to bother.

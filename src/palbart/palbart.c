@@ -2641,7 +2641,7 @@ void readLine()
       while(( iy % tabstops ) != 0 && iy < (LINELEN - 2));
       break;
 
-    case '\r':        /* dont copy the carriage return */
+    case '\r':        /* don't copy the carriage return */
        break;
 
     default:

@@ -27,34 +27,13 @@
 
     *   Python's `pexpect` library
 
-    *   The `usbmount` tool
-    
-        This is provides two things:
-        
-        *   USB stick auto-mounting on stripped-down OSes like Raspbian
-            Lite so you can use the PiDP-8/I `SING_STEP` + `DF` feature
-            without having to manually mount the USB stick first.
-        
-        *   A known directory structure that allows the PiDP-8/I
-            software to find the media image files on those sticks.
-            (`*.pt`, `*.dt`, `*.rk`, etc.)
-
-        Full-blown GUI OSes tend to have USB auto-mounting set up
-        already, though they won't meet the second criteria unless they
-        use the same directory layout as `usbmount`: `/media/usbN`,
-        where `N` is a number from 0 to 7, depending on the order
-        you attached the USB stick.  Many Linuxes use `/media/LABEL`
-        instead, for example, where `LABEL` is the partition's label;
-        the PiDP-8/I software won't find the files on those USB sticks
-        in that case.
-
     *   The `ncurses` development libraries
 
     To install all of this on a Raspbian type OS, say:
 
         $ sudo apt update
         $ sudo apt install build-essential
-        $ sudo apt install libncurses-dev python-pip usbmount
+        $ sudo apt install libncurses-dev python-pip
         $ sudo pip install pexpect
 
 [os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
@@ -93,7 +72,9 @@ the Pi. There are many options:
         $ wget -O pidp8i.tar.gz https://goo.gl/JowPoC
 
     That will get you a file called `pidp8i.tar.gz` in the current
-    working directory.
+    working directory containing the latest *release* version.  (Use the
+    "bleeding edge" links on the home page if you want the tip of trunk
+    instead!)
 
 3.  **SCP the file over** to a running Pi from another machine.
     If your Pi has OpenSSH installed and running, you can use
@@ -338,6 +319,9 @@ See the linked mailing list thread for details.
 As with `--serial-mod`, you should only enable this flag if you have
 actually done the mods as specified by James L-W.
 
+This option is a pure alternative to [`--serial-mod`](#serial-mod): you
+can leave both off, but you cannot pass both.
+
 
 #### --throttle
 
@@ -346,15 +330,91 @@ you don't give this option, the simulator runs as fast as possible, more
 or less.
 
 
+<a id="savestate"></a>
+#### --enable-savestate
+
+By default, the PiDP-8/I starts up with the core state undefined and
+runs the boot script you’ve selected either with the IF switches or by
+passing it on the command line to `pidp8i-sim` or `pdp8`.  This brings
+the simulator up in a known state, with no persistence between restarts
+other than what was written to the simulated storage devices before the
+last shutdown.
+
+On a real PDP-8 with core memory, however, the values in memory will
+persist for weeks without power and they aren’t zeroed on power-up.
+Since the CPU doesn’t start executing anything on power-up in a stock
+PDP-8 configuration, this means the user can toggle in a program/OS
+restart address with the switch register (SR), load it into the program
+counter (PC) with the Load Addr switch, then START the CPU to restart
+their program without having to reload it from tape or disk.
+
+There were also several power fail and restart options designed and made
+available for the PDP-8 series throughout its lifetime. One of these,
+the KP8-I for the PDP-8/I would detect a power fail condition, then in
+the brief time window while the power supply’s reservoir capacitors kept
+the computer running, this option card would raise an interrupt, giving
+a user-written routine up to 1 millisecond to save important registers
+to core so they would persist through the power outage. Then on
+power-up, it would start executing at core location 00000, where another
+user routine would load those registers back from core to restart the
+system where it left off before the power failed.
+
+Giving this option gives roughtly the same effect for all generated boot
+scripts: any time the simulator is shut down gracefully, it saves all
+key simulator state — registers, core, device assignments, etc. — to a
+disk file. Then on restart, that script will reload that saved state if
+it finds the saved state file.
+
+This is not identical to a KP8-I, in that it doesn’t require any
+user-written PDP-8 code to run, which is why it’s optional: it’s
+ahistoric with respect to the way the included OSes normally ran.
+
+Ideally, the default mode of operation would save the core memory state
+only and would reload only that on start. You can make do that by
+halting the CPU and resetting the saved registers after the `RESTORE`
+command in each bootscript you want to affect:
+
+    EVAL HLT
+    DEP L 0
+    DEP AC 0
+    DEP DF 0
+    DEP IF 0
+    DEP MQ 0
+    DEP PC 0
+
+That zeroes the key registers and prevents the CPU from running as it
+normally would after giving `RESTORE` command to SIMH.
+
+
+#### --disable-usb-automount
+
+When you install the software on a [systemd][systemd]-based Linux
+system, we normally configure the OS to automatically mount USB drives
+when they are initially plugged in, which allows the `SING_STEP` + `DF`
+media image auto-attach feature to work smoothly. That is, if you plug
+in a USB memory stick holding a `*.pt` file containing a paper tape
+image, you want the simulator to be able to find it if you have the DF
+switches set to 1, telling the PiDP-8/I front panel code to look for
+something to attach to the simulator's paper tape reader.
+
+This feature may interfere with other uses of USB, such as when booting
+your Pi from an external USB hard disk drive. Give this option to
+disable the feature.
+
+(Alternately, you could modify our `etc/udev.rules` and/or
+`bin/usb-mount` scripts so that they work cooperatively with your local
+USB setup rather than conflicting with it.)
+
+
 #### --disable-cc8-cross
 
 Give this option if you do not want to build Ian Schofield's `cc8` C
 cross-compiler on the host.
 
-Note that this is different from `--disable-os8-cc8`, which disables the
-*native OS/8* C compiler. They are two different C compilers: one runs
-outside the SIMH PDP-8 simulator and the other runs inside the simulator
-under OS/8.
+Because the cross-compiler is needed to build the CC8 native OS/8
+compiler, disabling the cross-compiler also causes the native compiler
+to be left off the bootable OS/8 RK05 disk image, as if you’d passed the
+`--disable-os8-cc8` configuration option.
 
 
 <a id="disable-os8"></a>
@@ -374,17 +434,19 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     implies that it is the OS/8 BASIC subsystem that is being left out,
     which is not even currently an option.)
 
+*   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
+    compiler and all of its ancillary files.
+
 *   **--disable-os8-chess** — Leave out John Comeau's
     [CHECKMO-II chess implementation][chess].
-
-*   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
-    compiler normally installed to `SYS:`.
 
 *   **--disable-os8-crt** — Suppress the [console rubout behavior][tty]
     enabled while building the OS/8 binary RK05 disk image. You
     probably only want to do this if you have attached a real teletype
     to your PiDP-8/I, and thus do not want video terminal style rubout
     processing.
+
+*   **--disable-os8-dcp** — Leave out the DCP disassembler.
 
 *   **--disable-os8-focal** - Do not install any version of FOCAL on the
     OS/8 system disk. This option sets `--disable-os8-uwfocal` and
@@ -394,18 +456,14 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     SABR, the linking loader (`LOADER`), the `LIBSET` tool, and the
     `*.RL` library files.  This option is ignored unless you also give
     `--disable-os8-cc8` because the OS/8 version of CC8 is built atop
-    parts of the OS/8 FORTRAN II subsystem.
+    this subsystem.
 
 *   **--disable-os8-fortran-iv** - Leave the FORTRAN IV compiler out.
 
-*   **--disable-os8-init** - Generate `RKB0:INIT.TX` but do not display
-    it on OS/8 boot.  Rather than disable the default on-boot init
-    message, you may want to edit `media/os8/init.tx.in` to taste
+*   **--disable-os8-init** - Do not install `RKB0:INIT.TX` or its “show
+    on boot” script, `INIT.CM`.  Rather than disable the default on-boot
+    init message, you may want to edit `media/os8/init.tx.in` to taste
     and rebuild.
-
-    (We still build the file when you give this option in case you
-    later decide you want to enable the boot message, or you need to
-    call up configuration information stored in `INIT.TX`.)
 
 *   **--disable-os8-k12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
@@ -413,13 +471,9 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 *   **--disable-os8-macrel** - Leave the MACREL v2 assembler and its
     associated FUTIL V8B tool out.
 
-*   **--disable-os8-patches** - Do not apply any of the OS/8 V3D
-    patches published by DEC.  See the [documentation][os8p] for this
-    option for more information.
-
-*   **--disable-os8-src** - Do not build the `os8v3d-src.rk05` disk
+*   **--disable-os8-src** - Do not build the `v3d-src.rk05` disk
     image from the OS/8 source tapes.  This is not controlled by
-    `--os8-minimal` because that only affects `os8v3d-bin.rk05`.
+    `--os8-minimal` because that only affects the bootable disk images.
 
 *   **--disable-os8-uwfocal** - Leave out the U/W FOCAL V4E programming
     environment normally installed to `RKA0:`.
@@ -537,7 +591,7 @@ This option does not control some things you might think it should:
 Run `./configure --help` for more information on your options here.
 
 
-## <a id="os8di"></a>OS/8 Disk Images
+## <a id="os8di"></a>The OS/8 RK05 Disk Image
 
 For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
 image included with the PiDP-8/I software (called `os8.rk05`) was based
@@ -547,10 +601,11 @@ the pieces of software on the disk worked properly with the other parts.
 It was also a reflection of the time it was created and used out in the
 world, which was not always what we would wish to use today.
 
-In late 2017 [several of us][aut] created the `mkos8` tool, which takes
-the `--*-os8-*` options documented above and generates the
-`os8v3d-*.rk05` RK05 disk image files with your chosen configuration
-options.
+In late 2017 [several of us][aut] created the `mkos8` tool, which was
+replaced during 2018 by Bill Cattey with the `os8-run` interpreter
+and its stock scripts. The `--*-os8-*` options documented above get
+passed into `os8-run` during the PiDP-8/I software build process,
+which controls how it generates the `v3d*.rk05` RK05 disk image files.
 
 This set of disk images entirely replaces the old `os8.rk05` disk
 image, in that all features of the old disk image are still available,
@@ -561,14 +616,15 @@ from the way they used to be on the old disk. Mostly, though, the
 new disk images are simply more functional than the old ones.
 
 If you wish to know the full details of how these disk images are
-created, the best documentation so far is [the source code for the
-`mkos8` script][mkos8] and the [documentation for `class simh`][cs].
+created, see the documentation for [`os8-run`][ori] and that for
+[`class simh`][cs].
 
 The remainder of this section describes some aspects of these disk
 images which are not clear from the descriptions of the `--*-os8-*`
 configuration options above.
 
 [aut]: https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
+[ori]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
 
 
 ### Baseline
@@ -577,9 +633,9 @@ The baseline for the bootable OS/8 disk images comes from a set of
 DECtapes distributed by Digital Equipment Corporation which are now
 included with the PiDP-8/I software; see the [`media/os8/*.tu56`
 files][os8mf]. From these files and your configuration options, the
-`mkos8` script creates the baseline `os8v3d-bin.rk05` disk image.
+`os8-run` script creates the baseline `v3d-dist.rk05` disk image.
 
-The default build creates a complete OS/8 system including `BUILD`
+The default build creates a complete OS/8 V3D system including `BUILD`
 support, FORTRAN IV, MACREL v2, and more.
 
 
@@ -600,7 +656,7 @@ image and copy files in from it.
 The OS/8 RK05 disk image build process normally installs many software
 and data file sets to the disk image.  See the option descriptions
 above: the ["disable" option set](#disable-os8) effectively lists those
-packages that `mkos8` installs by default, and the following set of
+packages that are installed by default, and the following set of
 ["enable" option set](#enable-os8) lists those left out by default.
 
 
@@ -621,19 +677,47 @@ You can read more about this [in the wiki][oce].
 
 ### Patches
 
-After the baseline disk image is created, `mkos8` makes a copy of it as
-`os8v3d-patched.rk05` and applies a [carefully selected set of official
-DEC patches][os8p] to it unless you give the `--disable-os8-patches`
-configuration option.  The IF=0 and IF=7 boot options boot from the
-patched disk unless you give that option.
+The `v3d-dist.rk05` disk image referenced above is considered a
+read-only master. A copy is made called `v3d.rk05`. This is the
+default OS/8 rk05 image assigned to the IF=0 and IF=7 boot options.
 
+In keeping with the standards of good systm management
+this image incorporates all mandatory patches, as well as
+optional patches appropriate to proper operation of the system.
+For details on the available patches, the selection criteria,
+and information about other optional patches see the [OS/8 system patches][os8p]
+document.
 
 [bdt2]:  https://tangentsoft.com/pidp8i/file/media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
 [cl]:    https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
 [cs]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
-[mkos8]: https://tangentsoft.com/pidp8i/doc/trunk/libexec/mkos8
 [os8mf]: https://tangentsoft.com/pidp8i/file/media/os8
 [tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
+## <a id="os8ti"></a>The OS/8 TU56 Tape Image
+
+As with the [OS/8 disk image](#os8di), this distribution’s build system
+can create custom TU56 tape images from pristine source media.  This
+replaces the old `os8.tu56` binary image previously distributed with
+this software.
+
+The build system actually creates four such tape images according to a
+2×2 matrix of choices:
+
+*   **--boot-tape-version** — The default value is “`v3f`”, meaning
+    that the boot tape is based on OS/8 V3F. Give “`v3d`” to boot from
+    a OS/8 V3D tape instead. See the wiki article [OS/8 V3D vs
+    V3F][os8ver] for the implications of this choice.
+
+*    **--boot-tape-config** — The default value is “`tc08`”. Give
+    “`td12k`” to use a tape image configured with the TD12K DECtape
+    controller driver built in. See the wiki article [TC08 vs
+    TD12K][os8td] for the reason you’re given a choice here.
+
+[os8td]:  https://tangentsoft.com/pidp8i/wiki?name=TD8E+vs+TC08
+[os8ver]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+V3D+vs+V3F
+
 
 
 <a id="overwrite-setup"></a>
@@ -649,13 +733,6 @@ files:
     the OS configuration or saved personal files to the disk the OS
     boots from, which in turn modifies this media image file out in the
     host operating environment.
-
-    There is an important exception here: when upgrading from v20170404
-    to v201712xx or newer, the old `os8.rk05` disk image will be left
-    untouched per the above, but because `os8v3d-*.rk05` does not exist
-    yet, those will be copied alongside `os8.rk05`. However, the next
-    item still holds, so that the simulator will continue to use
-    `os8.rk05` because it will be booted by the preexisting scripts.
 
 2.  **The PDP-8 simulator configuration files**, installed as
     `$prefix/share/boot/*.script`, which may similarly have local
@@ -703,7 +780,7 @@ You have several options here:
 
 You can test your PiDP-8/I LED and switch functions with these commands:
 
-    $ sudo systemctl stop pidp8i
+    $ pidp8i stop
     $ pidp8i-test
 
 You may have to log out and back in before the second command will work,
@@ -715,7 +792,7 @@ program, since both programs need exclusive access to the LEDs and
 switches on the front panel.  After you are done testing, you can start
 the PiDP-8/I simulator back up with:
 
-    $ sudo systemctl start pidp8i
+    $ pidp8i start
 
 See [its documentation][test] for more details.
 
@@ -728,12 +805,11 @@ For the most part, this software distribution works like the [old stable
 describes this software too, for the most part.
 
 The largest user-visible difference between the two software
-distributions is that all of the shell commands affecting the software
-were renamed to include `pidp8i` in their name:
+distributions is that many of the shell commands are different:
 
-1.  To start the simulator:
+1.  To start the simulator running in the background:
 
-        $ sudo systemctl start pidp8i
+        $ pidp8i start
 
     This will happen automatically on reboot unless you disable the
     service, such as in order to run one of the various [forks of Deeper
@@ -742,6 +818,10 @@ were renamed to include `pidp8i` in their name:
 2.  To attach the terminal you're working on to the simulator:
 
         $ pidp8i
+
+    (Yes, it's the same base command as above.  The `pidp8i` script uses
+    its first argument to determine what you want it to do.  Without
+    arguments, this is what it does.)
 
 3.  To detach from the simulator's terminal interface while leaving the
     PiDP-8/I simulator running, type <kbd>Ctrl-A d</kbd>.  You can
@@ -755,15 +835,102 @@ were renamed to include `pidp8i` in their name:
 
 5.  To shut the simulator down from the Raspbian command line:
 
-        $ sudo systemctl stop pidp8i
+        $ pidp8i stop
 
 There are [other major differences][mdif] between the old stable
 distribution and this one.  See that linked wiki article for details.
 
 
+<a id="sshd"></a>
+## Enabling the SSH Server on the Binary OS Images
+
+The OpenSSH server is enabled and running by default on the PiDP-8/I
+binary OS images, but for security reasons, the build process we use
+to create these OS images wipes out the SSH host keys generated here
+on our build system, else everyone's PiDP-8/I would have the same
+host keys, which would be a massive security hole. Unfortunately,
+the Raspbian `sshd` service is not smart enough to regenerate these
+keys if they are missing on boot, so you need to do this once by hand:
+
+    $ sudo dpkg-reconfigure openssh-server
+
+You should be able to log in via SSH immediately after that command
+completes.
+
+We used to do this automatically in releases v2017.12.22 and before,
+but that was when we started the `pidp8i` service as root, which we no
+longer do. Consequently, the `pidp8i` service no longer has permission
+to generate your OS's SSH keys, so you must do it interactively with
+`sudo` permissions.
+
+
+<a id="systemd" name="unit"></a>
+## The systemd Unit File
+
+The PiDP-8/I software version 2017.12.22 used an [old-style System V
+init script][svinit] to start the PiDP-8/I service, as did all prior
+releases, including Oscar Vermeulen's final stable release.
+
+As of 2018.02.22, we have now switched to a [systemd][systemd]
+unit file, since we normally install on Raspbian, which has been
+systemd-based for years. We've wanted to do this for some time, but
+some changes in the way systemd handles SysV init script compatibility
+in Raspbian Stretch forced the issue.
+
+One of the features systemd gives us is the ability to set the unit
+to run as user-level service rather than as a system-wide service,
+which means you no longer need the `sudo` prefix on commands to start,
+stop, restart, and query the service. The only time you now need root
+privileges is when installing the software. After that, the software
+runs under your normal user account, as do all of the commands you
+use to manipulate the background simulator service.
+
+As a result of these changes, none of these commands work any longer:
+
+    $ sudo /etc/init.d/pidp8i start
+    $ sudo service pidp8i stop
+    $ sudo systemctl restart pidp8i
+
+The correct forms, respectively, are:
+
+    $ systemctl --user start pidp8i
+    $ systemctl --user stop pidp8i
+    $ systemctl --user restart pidp8i
+
+These commands are long, so we have extended the `pidp8i` command to
+build and run `systemctl` commands for you when you pass it arguments:
+
+    $ pidp8i start
+    $ pidp8i stop
+    $ pidp8i restart
+    $ pidp8i status -l
+
+If you run it without arguments, it attaches to the GNU screen(1)
+session, just as before.
+
+The last command above shows that *all* arguments are passed to
+`systemctl`, not just the first, so you can pass flags and such.
+
+The service is still set to start at boot, just as before.
+
+To disable the service so you can run something else against the
+PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
+
+    $ pidp8i stop
+    $ pidp8i disable
+
+If you install this release on a system that has the old SysV init
+script on it, that service will be disabled and removed before we
+install and enable the replacement systemd user service.
+
+[svinit]:  https://en.wikipedia.org/wiki/Init#SysV-style
+[systemd]: https://www.freedesktop.org/wiki/Software/systemd/
+
+
+
 ## License
 
-Copyright © 2016-2017 by Warren Young. This document is licensed under
+Copyright © 2016-2019 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 

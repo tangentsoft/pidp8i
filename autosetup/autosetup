@@ -5,7 +5,7 @@
 # \
 dir=`dirname "$0"`; exec "`$dir/autosetup-find-tclsh`" "$0" "$@"
 
-set autosetup(version) 0.6.8
+set autosetup(version) 0.6.9
 
 # Can be set to 1 to debug early-init problems
 set autosetup(debug) [expr {"--debug" in $argv}]
@@ -80,6 +80,8 @@ proc main {argv} {
 	set autosetup(options-defaults) {}
 	set autosetup(optionhelp) {}
 	set autosetup(showhelp) 0
+
+	use util
 
 	# Parse options
 	use getopt
@@ -464,7 +466,7 @@ proc options-add {opts {header ""}} {
 				set defaultvalue [dict get $autosetup(options-defaults) $name]
 				dict set autosetup(optdefault) $name $defaultvalue
 			} elseif {![info exists defaultvalue]} {
-				# For backward compatiblity, if ":name" was given, use name as both
+				# For backward compatibility, if ":name" was given, use name as both
 				# the display text and the default value, but only if the user
 				# specified the option without the value
 				set defaultvalue $value
@@ -707,6 +709,9 @@ proc define-append {name args} {
 	if {[get-define $name ""] ne ""} {
 		# Avoid duplicates
 		foreach arg $args {
+			if {$arg eq ""} {
+				continue
+			}
 			set found 0
 			foreach str [split $::define($name) " "] {
 				if {$str eq $arg} {
@@ -743,6 +748,18 @@ proc get-define {name {default 0}} {
 #
 proc is-defined {name} {
 	info exists ::define($name)
+}
+
+# @is-define-set name
+#
+# Returns 1 if the given variable is defined and is set
+# to a value other than "" or 0
+#
+proc is-define-set {name} {
+	if {[get-define $name] in {0 ""}} {
+		return 0
+	}
+	return 1
 }
 
 # @all-defines
@@ -1040,7 +1057,6 @@ proc maybe-show-timestamp {} {
 # A fatal error is generated if the current version is less than that required.
 #
 proc autosetup-require-version {required} {
-	use util
 	if {[compare-versions $::autosetup(version) $required] < 0} {
 		user-error "autosetup version $required is required, but this is $::autosetup(version)"
 	}
@@ -1295,7 +1311,7 @@ set modsource(formatting.tcl) {
 
 # Module which provides common text formatting
 
-# This is designed for documenation which looks like:
+# This is designed for documentation which looks like:
 # code {...}
 # or
 # code {
@@ -1686,7 +1702,7 @@ set modsource(install.tcl) {
 # Module which can install autosetup
 
 # autosetup(installed)=1 means that autosetup is not running from source
-# autosetup(sysinstall)=1 means that autosetup is running from a sysinstall verion
+# autosetup(sysinstall)=1 means that autosetup is running from a sysinstall version
 # shared=1 means that we are trying to do a sysinstall. This is only possible from the development source.
 
 proc autosetup_install {dir {shared 0}} {
@@ -1841,14 +1857,13 @@ proc autosetup_create_configure {shared} {
 	if {$shared} {
 		writefile configure \
 {#!/bin/sh
-# Note that WRAPPER is set here purely to detect an autosetup-created script
-WRAPPER="-"; "autosetup" "$@"
+WRAPPER="$0"; export WRAPPER; "autosetup" "$@"
 }
 	} else {
 		writefile configure \
 {#!/bin/sh
 dir="`dirname "$0"`/autosetup"
-WRAPPER="$0"; export WRAPPER; exec "`$dir/autosetup-find-tclsh`" "$dir/autosetup" "$@"
+WRAPPER="$0"; export WRAPPER; exec "`"$dir/autosetup-find-tclsh"`" "$dir/autosetup" "$@"
 }
 	}
 	catch {exec chmod 755 configure}
@@ -2344,6 +2359,16 @@ proc prefix {pre list} {
 		lappend result $pre$p
 	}
 	return $result
+}
+
+# @lpop list
+#
+# Removes the last entry from the given list and returns it.
+proc lpop {listname} {
+	upvar $listname list
+	set val [lindex $list end]
+	set list [lrange $list 0 end-1]
+	return $val
 }
 }
 

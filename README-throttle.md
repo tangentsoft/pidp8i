@@ -5,7 +5,7 @@ the simulator's speed is set based on the number of CPU cores detected
 by the `tools/corecount` script.
 
 
-## Multi-Core Default
+## <a id="mcore"></a>Multi-Core Default
 
 If `corecount` detects a multi-core system, the default behavior is to
 not throttle the simulator at all, since there are only 2 threads in the
@@ -25,34 +25,35 @@ simulator running.
 You can force this behavior with `--throttle=none`.
 
 
-## Single-Core Default
+## <a id="score"></a>Single-Core Default
 
 If the `configure` script decides that you're building this on a
 single-core system, it purposely throttles the PDP-8 simulator so that
 it takes about 50% of a single core's worth of power on your system.
 
-Since different single-core Raspberry Pi boards run at different default
-clock rates — overclocking aside — we cannot just set a single IPS value
-and know that it's correct.
+Since different single-core Raspberry Pi boards run at different clock
+rates, we cannot just set the instructions per second (IPS) rate to a
+fixed value and know that it's correct.
 
-Besides that, SIMH's reaction to not having enough host CPU power to run
-at the requested IPS rate is to *turn off throttling entirely*, thus
-hogging the whole host CPU, exactly the opposite of what you want by
-turning on throttling! Since host CPU power is briefly impacted when
-starting the simulator up for the first time, SIMH's guesses about
-whether you've asked it to run at too fast a rate undershoot the actual
-capability of the hardware badly.
+We could choose a value low enough that it's supposed to work
+everywhere, but there's a serious problem with that. SIMH's reaction to
+not having enough host CPU power to run at the requested IPS rate is to
+*turn off throttling entirely*, thus hogging the whole host CPU, exactly
+the opposite of what you want by turning on throttling! Host CPU power
+is sapped during boot time, the point where the PiDP-8/I software
+normally starts up. That badly throws off SIMH's estimates of the
+hardware's capability, do you might get thrown into no-throttle mode
+even if the hardware could actually achieve the requested IPS rate once
+it has the CPU mostly to itself.
 
-Worse, when you set the PiDP-8/I software to start on boot via
-`systemd`, it's running in parallel with other startup tasks, further
-reducing the amount of host CPU power available to the simulator at the
-instant of startup, requiring an even lower IPS rate if you want to
-prevent SIMH from going into no-throttle mode.
+Our chosen solution to all of these problems is `set throttle 50%`,
+which tells SIMH to dynamically adjust the IPS rate according to
+available host CPU power. This does mean you don't get a steady IPS
+rate, but it does enforce our wish to leave some CPU power left over for
+background tasks.
 
-The solution to all of these problems is `set throttle 50%`, which tells
-SIMH to dynamically adjust the IPS rate according to available host CPU
-power. This does mean you don't get a steady IPS rate, but it does
-enforce our wish to leave some CPU power left over for background tasks.
+(There's [an alternate fix for this](#stabilization) in recent
+versions.)
 
 You might wish to adjust that default host/simulator CPU usage split.
 The `--throttle` option accepts percentages:
@@ -85,7 +86,7 @@ latter path, please send the patch to the mailing list so it can be
 integrated into the next release of the software.
 
 
-## Underclocking
+## <a id="under"></a>Underclocking
 
 There are many reasons to make the software run slower than it normally
 would.  You may achieve such ends by giving the `--throttle` option to
@@ -175,7 +176,53 @@ the `configure` script:
     feature to properly maintain its LED brightness values.
 
 
-## I/O Matters
+## <a id="stabilization"></a>Throttle Stabilization
+
+After the 2017.12.22 release, the [upstream SIMH v4 project][simh]'s
+main developer [changed the way throttling is handled][si508], mostly
+for the better. The primary upshot of this change — from the perspective
+of this document's subject matter — is that the simulator doesn't make
+any decisions about whether your requested throttle value is plausible
+until some seconds after the simulator starts.
+
+The SIMH default for this is 20 seconds, since the default must work for
+all simulators in the SIMH family, some of which have long bootup
+cycles. 20 seconds is far too long for a PDP-8, which boots instantly,
+so we've overridden that in the stock `boot/*.script` files, setting the
+throttle calibration delay to 3 seconds in order to give the SIMH timing
+code a sufficiently long baseline to work from.
+
+If you have a prior installation of the PiDP-8/I software, your boot
+scripts will not have this change unless you have taken specific steps
+to achieve it, so you will be using the 20-second SIMH default! See
+"[Overwriting the Local Simulator Setup][olss]" in the top-level
+`README.md` file for your options here.
+
+For those first seconds, the simulator runs *unthrottled*, after which
+the SIMH core timing code looks at the number of instructions executed
+during that time and then determines from that what timing values it
+needs to use to achieve your requested throttle value. It also checks
+whether the throttle value is even possible at this time.
+
+There is one case where we anticipate that you might want to increase
+this value: you've set a fixed throttle value that is right near the
+host CPU's ability to achieve and you have the simulator set to start at
+host boot time, so that there are lots of processes starting up and
+initializing in parallel with the PiDP-8/I simulator. In that case, you
+might want to override the following line in `boot/*.script`, setting a
+long enough value for the system load to stabilize:
+
+    deposit int-throttle THROT_DELAY 15
+
+That would override the 20-second stabilization time default to 15
+seconds.
+
+[olss]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md#overwrite-setup
+[simh]:  https://github.com/simh/simh/
+[si508]: https://github.com/simh/simh/issues/508
+
+
+## <a id="io"></a>I/O Matters
 
 The throttle mechanism discussed above only affects the speed of the
 PDP-8 CPU simulator. It does not affect the speed of I/O operations.
@@ -196,7 +243,7 @@ hardware.
 
 ## License
 
-Copyright © 2017 by Warren Young. This document is licensed under
+Copyright © 2017-2018 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 [sl]:  https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

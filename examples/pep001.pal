@@ -1,4 +1,6 @@
-/ Project Euler Problem #1, Multiples of 3 and 5:
+/ Project Euler Problem #1: https://projecteuler.net/problem=1
+/
+/ Multiples of 3 and 5:
 /
 /   If we list all the natural numbers below 10 that are multiples of
 /   3 or 5, we get 3, 5, 6 and 9. The sum of these multiples is 23.
@@ -7,7 +9,7 @@
 / Initial solution by Warren Young of tangentsoft.com, 2016.11.30
 / Optimized by Rick Murphy of the mailing list, 2016.12.04
 /
-/ Copyright © 2016-2017 Warren Young and Rick Murphy
+/ Copyright © 2016, 2018 Warren Young, © 2016 by Rick Murphy
 /
 / Permission is hereby granted, free of charge, to any person obtaining a
 / copy of this software and associated documentation files (the "Software"),
@@ -51,6 +53,7 @@ AC3=CLA CLL CML IAC RAL	/ set AC to 3
 PAGE 1
 MAIN,   AC3		/ start with 3, because we know 1 & 2 can't work
 	DCA CURR		
+	TLS		/ send null character to terminal to prepare it
 	DCA STOTAL	/ reset total to 0
 	TAD (ANSWER-1)	/ write "ANSWER: " to the terminal
 	JMS PRINTS
@@ -221,9 +224,9 @@ MAX,    999		/ check natural numbers CURR to MAX; must be < 2048!
 STMAX,  1024		/ subtotal max; avoids overflow of 12-bit signed int
 
 	OCTAL
-CRLF,   15;12;0		/ ASCII character values, zero-terminated
-PLUS,   40;53;40;0
-ANSWER, 101;116;123;127;105;122;72;40;0
+CRLF,   215;212;0	/ ASCIIZ character strings, 8th bit set
+PLUS,   240;253;240;0
+ANSWER, 301;316;323;327;305;322;272;240;0
 
 
 //// END ///////////////////////////////////////////////////////////////

@@ -15,15 +15,18 @@ Or reclassify them, of course.
 
 Most of the bug levels simply aid scheduling: Immediate priority bugs
 should be fixed before High, etc. Low priority bugs are "someone should
-fix this someday" type of problems, so they can move from release to
-release.
+fix this someday" type of problems; these are the only ones allowed to
+move from release to release. Think of bugs at this level as analogous
+to the `BUGS` section of a Unix man page: our "low" intent to fix these
+problems means they may stay at this level indefinitely, acting only as
+advisories to the software's users.
 
 The Features levels may be read as:
 
 *   **Immediate**: ASAP, or sooner. :)
-*   **High**: Features for this release.
-*   **Medium**: Features we'll look at lifting individually to High for
-    the next release.
+*   **High**: Features for the upcoming release.
+*   **Medium**: Features we'll look at lifting to High for the release
+    after that.
 *   **Low**: "Wouldn't it be nice if..."
 
 
@@ -47,17 +50,27 @@ home page.
 ## Update ChangeLog.md
 
 Trawl the Fossil timeline for user-visible changes since the last
-release, and write them up in user-focused form into the `ChangeLog.md`
-file.  If a regular user of the software cannot see a given change, it
-shouldn't go in the `ChangeLog.md`; let it be documented via the
+release, and write them up in user-focused form into [the `ChangeLog.md`
+file][cl]. If a regular user of the software cannot see a given change,
+it shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
+
+[cl]: https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
+
+
+## Build and Update the Fossil Binary
+
+If a new release of Fossil has come out since the last release, the
+`wget` link in `tools/bosi` is probably stale. Build an updated binary,
+run `tools/publish-fossil`, then replace the file name part of the URL
+in `tools/bosi` to pull that new version.
 
 
 ## Update the Release Branch
 
-Run `make release` to check the `ChangeLog.md` file changes in, tagging
-that checkin with a release version tag of the form vYYYYMMDD and merge
-those changes into the `release` branch.
+Run `make release` to check the `ChangeLog.md` file changes in, merge
+trunk to the `release` branch, and apply a tag of the form vYYYYMMDD to
+that marge checkin.
 
 It runs entirely automatically unless an error occurs, in which case it
 stops immediately, so check its output for errors before continuing.
@@ -72,7 +85,7 @@ by the previous step, so they begin shipping the new release immediately
 after tagging it.
 
 
-## Produce the Normal Binary OS Image
+## <a id="bosi"></a>Produce the Normal Binary OS Image
 
 Start with the latest version of [Raspbian Lite][os] on a multi-core
 Raspberry Pi.

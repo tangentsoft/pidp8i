@@ -1,5 +1,318 @@
 # PiDP-8/I Changes
 
+<a id="20190425"></a>
+## Version 2019.04.25 — The "OS/8 V3F and os8-run" release
+
+*   The banner feature in this release is that Bill Cattey transformed
+    our `mkos8` tool into the `os8-run` script interpreter, giving us
+    many new features and capabilities:
+
+    *   The OS/8 V3D RK05 media build steps previously hard-coded in
+        Python within `mkos8` are now in a series of scripts in the
+        `os8-run` language.  This abstracts the process, making it
+        easier to understand and change.  Non-Python programmers can
+        examine these `os8-run` input scripts to learn how their media
+        are built.  It's easier to modify the `os8-run` scripts to get
+        custom results than to modify the prior release's `mkos8` Python
+        script.
+
+    *   Replaced the hand-maintained `media/os8/os8.tu56` OS/8 V3D TU56
+        tape image used by boot option IF=3 with an `os8-run` script
+        that's run at build time to generate a series of four similar
+        tape images from pristine, curated source media, just like
+        we did for the RK05 media in the prior release.
+
+        These four tapes are the result of a 2×2 matrix of choices
+        between which virtual DECtape hardware ([TC08 or TD8E][tctd])
+        and which OS/8 version ([V3D or V3F][v3df]):
+
+        *   You can ask to have the IF=3 boot option use the OS/8 V3F
+            tape instead of the OS/8 V3D default.  Both versions get
+            built, always, but only one gets to be the boot tape for
+            this option.  This may be the first time that V3F was
+            ever easily available to SIMH users.  Previously, you
+            had to assemble it from pieces found all over the Internet.
+
+            (Bootable V3F RK05 media are planned for a future release.)
+
+        *   You can also select whether the IF=3 boot option uses
+            the boot tape configured for a PDP-8 with the TD8E tape
+            controller instead of the default, which assumes a TC08.
+            The prior release was hard-coded for the TD8E.
+
+            This new driver is more efficient and it will allow you to
+            copy the medium image to an actual DECtape and boot it on a
+            PDP-8 with the TC08 or compatible tape drive controller.
+            That wasn't possible before because the TD8E and TC08 share
+            the same IOT device ID, so you can have only one or the
+            other installed into OS/8 at a time, and that tape didn't
+            have `BUILD` on it, so the manually maintained tape image we
+            were running didn't allow you to easily switch it.
+
+    *    In the prior release, we offered the Python `simh` API for
+         scripting OS/8 and SIMH, plus the `teco-pi-demo` script to show
+         off this API.  The `os8-run` command language is based on this
+         same mechanism, offering a simpler method of achieving custom
+         results.  The `os8-run` script language is more like a command
+         language at this time than a programming language, so it should
+         be much easier for non-programmers to learn.
+
+    *   We've been working on this new mechanism for many months now,
+        during which we did a lot of manual testing.  But as with `mkos8`
+        before it, we've also got an automatic tester for `os8-run`,
+        which gives us tested quality assurance on several axes:
+
+        *   <p>**Complete**: We've repeatedly tested all 32768 possible
+            OS/8 RK05 configurations afforded by the configure
+            script.</p>
+
+        *   <p>**Repeatable**: We've re-tested those builds on the
+            original build systems, on multiple computers at a site, and
+            across sites.  This assures us that the builds are
+            deterministic: given the same inputs, you always get the
+            same outputs.  That sounds like it should be obvious and
+            easy, but it didn't come for free!</p>
+
+        *   <p>**Platform-Independent**: By copying these test exemplars
+            between Pi and non-Pi systems and re-testing, we've
+            convinced ourselves that the build is platform-independent,
+            at least within the scope of the systems we've tried it
+            on.</p>
+
+        *   <p>**Reliable**: Some of these configurations have been
+            tested many times over, and all of them have been built at least
+            four times.  We've come to expect that this new mechanism
+            will reliably build standard media on your Pi, too.</p>
+
+    This is largely the work of Bill Cattey.
+
+*   Added Bill Cattey's `os8-cp` script, which makes it nearly as easy
+    as `cp(1)` to get files into and out of a SIMH OS/8 media image.
+
+    Also added his `diff-os8` program, which is not general-purpose, but
+    it shows a useful application of `os8-cp`: to compare two RK05 media
+    images by copying out all of the files from OS/8 into the local
+    filesystem and then comparing the files individually on the host.
+    Imagine your own possibilities!
+
+*   Major improvements to Ian Schofield’s CC8 compiler:
+
+    *   <p>Bill Cattey retargeted the CC8 cross-compiler against
+        [SmallC-85][sc85], which greatly improves the capabilty of the
+        compiler.  It also allows this compiler to run without crashing
+        on 64-bit hosts for the first time.</p>
+
+    *   <p>Bill merged in some of the updates Ian has made to CC8, which
+        affects the native OS/8 compiler and its standard library.</p>
+
+    *   <p>Bill wrote an `os8-run` script to generate the `cc8.tu56`
+        DECtape image dynamically at build time, as needed, rather than
+        use a static binary image shipped in the Fossil code repository.
+        The primary practical upshot of this is that you can now change
+        the native OS/8 CC8 source code on the host side and just say
+        “`make`” to get a new RK05 disk pack with the new code running
+        in it. If you don’t get how cool this is, you don’t understand
+        it properly. :)</p>
+
+    *   <p>Warren Young quadrupled the size of the [CC8 user manual][cc8m].
+        It now answers many more questions, reveals many previously
+        hidden details, fully documents LIBC’s interfaces and internal
+        behaviors, and documents the CC8 memory model.</p>
+
+    *   <p>Warren and Ian collaborated on fixes to the native compiler
+        and its LIBC to fix a bunch of bugs and improve its conformance
+        to Standard C. It’s still miles from passing any ISO C
+        conformance suite, but it should violate fewer expectations now.
+        This work does change the API and ABI of CC8’s LIBC somewhat, so
+        if you have existing code, you might want to read the new manual
+        to work out what’s needed to port that code.</p>
+
+        <p>Notable improvements are that <tt>itoa()</tt> now takes a
+        radix parameter to match its implementation in other C
+        libraries; <tt>sprintf()</tt> returns an error code when the
+        format string contains an unsupported format specifier; and the
+        <tt>printf()</tt> family of functions now handle <tt>%x</tt> and
+        <tt>%X</tt> properly. In the prior release, only <tt>%x</tt>
+        was supported, and it gave uppercase output, not lowercase as
+        the Standard requires.</p>
+
+    *   <p>Warren changed CC8 to use octal when generating constants in
+        SABR output, that being SABR’s default radix. Since CC8 leaves
+        SABR in its default octal mode, the primary user benefit of this
+        is that inline assembly now behaves the same in CC8 as in OS/8
+        FORTRAN II, which is also built atop SABR. That is to say, your
+        inline assembly code can safely assume that the assembler is in
+        octal mode when it processes your code.</p>
+
+        <p>This does mean that if you had C programs built with CC8 that
+        had inline assembly and that code had integer constants within
+        it, it will have to be changed to work with the new
+        compilers.</p>
+
+        <p>The default radix for C code remains 10, so if you were not
+        using inline assembly, this change does not affect you.</p>
+
+*   Since the beginning of this project, we've called our modified
+    version of the SIMH PDP-8 simulator `pidp8i-sim`.  With this
+    release, we hard link that program to `pdp8`, the simulator's name
+    in the upstream distribution of SIMH.  When called by that name, our
+    simulator suppresses all of the PiDP-8/I extensions.
+
+    This not only means we don’t start the GPIO thread that blinks the
+    LEDs and scans for switch changes, it means we revert behavioral
+    changes like the one that affects how the HLT instruction ("halt")
+    is processed: just as with the upstream version, this drops you down
+    to the SIMH command prompt when you call the simulator as `pdp8`,
+    rather than halt the processor and wait for a front panel CONT or
+    START keypress to get it out of STOP state.
+
+    If you install this software on a non-Raspbian systemd-based Linux
+    distribution, the new `pidp8i start` command will notice that there
+    is no PiDP-8/I front panel available and will run `pdp8` instead of
+    our extended `pidp8i-sim` simulator.
+
+    When the GPIO thread is not running, the simulator runs considerably
+    faster.  It’s not clear to me why that should be so on multi-core
+    boxes, since the expensive parts of the PiDP-8/I extensions are
+    running on a separate core, but the measurements are clear.
+
+*   Added the [`--enable-savestate`][esco] configuration option.
+
+*   The Python `simh` API now supports automatic transitions between
+    OS/8 and SIMH context, largely removing the need to manage this
+    manually as in the prior release.  This is largely Bill Cattey's
+    work.
+
+*   The `pidp8i` program now takes optional [verb arguments][pv] that
+    let you avoid giving verbose `systemctl` or `service` commands.
+    Instead of `sudo systemctl restart pidp8i` as in prior releases, you
+    can now say `pidp8i restart`, for example.
+
+*   Gracefully stopping the simulator (e.g. `pidp8i stop` or
+    <kbd>Ctrl-E, q</kbd>) now turns off all front panel LEDs before
+    shutting down.
+
+    We’ve made no attempt to do similar cleanups when the simulator is
+    killed outright.  The most common case is during a Pi reboot, where
+    you’ll still see traces of the last state on the front panel
+    briefly.  We also make no attempt to cope with badness like `killall
+    pidp8i-sim`.
+
+*   The `pidp8i-test` program's scan-switch feature now debounces the
+    switches in software so that each state change results in only one
+    line printed on the console.  This is not just cosmetic: the prior
+    behavior could fool a builder into believing their correctly-working
+    PiDP-8/I had a hardware problem.
+
+*   Changed the SysV init script to a systemd unit file.  This gets us
+    several new features:
+
+    *   <p>It fixes a problem introduced between Raspbian Jessie and
+        Stretch that caused dangling `pidp8i-sim` processes when you
+        stopped the simulator.</p>
+
+    *   <p>SysV init was pretty much limited to use by root, so we had
+        to use `sudo` in many cases even though we'd largely divorced the
+        PiDP-8/I software from needing root privileges itself.  systemd
+        allows a service to be installed under the account of a normal
+        user, which lets you start and stop the simulator without
+        needing root privilege.</p>
+
+    *   <p>We get detailed service status for free via <tt>pidp8i
+        status</tt>, a short alias for the full command, <tt>systemctl
+        --user status pidp8i</tt>.</p>
+
+    *   <p>Gets us away from the SysV init backwards compatibility that
+        may go away in a future release of Raspbian.</p>
+
+*   Applied a fix from Ian Schofield for a serious problem with the
+    accuracy of the MB register lights in certain contexts, such as
+    while in STOP mode.  Bill Cattey verified this fix against a real
+    PDP-8 at the Rhode Island Computer Museum.
+
+*   Fixed some bugs in our version of the James L-W alt-serial mod
+    feature relative to the mailing list patch.  Bug reports and
+    diagnosis by Dylan McNamee.
+
+*   Fixed a bug going clear back to the epochal v20151215 release which
+    can cause an OSR instruction to incorrectly set the Link bit if the
+    next GPIO pin up from those used by the SR lines happens to be set
+    when you issue that instruction.
+
+*   The `tools/mkbootscript` program which translates palbart assembly
+    listing files into SIMH boot scripts was only writing a SIMH "dep"
+    command for the first word on a line of listing output.  It’s legal
+    in PAL format listings to have multiple words on a line, as is
+    common with data arrays and such. Any program that makes use of that
+    feature is affected, including the tty output from `hello.script`
+    and `pep001.script`.
+
+    While in there, made several other improvements to the script.
+
+*   The `examples/hello.pal` program was badly broken in prior releases.
+
+    *   <p>It was skipping the first character ("H") in its output
+        message.</p>
+
+    *   <p>Set the 8th bit set on the ASCII output bytes in case you use
+        a Teletype Model 33 ASR or similar, which requires mark parity.</p>
+
+    *   <p>It now uses the same optimized `PRINTS` routine as
+        `pep001.pal`, which we're also shipping as
+        `examples/routines/prints.pal`.</p>
+
+    Between these weaknesses and the `mkbootscript` bug fixed above,
+    this example was entirely broken since being shipped.  Our thanks
+    for the tests and diagnosis of these problems go to Greg Christie
+    and Bill Cattey.
+
+*   Improved `examples/pep001.pal`:
+
+    *   This program no longer gets stuck in the TSF loop on startup if
+        you run it with the terminal unready for output.  The terminal
+        would typically be ready when launching this program from within
+        OS/8, but it could get stuck in other conditions, such as when
+        running it under a freshly started simulator:
+
+             $ bin/pdp8 boot/pep001.script
+
+    *   Applied same high-bit improvement as for `hello.pal`.
+
+*   Updated SIMH to commit ID 4e0450cff (2019-04-18):
+
+    *   <p>Simulated PDP-8 devices now have description strings so that
+        SIMH commands like `SHOW FEATURES` gives more descriptive
+        output.</p>
+
+    *   <p>SCP (the Ctrl-E command processor) has seen a lot of work
+        since our last release, and the included PiDP-8/I boot scripts
+        make use of two of these improvements: `ELSE` directives in
+        command scripts and `ON SIGTERM` handling.</p>
+
+    *   <p>The core SIMH timing and throttling mechanism has seen a lot
+        of work.</p>
+
+    *   <p>Lots of small improvements to the terminal muxer.</p>
+
+*   The software now builds and runs on FreeBSD.  This just a step
+    toward support for FreeBSD for the Raspberry Pi: we haven’t tried to
+    make the GPIO stuff work at all yet.  For now, it just lets this
+    software be used on your FreeBSD desktop or server machine.  It may
+    allow building on other BSDs, but that is untested.
+
+*   `scanswitch` now returns 127 on “no GPIO” rather than 255.
+
+*   17 months of maintenance and polishing: better documentation, build
+    system improvements, etc.
+
+[cc8m]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
+[esco]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#savestate
+[pv]:   https://tangentsoft.com/pidp8i/doc/trunk/README.md#systemd
+[sc85]: https://github.com/ncb85/SmallC-85
+[tctd]: https://tangentsoft.com/pidp8i/wiki?name=TD8E+vs+TC08
+[v3df]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+V3D+vs+V3F
+
+
 <a id="20171222"></a>
 ## Version 2017.12.22 — The "Languages and Custom OS/8 Disk Packs" release
 
@@ -377,7 +690,7 @@
 *   Assorted portability, build system, and documentation improvements.
 
 [apt]:   https://linux.die.net/man/8/apt
-[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/README.md
+[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
 [csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [dibas]: https://tangentsoft.com/pidp8i/wiki?name=Demos+in+BASIC
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2

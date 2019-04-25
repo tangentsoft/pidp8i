@@ -58,7 +58,7 @@ The `d8tape` program is distributed under the license given in
 
 ## <a id="cc8"></a>CC8 Compiler License
 
-The license for the `src/cc8` subtree is messy as it comes to us from
+The license for the `src/cc8` sub-tree is messy as it comes to us from
 multiple authors over many years.
 
 There are two compilers here.
@@ -69,7 +69,7 @@ General Public License version 3][gpl3].
 
 Then we have the CC8 cross-compiler which is based on Ron Cain's
 [Small-C][smc], originally published in [Dr.  Dobbs' Journal][ddj].
-Wikipedia describes Small-C as "copyrighted but sharable," which I take
+Wikipedia describes Small-C as "copyrighted but shareable," which I take
 to mean that we cannot claim it as our exclusive property, but we can
 modify it and distribute those modifications to others, which is what
 we're doing here.
@@ -102,7 +102,7 @@ released under the Digital License Agreement presented in
 The other files in the [`media`][md] and [`examples`][ed] directories
 that originate from Digital Equipment Corporation are believed to fall
 under the [public domain license][pdp8pd] DEC released all their PDP-8
-software under after it stopped being ecomonmically viable. Documented
+software under after it stopped being economically viable. Documented
 releases for specific software (e.g. TSS/8) may be difficult to come by,
 however.
 

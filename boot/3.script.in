@@ -1,11 +1,19 @@
 ; Loads OS/8 from DECtape, as opposed to the RK05 based environment
 ; in 0.script.
 ;
-echo Loading OS/8 from DECtape...
-set df disabled
+echo Loading OS/8 from DECtape type @OS8_TAPE_DEVICE@...
+@include @srcdir@/boot/common.script
+
+@if SIMH_TAPE_DEVICE eq "td"
 set dt disabled
 set td enabled
-set cpu noidle
-@SET_THROTTLE@
-attach td0 @MEDIADIR@/os8/os8.tu56
-boot td0
+; else, default is correct, per p.4 in SIMH's pdp8_doc.doc.
+@endif
+
+@define SHORTNAME 3
+@include @srcdir@/boot/savestate.script
+
+attach @SIMH_TAPE_DEVICE@0 @MEDIADIR@/os8/@OS8_BOOT_TAPE@
+boot @SIMH_TAPE_DEVICE@0
+
+:end

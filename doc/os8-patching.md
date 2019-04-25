@@ -22,14 +22,13 @@ patches.  Using OCR'd text from each relevant _DSN_ issue, I created a
 file per patch, which I then compared to the scanned PDF and corrected
 the OCR errors.
 
-Then I enhanced our `mkos8` script to apply the patches in an
-automated way.  Most of the patches were for programs available
-in source form, so I built the programs from source, and then bench
-checked the patch against the source.  In a few cases the code was too
-obscure, and I marked the patch as "plausable" rather than "verified"
-in my spreadsheet.
+Then I created a way to apply the patches in an automated way.  Most
+of the patches were for programs available in source form, so I built
+the programs from source, and then bench checked the patch against the
+source.  In a few cases the code was too obscure, and I marked the
+patch as "plausable" rather than "verified" in my spreadsheet.
 
-The file [patch_list.txt][pl] lists all of the patch files in
+The file [`patch-list.txt`][pl] lists all of the patch files in
 `media/os8/patches`.  Comments in that file begin with `#` and are
 used to disable patches we have rejected for one reason or another.
 Each rejected patch also has a comment that explains why that
@@ -45,12 +44,9 @@ You may want to examine this file to see if there are any decisions you
 would reverse.  After modifying that file, say "`make`" to rebuild the
 OS/8 binary RK05 disk image file with your choice of patches.
 
-You can disable all of these OS/8 patches by giving the
-`--disable-os8-patches` option to the `configure` script.
-
 [dsn]:     http://bitsavers.org/pdf/dec/pdp8/softwarenews/
 [dsn8010]: http://bitsavers.org/pdf/dec/pdp8/softwarenews/198010_PDP8swNews_AA-K629A-BA.pdf
-[pl]:      https://tangentsoft.com/pidp8i/doc/trunk/media/os8/patches/patch_list.txt
+[pl]:      https://tangentsoft.com/pidp8i/doc/trunk/media/os8/patches/patch-list.txt
 
 
 ## Review of Recommendations
@@ -146,10 +142,10 @@ support.  But if you happen to be using this setup under `TD8E` and
 
 ## Patch Application Order
 
-The `patch` routine in `mkos8` applies the patches in the order they
-appear in `patch_list.txt`.  That list is currently in alphabetical
-order.  However, there may in future emerge patches that impose an
-order.
+In the creation of `v3d.rk05` image booted by default, the
+script `v3d-rk05.os8` defines the order in which the patches are applied.
+It started off alphabetically by subsystem, but evolved as
+order dependencies emerged.
 
 For example, if the `ABSLDR` patch actually did work, it needs the
 `FUTIL 31.21.2 M` in order to patch into the `ABSLDR` overlay bits.
@@ -160,6 +156,7 @@ load `ABSLDR.SV` into core with GET, the contents of memory showed by
 understanding of the OS/8 Device Extensions kit, I see that the patch
 was incorporated into the version 8 `FUTIL` source, and also that
 `ODT` is expected to be updated in version 3S of the Keyboard Monitor.
+
 
 ## Then There's `MACREL`
 
@@ -183,21 +180,21 @@ With that TECO patch, I simply changed the version amendment line in
 that `TECO` patch, because the rest was correct.  Whoever published
 the patch got the version number wrong, and nobody complained.
 
-With no `MACREL` v1 source verification was not really possible, so
-applying those patches was postponed.  But then we found both binary
+With no `MACREL` v1 source code, verification was not really possible,
+so applying those patches was postponed.  But then we found both binary
 and source of `MACREL` v2!
 
-In the interests of shipping out system packs in finite time, we will
-integrate `MACREL` v2 into the system packs, and verify/apply `MACREL`
-v2 patches as follow-on work.
+None of the available `MACREL` v2 patches are currently applied. We may
+get to that later.
 
-After further testing of 'MACREL' I have concluded that integrating
-the source-level patch `41.5.1M` will reduce uncertainty.  So I have
+After further testing of `MACREL`, I have concluded that integrating the
+source-level patch `41.5.1M` will reduce uncertainty, so I have
 hand-integrated that patch into the `MACREL` tu56 image as well.
 
 [macreldoc]:https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-macrel.md
 
-## `FUTIL`:
+
+## `FUTIL`
 
 I was dubious of some of the `FUTIL` patches, but with finding source
 to version 8A, I gained confidence in the version 7 patches, and
@@ -209,22 +206,22 @@ and so the OS/8 Core Control Block needed to change.
 
 Unfortunately, the `FUTIL.SV` distributed as version 8A had the wrong
 starting address and Job Status Word settings. It *hangs* when run
-under `BATCH`.  Our automated pack builder and patcher `mkos8` run
-`FUTIL` under `BATCH`.
+under `BATCH`.  Our automated pack builder and patcher script
+`v3d-rk05.os8` runs `FUTIL` under `BATCH`.
 
-The `MACREL` v2 DECtape image we use with `mkos8` contains a
+The `MACREL` v2 DECtape image we use with automated building contains a
 hand-applied patch `35.13.1M` that fixes this problem.
 
 Currently if you opt in to having `MACREL` on the system packs, you
-get `FUTIL` version 8B. If not, you get `FUTIL` version 7 and `mkos8`
-applies the relevant patches. If `FUTIL` version 8 is installed, the
-automated patch applier recognizes the version 7 patches don't fit and
-fails to install them.
+get `FUTIL` version 8B. If not, you get `FUTIL` version 7 and
+`v3d-rk05.os8` applies the relevant patches. If `FUTIL` version 8 is
+installed, the automated patch applier recognizes the version 7
+patches don't fit and fails to install them.
 
 ## One-off Patches
 
 Most of the patches are parsed and applied in an automated manner
-by mkos8.  However some are one-offs.
+by `v3d-rk05.os8`.  However some are one-offs.
 
 See the `FUTIL` section above with regards to patch `35.13.1M`.
 
@@ -234,8 +231,8 @@ file provides that line. It also provides instructions on how to use
 the old version of `DLOG` with the new one in `FORLIB.RL`.  I followed
 the instructions to hand-tool a patched `FORLIB.RL` which I then put
 in the `local.tu56` DECtape image along with the other local hacks.
-The `patch` routine `mkos8` has in-line code to replace `FORLIB.RL` on
-`SYS:` if installation of FORTRAN IV is enabled.
+The `v3d-rk05.os8` script has conditional code to replace `FORLIB.RL`
+on `SYS:` if installation of FORTRAN IV is enabled.
 
 
 ## Unfinished Business
@@ -400,5 +397,5 @@ Copyright © 2017 by Bill Cattey. Licensed under the terms of
 [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
-[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extenaions.md
+[os8ext]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-v3d-device-extensions.md
 

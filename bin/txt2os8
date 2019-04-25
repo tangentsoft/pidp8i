@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ########################################################################
 # Create a tu56 or rk05 image and fill it with ASCII files, i.e.  source code.
@@ -16,7 +16,8 @@
 # txt2ptp which transforms POSIX ASCII files to OS/8 ASCII files.
 # It WILL mutilate non-ASCII files.
 #
-# This program is based on cc8-tu56-update.
+# This program is based on the old cc8-tu56-update program, last
+# shipped by this project in release v20171222.
 #
 # Copyright © 2017 by Warren Young and Bill Cattey
 #

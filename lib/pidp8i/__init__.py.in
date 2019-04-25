@@ -7,7 +7,7 @@
 # to find it.  That happens naturally when building in-tree, but we
 # need this bit of *.in trickery when building out-of-tree.
 #
-# Copyright © 2017 by Warren Young
+# Copyright © 2017-2018 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -34,4 +34,4 @@
 # authorization from those authors.
 ########################################################################
 
-__all__ = [ 'dirs', 'ips' ]
+__all__ = [ 'dirs', 'ips', 'os8opts' ]

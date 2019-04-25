@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 ########################################################################
 # corecount - Prints the number of CPU cores found on this system
 #
-# Copyright © 2017 by Warren Young
+# Copyright © 2017-2018 by Warren Young
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -29,15 +29,20 @@
 # those authors.
 ########################################################################
 
-sys="$(uname -s)"
+sys=`uname -s`
 if [ -r /proc/cpuinfo ]
 then
-	# It's a Linux box
-	grep -Ec '^processor\s+:' /proc/cpuinfo
-elif [ "$sys" = "Darwin" -o "$sys" = "FreeBSD" -o "$sys" = "OpenBSD" -o "$sys" = "NetBSD" ]
+	# It's a Linux box, or something that *looks* like one, such as
+	# NetBSD, Cygwin, or the Windows Subsystem for Linux.
+	grep -Ec '^processor[[:space:]]+:' /proc/cpuinfo
+elif [ "$sys" = "Darwin" -o "$sys" = "OpenBSD" -o "$sys" = "NetBSD" ]
 then
 	# It's a macOS or BSD box
 	/usr/sbin/sysctl -n hw.ncpu
+elif [ "$sys" = "FreeBSD" ]
+then
+    # FreeBSD puts sysctl elsewhere
+	/sbin/sysctl -n hw.ncpu
 else
 	# No known way to find out, so report only 1 core
 	echo 1

@@ -25,7 +25,7 @@ media/os8/subsys as follows:
 
 When with-os8-fortran-iv is enabled (which is the default), the
 contents of Binary DECtape #1 are installed on the OS/8 RK05 images
-built by `mkos8`.
+built by `os8-run`.
 
 Binary DECtape #2 contains the `.RA` sources for the components
 of the FORTRAN IV library.  Those files are already assembled

@@ -1,0 +1,11 @@
+# If a script setting TD8E in the default system packs blows out
+# Run this script to fix it.
+
+mount rk0 $bin/v3d.rk05 required
+
+# The saved BUILD will just work.
+boot rk0
+begin build SYS:BUILD.SV
+BOOT
+end build
+os8 SET SYS INIT

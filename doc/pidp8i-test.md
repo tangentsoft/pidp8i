@@ -13,7 +13,7 @@ the other software with the normal `make` process.
 If you're running one of the [binary OS images][devhome], simply give
 these commands:
 
-    $ sudo systemctl stop pidp8i
+    $ pidp8i stop
     $ pidp8i-test
 
 The first command ensures that the modified PDP-8 simulator is stopped

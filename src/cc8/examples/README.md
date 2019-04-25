@@ -60,11 +60,11 @@ the compiler directly:
 
 Note that it tolerates lowercase input.
 
-See [the CC8 documentation][ccrm] for more information.
+See [the CC8 manual][ccmn] for more information.
 
 
 [aerm]: /doc/trunk/examples/README.md
-[ccrm]: /doc/trunk/src/cc8/README.md
+[ccmn]: /doc/trunk/doc/cc8-manual.md
 [uwfs]: /doc/trunk/doc/uwfocal-manual-supp.md
 
 

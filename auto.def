@@ -2,7 +2,7 @@
 # auto.def - Configure file for the PiDP-8/I software build system,
 #            based on autosetup.
 #
-# Copyright © 2016-2017 Warren Young
+# Copyright © 2016-2019 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -38,19 +38,20 @@ use cc-shared
 # Canonicalize some paths which may be relative and generate others from them
 set abspfx [file-normalize [get-define prefix]]
 define ABSPREFIX $abspfx
+define SHAREDIR "$abspfx/share"
 define BOOTDIR  "$abspfx/share/boot"
 define MEDIADIR "$abspfx/share/media"
 
-# Define options the configure script shares with mkos8.  We insert a
+# Define options the configure script shares with os8-run.  We insert a
 # variant of each into the autosetup option list and also write a
-# version to a Python library file that mkos8 can read.  This avoids
+# version to a Python library file that os8-run can read.  This avoids
 # the need to define the options by hand in both places.
 #
 # Some of the --*-os8-* options are defined only for the configure
 # script because they are either meta-options, affecting the definition
 # of some of those we do define here, or they aren't passed as-is to the
-# mkos8 script, but instead must be translated.  (e.g. --disable-os8-src
-# suppresses the call to "mkos8 src" from the Makefile.)
+# os8-run script, but instead must be translated.  (e.g. --disable-os8-src
+# suppresses creation of the OS/8 src rk05 by the Makefile.)
 set os8opts {
     advent      1  "Adventure"
     ba          1  "*.BA BASIC games and demos"
@@ -82,20 +83,36 @@ foreach {opt def desc} $os8opts {
 
 # Now define those command line options that belong only to us.
 append alloptions {
-    alt-serial-mod    => "use GPIO drive scheme suitable for James L-W's serial mod method"
-    cc8-cross=1       => "do not build the cc8 cross-compiler on the host"
-    debug-mode        => "create a debug build (default is release)"
-    lowercase:        => "select how lowercase input is to be handled"
-    no-lamp-simulator => "use simple LED driver instead of incandescent lamp simulator"
-    os8-focal=1       => "leave FOCAL 69 and U/W FOCAL off the built OS/8 RK05 image"
-    os8-minimal       => "set all --disable-os8-* options, giving minimal OS/8 bin disk"
-    os8-patches=1     => "do not apply DEC patches to the built OS/8 RK05 bin image"
-    os8-src=1         => "do not build os8v3d-src.rk05 from OS/8 source tapes"
-    serial-mod        => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
-    throttle:         => "override the throttle values in the boot scripts"
+    alt-serial-mod     => "use GPIO drive scheme suitable for James L-W's serial mod method"
+    boot-tape-config:  => "Boot tape configuration: tc08, or td12k"
+    boot-tape-version: => "OS/8 version for boot tape, either v3d or v3f"
+    cc8-cross=1        => "do not build the cc8 cross-compiler on the host"
+    debug-mode         => "create a debug build (default is release)"
+    lowercase:         => "select how lowercase input is to be handled"
+    no-lamp-simulator  => "use simple LED driver instead of incandescent lamp simulator"
+    os8-focal=1        => "leave FOCAL 69 and U/W FOCAL off the built OS/8 RK05 image"
+    os8-minimal        => "set all --disable-os8-* options, giving minimal OS/8 bin disk"
+    os8-src=1          => "do not build v3d-src.rk05 from OS/8 source tapes"
+    savestate          => "save simulator state (regs, core, devices) on exit; restore on restart"
+    serial-mod         => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+    throttle:          => "override the throttle values in the boot scripts"
+    usb-automount=1    => "do not automatically mount USB drives for SING_STEP + DF"
 }
 
 options $alloptions
+
+# use btc and btv to set defaults because I can't get the documented
+# syntax of <name>:=<value> to work.
+
+# Default boot-tape-config is tc08
+set btc [opt-val boot-tape-config]
+if {$btc eq ""} {set btc "tc08"}
+
+# Default boot-tape-version is v3d
+set btv [opt-val boot-tape-version]
+if {$btv eq ""} {set btv "v3d"}
+
+define USB_AUTOMOUNT [opt-bool usb-automount]
 
 # Make our own array of os8 options so we can apply the meta options
 foreach {opt def desc} $os8opts {
@@ -107,8 +124,8 @@ set os8bool(src) [opt-bool os8-src]
 set os8min [opt-bool os8-minimal]
 set os8src [opt-bool os8-src]
 if {![opt-bool os8-focal]} {
-    set os8bool(focal69) 0
-    set os8bool(uwfocal) 0
+    set os8bool(focal69) "0"
+    set os8bool(uwfocal) "0"
 }
 
 # -- do not use opt-bool os8-* below this point
@@ -119,9 +136,23 @@ if {$os8bool(cc8) && !$os8bool(fortran-ii)} {
     set $os8bool(fortran-ii) 1
     msg-result "WARNING: Re-enabling OS/8 FORTRAN II: OS/8 CC8 requires it."
 }
+define CC8_TU56 {}
+if {[opt-bool cc8-cross]} {
+    define CC8_CROSS bin/cc8
+    if {$os8bool(cc8)} {
+        define CC8_TU56 bin/cc8.tu56
+    }
+} else {
+    define CC8_CROSS {}
+    msg-result "Will not build the CC8 cross-compiler."
+    if {$os8bool(cc8)} {
+        msg-result "Also disabling OS/8 CC8: can't cross-compile it now."
+        set os8bool(cc8) "0"
+    }
+}
 
-# Now build the options to mkos8
-set mkos8_opts ""
+# Now build the options to os8-run
+set os8_opts ""
 foreach {opt def desc} $os8opts {
     set val $os8bool($opt)
     if {$os8min} {
@@ -130,24 +161,24 @@ foreach {opt def desc} $os8opts {
         # We can't have "except for" logic because we can't tell
         # explicitly-given options from implicit ones.
         set act " not"
-        if {$def} { append mkos8_opts " --disable-$opt" }
+        if {$def} { append os8_opts " --disable $opt" }
     } elseif {$val} {
         set act ""
         if {!$def} {
             # User is enabling a normally-disabled option, so pass it along
-            # to mkos8 explicitly.
-            append mkos8_opts " --enable-$opt"
+            # to os8-run explicitly.
+            append os8_opts " --enable $opt"
         }
     } else {
         set act " not"
         if {$def} {
-            append mkos8_opts " --disable-$opt"
+            append os8_opts " --disable $opt"
         }
     }
     msg-result "Will$act add $desc to the built OS/8 RK05 image"
 }
 
-# And generate mkos8/opts.py
+# And generate lib/pidp8i/os8opts.py
 set os "# GENERATED BY auto.def; DO NOT MODIFY.\n\nopts = {\n"
 foreach {opt def desc} $os8opts {
     set act [expr {$def ? "Leave $desc off" : "Add $desc to"}]
@@ -156,42 +187,46 @@ foreach {opt def desc} $os8opts {
 }
 append os "}\n"     ; # saved later!
 
-# Handle the OS/8 options not passed to mkos8 generically by above.
+# Handle the OS/8 options not passed to os8-run generically by above.
 if {$os8src} {
-    msg-result "Building os8v3d-src.rk05 from OS/8 source tapes."
-    define OS8_SRC_RK05 bin/os8v3d-src.rk05
+    msg-result "Building v3d-src.rk05 from OS/8 source tapes."
+    define OS8_SRC_RK05 bin/v3d-src.rk05
 } else {
-    msg-result "Will not build os8v3d-src.rk05 from OS/8 source tapes."
+    msg-result "Will not build v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 {}
 }
-if {$os8min || ![opt-bool os8-patches]} {
-    msg-result "Will not patch OS/8 on the RK05 bin disk."
-    define OS8_BOOT_DISK "os8v3d-bin.rk05"
-    define MKOS8_BIN_PATCHES {}
+# Define our boot image. (Note, we ALWAYS apply patches.)
+define OS8_BOOT_DISK "v3d.rk05"
+
+# Compose our boot tape image name from boot-tape-config and boot-tape-version
+# Pull defaults from $btc for boot-tape-config, and $btv for boot-tape-version.
+
+set btn "$btv-$btc.tu56"
+
+msg-result "Boot tape name: $btn"
+
+define OS8_BOOT_TAPE $btn
+define OS8_TAPE_DEVICE $btc
+if {$btc eq "tc08"} {
+    define SIMH_TAPE_DEVICE "dt"
 } else {
-    msg-result "Will apply OS/8 V3D patches to the RK05 bin disk."
-    define OS8_BOOT_DISK "os8v3d-patched.rk05"
-    define MKOS8_BIN_PATCHES patch
-}
+    define SIMH_TAPE_DEVICE "td"
+}    
+
 
 # React to remaining chosen command line options
 if {[opt-bool alt-serial-mod]} {
+    if {[opt-bool serial-mod]} {
+        user-error "You cannot request both --alt-serial-mod and --serial-mod!"
+    }
+
     msg-result "GPIO drive adjusted for James L-W's serial mods to the PiDP-8/I PCB."
     define PCB_SERIAL_MOD_JLW
     define PCB_SERIAL_MOD_ANY
-}
-
-if {[opt-bool serial-mod]} {
+} elseif {[opt-bool serial-mod]} {
     msg-result "GPIO drive adjusted for O. Vermeulen's serial mods to the Pi & PiDP-8/I PCBs."
     define PCB_SERIAL_MOD_OV
     define PCB_SERIAL_MOD_ANY
-}
-
-if {[opt-bool cc8-cross]} {
-    define CC8_CROSS bin/cc8
-} else {
-    define CC8_CROSS {}
-    msg-result "Will not build the cc8 cross-compiler."
 }
 
 if {[opt-bool debug-mode]} {
@@ -202,31 +237,38 @@ if {[opt-bool debug-mode]} {
     define BUILDMODE {-O2}
 }
 
+if {[opt-bool savestate]} {
+    msg-result "Enabling simulator state saving and restoration."
+    define SAVESTATE 1
+}
+
 set lv [opt-val lowercase]
 if {$lv == ""} { set lv "auto" }
 if {$lv == "auto"} {
     define SIMH_PASS_LOWERCASE
 } elseif {$lv == "pass"} {
     define SIMH_PASS_LOWERCASE
-    append mkos8_opts " --disable-lcmod"
+    append os8_opts " --disable lcmod"
 } elseif {$lv == "upper"} {
-    append mkos8_opts " --disable-lcmod"
+    append os8_opts " --disable lcmod"
 } else {
     user-error "Legal values for --lowercase are {auto,pass,upper}."
 }
 msg-result "Lowercase handling set to '$lv' mode."
 
-# We've purposely held off exporting the mkos8 option set until now
+# We've purposely held off exporting the os8-run option set until now
 # because some of the configuration options can affect the option set.
-define MKOS8_OPTS $mkos8_opts
-if {![file exists "lib/mkos8"]} { file mkdir "lib/mkos8" }
-write-if-changed "lib/mkos8/opts.py" $os
+define OS8_OPTS $os8_opts
+if {![file exists "lib/pidp8i"]} { file mkdir "lib/pidp8i" }
+if {![file exists "obj/pidp8i"]} { file mkdir "obj/pidp8i" }
+if {![file exists "obj/SIMH/PDP8"]} { file mkdir "obj/SIMH/PDP8" }
+write-if-changed "lib/pidp8i/os8opts.py" $os
 
 # Force a rebuild of the OS/8 media if the option set changed.
 if {![file exists "obj"]} { file mkdir "obj" }
-write-if-changed "obj/mkos8.opts" $mkos8_opts {
-    file delete -force bin/os8v3d-bin.rk05
-    msg-result "mkos8 options changed; will rebuild OS/8 disk images."
+write-if-changed "obj/os8.opts" $os8_opts {
+    file delete -force bin/v3d-dist.rk05
+    msg-result "os8 options changed; will rebuild OS/8 disk images."
 }
 
 # High-level definitions
@@ -297,10 +339,14 @@ if {($cores < 2) || [opt-bool no-lamp-simulator]} {
 }
 
 # Check for headers, functions, etc. whose absence we can work around
+cc-check-decls __progname
 cc-check-includes time.h
 cc-check-function-in-lib clock_gettime rt
 cc-check-functions clock_nanosleep nanosleep usleep
 cc-check-functions sched_yield
+cc-with {-includes signal.h} {
+    cc-check-types sighandler_t sig_t
+}
 
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
@@ -364,6 +410,13 @@ if {![opt-bool debug-mode]} {
     }
 }
 
+# Among others, the tools/version script requires Perl
+set status [catch {exec perl -e "exit 0"} result]
+if {$status != 0} {
+    user-error "Perl does not appear to be installed here.  It is required."
+}
+msg-result "Perl is installed here."
+
 # Embed this software's Fossil-based version string into gpio-common.c.
 # Fail hard if we can't get this version string because all supported
 # configurations require Fossil and work from a Fossil checkout.  Don't
@@ -394,16 +447,17 @@ set user $::env(USER)
 define BUILDUSER "$user@$host"
 define BUILDTS [clock format [clock seconds] -format "%Y.%m.%d at %T %Z"]
 
-# The mkos8 script requires Python and some non-core modules.
+# The os8-run script requires Python and some non-core modules.
 set status [catch {exec python -c exit} result]
 if {$status != 0} {
-    user-error "Python does not appear to be installed here.  It is required."
+    user-error "Python 2 does not appear to be installed here.  It is required."
 }
-msg-result "Python is installed here."
+msg-result "Python 2 is installed here."
 set status [catch {exec python -c "import pexpect" 2> /dev/null} result]
 if {$status != 0} {
-    set msg "The Python pexpect module is not installed here.  Fix with\n"
-    append msg "\n    sudo pip install pexpect\n"
+    set msg "The Python pexpect module is not installed here.  Fix with\n\n"
+    append msg "    sudo apt install python-pip\n"
+    append msg "    sudo pip install pexpect\n"
     append msg "\nOR:\n"
     append msg "\n    sudo easy_install pexpect\n"
     append msg "\nOR:\n"
@@ -423,8 +477,28 @@ if {$status != 0} {
 }
 msg-result "Python module pkg_resources is installed here."
 
+# Check for Perl and that it can run the test corpus builder.  Not fatal
+# if it can't, since only developers and deep testers need it.
+set status [catch {exec perl -e exit} result]
+if {$status == 0} {
+    set status [catch {exec perl -c "[get-define srcdir]/tools/test-os8-run" 2> /dev/null} result]
+    if {$status == 0} {
+        set status [catch {exec lz4 -h 2> /dev/null} result]
+        if {$status == 0} {
+            msg-result "All test-os8-run prereqs available here."
+            define CAN_TEST_OS8_RUN 1
+        } else {
+            msg-result "Cannot test-os8-run without lz4; try apt install liblz4-tool."
+        }
+    } else {
+        msg-result "Cannot test-os8-run: fix with 'sudo cpanm --installdeps .'"
+    }
+} else {
+    msg-result "Cannot test-os8-run: Perl is not available."
+}
+
 # Build Deeper Thought if we find it here
-if {[file exists "[get-define srcdir]/src/deeper.c"]} {
+if {[file exists "[get-define srcdir]/src/misc/deeper.c"]} {
     set ls [string toupper "[get-define LED_DRIVER_MODULE]ls"]
     msg-result "Found Deeper Thought; building it against $ls GPIO module"
     define BUILD_DEEPER_THOUGHT 1
@@ -435,8 +509,19 @@ if {[file exists "[get-define srcdir]/src/deeper.c"]} {
 # It is important to list "src" last, because GNU make takes the first
 # one that matches, and the wildcards in the generated rules for "src"
 # match all "src/*" subdirs.
+#
+# If you edit this directory list, you should probably also edit
+# BUILDDIRS in Makefile.in!
 set status [catch {
-    exec $srcdir/tools/mkadrules $srcdir src/cc8/cross src/d8tape src/palbart src/PDP8 src
+    exec $srcdir/tools/mkadrules \
+            $srcdir \
+            src/cc8/cross \
+            src/d8tape \
+            src/misc \
+            src/palbart \
+            src/pidp8i \
+            src/SIMH \
+            src/SIMH/PDP8
 } result]
 if {$status == 0} {
     msg-result $result
@@ -448,11 +533,19 @@ if {$status == 0} {
 #
 # NOTE: If you change the list of files here, change INFILES in
 # Makefile.in, too.
+#
+# We're listing the top-level Makefile.in last because the templates
+# ahead of it may have @include directives which modify the @AUTODEPS@
+# value substituted into the top-level Makefile.in's autoreconf target.
+#
+# The boot/common.script must precede the rest of boot/*, because they
+# @include the output version.
 make-config-header src/config.h \
     -auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
     -bare {ILS_MODE PCB_*}
-make-template Makefile.in
 make-template bin/pidp8i.in
+make-template bin/os8-cp.in
+make-template boot/common.script.in
 make-template boot/0.script.in
 make-template boot/2.script.in
 make-template boot/3.script.in
@@ -460,7 +553,9 @@ make-template boot/4.script.in
 make-template boot/6.script.in
 make-template boot/7.script.in
 make-template boot/run.script.in
-make-template etc/pidp8i-init.in
+make-template boot/run-v3f.script.in
+make-template boot/tss8.script.in
+make-template etc/pidp8i.service.in
 make-template etc/sudoers.in
 make-template etc/usb-mount@.service.in
 make-template examples/Makefile.in
@@ -468,11 +563,14 @@ make-template lib/pidp8i/__init__.py.in
 make-template lib/pidp8i/dirs.py.in
 make-template lib/pidp8i/ips.py.in
 make-template media/os8/init.tx.in
+make-template media/os8/3finit.tx.in
 make-template src/Makefile.in
 make-template src/cc8/Makefile.in
 make-template src/cc8/os8/Makefile.in
-make-template src/gpio-common.c.in
-make-template src/PDP8/Makefile.in
-make-template src/PDP8/pidp8i.c.in
+make-template src/pidp8i/gpio-common.c.in
+make-template src/pidp8i/main.c.in
+make-template src/SIMH/Makefile.in
+make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
-exec chmod +x "$builddir/tools/simh-update"
+make-template Makefile.in
+exec chmod +x "$builddir/bin/pidp8i" "$builddir/tools/simh-update" "$builddir/bin/os8-cp"
