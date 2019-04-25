@@ -42,6 +42,10 @@ is_running() {
     test -n "$procs" && test $procs -gt 0 && return 0 || return 1
 }
 
+sim_child_pid() {
+    screen -ls pidp8i | grep -Eo '[[:digit:]]+\.pidp8i' | grep -Eo '^[[:digit:]]+'
+}
+
 # Were we given a command line argument?
 if [ -z "$1" ]
 then
@@ -119,9 +123,11 @@ then
     # commands involving file paths.  This default is chosen because it
     # satisfies both criteria.
     # If you change the default here, change that script as well.
-    cd "$prefix/share/media"
-    screen -dm -S pidp8i "$sim" "$bscript"
-    exit $?
+    cd "$prefix/share/media" &&
+        screen -dm -S pidp8i "$sim" "$bscript" &&
+        systemd-notify --ready --pid=$(sim_child_pid) &&
+        exit 0
+    exit 1
 elif [ "$verb" = "stop" ]
 then
     # Someone (maybe the user via "pidp8i stop", maybe systemd via
@@ -148,4 +154,6 @@ then
             exit 0
         fi
     done 
+
+    exit 1
 fi

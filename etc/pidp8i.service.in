@@ -1,7 +1,7 @@
 ########################################################################
 # pidp8i.service - systemd user unit file for the PiDP-8/I service.
 #
-# Copyright © 2018 Warren Young
+# Copyright © 2018-2019 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -33,12 +33,12 @@ Description=PiDP-8/I Simulator
 Documentation=https://tangentsoft.com/pidp8i/doc/trunk/README.md#unit
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=notify
 ExecStart=@ABSPREFIX@/bin/pidp8i start
 ExecStop=@ABSPREFIX@/bin/pidp8i stop
-KillMode=none
 WorkingDirectory=@ABSPREFIX@/share/media
+NotifyAccess=all
+KillMode=none
 
 [Install]
 WantedBy=default.target
