@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
-<a id="201904xx"></a>
-## Version 2019.04.xx — The "OS/8 V3F and os8-run" release
+<a id="20190425"></a>
+## Version 2019.04.25 — The "OS/8 V3F and os8-run" release
 
 *   The banner feature in this release is that Bill Cattey transformed
     our `mkos8` tool into the `os8-run` script interpreter, giving us
@@ -49,9 +49,6 @@
             have `BUILD` on it, so the manually maintained tape image we
             were running didn't allow you to easily switch it.
 
-            TODO: What is TD12K, exactly?  The SIMH docs talk about TD8E
-            instead.
-
     *    In the prior release, we offered the Python `simh` API for
          scripting OS/8 and SIMH, plus the `teco-pi-demo` script to show
          off this API.  The `os8-run` command language is based on this
@@ -87,8 +84,7 @@
             four times.  We've come to expect that this new mechanism
             will reliably build standard media on your Pi, too.</p>
 
-    All of this is largely the work of Bill Cattey.  I (Warren Young)
-    mainly did bits of polishing and testing.
+    This is largely the work of Bill Cattey.
 
 *   Added Bill Cattey's `os8-cp` script, which makes it nearly as easy
     as `cp(1)` to get files into and out of a SIMH OS/8 media image.
@@ -222,16 +218,12 @@
         user, which lets you start and stop the simulator without
         needing root privilege.</p>
 
-    *   <p>By offering a proper systemd unit file, commands like
-        `systemctl status pidp8i` give much more useful output than
-        before.</p>
+    *   <p>We get detailed service status for free via <tt>pidp8i
+        status</tt>, a short alias for the full command, <tt>systemctl
+        --user status pidp8i</tt>.</p>
 
     *   <p>Gets us away from the SysV init backwards compatibility that
         may go away in a future release of Raspbian.</p>
-
-    *   <p>Potentially, automatic restarts on crashes.  (TODO: Either
-        make `pidp8i.service` actually do that or remove the bullet
-        point.)</p>
 
 *   Applied a fix from Ian Schofield for a serious problem with the
     accuracy of the MB register lights in certain contexts, such as
@@ -286,23 +278,21 @@
 
     *   Applied same high-bit improvement as for `hello.pal`.
 
-*   Updated SIMH to commit ID 4e0450cff (2019-04-18).  The only change
-    of note to the PDP-8 simulator proper since our prior release is
-    that devices now have description strings so that SIMH commands like
-    `SHOW FEATURES` gives more descriptive output.
+*   Updated SIMH to commit ID 4e0450cff (2019-04-18):
 
-    The SIMH core mechanisms are much improved since the prior release.
-    Major areas of improvement are:
+    *   <p>Simulated PDP-8 devices now have description strings so that
+        SIMH commands like `SHOW FEATURES` gives more descriptive
+        output.</p>
 
-    *   <p>**SCP** (the Ctrl-E command processor) — This piece of SIMH
-        has seen a lot of work since our last release, and this release
-        makes use of two of these improvements: `ELSE` directives in
+    *   <p>SCP (the Ctrl-E command processor) has seen a lot of work
+        since our last release, and the included PiDP-8/I boot scripts
+        make use of two of these improvements: `ELSE` directives in
         command scripts and `ON SIGTERM` handling.</p>
 
-    *   <p>**Timing** — We expect the improvements here to improve the
-        way throttling works.</p>
+    *   <p>The core SIMH timing and throttling mechanism has seen a lot
+        of work.</p>
 
-    *   <p>**Terminal Muxer** — Lots of small improvements.</p>
+    *   <p>Lots of small improvements to the terminal muxer.</p>
 
 *   The software now builds and runs on FreeBSD.  This just a step
     toward support for FreeBSD for the Raspberry Pi: we haven’t tried to
@@ -310,8 +300,10 @@
     software be used on your FreeBSD desktop or server machine.  It may
     allow building on other BSDs, but that is untested.
 
-*   Over a year of maintenance and polishing, much of it resulting in
-    documentation and build system improvements.
+*   `scanswitch` now returns 127 on “no GPIO” rather than 255.
+
+*   17 months of maintenance and polishing: better documentation, build
+    system improvements, etc.
 
 [cc8m]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
 [esco]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#savestate
