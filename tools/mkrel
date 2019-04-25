@@ -39,7 +39,7 @@ f update &&
 	( test -z "$(f changes --no-classify)" || f ci -m "Released $tag" ) &&
 	cd ../release &&
 	f update &&
-	f merge $tag &&
+	f merge trunk &&
 	test -z "$(f changes --conflict)" &&
 	tools/mmake &&
 	f diff -w --tk &&
