@@ -154,8 +154,11 @@ proc include-file {infile mapping} {
 	set linenum 0
 	foreach line [split [readfile $infile] \n] {
 		incr linenum
-		if {[regexp {^@(if|else|endif)\s*(.*)} $line -> condtype condargs]} {
+		if {[regexp {^@(if|else|endif)(\s*)(.*)} $line -> condtype condspace condargs]} {
 			if {$condtype eq "if"} {
+				if {[string length $condspace] == 0} {
+					autosetup-error "$infile:$linenum: Invalid expression: $line"
+				}
 				if {[llength $condargs] == 1} {
 					# ABC => [get-define ABC] ni {0 ""}
 					# !ABC => [get-define ABC] in {0 ""}
@@ -177,8 +180,12 @@ proc include-file {infile mapping} {
 				}
 				dputs "@$condtype: $condexpr => $condval"
 			}
-			if {$condtype ne "if" && [llength $condstack] <= 1} {
-				autosetup-error "$infile:$linenum: Error: @$condtype missing @if"
+			if {$condtype ne "if"} {
+				if {[llength $condstack] <= 1} {
+					autosetup-error "$infile:$linenum: Error: @$condtype missing @if"
+				} elseif {[string length $condargs]} {
+					autosetup-error "$infile:$linenum: Error: Extra arguments after @$condtype"
+				}
 			}
 			switch -exact $condtype {
 				if {
@@ -200,26 +207,25 @@ proc include-file {infile mapping} {
 			}
 			continue
 		} elseif {[regexp {^@include\s+(.*)} $line -> filearg]} {
-            set incfile [string map $mapping $filearg]
-            if {[file exists $incfile]} {
-                lappend ::autosetup(deps) [file-normalize $incfile]
-                set inclines [include-file $incfile $mapping]
-                set result [concat $result $inclines]
-            } else {
-                user-error "$infile:$linenum: Include file $incfile is missing"
-            }
-            continue
+			set incfile [string map $mapping $filearg]
+			if {[file exists $incfile]} {
+				lappend ::autosetup(deps) [file-normalize $incfile]
+				lappend result {*}[include-file $incfile $mapping]
+			} else {
+				user-error "$infile:$linenum: Include file $incfile is missing"
+			}
+			continue
 		} elseif {[regexp {^@define\s+(\w+)\s+(.*)} $line -> var val]} {
-            define $var $val
-            continue
-        }
+			define $var $val
+			continue
+		}
 		# Only output this line if the stack contains all "true"
 		if {"0" in $condstack} {
 			continue
 		}
 		lappend result $line
 	}
-    return $result
+	return $result
 }
 
 
@@ -285,22 +291,22 @@ proc make-template {template {out {}}} {
 	define srcdir [relative-path [file join $::autosetup(srcdir) $outdir] $outdir]
 	define top_srcdir [relative-path $::autosetup(srcdir) $outdir]
 
-    # Build map from global defines to their values so they can be
-    # substituted into @include file names.
-    proc build-define-mapping {} {
-        set mapping {}
-        foreach {n v} [array get ::define] {
-            lappend mapping @$n@ $v
-        }
-        return $mapping
-    }
+	# Build map from global defines to their values so they can be
+	# substituted into @include file names.
+	proc build-define-mapping {} {
+		set mapping {}
+		foreach {n v} [array get ::define] {
+			lappend mapping @$n@ $v
+		}
+		return $mapping
+	}
 	set mapping [build-define-mapping]
 
-    set result [include-file $infile $mapping]
+	set result [include-file $infile $mapping]
 
-    # Rebuild the define mapping in case we ran across @define
-    # directives in the template or a file it @included, then
-    # apply that mapping to the expanded template.
+	# Rebuild the define mapping in case we ran across @define
+	# directives in the template or a file it @included, then
+	# apply that mapping to the expanded template.
 	set mapping [build-define-mapping]
 	write-if-changed $out [string map $mapping [join $result \n]] {
 		msg-result "Created [relative-path $out] from [relative-path $template]"
