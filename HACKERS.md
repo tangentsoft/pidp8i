@@ -30,7 +30,7 @@ continue to do so until 2020 or so in accordance with their software
 stability policy.  You could build Fossil from source, or you could just
 go grab a pre-built binary we keep on the project site:
 
-    $ wget https://tangentsoft.com/pidp8i/uv/fossil-2.7-raspbian-9.6-stretch
+    $ wget https://tangentsoft.com/pidp8i/uv/fossil-2.8-raspbian-9.6-stretch
     $ sudo install -m 755 fossil-* /usr/local/bin/fossil
 
 Fossil is also available for all common desktop platforms.  One of [the
