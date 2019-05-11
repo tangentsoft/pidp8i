@@ -34,7 +34,7 @@ bootdir="@BOOTDIR@"
 prefix="@ABSPREFIX@"
 sim="$prefix/bin/pidp8i-sim"
 scanswitch="$prefix/libexec/scanswitch"
-systemctl=/bin/systemctl
+systemctl=$(uname -r | grep -qw Microsoft && echo /bin/nothing || echo /bin/systemctl)
 ggrep=$(which ggrep grep 2> /dev/null | head -1)
 
 is_running() {
