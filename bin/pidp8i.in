@@ -75,6 +75,7 @@ then
     # "sudo make install" is running us with root perms dropped.  We do
     # a bunch of things for it that would be awkward to do from within
     # the Makefile, which must be done as @INSTUSR@.
+	test -x $systemctl || exit 0
     set -e
     cd @abs_top_builddir@
     export XDG_RUNTIME_DIR=/run/user/$(id -u)
@@ -125,8 +126,9 @@ then
     # If you change the default here, change that script as well.
     cd "$prefix/share/media" &&
         screen -dm -S pidp8i "$sim" "$bscript" &&
-        systemd-notify --ready --pid=$(sim_child_pid) &&
-        exit 0
+		( ! test -x $systemctl ||
+		  systemd-notify --ready --pid=$(sim_child_pid) ) &&
+		exit 0
     exit 1
 elif [ "$verb" = "stop" ]
 then
