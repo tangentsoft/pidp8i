@@ -3,12 +3,16 @@
 ; RF08 disk controller.
 ;
 echo Loading TSS/8 from the RS08 fixed-head disk...
-load @MEDIADIR@/tss8/tss8_init.bin
+@include @srcdir@/boot/common.script
+
 set rf enabled
-set df disabled
-set cpu noidle
-@SET_THROTTLE@
-deposit int-throttle THROT_DELAY 3
+
+@define SHORTNAME 2
+@include @srcdir@/boot/savestate.script
+
+load @MEDIADIR@/tss8/tss8_init.bin
 attach rf @MEDIADIR@/tss8/tss8_rf.dsk
 attach ttix 4000
 run 24200
+
+:end

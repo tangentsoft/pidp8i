@@ -68,9 +68,9 @@ in `tools/bosi` to pull that new version.
 
 ## Update the Release Branch
 
-Run `make release` to check the `ChangeLog.md` file changes in, tagging
-that checkin with a release version tag of the form vYYYYMMDD and merge
-those changes into the `release` branch.
+Run `make release` to check the `ChangeLog.md` file changes in, merge
+trunk to the `release` branch, and apply a tag of the form vYYYYMMDD to
+that marge checkin.
 
 It runs entirely automatically unless an error occurs, in which case it
 stops immediately, so check its output for errors before continuing.

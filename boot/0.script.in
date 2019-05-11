@@ -21,29 +21,13 @@
 ; the simulator, else there would be no way to use Sing_Step for any
 ; of its other functions.  See the PiDP-8/I instructions for details.
 ;
-reset
 echo Loading OS/8 from the RK05 cartridge disk...
-set cpu 32k
-set cpu noidle
-set df disabled
-@SET_THROTTLE@
+@include @srcdir@/boot/common.script
 
-; Override the default simulator throttle stabilization time.  See
-; README-throttle.md for details.
-deposit int-throttle THROT_DELAY 3
-
-@if SIMH_PASS_LOWERCASE
-; The software was configured with either --lowercase=auto or =pass,
-; so send all text input to the simulator as 7-bit ASCII, including
-; lowercase.  Lowercase output from the simulator will be sent to the
-; console unchanged, as will non-printing chars.
-set tti 7b
-@else
-; The software was configured with --lowercase=upper, meaning the user
-; wants lowercase text to be forced to uppercase.  This is bidirectional,
-; affecting both input to the simulated PDP-8 and output from it.
-set tti ksr
-@endif
+@define SHORTNAME 0
+@include @srcdir@/boot/savestate.script
 
 att rk0 @MEDIADIR@/os8/@OS8_BOOT_DISK@
 boot rk0
+
+:end

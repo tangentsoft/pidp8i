@@ -76,9 +76,9 @@ and its default is therefore False.  We do that from programs like
 `os8-run` and `os8-cp` because we want them to run everywhere, even on
 an RPi while another simulator is running; we also don't want the front
 panel switches to affect these programs' operations.  If your program
-never runs on an RPi, passing True here might make it run a bit faster,
-since it doesn't try to start the useless GPIO thread, feed it data,
-or pull data is is expected to provide back into the simulator.
+never runs on an RPi, passing True here will usuall make it run faster,
+since the GPIO thread saps computer resources and so shouldn’t be
+started if it isn’t needed.
 
 
 ## Logging
@@ -129,7 +129,7 @@ which again is `pidp8i-sim`.
 
 ## Driving SIMH and OS/8
 
-After the simulator starts up, we want to wait for an OS/8 `.` prompt
+After the simulator starts up, we want to wait for an OS/8 “`.`” prompt
 and then send the first OS/8 command to start our demo. We use the
 `simh.os8_send_cmd` method for that:
 
@@ -153,7 +153,7 @@ delay value was calculated.)
 The bulk of `teco-pi-demo` consists of more calls to `simh.os8_send_cmd`
 and `simh.send_cmd`. Read the script if you want more examples.
 
-**IMPORTANT:** The `\\.` syntax for specifying the OS/8 `.` command
+**IMPORTANT:** The “`\\.`” syntax for specifying the OS/8 `.` command
 prompt is tricky. If you pass just `'.'` here instead, Python's
 [regular expression][re] matching engine will interpret it to mean
 that it should match *any* character as the prompt, almost certainly
@@ -223,7 +223,7 @@ indicator that OS/8 is in such an interruptible state.
 
 You don't see these anomalies when using OS/8 interactively because
 humans aren't fast enough to type commands at OS/8 fast enough to cause
-the problem.  That is doubtless why there this bug still exists in OS/8
+the problem.  That is doubtless why this bug still exists in OS/8
 in 2017.
 
 
@@ -276,7 +276,7 @@ somewhat different directory structure from the installation tree.
 
 ## <a id="license" name="credits"></a>Credits and License
 
-Written by and copyright © 2017 by Warren Young. Licensed under the
+Written by and copyright © 2017-2019 by Warren Young. Licensed under the
 terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

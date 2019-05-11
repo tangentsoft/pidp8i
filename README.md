@@ -1,5 +1,25 @@
 # Getting Started with the PiDP-8/I Software
 
+## Orientation
+
+You will be reading this file from one of several likely places:
+
+*   [Online][tlrm], within [the Fossil project repository][home].
+
+*   As a text file within the [source packages][src].
+
+*   In the read-only [GitHub mirror][ghm].
+
+The source packages and the GitHub mirror are secondary outputs from the
+Fossil repository, which is the primary home for the PiDP-8/I software
+development project.
+
+[ghm]:  https://github.com/tangentsoft/pidp8i
+[home]: https://tangentsoft.com/pidp8i/
+[src]:  https://tangentsoft.com/pidp8i/#src
+[tlrm]: https://tangentsoft.com/pidp8i/doc/trunk/README.md
+
+
 ## Prerequisites
 
 *   A Raspberry Pi with the 40-pin GPIO connector.  That rules out the
@@ -9,16 +29,8 @@
 *   An SD card containing [a compatible OS][os].
 
 *   This software distribution, unpacked somewhere convenient within the
-    filesystem on the Raspberry Pi.
-
-    We recommend that you unpack it somewhere your user has read/write
-    access like `$HOME/src/pidp8i`. Since it installs as a system
-    service, you might prefer `/usr/local/src` or `/opt/src`, though
-    you'll have to adjust permissions for that.
-
-    The [old stable 2015.12.15 release][osd] required that you unpack
-    the software into `/opt/pidp8`, but we now neither require nor
-    recommend that.
+    filesystem on the Raspberry Pi.  We recommend that you unpack it
+    somewhere your user has read/write access like `$HOME/src/pidp8i`.
 
 *   We require several tools and libraries that aren't always installed:
 
@@ -328,6 +340,62 @@ can leave both off, but you cannot pass both.
 See [`README-throttle.md`][thro] for the values this option takes.  If
 you don't give this option, the simulator runs as fast as possible, more
 or less.
+
+
+<a id="savestate"></a>
+#### --enable-savestate
+
+By default, the PiDP-8/I starts up with the core state undefined and
+runs the boot script you’ve selected either with the IF switches or by
+passing it on the command line to `pidp8i-sim` or `pdp8`.  This brings
+the simulator up in a known state, with no persistence between restarts
+other than what was written to the simulated storage devices before the
+last shutdown.
+
+On a real PDP-8 with core memory, however, the values in memory will
+persist for weeks without power and they aren’t zeroed on power-up.
+Since the CPU doesn’t start executing anything on power-up in a stock
+PDP-8 configuration, this means the user can toggle in a program/OS
+restart address with the switch register (SR), load it into the program
+counter (PC) with the Load Addr switch, then START the CPU to restart
+their program without having to reload it from tape or disk.
+
+There were also several power fail and restart options designed and made
+available for the PDP-8 series throughout its lifetime. One of these,
+the KP8-I for the PDP-8/I would detect a power fail condition, then in
+the brief time window while the power supply’s reservoir capacitors kept
+the computer running, this option card would raise an interrupt, giving
+a user-written routine up to 1 millisecond to save important registers
+to core so they would persist through the power outage. Then on
+power-up, it would start executing at core location 00000, where another
+user routine would load those registers back from core to restart the
+system where it left off before the power failed.
+
+Giving this option gives roughtly the same effect for all generated boot
+scripts: any time the simulator is shut down gracefully, it saves all
+key simulator state — registers, core, device assignments, etc. — to a
+disk file. Then on restart, that script will reload that saved state if
+it finds the saved state file.
+
+This is not identical to a KP8-I, in that it doesn’t require any
+user-written PDP-8 code to run, which is why it’s optional: it’s
+ahistoric with respect to the way the included OSes normally ran.
+
+Ideally, the default mode of operation would save the core memory state
+only and would reload only that on start. You can make do that by
+halting the CPU and resetting the saved registers after the `RESTORE`
+command in each bootscript you want to affect:
+
+    EVAL HLT
+    DEP L 0
+    DEP AC 0
+    DEP DF 0
+    DEP IF 0
+    DEP MQ 0
+    DEP PC 0
+
+That zeroes the key registers and prevents the CPU from running as it
+normally would after giving `RESTORE` command to SIMH.
 
 
 #### --disable-usb-automount

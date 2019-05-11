@@ -415,8 +415,9 @@ typedef uint32          t_addr;
 #define SCPE_AMBREG     (SCPE_BASE + 45)                /* ambiguous register */
 #define SCPE_REMOTE     (SCPE_BASE + 46)                /* remote console command */
 #define SCPE_INVEXPR    (SCPE_BASE + 47)                /* invalid expression */
+#define SCPE_SIGTERM    (SCPE_BASE + 48)                /* SIGTERM has been received */
 
-#define SCPE_MAX_ERR    (SCPE_BASE + 47)                /* Maximum SCPE Error Value */
+#define SCPE_MAX_ERR    (SCPE_BASE + 48)                /* Maximum SCPE Error Value */
 #define SCPE_KFLAG      0x10000000                      /* tti data flag */
 #define SCPE_BREAK      0x20000000                      /* tti break flag */
 #define SCPE_NOMESSAGE  0x40000000                      /* message display supression flag */
@@ -591,7 +592,8 @@ struct UNIT {
     uint16              us9;                            /* device specific */
     uint16              us10;                           /* device specific */
     void                *tmxr;                          /* TMXR linkage */
-    uint32              recsize;                        /* Tape info */
+    uint32              recsize;                        /* Tape specific info */
+    t_addr              tape_eom;                       /* Tape specific info */
     t_bool              (*cancel)(UNIT *);
     double              usecs_remaining;                /* time balance for long delays */
     char                *uname;                         /* Unit name */
