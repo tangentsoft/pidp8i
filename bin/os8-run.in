@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env @PYCMD@
 # -*- coding: utf-8 -*-
 ########################################################################
 # Script runner for OS/8 under SIMH.
