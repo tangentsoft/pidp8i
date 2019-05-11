@@ -576,7 +576,7 @@ class simh:
   # when driving TECO.
 
   def os8_send_str (self, str):
-    for i in xrange (0, len (str)):
+    for i in range (0, len (str)):
       self._child.send (str[i])
       self.os8_kbd_delay ()
 
