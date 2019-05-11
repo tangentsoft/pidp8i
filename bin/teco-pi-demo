@@ -74,6 +74,7 @@ def main ():
   s.os8_send_cmd ('\\.', "R TECO")
 
   # The macro comes from http://www.iwriteiam.nl/HaPi_TECO_macro.html
+  # and it was created by Stanley Rabinowitz.
   #
   # The 248 preceding "UN" in the first line of the macro is the number
   # of digits of pi to calculate.  That value was reached by experiment
