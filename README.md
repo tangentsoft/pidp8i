@@ -55,7 +55,7 @@ development project.
 ## Getting the Software onto Your Pi
 
 If you're reading this file within an unpacked distribution of the
-PiDP-8/I software, you should skip this section, because you have
+PiDP-8/I software, you may skip this section, because you have
 already achieved its aim.
 
 If you are reading this [online][this] and have not yet downloaded and
@@ -619,13 +619,12 @@ and its stock scripts. The `--*-os8-*` options documented above get
 passed into `os8-run` during the PiDP-8/I software build process,
 which controls how it generates the `v3d*.rk05` RK05 disk image files.
 
-This set of disk images entirely replaces the old `os8.rk05` disk
-image, in that all features of the old disk image are still available,
-though not necessarily in the default configuration. In some cases,
-features pesent on the old `os8.rk05` disk are now left out or disabled
-by default, and in other cases we have changed the behavior of features
-from the way they used to be on the old disk. Mostly, though, the
-new disk images are simply more functional than the old ones.
+This set of disk images entirely replaces the old `os8.rk05` disk image,
+in that all features of the old disk image are still available. In some
+cases, features present on the old `os8.rk05` disk are now left out or
+disabled by default, and in other cases we have changed the behavior of
+features from the way they used to be on the old disk. Mostly, though,
+the new disk images are simply more functional than the old ones.
 
 If you wish to know the full details of how these disk images are
 created, see the documentation for [`os8-run`][ori] and that for
@@ -869,25 +868,25 @@ keys if they are missing on boot, so you need to do this once by hand:
 You should be able to log in via SSH immediately after that command
 completes.
 
-We used to do this automatically in releases v2017.12.22 and before,
-but that was when we started the `pidp8i` service as root, which we no
-longer do. Consequently, the `pidp8i` service no longer has permission
-to generate your OS's SSH keys, so you must do it interactively with
+You may be wondering why we don’t do this automatically, somehow. It’s
+because, over time, we’ve removed all dependence on root access in our
+software in the name of security, so that we no longer have permission
+to make system-wide changes like this in our startup scripts.  We now
+rely on you, the system’s administrator, to do it interactively with
 `sudo` permissions.
 
 
 <a id="systemd" name="unit"></a>
 ## The systemd Unit File
 
-The PiDP-8/I software version 2017.12.22 used an [old-style System V
-init script][svinit] to start the PiDP-8/I service, as did all prior
-releases, including Oscar Vermeulen's final stable release.
+Older stable releases of the PiDP-8/I software used an [old-style System
+V init script][svinit] to start the PiDP-8/I service. This includes
+Oscar Vermeulen's final stable release.
 
-As of 2018.02.22, we have now switched to a [systemd][systemd]
-unit file, since we normally install on Raspbian, which has been
-systemd-based for years. We've wanted to do this for some time, but
-some changes in the way systemd handles SysV init script compatibility
-in Raspbian Stretch forced the issue.
+Starting with release v2019.04.25, we have now switched to a
+[systemd][systemd] unit file, since Raspbian has been systemd-based for
+years. (It also supports SysV init scripts, but only as a second-class
+mechanism intended for backwards compatibility only.)
 
 One of the features systemd gives us is the ability to set the unit
 to run as user-level service rather than as a system-wide service,
