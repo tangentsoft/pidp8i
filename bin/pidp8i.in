@@ -35,7 +35,7 @@ prefix="@ABSPREFIX@"
 sim="$prefix/bin/pidp8i-sim"
 scanswitch="$prefix/libexec/scanswitch"
 systemctl=/bin/systemctl
-ggrep=$(which ggrep grep | head -1)
+ggrep=$(which ggrep grep 2> /dev/null | head -1)
 
 is_running() {
     procs=`screen -list pidp8i | $ggrep -Pc '\d\.pidp8i'`
