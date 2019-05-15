@@ -353,12 +353,13 @@ other than what was written to the simulated storage devices before the
 last shutdown.
 
 On a real PDP-8 with core memory, however, the values in memory will
-persist for weeks without power and they aren’t zeroed on power-up.
-Since the CPU doesn’t start executing anything on power-up in a stock
-PDP-8 configuration, this means the user can toggle in a program/OS
-restart address with the switch register (SR), load it into the program
-counter (PC) with the Load Addr switch, then START the CPU to restart
-their program without having to reload it from tape or disk.
+persist for weeks without power; core memory on a PDP-8 is not zeroed on
+power-up, unlike RAM on a modern computer.  Since the CPU doesn’t start
+executing anything on power-up in a stock PDP-8 configuration, this
+means the user can toggle in a program/OS restart address with the
+switch register (SR), load it into the program counter (PC) with the
+Load Addr switch, then START the CPU to restart their program without
+having to reload it from tape or disk.
 
 There were also several power fail and restart options designed and made
 available for the PDP-8 series throughout its lifetime. One of these,
