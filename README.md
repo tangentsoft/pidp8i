@@ -397,7 +397,7 @@ bootscript you want to affect:
     DEP PC 0
 
 That zeroes the key registers and prevents the CPU from running as it
-normally would after giving `RESTORE` command to SIMH.
+normally would after giving the `RESTORE` command to SIMH.
 
 
 #### --disable-usb-automount
