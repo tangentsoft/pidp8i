@@ -382,10 +382,11 @@ This is not identical to a KP8-I, in that it doesn’t require any
 user-written PDP-8 code to run, which is why it’s optional: it’s
 ahistoric with respect to the way the included OSes normally ran.
 
-Ideally, the default mode of operation would save the core memory state
-only and would reload only that on start. You can make do that by
-halting the CPU and resetting the saved registers after the `RESTORE`
-command in each bootscript you want to affect:
+In absence of a hardware option like the KP8-I, a more accurate
+simulation would only save the core memory state to a host-side disk
+file and reload it on simulator re-start. You can get that behavior atop
+the current mechanism by adding commands like the following to each
+bootscript you want to affect:
 
     EVAL HLT
     DEP L 0
