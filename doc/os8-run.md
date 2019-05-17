@@ -21,10 +21,9 @@ choices. This has many virtues:
     purposefully done in a way that it is [reproducible][rb].
 
 *   Because `mkos8` is written in Python, we have a full-strength
-    scripting language for making the build conditional.  As of the
-    2017.12.22 release, there are potentially 65536 different build
-    configurations, whereas the old manual process produced just one
-    OS/8 system disk image.
+    scripting language for making the build conditional. The old manual
+    process produced just one OS/8 system disk image, but the new scheme
+    can now produce tens of thousands of different configurations.
 
 That process worked fine for the limited scope of problem it was meant to
 cover: creation of an OS/8 V3D RK05 image meant for use with SIMH's PDP-8
@@ -33,18 +32,14 @@ a number of related problems that should be simple extensions to the idea:
 
 *   What if we want a different version of OS/8, such as V3F?
 
-*   When running under SIMH, there is little practical difference between
-    its `DT` and `TD` devices for driving an emulated TU56 tape drive:
-    the default is almost certainly fine, since it's compatible with
-    the whole range of PDP-8 computers, and thus software for PDP-8
-    computers.  But, what if you've got a real PDP-8/e computer with a
-    real TU56 tape drive, which means you're using the TD8E interface, not
-    the TC08 that SIMH's PDP-8 simulator defaults to using?  That `BUILD`
-    output will not work on your hardware.
+*   What if we want this to happen on a storage device other than an
+    RK05? Other common boot devices choices are RL01, RX02, and TD8E,
+    and they all have consequences in the way you build the media.
 
-*   The same basic problem has additional complications when what's
-    changed in the `BUILD` is the system device type, such as from an
-    RK05 to an RL01 or RX02.
+*   What if we’re building media targeted at specific real PDP-8
+    hardware, and thus need certain non-default choices for OS/8 device
+    drivers? SIMH can be soft-reconfigured to accommodate whatever
+    `mkos8` put out, but real hardware is what it is.
 
 *   How do we make it drive other tools not already hard-coded into
     `mkos8` or its underlying helper library?
