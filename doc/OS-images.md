@@ -1,10 +1,10 @@
 The Raspbian OS images you can download from [the PiDP-8/I development
 site][1] are based on the [official Raspbian images][2], so the
 Raspberry Pi Foundation’s [installation guide][3] applies just as well
-to our PiDP-8/I software images.  I particularly like using the Etcher
-method, even on a POSIX system, since it can write the SD card directly
-from the Zip file, without requiring that you unpack the `*.img` file
-within first.
+to our PiDP-8/I software images.  I particularly like using the
+[Etcher][7] method, even on a POSIX system, since it can write the SD
+card directly from the Zip file, without requiring that you unpack the
+`*.img` file within first.
 
 You will need to use a 2 GB or larger SD card.
 
@@ -38,3 +38,4 @@ to Run a Naked PiDP-8/I][6]."
 [4]: https://en.wikipedia.org/wiki/Internet_of_things
 [5]: http://www.testandverification.com/iot/s-iot-stands-security/
 [6]: https://tangentsoft.com/pidp8i/wiki?name=How+to+Run+a+Naked+PiDP-8/I
+[7]: https://www.balena.io/etcher
