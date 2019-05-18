@@ -1,7 +1,12 @@
-The Raspbian OS images you can downlod from [the PiDP-8/I development
+The Raspbian OS images you can download from [the PiDP-8/I development
 site][1] install to an SD card in the same way as the [official Raspbian
-images][2].  Follow the [installation guide][3] published by the
-Raspberry Pi Foundation.  You will need to use a 2 GB or larger SD card.
+images][2].  The [installation guide][3] published by the Raspberry Pi
+Foundation therefore applies just as well to our PiDP-8/I software
+images.  I particularly like using the Etcher method, even on a POSIX
+system, since it can write the SD card directly from the Zip file,
+without requiring that you unpack the `*.img` file within first.
+
+You will need to use a 2 GB or larger SD card.
 
 The contents of the Zip file are:
 
@@ -9,7 +14,7 @@ The contents of the Zip file are:
 |--------------------------------
 | `README.md`       | this file
 | `pidp8i-*.img`    | the OS image, based on Raspbian Stretch Lite
-| `MANIFEST.txt`    | SHA 256 hash and file size for the OS image file
+| `MANIFEST.txt`    | SHA-256 hash and file size for the OS image file
 
 Aside from having the PiDP-8/I software installed and running, the
 primary difference between this disk image and the official Raspbian
