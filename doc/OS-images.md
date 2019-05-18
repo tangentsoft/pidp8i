@@ -1,10 +1,10 @@
 The Raspbian OS images you can download from [the PiDP-8/I development
-site][1] install to an SD card in the same way as the [official Raspbian
-images][2].  The [installation guide][3] published by the Raspberry Pi
-Foundation therefore applies just as well to our PiDP-8/I software
-images.  I particularly like using the Etcher method, even on a POSIX
-system, since it can write the SD card directly from the Zip file,
-without requiring that you unpack the `*.img` file within first.
+site][1] are based on the [official Raspbian images][2], so the
+Raspberry Pi Foundation’s [installation guide][3] applies just as well
+to our PiDP-8/I software images.  I particularly like using the Etcher
+method, even on a POSIX system, since it can write the SD card directly
+from the Zip file, without requiring that you unpack the `*.img` file
+within first.
 
 You will need to use a 2 GB or larger SD card.
 
