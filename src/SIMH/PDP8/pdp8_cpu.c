@@ -472,7 +472,9 @@ while (reason == 0) {                                   /* loop until halted */
                     int_req, Pause);
 
             // Go no further in STOP mode.  In particular, fetch no more
-            // instructions, and do not touch PC!
+            // instructions, and do not touch PC!  Limit call rate in this
+            // mode; no point burning host-side CPU on this.
+            sleep_ms (10);   
             continue;
 
         case pft_halt:
