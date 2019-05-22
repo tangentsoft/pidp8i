@@ -42,18 +42,16 @@
 
 void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
 {
-    // Light each row of LEDs 1.2 ms.  With 8 rows, that's an update
-    // rate of ~100x per second.  Not coincidentally, this is the human
-    // persistence of vision limit: changes faster than this are
-    // difficult for humans to perceive visually.
-    const us_time_t intervl = 1200;  
+    // This loop runs at a high priority with a total time of
+    // 8*120 uS + 1.2 mS.  See upadte_led_states as this
+    // implements a PWM system with 10 steps.
+    const us_time_t intervl = 1200;
 
     // This is a simplified version of what's in the gpio-ils.c version
     // of this function, so if you want more comments, read them there.
     while (*terminate == 0) {
         for (size_t i = 0; i < NCOLS; ++i) OUT_GPIO(cols[i]);
-        swap_displays ();
-        update_led_states (intervl);
+        update_led_states (intervl / 10);
         read_switches (intervl * 1000 / 100);
 #if defined(HAVE_SCHED_YIELD)
         sched_yield ();

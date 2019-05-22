@@ -113,6 +113,8 @@ display display_bufs[2];
 display* pdis_update = display_bufs + 0;    // exported to SIMH CPU thread
 display* pdis_paint  = display_bufs + 1;    // exported to gpio-*.c
 
+// Pi Zero ILS counter
+static int gpio_pwm_cnt = 0;
 
 // GPIO thread control variables manipulated by start/stop_*() below
 static pthread_t gpio_thread_info;
@@ -512,13 +514,22 @@ static const char* pi_type()
 
 
 //// update_led_states /////////////////////////////////////////////////
-// Generic front panel LED updater used by NLS full time and by ILS
-// while the CPU is in STOP mode.  Just uses the paint-from display's
-// bitfields to turn the LEDs on full-brightness.
+// Unlike the trunk version, this function generates a PWM sequence for
+// the LEDs according to the count value in pdis_paint->on. This array
+// contains 'on' counts betqeen 0 (off) and 9 (fully on).  This data is
+// compared with a cycle 10 counter (gpio_pwm_cnt) and each led in a
+// row/col is turned between 0 and 9 out of 80 calls to this function.
+// This 10 level PWM is sufficient to give an impression of varying
+// brightness although not quite as good as the trunk's ILS mode.  The
+// advantage is that it uses far less host CPU power, so that it will
+// run on a Pi Zero.  Another virtue of this scheme is that if this
+// function is called synchronously from the CPU instruction decoding
+// loop (pdp8_cpu.c), the LEDs will not flicker even if the primary CPU
+// loop varies in speed.
 
 void update_led_states (const us_time_t delay)
 {
-    uint16_t *pcurr = pdis_paint->curr;
+    size_t *prow = pdis_paint->on[0];
 
 #if 0   // debugging
     static time_t last = 0, now;
@@ -536,9 +547,11 @@ void update_led_states (const us_time_t delay)
         pdis_paint->curr[6] &= ~(1 << 7);
     }
 
+    if (++gpio_pwm_cnt >= 10) gpio_pwm_cnt = 0;
+
     for (size_t row = 0; row < NLEDROWS; ++row) {
-        for (size_t col = 0; col < NCOLS; ++col) {
-            if ((pcurr[row] & (1 << col)) == 0) {
+        for (size_t col = 0; col < NCOLS; ++col, ++prow) {
+            if (gpio_pwm_cnt >= *prow) {
                 GPIO_SET = 1 << cols[col];
             }
             else {
@@ -558,7 +571,8 @@ void update_led_states (const us_time_t delay)
         INP_GPIO (ledrows[row]);
 
         // Small delay to reduce UDN2981 ghosting
-        sleep_us (10);
+        for (int i = 0; i < 2000; ++i)
+            __asm__ ("nop");
     }
 }
 

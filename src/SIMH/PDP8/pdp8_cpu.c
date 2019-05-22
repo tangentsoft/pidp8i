@@ -395,8 +395,8 @@ srand48 (time (&last_update));
 // Reset display info in case we're re-entering the simulator from Ctrl-E
 extern display display_bufs[2];
 memset (display_bufs, 0, sizeof(display_bufs));
-static size_t skip_count, dither, inst_count;
-skip_count = dither = inst_count = 0;
+static size_t skip_count, inst_count;
+skip_count = inst_count = 0;
 
 // Copy a global flag set by main() to control whether we run the GPIO
 // stuff based on what name this program was called by.  We reference it
@@ -441,8 +441,12 @@ while (reason == 0) {                                   /* loop until halted */
             // We're passing IR for the MB line on purpose.  MB doesn't
             // have the correct value at this point.
             if (pidp8i_gpio) {
-                set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF,
-                    SC, int_req, Pause);
+                // Pi Zero ILS: run the PWM algorithm through two
+                // display updates.  (10 PWM levels per update.)
+                for (int i = 0; i < 20; ++i) {
+                    set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF,
+                        SC, int_req, Pause);
+                    }
 
                 // Also copy SR hardware value to software register in
                 // case the user tries poking at it from the sim> prompt.
@@ -1557,18 +1561,11 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // computers are pretty quick, and our slowest script runs at 30
     // kIPS.  (5.script.)
     //
-    // We deliberately add some timing jitter here to get stochastic
-    // sampling of the incoming instructions to avoid beat frequencies
-    // between our update rate and the instruction pattern being
-    // executed by the front panel.  It's a form of dithering.
-    //
-    // You might think to move this code to the top of set_pidp8i_leds,
-    // but the function call itself is a nontrivial hit.  In fact, you
-    // don't even want to move all of this to a function here in this
-    // module and try to get GCC to inline it: that's good for a 1 MIPS
-    // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
+    // Unlike in the trunk version, we do no dither here, we just use an
+    // odd CPU IPS rate divisor that has a low likelihood of dividing
+    // into the IPS rate in a way that creates a visible beat frequency.
 
-    if (pidp8i_gpio && (++skip_count >= (max_skips - dither))) {
+    if (pidp8i_gpio && (++skip_count >= 233)) {
         // Save skips to inst counter and reset
         inst_count += skip_count;
         skip_count = 0;
@@ -1577,18 +1574,6 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         // line here for same reason as above.
         set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF, SC,
                 int_req, Pause);
-
-        // Has it been ~1s since we updated our max_skips value?
-        time_t now;
-        if (time(&now) > last_update) {
-            // Yep; simulator IPS may have changed, so freshen it.
-            last_update = now;
-            max_skips = inst_count / pidp8i_updates_per_sec;
-            //printf("Inst./repaint: %zu - %zu; %.2f MIPS\r\n",
-            //        max_skips, dither, inst_count / 1e6);
-            inst_count = 0;
-            }
-        dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
         }
     Pause = 0;      // it's set outside the "if", so it must be *reset* outside
 /* ---PiDP end---------------------------------------------------------------------------------------------- */

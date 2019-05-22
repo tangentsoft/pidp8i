@@ -310,6 +310,15 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
 // panel display, modify the GPIO thread's LED state values accordingly.
 //
 // Also update the LED brightness values based on those new states.
+//
+// Pi Zero ILS: Unlike the trunk version, this function implements a
+// 10 level PWM system by generating a value between 0 and 9 for each
+// LED by counting the LED on cycles each time the function is called.
+// As a result, it does not matter if this function is synchronously
+// called as it only calculates the on/off ratios.  These are stored in
+// the display->on region of the display structure.  This data is then
+// copied to pdis_paint and used by update_led_states to generate the
+// PWM sequence.
 
 void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint32_t sMB,
     uint16_t sIR, int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF,
@@ -323,7 +332,7 @@ void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint32_t sMB,
     // working: we want to finish work on the same display even though
     // it's now called the paint-from display, so it's consistent.
     display* pd = pdis_update;
-    ++pd->inst_count;
+    if (++pd->inst_count >= 10) swap_displays ();       // Pi Zero ILS
 
     // Rows 0-4, easy cases: single-register LED strings.
     // 
