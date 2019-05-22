@@ -406,13 +406,6 @@ void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint32_t sMB,
     set_3_pidp8i_leds (pd, 9, sDF);
     set_3_pidp8i_leds (pd, 6, sIF);
     if (sLAC & 010000) set_pidp8i_led (pd, 7, 5);
-
-    // If we're stopped or single-stepped, the display-swapping code
-    // won't happen, so copy the above over to the paint-from version.
-    extern int resumeFromInstructionLoopExit;
-    if (!running || resumeFromInstructionLoopExit) {
-        memcpy(pdis_paint, pdis_update, sizeof(struct display));
-    }
 }
 
 
