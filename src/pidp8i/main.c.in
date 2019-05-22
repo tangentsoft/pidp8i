@@ -747,8 +747,6 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             resumeFromInstructionLoopExit) {
         // The initial CONT press is special: how we handle it
         // depends on the processor's state.
-        //
-        // FIXME: Are we handling MB correctly? [973271ae36]
         swCont = 1;                 // make it single-shot
         resumeFromInstructionLoopExit = 0;
         if (swSingInst) {
