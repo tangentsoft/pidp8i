@@ -2,7 +2,7 @@
 ########################################################################
 # mmake - Runs make -jN where N is 1.5x the number of CPU cores
 #
-# Copyright © 2017-2018 Warren Young
+# Copyright © 2017-2019 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -30,7 +30,7 @@
 ########################################################################
 
 MAKE=make
-if which gmake > /dev/null ; then MAKE=gmake ; fi
+MAKE=$(which gmake make 2> /dev/null | head -1)
 
 BDIR="$(dirname "$0")"
 if [ -z $BDIR ] ; then BDIR="$(dirname "$(which "$0")")" ; fi
