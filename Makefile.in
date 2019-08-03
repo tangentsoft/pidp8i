@@ -40,7 +40,7 @@ SGCID=4e0450cff96830c5aced36928a4427adfc5314f8
 SGCTM=2019-04-18T20:03:17-07:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
-SIM_CFLAGS := @CFLAGS@ @BUILDMODE@ \
+SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) -DPIDP8I \
 	-DSIM_ASYNCH_IO -DHAVE_REGEX_H -DHAVE_GLOB \
@@ -690,7 +690,7 @@ $(BUILDDIRS):
 	mkdir -p $@
 
 $(PIDP8I_SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
 	ln -f bin/pidp8i-sim bin/pdp8
 
 bin/cc8: $(CC8_OBJS)
@@ -703,7 +703,7 @@ bin/palbart: $(PALBART_OBJS)
 	$(CC) -o $@ $^
 
 bin/pidp8i-test: obj/misc/test.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
-	$(CC) -o $@ $^ $(LIBS) -lncurses
+	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
 
 bin/ptp2txt: obj/misc/ptp2txt.o
 	$(CC) -o $@ $^
@@ -716,7 +716,7 @@ bin/deeper: obj/misc/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i
 	$(CC) -o $@ $^ $(LIBS)
 
 libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
 
 # Reconfigure whenever one of the *.in or autosetup files changes unless
 # this is "make clean".

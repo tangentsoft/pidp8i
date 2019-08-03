@@ -1,7 +1,7 @@
 /*
  * gpio-common.c: functions common to both gpio.c and gpio-nls.c
  *
- * Copyright © 2015 Oscar Vermeulen, © 2016-2018 by Warren Young
+ * Copyright © 2015 Oscar Vermeulen, © 2016-2019 by Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,6 +37,10 @@
 #include "pidp8i.h"
 
 #include <config.h>
+
+#if defined(HAVE_BCM_HOST_H)
+#   include <bcm_host.h>
+#endif
 
 #include <pthread.h>
 #include <sys/file.h>
@@ -235,22 +239,11 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 
 
 //// bcm_host_get_peripheral_address ///////////////////////////////////
-// Find Pi's GPIO base address
+// Provide fallback for non-Pi case to avoid a link error.
 
-static unsigned bcm_host_get_peripheral_address(void)
-{
-    unsigned address = ~0;
-    FILE *fp = fopen("/proc/device-tree/soc/ranges", "rb");
-    if (fp)
-    {   unsigned char buf[4];
-        fseek(fp, 4, SEEK_SET);
-        if (fread(buf, 1, sizeof buf, fp) == sizeof buf)
-            address = buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3] << 0;
-        fclose(fp);
-    }
-
-    return address == ~0 ? 0x20000000 : address;
-}
+#if !defined(HAVE_BCM_HOST_H)
+    static unsigned bcm_host_get_peripheral_address(void) { }
+#endif
 
 
 //// DOUBLE BUFFERED DISPLAY MANIPULATION FUNCTIONS ////////////////////

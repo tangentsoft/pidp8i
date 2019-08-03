@@ -37,6 +37,8 @@ development project.
     *   A working C compiler and other standard Linux build tools,
         such as `make(1)`.
 
+    *   The Raspberry Pi development libraries
+
     *   Python's `pexpect` library
 
     *   The `ncurses` development libraries
@@ -44,8 +46,8 @@ development project.
     To install all of this on a Raspbian type OS, say:
 
         $ sudo apt update
-        $ sudo apt install build-essential
-        $ sudo apt install libncurses-dev python-pip
+        $ sudo apt install build-essential libraspberrypi-dev \
+             libncurses-dev python-pip
         $ sudo pip install pexpect
 
 [os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility

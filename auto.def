@@ -348,6 +348,25 @@ cc-with {-includes signal.h} {
     cc-check-types sighandler_t sig_t
 }
 
+# Check for libraspberrypi-dev stuff
+set old_LIBS [get-define LIBS]      ;# don't want LIBS modded directly
+if {![file isdirectory "/opt/vc"]} {
+    msg-result "WARNING: Not building on a Pi or libraspberrypi-dev not installed!"
+} elseif {![cc-with {-cflags "-L/opt/vc/lib"} {
+             cc-check-function-in-lib bcm_host_get_peripheral_address bcm_host
+           }]} {
+    user-error "Found /opt/vc but cannot link to -lbcm_host!"
+} elseif {![cc-with {-cflags "-I/opt/vc/include"} {
+             cc-check-includes bcm_host.h
+           }]} {
+    user-error "Found /opt/vc but cannot #include bcm_host.h!"
+} else {
+    define PI_CFLAGS "-I/opt/vc/include"
+    define PI_LFLAGS "-L/opt/vc/lib"
+    define PI_LIBS   "-lbcm_host"
+}
+define LIBS $old_LIBS
+
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
 if {![cc-check-includes curses.h]} {
