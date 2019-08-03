@@ -242,7 +242,7 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 // Provide fallback for non-Pi case to avoid a link error.
 
 #if !defined(HAVE_BCM_HOST_H)
-    static unsigned bcm_host_get_peripheral_address(void) { }
+    static unsigned bcm_host_get_peripheral_address(void) { return 0; }
 #endif
 
 

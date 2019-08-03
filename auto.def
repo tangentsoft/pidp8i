@@ -352,6 +352,9 @@ cc-with {-includes signal.h} {
 set old_LIBS [get-define LIBS]      ;# don't want LIBS modded directly
 if {![file isdirectory "/opt/vc"]} {
     msg-result "WARNING: Not building on a Pi or libraspberrypi-dev not installed!"
+    define PI_CFLAGS ""
+    define PI_LFLAGS ""
+    define PI_LIBS   ""
 } elseif {![cc-with {-cflags "-L/opt/vc/lib"} {
              cc-check-function-in-lib bcm_host_get_peripheral_address bcm_host
            }]} {
