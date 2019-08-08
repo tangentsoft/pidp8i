@@ -251,33 +251,35 @@ PDP-8/I to react to lowercase input:
 
     This is *not* the option you want if you are a purist.
 
+*   **pass** — This passes keyboard input through to the simulator
+    unchanged, and no patches are applied to the PDP-8 software we
+    distribute.
+
+    This is the option for historical purists. If you run into trouble
+    getting the software to work as you expect when built in this mode,
+    try enabling CAPS LOCK.
+
 *   **upper** — This option tells the PDP-8 simulator to turn lowercase
     input into upper case. This is the behavior we used for all versions
     of the PiDP-8/I software up through v2017.04.04.  Essentially, it
     tells the software that you want it to behave as through you've got
-    it connected to a Teletype Model 33 ASR.
+    it connected to an uppercase-only terminal like the Teletype Model 33 ASR.
 
     The advantage of this mode is that you will have no problems running
     PDP-8 software that does not understand lowercase ASCII text.
 
     The disadvantage is obvious: you won't be able to input lowercase
-    ASCII text.  The SIMH option we enable in this mode is
-    bidirectional, so that if you run a program that does emit lowercase
-    ASCII text — such as Rick Murphy's version of Adventure — it will be
-    uppercased, just like an ASR-33 would do.
+    ASCII text.
+
+    The SIMH option we enable in this mode is bidirectional, so that if
+    you run a program that does emit lowercase ASCII text — such as Rick
+    Murphy's version of Adventure — it will be uppercased, just like an
+    ASR-33 would do.
 
     Another trap here is that the C programming language requires
     lowercase text, so you will get a warning if you leave the default
     option **--enable-os8-cc8** set. Pass **--disable-os8-cc8** when
     enabling **upper** mode.
-
-*   **none** — This passes 7-bit ASCII text through to the software
-    running on the simulator unchanged, and no patches are applied to
-    the PDP-8 software we distribute.
-
-    This is the option for historical purists. If you run into trouble
-    getting the software to work as you expect when built in this mode,
-    try enabling CAPS LOCK.
 
 [sa]:  http://homepage.cs.uiowa.edu/~jones/pdp8/faqs/#charsets
 [tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
