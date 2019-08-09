@@ -5,6 +5,7 @@
 # \
 dir=`dirname "$0"`; exec "`$dir/autosetup-find-tclsh`" "$0" "$@"
 
+# Note that the version has a trailing + on unreleased versions
 set autosetup(version) 0.6.9
 
 # Can be set to 1 to debug early-init problems
@@ -213,6 +214,7 @@ proc main {argv} {
 
 	# Log how we were invoked
 	configlog "Invoked as: [getenv WRAPPER $::argv0] [quote-argv $autosetup(argv)]"
+	configlog "Tclsh: [info nameofexecutable]"
 
 	# Note that auto.def is *not* loaded in the global scope
 	source $autosetup(autodef)
