@@ -125,8 +125,8 @@ much as possible.  Git works the way it does because it was designed to
 meet the needs of the Linux kernel development project, which is
 inherently federated, so Git tries to operate in a federated model as
 well.  Fossil is better for smaller, more coherent teams, where there is
-a single, clear goal for the project and a single source for its
-official code.  Fossil helps remote developers cooperate, whereas Git
+a single, clear goal for the project and a single primary host for its
+project repository.  Fossil helps remote developers cooperate, whereas Git
 helps remote developers go off on their own tangents for extended
 periods of time and optionally sync back up with each other
 occasionally.
@@ -135,7 +135,11 @@ Fossil is a better match for the way the PiDP-8/I software project
 works: we want you to cooperate closely with us, not go off on wild
 tangents.
 
-[gitwt]:  https://git-scm.com/docs/git-worktree
+For more on this topic, see [Fossil Versus Git][fvg] in the Fossil
+documentation.
+
+[fvg]:   https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
+[gitwt]: https://git-scm.com/docs/git-worktree
 
 
 <a id="login"></a>
