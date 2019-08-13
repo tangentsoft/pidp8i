@@ -134,14 +134,17 @@ the Pi. There are many options:
 <a id="unpacking"></a>
 ### Unpacking the Software on Your Pi
 
-Having transferred the distribution file onto your Pi, unpack it:
+Having transferred the distribution file onto your Pi, unpack it with a
+command roughly like:
 
     $ tar xvf /path/to/pidp8i-VERSION.tar.gz
 
-The file name will vary depending on what you downloaded and [how you
-transferred it to the Pi](#transferring).  After unpacking it, you will
-have a new directory beginning with `pidp8i`.  `cd` into that directory,
-then proceed with the [configuration](#configuring) steps below.
+The final argument to that command will vary depending on what you
+downloaded, [how you transferred it to the Pi](#transferring), and where
+you put it. If you used the `wget` command above, the path is simply
+`pidp8i.tar.gz`, for example. After unpacking the tarball, you will have
+a new directory beginning with `pidp8i`.  `cd` into that directory, then
+proceed with the [configuration](#configuring) steps below.
 
 
 <a id="help"></a>
