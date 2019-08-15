@@ -1,7 +1,7 @@
 /*
  * gpio-common.h: public interface for the PiDP-8/I's GPIO module
  *
- * Copyright © 2015-2017 Oscar Vermeulen and Warren Young
+ * Copyright © 2015, 2019 by Oscar Vermeulen, © 2016-2019 by Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -53,6 +53,12 @@
 #define GPIO_PULL *(pgpio->addr + 37) // pull up/pull down
 #define GPIO_PULLCLK0 *(pgpio->addr + 38) // pull up/pull down clock
 
+// Pi 4 GPIO pull up/down peripheral I/O offsets.  Based on
+// https://github.com/RPi-Distro/raspi-gpio/blob/master/raspi-gpio.c
+#define GPPUPPDN0 57        // pins 15:0
+#define GPPUPPDN1 58        // pins 31:16
+#define GPPUPPDN2 59        // pins 47:32
+#define GPPUPPDN3 60        // pins 57:48
 
 // Switch masks, SSn, used against switchstatus[n]
 #define SS0_SR_B11 04000

@@ -1,7 +1,7 @@
 /*
  * gpio-common.c: functions common to both gpio.c and gpio-nls.c
  *
- * Copyright © 2015 Oscar Vermeulen, © 2016-2018 by Warren Young
+ * Copyright © 2015, 2019 Oscar Vermeulen, © 2016-2019 by Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -236,20 +236,33 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 
 //// bcm_host_get_peripheral_address ///////////////////////////////////
 // Find Pi's GPIO base address
+//
+// This is and its helper function get_dt_ranges are based on code
+// published by the Raspberry Pi Foundation:
+//
+// https://github.com/raspberrypi/userland/blob/master/host_applications/linux/libs/bcm_host/bcm_host.c
+
+static unsigned get_dt_ranges(const char *filename, unsigned offset)
+{
+    unsigned address = ~0;
+    FILE *fp = fopen(filename, "rb");
+    if (fp) {
+        unsigned char buf[4];
+        fseek(fp, offset, SEEK_SET);
+        if (fread(buf, 1, sizeof buf, fp) == sizeof buf) {
+            address = buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3] << 0;
+        }
+        fclose(fp);
+    }
+    return address;
+}
 
 static unsigned bcm_host_get_peripheral_address(void)
 {
-    unsigned address = ~0;
-    FILE *fp = fopen("/proc/device-tree/soc/ranges", "rb");
-    if (fp)
-    {   unsigned char buf[4];
-        fseek(fp, 4, SEEK_SET);
-        if (fread(buf, 1, sizeof buf, fp) == sizeof buf)
-            address = buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3] << 0;
-        fclose(fp);
-    }
-
-    return address == ~0 ? 0x20000000 : address;
+   unsigned address = get_dt_ranges("/proc/device-tree/soc/ranges", 4);
+   if (address == 0)
+      address = get_dt_ranges("/proc/device-tree/soc/ranges", 8);
+   return address == ~0 ? 0x20000000 : address;
 }
 
 
@@ -589,20 +602,70 @@ void turn_off_pidp8i_leds ()
 }
 
 
-//// init_pidp8i_gpio //////////////////////////////////////////////////
-// Initialize the GPIO pins to the initial states required by
-// gpio_thread().   It's a separate exported function so that scanswitch
-// can also use it.
+//// init_bcm2711_gpio /////////////////////////////////////////////////
+// Called from init_pidp8i_gpio() when it sees that it's running on a Pi
+// 4 which uses the BCM 2711 GPIO peripheral, which behaves differently
+// than GPIO was done in all prior Pi models.  This code is based on
+// https://github.com/RPi-Distro/raspi-gpio/blob/master/raspi-gpio.c
+//
+// Note that there is no "serial mod" handling here: no one has come up
+// with such a hardware hack for the Pi 4 yet, and no one has verified
+// that you can do one of the existing ones atop the Pi 4.
 
-void init_pidp8i_gpio (void)
+static void init_bcm2711_gpio (void)
 {
-    // Set GPIO pins to their starting state
-    turn_on_pidp8i_leds ();
-    for (size_t i = 0; i < NROWS; i++) {       // Define rows as input
-        INP_GPIO (rows[i]);
+    int gpiox, pullreg, pullshift;
+    unsigned int pullbits, pull;
+
+    // Configure "columns" GPIO pins
+    for (size_t i = 0; i < 12; ++i) {
+        gpiox = cols[i];
+        pullreg = GPPUPPDN0 + (gpiox>>4);
+        pullshift = (gpiox & 0xf) << 1;
+        pull = 1;
+
+        pullbits = *(gpio.addr + pullreg);
+        pullbits &= ~(3 << pullshift);
+        pullbits |= (pull << pullshift);
+        *(gpio.addr + pullreg) = pullbits;
     }
 
-    // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
+    // Configure "rows" GPIO pins
+    for (size_t i = 0; i < 3; ++i) {
+        gpiox = rows[i];
+        pullreg = GPPUPPDN0 + (gpiox>>4);
+        pullshift = (gpiox & 0xf) << 1;
+        pull = 0;
+
+        pullbits = *(gpio.addr + pullreg);
+        pullbits &= ~(3 << pullshift);
+        pullbits |= (pull << pullshift);
+        *(gpio.addr + pullreg) = pullbits;
+    }
+
+    // Configure "ledrows" GPIO pins
+    for (size_t i = 0; i < 6; ++i) {
+        gpiox = ledrows[i];
+        pullreg = GPPUPPDN0 + (gpiox>>4);
+        pullshift = (gpiox & 0xf) << 1;
+        pull = 0;
+
+        pullbits = *(gpio.addr + pullreg);
+        pullbits &= ~(3 << pullshift);
+        pullbits |= (pull << pullshift);
+        *(gpio.addr + pullreg) = pullbits;
+    }
+}
+
+
+//// init_bcm2835_gpio /////////////////////////////////////////////////
+// Called from init_pidp8i_gpio() when it sees that it's running on a Pi
+// 3 or older.  This is the "classic" Pi GPIO mode.  See page 101 in the
+// peripheral's datasheet and // http://elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
+
+static void init_bcm2835_gpio (void)
+{
+    // Configure "columns" GPIO pins
     GPIO_PULL = 2;  // pull-up
     usleep(1);  // must wait 150 cycles
 #if defined(PCB_SERIAL_MOD_OV) || defined(PCB_SERIAL_MOD_JLW)
@@ -620,17 +683,7 @@ void init_pidp8i_gpio (void)
     GPIO_PULLCLK0 = 0; // remove clock
     usleep(1); // probably unnecessary
 
-    // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-    GPIO_PULL = 1;  // pull-down to avoid ghosting (dec2015)
-    usleep(1);  // must wait 150 cycles
-    GPIO_PULLCLK0 = 0x0ff00000; // selects GPIO pins 20..27
-    usleep(1);
-    GPIO_PULL = 0; // reset GPPUD register
-    usleep(1);
-    GPIO_PULLCLK0 = 0; // remove clock
-    usleep(1); // probably unnecessary
-
-    // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
+    // Configure "rows" GPIO pins
     GPIO_PULL = 0;  // no pull-up no pull down just float
     usleep(1);  // must wait 150 cycles
     GPIO_PULLCLK0 = 0x070000; // selects GPIO pins 16..18
@@ -639,6 +692,39 @@ void init_pidp8i_gpio (void)
     usleep(1);
     GPIO_PULLCLK0 = 0; // remove clock
     usleep(1); // probably unnecessary
+
+    // Configure "ledrows" GPIO pins
+    GPIO_PULL = 1;  // pull-down to avoid ghosting
+    usleep(1);  // must wait 150 cycles
+    GPIO_PULLCLK0 = 0x0ff00000; // selects GPIO pins 20..27
+    usleep(1);
+    GPIO_PULL = 0; // reset GPPUD register
+    usleep(1);
+    GPIO_PULLCLK0 = 0; // remove clock
+    usleep(1); // probably unnecessary
+}
+
+
+//// init_pidp8i_gpio //////////////////////////////////////////////////
+// Initialize the GPIO pins to the initial states required by
+// gpio_thread().   It's a separate exported function so that scanswitch
+// can also use it.
+
+void init_pidp8i_gpio (void)
+{
+    // Set GPIO pins to their starting state
+    turn_on_pidp8i_leds ();
+    for (size_t i = 0; i < NROWS; i++) {       // Define rows as input
+        INP_GPIO (rows[i]);
+    }
+
+    // Configure GPIO pin pull-ups
+    if (gpio.addr_p == 0xfe200000) {
+        init_bcm2711_gpio();
+    }
+    else {
+        init_bcm2835_gpio();
+    }
 }
 
 
