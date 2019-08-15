@@ -1,7 +1,7 @@
 #!/bin/bash
 # bosi - The Binary OS Image creation/update script
 #
-# Copyright © 2016-2017 by Warren Young
+# Copyright © 2016-2019 by Warren Young
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -89,19 +89,10 @@ function do_init() {
 
     apt-get update && apt-get -y upgrade || true
 
-    apt-get -y install python-pip || true
+    apt-get -y install fossil python-pip || true
     pip install pexpect
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
-
-    if [ -z "$(type -p fossil)" ]
-    then
-        fb=/usr/local/bin/fossil
-        src=https://tangentsoft.com/pidp8i/uv/fossil-2.8-raspbian-9.6-stretch
-        wget -O $fb $src
-        chmod +x $fb
-        apt-get -y install libssl-dev    # user might rebuild Fossil later
-    fi
 
     if [ ! -e "$nh" ]
     then
