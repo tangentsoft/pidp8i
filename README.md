@@ -665,17 +665,17 @@ with the following options:
 [uvte]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 *   **--enable-os8-focal69** — Because the default installation includes
-    U/W FOCAL, we have chosen to leave FOCAL 69 out by default to save
-    space on the O/S 8 system disk. You can give this option to install
-    this implementation alongside U/W FOCAL, or you can couple this
-    option with `--disable-os8-uwfocal` to reverse our choice of which
-    FOCAL implementation to install by default.
+    U/W FOCAL, we have chosen to leave [FOCAL,1969][f69] out by default
+    to save space on the O/S 8 system disk. You can give this option to
+    install this implementation alongside U/W FOCAL, or you can couple
+    this option with `--disable-os8-uwfocal` to reverse our choice of
+    which FOCAL implementation to install by default.
 
     You should know that the reason we made this choice is that the
-    version of FOCAL 69 we are currently shipping is fairly minimal: we
-    believe we are shipping the original DEC version of FOCAL 69 plus a
+    version of FOCAL,1969 we are currently shipping is fairly minimal: we
+    believe we are shipping the original DEC version of FOCAL,1969 plus a
     few carefully-selected overlays. There are many more overlays and
-    patches available on the Internet for FOCAL 69, but we have not had
+    patches available on the Internet for FOCAL,1969, but we have not had
     time to sort through these and make choices of which ones to ship or
     how to manage which ones get installed. Thus our choice: we want to
     provide the most functional version of FOCAL by default, and within
@@ -687,10 +687,11 @@ with the following options:
     explains why we chose it.)
 
     It is possible that we will eventually add enough patches and
-    overlays to FOCAL 69 that it will become more powerful than U/W
+    overlays to FOCAL,1969 that it will become more powerful than U/W
     FOCAL, so we might then choose to switch the defaults, but that is
     just speculation at the time of this writing.
 
+[f69]:   https://tangentsoft.com/pidp8i/wiki?name=Running+FOCAL%2C1969
 [suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
 
 
