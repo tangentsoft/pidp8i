@@ -37,6 +37,8 @@ development project.
     *   A working C compiler and other standard Linux build tools,
         such as `make(1)`.
 
+    *   The Raspberry Pi development libraries
+
     *   Python's `pexpect` library
 
     *   The `ncurses` development libraries
@@ -44,11 +46,28 @@ development project.
     To install all of this on a Raspbian type OS, say:
 
         $ sudo apt update
-        $ sudo apt install build-essential
-        $ sudo apt install libncurses-dev python-pip
+        $ sudo apt install build-essential libraspberrypi-dev \
+             libncurses-dev python-pip
         $ sudo pip install pexpect
 
 [os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
+
+
+<a id="preparing"></a>
+## Preparing Your Pi
+
+If you have a working Raspberry Pi setup, you can probably just skip
+ahead.
+
+If you’ve just barely unpacked Raspbian onto an SD card and are now
+trying to get the PiDP-8/I software distribution working on it, stop and
+go through the [Rasbperry Pi documentation][rpd] first. At the absolute
+minimum, run `raspi-config` and make sure the Localization settings are
+correct. The defaults are for the United Kingdom, home of the Raspberry
+Pi Foundation, so unless you live there, the defaults are probably not
+correct out of the box.
+
+[rpd]: https://www.raspberrypi.org/documentation/
 
 
 <a id="unpacking"></a>
@@ -115,20 +134,16 @@ the Pi. There are many options:
 <a id="unpacking"></a>
 ### Unpacking the Software on Your Pi
 
-Having transferred the distribution file onto your Pi, you can unpack it
-with one of the two following commands.
-
-If you grabbed the tarball:
+Having transferred the distribution file onto your Pi, unpack it with a
+command roughly like:
 
     $ tar xvf /path/to/pidp8i-VERSION.tar.gz
 
-If you grabbed the Zip file instead:
-
-    $ unzip /path/to/pidp8i-VERSION.zip
-
-The file name will vary somewhat, depending on when and how you
-transferred the file.  After unpacking it, you will have a new
-directory beginning with `pidp8i`.  `cd` into that directory, then
+The final argument to that command will vary depending on what you
+downloaded, [how you transferred it to the Pi](#transferring), and where
+you put it. If you used the `wget` command above, the path is simply
+`pidp8i.tar.gz`, for example. After unpacking the tarball, you will have
+a new directory beginning with `pidp8i`.  `cd` into that directory, then
 proceed with the [configuration](#configuring) steps below.
 
 
@@ -158,33 +173,143 @@ other Linux/Unix software these days.  The short-and-sweet is:
     $ ./configure && make && sudo make install
 
 The `configure` step is generally needed only the first time you build
-the software in a new directory.  You may want to add options after it,
-as described [below](#options).
+the software in a new directory.  You may want to add options, described
+[below](#options).
 
-After that initial configuration, the software normally auto-reconfigures
-itself on updates using the same options you gave before, but occasionally
-we make some change that prevents this from happening.  If you get a
-build error after updating to a new version of the software, try saying:
+Subsequent software updates and rebuilds should not require that you
+re-run the `configure` step, even if you gave custom options. The build
+system detects when the configuration is outdated and re-runs the
+`configure` script with the same options. If for some reason that
+automatic re-configuration fails, you can kick it off manually:
 
     $ make reconfig
 
-...and then continuing with the `make && sudo make install` steps before
-reporting a build error.
+The “`make`” step above will take quite a while to run, especially on
+the slower Pi boards. The longest single step is building the OS/8 disk
+packs from source media. Be patient; the build process almost certainly
+isn’t frozen.
 
-If `make reconfig` also fails, you can try running the `configure`
-script again manually.
+If you’re on a multi-core Pi, You can speed the build process up some by
+running “`tools/mmake`” instead of directly calling “`make`”. It runs
+Make in a mode that lets it do a lot of work in parallel, making better
+use of your multiple CPU cores.  That OS/8 media rebuild step is choked
+down to a single thread, though, so this won’t help with that.  (This is
+a generic, portable script, so if you’re a software developer, feel free
+to reuse `mmake` and `corecount` on your own systems.)
+
+Only the `make install` step needs to be done via “`sudo`”.  For the
+most part, we’ve tried very hard to minimize the places where you need
+to use root privileges to get something done within the PiDP-8/I
+software distribution.
 
 
-<a id="running"></a>
-### Running the Software
+<a id="using"></a>
+## Using the Software
 
-For the most part, this is covered in the documentation linked from the
-[Learning More](/#learning) section of the project home page.
+After running “`sudo make install`” the first time, you will have to log
+out and back in to get the installation’s “bin” directory into your
+`PATH`.
 
-The only tricky bit is that if this is the first time you have
-configured, built and installed the software as above on a given system,
-you will have to log out and back in before commands like `pidp8i` will
-be in your user's `PATH`.
+For the most part, this software distribution works like the [old stable
+2015.12.15 distribution][osd]. Its [documentation][oprj] therefore
+describes this software too, for the most part. Beyond that, you might
+find our [Learning More](/#learning) links helpful.
+
+The largest user-visible difference between the two software
+distributions is that many of the shell commands are different:
+
+1.  To start the simulator running in the background:
+
+        $ pidp8i start
+
+    This will happen automatically on reboot unless you disable the
+    service, such as in order to run one of the various [forks of Deeper
+    Thought][dt2].
+
+2.  To attach the terminal you're working on to the simulator:
+
+        $ pidp8i
+
+    (Yes, it's the same base command as above.  The `pidp8i` script uses
+    its first argument to determine what you want it to do.  Without
+    arguments, this is what it does.)
+
+3.  To detach from the simulator's terminal interface while leaving the
+    PiDP-8/I simulator running, type <kbd>Ctrl-A d</kbd>.  You can
+    re-attach to it later with a `pidp8i` command.
+
+4.  To shut the simulator down while attached to its terminal interface,
+    type <kbd>Ctrl-E</kbd> to pause the simulator, then at the `simh>`
+    prompt type `quit`.  Type `help` at that prompt to get some idea of
+    what else you can do with the simulator command language, or read
+    the [SIMH Users' Guide][sdoc].
+
+5.  To shut the simulator down from the Raspbian command line:
+
+        $ pidp8i stop
+
+There are [other significant differences][mdif] between the old stable
+distribution and this one. You’ll want to be familiar with that
+documentation’s content before reading Oscar Vermeulen’s documentation,
+as it still refers to his last release in December 2015.
+
+
+<a id="systemd" name="unit"></a>
+## The systemd Unit File
+
+Starting with release 2019.04.25, the PiDP-8/I software distribution is
+based on [systemd][systemd], since Raspbian is now on its third
+systemd-based release.
+
+One of the features systemd gives us is the ability to set the unit to
+run as user-level service rather than as a system-wide service, which
+means you no longer need the `sudo` prefix on commands to start, stop,
+restart, and query the service. The only time you now need root
+privileges when working with the PiDP-8/I software is when installing
+it. After that, the software runs under your normal user account, as do
+all of the commands you use to manipulate the background simulator
+service.
+
+As a result of these changes, none of these commands work any longer:
+
+    $ sudo /etc/init.d/pidp8i start
+    $ sudo service pidp8i stop
+    $ sudo systemctl restart pidp8i
+
+The correct forms, respectively, are:
+
+    $ systemctl --user start pidp8i
+    $ systemctl --user stop pidp8i
+    $ systemctl --user restart pidp8i
+
+These commands are long, so we have extended the `pidp8i` command to
+build and run `systemctl` commands for you when you pass it arguments:
+
+    $ pidp8i start
+    $ pidp8i stop
+    $ pidp8i restart
+    $ pidp8i status -l
+
+If you run it without arguments, it attaches to the GNU screen(1)
+session, just as it always has.
+
+The last command above shows that *all* arguments are passed to
+`systemctl`, not just the first, so you can pass any flags that
+`systemctl` accepts.
+
+Our systemd service starts at boot by default after you install the
+software. To disable the service so you can run something else against
+the PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
+
+    $ pidp8i stop
+    $ pidp8i disable
+
+If you install this release on a system that has the old SysV init
+script on it, that service will be disabled and removed before we
+install and enable the replacement systemd user service.
+
+[svinit]:  https://en.wikipedia.org/wiki/Init#SysV-style
+[systemd]: https://www.freedesktop.org/wiki/Software/systemd/
 
 
 <a id="options"></a>
@@ -249,33 +374,35 @@ PDP-8/I to react to lowercase input:
 
     This is *not* the option you want if you are a purist.
 
+*   **pass** — This passes keyboard input through to the simulator
+    unchanged, and no patches are applied to the PDP-8 software we
+    distribute.
+
+    This is the option for historical purists. If you run into trouble
+    getting the software to work as you expect when built in this mode,
+    try enabling CAPS LOCK.
+
 *   **upper** — This option tells the PDP-8 simulator to turn lowercase
     input into upper case. This is the behavior we used for all versions
     of the PiDP-8/I software up through v2017.04.04.  Essentially, it
     tells the software that you want it to behave as through you've got
-    it connected to a Teletype Model 33 ASR.
+    it connected to an uppercase-only terminal like the Teletype Model 33 ASR.
 
     The advantage of this mode is that you will have no problems running
     PDP-8 software that does not understand lowercase ASCII text.
 
     The disadvantage is obvious: you won't be able to input lowercase
-    ASCII text.  The SIMH option we enable in this mode is
-    bidirectional, so that if you run a program that does emit lowercase
-    ASCII text — such as Rick Murphy's version of Adventure — it will be
-    uppercased, just like an ASR-33 would do.
+    ASCII text.
+
+    The SIMH option we enable in this mode is bidirectional, so that if
+    you run a program that does emit lowercase ASCII text — such as Rick
+    Murphy's version of Adventure — it will be uppercased, just like an
+    ASR-33 would do.
 
     Another trap here is that the C programming language requires
     lowercase text, so you will get a warning if you leave the default
     option **--enable-os8-cc8** set. Pass **--disable-os8-cc8** when
     enabling **upper** mode.
-
-*   **none** — This passes 7-bit ASCII text through to the software
-    running on the simulator unchanged, and no patches are applied to
-    the PDP-8 software we distribute.
-
-    This is the option for historical purists. If you run into trouble
-    getting the software to work as you expect when built in this mode,
-    try enabling CAPS LOCK.
 
 [sa]:  http://homepage.cs.uiowa.edu/~jones/pdp8/faqs/#charsets
 [tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
@@ -538,17 +665,17 @@ with the following options:
 [uvte]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 *   **--enable-os8-focal69** — Because the default installation includes
-    U/W FOCAL, we have chosen to leave FOCAL 69 out by default to save
-    space on the O/S 8 system disk. You can give this option to install
-    this implementation alongside U/W FOCAL, or you can couple this
-    option with `--disable-os8-uwfocal` to reverse our choice of which
-    FOCAL implementation to install by default.
+    U/W FOCAL, we have chosen to leave [FOCAL,1969][f69] out by default
+    to save space on the O/S 8 system disk. You can give this option to
+    install this implementation alongside U/W FOCAL, or you can couple
+    this option with `--disable-os8-uwfocal` to reverse our choice of
+    which FOCAL implementation to install by default.
 
     You should know that the reason we made this choice is that the
-    version of FOCAL 69 we are currently shipping is fairly minimal: we
-    believe we are shipping the original DEC version of FOCAL 69 plus a
+    version of FOCAL,1969 we are currently shipping is fairly minimal: we
+    believe we are shipping the original DEC version of FOCAL,1969 plus a
     few carefully-selected overlays. There are many more overlays and
-    patches available on the Internet for FOCAL 69, but we have not had
+    patches available on the Internet for FOCAL,1969, but we have not had
     time to sort through these and make choices of which ones to ship or
     how to manage which ones get installed. Thus our choice: we want to
     provide the most functional version of FOCAL by default, and within
@@ -560,10 +687,11 @@ with the following options:
     explains why we chose it.)
 
     It is possible that we will eventually add enough patches and
-    overlays to FOCAL 69 that it will become more powerful than U/W
+    overlays to FOCAL,1969 that it will become more powerful than U/W
     FOCAL, so we might then choose to switch the defaults, but that is
     just speculation at the time of this writing.
 
+[f69]:   https://tangentsoft.com/pidp8i/wiki?name=Running+FOCAL%2C1969
 [suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
 
 
@@ -810,50 +938,6 @@ the PiDP-8/I simulator back up with:
 See [its documentation][test] for more details.
 
 
-<a id="using"></a>
-## Using the Software
-
-For the most part, this software distribution works like the [old stable
-2015.12.15 distribution][osd]. Its [documentation][oprj] therefore
-describes this software too, for the most part.
-
-The largest user-visible difference between the two software
-distributions is that many of the shell commands are different:
-
-1.  To start the simulator running in the background:
-
-        $ pidp8i start
-
-    This will happen automatically on reboot unless you disable the
-    service, such as in order to run one of the various [forks of Deeper
-    Thought][dt2].
-
-2.  To attach the terminal you're working on to the simulator:
-
-        $ pidp8i
-
-    (Yes, it's the same base command as above.  The `pidp8i` script uses
-    its first argument to determine what you want it to do.  Without
-    arguments, this is what it does.)
-
-3.  To detach from the simulator's terminal interface while leaving the
-    PiDP-8/I simulator running, type <kbd>Ctrl-A d</kbd>.  You can
-    re-attach to it later with a `pidp8i` command.
-
-4.  To shut the simulator down while attached to its terminal interface,
-    type <kbd>Ctrl-E</kbd> to pause the simulator, then at the `simh>`
-    prompt type `quit`.  Type `help` at that prompt to get some idea of
-    what else you can do with the simulator command language, or read
-    the [SIMH Users' Guide][sdoc].
-
-5.  To shut the simulator down from the Raspbian command line:
-
-        $ pidp8i stop
-
-There are [other major differences][mdif] between the old stable
-distribution and this one.  See that linked wiki article for details.
-
-
 <a id="sshd"></a>
 ## Enabling the SSH Server on the Binary OS Images
 
@@ -876,69 +960,6 @@ software in the name of security, so that we no longer have permission
 to make system-wide changes like this in our startup scripts.  We now
 rely on you, the system’s administrator, to do it interactively with
 `sudo` permissions.
-
-
-<a id="systemd" name="unit"></a>
-## The systemd Unit File
-
-Older stable releases of the PiDP-8/I software used an [old-style System
-V init script][svinit] to start the PiDP-8/I service. This includes
-Oscar Vermeulen's final stable release.
-
-Starting with release v2019.04.25, we have now switched to a
-[systemd][systemd] unit file, since Raspbian has been systemd-based for
-years. (It also supports SysV init scripts, but only as a second-class
-mechanism intended for backwards compatibility only.)
-
-One of the features systemd gives us is the ability to set the unit
-to run as user-level service rather than as a system-wide service,
-which means you no longer need the `sudo` prefix on commands to start,
-stop, restart, and query the service. The only time you now need root
-privileges is when installing the software. After that, the software
-runs under your normal user account, as do all of the commands you
-use to manipulate the background simulator service.
-
-As a result of these changes, none of these commands work any longer:
-
-    $ sudo /etc/init.d/pidp8i start
-    $ sudo service pidp8i stop
-    $ sudo systemctl restart pidp8i
-
-The correct forms, respectively, are:
-
-    $ systemctl --user start pidp8i
-    $ systemctl --user stop pidp8i
-    $ systemctl --user restart pidp8i
-
-These commands are long, so we have extended the `pidp8i` command to
-build and run `systemctl` commands for you when you pass it arguments:
-
-    $ pidp8i start
-    $ pidp8i stop
-    $ pidp8i restart
-    $ pidp8i status -l
-
-If you run it without arguments, it attaches to the GNU screen(1)
-session, just as before.
-
-The last command above shows that *all* arguments are passed to
-`systemctl`, not just the first, so you can pass flags and such.
-
-The service is still set to start at boot, just as before.
-
-To disable the service so you can run something else against the
-PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
-
-    $ pidp8i stop
-    $ pidp8i disable
-
-If you install this release on a system that has the old SysV init
-script on it, that service will be disabled and removed before we
-install and enable the replacement systemd user service.
-
-[svinit]:  https://en.wikipedia.org/wiki/Init#SysV-style
-[systemd]: https://www.freedesktop.org/wiki/Software/systemd/
-
 
 
 ## License

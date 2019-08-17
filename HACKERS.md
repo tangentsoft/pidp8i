@@ -11,8 +11,10 @@ Getting Started with Fossil
 
 The PiDP-8/I software project is hosted using the [Fossil][fossil]
 [distributed version control system][dvcs].  Fossil provides most of the
-features of GitHub under a simpler operating model than Subversion
-without tying you to a proprietary web service.
+features of GitHub without having to put up with all of the complexities
+of Git. In a lot of ways, Fossil is even simpler to use than Subversion.
+See [Fossil Versus Git][fvg] for a well-balanced comparison of the
+user-facing differences.
 
 This guide will introduce you to some of the basics, but you should also
 at least read the [Fossil Quick Start Guide][fqsg]. For a more thorough
@@ -20,25 +22,29 @@ introduction, I recommend [the Schimpf book][fbook]. If you have
 questions about Fossil, you can ask on [the Fossil forum][ffor], where
 I, your humble project maintainer, am active.
 
-If you started with one of our PiDP-8/I binary OS images made in or
-after April 2017, Fossil 2.x is already installed.
+If you started with one of our PiDP-8/I [binary OS images][bosi] made in
+or after April 2017, Fossil is already installed.
 
-If you're starting from some other OS, you either won't have Fossil
-installed at all, or you'll most likely be using an older version, since
-the Debian project is still shipping version 1.37 and likely will
-continue to do so until 2020 or so in accordance with their software
-stability policy.  You could build Fossil from source, or you could just
-go grab a pre-built binary we keep on the project site:
+If you're starting from some other OS, Fossil won’t be installed by
+default, but if it’s Debian-based (e.g. Raspbian) you can easily install
+Fossil with:
 
-    $ wget https://tangentsoft.com/pidp8i/uv/fossil-2.8-raspbian-9.6-stretch
-    $ sudo install -m 755 fossil-* /usr/local/bin/fossil
+    $ sudo apt install fossil
+
+That command assumes you’re running it on a derivative of Debian Buster,
+released in June 2019, or newer. Older Debian-based OSes shipped Fossil
+1.x, which is too old to work with our Fossil repository. (We need 2.1
+or higher.) You could dig up an old version of this document to learn
+our workaround for that problem, but it’s better to upgrade to an OS
+that includes a compatible version of Fossil.
 
 Fossil is also available for all common desktop platforms.  One of [the
-official binaries][fbin] may work on your system.  If you're getting
-binaries from a third party, be sure it is Fossil 2.1 or higher.
+official binaries][fbin] may work on your system.
 
 
+[bosi]:   https://tangentsoft.com/pidp8i#bosi
 [fbin]:   https://fossil-scm.org/index.html/uv/download.html
+[fvg]:    https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
 [dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
 [fbook]:  https://www.fossil-scm.org/schimpf-book/home
 [ffor]:   https://fossil-scm.org/forum/
@@ -125,8 +131,8 @@ much as possible.  Git works the way it does because it was designed to
 meet the needs of the Linux kernel development project, which is
 inherently federated, so Git tries to operate in a federated model as
 well.  Fossil is better for smaller, more coherent teams, where there is
-a single, clear goal for the project and a single source for its
-official code.  Fossil helps remote developers cooperate, whereas Git
+a single, clear goal for the project and a single primary host for its
+project repository.  Fossil helps remote developers cooperate, whereas Git
 helps remote developers go off on their own tangents for extended
 periods of time and optionally sync back up with each other
 occasionally.
@@ -135,7 +141,11 @@ Fossil is a better match for the way the PiDP-8/I software project
 works: we want you to cooperate closely with us, not go off on wild
 tangents.
 
-[gitwt]:  https://git-scm.com/docs/git-worktree
+For more on this topic, see [Fossil Versus Git][fvg] in the Fossil
+documentation.
+
+[fvg]:   https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
+[gitwt]: https://git-scm.com/docs/git-worktree
 
 
 <a id="login"></a>

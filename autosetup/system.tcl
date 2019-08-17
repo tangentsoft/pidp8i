@@ -145,7 +145,7 @@ proc write-if-changed {file buf {script {}}} {
 # can have variables in the filename arg.  A separate substitution pass
 # happens when this recursive function returns, expanding the rest of
 # the variables.
-# 
+#
 proc include-file {infile mapping} {
 	# A stack of true/false conditions, one for each nested conditional
 	# starting with "true"
@@ -183,7 +183,7 @@ proc include-file {infile mapping} {
 			if {$condtype ne "if"} {
 				if {[llength $condstack] <= 1} {
 					autosetup-error "$infile:$linenum: Error: @$condtype missing @if"
-				} elseif {[string length $condargs]} {
+				} elseif {[string length $condargs] && [string index $condargs 0] ne "#"} {
 					autosetup-error "$infile:$linenum: Error: Extra arguments after @$condtype"
 				}
 			}

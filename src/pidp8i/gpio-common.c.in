@@ -38,6 +38,10 @@
 
 #include <config.h>
 
+#if defined(HAVE_BCM_HOST_H)
+#   include <bcm_host.h>
+#endif
+
 #include <pthread.h>
 #include <sys/file.h>
 #include <sys/time.h>
@@ -235,35 +239,11 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 
 
 //// bcm_host_get_peripheral_address ///////////////////////////////////
-// Find Pi's GPIO base address
-//
-// This is and its helper function get_dt_ranges are based on code
-// published by the Raspberry Pi Foundation:
-//
-// https://github.com/raspberrypi/userland/blob/master/host_applications/linux/libs/bcm_host/bcm_host.c
+// Provide fallback for non-Pi case to avoid a link error.
 
-static unsigned get_dt_ranges(const char *filename, unsigned offset)
-{
-    unsigned address = ~0;
-    FILE *fp = fopen(filename, "rb");
-    if (fp) {
-        unsigned char buf[4];
-        fseek(fp, offset, SEEK_SET);
-        if (fread(buf, 1, sizeof buf, fp) == sizeof buf) {
-            address = buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3] << 0;
-        }
-        fclose(fp);
-    }
-    return address;
-}
-
-static unsigned bcm_host_get_peripheral_address(void)
-{
-   unsigned address = get_dt_ranges("/proc/device-tree/soc/ranges", 4);
-   if (address == 0)
-      address = get_dt_ranges("/proc/device-tree/soc/ranges", 8);
-   return address == ~0 ? 0x20000000 : address;
-}
+#if !defined(HAVE_BCM_HOST_H)
+    static unsigned bcm_host_get_peripheral_address(void) { return 0; }
+#endif
 
 
 //// DOUBLE BUFFERED DISPLAY MANIPULATION FUNCTIONS ////////////////////

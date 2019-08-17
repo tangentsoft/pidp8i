@@ -59,7 +59,7 @@ set os8opts {
     chess       1  "the CHECKMO-II game of chess"
     crt         1  "CRT-style rubout processing"
     dcp         1  "the DCP disassembler"
-    focal69     0  "FOCAL 69"
+    focal69     0  "FOCAL,1969"
     fortran-ii  1  "FORTRAN II"
     fortran-iv  1  "FORTRAN IV"
     init        1  "the OS/8 INIT message"
@@ -90,7 +90,7 @@ append alloptions {
     debug-mode         => "create a debug build (default is release)"
     lowercase:         => "select how lowercase input is to be handled"
     no-lamp-simulator  => "use simple LED driver instead of incandescent lamp simulator"
-    os8-focal=1        => "leave FOCAL 69 and U/W FOCAL off the built OS/8 RK05 image"
+    os8-focal=1        => "leave FOCAL,1969 and U/W FOCAL off the built OS/8 RK05 image"
     os8-minimal        => "set all --disable-os8-* options, giving minimal OS/8 bin disk"
     os8-src=1          => "do not build v3d-src.rk05 from OS/8 source tapes"
     savestate          => "save simulator state (regs, core, devices) on exit; restore on restart"
@@ -347,6 +347,28 @@ cc-check-functions sched_yield
 cc-with {-includes signal.h} {
     cc-check-types sighandler_t sig_t
 }
+
+# Check for libraspberrypi-dev stuff
+set old_LIBS [get-define LIBS]      ;# don't want LIBS modded directly
+if {![file isdirectory "/opt/vc"]} {
+    msg-result "WARNING: Not building on a Pi or libraspberrypi-dev not installed!"
+    define PI_CFLAGS ""
+    define PI_LFLAGS ""
+    define PI_LIBS   ""
+} elseif {![cc-with {-cflags "-L/opt/vc/lib"} {
+             cc-check-function-in-lib bcm_host_get_peripheral_address bcm_host
+           }]} {
+    user-error "Found /opt/vc but cannot link to -lbcm_host!"
+} elseif {![cc-with {-cflags "-I/opt/vc/include"} {
+             cc-check-includes bcm_host.h
+           }]} {
+    user-error "Found /opt/vc but cannot #include bcm_host.h!"
+} else {
+    define PI_CFLAGS "-I/opt/vc/include"
+    define PI_LFLAGS "-L/opt/vc/lib"
+    define PI_LIBS   "-lbcm_host"
+}
+define LIBS $old_LIBS
 
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
