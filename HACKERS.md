@@ -10,43 +10,48 @@ Getting Started with Fossil
 ----
 
 The PiDP-8/I software project is hosted using the [Fossil][fossil]
-[distributed version control system][dvcs].  Fossil provides most of the
-features of GitHub without having to put up with all of the complexities
-of Git. In a lot of ways, Fossil is even simpler to use than Subversion.
-See [Fossil Versus Git][fvg] for a well-balanced comparison of the
-user-facing differences.
+[distributed version control system][dvcs], which provides most of the
+features of GitHub without [the complexities of Git][fvg].
 
-This guide will introduce you to some of the basics, but you should also
-at least read the [Fossil Quick Start Guide][fqsg]. For a more thorough
-introduction, I recommend [the Schimpf book][fbook]. If you have
-questions about Fossil, you can ask on [the Fossil forum][ffor], where
-I, your humble project maintainer, am active.
+Those new to Fossil should at least read its [Quick Start Guide][fqsg].
+If you want to go deeper, the [the Schimpf book][fbook] is somewhat
+outdated, but it is still the best single coherent tutorial on Fossil.
+[The official Fossil docs][fdoc] are much more up to date, but they take
+a piecemeal approach to topics, rather than the linear tutorial approach
+of a book, so it is not my first recommendation for learning Fossil.
+Those docs are better for polishing your skills and for reference after
+you know Fossil reasonably well.
 
-If you started with one of our PiDP-8/I [binary OS images][bosi] made in
-or after April 2017, Fossil is already installed.
+If you have questions about Fossil, ask on [the Fossil forum][ffor]
+where I, your humble project maintainer, am active. I also work on the
+Fossil docs quite a bit, so if your question really isn’t answered
+somewhere in the above material, I might just solve it by extending the
+Fossil docs.
 
-If you're starting from some other OS, Fossil won’t be installed by
-default, but if it’s Debian-based (e.g. Raspbian) you can easily install
-Fossil with:
+Fossil is pre-installed on our [binary OS images][bosi] since April
+2017.
+
+When starting from Debian-based OSes released in June 2019 or newer,
+this will work:
 
     $ sudo apt install fossil
 
-That command assumes you’re running it on a derivative of Debian Buster,
-released in June 2019, or newer. Older Debian-based OSes shipped Fossil
-1.x, which is too old to work with our Fossil repository. (We need 2.1
-or higher.) You could dig up an old version of this document to learn
-our workaround for that problem, but it’s better to upgrade to an OS
-that includes a compatible version of Fossil.
+Older Debian-based OSes will give you Fossil 1.*x*, which won’t work with
+our repository, which requires Fossil 2.1 or higher. If you can’t
+upgrade your host OS, you’ll have to [build Fossil from source][bffs].
 
-Fossil is also available for all common desktop platforms.  One of [the
-official binaries][fbin] may work on your system.
+Fossil is also available for all common desktop platforms. If your OS
+package repository doesn’t include Fossil 2.1 or higher already, one of
+the [precompiled binaries][fbin] may work on your system.
 
 
+[bffs]:   https://fossil-scm.org/index.html/doc/trunk/www/build.wiki
 [bosi]:   https://tangentsoft.com/pidp8i#bosi
 [fbin]:   https://fossil-scm.org/index.html/uv/download.html
 [fvg]:    https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
 [dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
 [fbook]:  https://www.fossil-scm.org/schimpf-book/home
+[fdoc]:   https://fossil-scm.org/index.html/doc/trunk/www/permutedindex.html
 [ffor]:   https://fossil-scm.org/forum/
 [fossil]: https://fossil-scm.org/
 [fqsg]:   https://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
@@ -69,83 +74,8 @@ the full history of the PiDP-8/I software project from the upstream
 like and put it in any directory you like.  Even the `.fossil` extension
 is largely a convention, not a requirement.
 
-
-<a id="tags" name="branches"></a>
-Working with Existing Tags and Branches
-----
-
-The directory structure shown in the commands above is more complicated
-than strictly necessary, but it has a number of nice properties.
-
-First, it collects other software projects under a common top-level
-directory, which I'm calling `~/src`, but you are free to use any scheme
-you like.
-
-Second, the top-level project directory stores multiple separate
-checkouts, one for each branch or tag I'm actively working with at the
-moment.  So, to add a few other checkouts, you could say:
-
-    $ cd ~/src/pidp8i
-    $ mkdir -p release          # another branch
-    $ mkdir -p v20151215        # a tag this time, not a branch
-      ...etc...
-    $ cd release
-    $ fossil open ~/museum/pidp8i.fossil release
-    $ cd ../v20151215
-    $ fossil open ~/museum/pidp8i.fossil v20151215
-      ...etc...
-
-This gives you multiple independent checkouts.  The branch checkouts
-remain pinned to the tip of that branch, so that if someone else checks
-changes in on that branch and you say `fossil update`, those changes
-appear in your checkout of that branch.  The tag checkouts simply give
-you the latest checkin with that tag; saying `fossil update` in a
-checkout made from a tag will fast-forward you to the tip of the branch
-that tag was made on.
-
-(In Fossil, tags and branches are related, but the details are beyond
-our scope here.  See the [Fossil Quick Start Guide][fqsg] and the
-documents it links to for more details.)
-
-This directory scheme shows an important difference between Fossil and
-Git: with Git, the checkout and the clone are normally intermingled in
-the same directory tree, but in Fossil, the clone and the checkout are
-always strictly separate.  Git has a weak emulation of Fossil's normal
-working style via its [worktree][gitwt] feature, but most Git users
-aren't even aware of the feature, and those that are aware of it tend to
-discourage its use because of the problems it can cause.  Fossil was
-designed to work this way from the start, so it doesn't have the
-problems associated with Git worktrees.
-
-Another important difference relative to Git is that with Fossil, local
-checkins attempt to automatically sync checked-in changes back to the
-repository you cloned from.  (This only works if you have a login on the
-remote repository, the subject of the [next section](#login).)  This
-solves a number of problems with Git, all stemming from the fact that
-Git almost actively tries to make sure every clone differs from every
-other in some important way.
-
-While Fossil does allow offline operation and local independent clones,
-its default mode of operation is to try and keep the clones in sync as
-much as possible.  Git works the way it does because it was designed to
-meet the needs of the Linux kernel development project, which is
-inherently federated, so Git tries to operate in a federated model as
-well.  Fossil is better for smaller, more coherent teams, where there is
-a single, clear goal for the project and a single primary host for its
-project repository.  Fossil helps remote developers cooperate, whereas Git
-helps remote developers go off on their own tangents for extended
-periods of time and optionally sync back up with each other
-occasionally.
-
-Fossil is a better match for the way the PiDP-8/I software project
-works: we want you to cooperate closely with us, not go off on wild
-tangents.
-
-For more on this topic, see [Fossil Versus Git][fvg] in the Fossil
-documentation.
-
-[fvg]:   https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
-[gitwt]: https://git-scm.com/docs/git-worktree
+You only need to clone the repository once per machine. Thereafter, you
+will just be working with that same clone.
 
 
 <a id="login"></a>
@@ -155,16 +85,15 @@ Fossil Developer Access
 If you have a developer account on the `tangentsoft.com/pidp8i` Fossil
 instance, just add your username to the URL like so:
 
-    $ fossil clone https://username@tangentsoft.com/pidp8i pidp8i.fossil
+    $ fossil clone https://USERNAME@tangentsoft.com/pidp8i pidp8i.fossil
 
-If you've already cloned anonymously, you don't have to clone again to
-inform Fossil about your developer account.  Just do a manual sync from
-within a PiDP-8/I checkout directory, changing the URL to include the
-user name:
+If you've already cloned anonymously, simply tell Fossil about the new
+sync URL instead:
 
-    $ fossil sync https://username@tangentsoft.com/pidp8i
+    $ cd ~/src/pidp8i/trunk
+    $ fossil sync https://USERNAME@tangentsoft.com/pidp8i
 
-Either way, Fossil will ask you for the password for `username` on the
+Either way, Fossil will ask you for the password for `USERNAME` on the
 remote Fossil instance, and it will offer to remember it for you.  If
 you let it remember the password, operation from then on is scarcely
 different from working with an anonymous clone, except that on checkin,
@@ -202,35 +131,63 @@ software. If we’ve accepted one of your patches, just ask for a
 developer account [on the forum][pfor].
 
 
-<a id="forum"></a>
-Developer Discussion Forum
+<a id="tags" name="branches"></a>
+Working with Existing Tags and Branches
 ----
 
-The "[Forum][pfor]" link at the top of the Fossil web interface is for
-discussing the development of the PiDP-8/I software only. All other
-traffic should go to [the mailing list][ggml] instead.  We're not trying
-to split the community by providing a second discussion forum; we just
-think many development-related discussions are too low-level to be of
-any interest to most of the people on the mailing list.
+The directory structure shown in the commands above is more complicated
+than strictly necessary, but it has a number of nice properties.
 
-We used to relegate such discussions to private email, but that was not
-out of any wish to hide what we're doing. We just didn't have a good
-place to do this work in public until recently.
+First, it collects other software projects under a common top-level
+directory, which I'm calling `~/src`, but you are free to use any scheme
+you like.
 
-You can sign up for the forums without having a developer login, and you
-can even post anonymously. If you have a login, you can [sign up for
-email alerts][alert] if you like.
+Second, the project directory (`~/src/pidp8i`) stores multiple separate
+checkouts, one for each version I'm actively working with at the moment.
+So, to add a few other checkouts, you could say:
 
-Keep in mind that posts to the Fossil forum are treated much the same
-way as ticket submissions and wiki articles. They are permanently
-archived with the project. The "edit" feature of Fossil forums just
-creates a replacement record for a post, but the old post is still
-available in the repository. Don't post anything you wouldn't want made
-part of the permanent record of the project!
+    $ cd ~/src/pidp8i
+    $ mkdir -p release          # another branch
+    $ mkdir -p v20151215        # a tag this time, not a branch
+    $ mkdir -p 2019-04-01       # the software as of a particular date
+      ...etc...
+    $ cd release
+    $ fossil open ~/museum/pidp8i.fossil release
+    $ cd ../v20151215
+    $ fossil open ~/museum/pidp8i.fossil v20151215
+    $ cd ../2019-04-01
+    $ fossil open ~/museum/pidp8i.fossil 2019-04-01
+      ...etc...
 
-[ggml]:  https://groups.google.com/forum/#!forum/pidp-8
-[pfor]:  https://tangentsoft.com/pidp8i/forum
-[alert]: https://tangentsoft.com/pidp8i/alerts
+This gives you multiple independent checkouts, which allows you to
+quickly switch between versions with “`cd`” commands. The alternative
+(favored by Git and some other version control systems) is to use a
+single working directory and switch among versions by updating that
+single working directory in place. The problem with that is that it
+invalidates all of the build artifacts tied to changed files, so you
+have a longer rebuild time than simply switching among check-out
+directories. Since disk space is cheap these days — even on a small
+Raspberry Pi SD card – it’s better to have multiple working states and
+just “`cd`” among them.
+
+When you say `fossil update` in a check-out directory, you get the “tip”
+state of that version’s branch. This means that if you created your
+“`release`” check-out while version 2017.01.23 was current and you say
+“`fossil update`” today, you’ll get the release version 2019.04.25 or
+later. But, since the `v20151215` tag was made on trunk, saying “`fossil
+update`” in that check-out directory will fast-forward you to the tip of
+trunk; you won’t remain pinned to that old version.
+
+The PiDP-8/I project uses tags for [each released version][tags], and it
+has [many working branches][brlist]. You can use any of those names in
+“`fossil open`” and “`fossil update`” commands, and you can also use any
+of [Fossil’s special check-in names][fscn].
+
+[brlist]: https://tangentsoft.com/pidp8i/brlist
+[fscn]:   https://fossil-scm.org/fossil/doc/trunk/www/checkin_names.wiki
+[fvg]:    https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
+[gitwt]:  https://git-scm.com/docs/git-worktree
+[tags]:   https://tangentsoft.com/pidp8i/taglist
 
 
 <a id="branching"></a>
@@ -301,9 +258,8 @@ discussing the idea first.  This is yet another use for branches: to
 make a possibly-controversial change so that it can be discussed before
 being merged into the trunk.
 
-[brlist]: https://tangentsoft.com/pidp8i/brlist
-[daff]:   http://www.hanselman.com/blog/YouAreNotYourCode.aspx
-[dosd]:   http://amzn.to/2iEVoBL
+[daff]: http://www.hanselman.com/blog/YouAreNotYourCode.aspx
+[dosd]: http://amzn.to/2iEVoBL
 
 
 <a id="special"></a>
@@ -324,15 +280,15 @@ subject to different rules than other branches:
     images are created.  Only the project's release manager — currently
     Warren Young — should make changes to this branch.
 
-*   **<code>bogus/BOGUS</code>** — Because a branch is basically just a
-    label for a specific checkin, Fossil allows the tip of one branch to
-    be "moved" to another branch by applying a branch label to that
-    checkin.  We use this label when someone makes a checkin on the tip
-    of a branch that should be "forgotten."  Fossil makes destroying
-    project history very difficult, on purpose, so things moved to the
-    "bogus" branch are not actually destroyed; instead, they are merely
-    moved out of the way so that they do not interfere with that
-    branch's normal purpose.
+*   **<code>bogus</code>** or **<code>BOGUS</code>** — Because a branch
+    is basically just a label for a specific checkin, Fossil allows the tip
+    of one branch to be "moved" to another branch by applying a branch
+    label to that checkin.  We use this label when someone makes a
+    checkin on the tip of a branch that should be "forgotten."  Fossil
+    makes destroying project history very difficult, on purpose, so
+    things moved to the "bogus" branch are not actually destroyed;
+    instead, they are merely moved out of the way so that they do not
+    interfere with that branch's normal purpose.
 
     If you find yourself needing to prune the tip of a branch this way,
     the simplest way is to do it via the web UI, using the checkin
@@ -340,6 +296,33 @@ subject to different rules than other branches:
     command line with the `fossil amend` command.
 
 [relpr]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCESS.md
+
+
+<a id="forum"></a>
+Developer Discussion Forum
+----
+
+The "[Forum][pfor]" link at the top of the Fossil web interface is for
+discussing the development of the PiDP-8/I software only. All other
+traffic should go to [the mailing list][ggml] instead.  We're not trying
+to split the community by providing a second discussion forum; we just
+think many development-related discussions are too low-level to be of
+any interest to most of the people on the mailing list.
+
+You can sign up for the forums without having a developer login, and you
+can even post anonymously. If you have a login, you can [sign up for
+email alerts][alert] if you like.
+
+Keep in mind that posts to the Fossil forum are treated much the same
+way as ticket submissions and wiki articles. They are permanently
+archived with the project. The "edit" feature of Fossil forums just
+creates a replacement record for a post, but the old post is still
+available in the repository. Don't post anything you wouldn't want made
+part of the permanent record of the project!
+
+[ggml]:  https://groups.google.com/forum/#!forum/pidp-8
+[pfor]:  https://tangentsoft.com/pidp8i/forum
+[alert]: https://tangentsoft.com/pidp8i/alerts
 
 
 <a id="debug"></a>
@@ -351,6 +334,8 @@ it to produce a binary without as much optimization and with debug
 symbols included:
 
      $ ./configure --debug-mode
+     $ make clean
+     $ tools/mmake
 
 
 <a id="build-system"></a>
@@ -367,26 +352,25 @@ directories:
 
 Unlike with GNU Autoconf, which you may be familiar with, the
 `configure` script is not output from some other tool.  It is just a
-driver for the Tcl and C code under the `autosetup` directory.
+driver for the generic Tcl and C code under the `autosetup` directory,
+which in turn runs the project-specific `auto.def` Tcl script to
+configure the software.  Some knowledge of [Tcl syntax][tcldoc] will
+therefore be helpful in modifying `auto.def`.
 
 If you have to modify any of the files in `autosetup/` to get some
 needed effect, you should try to get that change into the upstream
 [Autosetup][asbs] project, then merge that change down into the local
 copy when it lands upstream.
 
-The bulk of the customization to the build system is in `auto.def`,
-which is a Tcl script run by `autosetup` via the `configure` script.
-Some knowledge of [Tcl syntax][tcldoc] will therefore be helpful in
-modifying it.
-
 If you do not have Tcl installed on your system, `configure` builds a
 minimal Tcl interpreter called `jimsh0`, based on the [Jim Tcl][jim]
 project.  Developers working on the build system are encouraged to use
 this stripped-down version of Tcl rather than "real" Tcl because Jim Tcl
-is more or less a strict subset of Tcl, so any changes you make that
-work with the `jimsh0` interpreter should also work with "real" Tcl, but
-not vice versa.  If you have Tcl installed and don't really need it,
-consider uninstalling it to force Autosetup to build and use `jimsh0`.
+is mostly-pure subset of Tcl, and `jimsh0` is a subset of the complete
+Jim Tcl distribution,  so any changes you make that work with the
+`jimsh0` interpreter should also work with "real" Tcl, but not vice
+versa.  If you have Tcl installed and don't really need it, consider
+uninstalling it to force Autosetup to build and use `jimsh0`.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
 excepting only that it has variables substituted into it by Autosetup
