@@ -664,7 +664,8 @@ File types: `c`, `h`, `c.in`
 We follow the SIMH project's pre-existing code style when modifying one
 of its source files:
 
-*   Spaces for indents, size 4
+*   Spaces for indents, size 4; tabs are rendered size 8 in HTML output,
+    since that's how a PDP-8 terminal would likely interpret it!
 
 *   DOS line endings.  (Yes, even though this is a Linux-based project!
     All decent Linux text editors can cope with this.)
