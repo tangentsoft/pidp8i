@@ -75,7 +75,7 @@ correct for you, in *your* location.
 
 If you're reading this file within an unpacked distribution of the
 PiDP-8/I software, you may [skip to the next section](#configuring),
-because you have already achieved this section's aim.
+'ecause you have already achieved this section's aim.
 
 If you are reading this [online][this] and have not yet downloaded and
 unpacked the software source code onto your Pi, this section will get
@@ -87,7 +87,7 @@ you going.
 <a id="transferring"></a>
 ### Transferring the File to the Pi
 
-The first step is to get the tarball (`*.tar.gz` file) or Zip file onto
+The first step is to get the tarball (`*.tar.gz` file) onto
 the Pi. There are many options:
 
 1.  **Copy the file to the SD card** you're using to boot the Pi.
@@ -96,7 +96,7 @@ the Pi. There are many options:
     larger partition on the SD card, but most PCs cannot see it.)
     There should be enough free space left in this small partition to
     copy the file over.  When you boot the Pi up with that SD card,
-    you will find the tarball or Zip file in `/boot`.
+    you will find the tarball in `/boot`.
 
 2.  **Pull the file down to the Pi** over the web, directly to the Pi:
 
