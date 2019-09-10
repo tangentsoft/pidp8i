@@ -56,8 +56,8 @@ development project.
 <a id="preparing"></a>
 ## Preparing Your Pi
 
-If you have a working Raspberry Pi setup, you can probably just skip
-ahead.
+If you have a working Raspberry Pi setup, you can probably [skip
+ahead](#unpacking).
 
 If you’ve just barely unpacked Raspbian onto an SD card and are now
 trying to get the PiDP-8/I software distribution working on it, stop and
@@ -65,7 +65,7 @@ go through the [Rasbperry Pi documentation][rpd] first. At the absolute
 minimum, run `raspi-config` and make sure the Localization settings are
 correct. The defaults are for the United Kingdom, home of the Raspberry
 Pi Foundation, so unless you live there, the defaults are probably not
-correct out of the box.
+correct for you, in *your* location.
 
 [rpd]: https://www.raspberrypi.org/documentation/
 
@@ -74,8 +74,8 @@ correct out of the box.
 ## Getting the Software onto Your Pi
 
 If you're reading this file within an unpacked distribution of the
-PiDP-8/I software, you may skip this section, because you have
-already achieved its aim.
+PiDP-8/I software, you may [skip to the next section](#configuring),
+because you have already achieved this section's aim.
 
 If you are reading this [online][this] and have not yet downloaded and
 unpacked the software source code onto your Pi, this section will get
