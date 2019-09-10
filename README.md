@@ -108,7 +108,7 @@ the Pi. There are many options:
     instead!)
 
 3.  **SCP the file over** to a running Pi from another machine.
-    If your Pi has OpenSSH installed and running, you can use
+    If your Pi has [OpenSSH installed and running](#sshd), you can use
     [WinSCP][wscp], [Cyberduck][cd], [FileZilla][fz] or another SCP
     or SFTP-compatible file transfer program to copy the file to the
     Pi over the network.
