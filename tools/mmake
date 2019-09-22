@@ -33,6 +33,6 @@ MAKE=make
 MAKE=$(which gmake make 2> /dev/null | head -1)
 
 BDIR="$(dirname "$0")"
-if [ -z $BDIR ] ; then BDIR="$(dirname "$(which "$0")")" ; fi
+if [ -z "$BDIR" ] ; then BDIR="$(dirname "$(which "$0")")" ; fi
 
 $MAKE -j$(($("$BDIR"/corecount) * 15 / 10)) "$@"
