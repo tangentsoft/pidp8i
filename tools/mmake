@@ -1,6 +1,7 @@
 #!/bin/bash
 ########################################################################
-# mmake - Runs make -jN where N is 1.5x the number of CPU cores
+# mmake - Runs make -jN where N is 1.5x the number of CPU cores.  Use
+#         with GNU or BSD make.
 #
 # Copyright © 2017-2019 Warren Young
 #
@@ -30,7 +31,7 @@
 ########################################################################
 
 MAKE=make
-MAKE=$(which gmake make 2> /dev/null | head -1)
+MAKE=$(which gmake bsdmake make 2> /dev/null | head -1)
 
 BDIR="$(dirname "$0")"
 if [ -z "$BDIR" ] ; then BDIR="$(dirname "$(which "$0")")" ; fi
