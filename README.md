@@ -254,6 +254,33 @@ documentation’s content before reading Oscar Vermeulen’s documentation,
 as it still refers to his last release in December 2015.
 
 
+<a id="runtime"></a>
+## Runtime Configuration
+
+The `pidp8i` command may be configured by the optional `pidp8i.rc` file,
+located by default in `/opt/pidp8i/etc/`.  This is a Bourne shell script
+which is sourced by `pidp8i` if it exists, and recognizes the following
+variables:
+
+
+<a id="rc-screen-manager"></a>
+### SCREEN_MANAGER=screen
+
+By default, pidp8i installs and uses [GNU screen(1)][gnuscreen] to
+manage screen sessions.  However, if you prefer to use [tmux(1)][tmux]
+as a screen manager for the pidp8i session, you may set
+`SCREEN_MANAGER=tmux`.  Note that if you make this change, you are
+responsible for installing tmux; on Raspbian, this is done by:
+
+        $ sudo apt-get install tmux
+
+Switching between configured screen managers must be done while pidp8i
+is stopped.
+
+[gnuscreen]: https://www.gnu.org/software/screen/
+[tmux]:      https://tmux.github.io/
+
+
 <a id="systemd" name="unit"></a>
 ## The systemd Unit File
 
@@ -290,7 +317,7 @@ build and run `systemctl` commands for you when you pass it arguments:
     $ pidp8i restart
     $ pidp8i status -l
 
-If you run it without arguments, it attaches to the GNU screen(1)
+If you run it without arguments, it attaches to the screen manager
 session, just as it always has.
 
 The last command above shows that *all* arguments are passed to
