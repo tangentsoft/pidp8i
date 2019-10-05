@@ -1,7 +1,7 @@
 #!/bin/bash
 ########################################################################
 # pidp8i.in - Collection of scriptlets for dealing with the pidp8i
-#   systemd user service and its associated screen(1) session.
+#   systemd user service and its associated screen manager session.
 #
 # Copyright © 2015-2019 Oscar Vermeulen and Warren Young
 #
@@ -37,13 +37,29 @@ scanswitch="$prefix/libexec/scanswitch"
 systemctl=$(uname -r | grep -qw Microsoft && echo /bin/nothing || echo /bin/systemctl)
 ggrep=$(which ggrep grep 2> /dev/null | head -1)
 
+if [ -e "$prefix/etc/pidp8i.rc" ]
+then
+    . "$prefix/etc/pidp8i.rc"
+fi
+[ -n "$SCREEN_MANAGER" ] || SCREEN_MANAGER=screen
+
 is_running() {
-    procs=`screen -list pidp8i | $ggrep -Pc '\d\.pidp8i'`
-    test -n "$procs" && test $procs -gt 0 && return 0 || return 1
+    if [ "$SCREEN_MANAGER" = "tmux" ]
+    then
+        tmux has-session -t pidp8i 2>/dev/null
+    else
+        procs=`screen -list pidp8i | $ggrep -Pc '\d\.pidp8i'`
+        test -n "$procs" && test $procs -gt 0 && return 0 || return 1
+    fi
 }
 
 sim_child_pid() {
-    screen -ls pidp8i | grep -Eo '[[:digit:]]+\.pidp8i' | grep -Eo '^[[:digit:]]+'
+    if [ "$SCREEN_MANAGER" = "tmux" ]
+    then
+        tmux list-sessions -F '#{session_name} #{pid}' | awk '/^pidp8i / {print $2}'
+    else
+        screen -ls pidp8i | grep -Eo '[[:digit:]]+\.pidp8i' | grep -Eo '^[[:digit:]]+'
+    fi
 }
 
 # Were we given a command line argument?
@@ -53,10 +69,15 @@ then
     if is_running
     then
         echo Joining simulator session already in progress...
-        screen -r -S pidp8i
+        if [ "$SCREEN_MANAGER" = "tmux" ]
+        then
+            exec tmux attach-session -d -t pidp8i
+        else
+            exec screen -r -S pidp8i
+        fi
     else
         cat <<ERROR
-Either the simulator isn't running, or it isn't running under a screen(1)
+Either the simulator isn't running, or it isn't running under a ${SCREEN_MANAGER}
 session owned by @INSTUSR@.  Did you start the simulator via systemd?
 
 ERROR
@@ -124,12 +145,19 @@ then
     # commands involving file paths.  This default is chosen because it
     # satisfies both criteria.
     # If you change the default here, change that script as well.
-    cd "$prefix/share/media" &&
-        screen -dm -S pidp8i "$sim" "$bscript" &&
-		( ! test -x $systemctl ||
-		  systemd-notify --ready --pid=$(sim_child_pid) ) &&
-		exit 0
-    exit 1
+    set -e
+    cd "$prefix/share/media"
+    if [ "$SCREEN_MANAGER" = "tmux" ]
+    then
+        tmux new-session -s pidp8i -d "$sim" "$bscript"
+    else
+        screen -dm -S pidp8i "$sim" "$bscript"
+    fi
+    if [ -x $systemctl ]
+    then
+        systemd-notify --ready --pid=$(sim_child_pid)
+    fi
+    exit 0
 elif [ "$verb" = "stop" ]
 then
     # Someone (maybe the user via "pidp8i stop", maybe systemd via
@@ -149,9 +177,17 @@ then
             echo -n "Stopping $sim simulator..."
             for sig in TERM KILL ; do pkill -$sig $sim ; sleep 1 ; done
 
-            # screen(1) might still be running despite its only child
-            # dying.  Nuke it hard if so.
-            if is_running ; then screen -S pidp8i -X quit ; fi
+            # The screen manager might still be running despite its
+            # only child dying.  Nuke it hard if so.
+            if is_running
+            then
+                if [ "$SCREEN_MANAGER" = "tmux" ]
+                then
+                    tmux kill-session -t pidp8i
+                else
+                    screen -S pidp8i -X quit
+                fi
+            fi
 
             exit 0
         fi
