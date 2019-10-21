@@ -313,14 +313,14 @@ install and enable the replacement systemd user service.
 
 
 <a id="options"></a>
-### Configure Script Options
+## Configure Script Options
 
 You can change many things about the way the software is built and
 installed by giving options to the `configure` script:
 
 
 <a id="prefix"></a>
-#### --prefix
+### --prefix
 
 Perhaps the most widely useful `configure` script option is `--prefix`,
 which lets you override the default installation directory, `/opt/pidp8i`.
@@ -342,7 +342,7 @@ levels, which improves the quality of the display, particularly with the
 
 
 <a id="lowercase"></a>
-#### --lowercase
+### --lowercase
 
 The American Standards Association (predecessor to ANSI) delivered the
 second major version of the ASCII character encoding standard the same
@@ -409,7 +409,7 @@ PDP-8/I to react to lowercase input:
 
 
 <a id="nls"></a>
-#### --no-lamp-simulator
+### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
 normally built with the [incandescent lamp simulator][ils] feature,
@@ -430,7 +430,7 @@ helpful when the CPU is [heavily throttled][thro].
 
 
 <a id="serial-mod"></a>
-#### --serial-mod
+### --serial-mod
 
 If you have done [Oscar's serial mod][sm1] to your PiDP-8/I PCB and the
 Raspberry Pi you have connected to it, add `--serial-mod` to the
@@ -446,7 +446,7 @@ work correctly.
 
 
 <a id="alt-serial-mod"></a>
-#### --alt-serial-mod
+### --alt-serial-mod
 
 This flag is for an [alternative serial mod by James L-W][sm2]. It
 doesn't require mods to the Pi, and the mods to the PiDP-8/I board are
@@ -462,7 +462,7 @@ This option is a pure alternative to [`--serial-mod`](#serial-mod): you
 can leave both off, but you cannot pass both.
 
 
-#### --throttle
+### --throttle
 
 See [`README-throttle.md`][thro] for the values this option takes.  If
 you don't give this option, the simulator runs as fast as possible, more
@@ -470,7 +470,7 @@ or less.
 
 
 <a id="savestate"></a>
-#### --enable-savestate
+### --enable-savestate
 
 By default, the PiDP-8/I starts up with the core state undefined and
 runs the boot script you’ve selected either with the IF switches or by
@@ -527,7 +527,7 @@ That zeroes the key registers and prevents the CPU from running as it
 normally would after giving the `RESTORE` command to SIMH.
 
 
-#### --disable-usb-automount
+### --disable-usb-automount
 
 When you install the software on a [systemd][systemd]-based Linux
 system, we normally configure the OS to automatically mount USB drives
@@ -547,7 +547,7 @@ disable the feature.
 USB setup rather than conflicting with it.)
 
 
-#### --disable-cc8-cross
+### --disable-cc8-cross
 
 Give this option if you do not want to build Ian Schofield's `cc8` C
 cross-compiler on the host.
@@ -559,7 +559,7 @@ to be left off the bootable OS/8 RK05 disk image, as if you’d passed the
 
 
 <a id="disable-os8"></a>
-#### --disable-os8-\*
+### --disable-os8-\*
 
 Several default components of the [OS/8 RK05 disk image](#os8di) used by
 boot options IF=0 and IF=7 can be left out to save space and build time:
@@ -631,7 +631,7 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 
 
 <a id="enable-os8"></a>
-#### --enable-os8-\*
+### --enable-os8-\*
 
 There are a few file sets not normally installed to the [OS/8 RK05 disk
 image](#os8di) used by boot options IF=0 and IF=7. You can install them
@@ -695,7 +695,7 @@ with the following options:
 [suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
 
 
-#### --os8-minimal
+### --os8-minimal
 
 If you set this flag, it sets all `--enable-os8-*` flags to false and
 all `--disable-os8-*` flags to true.  If you give this along with any
@@ -728,7 +728,7 @@ This option does not control some things you might think it should:
     the file acts as build documentation as well as a "welcome" message.
 
 
-#### --help
+### --help
 
 Run `./configure --help` for more information on your options here.
 
