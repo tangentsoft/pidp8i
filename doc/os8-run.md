@@ -79,8 +79,8 @@ The goals of the project are:
 * boot OS/8 on an arbitrary attached device image.
 * create a duplicate of an existing file. This is the use case of building new image files from an existing baseline while preserving the baseline image file.
 * copy files from the running OS/8 environment into the POSIX environment
-* copy files to the running OS/8 from the POSIX environment running SIMH.
 running SIMH.
+* copy files to the running OS/8 from the POSIX environment running SIMH.
 * run any OS/8 command as long as it returns immediately to the OS/8 Keyboard
 Monitor. This includes BATCH scripts.
 * run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the OS/8
