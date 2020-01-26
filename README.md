@@ -757,24 +757,28 @@ us have it both ways.
 The `SCREEN_MANAGER` setting is for use by those that need something
 other than GNU `screen`. There are several alternatives:
 
-*   **`screen`**: The default, per above
+*   **`screen`**: The default, per above.
 
 *   [**`tmux`**][tmux]: A popular alternative to `screen`, especially on
-    BSD platforms
+    BSD platforms.
 
 *   [**`dtach`**][dtach]: A minimalist alternative to `screen` which
-    handles only the terminal attach/detach features.
+    provides only its terminal attach/detach features.
 
     In addition to the virtues called out on the program’s home page,
-    this option has a side benefit for some PiDP-8/I users: `screen` and
-    `tmux` assume an ANSI X3.64 terminal (e.g. DEC VT102 or xterm),
-    because they interpret escape codes to provide features such as
-    their scrollback buffer. It is somewhat rare to use the PiDP-8/I
-    with an ANSI terminal as the PDP-8 predates that standard by many
-    years, so a lot of the software for those systems assumes either a
-    dumb teletypewriter or some other terminal type, such as a Tek 4010
-    series. In the latter case, these ANSI screen managers can get in
-    the way and mess things up. Thus this option.
+    use of this option has a side benefit for some PiDP-8/I users:
+    `screen` and `tmux` assume an [ANSI X3.64 terminal][ansit] (e.g. DEC
+    VT102 or xterm), because they interpret escape codes to provide
+    features such as their scrollback buffer. It is uncommon to find
+    PDP-8 software that uses ANSI terminal escape codes since almost all
+    PDP-8 computers sold predate that standard. Most PDP-8 software
+    assumes a dumb teletypewriter, and of the software that does make
+    use of a smart terminal, there’s a good chance it wants something
+    else, such as a [Tek 4010][t4010] series terminal. These ANSI screen
+    managers can therefore get in the way and mess things up.
+
+    `dtach` doesn’t interfere with terminal escape code handling; thus
+    this option.
 
 *   **`none`**: Effectively aliases the `pidp8i` and `pidp8i start`
     commands, attaching the simulator to the local console. The `pidp8i
@@ -791,9 +795,11 @@ Raspbian, this is done by:
 Switching between configured screen managers must be done while the
 simulator is stopped.
 
+[ansit]: https://en.wikipedia.org/wiki/ANSI_escape_code
 [dtach]: https://github.com/crigler/dtach
 [gscr]:  https://www.gnu.org/software/screen/
 [scons]: /wiki?name=Serial+or+Telnet+PDP-8+Console
+[t4010]: https://en.wikipedia.org/wiki/Tektronix_4010
 [tmux]:  https://tmux.github.io/
 
 
