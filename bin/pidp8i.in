@@ -214,7 +214,7 @@ then
             # only child dying.  Nuke it hard if so.
             if ! is_running || [ "$SCREEN_MANAGER" = "none" ]
             then
-                echo "The PiDP-8/I simulator is not running."
+                echo "The PiDP-8/I simulator is stopped."
             elif [ "$SCREEN_MANAGER" = "tmux" ]
             then
                 tmux kill-session -t pidp8i
