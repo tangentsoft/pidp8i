@@ -793,7 +793,7 @@ simulator is stopped.
 
 [dtach]: https://github.com/crigler/dtach
 [gscr]:  https://www.gnu.org/software/screen/
-[scona]: /wiki?name=Serial+or+Telnet+PDP-8+Console
+[scons]: /wiki?name=Serial+or+Telnet+PDP-8+Console
 [tmux]:  https://tmux.github.io/
 
 
