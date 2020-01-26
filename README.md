@@ -790,7 +790,7 @@ If you set `SCREEN_MANAGER=tmux`, you must then ensure that `tmux` is in
 fact installed before the `pidp8i` script goes to try and use it. On
 Raspbian, this is done by:
 
-        $ sudo apt install tmux
+    $ sudo apt install tmux
 
 Switching between configured screen managers must be done while the
 simulator is stopped.
