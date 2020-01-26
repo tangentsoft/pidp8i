@@ -780,7 +780,7 @@ other than GNU `screen`. There are several alternatives:
     `dtach` doesn’t interfere with terminal escape code handling; thus
     this option.
 
-*   **`none`**: Effectively aliases the `pidp8i` and `pidp8i start`
+*   **<tt>none</tt>**: Effectively aliases the `pidp8i` and `pidp8i start`
     commands, attaching the simulator to the local console. The `pidp8i
     stop` command becomes a no-op, since stopping the simulator is then
     done in the standard SIMH way: <kbd>Ctrl-E, quit</kbd>.
