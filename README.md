@@ -743,21 +743,44 @@ variables:
 
 
 <a id="rc-screen-manager"></a>
-### SCREEN_MANAGER=screen
+### `SCREEN_MANAGER=screen`
 
-By default, pidp8i installs and uses [GNU screen(1)][gnuscreen] to
-manage screen sessions.  However, if you prefer to use [tmux(1)][tmux]
-as a screen manager for the pidp8i session, you may set
-`SCREEN_MANAGER=tmux`.  Note that if you make this change, you are
-responsible for installing tmux; on Raspbian, this is done by:
+By default, the PiDP-8/I software distribution installs and uses [GNU
+`screen(1)`][gscr] to allow the simulator to run in the background yet be
+reattached from a later terminal session, then possibly later to be
+backgrounded once again. Without the intermediation of something like
+`screen`, the simulator would either forever be in the background and
+we’d have to export the console [another way][scons] or you’d have to
+fire it up interactively any time you wanted to use it. This scheme lets
+us have it both ways.
 
-        $ sudo apt-get install tmux
+The `SCREEN_MANAGER` setting is for use by those that need something
+other than GNU `screen`. There are several alternatives:
 
-Switching between configured screen managers must be done while pidp8i
-is stopped.
+*   **`screen`**: the default, per above
 
-[gnuscreen]: https://www.gnu.org/software/screen/
-[tmux]:      https://tmux.github.io/
+*   [**`tmux`**][tmux]: a popular alternative to `screen`, especially on
+    BSD platforms
+
+*   **`none`**: effectively aliases the `pidp8i` and `pidp8i start`
+    commands, attaching the simulator to the local console. The `pidp8i
+    stop` command becomes a no-op, since stopping the simulator is then
+    done in the standard SIMH way: <kbd>Ctrl-E, quit</kbd>.
+
+Note that the alternative screen managers are not installed by default.
+If you set `SCREEN_MANAGER=tmux`, you must then ensure that `tmux` is in
+fact installed before the `pidp8i` script goes to try and use it. On
+Raspbian, this is done by:
+
+        $ sudo apt install tmux
+
+Switching between configured screen managers must be done while the
+simulator is stopped.
+
+[dtach]: https://github.com/crigler/dtach
+[gscr]:  https://www.gnu.org/software/screen/
+[scona]: /wiki?name=Serial+or+Telnet+PDP-8+Console
+[tmux]:  https://tmux.github.io/
 
 
 ## <a id="os8di"></a>The OS/8 RK05 Disk Image
@@ -991,7 +1014,7 @@ rely on you, the system’s administrator, to do it interactively with
 
 ## License
 
-Copyright © 2016-2019 by Warren Young. This document is licensed under
+Copyright © 2016-2020 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
