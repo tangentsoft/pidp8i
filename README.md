@@ -757,12 +757,26 @@ us have it both ways.
 The `SCREEN_MANAGER` setting is for use by those that need something
 other than GNU `screen`. There are several alternatives:
 
-*   **`screen`**: the default, per above
+*   **`screen`**: The default, per above
 
-*   [**`tmux`**][tmux]: a popular alternative to `screen`, especially on
+*   [**`tmux`**][tmux]: A popular alternative to `screen`, especially on
     BSD platforms
 
-*   **`none`**: effectively aliases the `pidp8i` and `pidp8i start`
+*   [**`dtach`**][dtach]: A minimalist alternative to `screen` which
+    handles only the terminal attach/detach features.
+
+    In addition to the virtues called out on the program’s home page,
+    this option has a side benefit for some PiDP-8/I users: `screen` and
+    `tmux` assume an ANSI X3.64 terminal (e.g. DEC VT102 or xterm),
+    because they interpret escape codes to provide features such as
+    their scrollback buffer. It is somewhat rare to use the PiDP-8/I
+    with an ANSI terminal as the PDP-8 predates that standard by many
+    years, so a lot of the software for those systems assumes either a
+    dumb teletypewriter or some other terminal type, such as a Tek 4010
+    series. In the latter case, these ANSI screen managers can get in
+    the way and mess things up. Thus this option.
+
+*   **`none`**: Effectively aliases the `pidp8i` and `pidp8i start`
     commands, attaching the simulator to the local console. The `pidp8i
     stop` command becomes a no-op, since stopping the simulator is then
     done in the standard SIMH way: <kbd>Ctrl-E, quit</kbd>.

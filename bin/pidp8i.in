@@ -36,6 +36,7 @@ sim="$prefix/bin/pidp8i-sim"
 scanswitch="$prefix/libexec/scanswitch"
 systemctl=$(uname -r | grep -qw Microsoft && echo /bin/nothing || echo /bin/systemctl)
 ggrep=$(which ggrep grep 2> /dev/null | head -1)
+dtsock=/tmp/pidp8i-dtach.sock
 
 if [ -e "$prefix/etc/pidp8i.rc" ]
 then
@@ -50,6 +51,9 @@ is_running() {
     elif [ "$SCREEN_MANAGER" = "tmux" ]
     then
         tmux has-session -t pidp8i 2>/dev/null
+    elif [ "$SCREEN_MANAGER" = "dtach" ]
+    then
+        test -e $dtsock
     else
         procs=`screen -list pidp8i | $ggrep -Pc '\d\.pidp8i'`
         test -n "$procs" && test $procs -gt 0 && return 0 || return 1
@@ -63,6 +67,9 @@ sim_child_pid() {
     elif [ "$SCREEN_MANAGER" = "tmux" ]
     then
         tmux list-sessions -F '#{session_name} #{pid}' | awk '/^pidp8i / {print $2}'
+    elif [ "$SCREEN_MANAGER" = "dtach" ]
+    then
+        test -e $dtsock && fuser -f $dtsock | cut -f2 -d:
     else
         screen -ls pidp8i | grep -Eo '[[:digit:]]+\.pidp8i' | grep -Eo '^[[:digit:]]+'
     fi
@@ -81,6 +88,9 @@ then
         if [ "$SCREEN_MANAGER" = "tmux" ]
         then
             exec tmux attach-session -d -t pidp8i
+        elif [ "$SCREEN_MANAGER" = "dtach" ]
+        then
+            exec dtach -a $dtsock
         else
             exec screen -r -S pidp8i
         fi
@@ -164,6 +174,9 @@ then
     elif [ "$SCREEN_MANAGER" = "tmux" ]
     then
         tmux new-session -s pidp8i -d "$sim" "$bscript"
+    elif [ "$SCREEN_MANAGER" = "dtach" ]
+    then
+        dtach -A $dtsock -Ez "$sim" "$bscript"
     else
         screen -dm -S pidp8i "$sim" "$bscript"
     fi
@@ -205,6 +218,9 @@ then
             elif [ "$SCREEN_MANAGER" = "tmux" ]
             then
                 tmux kill-session -t pidp8i
+            elif [ "$SCREEN_MANAGER" = "dtach" ]
+            then
+                kill $(sim_child_pid)
             else
                 screen -S pidp8i -X quit
             fi
