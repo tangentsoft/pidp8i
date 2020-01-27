@@ -759,8 +759,10 @@ other than GNU `screen`. There are several alternatives:
 
 *   **`screen`**: The default, per above.
 
-*   [**`tmux`**][tmux]: A popular alternative to `screen`, especially on
-    BSD platforms.
+*   [**`tmux`**][tmux]: A popular alternative to `screen`, especially
+    on BSD platforms. Note that the "attention" character for `tmux`
+    is <kbd>Ctrl-B</kbd> by default, not <kbd>Ctrl-A</kbd> as with
+    `screen`.
 
 *   [**`dtach`**][dtach]: A minimalist alternative to `screen` which
     provides only its terminal attach/detach features.
@@ -779,6 +781,11 @@ other than GNU `screen`. There are several alternatives:
 
     `dtach` doesn’t interfere with terminal escape code handling; thus
     this option.
+
+    Unlike `screen` and `tmux`, there is no command layer enetered
+    via an "attention" keystroke in `dtach`. The only key that `dtach`
+    scans for from the terminal is the detach keystroke, which we leave
+    at its default, <kbd>Ctrl-\\<kbd>.
 
 *   **<tt>none</tt>**: Effectively aliases the `pidp8i` and `pidp8i start`
     commands, attaching the simulator to the local console. The `pidp8i
