@@ -124,7 +124,7 @@ then
     @INSTALL@ -m 644 @srcdir@/etc/pidp8i.service $unitdir
     $systemctl --user daemon-reload
     $systemctl --user enable pidp8i
-elif test -t 1 -a -x $systemctl
+elif test -t 1 -a -x $systemctl -a "$SCREEN_MANAGER" != "none"
 then
     # We were given some other arg(s) and we're attached to a terminal,
     # so build a systemctl command with those args so the user doesn't
