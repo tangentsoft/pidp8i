@@ -43,6 +43,11 @@ then
     . "$prefix/etc/pidp8i.rc"
 fi
 [ -n "$SCREEN_MANAGER" ] || SCREEN_MANAGER=screen
+if [ ! -t 1 ] && [ "$SCREEN_MANAGER" = "none" ]
+then
+    echo "The 'none' screen manager mode is meant for interactive use only!"
+    exit 1
+fi
 
 is_running() {
     if [ "$SCREEN_MANAGER" = "none" ]
@@ -124,7 +129,7 @@ then
     @INSTALL@ -m 644 @srcdir@/etc/pidp8i.service $unitdir
     $systemctl --user daemon-reload
     $systemctl --user enable pidp8i
-elif test -t 1 -a -x $systemctl -a "$SCREEN_MANAGER" != "none"
+elif test -t 1 -a -x $systemctl
 then
     # We were given some other arg(s) and we're attached to a terminal,
     # so build a systemctl command with those args so the user doesn't

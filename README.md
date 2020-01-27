@@ -787,10 +787,15 @@ other than GNU `screen`. There are several alternatives:
     scans for from the terminal is the detach keystroke, which we leave
     at its default, <kbd>Ctrl-\\<kbd>.
 
-*   **<tt>none</tt>**: Effectively aliases the `pidp8i` and `pidp8i start`
-    commands, attaching the simulator to the local console. The `pidp8i
-    stop` command becomes a no-op, since stopping the simulator is then
-    done in the standard SIMH way: <kbd>Ctrl-E, quit</kbd>.
+*   **<tt>none</tt>**: This mode is for interactive use, allowing you to
+    run the installed simulator with the installed media without any
+    screen manager at all.
+
+    In this mode, the `pidp8i` and `pidp8i start` commands do the
+    same thing: run the simulator directly attached to your current
+    interactive terminal. The `pidp8i stop` command becomes a no-op,
+    since stopping the simulator is then done in the standard SIMH way:
+    <kbd>Ctrl-E, quit</kbd>.
 
 Note that the alternative screen managers are not installed by default.
 If you set `SCREEN_MANAGER=tmux`, you must then ensure that `tmux` is in
