@@ -69,7 +69,7 @@ sim_child_pid() {
         tmux list-sessions -F '#{session_name} #{pid}' | awk '/^pidp8i / {print $2}'
     elif [ "$SCREEN_MANAGER" = "dtach" ]
     then
-        test -e $dtsock && fuser -f $dtsock | cut -f2 -d:
+        test -e $dtsock && fuser -f $dtsock | cut -f2 -d' '
     else
         screen -ls pidp8i | grep -Eo '[[:digit:]]+\.pidp8i' | grep -Eo '^[[:digit:]]+'
     fi
