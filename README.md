@@ -736,10 +736,10 @@ Run `./configure --help` for more information on your options here.
 <a id="runtime"></a>
 ## Runtime Configuration
 
-The `pidp8i` command may be configured by the optional `pidp8i.rc` file,
+The `pidp8i` command may be configured by the `pidp8i.rc` file,
 located by default in `/opt/pidp8i/etc/`.  This is a Bourne shell script
-which is sourced by `pidp8i` if it exists, and recognizes the following
-variables:
+which is sourced by `pidp8i` if it exists which may set the following
+variables for the `pidp8i` script to affect how it works:
 
 
 <a id="rc-screen-manager"></a>

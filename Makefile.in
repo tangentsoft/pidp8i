@@ -7,7 +7,7 @@
 # re-build Makefile from that modified Makefile.in before proceeding to
 # do the "make" operation.
 #
-# Copyright © 2015 by Oscar Vermeulen, © 2016-2019 by Warren Young
+# Copyright © 2015 by Oscar Vermeulen, © 2016-2020 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -306,6 +306,8 @@ V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
 CC8_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/cc8-tu56.os8
 
+RCFILE := @ABSPREFIX@/etc/pidp8i.rc
+
 CLTXT = /boot/cmdline.txt
 
 ADF := adrules.mk
@@ -426,6 +428,9 @@ endif
 		@INSTALL@ -m 440 -o root -g root @srcdir@/etc/sudoers \
 		    /etc/sudoers.d/099_pidp8i \
 	) || true
+
+	@# Install runtime config file if there isn't one there already.
+	@test -f $(RCFILE) || @INSTALL@ -m 644 -o @INSTUSR@ @srcdir@/etc/pidp8i.rc $(RCFILE)
 
 	@# Add installation bin dir to the non-root user's PATH unless it's
 	@# already in there or we aren't running under sudo.
