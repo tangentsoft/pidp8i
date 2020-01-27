@@ -176,7 +176,7 @@ then
         tmux new-session -s pidp8i -d "$sim" "$bscript"
     elif [ "$SCREEN_MANAGER" = "dtach" ]
     then
-        dtach -A $dtsock -Ez "$sim" "$bscript"
+        dtach -n $dtsock -Ez "$sim" "$bscript"
     else
         screen -dm -S pidp8i "$sim" "$bscript"
     fi
