@@ -980,7 +980,7 @@ class os8script:
     self.simh._child.expect(expect_val_str)
   
     if old_val.isdigit():          # We need to check old value
-      found_val = self.simh._child.after.strip()
+      found_val = self.simh._child.after.decode().strip()
       if found_val != old_val:
         print("\tOld value: " + found_val + " does not match " +
             old_val + ". Aborting patch.")
@@ -1012,7 +1012,7 @@ class os8script:
     expect_futil_file_str = "\n" + fname + "\s+(.*)$"
     self.simh.os8_send_line (line)
     self.simh._child.expect(expect_futil_file_str)
-    result = self.simh._child.after.strip()
+    result = self.simh._child.after.decode().strip()
     match = _com_split_parse.match(result)
     if match == None:
       print("Aborting because unexpected return status: " + result + \
@@ -1161,12 +1161,12 @@ class os8script:
     self.simh.os8_send_line (com_line)
     err_count = 0
     reply = self.simh._child.expect (pal8_replies)
-    executed_line = self.simh._child.before.strip()
-    reply_str = self.simh._child.after.strip()
+    executed_line = self.simh._child.before.decode().strip()
+    reply_str = self.simh._child.after.decode().strip()
     if reply == 0:
       self.simh._child.expect("\d+")
-      err_count = int(self.simh._child.after.strip())
-      reply_str += " " + self.simh._child.after.strip()
+      err_count = int(self.simh._child.after.decode().strip())
+      reply_str += " " + self.simh._child.after.decode().strip()
     if reply > 0 or err_count > 0:
       print("PAL8 Error: ")
       print("\t*" + executed_line)
@@ -1353,7 +1353,7 @@ class os8script:
     if retval == 1:
       print("Attempt to boot non-existent device: " + line)
       return "die"
-    reply = self.simh._child.after.decode('ascii')
+    reply = self.simh._child.after.decode()
     m = re.match("^(\S+)\s(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
         reply)
     if m == None:
@@ -1527,8 +1527,8 @@ class os8script:
         if self.verbose:
           print("Line " + str(self.line_ct_stack[0]) + ": end BUILD")
         if self.debug:
-          print("before: " + self.simh._child.before.strip())
-          print("after: " + self.simh._child.after.strip())
+          print("before: " + self.simh._child.before.decode().strip())
+          print("after: " + self.simh._child.after.decode().strip())
         # Return to monitor level unless need_exit == False.
         if need_exit:
           self.simh.os8_send_ctrl ('c')
@@ -1573,12 +1573,12 @@ class os8script:
           reply = self.simh._child.expect(build_build_replies)
           if self.debug:
             print("reply: " + str(reply))
-            print("before: " + self.simh._child.before.strip())
-            print("after: " + self.simh._child.after.strip())
+            print("before: " + self.simh._child.before.decode().strip())
+            print("after: " + self.simh._child.after.decode().strip())
           if reply != 0:
             print("No prompt for LOAD OS/8 in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + ".")
-            print("Instead got: {" + self.simh._child.after + "}.")
+            print("Instead got: {" + self.simh._child.after.decode() + "}.")
             print("Exiting BUILD.")
             return "die"
           if self.debug:
@@ -1593,12 +1593,12 @@ class os8script:
           reply = self.simh._child.expect(build_build_replies)
           if self.debug:
             print("reply: " + str(reply))
-            print("before: " + self.simh._child.before.strip())
-            print("after: " + self.simh._child.after.strip())
+            print("before: " + self.simh._child.before.decode().strip())
+            print("after: " + self.simh._child.after.decode().strip())
           if reply != 0:
             print("No prompt for LOAD CD in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + ".")
-            print("Instead got: {" + self.simh._child.after + "}.")
+            print("Instead got: {" + self.simh._child.after.decode() + "}.")
             print("Exiting BUILD.")
             return "die"
           if self.debug:
@@ -1626,12 +1626,12 @@ class os8script:
       reply = self.simh._child.expect(_build_replies)
       if self.debug:
         print("reply: " + str(reply))
-        print("before: " + self.simh._child.before.strip())
-        print("after: " + self.simh._child.after.strip())
+        print("before: " + self.simh._child.before.decode().strip())
+        print("after: " + self.simh._child.after.decode().strip())
       if reply > 3:
         print("BUILD error at line " + str(self.line_ct_stack[0]) + \
-          " with command " + self.simh._child.before.strip())
-        print("\t" + self.simh._child.after.strip())
+          " with command " + self.simh._child.before.decode().strip())
+        print("\t" + self.simh._child.after.decode().strip())
         self.simh.os8_send_ctrl ('c')
       # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
       if build_sub == "BOOT":
@@ -1645,22 +1645,22 @@ class os8script:
           reply = self.simh._child.expect("SYS BUILT")
           if self.debug:
             print("ZeroDir: reply: " + str(reply))
-            print("before: " + self.simh._child.before.strip())
-            print("after: " + self.simh._child.after.strip())
+            print("before: " + self.simh._child.before.decode().strip())
+            print("after: " + self.simh._child.after.decode().strip())
           need_exit = False
         elif reply == 0:
           reply = self.simh._child.expect("SYS BUILT")
           if self.debug:
             print("$: reply: " + str(reply))
-            print("before: " + self.simh._child.before.strip())
-            print("after: " + self.simh._child.after.strip())
+            print("before: " + self.simh._child.before.decode().strip())
+            print("after: " + self.simh._child.after.decode().strip())
           need_exit = False
         elif reply == 1:
           reply = self.simh._child.expect("\\.")
           if self.debug:
             print("SysBuilt: reply: " + str(reply))
-            print("before: " + self.simh._child.before.strip())
-            print("after: " + self.simh._child.after.strip())
+            print("before: " + self.simh._child.before.decode().strip())
+            print("after: " + self.simh._child.after.decode().strip())
     print("Warning end of file encountered with no end of BUILD command block at line " + \
       str(self.line_ct_stack[0]) + ".")
     return "fail"

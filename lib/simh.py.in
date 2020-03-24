@@ -319,8 +319,8 @@ class simh:
       return
     if debug:
       print("os8_send_cmd: expecting: " + prompt)
-      print("\tLast match before: {" + self._child.before + "}")
-      print("\tLast match after: {" + self._child.after + "}")
+      print("\tLast match before: {" + self._child.before.decode() + "}")
+      print("\tLast match after: {" + self._child.after.decode() + "}")
     self._child.expect ("\n%s$" % prompt, timeout = timeout)
     self.os8_send_line (line)
 
@@ -404,8 +404,8 @@ class simh:
 
   def pip_error_handler(self, caller, reply):
     print("PIP error from inside " + caller + ": ")
-    print("\t" + self._child.before.strip())
-    print("\t" + self._child.after.strip())
+    print("\t" + self._child.before.decode().strip())
+    print("\t" + self._child.after.decode().strip())
     
     # Was this error fatal or do we need to clean up?
     # Remember we subtract 1 from reply to get index into error tables.
@@ -811,7 +811,7 @@ class simh:
     ucname = name.upper()
     self.send_cmd("show " + name)
     self._child.expect(ucname + "\s+(.+)\r")
-    lines = self._child.after.split ("\r")
+    lines = self._child.after.decode().split ("\r")
     return lines
 
 
