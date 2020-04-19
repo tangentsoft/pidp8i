@@ -3,7 +3,7 @@
 # pidp8i.in - Collection of scriptlets for dealing with the pidp8i
 #   systemd user service and its associated screen manager session.
 #
-# Copyright © 2015-2019 Oscar Vermeulen and Warren Young
+# Copyright © 2015-2020 Oscar Vermeulen and Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -42,9 +42,17 @@ then
     . "$prefix/etc/pidp8i.rc"
 fi
 [ -n "$SCREEN_MANAGER" ] || SCREEN_MANAGER=screen
+if [ ! -t 1 ] && [ "$SCREEN_MANAGER" = "none" ]
+then
+    echo "The 'none' screen manager mode is meant for interactive use only!"
+    exit 1
+fi
 
 is_running() {
-    if [ "$SCREEN_MANAGER" = "tmux" ]
+    if [ "$SCREEN_MANAGER" = "none" ]
+    then
+        return 1
+    elif [ "$SCREEN_MANAGER" = "tmux" ]
     then
         tmux has-session -t pidp8i 2>/dev/null
     else
@@ -54,7 +62,10 @@ is_running() {
 }
 
 sim_child_pid() {
-    if [ "$SCREEN_MANAGER" = "tmux" ]
+    if [ "$SCREEN_MANAGER" = "none" ]
+    then
+        echo ""
+    elif [ "$SCREEN_MANAGER" = "tmux" ]
     then
         tmux list-sessions -F '#{session_name} #{pid}' | awk '/^pidp8i / {print $2}'
     else
@@ -65,8 +76,11 @@ sim_child_pid() {
 # Were we given a command line argument?
 if [ -z "$1" ]
 then
-    # No, so just try to attach to the running simulator
-    if is_running
+    # No, so try to run or attach to the running simulator
+    if [ "$SCREEN_MANAGER" = "none" ]
+    then
+        exec $0 start
+    elif is_running
     then
         echo Joining simulator session already in progress...
         if [ "$SCREEN_MANAGER" = "tmux" ]
@@ -147,16 +161,27 @@ then
     # If you change the default here, change that script as well.
     set -e
     cd "$prefix/share/media"
-    if [ "$SCREEN_MANAGER" = "tmux" ]
+
+    # Start the simulator
+    if [ "$SCREEN_MANAGER" = "none" ]
+    then
+        exec "$sim" "$bscript"
+    elif [ "$SCREEN_MANAGER" = "tmux" ]
     then
         tmux new-session -s pidp8i -d "$sim" "$bscript"
     else
         screen -dm -S pidp8i "$sim" "$bscript"
     fi
-    if [ -x $systemctl ]
+
+    # Tell systemd where to find the backgrounded simulator so it can
+    # stop it via systemctl.  Skipped on non-systemd systems and where
+    # SCREEN_MANAGER=none.
+    scpid=$(sim_child_pid)
+    if [ -x $systemctl ] && [ -n "$scpid" ] && [ $scpid -gt 0 ]
     then
-        systemd-notify --ready --pid=$(sim_child_pid)
+        systemd-notify --ready --pid=$scpid
     fi
+
     exit 0
 elif [ "$verb" = "stop" ]
 then
@@ -179,14 +204,14 @@ then
 
             # The screen manager might still be running despite its
             # only child dying.  Nuke it hard if so.
-            if is_running
+            if ! is_running || [ "$SCREEN_MANAGER" = "none" ]
             then
-                if [ "$SCREEN_MANAGER" = "tmux" ]
-                then
-                    tmux kill-session -t pidp8i
-                else
-                    screen -S pidp8i -X quit
-                fi
+                echo "The PiDP-8/I simulator is stopped."
+            elif [ "$SCREEN_MANAGER" = "tmux" ]
+            then
+                tmux kill-session -t pidp8i
+            else
+                screen -S pidp8i -X quit
             fi
 
             exit 0

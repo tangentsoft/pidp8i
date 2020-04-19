@@ -736,28 +736,55 @@ Run `./configure --help` for more information on your options here.
 <a id="runtime"></a>
 ## Runtime Configuration
 
-The `pidp8i` command may be configured by the optional `pidp8i.rc` file,
+The `pidp8i` command may be configured by the `pidp8i.rc` file,
 located by default in `/opt/pidp8i/etc/`.  This is a Bourne shell script
-which is sourced by `pidp8i` if it exists, and recognizes the following
-variables:
+which is sourced by `pidp8i` if it exists which may set the following
+variables for the `pidp8i` script to affect how it works:
 
 
 <a id="rc-screen-manager"></a>
-### SCREEN_MANAGER=screen
+### `SCREEN_MANAGER=screen`
 
-By default, pidp8i installs and uses [GNU screen(1)][gnuscreen] to
-manage screen sessions.  However, if you prefer to use [tmux(1)][tmux]
-as a screen manager for the pidp8i session, you may set
-`SCREEN_MANAGER=tmux`.  Note that if you make this change, you are
-responsible for installing tmux; on Raspbian, this is done by:
+By default, the PiDP-8/I software distribution installs and uses [GNU
+`screen(1)`][gscr] to allow the simulator to run in the background yet be
+reattached from a later terminal session, then possibly later to be
+backgrounded once again. Without the intermediation of something like
+`screen`, the simulator would either forever be in the background and
+we’d have to export the console [another way][scons] or you’d have to
+fire it up interactively any time you wanted to use it. This scheme lets
+us have it both ways.
 
-        $ sudo apt-get install tmux
+The `SCREEN_MANAGER` setting is for use by those that need something
+other than GNU `screen`. There are several alternatives:
 
-Switching between configured screen managers must be done while pidp8i
-is stopped.
+*   **screen**: The default, per above.
 
-[gnuscreen]: https://www.gnu.org/software/screen/
-[tmux]:      https://tmux.github.io/
+*   [**tmux**][tmux]: A popular alternative to `screen`, especially on
+    BSD platforms.
+
+*   **none**: This mode is for interactive use, allowing you to
+    run the installed simulator with the installed media without any
+    screen manager at all.
+
+    In this mode, the `pidp8i` and `pidp8i start` commands do the
+    same thing: run the simulator directly attached to your current
+    interactive terminal. The `pidp8i stop` command becomes a no-op,
+    since stopping the simulator is then done in the standard SIMH way:
+    <kbd>Ctrl-E, quit</kbd>.
+
+Note that the alternative screen managers are not installed by default.
+If you set `SCREEN_MANAGER=tmux`, you must then ensure that `tmux` is in
+fact installed before the `pidp8i` script goes to try and use it. On
+Raspbian, this is done by:
+
+    $ sudo apt install tmux
+
+Switching between configured screen managers must be done while the
+simulator is stopped.
+
+[gscr]:  https://www.gnu.org/software/screen/
+[scons]: /wiki?name=Serial+or+Telnet+PDP-8+Console
+[tmux]:  https://tmux.github.io/
 
 
 ## <a id="os8di"></a>The OS/8 RK05 Disk Image
@@ -991,7 +1018,7 @@ rely on you, the system’s administrator, to do it interactively with
 
 ## License
 
-Copyright © 2016-2019 by Warren Young. This document is licensed under
+Copyright © 2016-2020 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 
