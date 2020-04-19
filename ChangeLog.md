@@ -1,5 +1,27 @@
 # PiDP-8/I Changes
 
+<a id="202004xx"></a>
+## Version 2020.04.xx
+
+*   Raspberry Pi 4 support.
+
+*   [Configurable screen manager][rmsm], allowing either tmux or
+    "none" as an alternative to GNU screen.  Initial work on this
+    feature done by Ryan Finnie.
+
+*   Added udev rules to allow mounting media from disks on USB
+    floppy drives.  (Thanks to Ryan Finnie for this feature.)
+
+*   The build system now detects the availability of Python 3 and
+    prefers it if available.
+
+*   Updated external dependencies Autosetup and SIMH.
+
+*   Assorted portability and documentation improvements.
+
+[rmsm]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
+
+
 <a id="20190425"></a>
 ## Version 2019.04.25 — The "OS/8 V3F and os8-run" release
 
