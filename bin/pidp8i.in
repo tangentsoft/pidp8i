@@ -223,9 +223,6 @@ then
             elif [ "$SCREEN_MANAGER" = "tmux" ]
             then
                 tmux kill-session -t pidp8i
-            elif [ "$SCREEN_MANAGER" = "dtach" ]
-            then
-                kill $(sim_child_pid)
             else
                 screen -S pidp8i -X quit
             fi

@@ -14,7 +14,7 @@ The PiDP-8/I software project is hosted using the [Fossil][fossil]
 features of GitHub without [the complexities of Git][fvg].
 
 Those new to Fossil should at least read its [Quick Start Guide][fqsg].
-If you want to go deeper, the [the Schimpf book][fbook] is somewhat
+If you want to go deeper, [the Schimpf book][fbook] is somewhat
 outdated, but it is still the best single coherent tutorial on Fossil.
 [The official Fossil docs][fdoc] are much more up to date, but they take
 a piecemeal approach to topics, rather than the linear tutorial approach
@@ -70,8 +70,8 @@ To clone the code repository anonymously, say:
 
 The `clone` command gets you a file called `pidp8i.fossil` containing
 the full history of the PiDP-8/I software project from the upstream
-2015.12.15 release onward.  You can call that clone file anything you
-like and put it in any directory you like.  Even the `.fossil` extension
+2015.12.15 release onward. You can call that clone file anything you
+like and put it in any directory you like. Even the `.fossil` extension
 is largely a convention, not a requirement.
 
 You only need to clone the repository once per machine. Thereafter, you
@@ -87,23 +87,23 @@ instance, just add your username to the URL like so:
 
     $ fossil clone https://USERNAME@tangentsoft.com/pidp8i pidp8i.fossil
 
-If you've already cloned anonymously, simply tell Fossil about the new
+If you’ve already cloned anonymously, simply tell Fossil about the new
 sync URL instead:
 
     $ cd ~/src/pidp8i/trunk
     $ fossil sync https://USERNAME@tangentsoft.com/pidp8i
 
 Either way, Fossil will ask you for the password for `USERNAME` on the
-remote Fossil instance, and it will offer to remember it for you.  If
+remote Fossil instance, and it will offer to remember it for you. If
 you let it remember the password, operation from then on is scarcely
 different from working with an anonymous clone, except that on checkin,
 your changes will be sync’d back to the repository on tangentsoft.com if
-you're online at the time, and you'll get credit under your developer
+you’re online at the time, and you’ll get credit under your developer
 account name for the checkin.
 
-If you're working offline, Fossil will still do the checkin locally, and
+If you’re working offline, Fossil will still do the checkin locally, and
 it will sync up with the central repository after you get back online.
-It is best to work on a branch when unable to use Fossil's autosync
+It is best to work on a branch when unable to use Fossil’s autosync
 feature, as you are less likely to have a sync conflict when attempting
 to send a new branch to the central server than in attempting to merge
 your changes to the tip of trunk into the current upstream trunk, which
@@ -114,10 +114,10 @@ You can purposely work offline by disabling autosync mode:
     $ fossil set autosync 0
 
 Until you re-enable it (`autosync 1`) Fossil will stop trying to sync
-your local changes back to the central repo.  In this mode, Fossil works
-more like Git's default mode, buying you many of the same problems that
-go along with that working style.  I recommend disabling autosync mode
-only when you are truly going to be offline and don't want Fossil
+your local changes back to the central repo. In this mode, Fossil works
+more like Git’s default mode, buying you many of the same problems that
+go along with that working style. I recommend disabling autosync mode
+only when you are truly going to be offline and don’t want Fossil
 attempting to sync when you know it will fail.
 
 
@@ -139,11 +139,11 @@ The directory structure shown in the commands above is more complicated
 than strictly necessary, but it has a number of nice properties.
 
 First, it collects other software projects under a common top-level
-directory, which I'm calling `~/src`, but you are free to use any scheme
+directory, which I’m calling `~/src`, but you are free to use any scheme
 you like.
 
 Second, the project directory (`~/src/pidp8i`) stores multiple separate
-checkouts, one for each version I'm actively working with at the moment.
+checkouts, one for each version I’m actively working with at the moment.
 So, to add a few other checkouts, you could say:
 
     $ cd ~/src/pidp8i
@@ -174,8 +174,8 @@ When you say `fossil update` in a check-out directory, you get the “tip”
 state of that version’s branch. This means that if you created your
 “`release`” check-out while version 2017.01.23 was current and you say
 “`fossil update`” today, you’ll get the release version 2019.04.25 or
-later. But, since the `v20151215` tag was made on trunk, saying “`fossil
-update`” in that check-out directory will fast-forward you to the tip of
+later. But, since the `v20151215` tag was made on trunk, saying
+“`fossil update`” in that check-out directory will fast-forward you to the tip of
 trunk; you won’t remain pinned to that old version.
 
 The PiDP-8/I project uses tags for [each released version][tags], and it
@@ -195,8 +195,8 @@ Creating Branches
 ----
 
 Creating a branch in Fossil is scary-simple, to the point that those
-coming from other version control systems may ask, "Is that really all
-there is to it?"  Yes, really, this is it:
+coming from other version control systems may ask, “Is that really all
+there is to it?” Yes, really, this is it:
 
     $ fossil ci --branch new-branch-name
 
@@ -207,30 +207,29 @@ them to the same branch the changes were made against.
 
 While developers with login rights to the PiDP-8/I Fossil instance are
 allowed to check in on the trunk at any time, we recommend using
-branches whenever you're working on something experimental, or where you
-can't make the necessary changes in a single coherent checkin.
+branches whenever you’re working on something experimental, or where you
+can’t make the necessary changes in a single coherent checkin.
 
-One of this project's core principles is that `trunk` should always
-build without error, and it should always function correctly.  That's an
+One of this project’s core principles is that `trunk` should always
+build without error, and it should always function correctly. That’s an
 ideal we have not always achieved, but we do always *try* to achieve it.
 
 Contrast branches, which PiDP-8/I developers may use to isolate work
-until it is ready to merge into the trunk.  It is okay to check work in
-on a branch that doesn't work, or doesn't even *build*, so long as the
+until it is ready to merge into the trunk. It is okay to check work in
+on a branch that doesn’t work, or doesn’t even *build*, so long as the
 goal is to get it to a point that it does build and work properly before
 merging it into trunk.
 
 Here again we have a difference with Git: because Fossil normally syncs
 your work back to the central repository, this means we get to see the
-branches you are still working on.  This is a *good thing*.  Do not fear
-committing broken or otherwise bad code to a branch.  [You are not your
-code.][daff]  We are software developers, too: we understand that
+branches you are still working on. This is a *good thing*. Do not fear
+committing broken or otherwise bad code to a branch. [You are not your
+code.][daff] We are software developers, too: we understand that
 software development is an iterative process, and that not all ideas
 spring forth perfect and production-ready from the fingers of its
-developers.  These public branches let your collaborators see what
-you're up to, and maybe lend advice or a hand in the work; mostly,
-public branches let your collaborators see what you're up to, so they're
-not surprised when the change finally lands in trunk.
+developers. These public branches let your collaborators see what
+you’re up to; they may be able to lend advice, to help with the work, or
+to at least be unsurprised when your change finally lands in trunk.
 
 This is part of what I mean about Fossil fostering close cooperation
 rather than fostering wild tangents.
@@ -239,10 +238,10 @@ Jim McCarthy (author of [Dynamics of Software Development][dosd]) has a
 presentation on YouTube that touches on this topic at a couple of
 points:
 
-* [Don't go dark](https://www.youtube.com/watch?v=9OJ9hplU8XA)
-* [Beware of a guy in a room](https://www.youtube.com/watch?v=oY6BCHqEbyc)
+*   [Don’t go dark](https://www.youtube.com/watch?v=9OJ9hplU8XA)
+*   [Beware of a guy in a room](https://www.youtube.com/watch?v=oY6BCHqEbyc)
 
-Fossil's sync-by-default behavior fights these negative tendencies.
+Fossil’s sync-by-default behavior fights these negative tendencies.
 
 PiDP-8/I project developers are welcome to create branches at will. The
 main rule is to follow the branch naming scheme: all lowercase with
@@ -250,11 +249,11 @@ hyphens separating words. See the [available branch list][brlist] for
 examples to emulate.
 
 If you have checkin rights on the repository, it is generally fine to
-check things in on someone else's feature branch, as long as you do so
-in a way that cooperates with the purpose of that branch.  The same is
+check things in on someone else’s feature branch, as long as you do so
+in a way that cooperates with the purpose of that branch. The same is
 true of `trunk`: you should not check something in directly on the trunk
 that changes the nature of the software in a major way without
-discussing the idea first.  This is yet another use for branches: to
+discussing the idea first. This is yet another use for branches: to
 make a possibly-controversial change so that it can be discussed before
 being merged into the trunk.
 
@@ -268,43 +267,43 @@ Special Branches
 
 Most of the branches in the PiDP-8/I project are feature branches of the
 sort described in the previous section: an isolated line of development
-by one or more of the project's developers to work towards some new
+by one or more of the project’s developers to work towards some new
 feature, with the goal of merging that feature into the `trunk` branch.
 
 There are a few branches in the project that are special, which are
 subject to different rules than other branches:
 
-*   **<code>release</code>** - One of the steps in the
+*   **<code>release</code>** — One of the steps in the
     [release process][relpr] is to merge the stabilized `trunk` into the
     `release` branch, from which the release tarballs and binary OS
-    images are created.  Only the project's release manager — currently
+    images are created. Only the project’s release manager — currently
     Warren Young — should make changes to this branch.
 
 *   **<code>bogus</code>** or **<code>BOGUS</code>** — Because a branch
     is basically just a label for a specific checkin, Fossil allows the tip
-    of one branch to be "moved" to another branch by applying a branch
-    label to that checkin.  We use this label when someone makes a
-    checkin on the tip of a branch that should be "forgotten."  Fossil
+    of one branch to be “moved” to another branch by applying a branch
+    label to that checkin. We use this label when someone makes a
+    checkin on the tip of a branch that should be “forgotten.” Fossil
     makes destroying project history very difficult, on purpose, so
-    things moved to the "bogus" branch are not actually destroyed;
+    things moved to the “bogus” branch are not actually destroyed;
     instead, they are merely moved out of the way so that they do not
-    interfere with that branch's normal purpose.
+    interfere with that branch’s normal purpose.
 
     If you find yourself needing to prune the tip of a branch this way,
     the simplest way is to do it via the web UI, using the checkin
-    description page's "edit" link.  You can instead do it from the
+    description page’s “edit” link. You can instead do it from the
     command line with the `fossil amend` command.
 
-[relpr]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCESS.md
+[relpr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCESS.md
 
 
 <a id="forum"></a>
 Developer Discussion Forum
 ----
 
-The "[Forum][pfor]" link at the top of the Fossil web interface is for
+The “[Forum][pfor]” link at the top of the Fossil web interface is for
 discussing the development of the PiDP-8/I software only. All other
-traffic should go to [the mailing list][ggml] instead.  We're not trying
+traffic should go to [the mailing list][ggml] instead. We’re not trying
 to split the community by providing a second discussion forum; we just
 think many development-related discussions are too low-level to be of
 any interest to most of the people on the mailing list.
@@ -315,13 +314,13 @@ email alerts][alert] if you like.
 
 Keep in mind that posts to the Fossil forum are treated much the same
 way as ticket submissions and wiki articles. They are permanently
-archived with the project. The "edit" feature of Fossil forums just
+archived with the project. The “edit” feature of Fossil forums just
 creates a replacement record for a post, but the old post is still
-available in the repository. Don't post anything you wouldn't want made
+available in the repository. Don’t post anything you wouldn’t want made
 part of the permanent record of the project!
 
-[ggml]:  https://groups.google.com/forum/#!forum/pidp-8
-[pfor]:  https://tangentsoft.com/pidp8i/forum
+[ggml]: https://groups.google.com/forum/#!forum/pidp-8
+[pfor]: https://tangentsoft.com/pidp8i/forum
 [alert]: https://tangentsoft.com/pidp8i/alerts
 
 
@@ -333,9 +332,9 @@ By default, the build system creates a release build, but you can force
 it to produce a binary without as much optimization and with debug
 symbols included:
 
-     $ ./configure --debug-mode
-     $ make clean
-     $ tools/mmake
+    $ ./configure --debug-mode
+    $ make clean
+    $ tools/mmake
 
 
 <a id="build-system"></a>
@@ -345,16 +344,16 @@ Manipulating the Build System Source Files
 The [autosetup build system][asbs] is composed of these files and
 directories:
 
-     auto.def
-     autosetup/*
-     configure
-     Makefile.in
+    auto.def
+    autosetup/*
+    configure
+    Makefile.in
 
 Unlike with GNU Autoconf, which you may be familiar with, the
-`configure` script is not output from some other tool.  It is just a
+`configure` script is not output from some other tool. It is just a
 driver for the generic Tcl and C code under the `autosetup` directory,
 which in turn runs the project-specific `auto.def` Tcl script to
-configure the software.  Some knowledge of [Tcl syntax][tcldoc] will
+configure the software. Some knowledge of [Tcl syntax][tcldoc] will
 therefore be helpful in modifying `auto.def`.
 
 If you have to modify any of the files in `autosetup/` to get some
@@ -364,33 +363,33 @@ copy when it lands upstream.
 
 If you do not have Tcl installed on your system, `configure` builds a
 minimal Tcl interpreter called `jimsh0`, based on the [Jim Tcl][jim]
-project.  Developers working on the build system are encouraged to use
-this stripped-down version of Tcl rather than "real" Tcl because Jim Tcl
+project. Developers working on the build system are encouraged to use
+this stripped-down version of Tcl rather than “real” Tcl because Jim Tcl
 is mostly-pure subset of Tcl, and `jimsh0` is a subset of the complete
-Jim Tcl distribution,  so any changes you make that work with the
-`jimsh0` interpreter should also work with "real" Tcl, but not vice
-versa.  If you have Tcl installed and don't really need it, consider
+Jim Tcl distribution, so any changes you make that work with the
+`jimsh0` interpreter should also work with “real” Tcl, but not vice
+versa. If you have Tcl installed and don’t really need it, consider
 uninstalling it to force Autosetup to build and use `jimsh0`.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
 excepting only that it has variables substituted into it by Autosetup
-using its `@VARIABLE@` syntax.  At this time, we do not attempt to
+using its `@VARIABLE@` syntax. At this time, we do not attempt to
 achieve compatibility with other `make` programs, though in the future
 we may need it to work with [BSD `make`][bmake] as well, so if you are
 adding features, you might want to stick to the common subset of
-features implemented by both the GNU and BSD flavors of `make`.  We do
+features implemented by both the GNU and BSD flavors of `make`. We do
 not anticipate any need to support any other `make` flavors.
 
-This, by the way, is why we're not using some heavy-weight build system
-such as the GNU Autotools, CMake, etc.  The primary advantage of GNU
+This, by the way, is why we’re not using some heavy-weight build system
+such as the GNU Autotools, CMake, etc. The primary advantage of GNU
 Autotools is that you can generate source packages that will configure
-and build on weird and ancient flavors of Unix; we don't need that.
+and build on weird and ancient flavors of Unix; we don’t need that.
 Cross-platform build systems such as CMake ease building the same
 software on multiple disparate platforms straightforward, but the
 PiDP-8/I software is built primarily on and for a single operating
-system, Raspbian Linux.  It also happens to build and run on [several
+system, Raspbian Linux. It also happens to build and run on [several
 other OSes][oscomp], for which we also do not need the full power of
-something like CMake.  Autosetup and GNU `make` suffice for our purposes
+something like CMake. Autosetup and GNU `make` suffice for our purposes
 here.
 
 [asbs]:   http://msteveb.github.io/autosetup/
@@ -407,18 +406,18 @@ Directory Structure
 
 The directory structure of the PiDP-8/I project is as follows:
 
-*   <b>`.`</b> - Top level, occupied only by the few files the end user
+*   <b>`.`</b> — Top level, occupied only by the few files the end user
     of the source code needs immediately at hand on first unpacking the
     project: the top level build system files, key documentation, and
     licensing information. If a given file *can* be buried deeper, it
     *should* be buried to reduce clutter at this most precious level of
     the hierarchy.
 
-*   <b>`.fossil-settings`</b> - Versioned settings for the Fossil build
+*   <b>`.fossil-settings`</b> — Versioned settings for the Fossil build
     system which Fossil applies as defaults everywhere you check out a
-    Fossil version.  Settings made here are intended to be correct for
+    Fossil version. Settings made here are intended to be correct for
     all users of the system; think of these not as expressing defaults
-    but as expressing *policy*.  It is possible to override these
+    but as expressing *policy*. It is possible to override these
     settings, but we do not make settings here if we expect that some
     users may quibble with our choices here.
 
@@ -427,26 +426,26 @@ The directory structure of the PiDP-8/I project is as follows:
 
     Say `fossil help set` at the command line for more on this.
 
-*   <b>`autosetup`</b> - The bulk of the [Autosetup build system][asbs].
+*   <b>`autosetup`</b> — The bulk of the [Autosetup build system][asbs].
     These are generic files, not modified by the project itself. We
     occasionally run `tools/autosetup-update` to merge in upstream
     changes.
 
-*   <b>`bin`</b> - Programs installed to `$prefix/bin`, which may also
+*   <b>`bin`</b> — Programs installed to `$prefix/bin`, which may also
     be run during development, if only to test changes to those
-    programs.  Some scripts stored here are written in place by the
-    project's developers, while other files in this directory are
+    programs. Some scripts stored here are written in place by the
+    project’s developers, while other files in this directory are
     outputs of the build system.
 
     The content of this directory is copied to `$prefix/bin` at
-    installation time, which is added to the user's `PATH` by the
+    installation time, which is added to the user’s `PATH` by the
     `make install` script.
 
-*   <b>`boot`</b> - SIMH initialization scripts.  The `*.script.in`
+*   <b>`boot`</b> — SIMH initialization scripts. The `*.script.in`
     files are written by the project developers but have local
     configuration values substituted in by the `configure` script to
-    produce a `*.script` version.  Scripts which need no config-time
-    values substituted in are checked in directly as `*.script`.  The
+    produce a `*.script` version. Scripts which need no config-time
+    values substituted in are checked in directly as `*.script`. The
     `*.script` files in this directory which do not fall into either of
     those categories are outputs of `tools/mkbootscript`, which produces
     them from `palbart` assembly listings.
@@ -454,33 +453,33 @@ The directory structure of the PiDP-8/I project is as follows:
     All of these `*.script` files are copied to `$prefix/share/boot` by
     `make mediainstall` which runs automatically from `make install`
     when we detect that the binary media and SIMH boot scripts have
-    never been installed at this site before.  On subsequent installs,
+    never been installed at this site before. On subsequent installs,
     the user chooses whether to run `make mediainstall` by hand to
     overwrite all of this.
 
-*   <b>`doc`</b> - Documentation files sufficiently unimportant to a new
+*   <b>`doc`</b> — Documentation files sufficiently unimportant to a new
     user of the software that they need not be at the top level of the
-    project tree.  Such files can wait for new users to discover them.
+    project tree. Such files can wait for new users to discover them.
 
-    Fossil's [embedded documentation][edoc] feature allows us to present
+    Fossil’s [embedded documentation][edoc] feature allows us to present
     the contents of `doc` to web site users all but indistinguishably
-    from a wiki page.  Why are there two different ways to achieve the
+    from a wiki page. Why are there two different ways to achieve the
     same end, and how do we decide which mechanism to use?
 
-    The rule is simple: if a given document's change history is tied to
+    The rule is simple: if a given document’s change history is tied to
     the history of the PiDP-8/I project itself, it goes in `doc`, else
-    it goes in the wiki.  When checking out older versions of the
+    it goes in the wiki. When checking out older versions of the
     PiDP-8/I software, you expect to roll back to contemporaneous
     versions of the project documentation, which is what happens to all
     files stored in the repository, including those in `doc`, but this
-    does not happen to the wiki documents.  The wiki always presents the
+    does not happen to the wiki documents. The wiki always presents the
     most current version, no matter what version you have locally
     checked out.
 
-    (Fossil's wiki feature behaves much like Wikipedia: it keeps change
+    (Fossil’s wiki feature behaves much like Wikipedia: it keeps change
     history for wiki documents, but it always presents the most recent
     version unless you manually go poking around in the history to pull
-    up old versions.  If you check out a historical version of the
+    up old versions. If you check out a historical version of the
     software and then say `fossil ui` within that checkout directory,
     the resulting web view still shows the most recent locally-available
     version of each wiki document, not versions of the wiki documents
@@ -490,83 +489,83 @@ The directory structure of the PiDP-8/I project is as follows:
     The `doc/graphics` subdirectory holds JPEGs and SVGs displayed
     inline within wiki articles.
 
-*   <b>`etc`</b> - Files which get copied to `/etc` or one of its
+*   <b>`etc`</b> — Files which get copied to `/etc` or one of its
     subdirectories at installation time.
 
     There is an exception: `pidp8i.service.in` does not get installed to
-    `/etc` at install time, but only because systemd's [unit file load
+    `/etc` at install time, but only because systemd’s [unit file load
     path scheme][uflp] is screwy: *some* unit files go in `/etc`, while
-    others do not.  The systemd docs claim we can put user units in
+    others do not. The systemd docs claim we can put user units in
     `/etc/systemd/user` but this does not appear to work on a Raspberry
-    Pi running Raspbian Stretch at least.  We've fallen back to another
+    Pi running Raspbian Stretch at least. We’ve fallen back to another
     directory that *does* work, which feels more right to us anyway, but
-    which happens not to be in `/etc`.  If systemd were designed sanely,
-    we'd install such files to `$HOME/etc/systemd` but noooo....
+    which happens not to be in `/etc`. If systemd were designed sanely,
+    we’d install such files to `$HOME/etc/systemd` but noooo…
 
     Since none of the above actually argues for creating another
-    top-level repository directory to hold this one file, we've chosen
+    top-level repository directory to hold this one file, we’ve chosen
     to store it in `etc`.
 
-*   <b>`examples`</b> - Example programs for the end user's edification.
+*   <b>`examples`</b> — Example programs for the end user’s edification.
     Many of these are referenced by documentation files and therefore
     should not be renamed or moved, since there may be public web links
     referring to these examples.
 
-*   <b>`hardware`</b> - Schematics and such for the PiDP-8/I board or
+*   <b>`hardware`</b> — Schematics and such for the PiDP-8/I board or
     associated hardware.
 
-*   <b>`labels`</b> - Graphics intended to be printed out and used as
+*   <b>`labels`</b> — Graphics intended to be printed out and used as
     labels for removable media.
 
-*   <b>`lib`</b> - Library routines used by other programs, installed to
+*   <b>`lib`</b> — Library routines used by other programs, installed to
     `$prefix/lib`.
 
-*   <b>`libexec`</b> - A logical extension of `lib`, these are
+*   <b>`libexec`</b> — A logical extension of `lib`, these are
     standalone programs that nevertheless are intended to be run
-    primarily by other programs.  Whereas a file in `lib` might have its
-    interface described by a programmer's reference manual, the
+    primarily by other programs. Whereas a file in `lib` might have its
+    interface described by a programmer’s reference manual, the
     interface of a program in `libexec` is described by its usage
-    message.  Example:
+    message. Example:
 
-    *   <b>`scanswitch`</b> - Run by `etc/pidp8i`.
-    
+    *   <b>`scanswitch`</b> — Run by `etc/pidp8i`.
+
         <p>It is run by hand only by developers modifying its behavior.</p>
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
-    *not* put into the user's `PATH`, on purpose.  If a program should
-    end up in the user's `PATH`, it belongs in `bin`.  Alternately, a
+    *not* put into the user’s `PATH`, on purpose. If a program should
+    end up in the user’s `PATH`, it belongs in `bin`. Alternately, a
     wrapper may be put in `bin` which calls a `libexec` program as a
     helper.
 
-*   <b>`media`</b> - Binary media images used either by SIMH directly or
+*   <b>`media`</b> — Binary media images used either by SIMH directly or
     by tools like `os8-run` to produce media used by SIMH.
 
     The contents of this tree are installed to `$prefix/share/media`.
 
-*   <b>`obj`</b> - Intermediate output directory used by the build
-    system.  It is safe to remove this directory at any time, as its
-    contents may be recreated by `make`.  No file checked into Fossil
+*   <b>`obj`</b> — Intermediate output directory used by the build
+    system. It is safe to remove this directory at any time, as its
+    contents may be recreated by `make`. No file checked into Fossil
     should be placed here.
 
     (Contrast `bin` which does have some files checked into Fossil; all
     of the *other* files that end up in `bin` can be recreated by
     `make`, but not these few hand-written programs.)
 
-*   <b>`src`</b> - Source code for the project's programs, especially
-    those that cannot be used until they are built.  The great majority
-    of these programs are written in C.  The build system's output
+*   <b>`src`</b> — Source code for the project’s programs, especially
+    those that cannot be used until they are built. The great majority
+    of these programs are written in C. The build system’s output
     directories are `bin`, `boot`, `libexec`, and `obj`.
 
-    Programs that can be used without being "built," example programs,
+    Programs that can be used without being “built,” example programs,
     and single-file scripts are placed elsewhere: `bin`, `examples`,
-    `libexec`, `tools`, etc.  Basically, we place such files where the
+    `libexec`, `tools`, etc. Basically, we place such files where the
     build system *would* place them if they were built from something
     under `src`.
 
-    There are no program sources in the top level of `src`.  The file
+    There are no program sources in the top level of `src`. The file
     `src/config.h` may appear to be an exception to that restriction,
-    but it is *generated output* of the `configure` script, not "source
-    code" *per se*.
+    but it is *generated output* of the `configure` script, not “source
+    code” *per se*.
 
     Multi-module programs each have their own subdirectory of `src`,
     each named after the program contained within.
@@ -574,9 +573,9 @@ The directory structure of the PiDP-8/I project is as follows:
     Single module programs live in `src/misc` or `src/asm`, depending on
     whether they are host-side C programs or PAL8 assembly programs.
 
-*   <b>`test`</b> - Output directory used by `tools/test-*`.
+*   <b>`test`</b> — Output directory used by `tools/test-*`.
 
-*   <b>`tools`</b> - Programs run only during development and not
+*   <b>`tools`</b> — Programs run only during development and not
     installed.
 
     If a program is initially created here but we later decide that it
@@ -604,16 +603,16 @@ trunk of PiDP-8/I:
 Then either upload that file somewhere (e.g. Pastebin) and point to it
 from a [forum post][pfor] or attach the patch to a new [PiDP-8/I mailing
 list][ggml] message. Either way, include a declaration of the license
-you wish to contribute your changes under.  We suggest using the [SIMH
+you wish to contribute your changes under. We suggest using the [SIMH
 license][simhl], but any [non-viral][viral] [OSI-approved license][osil]
 should suffice. We’re willing to tolerate viral licenses for standalone
 products; for example, CC8 is under the GPL, but it’s fine because it
 isn’t hard-linked into any other part of the PiDP-8/I software system.
 
 If your change is more than a small patch, `fossil diff` might not
-incorporate all of the changes you have made.  The old unified `diff`
-format can't encode branch names, file renamings, file deletions, tags,
-checkin comments, and other Fossil-specific information.  For such
+incorporate all of the changes you have made. The old unified `diff`
+format can’t encode branch names, file renamings, file deletions, tags,
+checkin comments, and other Fossil-specific information. For such
 changes, it is better to send a Fossil bundle:
 
     $ fossil set autosync 0                # disable autosync
@@ -624,8 +623,8 @@ changes, it is better to send a Fossil bundle:
 After that first `fossil checkin --branch ...` command, any subsequent
 `fossil ci` commands will check your changes in on that branch without
 needing a `--branch` option until you explicitly switch that checkout
-directory to some other branch.  This lets you build up a larger change
-on a private branch until you're ready to submit the whole thing as a
+directory to some other branch. This lets you build up a larger change
+on a private branch until you’re ready to submit the whole thing as a
 bundle.
 
 Because you are working on a branch on your private copy of the
@@ -636,11 +635,11 @@ Once you are done with the bundle, send it to the developers the same
 way you should a patch file.
 
 If you provide a quality patch, we are likely to offer you a developer
-login on [the repository][repo] so you don't have to continue with the
+login on [the repository][repo] so you don’t have to continue with the
 patch or bundle methods.
 
 Please make your patches or experimental branch bundles against the tip
-of the current trunk.  PiDP-8/I often drifts enough during development
+of the current trunk. PiDP-8/I often drifts enough during development
 that a patch against a stable release may not apply to the trunk cleanly
 otherwise.
 
@@ -654,20 +653,20 @@ otherwise.
 The PiDP-8/I Software Project Code Style Rules
 ----
 
-Every code base should have a common code style.  Love it or
-hate it, here are PiDP-8/I's current code style rules:
+Every code base should have a common code style. Love it or
+hate it, here are PiDP-8/I’s current code style rules:
 
 **C Source Code**
 
-File types: `c`, `h`, `c.in`
+File types: `*.c`, `*.h`, `*.c.in`
 
-We follow the SIMH project's pre-existing code style when modifying one
+We follow the SIMH project’s pre-existing code style when modifying one
 of its source files:
 
 *   Spaces for indents, size 4; tabs are rendered size 8 in HTML output,
-    since that's how a PDP-8 terminal would likely interpret it!
+    since that’s how a PDP-8 terminal would likely interpret it!
 
-*   DOS line endings.  (Yes, even though this is a Linux-based project!
+*   DOS line endings. (Yes, even though this is a Linux-based project!
     All decent Linux text editors can cope with this.)
 
 *   Function, structure, type, and variable names are all lowercase,
@@ -676,11 +675,64 @@ of its source files:
 *   Macro names are in `ALL_UPPERCASE_WITH_UNDERSCORES`
 
 *   Whitespace in the SIMH C files is of a style I have never seen
-    anywhere else in my decades of software development.  This example
+    anywhere else in my decades of software development. This example
     shows the important features:
 
-        int some_function (char some_parameter)
-        {
+    ```C
+    int some_function (char some_parameter)
+    {
+    int some_variable = 0;
+
+    if (some_parameter != '\0') {
+        int nbytes = sizeof (some_parameter);
+        char *buffer = malloc (4 * nbytes);
+
+        switch (some_parameter) {
+            case 'a':
+                do_something_with_buffer ((char *)buffer); 
+            default:
+                do_something_else ();
+            }
+        }
+    else {
+        some_other_function (with_a_large, "number of parameters",
+            wraps_with_a_single, "indent level");
+        printf (stderr, "Failed to allocate buffer.\n");
+        }
+    }
+    ```
+
+    It is vaguely like K&R C style except that:
+
+    *   The top level of statements in a function are not indented
+
+    *   The closing curly brace is indented to the same level as the
+        statement(s) it contains
+
+    *   There is a space before all opening parentheses, not just those
+        used in `if`, `while`, and similar flow control statements.
+
+        Nested open parentheses do not have extra spaces, however. Only
+        the outer opening parenthesis has a space separating it from
+        what went before.
+
+    *   Multiple variables declared together don’t have their types and
+        variable names aligned in columns.
+
+    I find that this style is mostly sensible, but with two serious problems:
+    I find the indented closing curly braces confusing, and I find that the
+    loss of the first indent level for the statements inside a function makes
+    functions all visually run together in a screenful of code. Therefore,
+    when we have the luxury to be working on a file separate from SIMH,
+    we use a variant of its style with these two changes, which you can
+    produce with the `tools/restyle` command. See its internal comments for
+    details.
+
+    That gives the following, when applied to the above example:
+
+    ```C
+    int some_function (char some_parameter)
+    {
         int some_variable = 0;
 
         if (some_parameter != '\0') {
@@ -692,92 +744,43 @@ of its source files:
                     do_something_with_buffer ((char *)buffer); 
                 default:
                     do_something_else ();
-                }
             }
+        }
         else {
             some_other_function (with_a_large, "number of parameters",
                 wraps_with_a_single, "indent level");
             printf (stderr, "Failed to allocate buffer.\n");
-            }
         }
-    
-    It is vaguely like K&R C style except that:
+    }
+    ```
 
-    -   The top level of statements in a function are not indented
+    If that looks greatly different, realize that it is just two indenting
+    level differences: add one indent at function level, except for the
+    closing braces, which we leave at their previous position.
 
-    -   The closing curly brace is indented to the same level as the
-        statement(s) it contains
+    SIMH occasionally exceeds 100-column lines. I recommend breaking
+    long lines at 72 columns. Call me an 80-column traditionalist.
 
-    -   There is a space before all opening parentheses, not just those
-        used in `if`, `while`, and similar flow control statements.
-
-        Nested open parentheses do not have extra spaces, however.  Only
-        the outer opening parenthesis has a space separating it from
-        what went before.
-
-    -   Multiple variables declared together don't have their types and
-        variable names aligned in columns.
-
-I find that this style is mostly sensible, but with two serious problems:
-I find the indented closing curly braces confusing, and I find that the
-loss of the first indent level for the statements inside a function makes
-functions all visually run together in a screenful of code.  Therefore,
-when we have the luxury to be working on a file separate from SIMH,
-we use a variant of its style with these two changes, which you can
-produce with the `tools/restyle` command.  See its internal comments for
-details.
-
-That gives the following, when applied to the above example:
-
-        int some_function (char some_parameter)
-        {
-            int some_variable = 0;
-
-            if (some_parameter != '\0') {
-                int nbytes = sizeof (some_parameter);
-                char *buffer = malloc (4 * nbytes);
-
-                switch (some_parameter) {
-                    case 'a':
-                        do_something_with_buffer ((char *)buffer); 
-                    default:
-                        do_something_else ();
-                }
-            }
-            else {
-                some_other_function (with_a_large, "number of parameters",
-                    wraps_with_a_single, "indent level");
-                printf (stderr, "Failed to allocate buffer.\n");
-            }
-        }
-    
-If that looks greatly different, realize that it is just two indenting
-level differences: add one indent at function level, except for the
-closing braces, which we leave at their previous position.
-
-SIMH occasionally exceeds 100-column lines.  I recommend breaking
-long lines at 72 columns.  Call me an 80-column traditionalist.
-
-When in doubt, mimic what you see in the current code.  When still in
-doubt, ask on the [project forum][pfor].
+    When in doubt, mimic what you see in the current code. When still in
+    doubt, ask on the [project forum][pfor].
 
 [indent]: http://linux.die.net/man/1/indent
 
 
 **Plain Text Files**
 
-File types: `md`, `txt`
+File types: `*.md`, `*.txt`
 
 *   Spaces for indents, size 4.
 
-*   Unix line endings.  The only common text editor I'm aware of that
+*   Unix line endings. The only common text editor I’m aware of that
     has a problem with this is Notepad, and people looking at these
     files anywhere other than unpacked on a Raspberry Pi box are
     probably looking at them through the Fossil web interface on
     tangentsoft.com.
 
 *   Markdown files must follow the syntax flavor understood by
-    [Fossil's Markdown interpreter][fmd].
+    [Fossil’s Markdown interpreter][fmd].
 
 [fmd]: https://tangentsoft.com/pidp8i/md_rules
 
@@ -817,7 +820,7 @@ before you resolve a ticket.
 There is a process interlock between the Resolution and Status settings
 for a ticket: while Status is not Closed, Resolution should be Open.
 When Resolution changes from Open, Status should change to either Review
-or, preferentially, Closed.  A resolution is an end state, not an
+or, preferentially, Closed. A resolution is an end state, not an
 expression of changeable intent: no more ceremony than setting a
 ticket’s Resolution state *away* from Open and its Status *to* Closed is
 required.
@@ -827,9 +830,9 @@ particular resolution, just add a comment to the ticket and let someone
 else choose whether to close the ticket or not. Don’t change the
 Resolution value until the issue has been *resolved* for good.
 
-For example, the resolution "Works as Designed" does not merely mean,
-“Yes, we know it works that way,” it also implies “...and we have no
-intention to change that behavior, ever.”  If there is a chance that the
+For example, the resolution “Works as Designed” does not merely mean,
+“Yes, we know it works that way,” it also implies “…and we have no
+intention to change that behavior, ever.” If there is a chance that the
 behavior described in the ticket could change, you should not assign any
 resolution. Just leave it open until someone decides to do something
 final with the ticket.
@@ -852,7 +855,7 @@ with anything short of a working patch, for example:
 
 ## License
 
-Copyright © 2016-2019 by Warren Young. This document is licensed under
+Copyright © 2016-2020 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
-[sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

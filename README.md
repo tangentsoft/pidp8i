@@ -757,12 +757,10 @@ us have it both ways.
 The `SCREEN_MANAGER` setting is for use by those that need something
 other than GNU `screen`. There are several alternatives:
 
-*   **`screen`**: The default, per above.
+*   **screen**: The default, per above.
 
-*   [**`tmux`**][tmux]: A popular alternative to `screen`, especially
-    on BSD platforms. Note that the "attention" character for `tmux`
-    is <kbd>Ctrl-B</kbd> by default, not <kbd>Ctrl-A</kbd> as with
-    `screen`.
+*   [**tmux**][tmux]: A popular alternative to `screen`, especially on
+    BSD platforms.
 
 *   [**`dtach`**][dtach]: A minimalist alternative to `screen` which
     provides only its terminal attach/detach features.
@@ -787,7 +785,7 @@ other than GNU `screen`. There are several alternatives:
     scans for from the terminal is the detach keystroke, which we leave
     at its default, <kbd>Ctrl-\\<kbd>.
 
-*   **<tt>none</tt>**: This mode is for interactive use, allowing you to
+*   **none**: This mode is for interactive use, allowing you to
     run the installed simulator with the installed media without any
     screen manager at all.
 

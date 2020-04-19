@@ -251,6 +251,9 @@ PRECIOUS_INFILES = \
     @srcdir@/src/SIMH/PDP8/Makefile.in
 INFILES = \
 	@srcdir@/bin/os8-cp.in \
+	@srcdir@/bin/os8-run.in \
+	@srcdir@/bin/teco-pi-demo.in \
+	@srcdir@/bin/txt2os8.in \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
 	@srcdir@/boot/2.script.in \
@@ -264,8 +267,11 @@ INFILES = \
 	@srcdir@/etc/pidp8i.service.in \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/etc/usb-mount@.service.in \
+	@srcdir@/lib/os8script.py.in \
+	@srcdir@/lib/simh.py.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
+	@srcdir@/tools/test-os8-send-file.in \
 	$(OS8RUN_INFILES)
 OS8RUN_OUTFILES := $(subst @srcdir@/,,$(OS8RUN_INFILES))
 OS8RUN_OUTFILES := $(subst .in,,$(OS8RUN_OUTFILES))
