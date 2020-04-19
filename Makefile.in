@@ -490,6 +490,9 @@ endif
 		 < $(PIDP8I_DIRS) > @prefix@/$(PIDP8I_DIRS)
 	@chgrp @INSTGRP@ @prefix@/$(PIDP8I_DIRS)
 
+	@# We need a directory for PIDs and such in some cases
+	@@INSTALL@ -d -m 755 @prefix@/run
+
 instdirs:
 	@echo "Creating installation directory tree..."
 	@for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -o @INSTUSR@ -g @INSTGRP@ -d @prefix@/$$d ; done
