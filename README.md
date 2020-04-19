@@ -760,7 +760,9 @@ other than GNU `screen`. There are several alternatives:
 *   **screen**: The default, per above.
 
 *   [**tmux**][tmux]: A popular alternative to `screen`, especially on
-    BSD platforms.
+    on BSD platforms. Note that the "attention" character for `tmux`
+    is <kbd>Ctrl-B</kbd> by default, not <kbd>Ctrl-A</kbd> as with
+    `screen`.
 
 *   **none**: This mode is for interactive use, allowing you to
     run the installed simulator with the installed media without any
