@@ -86,13 +86,13 @@ started if it isn’t needed.
 The next step is to tell the `s` object where to send its logging
 output:
 
-    s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+    s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
 Contrast the corresponding line in `os8-run` which chooses whether to send
 logging output to the console or to a log file:
 
-    s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'a') \
-        if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'w', 0))
+    s.set_logfile (open (dirs.log + 'os8-run' + '.log', 'ab') \
+        if not VERY_VERBOSE else os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
 Note that this more complicated scheme appends to the log file instead
 of overwriting it because there are cases where `os8-run` gets run

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env @PYCMD@
 # -*- coding: utf-8 -*-
 ########################################################################
 # test-os8-send-file - Repeatedly sends random files through class simh
 #   method os8_send_file() and pulls it back through os8_get_file(),
 #   then checks that the file is unchanged.
 #
-# Copyright © 2017 by Warren Young.
+# Copyright © 2017-2019 by Warren Young.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -80,7 +80,7 @@ def main ():
   except (RuntimeError) as e:
     print "Could not start simulator: " + e.message + '!'
     exit (1)
-  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'w', 0))
+  s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
   # Find and boot the built OS/8 bin disk
   rk = os.path.join (dirs.os8mo, 'v3d.rk05')
