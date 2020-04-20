@@ -623,5 +623,5 @@ make-template tools/simh-update.in
 make-template tools/test-os8-send-file.in
 make-template Makefile.in
 foreach f [concat [glob "$builddir/bin/*"] [glob "$builddir/tools/*"]] {
-    file attributes $f -permissions +x
+    exec chmod +x $f
 }
