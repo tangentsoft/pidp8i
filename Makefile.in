@@ -49,13 +49,11 @@ SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
 	-I @srcdir@/src/SIMH -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
-ifneq "@HAVE_PCRE_H@" ""
+ifneq "@HAVE_PCRE_H@" "0"
 SIM_CFLAGS += -DHAVE_PCRE_H
 SIM_LFLAGS := -lpcre
-else
-SIM_CFLAGS += -DHAVE_REGEX_H
 endif
-ifneq "@HAVE_PCREPOSIX_H@" ""
+ifneq "@HAVE_PCREPOSIX_H@" "0"
 SIM_CFLAGS += -DHAVE_PCREPOSIX_H
 endif
 PIDP8I_CFLAGS = $(SIM_CFLAGS)
