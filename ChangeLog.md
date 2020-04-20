@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
 <a id="202004xx"></a>
-## Version 2020.04.xx
+## Version 2020.04.xx — The Quarantine Release
 
 *   Raspberry Pi 4 support.
 
@@ -15,11 +15,10 @@
 *   Updated SIMH.  The primary user-visible changes from the perspective
     of a PiDP-8/I user are:
 
-    *   Better IPS rate calibration for the PDP-8 simulator when
-        throttling.  The simulator now does a precalibration pass to
-        achieve a good initial guess at the host's IPS rate rather
-        than drop sharply into a calibrated level some seconds past
-        the simulator startup time, as in the prior release.
+    *   The simulator now does a precalibration pass to achieve a good
+        initial guess at the host's IPS rate rather than drop sharply
+        into a calibrated level some seconds past the simulator startup
+        time, as in the prior release.
 
     *   Improvements to SCP, the command shell / script interpreter:
 
@@ -37,12 +36,11 @@
     *   Many improvements to tape device handling.  (Nothing PDP-8
         specific, just generic SIMH improvements.)
 
-    *   Portability and documentation improvements.
-
 *   The build system now detects the availability of Python 3 and
     prefers it if available.
 
-*   Updated Autosetup to v0.6.9+.  Allows it to work under Tcl 8.7.
+*   Updated Autosetup to v0.6.9+.  Allows the build system to work under
+    Tcl 8.7.
 
 *   Portability and documentation improvements.
 
@@ -50,7 +48,7 @@
 
 
 <a id="20190425"></a>
-## Version 2019.04.25 — The "OS/8 V3F and os8-run" release
+## Version 2019.04.25 — The "OS/8 V3F and os8-run" Release
 
 *   The banner feature in this release is that Bill Cattey transformed
     our `mkos8` tool into the `os8-run` script interpreter, giving us
@@ -363,7 +361,7 @@
 
 
 <a id="20171222"></a>
-## Version 2017.12.22 — The "Languages and Custom OS/8 Disk Packs" release
+## Version 2017.12.22 — The "Languages and Custom OS/8 Disk Packs" Release
 
 *   All prior versions of the PiDP-8/I software distribution included
     `os8.rk05`, a "Field Service Diagnostic" OS/8 disk pack image with
@@ -782,7 +780,7 @@
 
 
 <a id="20170401"></a>
-## Version 2017.04.01 — The "I May Be a Fool, but I am *Your* Fool" release
+## Version 2017.04.01 — The "I May Be a Fool, but I am *Your* Fool" Release
 
 *   Added the `configure --alt-serial-mod` option to change the GPIO
     code to work with [James L-W's alternative serial mod][sm2].
@@ -1297,7 +1295,7 @@
 
 
 <a id="20161226"></a>
-## Version 2016.12.26 — The Boxing Day release
+## Version 2016.12.26 — The Boxing Day Release
 
 *   Tony Hill updated SIMH to the latest upstream version.
 
