@@ -12,12 +12,39 @@
 *   Added udev rules to allow mounting media from disks on USB
     floppy drives.  (Thanks to Ryan Finnie for this feature.)
 
+*   Updated SIMH.  The primary user-visible changes from the perspective
+    of a PiDP-8/I user are:
+
+    *   Better IPS rate calibration for the PDP-8 simulator when
+        throttling.  The simulator now does a precalibration pass to
+        achieve a good initial guess at the host's IPS rate rather
+        than drop sharply into a calibrated level some seconds past
+        the simulator startup time, as in the prior release.
+
+    *   Improvements to SCP, the command shell / script interpreter:
+
+        *   Add the `RENAME/MOVE/MV`, `MKDIR`, and `RMDIR` commands.
+
+        *   The `SAVE` command can now overwrite existing files.
+
+        *   Several improvements to power-of-2 unit handling in command
+            output and parameter input.
+
+        *   Regular expressions in SIMH `EXPECT` commands now use
+            PCRE syntax if available instead of the POSIX regex
+            library.
+
+    *   Many improvements to tape device handling.  (Nothing PDP-8
+        specific, just generic SIMH improvements.)
+
+    *   Portability and documentation improvements.
+
 *   The build system now detects the availability of Python 3 and
     prefers it if available.
 
-*   Updated external dependencies Autosetup and SIMH.
+*   Updated Autosetup to v0.6.9+.  Allows it to work under Tcl 8.7.
 
-*   Assorted portability and documentation improvements.
+*   Portability and documentation improvements.
 
 [rmsm]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
 

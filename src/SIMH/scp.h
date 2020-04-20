@@ -95,6 +95,9 @@ t_stat dir_cmd (int32 flg, CONST char *cptr);
 t_stat type_cmd (int32 flg, CONST char *cptr);
 t_stat delete_cmd (int32 flg, CONST char *cptr);
 t_stat copy_cmd (int32 flg, CONST char *cptr);
+t_stat rename_cmd (int32 flg, CONST char *cptr);
+t_stat mkdir_cmd (int32 flg, CONST char *cptr);
+t_stat rmdir_cmd (int32 flg, CONST char *cptr);
 t_stat brk_cmd (int32 flag, CONST char *ptr);
 t_stat do_cmd (int32 flag, CONST char *ptr);
 t_stat goto_cmd (int32 flag, CONST char *ptr);
@@ -113,6 +116,8 @@ t_stat spawn_cmd (int32 flag, CONST char *ptr);
 t_stat echo_cmd (int32 flag, CONST char *ptr);
 t_stat echof_cmd (int32 flag, CONST char *ptr);
 t_stat debug_cmd (int32 flag, CONST char *ptr);
+t_stat runlimit_cmd (int32 flag, CONST char *ptr);
+t_stat test_lib_cmd (int32 flag, CONST char *ptr);
 
 /* Allow compiler to help validate printf style format arguments */
 #if !defined __GNUC__
@@ -138,6 +143,7 @@ t_stat _sim_activate_after_abs (UNIT *uptr, double usecs_walltime);
 t_stat sim_cancel (UNIT *uptr);
 t_bool sim_is_active (UNIT *uptr);
 int32 sim_activate_time (UNIT *uptr);
+int32 _sim_activate_queue_time (UNIT *uptr);
 int32 _sim_activate_time (UNIT *uptr);
 double sim_activate_time_usecs (UNIT *uptr);
 t_stat sim_run_boot_prep (int32 flag);
@@ -328,7 +334,7 @@ void sim_debug_bits (uint32 dbits, DEVICE* dptr, BITFIELD* bitdefs,
 #define _sim_debug_device sim_debug
 void sim_debug (uint32 dbits, DEVICE* dptr, const char *fmt, ...) GCC_FMT_ATTR(3, 4);
 #define _sim_debug_unit sim_debug_unit
-void sim_debug_unit (uint32 dbits, DEVICE* dptr, const char *fmt, ...) GCC_FMT_ATTR(3, 4);
+void sim_debug_unit (uint32 dbits, UNIT* uptr, const char *fmt, ...) GCC_FMT_ATTR(3, 4);
 #else
 void _sim_debug_unit (uint32 dbits, UNIT *uptr, const char* fmt, ...) GCC_FMT_ATTR(3, 4);
 void _sim_debug_device (uint32 dbits, DEVICE* dptr, const char* fmt, ...) GCC_FMT_ATTR(3, 4);
@@ -385,7 +391,8 @@ extern uint32 sim_brk_dflt;
 extern uint32 sim_brk_summ;
 extern uint32 sim_brk_match_type;
 extern t_addr sim_brk_match_addr;
-extern BRKTYPTAB *sim_brk_type_desc;                      /* type descriptions */
+extern BRKTYPTAB *sim_brk_type_desc;                    /* type descriptions */
+extern const char *sim_prog_name;                       /* executable program name */
 extern FILE *stdnul;
 extern t_bool sim_asynch_enabled;
 #if defined(SIM_ASYNCH_IO)
@@ -396,6 +403,8 @@ void sim_aio_activate (ACTIVATE_API caller, UNIT *uptr, int32 event_time);
 /* VM interface */
 
 extern char sim_name[64];
+extern const char *sim_vm_release;
+extern const char *sim_vm_release_message;
 extern DEVICE *sim_devices[];
 extern REG *sim_PC;
 extern const char *sim_stop_messages[SCPE_BASE];
@@ -410,7 +419,7 @@ extern t_stat parse_sym (CONST char *cptr, t_addr addr, UNIT *uptr, t_value *val
 /* The per-simulator init routine is a weak global that defaults to NULL
    The other per-simulator pointers can be overrriden by the init routine */
 
-WEAK extern void (*sim_vm_init) (void);
+extern void (*sim_vm_init) (void);
 extern char *(*sim_vm_read) (char *ptr, int32 size, FILE *stream);
 extern void (*sim_vm_post) (t_bool from_scp);
 extern CTAB *sim_vm_cmd;
@@ -420,6 +429,11 @@ extern t_addr (*sim_vm_parse_addr) (DEVICE *dptr, CONST char *cptr, CONST char *
 extern t_bool (*sim_vm_fprint_stopped) (FILE *st, t_stat reason);
 extern t_value (*sim_vm_pc_value) (void);
 extern t_bool (*sim_vm_is_subroutine_call) (t_addr **ret_addrs);
+extern const char **sim_clock_precalibrate_commands;
+extern int32 sim_vm_initial_ips;                        /* base estimate of simulated instructions per second */
+extern const char *sim_vm_interval_units;               /* Simulator can change this - default "instructions" */
+extern const char *sim_vm_step_unit;                    /* Simulator can change this - default "instruction" */
+
 
 /* Core SCP libraries can potentially have unit test routines.
    These defines help implement consistent unit test functionality */

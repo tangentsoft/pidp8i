@@ -36,18 +36,28 @@
 
 # Git commit ID and time of the latest version of the SIMH 4 project on
 # GitHub that has been merged into this source base.
-SGCID=4e0450cff96830c5aced36928a4427adfc5314f8
-SGCTM=2019-04-18T20:03:17-07:00
+SGCID=cabd3784bc7e33d63906602e33a5d01b60c1dee1
+SGCTM=2020-04-17T18:20:27-07:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) -DPIDP8I \
-	-DSIM_ASYNCH_IO -DHAVE_REGEX_H -DHAVE_GLOB \
+	-DSIM_ASYNCH_IO -DHAVE_GLOB \
 	-DSIM_GIT_COMMIT_ID=$(SGCID) -DSIM_GIT_COMMIT_TIME=$(SGCTM) \
+	-DSIM_BUILD_TOOL='autosetup+gmake' \
 	-D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
 	-I @srcdir@/src/SIMH -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
+ifneq "@HAVE_PCRE_H@" ""
+SIM_CFLAGS += -DHAVE_PCRE_H
+SIM_LFLAGS := -lpcre
+else
+SIM_CFLAGS += -DHAVE_REGEX_H
+endif
+ifneq "@HAVE_PCREPOSIX_H@" ""
+SIM_CFLAGS += -DHAVE_PCREPOSIX_H
+endif
 PIDP8I_CFLAGS = $(SIM_CFLAGS)
 SIMH_CFLAGS = $(SIM_CFLAGS)
 SIMH_PDP8_CFLAGS = $(SIM_CFLAGS)
@@ -704,7 +714,7 @@ $(BUILDDIRS):
 	mkdir -p $@
 
 $(PIDP8I_SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
-	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) $(SIM_LFLAGS) @PI_LIBS@
 	ln -f bin/pidp8i-sim bin/pdp8
 
 bin/cc8: $(CC8_OBJS)
