@@ -3,7 +3,7 @@
 # mmake - Runs make -jN where N is 1.5x the number of CPU cores.  Use
 #         with GNU or BSD make.
 #
-# Copyright © 2017-2019 Warren Young
+# Copyright © 2017-2020 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -30,8 +30,8 @@
 # authorization from those authors.
 ########################################################################
 
-MAKE=make
 MAKE=$(which gmake bsdmake make 2> /dev/null | head -1)
+test -z "$MAKE" && echo "Cannot find a 'make' command!" && exit 1
 
 BDIR="$(dirname "$0")"
 if [ -z "$BDIR" ] ; then BDIR="$(dirname "$(which "$0")")" ; fi
