@@ -5,7 +5,7 @@
 #   famous TECO "calculate pi" program to it, and starts it running at
 #   a very slow rate of speed to act as a blinkenlights demo.
 #
-# Copyright © 2017-2019 by Warren Young.
+# Copyright © 2017-2020 by Warren Young.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -57,16 +57,16 @@ def main ():
   try:
     s = simh (dirs.build)
   except (RuntimeError) as e:
-    print "Could not start simulator: " + e.message + '!'
+    print("Could not start simulator: " + e.message + '!')
     exit (1)
   s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
   # Find and boot the built OS/8 bin disk
   rk = os.path.join (dirs.os8mo, 'v3d.rk05')
   if not os.path.isfile (rk):
-    print "Could not find " + rk + "; OS/8 media not yet built?"
+    print("Could not find " + rk + "; OS/8 media not yet built?")
     exit (1)
-  print "Booting " + rk + "..."
+  print("Booting " + rk + "...")
   s.send_cmd ("att rk0 " + rk)
   s.send_cmd ("boot rk0")
 
@@ -94,7 +94,7 @@ def main ():
   # factor 8 MIPS / 59 IPS = ~136000, giving about 2.2 million seconds
   # per digit.  Multiplying that by 248 gives ~17 years.
   macro = [
-    'GZ0J\UNQN"E 248UN \' BUH BUV HK',
+    'GZ0J\\UNQN"E 248UN \' BUH BUV HK',
     'QN< J BUQ QN*10/3UI',
     'QI< \+2*10+(QQ*QI)UA B L K QI*2-1UJ QA/QJUQ',
     'QA-(QQ*QJ)-2\ 10@I// -1%I >',
@@ -144,10 +144,10 @@ def main ():
       s.send_cmd ('quit')
       pdp_ratio = float (curr_ips) / ips.pdp8i
       rpi_ratio = float (curr_ips) / ips.raspberry_pi_b_plus
-      print "\nYour system is " + format (rpi_ratio, '.1f') + \
-          " times faster than a Raspberry Pi Model B+"
-      print "or " + format (pdp_ratio, '.1f') + \
-          " times faster than a PDP-8/I.\n"
+      print("\nYour system is " + format (rpi_ratio, '.1f') + \
+          " times faster than a Raspberry Pi Model B+")
+      print("or " + format (pdp_ratio, '.1f') + \
+          " times faster than a PDP-8/I.\n")
   else:
     # Normal mode.  Tell SIMH and throttle down to a rate suitable for a
     # blinkenlights demo.  1/17 means SIMH runs one instruction then
