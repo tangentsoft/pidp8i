@@ -489,7 +489,8 @@ endif
 		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
-	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
+	    ! test -e $${src}c || \
+		@INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
 	  done \
 	)
 	@sed -e 's#^build =.*#build = "@ABSPREFIX@"#' \
