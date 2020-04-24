@@ -1,0 +1,48 @@
+# Comments begin with an octothorpe
+# Blank lines are ignored.
+
+# OS/8 Writes on the system device (architectural flaw).
+# Since this might be run from a parallel make, we mount the system
+# with the scratch option to make a unique copy.
+mount rk0 $os8mo/v3d.rk05 required scratch
+copy $obj/uni-build.rk05 $os8mo/uni-made.rk05
+mount rk1 $os8mo/uni-made.rk05 required
+
+boot rk0
+
+print Building BUILD.SV
+pal8 RKB1:BUILD.BN<RKA1:BUILD.PA
+
+begin cdprog SYS:ABSLDR.SV
+RKB1:BUILD.BN
+end cdprog SYS:ABSLDR.SV
+
+os8 SAVE RKB1:BUILD.SV
+
+print Assembling OS8.BN and CD.BN
+pal8 RKB1:OS8.BN<RKA1:OS8.PA
+pal8 RKB1:CD.BN<RKA1:CD.PA
+
+print Assembling handlers
+pal8 RKB1:RL0.BN<RKB1:RL0.PA
+pal8 RKB1:RL1.BN<RKB1:RL1.PA
+pal8 RKB1:RL2.BN<RKB1:RL2.PA
+pal8 RKB1:RL3.BN<RKB1:RL3.PA
+pal8 RKB1:RLC.BN<RKB1:RLC.PA
+pal8 RKB1:RXSY1.BN<RKB1:RXSY1.PA
+pal8 RKB1:RXSY2.BN<RKB1:RXSY1.PA
+pal8 RKB1:RXNS.BN<RKB1:RXNS.PA
+
+print Building BATCH.SV
+pal8 RKB1:BATCH.BN<RKA1:BATCH.PA
+begin cdprog SYS:ABSLDR.SV
+RKB1:BATCH.BN
+end cdprog SYS:ABSLDR.SV
+os8 SAVE RKB1:BATCH.SV
+
+print Running BATCH job to build CCL.SV
+os8 ASSIGN RKA1 IN
+os8 ASSIGN RKB1 OUT
+os8 COPY DSK:<RKA1:RESORC.BI
+os8 COPY DSK:<RKA1:CCL.BI
+os8 SUBMIT CCL.BI
