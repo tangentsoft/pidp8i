@@ -313,7 +313,7 @@ UNI_MANIFEST = actions.txt
 
 UNI_MADE_RK05 = bin/uni-made.rk05
 
-UNI_MAKER = $(OS8_SCRIPTS_DIR)/uni-control.os8
+UNI_MAKER = $(OS8_SCRIPTS_DIR)/uni-build.os8
 
 ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
