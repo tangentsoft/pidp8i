@@ -345,7 +345,7 @@ clean:
 		$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_BUILD_RK05) $(V3D_TC08_TU56) \
 		$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) \
 		config.log cscope.out tags \
-		bin/*.pt  bin/*.save bin/txt2ptp \
+		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
 		obj/*.log obj/*.pt obj/os8.opts \
 		src/config.h \
