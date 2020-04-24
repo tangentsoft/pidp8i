@@ -16,6 +16,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * This file is the core of the native C compiler for the PDP-8 series of computers.
+ * Linked with LIBC.RL to create CC1.SV
+ * Hardware requirements:
+ * 1. PDP/8 processor with minimal EAE (MQ register is heavily used).
+ * 2. 20K (5x4K banks) of core.
+ * 3. OS/8 operating system with FORTRAN II library (LIB8.RL)
+ * 4.                            SABR assembler (SABR.SV)
+ * 5.                            Linking loader (LOADER.SV)
+ *
+ * 1. The compiler consists of 3 files: CC0.SV, CC1.SV, CC2.SV on system device. (SYS:)
+ * The runtime support files are:
+ * 1. The c library created from libc.c and assembled to LIBC.RL on the user device.
+ * 2. A runtime support file: HEADER.SB on the user device (DSK:)
+
+ * These 3 .SV files run in sequence:
+ * CC0: C pre-processor: Asks for ONE source file and creates CC.CC for CC1.SV.
+ *      And, generates an intermediate file (CASM.TX) used by CC2.SV.
+ * CC1: C tokeniser: Reads CC.CC and converts the code to a token list in FIELD 4
+ * CC2: SABR code generator: Reads token list and generates CC.SB from
+ *      a collection of code fragments. 
+ * Finally, the SABR assembler is used on CC.SB and the runtime is generated
+ * by LOADER.SV using CC.RL and LIBC.RL
+
+ */
 
 #include <libc.h>
 #include <init.h>
@@ -45,7 +70,6 @@ int lm[CMAX];		/* Auto symbol table */
 int fstk[BMAX];		/* Push down stack for For etc. */
 int inproc,addr,cbrk;
 int izf,ixf,idf,ssz,icd;
-
 
 skpsp()
 {
@@ -96,7 +120,7 @@ J(  ) {
 	K( );
 	switch(*p++){
 	case '&': J( ); stri(20); break;
-	case '|': J( ); stri(-20); break;
+	case '|': J( ); stri(4076); break;
 	default: p--; return;
 	}
 	stkp--;
@@ -108,6 +132,9 @@ K(  ) {
 	switch(*p++){
 	case '<': K( ); stri(11); break;
 	case '>': K( ); stri(-11); break;
+	case '?': K( ); stri(11); stri(-26); break;
+    case '#': K( ); stri(-11); stri(-26); break;
+    case '£': K( ); stri(24); stri(-26); break;
 	case '$': K( ); stri(24); break;
 	default: p--; return;
 	}
@@ -129,11 +156,10 @@ W(  ) {
 
 	Y( );
 	skpsp();
-	cop=*p;
-	switch(*p++) {
+	switch(cop=*p++) {
 	case '*': W( ); stri(13); break;
 	case '/': W( ); stri(14); break;
-	case '%': W( ); stri(14);stri(-14); break;
+	case '%': W( ); stri(14);stri(4082); break;
 	case '=': if (*p=='=') {
 				*p='$';return;
 			  }
@@ -328,11 +354,7 @@ char trm;
 strpad(sym)
 char *sym;
 {
-	char *a,*b;
-
-	strcpy(a=smbf,"         ");  /* 9 spaces */
-	while (*sym)
-		*a++=*sym++;
+    strpd(smbf,sym);
 }
 
 addsym(sym,sz)
@@ -362,12 +384,12 @@ char *sym;
 	smbf[7]=0;
 	if (s=strstr(lm,smbf)) {
 		ssz=s[8];
-		s=s+7;
+		s+=7;
 		return *s-stkp;
 	}
 	if (s=strstr(gm,smbf)) {
 		ssz=s[8];
-		s=s+7;
+		s+=7;
 		return *s;
 	}
 	return 0;
@@ -500,7 +522,7 @@ next()
 			case 24:
 				if (tm-';') {
 					procst(';');
-					stri(-23);
+					stri(4073);
 					stri(ectr);
 					tm=1;
 				}
@@ -574,7 +596,7 @@ main()
 	ectr = 900;
 	ltpt = ltbf;
 	fptr = fstk;
-	*fptr = -1;
+	*fptr = 4095;
 	gadr = 128; /* Start of globals */
 	iinit(128);
 	tm=gettk();
@@ -599,7 +621,7 @@ main()
 			case 1:
 				stri(99);
 				if (!strcmp("else",tkbf)) {
-					stri(-23);
+					stri(4073);
 					stri(200+lctr+2);
 					popfr();
 					*++fptr=200+lctr++;

@@ -200,6 +200,7 @@ CLIST,	ITOA
 		FGETS
 		REVCPY
 		TOUPPER
+        STRPD
 #endasm
 
 #define stdout 0
@@ -772,6 +773,14 @@ TPP2,
 #endasm
 }
 
+strpd(buff,sym)
+char *buff,*sym;
+{
+	strcpy(buff,"         ");  /* 9 spaces */
+	while (*sym)
+		*buff++=*sym++;
+
+}
 
 /* Arbitrary fgets(). Read until LF, CR/LF are retained*/
 /* EOF returns null, else strlen(*p) */

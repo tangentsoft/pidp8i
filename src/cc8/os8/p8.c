@@ -16,6 +16,32 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * This file is the code generator of the native C compiler for the PDP-8 series of computers.
+ * Linked with LIBC.RL to create CC2.SV
+ * Hardware requirements:
+ * 1. PDP/8 processor with minimal EAE (MQ register is heavily used).
+ * 2. 20K (5x4K banks) of core.
+ * 3. OS/8 operating system with FORTRAN II library (LIB8.RL)
+ * 4.                            SABR assembler (SABR.SV)
+ * 5.                            Linking loader (LOADER.SV)
+ *
+ * 1. The compiler consists of 3 files: CC0.SV, CC1.SV, CC2.SV on system device. (SYS:)
+ * The runtime support files are:
+ * 1. The c library created from libc.c and assembled to LIBC.RL on the user device.
+ * 2. A runtime support file: HEADER.SB on the user device (DSK:)
+
+ * These 3 .SV files run in sequence:
+ * CC0: C pre-processor: Asks for ONE source file and creates CC.CC for CC1.SV.
+ *      And, generates an intermediate file (CASM.TX) used by CC2.SV.
+ * CC1: C tokeniser: Reads CC.CC and converts the code to a token list in FIELD 4
+ * CC2: SABR code generator: Reads token list and generates CC.SB from
+ *      a collection of code fragments. 
+ * Finally, the SABR assembler is used on CC.SB and the runtime is generated
+ * by LOADER.SV using CC.RL and LIBC.RL
+
+ */
+
 
 #include <libc.h>
 #include <init.h>

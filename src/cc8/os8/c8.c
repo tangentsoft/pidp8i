@@ -19,18 +19,48 @@
 #include <libc.h>
 #include <init.h>
 
-/* C pre-processor stub for PDP/8 c compiler 2017 */
+/*
+ * This file is the c pre processor of the native C compiler for the PDP-8 series of computers.
+ * Linked with LIBC.RL to create CC0.SV
+ * Hardware requirements:
+ * 1. PDP/8 processor with minimal EAE (MQ register is heavily used).
+ * 2. 20K (5x4K banks) of core.
+ * 3. OS/8 operating system with FORTRAN II library (LIB8.RL)
+ * 4.                            SABR assembler (SABR.SV)
+ * 5.                            Linking loader (LOADER.SV)
+ *
+ * 1. The compiler consists of 3 files: CC0.SV, CC1.SV, CC2.SV on system device. (SYS:)
+ * The runtime support files are:
+ * 1. The c library created from libc.c and assembled to LIBC.RL on the user device.
+ * 2. A runtime support file: HEADER.SB on the user device (DSK:)
+
+ * These 3 .SV files run in sequence:
+ * CC0: C pre-processor: Asks for ONE source file and creates CC.CC for CC1.SV.
+ *      And, generates an intermediate file (CASM.TX) used by CC2.SV.
+ * CC1: C tokeniser: Reads CC.CC and converts the code to a token list in FIELD 4
+ * CC2: SABR code generator: Reads token list and generates CC.SB from
+ *      a collection of code fragments. 
+ * Finally, the SABR assembler is used on CC.SB and the runtime is generated
+ * by LOADER.SV using CC.RL and LIBC.RL
+
+ */
+
 /* Ask for input file, copy to CC.CC and run CC1 */
-/* Update Feb 2018: */
+/* Update Feb 2018 */
 /* 1. Read file line by line */
 /* 2. Exclude FF (12) */
 /* 3. Implement simple #define directive **Warning** quoted text is not ignored */
 /* 4. Implement #asm/#endasm directive */
+/* Update April 2020 */
+/* 5. Implement switch satement via re-write */
+/* *** 1: default: must be included 2: Fall through is not implemented */
+/*     3: Nesting is allowed */
+/* 6: Implement logical operators !=,>=,<= via token symbols #,£,? */
 
 int ln[80],*p,*q,*tm,*dfp,tkbf[10],smbf[10];
 int dflst[1024],tmln[80];
 int asm[1024];
-
+int *swp,swpbf[256],*swc,xm;
 
 skpsp()
 {
@@ -101,6 +131,7 @@ main()
 	*asm=0;
 	memset(dflst,0,1024);
 	dfp=dflst;
+    swc=swp=swpbf;
 	while (1) {
 		fgets(p=ln);
 		if (!*ln)
@@ -113,6 +144,31 @@ main()
 				*p=' ';
 			p++;
 		}
+
+        p=ln;
+        while (*p) {
+            tm=p;
+            switch (*p++) {
+                case '>':
+                    if (*p=='=') {
+                        *tm=' ';
+                        *p='?';
+                    }
+                    break;
+                case '<':
+                    if (*p=='=') {
+                        *tm=' ';
+                        *p='#';
+                    }
+                    break;
+                case '!':
+                    if (*p=='=') {
+                        *tm=' ';
+                        *p='£';
+                    }
+                    break;
+            }
+        }
 
 		p=strstr(ln,"#asm");
 		q=0;
@@ -128,6 +184,41 @@ main()
 		}
 		if (p)
 			strcat(asm,"$");
+
+        p=strstr(ln,"switch");
+            if (p) {
+                p=p+6;
+                while (*p!='{') {
+                    if (!*p) 
+                        fgets(ln);
+                    *swp++=*p++;
+                }
+                *swp=0;
+                xm=0;
+                strcpy(ln,"while(1) {\r\n");
+            }
+		
+        p=strstr(ln,"case ");
+        if (p) {
+            p=p+5;
+            q=strstr(ln,":");
+            *q=0;
+            memcpy(tmln,p,q-p+1);
+            if (xm)
+                fputs("}\r\n");
+            sprintf(ln,"if (%s== %s) {\r\n",swc,tmln);
+            xm++;
+        }
+
+        p=strstr(ln,"default");
+		if (p) {
+            while (*p++!=':');
+             if (xm)
+                fputs("}");
+            fputs(p);
+            *ln=0;
+		}
+
 		
 		p=strstr(ln,"#define ");
 		if (p) {

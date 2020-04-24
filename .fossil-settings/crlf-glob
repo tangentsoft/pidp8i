@@ -5,6 +5,7 @@ src/*.in
 
 src/cc8/*/*.[ch]
 src/cc8/include/*
+src/cc8/os8/*.[ch]
 src/cc8/os8/*.sb
 src/cc8/os8/bldcc8.bi
 
