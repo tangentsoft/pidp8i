@@ -40,7 +40,7 @@ RKB1:BATCH.BN
 end cdprog SYS:ABSLDR.SV
 os8 SAVE RKB1:BATCH.SV
 
-print Running BATCH job to build CCL.SV
+print Running BATCH job to build CCL.SV and RESORC.SV
 os8 ASSIGN RKA1 IN
 os8 ASSIGN RKB1 OUT
 os8 COPY DSK:<RKA1:RESORC.BI
