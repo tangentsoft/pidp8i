@@ -695,14 +695,14 @@ under review, and the `pal8` command may go away in a subsequent version
 of `os8-run`.  For now, two forms of the `pal8` command are supported with
 an unreasonable number of limitations:
 
-`pal8` _os8-bn-spec_ `<` _os8-pa-spec_
+`pal8` _os8-bn-spec_ `<` _os8-pa-spec_ options_spec
 
-`pal8` _os8-bn-spec_ `,` _os8-ls-spec_ `<` _os8-pa-spec_
+`pal8` _os8-bn-spec_ `,` _os8-ls-spec_ `<` _os8-pa-spec_ options_spec
 
-Note that the parser for this wrapper for `PAL8` is much too
+Note that the parser for this wrapper for `PAL8` is quite
 conservative in what it allows:
 
-* No `PAL8` options are allowed.
+* Only valid `PAL8` options are allowed.
 * Only two ways to call `PAL8`:
     * two argument form with binary and source or
     * three argument form with binary, listing, and source.
@@ -710,10 +710,11 @@ conservative in what it allows:
 * _os8-ls-spec_ must specify a listing filename ending in `.LS`
 * _os8-pa-spec_ must specify a source filename ending in `.PA`
 
-This should be improved.  The reason why this wrapper is so
-constrained is that it evolved from extremely rudimentary, hard-coded
-scripts, and hasn't been worked on since reaching minimum necessary
-functionality.
+The two argument form is needed because calling pal8 with just two arguments
+using either the `begin cdprog SYS:PAL8` or `os8 PAL8` constructs hangs the
+state machine.  This is because cdprog is expecting to return to the command
+decoder `*` prompt, and `os8 ` is expecting a monitor prompt, not multiple
+lines of output.  Expect gets lost and the state machine hangs.
 
 The three file name specifiers can include an OS/8 device specification.
 

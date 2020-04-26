@@ -158,6 +158,7 @@ _os8_fspec = Template ("((\S+:)?([A-Z0-9]{1,6}|[A-Z0-9]{1,6}\.$ext))")
 _os8_BN_fspec = _os8_fspec.substitute(ext="BN")
 _os8_PA_fspec = _os8_fspec.substitute(ext="PA")
 _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
+_pal8_opts = "[B-J-LNOSTW]"
 
 # For the two arg form:
 # The full destination spec is in group(1), The full source spec is in group(4).
@@ -166,7 +167,9 @@ _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
 # The file components are in group(3) for destination, and group (6) for source.
 # The destination file must either end in ".BN" or have no extension.
 # The source must file either end in ".PA" or have no extension.
-_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*<\s*" + _os8_PA_fspec + "$")
+# The command line arguments, if any, are in group(7)
+_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*<\s*" + _os8_PA_fspec + "((/" + \
+                              _pal8_opts + ")+|\(" + _pal8_opts + "+\))?$")
 
 # For the 3 arg form:
 # The full destination spec is in group(1), The full source spec is in group(7).
@@ -178,8 +181,10 @@ _two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*<\s*" + _os8_PA_fspec + 
 # The destination file must either end in ".BN" or have no extension.
 # The source must file either end in ".PA" or have no extension.
 # The listing must either end in "LS" or have no extension.
+# The command line arguments, if any, are in group(10)
 
-_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*,\s*" + _os8_LS_fspec + "\s*<\s*" + _os8_PA_fspec + "$")
+_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*,\s*" + _os8_LS_fspec + "\s*<\s*" + \
+                                _os8_PA_fspec + "((/" + _pal8_opts + ")+|\(" + _pal8_opts + "+\))?$")
 
 # Regular expression for syntax checking inside ABSLDR
 # One or more OS/8 binary files and optional args beginning with a slash.
@@ -1144,13 +1149,13 @@ class os8script:
   # We rely on the caller to have good specifications for source,
   # binary and optional listing files.
   
-  def call_pal8 (self, source, binary):
+  def call_pal8 (self, source, binary, options):
     pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF", "IC\s+\S+", "ID\s+\S+",
                     "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
                     "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
   
     if self.verbose: print("Assembling " + source)
-    com_line = binary + "<" + source
+    com_line = binary + "<" + source + options
     self.simh.os8_send_cmd ("\\.", "R PAL8")
     # Did the command successfully run and enter the command decoder?
     reply = self.simh._child.expect (self.simh._cd_replies)
@@ -1414,7 +1419,7 @@ class os8script:
         self.resume_command(line, script_file)
 
       # Call the 2arg pal8 code that works hard at error analysis.
-      return self.call_pal8 (m_2form.group(4), m_2form.group(1))
+      return self.call_pal8 (m_2form.group(4), m_2form.group(1), m_2form.group(7))
     else:
       m_3form = re.match (_three_arg_pal_re, line)
       if m_3form != None:
