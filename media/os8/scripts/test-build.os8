@@ -6,11 +6,10 @@ print Build tester
 
 boot rk0
 
-# So we can't use the os8-run pal8 command.
-print Building TECO.SV
-pal8 RKB1:TECO.BN<RKA1:TECO.PA/W
+print Building TDFRMT.SV
+pal8 RKB1:TDFRMT.BN<RKA1:TDFRMT.PA
 begin cdprog SYS:ABSLDR.SV
-RKB1:TECO.BN
+RKB1:TDFRMT.BN
 end cdprog SYS:ABSLDR.SV
-os8 SAVE RKB1:TECO.SV=2000
-os8 DEL RKB1:TECO.BN
+os8 SAVE RKB1:TDFRMT.SV;1000=2000
+os8 DEL RKB1:TDFRMT.BN
