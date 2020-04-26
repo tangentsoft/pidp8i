@@ -307,13 +307,16 @@ V3F_MADE_RK05 = bin/v3f-made.rk05
 
 V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
 
-UNI_SRCDIR = @srcdir@/src/os8/uni
-UNI_BUILD_RK05 = obj/uni-build.rk05
-UNI_MANIFEST = actions.txt
+# OS/8 Combined Kit. Build from Source.
+# We build each object rk05 image in one large script
+# Because otherwise mmake would have terrible race conditions.
+# We cut the tree up into chunks to fit them on rk05 images:
+# SYS: The System Head and device Handlers and key system CUSPS.
 
-UNI_MADE_RK05 = bin/uni-made.rk05
-
-UNI_MAKER = $(OS8_SCRIPTS_DIR)/uni-build.os8
+OS8_UNI_SRCDIR = @srcdir@/src/os8/uni
+OS8_UNI_SYS_SRC_RK05 = obj/uni-sys-src.rk05
+OS8_UNI_SYS_OBJ_RK05 = bin/uni-sys-obj.rk05
+OS8_UNI_SYS_MAKER = $(OS8_SCRIPTS_DIR)/uni-sys-build.os8
 
 ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
@@ -346,13 +349,14 @@ all: \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
 	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) \
 	$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) \
-	$(UNI_MADE_RK05)
+	$(OS8_UNI_SYS_OBJ_RK05)
 
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
 		$(OUTFILES) $(ADF) \
 		$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_BUILD_RK05) $(V3D_TC08_TU56) \
-		$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) $(UNI_MADE_RK05) \
+		$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) \
+		$(OS8_UNI_SYS_SRC_RK05) $(OS8_UNI_SYS_OBJ_RK05) \
 		config.log cscope.out tags \
 		bin/*.pt  bin/*.save bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
@@ -629,17 +633,20 @@ V3F_SOURCES := \
 	@srcdir@/src/os8/v3f/*.BI
 
 # Dependency on the contents of the uni source directory.
-UNI_SOURCES := \
-	@srcdir@/src/os8/uni/HANDLERS/*.PA \
+OS8_UNI_SYS_SOURCES := \
 	@srcdir@/src/os8/uni/SYSTEM/*.PA \
 	@srcdir@/src/os8/uni/SYSTEM/*.MA \
 	@srcdir@/src/os8/uni/SYSTEM/*.BI \
-	@srcdir@/src/os8/uni/CUSPS/*.PA \
+	@srcdir@/src/os8/uni/HANDLERS/*.PA \
 	@srcdir@/src/os8/uni/CUSPS/*.MA \
 	@srcdir@/src/os8/uni/CUSPS/*.BI \
 	@srcdir@/src/os8/uni/CUSPS/*.HL
 
-UNI_LANGS := \
+OS8_UNI_CUSP_SOURCES :=\
+	@srcdir@/src/os8/uni/CUSPS/*.PA \
+
+
+OS8_UNI_LANGS := \
 	@srcdir@/src/os8/uni/LANGUAGE/BASIC/*.PA
 
 
@@ -672,15 +679,13 @@ $(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_BOOT_DIS
 $(V3F_MADE_RK05): $(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(OS8RUN) $(V3F_MAKER)
 
-# Build the source disk for OS/8 UNI
-$(UNI_BUILD_RK05): $(UNI_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(UNI_BUILD_RK05) -z -a  $(UNI_SRCDIR)/SYSTEM/* RKA1:
-	@builddir@/bin/os8-cp -v -rk1 $(UNI_BUILD_RK05) -a  $(UNI_SRCDIR)/CUSPS/* RKA1:
-	@builddir@/bin/os8-cp -v -rk1 $(UNI_BUILD_RK05) -a  $(UNI_SRCDIR)/HANDLERS/* RKB1:
+# Build the source disk for OS/8 UNI SYS Component.
+$(OS8_UNI_SYS_SRC_RK05): $(OS8_UNI_SYS_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_SYS_SRC_RK05) -z -a $(OS8_UNI_SYS_SOURCES) RKA1:
 
-# Make a disk with binaries assembled from the UNI source disk
-$(UNI_MADE_RK05): $(UNI_BUILD_RK05) $(UNI_MAKER)
-	$(OS8RUN) $(UNI_MAKER)
+# Make a disk with binaries assembled from the OS8_UNI source disk
+$(OS8_UNI_SYS_OBJ_RK05): $(OS8_UNI_SYS_SRC_RK05) $(OS8_UNI_SYS_MAKER)
+	$(OS8RUN) $(OS8_UNI_SYS_MAKER)
 
 # Make a bootable OS/8 v3f TCO8 DECtape image
 $(V3F_TC08_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
