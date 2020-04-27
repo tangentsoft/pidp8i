@@ -1439,8 +1439,7 @@ class os8script:
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
       return "die"
 
-    sub_commands = {"fotp": self.fotp_subcomm, "build": self.build_subcomm,
-                    "absldr": self.absldr_subcomm,
+    sub_commands = {"build": self.build_subcomm,
                     "cdprog": self.cdprog_subcomm}
   
     m = re.match(_comm_re, line)
@@ -1713,102 +1712,6 @@ class os8script:
         str(self.line_ct_stack[0]) + \
         " with no end of cdprog command block.")
     self.simh.os8_send_ctrl ('[')
-    return "fail"
-
-  
-  #### fotp_subcomm ####################################################
-  
-  def fotp_subcomm (self, old_line, script_file):
-    os8_comm = "RU " + old_line
-    if self.verbose:
-      print("Line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
-    self.simh.os8_send_cmd ("\\.", os8_comm)
-    
-    for line in script_file:
-      line = self.basic_line_parse(line, script_file)
-      if line == None: continue
-  
-      # Test for special case, "end" and act on it if present.
-      m = re.match(_comm_re, line)
-      if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
-        rest = m.group(3)
-        if rest == None or rest == "":
-          print("Warning! end statement encountered inside fotp " + \
-              "with no argument at line " + \
-              str(self.line_ct_stack[0]) + ".")
-          return "fail"
-        elif rest != "fotp":
-          print("Warning! Mismatched begin/end blocks in FOTP at line " + \
-              str(self.line_ct_stack[0]) + ".\nEncountered end: {" + \
-              rest + "}. Exiting FOTP.")
-          return "fail"
-
-        if self.verbose:
-          print("Line " + str(self.line_ct_stack[0]) + ": end FOTP")
-        self.simh.os8_send_ctrl ('[')
-        return "success"
-  
-      m = re.match(_fotp_re, line)
-      if m == None:
-        print("At line " + str(self.line_ct_stack[0]) + \
-            ": ignoring mal-formed fotp file spec: {" + line + "}.")
-        continue
-  
-      comm = line
-      if self.verbose:
-        print("Line: " + str(self.line_ct_stack[0]) + ": * " + line)
-      self.simh.os8_send_cmd ("\\*", line)
-    print("Warning end of file encountered at line " + \
-        str(self.line_ct_stack[0]) +
-        " with no end of FOTP command block.")
-    return "fail"
-
-  
-  #### absldr_subcomm ##################################################
-  # A clone of fotp_subcom.  Can we find a way to merge the common code?
-  
-  def absldr_subcomm (self, old_line, script_file):
-    os8_comm = "RU " + old_line
-    if self.verbose:
-      print(" line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
-    self.simh.os8_send_cmd ("\\.", os8_comm)
-    
-    for line in script_file:
-      line = self.basic_line_parse(line, script_file)
-      if line == None: continue
-  
-      # Test for special case, "end" and act on it if present.
-      m = re.match(_comm_re, line)
-      if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
-        rest = m.group(3)
-        if rest == None or rest == "":
-          print("Warning! end statement encountered inside ABSLDR " + \
-              "with no argument at line " +
-              str(self.line_ct_stack[0]) + ".")
-          return "fail"
-        elif rest != "absldr":
-          print("Warning! Mismatched begin/end blocks in ABSLDR at " + \
-              "line " + str(self.line_ct_stack[0]) + \
-              ".\nEncountered end: {" + rest + "}. Exiting ABSLDR.")
-          return "fail"
-          
-        if self.verbose:
-          print("End ABSLDR at line " + str(self.line_ct_stack[0]) + ".")
-        self.simh.os8_send_ctrl ('[')
-        return "success"
-  
-      m = re.match(_absldr_re, line)
-      if m == None:
-        print("Ignoring mal-formed absldr file spec at line " + \
-            str(self.line_ct_stack[0]) + ": {" + line + "}.")
-        continue
-  
-      comm = line
-      if self.verbose:
-        print("Line : " + str(self.line_ct_stack[0]) + "* " + line)
-      self.simh.os8_send_cmd ("\\*", line)
-    print("Warning end of file encountered at line " + \
-      str(self.line_ct_stack[0]) + "with no end of ABSLDR command block.")
     return "fail"
 
 
