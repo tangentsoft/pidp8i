@@ -189,8 +189,6 @@ class simh:
       self._os8_error_match_strings.append(error_spec[0])
       self._os8_fatal_check.append(error_spec[1])
 
-    self._pip_to_replies = ['\\*']
-    self._pip_to_replies.extend(self._os8_error_match_strings)
     # Did command start the command decoder or die with a monitor error?
     self._cd_replies = ['\\*']
     self._cd_replies.extend(self._os8_error_match_strings)
@@ -479,7 +477,7 @@ class simh:
     self.os8_send_line (dest + '<PTR:' + option)
     self._child.expect ('\\^')
     self.os8_send_ctrl ('[')      # finish transfer
-    reply = self._child.expect (self._pip_to_replies)
+    reply = self._child.expect (self._cd_replies)
     if reply !=0:
       self.pip_error_handler("os8_pip_to", reply)
       if did_conversion:
