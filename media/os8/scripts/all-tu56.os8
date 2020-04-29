@@ -39,6 +39,10 @@ begin enabled tdrom
 end enabled tdrom
 
 begin enabled td8e
+  # With error checking enabled, the TD8E virtual device driver falls behind.
+  # And expect gets confused and chokes.  Sleeping commands and cdprog runs
+  # by .2 seconds works.  .1 is not enough. You may need to tweak this value.
+  sleep 0.2
   disable tc08
 end enabled td8e
 

@@ -91,6 +91,7 @@ class simh:
   _host_safe_cps = _pdp8i_safe_bps * _ips_ratio / _bpc       # [4]
   _os8_kbd_delay = 1 / _host_safe_cps                        # [5]
 
+
   # Known OS/8 error strings and a flag indicating whether the error
   # dumps us back out to the OS/8 command monitor or leaves us in the
   # called program.
@@ -189,11 +190,13 @@ class simh:
       self._os8_error_match_strings.append(error_spec[0])
       self._os8_fatal_check.append(error_spec[1])
 
-    self._pip_to_replies = ['\\*']
-    self._pip_to_replies.extend(self._os8_error_match_strings)
     # Did command start the command decoder or die with a monitor error?
-    self._cd_replies = ['\\*']
+    self._cd_replies = ['\\*$', '\\.$']
     self._cd_replies.extend(self._os8_error_match_strings)
+
+    self._cd_rep_compiled = []
+    for reply in self._cdreplies:
+      self._cd_rep_compiled.append(re.compile(reply.encode()))
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
@@ -321,7 +324,17 @@ class simh:
       print("os8_send_cmd: expecting: " + prompt)
       print("\tLast match before: {" + self._child.before.decode() + "}")
       print("\tLast match after: {" + self._child.after.decode() + "}")
-    self._child.expect ("\n%s$" % prompt, timeout = timeout)
+    # Main loop should check for the prompt and error messages AFTER execution!
+    # Until It does, we sometimes send an escape to exit a program
+    # that has already exited and returned to the monitor.
+    # When that happens, there is a race condition where the prompt we seek
+    # has the dollar sign from the escape embedded.
+    # To prevent the state machine from hanging,
+    # when we seek a monitor dot prompt we expand the regex to allow
+    # a dollar sign after the prompt.
+    if prompt == '\\.': prompt_re = "\n\\.(\\$\\.)?$"
+    else: prompt_re = "\n%s$" % prompt
+    self._child.expect (prompt_re, timeout = timeout)
     self.os8_send_line (line)
 
 
@@ -479,7 +492,7 @@ class simh:
     self.os8_send_line (dest + '<PTR:' + option)
     self._child.expect ('\\^')
     self.os8_send_ctrl ('[')      # finish transfer
-    reply = self._child.expect (self._pip_to_replies)
+    reply = self._child.expect (self._cd_replies)
     if reply !=0:
       self.pip_error_handler("os8_pip_to", reply)
       if did_conversion:
@@ -692,10 +705,12 @@ class simh:
   # Perhaps we should require separate and explicit commands to
   # escape to SIMH. But for now, just be careful to use os8_resume
   # after calling send_cmd.
+  # The monitor prompt RE is funky because of a race condition where
+  # we may have terminated a running command that was already successful.
   
   def send_cmd (self, cmd):
     if self._context == "os8":
-      self._child.expect ("\n\\.$")
+      self._child.expect ("\n\\.(\\$\\.)?$")
       self._child.sendcontrol ('e')
       self._context = "simh"
     elif self._context != "simh":

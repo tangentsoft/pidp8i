@@ -35,6 +35,7 @@
 
 # Bring in just the basics so we can bring in our local modules
 import os
+import time
 import sys
 import tempfile
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
@@ -332,6 +333,8 @@ class os8script:
     self.scratch_list = []
     self.booted = False
     self.line_ct_stack = []
+    # For slow devices we let there be a sleep time between commands.
+    self.sleep_time = 0
 
 
   #### path_expand #######################################################
@@ -570,7 +573,7 @@ class os8script:
         ": Could not find include file: " + path)
       return "fail"
     if self.verbose:
-      print("line: " + str(self.line_ct_stack[0]) + ": include " + line)
+      print("line: " + str(self.line_ct_stack[0]) + ": include " + path)
     return self.run_script_file (path)
       
   
@@ -844,6 +847,16 @@ class os8script:
   #### _command ###########################################
   # 
 
+  def sleep_command (self, line, script_file):
+    if self.verbose:
+      print("Line: " + str(self.line_ct_stack[0]) + ": " + line)
+    self.sleep_time = float(line)
+    return "success"
+
+
+  #### _command ###########################################
+  # 
+
   def _command (self, line, script_file):
     return "success"
 
@@ -878,6 +891,7 @@ class os8script:
   # begin <sub-command> <os8-path>
   # end <sub-command>
   # print <output text>
+  # sleep <time>
   # exit <status>
 
   # Sub-commands:
@@ -906,6 +920,7 @@ class os8script:
                 "copy": self.copy_command,
                 "resume": self.resume_command,
                 "restart": self.restart_command,
+                "sleep": self.sleep_command,
                 "patch": self.patch_command}
   
     try:
@@ -1396,6 +1411,7 @@ class os8script:
       self.resume_command(line, script_file)
 
     self.simh.os8_send_cmd ("\\.", os8_comm, self.debug)
+    time.sleep(self.sleep_time)
     return "success"
 
 
@@ -1448,8 +1464,7 @@ class os8script:
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
       return "die"
 
-    sub_commands = {"fotp": self.fotp_subcomm, "build": self.build_subcomm,
-                    "absldr": self.absldr_subcomm,
+    sub_commands = {"build": self.build_subcomm,
                     "cdprog": self.cdprog_subcomm}
   
     m = re.match(_comm_re, line)
@@ -1682,7 +1697,7 @@ class os8script:
     os8_comm = "RU " + old_line
     end_str = "cdprog " + old_line
     if self.verbose:
-      print("Line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
+      print("cdprog_subcomm: Line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
     self.simh.os8_send_cmd ("\\.", os8_comm)
     
     for line in script_file:
@@ -1717,107 +1732,23 @@ class os8script:
       comm = line
       if self.verbose:
         print("Line: " + str(self.line_ct_stack[0]) + ": * " + line)
-      self.simh.os8_send_cmd ("\\*", line)
+      # self.simh.os8_send_cmd ("\\*", line)
+      reply = self.simh._child.expect (self.simh._cd_replies, timeout = 60)
+      if reply >1:
+        print ("Error at line " + str(self.line_ct_stack[0]) + ": " + line)
+        print ("reply: " + str(reply))
+        print ("\t" + self.simh._cd_replies[reply])
+        print ("\tbefore:" + self.simh._child.before.decode().strip())
+        print ("\tafter:" + self.simh._child.after.decode().strip())
+        print ("kbd-delay: " + str(self.simh._os8_kbd_delay))
+      self.simh.os8_send_line (line)
+      time.sleep(self.sleep_time)
+     
     print("Warning end of file encountered at line " + \
         str(self.line_ct_stack[0]) + \
         " with no end of cdprog command block.")
+    print ("Sending escape to terminate " + os8_comm)
     self.simh.os8_send_ctrl ('[')
-    return "fail"
-
-  
-  #### fotp_subcomm ####################################################
-  
-  def fotp_subcomm (self, old_line, script_file):
-    os8_comm = "RU " + old_line
-    if self.verbose:
-      print("Line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
-    self.simh.os8_send_cmd ("\\.", os8_comm)
-    
-    for line in script_file:
-      line = self.basic_line_parse(line, script_file)
-      if line == None: continue
-  
-      # Test for special case, "end" and act on it if present.
-      m = re.match(_comm_re, line)
-      if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
-        rest = m.group(3)
-        if rest == None or rest == "":
-          print("Warning! end statement encountered inside fotp " + \
-              "with no argument at line " + \
-              str(self.line_ct_stack[0]) + ".")
-          return "fail"
-        elif rest != "fotp":
-          print("Warning! Mismatched begin/end blocks in FOTP at line " + \
-              str(self.line_ct_stack[0]) + ".\nEncountered end: {" + \
-              rest + "}. Exiting FOTP.")
-          return "fail"
-
-        if self.verbose:
-          print("Line " + str(self.line_ct_stack[0]) + ": end FOTP")
-        self.simh.os8_send_ctrl ('[')
-        return "success"
-  
-      m = re.match(_fotp_re, line)
-      if m == None:
-        print("At line " + str(self.line_ct_stack[0]) + \
-            ": ignoring mal-formed fotp file spec: {" + line + "}.")
-        continue
-  
-      comm = line
-      if self.verbose:
-        print("Line: " + str(self.line_ct_stack[0]) + ": * " + line)
-      self.simh.os8_send_cmd ("\\*", line)
-    print("Warning end of file encountered at line " + \
-        str(self.line_ct_stack[0]) +
-        " with no end of FOTP command block.")
-    return "fail"
-
-  
-  #### absldr_subcomm ##################################################
-  # A clone of fotp_subcom.  Can we find a way to merge the common code?
-  
-  def absldr_subcomm (self, old_line, script_file):
-    os8_comm = "RU " + old_line
-    if self.verbose:
-      print(" line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
-    self.simh.os8_send_cmd ("\\.", os8_comm)
-    
-    for line in script_file:
-      line = self.basic_line_parse(line, script_file)
-      if line == None: continue
-  
-      # Test for special case, "end" and act on it if present.
-      m = re.match(_comm_re, line)
-      if m != None and m.group(1) != None and m.group(1) != "" and m.group(1)  == "end":
-        rest = m.group(3)
-        if rest == None or rest == "":
-          print("Warning! end statement encountered inside ABSLDR " + \
-              "with no argument at line " +
-              str(self.line_ct_stack[0]) + ".")
-          return "fail"
-        elif rest != "absldr":
-          print("Warning! Mismatched begin/end blocks in ABSLDR at " + \
-              "line " + str(self.line_ct_stack[0]) + \
-              ".\nEncountered end: {" + rest + "}. Exiting ABSLDR.")
-          return "fail"
-          
-        if self.verbose:
-          print("End ABSLDR at line " + str(self.line_ct_stack[0]) + ".")
-        self.simh.os8_send_ctrl ('[')
-        return "success"
-  
-      m = re.match(_absldr_re, line)
-      if m == None:
-        print("Ignoring mal-formed absldr file spec at line " + \
-            str(self.line_ct_stack[0]) + ": {" + line + "}.")
-        continue
-  
-      comm = line
-      if self.verbose:
-        print("Line : " + str(self.line_ct_stack[0]) + "* " + line)
-      self.simh.os8_send_cmd ("\\*", line)
-    print("Warning end of file encountered at line " + \
-      str(self.line_ct_stack[0]) + "with no end of ABSLDR command block.")
     return "fail"
 
 
