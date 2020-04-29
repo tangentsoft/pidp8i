@@ -91,6 +91,11 @@ class simh:
   _host_safe_cps = _pdp8i_safe_bps * _ips_ratio / _bpc       # [4]
   _os8_kbd_delay = 1 / _host_safe_cps                        # [5]
 
+  # Prompts you might get instead of what you thought you were looking for.
+  # This helps us report problems rather than hanging the state machine.
+  _os8_prompts = ["\n\\.$", "\\n.\\$\\.$", "\n\\*$", "\n\\^C$", "\nsim> $", "\n\\^G$"]
+  _os8_prompt_names = ["Monitor", "Escape", "Command Decoder", "Escape", "Interrupt", "Bell"]
+
 
   # Known OS/8 error strings and a flag indicating whether the error
   # dumps us back out to the OS/8 command monitor or leaves us in the
@@ -184,7 +189,8 @@ class simh:
     # not need to explicitly call back_to_cmd() or sendcontrol ('e').
     # We keep track of the command context and transition automatically.
     self._context = "simh"
-    
+
+    # 
     # Parse our OS/8 Errors table into actionable chunks
     for error_spec in self._os8_errors:
       self._os8_error_match_strings.append(error_spec[0])
@@ -194,9 +200,16 @@ class simh:
     self._cd_replies = ['\\*$', '\\.$']
     self._cd_replies.extend(self._os8_error_match_strings)
 
+    # Lots of messages. Let's pre-compile their regexps.
     self._cd_rep_compiled = []
-    for reply in self._cdreplies:
+    for reply in self._cd_replies:
       self._cd_rep_compiled.append(re.compile(reply.encode()))
+
+    self._os8_prompts_compiled = []
+    # Pre-compile the prompts_array
+    for prompt in self._os8_prompts:
+      self._os8_prompts_compiled.append(re.compile(prompt.encode()))
+      
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
@@ -332,9 +345,14 @@ class simh:
     # To prevent the state machine from hanging,
     # when we seek a monitor dot prompt we expand the regex to allow
     # a dollar sign after the prompt.
-    if prompt == '\\.': prompt_re = "\n\\.(\\$\\.)?$"
-    else: prompt_re = "\n%s$" % prompt
-    self._child.expect (prompt_re, timeout = timeout)
+    if prompt == "\\.":
+      wrapped_prompt = ["\n\\.$", "\n\\.\\$\\.$"]
+    else:
+      wrapped_prompt = [("\n%s$" % prompt)]
+    reply = self._child.expect (wrapped_prompt, timeout = timeout)
+    if reply !=0:
+      print ("When executing line: " + line)
+      print ("\tGot an escape.  Consider using cdprog1 instead.")
     self.os8_send_line (line)
 
 
@@ -483,7 +501,7 @@ class simh:
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
     # Was the start of PIP successful, or did we get a Monitor error?
-    reply = self._child.expect (self._cd_replies)
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply != 0:
       self.pip_error_handler ("os8_pip_to", reply)
       return
@@ -492,7 +510,7 @@ class simh:
     self.os8_send_line (dest + '<PTR:' + option)
     self._child.expect ('\\^')
     self.os8_send_ctrl ('[')      # finish transfer
-    reply = self._child.expect (self._cd_replies)
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply !=0:
       self.pip_error_handler("os8_pip_to", reply)
       if did_conversion:
@@ -542,14 +560,14 @@ class simh:
     
     self.os8_send_cmd ('\\.', 'R PIP')
     # Was the start of PIP successful or did we get a Monitor error?
-    reply = self._child.expect (self._cd_replies)
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply != 0:
       self.pip_error_handler ("os8_pip_from", reply)
       return
     
     self.os8_send_line ('PTP:<' + os8name + option)
 
-    reply = self._child.expect (self._cd_replies)
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply !=0:
       self.pip_error_handler ("os8_pip_from", reply)
       # There is an empty PTP file we need to remove.

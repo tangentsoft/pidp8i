@@ -226,6 +226,11 @@ _build_replies = ["\\$", "SYS BUILT", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
                   "\\?PLAT", "\\?SYNTAX", "\\?SYS", "SYS ERR",
                   "\S+ NOT FOUND"]
 
+_pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF\r", "IC\s+\S+", "ID\s+\S+",
+                    "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
+                    "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
+
+
 # Parse two whitspace separated arguments into group(1) and group(2)
 _two_args_re = re.compile("^(\S+)\s+(\S+)$")
 
@@ -1165,22 +1170,19 @@ class os8script:
   # binary and optional listing files.
   
   def call_pal8 (self, source, binary, options):
-    pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF\r", "IC\s+\S+", "ID\s+\S+",
-                    "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
-                    "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
   
     if self.verbose: print("Assembling " + source)
     com_line = binary + "<" + source + options
     self.simh.os8_send_cmd ("\\.", "R PAL8")
     # Did the command successfully run and enter the command decoder?
-    reply = self.simh._child.expect (self.simh._cd_replies)
+    reply = self.simh._child.expect (self.simh._cd_rep_compiled)
     if reply != 0:
       print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
       return "fail"
 
     self.simh.os8_send_line (com_line)
     err_count = 0
-    reply = self.simh._child.expect (pal8_replies)
+    reply = self.simh._child.expect (_pal8_replies)
     executed_line = self.simh._child.before.decode().strip()
     reply_str = self.simh._child.after.decode().strip()
     if reply == 0:
@@ -1465,7 +1467,8 @@ class os8script:
       return "die"
 
     sub_commands = {"build": self.build_subcomm,
-                    "cdprog": self.cdprog_subcomm}
+                    "cdprog": self.cdprog_subcomm,
+                    "cdprog1": self.cdprog1_subcomm}
   
     m = re.match(_comm_re, line)
     if m == None:
@@ -1688,12 +1691,13 @@ class os8script:
     print("Warning end of file encountered with no end of BUILD command block at line " + \
       str(self.line_ct_stack[0]) + ".")
     return "fail"
+
   
   #### cdprog_subcomm ##################################################
   # Cycle through OS/8 command decoder with the command specified
   # in the argument.
   
-  def cdprog_subcomm (self, old_line, script_file):
+  def cdprog_common (self, old_line, script_file, escape):
     os8_comm = "RU " + old_line
     end_str = "cdprog " + old_line
     if self.verbose:
@@ -1725,7 +1729,7 @@ class os8script:
         if retval == "fail":
           print("Exiting cdprog, possibly earlier than expected at line " + \
             str(self.line_ct_stack[0]) + ".")
-        self.simh.os8_send_ctrl ('[')
+        if escape: self.simh.os8_send_ctrl ('[')
         return retval
   
       # We could do some basic OS/8 command decoder synax checking here.
@@ -1733,7 +1737,7 @@ class os8script:
       if self.verbose:
         print("Line: " + str(self.line_ct_stack[0]) + ": * " + line)
       # self.simh.os8_send_cmd ("\\*", line)
-      reply = self.simh._child.expect (self.simh._cd_replies, timeout = 60)
+      reply = self.simh._child.expect (self.simh._cd_rep_compiled, timeout = 60)
       if reply >1:
         print ("Error at line " + str(self.line_ct_stack[0]) + ": " + line)
         print ("reply: " + str(reply))
@@ -1748,8 +1752,23 @@ class os8script:
         str(self.line_ct_stack[0]) + \
         " with no end of cdprog command block.")
     print ("Sending escape to terminate " + os8_comm)
-    self.simh.os8_send_ctrl ('[')
+    if escape: self.simh.os8_send_ctrl ('[')
     return "fail"
+
+
+  #### cdprog_subcomm ##################################################
+  # Cycle through OS/8 command decoder with the command specified
+  # in the argument.
+  
+  def cdprog_subcomm (self, old_line, script_file):
+    return self.cdprog_common(old_line, script_file, escape=True)
+    
+  #### cdprog_subcomm ##################################################
+  # Cycle through OS/8 command decoder with the command specified
+  # in the argument.
+  
+  def cdprog1_subcomm (self, old_line, script_file):
+    return self.cdprog_common(old_line, script_file, escape=False)
 
 
   #### check_exists ####################################################

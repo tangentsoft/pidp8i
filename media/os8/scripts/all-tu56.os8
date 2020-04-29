@@ -42,7 +42,7 @@ begin enabled td8e
   # With error checking enabled, the TD8E virtual device driver falls behind.
   # And expect gets confused and chokes.  Sleeping commands and cdprog runs
   # by .2 seconds works.  .1 is not enough. You may need to tweak this value.
-  sleep 0.2
+  # sleep 0.1
   disable tc08
 end enabled td8e
 
@@ -241,10 +241,45 @@ begin enabled v3f
   end build
 
   # Explicit unmount to avoid possible race condition.
-  umount dt1
+  begin enabled td8e
+    umount td1
+  end enabled td8e
+  begin enabled tc08
+    umount dt1
+  end enabled tc08
 end enabled v3f
 
 os8 SAVE DTA0 BUILD.SV
+
+begin enabled td8e
+  # Now we use switch to the dt (tc08) device to do the copyin of as many files
+  # as possible, because pexpect gets confused with the time it takes to
+  # perform fotp transfers and the script chokes.
+  # This is a bit messy because we need to have our running system change between
+  # TD8E and TC08 handlers
+
+  umount td1
+  umount td0
+
+  configure tape dt
+
+  # Re-mount the destination image, either v3d or v3f on drive 0.
+  begin enabled v3d
+    mount dt0 $os8mo/v3d-td12k.tu56 required
+  end enabled v3d
+
+  begin enabled v3f
+    mount dt0 $os8mo/v3f-td12k.tu56 required
+  end enabled v3f
+
+  # we need a monitor prompt.
+  boot rk0
+  
+  begin build SYS:BUILD
+    # BUILD has tc enabled by default so just boot.
+    BOOT
+  end build
+end enabled td8e
 
 # cusp-copyin.os8 uses the value of v3d or v3f enablement
 # already present in the environment.
@@ -265,6 +300,25 @@ end cdprog RKA0:FOTP.SV
 # The last thing we do is run CCL on the system tu56 we just made.
 
 begin enabled td8e
+  # Switch back to using the td device because now we boot.
+  umount dt0
+
+  begin build SYS:BUILD
+    DELETE DTA0,DTA1
+    INSERT TD8A,DTA0,DTA1
+    BOOT
+  end build
+
+  configure tape td
+  # Re-mount the destination image, either v3d or v3f on drive 0.
+  begin enabled v3d
+    mount td0 $os8mo/v3d-td12k.tu56 required
+  end enabled v3d
+
+  begin enabled v3f
+    mount td0 $os8mo/v3f-td12k.tu56 required
+  end enabled v3f
+
   boot td0
 end enabled td8e
 
