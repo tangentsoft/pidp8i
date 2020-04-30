@@ -1160,7 +1160,7 @@ class os8script:
     com_line = binary + "<" + source + options
     self.simh.os8_send_cmd ("\\.", "R PAL8")
     # Did the command successfully run and enter the command decoder?
-    reply = self.simh._child.expect (self.simh._cd_replies)
+    reply = self.simh._child.expect (self.simh._cd_rep_compiled)
     if reply != 0:
       print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
       return "fail"
