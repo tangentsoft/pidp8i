@@ -225,6 +225,11 @@ _build_replies = ["\\$", "SYS BUILT", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
                   "\\?PLAT", "\\?SYNTAX", "\\?SYS", "SYS ERR",
                   "\S+ NOT FOUND"]
 
+_pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF\r", "IC\s+\S+", "ID\s+\S+",
+                    "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
+                    "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
+
+
 # Parse two whitspace separated arguments into group(1) and group(2)
 _two_args_re = re.compile("^(\S+)\s+(\S+)$")
 
@@ -1150,9 +1155,6 @@ class os8script:
   # binary and optional listing files.
   
   def call_pal8 (self, source, binary, options):
-    pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF\r", "IC\s+\S+", "ID\s+\S+",
-                    "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
-                    "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
   
     if self.verbose: print("Assembling " + source)
     com_line = binary + "<" + source + options
@@ -1165,7 +1167,7 @@ class os8script:
 
     self.simh.os8_send_line (com_line)
     err_count = 0
-    reply = self.simh._child.expect (pal8_replies)
+    reply = self.simh._child.expect (_pal8_replies)
     executed_line = self.simh._child.before.decode().strip()
     reply_str = self.simh._child.after.decode().strip()
     if reply == 0:
