@@ -687,9 +687,10 @@ class simh:
           ". Ignoring os8_pip_from on: " + path)
       return
 
-    self.esc_to_simh()
+    self.esc_to_simh(debug)
     self.simh_cmd (self._simh_replies_compiled, 'attach ptp ' + path, debug)
-    self.os8_restart ()
+    self.simh_cmd (self._os8_replies_compiled, 'go 7600', debug)
+
     
     reply = self.os8_cmd (self._os8_replies_compiled, 'R PIP', debug)
     # Has PIP Startup been successful?
@@ -707,9 +708,9 @@ class simh:
       return
 
     self.os8_send_ctrl ('[')      # exit PIP
-    self.esc_to_simh()
+    self.esc_to_simh(debug)
     self.simh_cmd (self._simh_replies_compiled, 'detach ptp', debug)  # Clean flush of buffers.
-    self.os8_restart ()
+    self.simh_cmd (self._os8_replies_compiled, 'go 7600', debug)
 
     if option == "" or option == "/A":
       if self.verbose: print("Format converting " + path)
