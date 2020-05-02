@@ -167,7 +167,7 @@ class simh:
     ["Bad Device", "BAD DEVICE", False],
     ["Bad Extension", "BAD EXTENSION", False],
     #"",  OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
-    ["ARE YOU SURE", "ARE YOU SURE", False],
+    ["ARE YOU SURE?", "ARE YOU SURE\\?", False],
     ["BAD DIRECTORY ON DEVICE", "BAD DIRECTORY ON DEVICE #\s?\d+", False],
     ["BAD SYSTEM HEAD", "BAD SYSTEM HEAD", False],
     ["CAN'T OPEN OUTPUT FILE", "CAN'T OPEN OUTPUT FILE", False],
@@ -753,7 +753,7 @@ class simh:
   #### os8_send_ctrl ###################################################
   # Send a control character to OS/8 corresponding to the ASCII letter
   # given.  We precede it with the OS/8 keyboard delay, since we're
-  # probably following a call to os8_send_line or os8_send_cmd.
+  # probably following a call to os8_send_line or os8_cmd.
 
   def os8_send_ctrl (self, char):
     cc = char[0].lower ()
@@ -764,7 +764,7 @@ class simh:
 
 
   #### os8_send_line ###################################################
-  # Core of os8_send_cmd.  Also used by code that needs to send text
+  # Core of os8_cmd.  Also used by code that needs to send text
   # "blind" to OS/8, without expecting a prompt, as when driving EDIT.
 
   def os8_send_line (self, line):
@@ -819,6 +819,16 @@ class simh:
     return reply
     
 
+  #### os8_squish ########################################################
+  # Wraps the OS/8 SQUISH command for a given device.
+
+  def os8_squish (self, device, caller = ""):
+    reply = self.os8_cmd ("SQUISH " + device + ":")
+    self.os8_test_result (reply, "ARE YOU SURE?", caller)
+    reply = self.os8_cmd ("Y")
+    self.os8_test_result (reply, "Monitor Prompt", caller)
+
+
   #### os8_pip_to ###################################################
   # Send a copy of a local file to OS/8 using PIP.
   #
@@ -872,10 +882,8 @@ class simh:
     # the file.
     self.esc_to_simh (debug)
     self.simh_cmd ('attach -r ptr ' + pt, debug=debug)
-    # We're entering OS/8, use that replies array.
-    self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
-
-    # self.os8_restart ()
+    # Enter OS/8.
+    self.simh_restart_os8 (caller="os8_pip_to")
     
     reply = self.os8_cmd ('R PIP', debug=debug)
     # Has PIP Startup been successful?
@@ -944,9 +952,8 @@ class simh:
 
     self.esc_to_simh(debug)
     self.simh_cmd ('attach ptp ' + path, debug=debug)
-    # Entering OS/8 use those replies.
-    self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
-
+    # Enter OS/8.
+    self.simh_restart_os8 (caller="os8_pip_from 0")
     
     reply = self.os8_cmd ('R PIP', debug=debug)
     # Has PIP Startup been successful?
@@ -966,8 +973,8 @@ class simh:
     self.os8_send_ctrl ('[')      # exit PIP
     self.esc_to_simh(debug)
     self.simh_cmd ('detach ptp', debug=debug)  # Clean flush of buffers.
-    # Entering OS/8 use their replies.
-    self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
+    # Enter OS/8.
+    self.simh_restart_os8(caller="os8_pip_from 1")
 
     if option == "" or option == "/A":
       if self.verbose: print("Format converting " + path)
@@ -1017,42 +1024,20 @@ class simh:
     self.os8_send_str('\r\n')
   
 
-  #### os8_restart #######################################################
-  # Will probably move to the new way.
-  # Called while in the SIMH command prompt, this restarts OS/8.
-  #
-  # This one-line function exists to abstract the method we use and to
-  # document the reason we do it this way.
-  #
-  # Currently we do this by calling the OS/8 command entry point, which
-  # has the virtue that it forces another . prompt, which keeps the
-  # send/expect sequencing simple when switching between OS/8 and SIMH
-  # command modes.
-  #
-  # That is why we don't use "cont" here instead: it requires that the
-  # caller always be aware of when the . prompt went out; complicated.
-  #
-  # Another simple alternative is "boot rk0", which actually benchmarks
-  # a smidge faster here.  We choose this method instead because we
-  # expect that some of our callers will want to do several different
-  # things in a single OS/8 session, which rebooting would screw up.
-
-  def os8_restart (self):
-    self.send_cmd ("go 7600")
-    # Wait for monitor prompt. More error detection could go here.
-    self._child.expect("\n\\.$")
+  #### simh_restart_os8 #######################################################
+  # Abstraction on returning to OS/8 monitor from within SIMH.
+  # It is common practice to "load address 7600; start" at the console.
+  
+  def simh_restart_os8 (self, caller = "", debug=False):
+    # Note we're calling simh with os8 replies because we will
+    # be switching contexts.
+    # simh_cmd manages the context, and checks for success
+    # by expecting a command prompt.
+    reply = self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
+    # We test our reply with os8_test result because we're in OS/8 now.
+    self.os8_test_result(reply, "Monitor Prompt", caller)
 
     
-  #### os8_squish ########################################################
-  # Will probably move to the new way.
-  # Wraps the OS/8 SQUISH command for a given device.
-
-  def os8_squish (self, device):
-    self.os8_send_cmd ('\\.', "SQUISH " + device + ":")
-    self.os8_kbd_delay ()
-    self._child.send ("Y\r");
-
-
   #### zero_core #######################################################
   # Will probably move to the new way as simh utility.
   # From SIMH context, zero the entire contents of core, which is
