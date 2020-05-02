@@ -116,21 +116,20 @@ class simh:
   #        and prompts with "$" to terminate the search.
   #    A True/False indicator if the command returned to the
   #        keyboard monitor, rather than continuing in the program.    
-  # The date comment tells when each message is observed and validated
 
   _os8_replies = [
+    # Prompts:
     ["Monitor Prompt", "\n\\.$", True],
     ["Command Decoder Prompt", "\\*$", False], # Newline NOT always present!
     ["PIP Continue", "\\^$"],                  # Newline NOT always present! 
-  #
     # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
-    ["Monitor Error 2", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],   # 2018.02.11
-    ["Monitor Error 5", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
-    ["Monitor Error 6", "MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["Directory I/O Error", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["I/O Error on SYS", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
+    ["Directory I/O Error", "MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
     ["File not available", "(\S+) NOT AVAILABLE", False],
-    ["File not found", "(\S+) NOT FOUND", False],                                   # 2018.02.11
+    ["File not found", "(\S+) NOT FOUND", False],
     #  OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
-    ["Illegal Syntax", "ILLEGAL SYNTAX", False],                                    # 2018.02.11
+    ["Illegal Syntax", "ILLEGAL SYNTAX", False],
     ["File does not exist", "(\S+) DOES NOT EXIST", False],
     #  ["(\S+) NOT FOUND", False],                                 # See above
     ["Too many files", "TOO MANY FILES", False],
@@ -138,40 +137,39 @@ class simh:
     ["Bad Device", "BAD DEVICE", False],
     ["Bad Extension", "BAD EXTENSION", False],
     #"",  OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
-    ["", "ARE YOU SURE", False],
-    ["", "BAD DIRECTORY ON DEVICE #\s?\d+", False],
-    ["", "BAD SYSTEM HEAD", False],
-    ["", "CAN'T OPEN OUTPUT FILE", False],
-    ["", "DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
-    ["", "DIRECTORY ERROR", False],
-    ["", "ERROR DELETING FILE", False],
-    ["", "ILLEGIAL BINARY INPUT, FILE #\d+", False],
-    ["", "INPUT ERROR, FILE #\s?\d+", False],
-    ["", "IO ERROR IN \\(file name\\) --CONTINUING", False],
-    ["", "NO ROOM FOR OUTPUT FILE", False],
-    ["", "NO ROOM IN \\(file name\\) --CONTINUING", False],
-    ["", "OUTPUT ERROR", False],
-    ["", "PREMATURE END OF FILE, FILE #\s?\d+", False],
-    ["", "ZERO SYS?", False],
+    ["ARE YOU SURE", "ARE YOU SURE", False],
+    ["BAD DIRECTORY ON DEVICE", "BAD DIRECTORY ON DEVICE #\s?\d+", False],
+    ["BAD SYSTEM HEAD", "BAD SYSTEM HEAD", False],
+    ["CAN'T OPEN OUTPUT FILE", "CAN'T OPEN OUTPUT FILE", False],
+    ["DEVICE NOT A DIRECTORY DEVICE", "DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
+    ["DIRECTORY ERROR", "DIRECTORY ERROR", False],
+    ["ERROR DELETING FILE", "ERROR DELETING FILE", False],
+    ["ILLEGIAL BINARY INPUT, FILE", "ILLEGIAL BINARY INPUT, FILE #\d+", False],
+    ["INPUT ERROR", "INPUT ERROR, FILE #\s?\d+", False],
+    ["IO ERROR--CONTINUING", "IO ERROR IN \\(file name\\) --CONTINUING", False],
+    ["NO ROOM FOR OUTPUT FILE", "NO ROOM FOR OUTPUT FILE", False],
+    ["NO ROOM--CONTINUING", "NO ROOM IN \\(file name\\) --CONTINUING", False],
+    ["OUTPUT ERROR", "OUTPUT ERROR", False],
+    ["PREMATURE END OF FILE", "PREMATURE END OF FILE, FILE #\s?\d+", False],
+    ["ZERO SYS?", "ZERO SYS?", False],
     #"",  OS/8 Handbook 1974 page 2-81/244: DIRECT Error Messages
-    ["", "BAD INPUT DIRECTORY", False],
-    ["", "DEVICE DOES NOT HAVE A DIRECTORY", False],
-    ["", "ERROR CLOSING FILE", False],
-    ["", "ERROR CLOSING FILE", False],
-    ["", "ERROR READING INPUT DIRECTORY", False],
-    ["", "ILLEGAL \\*", False],
+    ["BAD INPUT DIRECTORY", "BAD INPUT DIRECTORY", False],
+    ["DEVICE DOES NOT HAVE A DIRECTORY", "DEVICE DOES NOT HAVE A DIRECTORY", False],
+    ["ERROR CLOSING FILE", "ERROR CLOSING FILE", False],
+    ["ERROR CLOSING FILE", "ERROR CLOSING FILE", False],
+    ["ERROR READING INPUT DIRECTORY", "ERROR READING INPUT DIRECTORY", False],
+    ["ILLEGAL *", "ILLEGAL \\*", False],
     #"",  OS/8 Handbook 1974 page: 2-109/272: FOTP Error Messages
-    ["", "ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
-    ["", "ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
-    ["", "ERROR READING INPUT DIRECTORY", False],
-    ["", "ERROR READING OUTPUT DIRECTORY", False],
-    ["", "ILLEGAL \\?", False],
-    ["", "NO FILES OF THE FORM (\S+)", False],
-    ["", "NO ROOM, SKIPPING \\((\S+)\\)", False],
-    ["", "SYSTEM ERROR-CLOSING FILE", False],
-    ["", "USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
-    ["", "LINE TOO LONG IN FILE#\d+", False],
-
+    ["ERROR ON INPUT DEVICE, SKIPPING", "ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR ON OUTPUT DEVICE, SKIPPING", "ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR READING INPUT DIRECTORY", "ERROR READING INPUT DIRECTORY", False],
+    ["ERROR READING OUTPUT DIRECTORY", "ERROR READING OUTPUT DIRECTORY", False],
+    ["ILLEGAL ?", "ILLEGAL \\?", False],
+    ["NO FILES OF THE FORM", "NO FILES OF THE FORM (\S+)", False],
+    ["NO ROOM, SKIPPING", "NO ROOM, SKIPPING \\((\S+)\\)", False],
+    ["SYSTEM ERROR-CLOSING FILE", "SYSTEM ERROR-CLOSING FILE", False],
+    ["USE PIP FOR NON-FILE STRUCTURED DEVICE", "USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
+    ["LINE TOO LONG IN FILE", "LINE TOO LONG IN FILE#\d+", False],
     ]
   
   _os8_errors = [
@@ -269,14 +267,14 @@ class simh:
       self._os8_fatal_check.append(error_spec[1])
 
     # Pre-compile our os8_replies regexps.
-    self._os8_replies_compiled = []
+    self._os8_replies_rex = []
     for item in self._os8_replies:
-      self._os8_replies_compiled.append(re.compile(item[1].encode()))
+      self._os8_replies_rex.append(re.compile(item[1].encode()))
 
     # Pre-compile our simh_replies regexps.
-    self._simh_replies_compiled = []
+    self._simh_replies_rex = []
     for item in self._simh_replies:
-      self._simh_replies_compiled.append(re.compile(item[1].encode()))
+      self._simh_replies_rex.append(re.compile(item[1].encode()))
         
     # Did command start the command decoder or die with a monitor error?
     self._cd_replies = ['\\*']
@@ -298,7 +296,7 @@ class simh:
       raise RuntimeError ('Simulator failed to start')
 
 
-  #### Test result ######################################################
+  #### test_result ######################################################
   # Given a result number, an expected result, and an array of result elements,
   # return True if the result matched expected value.
   # If caller is not the empty string, print a message about it.
@@ -310,15 +308,27 @@ class simh:
         print (caller + ": failure.")
       return False
     reply_ID = results[reply][0]
-    if reply_ID == expected:
+    if reply_ID.lower() == expected.lower():
       return True
     else:
       if caller != "":
         print (caller + ": Expected " + expected + ". Instead got: " + reply_ID)
-      return False
-        
+      return False      
 
   
+  #### os8_test_result ##################################################
+  # Convenience wrapper for test_result that uses OS/8 replies.
+
+  def os8_test_result (self, reply, expected, caller):
+    return self.test_result (reply, expected, self._os8_replies, caller)
+
+
+  #### simh_test_result #################################################
+  # Convenience wrapper for test_result that uses SIMH replies.
+
+  def simh_test_result (self, reply, expected, caller):
+    return self.test_result (reply, expected, self._simh_replies, caller)
+
   
   #### back_to_cmd ######################################################
   # Pause the simulation and return to the SIMH command prompt when the
@@ -337,51 +347,14 @@ class simh:
   # Unconditionally go to SIMH
   def esc_to_simh (self, debug=False):
     self._child.sendcontrol ('e')
-    reply = self._child.expect (self._simh_replies_compiled)  # Wait to get simh prompt
-    self.test_result(reply, "Prompt", self._simh_replies, "esc_to_simh")
+    reply = self._child.expect (self._simh_replies_rex)  # Wait to get simh prompt
+    self.simh_test_result(reply, "Prompt", "esc_to_simh")
     self._context = "simh"
     if debug:
       print("esc_to_simh: reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
       print("\tmatch before: {" + self._child.before.decode() + "}")
       print("\tmatch after: {" + self._child.after.decode() + "}")
     return reply
-
-
-  #### os8_get_file ####################################################
-  # Rough inverse of os8_send_file.
-  #
-  # Both paths must be given and are used literally.  (Contrast our
-  # inverse, where the destinatinon file name is produced from the
-  # source if not given.)
-  #
-  # When this function is called to pull a file sent by our inverse, the
-  # conversion should be lossless except for the transforms done by our
-  # underlying utility tools, such as the LF -> CR+LF done by txt2ptp
-  # but not undone by ptp2txt.
-  #
-  # Entry context should be inside OS/8.  Exit context is inside OS/8.
-
-  def os8_get_file (self, intname, extname):
-    # Attach a blank paper tape to the simulator.
-    ptf = tempfile.NamedTemporaryFile (suffix = '.pt', delete = False)
-    ptf.close ()
-    ptn = ptf.name
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach ptp ' + ptn)
-
-    # Punch internal file to external paper tape image
-    self.os8_restart ()
-    self.os8_send_cmd ('\\.', 'PUNCH ' + intname);
-    self.back_to_cmd ('\\.')        # wait for transfer to finish
-
-    # Convert text file from SIMH paper tape format
-    tool = os.path.join (pidp8i.dirs.build, 'bin', 'ptp2txt')
-    self.send_cmd ('detach ptp')
-    subprocess.call (tool + ' < ' +  ptn + ' > ' + extname, shell = True)
-
-    # Return to OS/8, just because that's where we were on entry, so we
-    # should not change that.
-    self.os8_restart ()
 
 
   #### os8_kbd_delay ###################################################
@@ -458,8 +431,10 @@ class simh:
   # replies is an array of possible replies that command will get.
   # Returns the index into the replies array that pexpect got,
   # or -1 if the command could not be run.
+  # replies is an optional argument which defaults to _os8_replies_rex
 
-  def os8_cmd (self, replies, cmd, debug=False, timeout=60):
+  def os8_cmd (self, cmd, replies=None, debug=False, timeout=60):
+    if replies == None: replies = self._os8_replies_rex
     if self._context != 'os8': 
       print("OS/8 is not running. Cannot execute: " + cmd)
       return -1
@@ -550,21 +525,6 @@ class simh:
     self.os8_send_ctrl ('[')      # exit PIP
 
 
-  #### pip_error_handler ###############################################
-  # Common error handler for os8_pip_to and os8_pip_from
-
-  def pip_error_handler(self, caller, reply):
-    print("PIP error from inside " + caller + ": ")
-    # print("\t" + self._child.before.decode().strip())
-    print("\t" + self._child.after.decode().strip())
-    
-    # Was this error fatal or do we need to clean up?
-    # Remember we subtract 1 from reply to get index into error tables.
-    if not self._os8_fatal_check[reply - 1]:
-      # Non fatal error.  Exit pip to the monitor
-      self.os8_send_ctrl ('[')      # exit PIP
-
-
   #### os8_pip_to ###################################################
   # Send a copy of a local file to OS/8 using PIP.
   #
@@ -617,18 +577,19 @@ class simh:
     # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
     # the file.
     self.esc_to_simh (debug)
-    self.simh_cmd (self._simh_replies_compiled, 'attach -r ptr ' + pt, debug)
-    self.simh_cmd (self._os8_replies_compiled, 'go 7600', debug)
+    self.simh_cmd ('attach -r ptr ' + pt, debug=debug)
+    # We're entering OS/8, use that replies array.
+    self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
 
     # self.os8_restart ()
     
-    reply = self.os8_cmd (self._os8_replies_compiled, 'R PIP', debug)
+    reply = self.os8_cmd ('R PIP', debug=debug)
     # Has PIP Startup been successful?
-    if self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_to 0") == False: return
+    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_to 0") == False: return
 
     # Give file and test for ready to send,
-    reply = self.os8_cmd (self._os8_replies_compiled, dest + '<PTR:' + option, debug)
-    if self.test_result (reply, "PIP Continue", self._os8_replies, "os8_pip_to 1") == False:
+    reply = self.os8_cmd (dest + '<PTR:' + option, debug=debug)
+    if self.os8_test_result (reply, "PIP Continue", "os8_pip_to 1") == False:
       # If we got "PIP Continue" we keep going. Otherwise return.
       # Send escape if reply indicates we didn't go back to the monitor.
       if self._os8_replies[reply][2] == False:
@@ -638,14 +599,14 @@ class simh:
     # Finish transfer
     # The test for success is implicit.
     self.os8_send_ctrl ('[')
-    reply = self._child.expect (self._os8_replies_compiled)
-    self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_to 2")
+    reply = self._child.expect (self._os8_replies_rex)
+    self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_to 2")
     # If we did not return to monitor hit escape to exit PIP.
     if self._os8_replies[reply][2] == False:
         self.os8_send_ctrl ('[')      # Success or Non-fatal error.
         # Must exit PIP and wait for monitor prompt. Complain if we don't get it!
-        reply = self._child.expect (self._os8_replies_compiled)
-        self.test_result (reply, "Monitor Prompt", self._os8_replies, "os8_pip_to 3")
+        reply = self._child.expect (self._os8_replies_rex)
+        self.os8_test_result (reply, "Monitor Prompt", "os8_pip_to 3")
     # detach ptr
     # self.esc_to_simh ()
     # self.send_cmd ('detach ptr ')
@@ -688,18 +649,19 @@ class simh:
       return
 
     self.esc_to_simh(debug)
-    self.simh_cmd (self._simh_replies_compiled, 'attach ptp ' + path, debug)
-    self.simh_cmd (self._os8_replies_compiled, 'go 7600', debug)
+    self.simh_cmd ('attach ptp ' + path, debug=debug)
+    # Entering OS/8 use those replies.
+    self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
 
     
-    reply = self.os8_cmd (self._os8_replies_compiled, 'R PIP', debug)
+    reply = self.os8_cmd ('R PIP', debug=debug)
     # Has PIP Startup been successful?
-    if self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_from 0") == False: return
+    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_from 0") == False: return
     
     # Issue file transfer spec.
-    reply = self.os8_cmd (self._os8_replies_compiled, 'PTP:<' + os8name + option, debug)
+    reply = self.os8_cmd ('PTP:<' + os8name + option, debug=debug)
     # Test for Success
-    if self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_from 1") == False:
+    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_from 1") == False:
       # There is an empty PTP file we need to remove.
       os.remove(path)
       # Was this a fatal error?
@@ -709,8 +671,9 @@ class simh:
 
     self.os8_send_ctrl ('[')      # exit PIP
     self.esc_to_simh(debug)
-    self.simh_cmd (self._simh_replies_compiled, 'detach ptp', debug)  # Clean flush of buffers.
-    self.simh_cmd (self._os8_replies_compiled, 'go 7600', debug)
+    self.simh_cmd ('detach ptp', debug=debug)  # Clean flush of buffers.
+    # Entering OS/8 use their replies.
+    self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
 
     if option == "" or option == "/A":
       if self.verbose: print("Format converting " + path)
@@ -856,8 +819,10 @@ class simh:
   # escape to SIMH. But for now, just be careful to use os8_resume
   # after calling send_cmd.
   # Wait for a reply for error checking.
+  # replies is an optional argument that defaults to _simh_replies_rex
   
-  def simh_cmd (self, replies, cmd, debug=False):
+  def simh_cmd (self, cmd, replies=None, debug=False):
+    if replies == None: replies = self._simh_replies_rex
     if self._context != "simh":
       self.esc_to_simh()
     if debug: print ("simh_cmd: Sending: " + cmd)
