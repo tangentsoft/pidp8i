@@ -91,10 +91,89 @@ class simh:
   _host_safe_cps = _pdp8i_safe_bps * _ips_ratio / _bpc       # [4]
   _os8_kbd_delay = 1 / _host_safe_cps                        # [5]
 
-  # Known OS/8 error strings and a flag indicating whether the error
-  # dumps us back out to the OS/8 command monitor or leaves us in the
-  # called program.
 
+  # _simh_replies is an array of items that describe replies
+  # one might get at various times from SIMH.
+  # Each item consists of:
+  # Each item consists of:
+  #    A help string that describes the reply. Use this for checks.
+  #    A regular expression for pexpect to use to match on it.
+  #        It is a good idea to terminate status messages with "\r"
+  #        in order to confirm we've got the whole line,
+  #        and prompts with "$" to terminate the search.
+  
+  _simh_replies = [
+    ["Prompt", "sim> $"]
+    ]
+
+  # _os8_replies is an array of items that describe replies
+  #  one might get at various times from OS/8 under SIMH.
+  # Each item consists of:
+  #    A help string that describes the reply.
+  #    A regular expression for pexpect to use to match on it.
+  #        It is a good idea to terminate status messages with "\r"
+  #        in order to confirm we've got the whole line,
+  #        and prompts with "$" to terminate the search.
+  #    A True/False indicator if the command returned to the
+  #        keyboard monitor, rather than continuing in the program.    
+  # The date comment tells when each message is observed and validated
+
+  _os8_replies = [
+    ["Monitor Prompt", "\n\\.$", True],
+    ["Command Decoder Prompt", "\\*$", False], # Newline NOT always present!
+    ["PIP Continue", "\\^$"],                  # Newline NOT always present! 
+  #
+    # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
+    ["Monitor Error 2", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],   # 2018.02.11
+    ["Monitor Error 5", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
+    ["Monitor Error 6", "MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["File not available", "(\S+) NOT AVAILABLE", False],
+    ["File not found", "(\S+) NOT FOUND", False],                                   # 2018.02.11
+    #  OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
+    ["Illegal Syntax", "ILLEGAL SYNTAX", False],                                    # 2018.02.11
+    ["File does not exist", "(\S+) DOES NOT EXIST", False],
+    #  ["(\S+) NOT FOUND", False],                                 # See above
+    ["Too many files", "TOO MANY FILES", False],
+    #  OS/8 Handbook 1974 page 1-75/113 CCL Error Messages
+    ["Bad Device", "BAD DEVICE", False],
+    ["Bad Extension", "BAD EXTENSION", False],
+    #"",  OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
+    ["", "ARE YOU SURE", False],
+    ["", "BAD DIRECTORY ON DEVICE #\s?\d+", False],
+    ["", "BAD SYSTEM HEAD", False],
+    ["", "CAN'T OPEN OUTPUT FILE", False],
+    ["", "DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
+    ["", "DIRECTORY ERROR", False],
+    ["", "ERROR DELETING FILE", False],
+    ["", "ILLEGIAL BINARY INPUT, FILE #\d+", False],
+    ["", "INPUT ERROR, FILE #\s?\d+", False],
+    ["", "IO ERROR IN \\(file name\\) --CONTINUING", False],
+    ["", "NO ROOM FOR OUTPUT FILE", False],
+    ["", "NO ROOM IN \\(file name\\) --CONTINUING", False],
+    ["", "OUTPUT ERROR", False],
+    ["", "PREMATURE END OF FILE, FILE #\s?\d+", False],
+    ["", "ZERO SYS?", False],
+    #"",  OS/8 Handbook 1974 page 2-81/244: DIRECT Error Messages
+    ["", "BAD INPUT DIRECTORY", False],
+    ["", "DEVICE DOES NOT HAVE A DIRECTORY", False],
+    ["", "ERROR CLOSING FILE", False],
+    ["", "ERROR CLOSING FILE", False],
+    ["", "ERROR READING INPUT DIRECTORY", False],
+    ["", "ILLEGAL \\*", False],
+    #"",  OS/8 Handbook 1974 page: 2-109/272: FOTP Error Messages
+    ["", "ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["", "ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["", "ERROR READING INPUT DIRECTORY", False],
+    ["", "ERROR READING OUTPUT DIRECTORY", False],
+    ["", "ILLEGAL \\?", False],
+    ["", "NO FILES OF THE FORM (\S+)", False],
+    ["", "NO ROOM, SKIPPING \\((\S+)\\)", False],
+    ["", "SYSTEM ERROR-CLOSING FILE", False],
+    ["", "USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
+    ["", "LINE TOO LONG IN FILE#\d+", False],
+
+    ]
+  
   _os8_errors = [
     # The date comment tells when each message is observed and validated
     #
@@ -189,6 +268,16 @@ class simh:
       self._os8_error_match_strings.append(error_spec[0])
       self._os8_fatal_check.append(error_spec[1])
 
+    # Pre-compile our os8_replies regexps.
+    self._os8_replies_compiled = []
+    for item in self._os8_replies:
+      self._os8_replies_compiled.append(re.compile(item[1].encode()))
+
+    # Pre-compile our simh_replies regexps.
+    self._simh_replies_compiled = []
+    for item in self._simh_replies:
+      self._simh_replies_compiled.append(re.compile(item[1].encode()))
+        
     # Did command start the command decoder or die with a monitor error?
     self._cd_replies = ['\\*']
     self._cd_replies.extend(self._os8_error_match_strings)
@@ -209,6 +298,28 @@ class simh:
       raise RuntimeError ('Simulator failed to start')
 
 
+  #### Test result ######################################################
+  # Given a result number, an expected result, and an array of result elements,
+  # return True if the result matched expected value.
+  # If caller is not the empty string, print a message about it.
+
+  def test_result (self, reply, expected, results, caller):
+    # Cover case of utter failure.
+    if reply == -1:
+      if caller != "":
+        print (caller + ": failure.")
+      return False
+    reply_ID = results[reply][0]
+    if reply_ID == expected:
+      return True
+    else:
+      if caller != "":
+        print (caller + ": Expected " + expected + ". Instead got: " + reply_ID)
+      return False
+        
+
+  
+  
   #### back_to_cmd ######################################################
   # Pause the simulation and return to the SIMH command prompt when the
   # simulated software emits the given prompt string.  Typically used to
@@ -220,6 +331,20 @@ class simh:
     self.os8_kbd_delay ()
     self._child.sendcontrol ('e')
     self._context = "simh"
+
+
+  #### esc_to_simh  ######################################################
+  # Unconditionally go to SIMH
+  def esc_to_simh (self, debug=False):
+    self._child.sendcontrol ('e')
+    reply = self._child.expect (self._simh_replies_compiled)  # Wait to get simh prompt
+    self.test_result(reply, "Prompt", self._simh_replies, "esc_to_simh")
+    self._context = "simh"
+    if debug:
+      print("esc_to_simh: reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
+    return reply
 
 
   #### os8_get_file ####################################################
@@ -318,7 +443,7 @@ class simh:
 
   def os8_send_cmd (self, prompt, line, debug=False, timeout=60):
     if self._context != 'os8': 
-      print("OS/8 is not running. Cannot execute: " + lin)
+      print("OS/8 is not running. Cannot execute: " + line)
       return
     if debug:
       print("os8_send_cmd: expecting: " + prompt)
@@ -327,6 +452,29 @@ class simh:
     self._child.expect ("\n%s$" % prompt, timeout = timeout)
     self.os8_send_line (line)
 
+
+  #### os8_cmd_ ###################################################
+  # Send the given command to OS/8.
+  # replies is an array of possible replies that command will get.
+  # Returns the index into the replies array that pexpect got,
+  # or -1 if the command could not be run.
+
+  def os8_cmd (self, replies, cmd, debug=False, timeout=60):
+    if self._context != 'os8': 
+      print("OS/8 is not running. Cannot execute: " + cmd)
+      return -1
+    if debug:
+      print("os8_cmd: sending: " + cmd)
+      print("\tPrevious match before: {" + self._child.before.decode() + "}")
+      print("\tPrevious match after: {" + self._child.after.decode() + "}")
+    self.os8_send_line (cmd)
+    reply = self._child.expect (replies, timeout = timeout)
+    if debug:
+      print("\tGot reply: " + str(reply) + " -> " + self._os8_replies[reply][0])
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
+    return reply
+    
 
   #### os8_send_ctrl ###################################################
   # Send a control character to OS/8 corresponding to the ASCII letter
@@ -433,7 +581,7 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_pip_to (self, path, os8name, option = None):
+  def os8_pip_to (self, path, os8name, option = None, debug=False):
     if option == None: option = ""
     # If os8name is just a device, synthesize an upcased name from
     # the POSIX file basename.
@@ -468,29 +616,42 @@ class simh:
     # Paper tape created, so attach it read-only and copy it in.  We're
     # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
     # the file.
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach -r ptr ' + pt)
-    self.os8_restart ()
-    self.os8_send_cmd ('\\.', 'R PIP')
-    # Was the start of PIP successful, or did we get a Monitor error?
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply != 0:
-      self.pip_error_handler ("os8_pip_to", reply)
+    self.esc_to_simh (debug)
+    self.simh_cmd (self._simh_replies_compiled, 'attach -r ptr ' + pt, debug)
+    self.simh_cmd (self._os8_replies_compiled, 'go 7600', debug)
+
+    # self.os8_restart ()
+    
+    reply = self.os8_cmd (self._os8_replies_compiled, 'R PIP', debug)
+    # Has PIP Startup been successful?
+    if self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_to 0") == False: return
+
+    # Give file and test for ready to send,
+    reply = self.os8_cmd (self._os8_replies_compiled, dest + '<PTR:' + option, debug)
+    if self.test_result (reply, "PIP Continue", self._os8_replies, "os8_pip_to 1") == False:
+      # If we got "PIP Continue" we keep going. Otherwise return.
+      # Send escape if reply indicates we didn't go back to the monitor.
+      if self._os8_replies[reply][2] == False:
+        self.os8_send_ctrl ('[')
       return
 
-    # Has the read-in been successful?
-    self.os8_send_line (dest + '<PTR:' + option)
-    self._child.expect ('\\^')
-    self.os8_send_ctrl ('[')      # finish transfer
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply !=0:
-      self.pip_error_handler("os8_pip_to", reply)
-      if did_conversion:
-        os.remove(pt)
-      return
-    self.os8_send_ctrl ('[')      # exit PIP
-    # We could detach ptr and restart OS/8 here, but we don't need to.
-    # Do remove the temp file if we created one.
+    # Finish transfer
+    # The test for success is implicit.
+    self.os8_send_ctrl ('[')
+    reply = self._child.expect (self._os8_replies_compiled)
+    self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_to 2")
+    # If we did not return to monitor hit escape to exit PIP.
+    if self._os8_replies[reply][2] == False:
+        self.os8_send_ctrl ('[')      # Success or Non-fatal error.
+        # Must exit PIP and wait for monitor prompt. Complain if we don't get it!
+        reply = self._child.expect (self._os8_replies_compiled)
+        self.test_result (reply, "Monitor Prompt", self._os8_replies, "os8_pip_to 3")
+    # detach ptr
+    # self.esc_to_simh ()
+    # self.send_cmd ('detach ptr ')
+    # self.os8_restart ()
+    
+    # Remove the temp file if we created one.
     if did_conversion:
       os.remove (pt)
 
@@ -511,7 +672,7 @@ class simh:
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
 
-  def os8_pip_from (self, os8name, path, option = None):
+  def os8_pip_from (self, os8name, path, option = None, debug=False):
     if option == None: option = ""
     # If path is not a file, use the name portion of os8name.
     if os.path.isdir(path):
@@ -526,29 +687,28 @@ class simh:
           ". Ignoring os8_pip_from on: " + path)
       return
 
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach ptp ' + path)
+    self.esc_to_simh()
+    self.simh_cmd (self._simh_replies_compiled, 'attach ptp ' + path, debug)
     self.os8_restart ()
     
-    self.os8_send_cmd ('\\.', 'R PIP')
-    # Was the start of PIP successful or did we get a Monitor error?
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply != 0:
-      self.pip_error_handler ("os8_pip_from", reply)
-      return
+    reply = self.os8_cmd (self._os8_replies_compiled, 'R PIP', debug)
+    # Has PIP Startup been successful?
+    if self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_from 0") == False: return
     
-    self.os8_send_line ('PTP:<' + os8name + option)
-
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply !=0:
-      self.pip_error_handler ("os8_pip_from", reply)
+    # Issue file transfer spec.
+    reply = self.os8_cmd (self._os8_replies_compiled, 'PTP:<' + os8name + option, debug)
+    # Test for Success
+    if self.test_result (reply, "Command Decoder Prompt", self._os8_replies, "os8_pip_from 1") == False:
       # There is an empty PTP file we need to remove.
       os.remove(path)
+      # Was this a fatal error?
+      if self._os8_replies[reply][2] == False:
+        self.os8_send_ctrl ('[')      # Non-fatal error. Must exit PIP
       return
 
     self.os8_send_ctrl ('[')      # exit PIP
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('detach ptp')  # Clean flush of buffers.
+    self.esc_to_simh()
+    self.simh_cmd (self._simh_replies_compiled, 'detach ptp', debug)  # Clean flush of buffers.
     self.os8_restart ()
 
     if option == "" or option == "/A":
@@ -633,7 +793,8 @@ class simh:
 
   def os8_restart (self):
     self.send_cmd ("go 7600")
-
+    # Wait for monitor prompt. More error detection could go here.
+    self._child.expect("\n\\.$")
 
   #### os8_squish ########################################################
   # Wraps the OS/8 SQUISH command for a given device.
@@ -683,7 +844,35 @@ class simh:
     return self._child.readline ()
 
 
+  #### simh_cmd ########################################################
+  # If we are not in the simh context call esc_to_simh which will
+  #    send ^e, and set the context to simh.
+  # If we issue a command that enters os8 context, set context "os8".
+  # Note exiting out of OS/8 into the SIMH context is a bit of a
+  # trap door. Resynchronizing with python expect requires provoking
+  # a prompt, and prompts are context specific.
+  # Perhaps we should require separate and explicit commands to
+  # escape to SIMH. But for now, just be careful to use os8_resume
+  # after calling send_cmd.
+  # Wait for a reply for error checking.
+  
+  def simh_cmd (self, replies, cmd, debug=False):
+    if self._context != "simh":
+      self.esc_to_simh()
+    if debug: print ("simh_cmd: Sending: " + cmd)
+    self._child.sendline (cmd)
+    m = re.match (self._simh_comm_re, cmd)
+    if m != None and m.group(1)[:1].upper() in self._enters_os8_context:
+      self._context = "os8"
+    reply = self._child.expect(replies)
+    if debug:
+      print("\tGot reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
+    return reply
+
   #### send_cmd ########################################################
+  # This (deprecated) version waits for prompt and sends.
   # Wait for a SIMH command prompt and then send the given command.
   # If we are not in the simh context send ^e and set context "simh".
   # If we are not in simh context, send ^e set context "simh"
@@ -695,7 +884,7 @@ class simh:
   # Perhaps we should require separate and explicit commands to
   # escape to SIMH. But for now, just be careful to use os8_resume
   # after calling send_cmd.
-  
+
   def send_cmd (self, cmd):
     if self._context == "os8":
       self._child.expect ("\n\\.$")
