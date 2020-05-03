@@ -1161,7 +1161,7 @@ class os8script:
         # We carefully separate com and args
         # But don't make much use of that yet.
         if self.verbose and self.debug: print(line)
-        self.simh.os8_cmd (line[1:])  # Skip Prompt.
+        self.simh.os8_send_line (line[1:])  # Skip Prompt.
   
     patch_file.close()
   
@@ -1244,7 +1244,7 @@ class os8script:
       str(self.line_ct_stack[0]) + " ignored.")
     return "fail"
     if self.verbose: print(line)
-    self.simh.send_cmd(line)
+    self.simh.simh_cmd(line)
     return "success"
 
 
@@ -1253,7 +1253,7 @@ class os8script:
     detach_comm = "det " + line
     if self.verbose: print("line: " + \
         str(self.line_ct_stack[0]) + ": " + detach_comm)
-    self.simh.send_cmd(detach_comm)
+    self.simh.simh_cmd(detach_comm)
     return "success"
 
 
@@ -1388,7 +1388,7 @@ class os8script:
     if self.verbose:
       print("Line " + str(self.line_ct_stack[0]) + ": mount: " + \
           attach_comm)
-    self.simh.send_cmd(attach_comm)
+    self.simh.simh_cmd(attach_comm)
     return "success"
 
 
@@ -1402,17 +1402,17 @@ class os8script:
     # First confirm something is attached to boot from.
     ucname = line.upper()
     boot_replies = [ucname + "\s+(.+)\r", "Non-existent device"]
-    self.simh.send_cmd("show " + line)
+    self.simh.send_line("show " + line)
     retval = self.simh._child.expect(boot_replies)
     if retval == 1:
       print("Attempt to boot non-existent device: " + line)
       return "die"
-    reply = self.simh._child.after.decode()
+    reply_str = self.simh._child.after.decode()
     m = re.match("^(\S+)\s(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
-        reply)
+        reply_str)
     if m == None:
       print("Could not determine if device " + line + " is attached; " +
-          "got '" + reply + "'")
+          "got '" + reply_str + "'")
       return "die"
 
     # Caution match group we want ends with a space.
@@ -1423,7 +1423,9 @@ class os8script:
     boot_comm = "boot " + line
     if self.verbose:
       print("Line " + str(self.line_ct_stack[0]) + ": " + boot_comm)
-    self.simh.send_cmd(boot_comm)
+    reply = self.simh.simh_cmd(boot_comm, self.simh._os8_replies_rex)
+    # We're in OS/8 now use that tester.
+    self.simh.os8_test_result (reply, "Monitor Prompt", "os8-run: boot_command")
     self.booted = True
     return "success"
 
@@ -1444,7 +1446,9 @@ class os8script:
     if self.simh._context == "simh":
       self.resume_command(line, script_file)
 
-    self.simh.os8_send_cmd ("\\.", os8_comm, self.debug)
+    reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
+    self.simh.os8_test_result (reply, "Monitor Prompt", "os8-run: os8_command")
+
     return "success"
 
 
@@ -1463,7 +1467,7 @@ class os8script:
     m_2form = re.match (_two_arg_pal_re, line)
     if m_2form != None:
 
-      # Resume OS/8 if necessary.
+      # Resume OS/8 if necessary. (I Don't think it ever is.)
       if self.simh._context == "simh":
         self.resume_command(line, script_file)
 
@@ -1511,7 +1515,7 @@ class os8script:
       self.ignore_to_subcomm_end(line, script_file, "")
       return "fail"
     else:
-      # Resume OS/8 if necessary.
+      # Resume OS/8 if necessary.  (I don't think it ever is.)
       if self.simh._context == "simh":
         self.resume_command(line, script_file)
 
@@ -1546,8 +1550,7 @@ class os8script:
     if self.debug:
       print("sending to simh: " + os8_comm)
       print(" and expecting prompt: '\\n\\\\$$'")
-    self.simh.os8_send_cmd ("\\.", os8_comm)
-    self.simh._child.expect(prompt_str)
+    self.simh.os8_cmd (os8_comm, prompt_str)
     
     for line in script_file:
       # if self.debug:

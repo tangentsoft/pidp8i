@@ -123,7 +123,11 @@ class simh:
   #        is created by __init__: simh_replies_rex
   
   _simh_replies = [
-    ["Prompt", "sim> $"]
+    # Prompts:
+    ["Prompt", "sim> $"],
+    # Guard against case we used the simh table when we meant the OS/8 table. 
+    ["Monitor Prompt", "\n\\.$"],
+    ["Non-existent device", "Non-existent device"],
     ]
 
   ####_os8_replies ##################################################
