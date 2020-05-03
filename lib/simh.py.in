@@ -42,6 +42,7 @@ import tempfile
 import time
 import re
 import sys
+import traceback
 
 import pidp8i
 
@@ -154,8 +155,9 @@ class simh:
   _os8_replies = [
     # Prompts:
     ["Monitor Prompt", "\n\\.$", True],
-    ["Command Decoder Prompt", "\\*$", False], # Newline NOT always present!
-    ["PIP Continue", "\\^$"],                  # Newline NOT always present! 
+    ["Command Decoder Prompt", "\n\\*$", False],
+    ["PIP Continue", "\\^$", True],                  # Newline NOT always present! 
+    ["BUILD Prompt", "\n\\$$", True],
     # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
     ["Directory I/O Error", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
     ["I/O Error on SYS", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
@@ -327,13 +329,14 @@ class simh:
   # This routine does the repetitive work of testing results returned
   # from running a command, and optionally printing status.
 
-  def test_result (self, reply, expected, results, caller):
+  def test_result (self, reply, expected, results, caller, debug=False):
     # Cover case of utter failure.
     if reply == -1:
-      if caller != "":
+      if debug or caller != "":
         print (caller + ": failure.")
       return False
     reply_ID = results[reply][0]
+    if debug: print ("test_result: Got: " + reply_ID)
     if reply_ID.lower() == expected.lower():
       return True
     else:
@@ -363,7 +366,7 @@ class simh:
   #### simh_test_result #################################################
   # Convenience wrapper for test_result that uses SIMH replies.
 
-  def simh_test_result (self, reply, expected, caller):
+  def simh_test_result (self, reply, expected, caller, debug=False):
     return self.test_result (reply, expected, self._simh_replies, caller)
 
   
@@ -375,6 +378,7 @@ class simh:
   # It is up to the caller to then do an expect to confirm success.
 
   def simh_send_line (self, cmd, debug=False):
+    if debug: print ("Context: " + self._context)
     if self._context != "simh":
       self.esc_to_simh()
     if debug: print ("simh_send_line: Sending: " + cmd)
@@ -784,8 +788,8 @@ class simh:
   #### os8_test_result ##################################################
   # Convenience wrapper for test_result that uses OS/8 replies.
 
-  def os8_test_result (self, reply, expected, caller):
-    return self.test_result (reply, expected, self._os8_replies, caller)
+  def os8_test_result (self, reply, expected, caller, debug=False):
+    return self.test_result (reply, expected, self._os8_replies, caller, debug)
 
 
   #### mk_os8_name # ###################################################
@@ -822,11 +826,23 @@ class simh:
     self.os8_send_line (cmd)
     reply = self._child.expect (replies, timeout = timeout)
     if debug:
-      print("\tGot reply: " + str(reply) + " -> " + self._os8_replies[reply][0])
       print("\tmatch before: {" + self._child.before.decode() + "}")
       print("\tmatch after: {" + self._child.after.decode() + "}")
     return reply
     
+
+  #### os8_cfm_monitor ##################################################
+  # Confirm return to OS/8 monitor.
+  # This function is necessary so that we know our command has returned to OS/8.
+  # Without this test, the next _child.expect hits a monitor prompt instead of
+  # what it will be looking for.
+  # If caller is not empty, it will emit an error string if the prompt wasn't seen.
+  # Returns True if we are where we expect.
+
+  def os8_cfm_monitor (self, caller):
+    reply = self._child.expect(self._os8_replies_rex)
+    return self.test_result(reply, "Monitor Prompt", self._os8_replies, caller)
+
 
   #### os8_squish ########################################################
   # Wraps the OS/8 SQUISH command for a given device.
@@ -853,6 +869,7 @@ class simh:
   # because the OS/8 PTR driver throws the last character away. (NOT DONE YET)
   #
   # Entry context should be inside OS/8.  Exit context is inside OS/8.
+  #
 
   def os8_pip_to (self, path, os8name, option = None, debug=False):
     if option == None: option = ""
@@ -867,6 +884,17 @@ class simh:
     else:
         dest = os8name
 
+    # Gross hack:
+    # The command decoder prompt that comes when we continue a PTR/PTP
+    # does not have a newline.  But everything else that matches on
+    # a command decoder prompt NEEDS that newline. Otherwise we match
+    # on asterisks in file specs.
+    # Remember to decrement replies on this rex list if we use
+    # _os8_replies
+
+    pip_rex = [re.compile("\\*$".encode())]
+    pip_rex.extend(self._os8_replies_rex)
+    
     did_conversion = False
     if option == "" or option == "/A":
       # Convert text file to SIMH paper tape format in current dir of path.
@@ -896,11 +924,12 @@ class simh:
     
     reply = self.os8_cmd ('R PIP', debug=debug)
     # Has PIP Startup been successful?
-    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_to 0") == False: return
+    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_to 0", \
+                             debug=debug) == False: return
 
     # Give file and test for ready to send,
     reply = self.os8_cmd (dest + '<PTR:' + option, debug=debug)
-    if self.os8_test_result (reply, "PIP Continue", "os8_pip_to 1") == False:
+    if self.os8_test_result (reply, "PIP Continue", "os8_pip_to 1", debug=debug) == False:
       # If we got "PIP Continue" we keep going. Otherwise return.
       # Send escape if reply indicates we didn't go back to the monitor.
       if self._os8_replies[reply][2] == False:
@@ -910,10 +939,11 @@ class simh:
     # Finish transfer
     # The test for success is implicit.
     self.os8_send_ctrl ('[')
-    reply = self._child.expect (self._os8_replies_rex)
-    self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_to 2")
+    reply = self._child.expect (pip_rex)
+    if reply != 0:
+      self.os8_test_result (reply - 1, "Command Decoder Prompt", "os8_pip_to 2", debug=debug)
     # If we did not return to monitor hit escape to exit PIP.
-    if self._os8_replies[reply][2] == False:
+    if self._os8_replies[reply - 1][2] == False:
         self.os8_send_ctrl ('[')      # Success or Non-fatal error.
         # Must exit PIP and wait for monitor prompt. Complain if we don't get it!
         reply = self._child.expect (self._os8_replies_rex)
