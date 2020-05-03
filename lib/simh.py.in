@@ -363,29 +363,34 @@ class simh:
     return self.test_result (reply, expected, self._simh_replies, caller)
 
   
+  #### simh_send_line ########################################################
+  # Send a line to simh while managing context.
+  # If we are not in the simh context call esc_to_simh which will
+  #    send ^e, and set the context to simh.
+  # If we issue a command that enters os8 context, set context "os8".
+  # It is up to the caller to then do an expect to confirm success.
+
+  def simh_send_line (self, cmd, debug=False):
+    if self._context != "simh":
+      self.esc_to_simh()
+    if debug: print ("simh_send_line: Sending: " + cmd)
+    self._child.sendline (cmd)
+    m = re.match (self._simh_comm_re, cmd)
+    if m != None and m.group(1)[:1].upper() in self._enters_os8_context:
+      self._context = "os8"
+
+  
 
   #### simh_cmd ########################################################
   # If we are not in the simh context call esc_to_simh which will
   #    send ^e, and set the context to simh.
   # If we issue a command that enters os8 context, set context "os8".
-  # Note exiting out of OS/8 into the SIMH context is a bit of a
-  # trap door. Resynchronizing with python expect requires provoking
-  # a prompt, and prompts are context specific.
-  # Perhaps we should require separate and explicit commands to
-  # escape to SIMH. But for now, just be careful to use os8_resume
-  # after calling send_cmd.
   # Wait for a reply for error checking.
   # replies is an optional argument that defaults to _simh_replies_rex
   
   def simh_cmd (self, cmd, replies=None, debug=False):
     if replies == None: replies = self._simh_replies_rex
-    if self._context != "simh":
-      self.esc_to_simh()
-    if debug: print ("simh_cmd: Sending: " + cmd)
-    self._child.sendline (cmd)
-    m = re.match (self._simh_comm_re, cmd)
-    if m != None and m.group(1)[:1].upper() in self._enters_os8_context:
-      self._context = "os8"
+    self.simh_send_line (cmd, debug=debug)
     reply = self._child.expect(replies)
     if debug:
       print("\tGot reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
@@ -439,7 +444,7 @@ class simh:
     if name not in supported_shows: return None
     
     ucname = name.upper()
-    self.send_cmd("show " + name)
+    self.simh_send_line("show " + name)
     self._child.expect(ucname + "\s+(.+)\r")
     lines = self._child.after.decode().split ("\r")
     return lines
@@ -539,8 +544,8 @@ class simh:
             det_comm = "det " + from_tape + unit
             if self.verbose:
               print(det_comm + "(Had: " + attached_from[unit] + ")")
-            self.send_cmd(det_comm)
-        self.send_cmd("set " + from_tape + " disabled")
+            self.simh_cmd(det_comm)
+        self.simh_cmd("set " + from_tape + " disabled")
 
     lines = self.do_simh_show(to_tape)
     to_status = self.parse_show_tape_dev(lines)
@@ -553,7 +558,7 @@ class simh:
     elif to_status != "disabled":
       print(to_tape + " already is enabled.")
     else:
-      self.send_cmd("set " + to_tape + " enabled")    
+      self.simh_cmd("set " + to_tape + " enabled")    
 
     # Test to confirm to_tape is now enabled.
 
@@ -627,7 +632,7 @@ class simh:
       return False
     elif rx_type == "disabled":
       if self.verbose: print("rx is disabled. Enabling...")
-      self.send_cmd("set rx enabled")
+      self.simh_cmd("set rx enabled")
       # Retry getting rx info
       lines = self.do_simh_show("rx")
       rx_type = self.parse_show_rx_dev (lines)
@@ -653,9 +658,9 @@ class simh:
           det_comm = "det rx" + unit
           if self.verbose:
             print(det_comm + "(Had: " + attached_rx[unit] + ")")
-          self.send_cmd(det_comm)
+          self.simh_cmd(det_comm)
 
-    self.send_cmd("set rx " + to_rx)
+    self.simh_cmd("set rx " + to_rx)
 
     # Test to confirm new setting of RX
     lines = self.do_simh_show("rx")
@@ -708,7 +713,7 @@ class simh:
       print("tti device is already set to " + to_tti)
       return None
 
-    self.send_cmd("set tti " + to_tti)
+    self.simh_cmd("set tti " + to_tti)
 
     # Test to confirm new setting of tti
     lines = self.do_simh_show("tti")
@@ -911,7 +916,7 @@ class simh:
         self.os8_test_result (reply, "Monitor Prompt", "os8_pip_to 3")
     # detach ptr
     # self.esc_to_simh ()
-    # self.send_cmd ('detach ptr ')
+    # self.simh_cmd ('detach ptr ')
     # self.os8_restart ()
     
     # Remove the temp file if we created one.
@@ -1054,7 +1059,7 @@ class simh:
   # when running under OS/8.
 
   def zero_core (self):
-    self.send_cmd ('de all 0')
+    self.simh_cmd ('de all 0')
   
 
   #### os8_zero_core ###################################################
@@ -1074,10 +1079,10 @@ class simh:
 
   def os8_zero_core (self):
     self.back_to_cmd ('\\.')
-    self.send_cmd ('de 00200-07577 0')
-    self.send_cmd ('de 10000-17577 0')
-    self.send_cmd ('de 20000-27577 0')
-    self.send_cmd ('de 30000-77777 0')
+    self.simh_cmd ('de 00200-07577 0')
+    self.simh_cmd ('de 10000-17577 0')
+    self.simh_cmd ('de 20000-27577 0')
+    self.simh_cmd ('de 30000-77777 0')
     self.os8_restart ()
 
 
