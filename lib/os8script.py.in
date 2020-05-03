@@ -225,10 +225,6 @@ _build_replies = ["\\$", "SYS BUILT", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
                   "\\?PLAT", "\\?SYNTAX", "\\?SYS", "SYS ERR",
                   "\S+ NOT FOUND"]
 
-_pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF\r", "IC\s+\S+", "ID\s+\S+",
-                    "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
-                    "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
-
 
 # Parse two whitspace separated arguments into group(1) and group(2)
 _two_args_re = re.compile("^(\S+)\s+(\S+)$")
@@ -322,6 +318,34 @@ class os8script:
   # Contains a simh object, other global state and methods
   # for running OS/8 scripts under simh.
   #### globals and constants ###########################################
+  _pal8_replies = [
+    # Prompts:
+    ["Monitor Prompt", "\n\\.$", True],
+    ["Command Decoder Prompt", "\\*$", False], # Newline NOT always present!
+    # Status:
+    ["ERRORS DETECTED", "ERRORS DETECTED: ", False],
+    ["LINKS GENERATED", "LINKS GENERATED: ", False],
+    ["Buffer Exceeded", "BE\s+\S+.*\r", True],
+    ["Cref not Found", "CF\s+\S+.*\r", False],
+    ["Device Error", "DE\s+\S+.*\r", True],
+    ["Device Full", "DF\r", True],
+    ["Illegal Character", "IC\s+\S+.*\r", False],
+    ["Illegal re-Definition", "ID\s+\S+.*\r", False],
+    ["Illegal Equals", "IE\s+\S+.*\r", False],
+    ["Illegal Indirect", "II\s+\S+.*\r", False],
+    ["Illegal PseudoOp", "IP\s+\S+.*\r", False],
+    ["Illegal page Zero reference", "IZ\s+\S+.*\r", False],
+    ["Loader not founD", "LD\s+\S+.*\r", False],
+    ["Link Generated", "LG\s+\S+.*\r", False],
+    ["current Page Exceeded", "PE\s+\S+.*\r", False],
+    ["PHase Error", "PH\s+\S+.*\r", False],
+    ["Re Definition", "RD\s+\S+.*\r", False],
+    ["Symbol table Exceeded", "SE\s+\S+.*\r", False],
+    ["Undefined Origin", "UO\s+\S+.*\r", False],
+    ["Undefined Symbol", "US\s+\S.*\r", False],
+    ["page Zero Exceeded", "ZE\s+\S+.*\r", False],
+    ["NOT FOUND", "\S+ NOT FOUND", False],
+  ]
   
   
   def __init__ (self, simh, enabled_options, disabled_options, verbose=False, debug=True):
@@ -337,6 +361,13 @@ class os8script:
     self.scratch_list = []
     self.booted = False
     self.line_ct_stack = []
+
+    # Pre-compile our pal8_replies regexps.
+    self._pal8_replies_rex = []
+    for item in self._pal8_replies:
+      self._pal8_replies_rex.append(re.compile(item[1].encode()))
+
+
 
 
   #### path_expand #######################################################
@@ -772,7 +803,7 @@ class os8script:
     if self.verbose:
       print("Resuming OS/8 at line " + str(self.line_ct_stack[0]) + ".")
 
-    self.simh.os8_restart()
+    self.simh.simh_restart_os8()
     return "success"
 
 
@@ -783,7 +814,7 @@ class os8script:
     if self.verbose:
       print("Restarting OS/8 at line " + str(self.line_ct_stack[0]) + ".")
 
-    self.simh.os8_restart()
+    self.simh.simh_restart_os8()
     return "success"
 
 
@@ -1130,7 +1161,7 @@ class os8script:
         # We carefully separate com and args
         # But don't make much use of that yet.
         if self.verbose and self.debug: print(line)
-        self.simh.os8_send_cmd ("\\.", line[1:])  # Skip Prompt.
+        self.simh.os8_cmd (line[1:])  # Skip Prompt.
   
     patch_file.close()
   
@@ -1158,30 +1189,46 @@ class os8script:
   
     if self.verbose: print("Assembling " + source)
     com_line = binary + "<" + source + options
-    self.simh.os8_send_cmd ("\\.", "R PAL8")
+    reply = self.simh.os8_cmd ("R PAL8")
     # Did the command successfully run and enter the command decoder?
-    reply = self.simh._child.expect (self.simh._cd_rep_compiled)
-    if reply != 0:
+    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "call_pal8") == False:
       print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
       return "fail"
 
-    self.simh.os8_send_line (com_line)
+    # Send our command and harvest results.
+    reply = self.simh.os8_cmd (com_line, self._pal8_replies_rex)
     err_count = 0
-    reply = self.simh._child.expect (_pal8_replies)
     executed_line = self.simh._child.before.decode().strip()
-    reply_str = self.simh._child.after.decode().strip()
-    if reply == 0:
-      self.simh._child.expect("\d+")
-      err_count = int(self.simh._child.after.decode().strip())
-      reply_str += " " + self.simh._child.after.decode().strip()
-    if reply > 0 or err_count > 0:
-      print("PAL8 Error: ")
-      print("\t*" + executed_line)
-      print("\t" + reply_str)
-      self.simh.os8_send_ctrl ('c')      # exit PAL8 Just in case.
-      # We could do something better than just dying, I expect.
+    reply_match_str = self.simh._child.after.decode().strip()
+    ed  = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "call_pal8")
+    mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
+    cd  = self.simh.test_result(reply, "Command Decpder Prompt", self._pal8_replies, "")
+    lg  = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+    err_string = ""
+    # We're going to print all the errors we see
+    # and keep looking till we get either a monitor or command decoder prompt.
+    while not mon:
+      if ed:   # Got Errors Detected. Count them.
+        self.simh._child.expect("\d+")
+        err_count = int(self.simh._child.after.decode().strip())
+      elif lg: 
+        self.simh._child.expect("\d+")
+        link_count = int(self.simh._child.after.decode().strip())
+      elif cd: # Got Command Decoder. Exit with failure.
+        print ("Sending ^C")
+        self.simh.os8_send_ctrl ('c')      # Exit pal8
+      else:
+        err_string += ("\t" + self.simh._child.after.decode().strip() + "\n")
+      reply = self.simh._child.expect(self._pal8_replies_rex)
+      print ("Now have: " + self._pal8_replies[reply][0])
+      ed = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
+      mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
+      cd = self.simh.test_result(reply, "Command Decoder Prompt", self._pal8_replies, "")
+      lg = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+    if err_count > 0 or err_string != "":
+      print ("PAL8 Error: \n\t" + executed_line)
+      print (err_string)
       return "fail"
-    # self.simh.os8_send_ctrl ('[')      # exit PAL8
     return "success"
 
 
@@ -1807,7 +1854,7 @@ class os8script:
     if copyin0: self.simh.send_cmd ("attach -r dt0 " + dirs.os8mi + copyin0[1])
     if copyin1: self.simh.send_cmd ("attach -r dt1 " + dirs.os8mi + copyin1[1])
   
-    self.simh.os8_restart()
+    self.simh.simh_restart_os8()
   
     if copyin0:
       if self.verbose: print(copyin0[2])
