@@ -42,7 +42,6 @@ import tempfile
 import time
 import re
 import sys
-import traceback
 
 import pidp8i
 
@@ -277,7 +276,7 @@ class simh:
 
 
   #### send_line #######################################################
-  # Sends the given line "blind", without waiting for a prompt.
+  # Sends the given line "blind", without before or after checks
 
   def send_line (self, line):
     self._child.sendline (line)
@@ -407,6 +406,14 @@ class simh:
     return reply
 
 
+  #### quit ############################################################
+  # Quits the simulator and waits for it to exit
+  # By calling simh_send_line, we are careful to look to our context
+  # and escape to SIMH if necessary.
+
+  def quit (self):
+    self.simh_send_line("quit")
+  
 
   ################# PDP-8 SIMH Interaction #############################
   # High level interfaces to learn about and change device configurations
@@ -446,6 +453,7 @@ class simh:
   #### do_simh_show  ###################################################
   # Calls show on the device name.
   # Returns array of lines from output.
+  # This is focused on OS/8 devices.
 
   def do_simh_show (self, name):
     supported_shows = ["dt", "td", "tti", "rx"]
@@ -839,11 +847,25 @@ class simh:
   # If caller is not empty, it will emit an error string if the prompt wasn't seen.
   # Returns True if we are where we expect.
 
-  def os8_cfm_monitor (self, caller):
+  def os8_cfm_monitor (self, caller, debug=False):
     reply = self._child.expect(self._os8_replies_rex)
-    return self.test_result(reply, "Monitor Prompt", self._os8_replies, caller)
+    return self.os8_test_result(reply, "Monitor Prompt", caller, debug=debug)
 
 
+  #### simh_restart_os8 #######################################################
+  # Abstraction on returning to OS/8 monitor from within SIMH.
+  # It is common practice to "load address 7600; start" at the console.
+  
+  def simh_restart_os8 (self, caller = "", debug=False):
+    # Note we're calling simh with os8 replies because we will
+    # be switching contexts.
+    # simh_cmd manages the context, and checks for success
+    # by expecting a command prompt.
+    reply = self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
+    # We test our reply with os8_test result because we're in OS/8 now.
+    self.os8_test_result(reply, "Monitor Prompt", caller)
+
+    
   #### os8_squish ########################################################
   # Wraps the OS/8 SQUISH command for a given device.
 
@@ -1010,10 +1032,14 @@ class simh:
       return
 
     self.os8_send_ctrl ('[')      # exit PIP
+    # Must wait for monitor prompt. Complain if we don't get it!
+    reply = self._child.expect (self._os8_replies_rex)
+    self.os8_test_result (reply, "Monitor Prompt", "os8_pip_from 2")
+
     self.esc_to_simh(debug)
     self.simh_cmd ('detach ptp', debug=debug)  # Clean flush of buffers.
     # Enter OS/8.
-    self.simh_restart_os8(caller="os8_pip_from 1")
+    self.simh_restart_os8(caller="os8_pip_from 3")
 
     if option == "" or option == "/A":
       if self.verbose: print("Format converting " + path)
@@ -1025,7 +1051,6 @@ class simh:
       tool = os.path.join (bdir, 'bin', 'ptp2txt')
       subprocess.call (tool + ' < ' + pf + ' > ' + path, shell = True)
       os.remove(pf)
-
 
 
   ################## Under Review #####################################
@@ -1063,20 +1088,6 @@ class simh:
     self.os8_send_str('\r\n')
   
 
-  #### simh_restart_os8 #######################################################
-  # Abstraction on returning to OS/8 monitor from within SIMH.
-  # It is common practice to "load address 7600; start" at the console.
-  
-  def simh_restart_os8 (self, caller = "", debug=False):
-    # Note we're calling simh with os8 replies because we will
-    # be switching contexts.
-    # simh_cmd manages the context, and checks for success
-    # by expecting a command prompt.
-    reply = self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
-    # We test our reply with os8_test result because we're in OS/8 now.
-    self.os8_test_result(reply, "Monitor Prompt", caller)
-
-    
   #### zero_core #######################################################
   # Will probably move to the new way as simh utility.
   # From SIMH context, zero the entire contents of core, which is
@@ -1119,15 +1130,6 @@ class simh:
     self.simh_cmd ('de 30000-77777 0')
     self.os8_restart ()
 
-
-  #### quit ############################################################
-  # Will need a rewrite in the new way.
-  # Quits the simulator and waits for it to exit
-
-  def quit (self):
-    self.send_cmd ("q")
-    self._child.expect (pexpect.EOF)
-  
 
   ######################## Deprecated functions ########################
   # These functions are hold-overs from the old main loop that

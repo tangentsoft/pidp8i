@@ -15,6 +15,8 @@ write a script to make use of it. The result is `class simh`, currently
 used by six different scripts in the PiDP-8/I software distribution
 including `os8-run` and the `teco-pi-demo` demo script.
 
+The basis for this work is `pexpect` the Python Expect library.
+
 This document describes how `teco-pi-demo` works, and through it, how
 `class simh` works, with an eye toward teaching you how to reuse this
 functionality for your own ends.
@@ -100,6 +102,83 @@ more than once with different script inputs, so we want to preserve
 the prior script outputs, not keep only the latest.
 
 
+## Driving SIMH and OS/8
+
+The basic control flow is:
+
+1. Send to SIMH text to act upon.
+2. Harvest results.
+3. Check results.
+4. Goto 1 or quit.
+
+There are a number of helper methods and data structures to help
+in checking results.
+
+Although `pexpect` can search replies for a regular expression string,
+or a list of such strings, the helper methods use an array of compiled
+regular expressions.
+
+The simh class contains two arrays, `_simh_replies` and `_os8_replies`
+with corresponding arrays of compiled regular expressions, `_simh_replies_rex`,
+and `_os8_replies_rex`.
+
+You can use the simh Class replies or define some for yourself. Example:
+
+```
+my_replies = [
+  ["Sample Reply", "Sample Reply\s+.*\n$", "False"],
+  ["Fatal Error", "Fatal error was\s+.*\n$", "True"]
+]
+
+my_replies_rex = []
+for item in my_replies:
+   my_replies_rex.append(re.compile(item[1].encode()))
+
+```
+
+High level calls to run commands in SIMH can be made from
+
+`simh_cmd` for SIMH commands and
+`os8_cmd` for OS/8 commands.
+
+These two methods default to searching results for replies in the relevant arrays.
+They return an index into the array that says which reply was received.
+
+The `test_result` method takes a reply number, an expected reply name, an array
+replies and a string for helping identify the caller of the test.  (There's also an
+optional debug flag. These scripts can be difficult to debug.)
+
+To see if the reply from running a command that would reply with
+`my_replies` the code would be:
+
+```
+s.test_result(reply, "Fatal Error", my_replies, "myfunc")
+```
+
+The reply item at the index given by `reply` is examined. And the desired reply
+is matched against the first element of that item.  If it matches, `True` is returned,
+otherwise `False` is returned.  If the caller string is present, (in this case,
+`"myfunc"`, a message is printed if the reply doesn't match the expected reply.
+If the caller string is the empty string, no message is printed.  This makes it
+easy to add error diagnostics without a lot of extra work.
+
+Sometimes you want to try a couple different expected values, and don't want
+to print anything if there isn't a match.  That's why we special case an empty
+caller string.
+
+For SIMH and OS/8 command testing, there are convenience wrappers, `simh_test_result`
+and `os8_test_result` that use the relevant array so you don't have to keep typing it.
+So the following two are equivalent:
+
+```
+s.test_result(reply, "Prompt", s._simh_replies, "myfunc", debug=True)
+
+s.simh_test_result(reply, "Prompt", "myfunc", debug=True)
+```
+
+Armed with an understanding of how we make calls into SIMH and OS/8, and
+how we test results, we're ready to continue our exploration.
+
 ## Finding and Booting the OS/8 Media
 
 If your program will use our OS/8 boot disk, you can find it
@@ -119,82 +198,104 @@ Now we attach the RK05 disk image to the PiDP-8/I simulator found by the
 `simh` object and boot from it:
 
     print "Booting " + rk + "..."
-    s.send_cmd ("att rk0 " + rk)
+    s.simh_cmd ("att rk0 " + rk)
+    s.simh_test_result (reply, "Prompt", "main 1")
     s.send_cmd ("boot rk0")
+    reply = s.simh_cmd ("boot rk0", s._os8_replies_rex)
+    s.os8_test_result (reply, "Monitor Prompt", "main 2")
 
-This shows one of the most-used methods, `simh.send_cmd`, which sends a
-line of text along with a carriage return to the spawned child program,
-which again is `pidp8i-sim`.
+A couple subtle points:  We issued a command to SIMH to attach the rk0
+device. If we didn't get the SIMH prompt back, `simh_test_result` would
+have said,
+
+    main 1: Expecting Prompt. Instead got: Fatal Error
+
+Then we issued the SIMH command to boot that device. We used the `os8_test_result`
+method instead of the `simh_test_result` method because we expected
+the panoply of replies would more likely be from the OS/8 list.
+
+After the simulator starts up, and we've confirmed we've got our
+OS/8 monitor prompt as a result, we send the first OS/8 command to start our demo.
+
+    s.os8_cmd ("R TECO")
+    s.os8_test_result (reply, "Command Decoder Prompt", "main 2")
 
 
-## Driving SIMH and OS/8
 
-After the simulator starts up, we want to wait for an OS/8 “`.`” prompt
-and then send the first OS/8 command to start our demo. We use the
-`simh.os8_send_cmd` method for that:
+The bulk of `teco-pi-demo` consists of more calls to `simh.os8_cmd`
+and `simh.cmd`. Read the script if you want more examples.
 
-    s.os8_send_cmd ('\\.', "R TECO")
-
-This method differs from `send_cmd` in a couple of key ways.
-
-First, it waits for a configurable prompt character — sent as the first
-parameter — before sending the command.  This is critical when driving
-OS/8 because OS/8 lacks a keyboard input buffer, so if you send text to
-it too early, all or part of your input is likely to be lost, so your
-command won't work.
-
-Second, because OS/8 can only accept so many characters of input per
-second, `os8_send_cmd` inserts a small delay between each input
-character to prevent character losses.
-
-(See the commentary for `simh._kbd_delay` if you want to know how that
-delay value was calculated.)
-
-The bulk of `teco-pi-demo` consists of more calls to `simh.os8_send_cmd`
-and `simh.send_cmd`. Read the script if you want more examples.
-
-**IMPORTANT:** The “`\\.`” syntax for specifying the OS/8 `.` command
-prompt is tricky. If you pass just `'.'` here instead, Python's
-[regular expression][re] matching engine will interpret it to mean
-that it should match *any* character as the prompt, almost certainly
-breaking your script's state machine, since it is likely to cause the
-call to return too early. If you instead pass `'\.'`, Python's string
-parser will take the backslash as escaping the period and again pass
-just a single period character to the regex engine, giving the same
-result. You must specify it exactly as shown above to escape the
-backslash so that Python will send an escaped period to the regex
-engine, which in turn is necessary to cause the regex engine to treat
-it as a literal period rather than the "any character" wildcard.
-
-Much the same is true when your script needs to await the common
-<code>*</code> prompt character: you must pass it like so:
-
-    s.os8_send_cmd ('\\*', 'COMMAND')
+**IMPORTANT:** When you specify the [regular expression][re] strings
+for result matching, and want literal matches for characters that
+are special to regular expressions such as dot `.`, asterisk `*`,
+etc., you need to be preface the characterpair of backslashes.
+Example:  To match a literal dollar sign you would say `\\$`.
 
 [re]: https://en.wikipedia.org/wiki/Regular_expression
 
 
-## Escaping OS/8 to SIMH
+## Contexts
 
-Sometimes you need to escape from OS/8 back to SIMH with a
-<kbd>Ctrl-E</kbd> keystroke so that you can send more SIMH commands
-after OS/8 starts up. This accomplishes that:
+The operation of OS/8 under SIMH requires awareness of who
+is getting the commands: SIMH, the OS/8 Keyboard Monitor,
+the OS/8 Command Decoder, or some read/eval/print loop in
+a program being run.
 
-    s.os8_send_ctrl ('e')
+Your use of the simh class needs to be mindful of this.
 
-While out in the SIMH context, you *could* continue to call the
-`simh.os8_*` methods, but since SIMH can accept input as fast as your
-program can give it, it is best to use methods like `simh.send_cmd`
-which don't insert artificial delays.  For many programs, this
-difference won't matter, but it results in a major speed improvement in
-a program like `os8-run` which sends many SIMH and OS/8 commands
-back-to-back!
+### Within a program under OS/8
+
+If you've forgotten to exit a sub-program, that program
+will still be getting your subsequent commands instead of
+OS/8.
+
+You may have a program that keeps running and asking for more input,
+for example OS/8 `PIP` returns to the command decoder after each
+action.
+
+The `os8_send_ctrl` method enables you to send an interrupt character.
+For example:
+
+```
+    s.os8_send_ctrl ('c')
+```
+
+You should then check the results.  A handy wrapper for the
+test that will test for and consume the monitor prompt making
+ready for your next OS/8 command is, `os8_cmf_monitor`. For example:
+
+    self.simh.os8_cfm_monitor ("myprog")      
+
+### Between SIMH and OS/8
+
+Similarly it is important to make sure that commands intended for SIMH
+go there, and not to OS/8 or any programs running under SIMH.  The
+`os8_cmd` amd `simh_cmd` methods keep track of context. If
+you call the `simh_cmd` method but aren't actually escaped out to
+SIMH, an escape will be made for you, and the context change will be
+recorded.
+
+If you issue `os8_cmd` when OS/8 is not running, it will complain
+and refuse to send the command.
+
+The cleanest way to explicitly escape from OS/8 to SIMH
+is to call `esc_to_simh`. It manages the context switch, and tests
+to see that you got the SIMH prompt.  Example:
+
+    esc_to_simh()
+
+Subtle points:  Calling  `simh_cmd` will leave you in SIMH. You will
+need to resume OS/8 explicitly.  There are a variety of ways
+to do this.
 
 
 ## Getting Back to OS/8 from SIMH
 
 There are several ways to get back to the simulated OS/8 environment
 from SIMH context, each with different tradeoffs.
+
+*FIXME*  We used to have a lot of trouble with continue commands.
+We think they're all fixed now, so we can fully flesh out this section.
 
 
 ### Rebooting
@@ -252,6 +353,26 @@ Yes, <kbd>Escape</kbd> is <kbd>Ctrl-\[</kbd>. Now you can be the life of
 the party with that bit of trivia up your sleeve. Or maybe you go to
 better parties than I do.
 
+## Sending without testing results.
+
+At some point you always need to test your results and make sure
+you are where you think you are.  Otherwise some corner case will
+trip up your use of the simh class, and the error message you will
+get is a 60 second pause, and a big backtrace.
+
+But often you need to send and receive data in a much less structured
+way than that used by `os8_cmd` and `simh_cmd`.  Here is what you need:
+
+| Method           | Description                                                   |
+|----------------  |----------------------------------------------------------------
+| `send_line`      | Send the given line blind without before or after checks.
+| `simh_send_line` | Like `send_line` above, but mindful of context. Will escape to SIMH if necessary.|
+| `os8_kbd_delay`  | Wait an amount of time proportional to what OS/8 should be able to handle on the hosting platform without overflowing the input buffer and dying. |
+| `os8_send_ctrl`  | Send a control character to OS/8.  Use `os8_kbd_delay` to prevent overflowin the input buffer and killing OS/8.|
+| `os8_send_str`   | Send a string of characters to OS/8, and wait for os8_kbd_delay afterwards. |
+| `os8_send_line`  | Add a carriage return to the given string and calk os8_send_str` to send it to OS/8.|
+
+
 
 ## But There's More!
 
@@ -276,7 +397,7 @@ somewhat different directory structure from the installation tree.
 
 ## <a id="license" name="credits"></a>Credits and License
 
-Written by and copyright © 2017-2019 by Warren Young. Licensed under the
-terms of [the SIMH license][sl].
+Written by and copyright © 2017-2020 by Warren Young and William Cattey.
+Licensed under the terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
