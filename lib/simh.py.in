@@ -239,8 +239,6 @@ class simh:
     self._os8_fatal_check = []
     self.verbose = False
 
-    # We keep track of what our command context is so our caller does
-    # not need to explicitly call back_to_cmd() or sendcontrol ('e').
     # We keep track of the command context and transition automatically.
     self._context = "simh"
     
@@ -850,6 +848,16 @@ class simh:
   def os8_cfm_monitor (self, caller, debug=False):
     reply = self._child.expect(self._os8_replies_rex)
     return self.os8_test_result(reply, "Monitor Prompt", caller, debug=debug)
+
+
+  #### os8_escape ##################################################
+  # Return to OS/8 monitor using the given escape character.
+  # Confirm we got our monitor prompt.
+  # Optional caller argument enables a message if escape failed.
+
+  def os8_escape (self, char, caller = "", debug=False):
+    self.os8_send_ctrl (char)
+    return self.os8_cfm_monitor (caller)
 
 
   #### simh_restart_os8 #######################################################

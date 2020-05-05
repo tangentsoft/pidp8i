@@ -111,6 +111,8 @@ The basic control flow is:
 3. Check results.
 4. Goto 1 or quit.
 
+## Checking results
+
 There are a number of helper methods and data structures to help
 in checking results.
 
@@ -135,6 +137,17 @@ for item in my_replies:
    my_replies_rex.append(re.compile(item[1].encode()))
 
 ```
+
+Often you want your replies in addition to the errors you might
+want from OS/8.  In that case you'd do something like:
+
+```
+my_replies.extend(s._os8_replies)
+```
+Of course the extend would appear before the computation of
+`my_replies_rex`.
+
+## Running SIMH or OS/8 commands
 
 High level calls to run commands in SIMH can be made from
 
@@ -200,7 +213,6 @@ Now we attach the RK05 disk image to the PiDP-8/I simulator found by the
     print "Booting " + rk + "..."
     s.simh_cmd ("att rk0 " + rk)
     s.simh_test_result (reply, "Prompt", "main 1")
-    s.send_cmd ("boot rk0")
     reply = s.simh_cmd ("boot rk0", s._os8_replies_rex)
     s.os8_test_result (reply, "Monitor Prompt", "main 2")
 
@@ -306,36 +318,43 @@ If you need to save state between one run of OS/8 and the next, save it
 to the RK05 disk pack or other SIMH media, then re-load it when OS/8
 reboots.
 
+It's important to check that you got your OS/8 prompt so the recommended
+code looks like this:
+
+```
+    reply = s.simh_cmd ("boot rk0", my_replies_rex)
+    s.os8_test_result (reply, "Monitor Prompt", "myprog")
+```
 
 ### Continuing
 
-The way `teco-pi-demo` does it is to send a `cont` command to SIMH.
+The way `teco-pi-demo` does it is to send a `cont` command to SIMH:
 
-The problem with this method is that it sometimes hangs the simulator.
-The solution is to insert a small delay *before* escaping to the SIMH
-context. I'm not sure why this is sometimes necessary. My best guess is
-required to give OS/8 time to settle into an interruptible state before
-escaping to SIMH, so that on "continue," we re-enter OS/8 in a sane
-state.
+```
+    s.send_line ('cont')
+```
 
-You can usually avoid the need for that delay by waiting for an OS/8
-command prompt before escaping to SIMH, since that is a reliable
-indicator that OS/8 is in such an interruptible state.
-
-You don't see these anomalies when using OS/8 interactively because
-humans aren't fast enough to type commands at OS/8 fast enough to cause
-the problem.  That is doubtless why this bug still exists in OS/8
-in 2017.
+A previous version of the simh class would sometime hang the
+simulator unless a small delay were inserted before escaping to
+the SIMH context.  We believe this is no longer necessary.
+However the problems with `cont` made implementors gun shy
+using it.  Most code you will see does a restart with an explicit
+confirmation we are at the OS/8 command level.
 
 
-### Re-Entering
+### Re-starting OS/8
 
 If your use of OS/8 is such that all required state is saved to disk
-before re-entering OS/8, you can call the `simh.os8_restart` method to
-avoid the need for a delay *or* a reboot.  It re-calls OS/8's entry
-point from SIMH context, which we've found through much testing is
-entirely reliable, as compared to sending a SIMH `cont` command without
-having delayed before escaping to SIMH context.
+before re-entering OS/8, you can call the `simh_restart_os8` method to
+avoid the need for a delay *or* a reboot.
+
+It sends the simh command `go 7600` which is the traditional "restart
+at the OS/8 entrypoint" commonly used from the PDP-8 front panel.
+It then uses `os8_test_result` to confirm that it got a monitor prompt.
+`simh_restart_os8` has an optional `caller` argument to make it
+quick and easy to print an error if returning to the monitor failed.
+
+    s.simh_restart_os8 (caller = "myprog")
 
 `os8-run` uses this option extensively.
 
@@ -343,11 +362,16 @@ having delayed before escaping to SIMH context.
 ## Sending Escape Characters
 
 Several OS/8 programs expect an <kbd>Escape</kbd> (a.k.a. `ALTMODE`)
-keystroke to do things. Examples are `TECO` and `FRTS`. There isn't a
-specific method to do this because we can do that in terms of one we've
-just described:
+keystroke to do things. Examples are `TECO` and `FRTS`. A higher
+level method that does this, confirms the return to the OS/8 monitor,
+gives the option to provide an error report, and returns `True`
+if successful or `False` if not.
 
-    s.os8_send_ctrl ('[')
+    if not s.os8_escape ('[', caller="myprog"): print ("More error reporting") 
+
+The lower level method to send an escape character is `os8_send_ctrl`
+if your control flow is such that you need to do more before checking
+the OS/8 output.
 
 Yes, <kbd>Escape</kbd> is <kbd>Ctrl-\[</kbd>. Now you can be the life of
 the party with that bit of trivia up your sleeve. Or maybe you go to
