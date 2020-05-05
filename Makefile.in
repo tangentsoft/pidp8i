@@ -261,7 +261,6 @@ INFILES = \
 	@srcdir@/bin/os8-cp.in \
 	@srcdir@/bin/os8-run.in \
 	@srcdir@/bin/teco-pi-demo.in \
-	@srcdir@/bin/txt2os8.in \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
 	@srcdir@/boot/2.script.in \
