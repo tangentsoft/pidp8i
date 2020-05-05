@@ -1,0 +1,22 @@
+mount rk0 $bin/v3d.rk05 required scratch
+mount dt0 $os8mo/pal-test.tu56 new
+mount rk1 $bin/v3d-src.rk05 required
+
+boot rk0
+
+print Create test tape
+os8 ZERO DTA0:
+cpto $os8mi/PALTST.PA DTA0:
+os8 COPY DTA0:<RKB1:BOOT.PA
+
+print Confirm right things happen when source not found.
+
+pal8 FOO.BN<FOO.PA
+
+print Confirm a good build is successful:
+
+pal8 DTA0:BOOT.BN<DTA0:BOOT.PA
+
+print Confirm we display errors:
+
+pal8 FOO.BN<DTA0:PALTST

@@ -160,7 +160,7 @@ class simh:
     # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
     ["Directory I/O Error", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
     ["I/O Error on SYS", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
-    ["Directory I/O Error", "MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["Directory I/O Error", "MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)\r", True],
     ["File not available", "(\S+) NOT AVAILABLE", False],
     ["File not found", "(\S+) NOT FOUND", False],
     #  OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
@@ -340,7 +340,7 @@ class simh:
       return True
     else:
       if caller != "":
-        print (caller + ": Expected " + expected + ". Instead got: " + reply_ID)
+        print (caller + ": Expected: \"" + expected + "\". Instead got: \"" + reply_ID + "\".")
       return False      
 
   
@@ -767,8 +767,8 @@ class simh:
 
   def os8_send_str (self, str):
     for i in range (0, len (str)):
-      self._child.send (str[i])
       self.os8_kbd_delay ()
+      self._child.send (str[i])
 
 
   #### os8_send_ctrl ###################################################
