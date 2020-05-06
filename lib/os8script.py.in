@@ -37,6 +37,7 @@
 import os
 import sys
 import tempfile
+import time
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 sys.path.insert (0, os.getcwd () + '/lib')
 
@@ -847,7 +848,10 @@ class os8script:
     if self.verbose:
       print("Resuming OS/8 at line " + str(self.line_ct_stack[0]) + ".")
 
-    self.simh.simh_restart_os8()
+    self.simh.simh_send_line ("cont", debug=self.debug)
+    # Give OS/8 a chance to wake up.
+    self.simh._child.expect("cont\r")
+    self.simh.os8_kbd_delay()
     return "success"
 
 
@@ -1170,10 +1174,6 @@ class os8script:
     the_command = ""
     the_command_parser = None
     
-    # Resume OS/8 if necessary.
-    if self.simh._context == "simh":
-      self.resume_command(line, script_file)
-
     for line in patch_file:
       line = line.rstrip()
       if line == "": continue
@@ -1494,6 +1494,9 @@ class os8script:
       self.resume_command(line, script_file)
 
     reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
+    if self.verbose:
+      print (self.simh._child.before.decode())
+
     self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command")
 
     return "success"
@@ -1513,11 +1516,6 @@ class os8script:
 
     m_2form = re.match (_two_arg_pal_re, line)
     if m_2form != None:
-
-      # Resume OS/8 if necessary. (I Don't think it ever is.)
-      if self.simh._context == "simh":
-        self.resume_command(line, script_file)
-
       # Call the 2arg pal8 code that works hard at error analysis.
       if m_2form.group(7) == None:
         options = ""
@@ -1559,10 +1557,6 @@ class os8script:
       self.ignore_to_subcomm_end(line, script_file, "")
       return "fail"
     else:
-      # Resume OS/8 if necessary.  (I don't think it ever is.)
-      if self.simh._context == "simh":
-        self.resume_command(line, script_file)
-
       return sub_commands[m.group(1)](m.group(3), script_file)
   
   
