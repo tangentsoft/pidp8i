@@ -278,7 +278,6 @@ INFILES = \
 	@srcdir@/lib/simh.py.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
-	@srcdir@/tools/test-os8-send-file.in \
 	$(OS8RUN_INFILES)
 OS8RUN_OUTFILES := $(subst @srcdir@/,,$(OS8RUN_INFILES))
 OS8RUN_OUTFILES := $(subst .in,,$(OS8RUN_OUTFILES))

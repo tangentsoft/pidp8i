@@ -334,7 +334,10 @@ class simh:
         print (caller + ": failure.")
       return False
     reply_ID = results[reply][0]
-    if debug: print ("test_result: Got: " + reply_ID)
+    if debug:
+      print ("test_result: Got reply: " + str(reply) + " -> "  + reply_ID)
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
     if reply_ID.lower() == expected.lower():
       return True
     else:
@@ -413,6 +416,25 @@ class simh:
   def quit (self):
     self.simh_send_line("quit")
   
+
+  #### zero_core #######################################################
+  # From SIMH context, zero the entire contents of core, which is
+  # assumed to be 32 kWords.
+  #
+  # SIMH's PDP-8 simulator doesn't start with core zeroed, on purpose,
+  # because the actual hardware did not do that.  SIMH does not attempt
+  # to simulate the persistence of core memory by saving it to disk
+  # between runs, but the SIMH developers are right to refuse to do this
+  # by default: you cannot trust the prior state of a PDP-8's core
+  # memory before initializing it yourself.
+  #
+  # See os8_zero_core () for a less heavy-handed alternative for use
+  # when running under OS/8.
+
+  def zero_core (self):
+    reply = self.simh_cmd ('de all 0')
+    self.simh_test_result(reply, "Prompt", "simh_zero_core")
+
 
   ################# PDP-8 SIMH Interaction #############################
   # High level interfaces to learn about and change device configurations
@@ -875,6 +897,32 @@ class simh:
     self.os8_test_result(reply, "Monitor Prompt", caller)
 
     
+  #### os8_zero_core ###################################################
+  # Starting from OS/8 context, bounce out to SIMH context and zero all
+  # of core excepting:
+  #
+  # 0. zero page - many apps put temporary data here
+  # 1. the top pages of fields 1 & 2 - OS/8 is resident here
+  # 2. the top page of field 2 - OS/8's TD8E driver (if any) lives here
+  #
+  # We then restart OS/8, which means we absolutely need to do #1 and
+  # may need to do #2.  We could probably get away with zeroing page 0.
+  #
+  # All of the above explains why we have this special OS/8 alternative
+  # to the zero_core() method.
+
+  def os8_zero_core (self):
+    reply = self.simh_cmd ('de 00200-07577 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core 00200-07577")
+    reply = self.simh_cmd ('de 10000-17577 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core de 10000-17577 0")
+    reply = self.simh_cmd ('de 20000-27577 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core de 20000-27577 0")
+    reply = self.simh_cmd ('de 30000-77777 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core de 30000-37577 0")
+    self.simh_restart_os8 ()
+
+
   #### os8_squish ########################################################
   # Wraps the OS/8 SQUISH command for a given device.
 
@@ -1060,240 +1108,3 @@ class simh:
       tool = os.path.join (bdir, 'bin', 'ptp2txt')
       subprocess.call (tool + ' < ' + pf + ' > ' + path, shell = True)
       os.remove(pf)
-
-
-  ################## Under Review #####################################
-  # These functions were ad-hoc answers to issues.
-  # Ideally there's one way to do stuff, and redundant ways go away.
-  # They'll either move to the new way or be deprecated.
-  
-  #### os8_resume #######################################################
-  # Never worked. May be possible with new command loop.
-  # Resume OS/8.
-  #
-  # It would be nice if we could just send  the "cont" command
-  # and have python expect and OS/8 synch right up.
-  # But so far we have not figured out how to do that.
-  # To resume OS/8 from SIMH we need to provoke a prompt.
-  # Typing a rubout or ^U at a SIMH terminal session does this.
-  # But not when SIMH is run under python expect.
-  # We don't know why.
-  #
-  # boot works
-  # go 7600 works
-  # ^C <pause> \n\r works.
-  #
-  # The resume command uses the ^C method as the least disruptive
-  # to system state.
-
-  def os8_resume (self):
-    if self._context == "os8": return   # Already running.
-    
-    self.send_cmd("cont")   # sets os8 context for us.
-
-    # Now provoke a keyboard monitor prompt.
-    self.os8_send_ctrl('c')
-    self.os8_kbd_delay()
-    self.os8_send_str('\r\n')
-  
-
-  #### zero_core #######################################################
-  # Will probably move to the new way as simh utility.
-  # From SIMH context, zero the entire contents of core, which is
-  # assumed to be 32 kWords.
-  #
-  # SIMH's PDP-8 simulator doesn't start with core zeroed, on purpose,
-  # because the actual hardware did not do that.  SIMH does not attempt
-  # to simulate the persistence of core memory by saving it to disk
-  # between runs, but the SIMH developers are right to refuse to do this
-  # by default: you cannot trust the prior state of a PDP-8's core
-  # memory before initializing it yourself.
-  #
-  # See os8_zero_core () for a less heavy-handed alternative for use
-  # when running under OS/8.
-
-  def zero_core (self):
-    self.simh_cmd ('de all 0')
-  
-
-  #### os8_zero_core ###################################################
-  # Will probably move to the new way as an OS/8 utility
-  # Starting from OS/8 context, bounce out to SIMH context and zero all
-  # of core excepting:
-  #
-  # 0. zero page - many apps put temporary data here
-  # 1. the top pages of fields 1 & 2 - OS/8 is resident here
-  # 2. the top page of field 2 - OS/8's TD8E driver (if any) lives here
-  #
-  # We then restart OS/8, which means we absolutely need to do #1 and
-  # may need to do #2.  We could probably get away with zeroing page 0.
-  #
-  # All of the above explains why we have this special OS/8 alternative
-  # to the zero_core() method.
-
-  def os8_zero_core (self):
-    self.back_to_cmd ('\\.')
-    self.simh_cmd ('de 00200-07577 0')
-    self.simh_cmd ('de 10000-17577 0')
-    self.simh_cmd ('de 20000-27577 0')
-    self.simh_cmd ('de 30000-77777 0')
-    self.os8_restart ()
-
-
-  ######################## Deprecated functions ########################
-  # These functions are hold-overs from the old main loop that
-  # tested for a prompt, did work, and maybe sifted through errors.
-  # The current paradigm is: Do something, and test for success.
-  
-  #### back_to_cmd ######################################################
-  # Replaced by esc_to_simh
-  # Pause the simulation and return to the SIMH command prompt when the
-  # simulated software emits the given prompt string.  Typically used to
-  # wait for OS/8 to finish running a command so we can do something
-  # down at the SIMH layer instead.
-
-  def back_to_cmd (self, prompt):
-    self._child.expect ("\n%s$" % prompt)
-    self.os8_kbd_delay ()
-    self._child.sendcontrol ('e')
-    self._context = "simh"
-
-
-  #### os8_send_cmd ####################################################
-  # Replaced by os8_cmd
-  # Wait for an OS/8 command prompt running within SIMH, then send the
-  # given line.
-  #
-  # The default timeout may seem excessive, but it is based on hard
-  # experience: when SIMH is running on a slow host with slow devices
-  # (e.g. the byte-by-byte transfer of the TD8E tape controller) a
-  # single OS/8 command can take a very long time if it requires a lot
-  # of I/O.  If you are calling this for a command that you know for a
-  # fact takes less time on all hosts and with all practical device
-  # configurations, we encourage you to pass a smaller value.
-  #
-  # The caller must pass a prompt string because OS/8 has several
-  # different prompt types: ., *, $, and #, at least.  Beware in passing
-  # these that they're treated as regular expressions, so characters
-  # special in Python REs must be escaped.  And then since the RE escape
-  # character (\) is also special in Python strings, you must double-
-  # escape *it*.  So, '\\$' is a reasonable thing to pass as the prompt
-  # value, meaning "look for a literal $ character."
-  #
-  # This routine requires the caller to ensure that the system is in
-  # OS/8 Keyboard Monitor context — that is, ready for another OS/8
-  # command — before calling it.  While this routine is able to check
-  # whether we're in OS/8 context as a prerequisite, it is not practical
-  # for us to return the system to OS/8 context automatically from some
-  # other context because that would require us to know the current
-  # context in detail, but only the caller has that full knowledge.
-  # 
-  # Part of the problem is that in order to synchronize this object's
-  # internal state machine with the SIMH + OS/8 + running program state,
-  # we have to somehow provoke a prompt character from the running
-  # program.  How do we do that without knowing the current context?
-  # In some contexts, a CR or LF will do it, in others BS, and in others
-  # it'll take Ctrl-C.  Then you have a new problem, with is that those
-  # same characters aren't harmless: they'll change the very context
-  # we're trying to probe!  For instance, a Ctrl-C sent to the OS/8
-  # Keyboard Monitor just results in another prompt, but a Ctrl-C sent
-  # to a program running *under* OS/8 might kill it.  Or it might be
-  # treated as input.  Or it might be ignored entirely.
-  #
-  # There is no magic sequence we can send to SIMH or OS/8 to return the
-  # system to OS/8 Keyboard Monitor context without either changing the
-  # context in some way that might break the caller's needed state (e.g.
-  # Ctrl-E, go 7600) or lose data (e.g. Ctrl-C) or fail entirely (e.g.
-  # Enter.)  It's up to the caller to arrange this.
-
-  def os8_send_cmd (self, prompt, line, debug=False, timeout=60):
-    if self._context != 'os8': 
-      print("OS/8 is not running. Cannot execute: " + line)
-      return
-    if debug:
-      print("os8_send_cmd: expecting: " + prompt)
-      print("\tLast match before: {" + self._child.before.decode() + "}")
-      print("\tLast match after: {" + self._child.after.decode() + "}")
-    self._child.expect ("\n%s$" % prompt, timeout = timeout)
-    self.os8_send_line (line)
-
-
-  #### os8_send_file ###################################################
-  # Replaced by os8_pip_to
-  # Send a copy of a local text file to OS/8.  The local path may
-  # contain directory components, but the remote must not, of course.
-  #
-  # If the destination file name is not uppercase, it will be so forced.
-  #
-  # If the destination file name is not given, it is taken as the
-  # basename of the source file name.
-  #
-  # The file is sent via the SIMH paper tape device through PIP in its
-  # default ASCII mode, rather than character by character for two reasons:
-  #
-  # 1. It's faster.  It runs as fast as the simulator can process the
-  #    I/O instructions, without any os8_kbd_delay() hooey.
-  #
-  # 2. It allows lowercase input regardless of the way the simulator is
-  #    configured.  ASCII is ASCII.
-  #
-  # Entry context should be inside OS/8.  Exit context is inside OS/8.
-
-  def os8_send_file (self, source, dest = None):
-    # Create path and file names not given
-    bns = os.path.basename (source)
-    if dest == None: dest = bns
-    dest = dest.upper ()
-
-    # Convert text file to SIMH paper tape format
-    bdir = pidp8i.dirs.build
-    pt   = os.path.join (bdir, 'obj', bns + '.pt')
-    tool = os.path.join (bdir, 'bin', 'txt2ptp')
-    subprocess.call (tool + ' < ' + source + ' > ' + pt, shell = True)
-
-    # Paper tape created, so attach it read-only and copy it in.  We're
-    # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
-    # the file.
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach -r ptr ' + pt)
-    self.os8_restart ()
-    self.os8_send_cmd ('\\.', 'R PIP')
-    self.os8_send_cmd ('\\*', dest + '<PTR:')
-    self._child.expect ('\\^')
-    self.os8_send_ctrl ('[')      # finish transfer
-    self._child.expect ('\\*')
-    self.os8_send_ctrl ('[')      # exit PIP
-
-
-  #### send_cmd ########################################################
-  # Replaced by simh_cmd
-  # This (deprecated) version waits for prompt and sends.
-  # Wait for a SIMH command prompt and then send the given command.
-  # If we are not in the simh context send ^e and set context "simh".
-  # If we are not in simh context, send ^e set context "simh"
-  #    and hope for the best.
-  # If we issue a command that enters os8 context, set context "os8".
-  # Note exiting out of OS/8 into the SIMH context is a bit of a
-  # trap door. Resynchronizing with python expect requires provoking
-  # a prompt, and prompts are context specific.
-  # Perhaps we should require separate and explicit commands to
-  # escape to SIMH. But for now, just be careful to use os8_resume
-  # after calling send_cmd.
-
-  def send_cmd (self, cmd):
-    if self._context == "os8":
-      self._child.expect ("\n\\.$")
-      self._child.sendcontrol ('e')
-      self._context = "simh"
-    elif self._context != "simh":
-      self._child.sendcontrol ('e')
-      self._context = "simh"
-      
-    self._child.expect ("sim> $")
-    self._child.sendline (cmd)
-    m = re.match (self._simh_comm_re, cmd)
-    if m != None and m.group(1)[:1].upper() in self._enters_os8_context:
-      self._context = "os8"
-
-
-

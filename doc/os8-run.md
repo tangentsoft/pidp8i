@@ -689,11 +689,9 @@ by using the `os8` command, for example:
 
     os8 PAL8 RKB1:RL0.BN<RKA1:RL0.PA
    
-However, an separate pal8 command was created to enable richer parsing
-of errors when no listing file is created.  This decision is currently
-under review, and the `pal8` command may go away in a subsequent version
-of `os8-run`.  For now, two forms of the `pal8` command are supported with
-an unreasonable number of limitations:
+However, an separate pal8 command was created to enable richer display
+of errors.  For now, two forms of the `pal8` command are supported with
+the following limitations:
 
 `pal8` _os8-bn-spec_ `<` _os8-pa-spec_ options_spec
 
@@ -708,15 +706,11 @@ conservative in what it allows:
     * three argument form with binary, listing, and source.
 * _os8-bn-spec_ must specify a binary filename ending in `.BN`
 * _os8-ls-spec_ must specify a listing filename ending in `.LS`
-* _os8-pa-spec_ must specify a source filename ending in `.PA`
+* _os8-pa-spec_ must specify a single source filename ending in `.PA`
 
-The two argument form is needed because calling pal8 with just two arguments
-using either the `begin cdprog SYS:PAL8` or `os8 PAL8` constructs hangs the
-state machine.  This is because cdprog is expecting to return to the command
-decoder `*` prompt, and `os8 ` is expecting a monitor prompt, not multiple
-lines of output.  Expect gets lost and the state machine hangs.
+Perhaps these limits will be relaxed in future.
 
-The three file name specifiers can include an OS/8 device specification.
+The file name specifiers can include an OS/8 device specification.
 
 Examples:
 

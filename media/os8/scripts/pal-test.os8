@@ -20,3 +20,11 @@ pal8 DTA0:BOOT.BN<DTA0:BOOT.PA
 print Confirm we display errors:
 
 pal8 FOO.BN<DTA0:PALTST
+
+print Test 3-arg Pal8 command.
+
+pal8 FOO.BN,FOO.LS<DTA0:BOOT.PA
+
+print Test 3-arg PAL8 command with errors.
+
+pal8 FOO.BN,FOO.LS<DTA0:PALTST

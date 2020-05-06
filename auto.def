@@ -619,7 +619,6 @@ make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
-make-template tools/test-os8-send-file.in
 make-template Makefile.in
 foreach f [concat [glob "$builddir/bin/*"] [glob "$builddir/tools/*"]] {
     exec chmod +x $f
