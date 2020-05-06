@@ -49,13 +49,17 @@ end enabled td8e
 mount rk0 $bin/v3d.rk05 required scratch
 boot rk0
 
+# Our built image inherits whether or not INIT is set.
+# A blank tape will complain "NO CCL!" on first boot.
+# So first thing SET SYS NO INIT
+
+os8 SET SYS NO INIT
+
 begin enabled td8e
   # For TD8E we run BUILD twice
   # First from SYS to change switch from TC08 to TD8E
   # Then  to build the TD8E head from either RKB1 for v3f or from SYS for v3d.
 
-  os8 SET SYS NO INIT
-  
   begin build SYS:BUILD
     DELETE DTA0,DTA1
     INSERT TD8A,DTA0,DTA1
