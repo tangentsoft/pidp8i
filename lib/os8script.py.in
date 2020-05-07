@@ -159,48 +159,12 @@ _os8_fspec = Template ("((\S+:)?([A-Z0-9]{1,6}|[A-Z0-9]{1,6}\.$ext))")
 _os8_BN_fspec = _os8_fspec.substitute(ext="BN")
 _os8_PA_fspec = _os8_fspec.substitute(ext="PA")
 _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
-_pal8_opts = "[B-J-LNOSTW]"
 
-# Are PA,BN, and LS in the names really required?
-#
-# Possible richer and simpler approach:
-# Not quite there yet...
-# Should but doesn't handle empty outspecs
-# Doesnt handle devs with no name like TTY:
-# Use print (str(m.groups)) to dissect...
-_fn_spec = "(\S+:)?[A-Z0-9]{1,6}(\.[A-Z0-9]{0,2})?"
-_pal8_opt_line = "((/" + _pal8_opts + ")+|\(" + _pal8_opts + "+\))?"
-_cd_spec = "^(((" + _fn_spec + ")(," + _fn_spec + "){0,2}))<(((" + \
-  _fn_spec + ")(," + _fn_spec + "){0,8}))" + _pal8_opt_line + "$"
-
-
-# For the two arg form:
-# The full destination spec is in group(1), The full source spec is in group(4).
-# The device components, if any, are in group(2) for destination, and
-# group(5) for source.
-# The file components are in group(3) for destination, and group (6) for source.
-# The destination file must either end in ".BN" or have no extension.
-# The source must file either end in ".PA" or have no extension.
-# The command line arguments, if any, are in group(7)
-_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*<\s*" + _os8_PA_fspec + "((/" + \
-                              _pal8_opts + ")+|\(" + _pal8_opts + "+\))?$")
-
-# For the 3 arg form:
-# The full destination spec is in group(1), The full source spec is in group(7).
-# The full listing spec is in group(4)
-# The device components, if any, are in group(2) for destination, group(5)
-# for listing, and group(8) for source.
-# The file components are in group(3) for destination, and group(9) for source,
-# and group(6) for listing.
-# The destination file must either end in ".BN" or have no extension.
-# The source must file either end in ".PA" or have no extension.
-# The listing must either end in "LS" or have no extension.
-# The command line arguments, if any, are in group(10)
-
-_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*,\s*" + _os8_LS_fspec + "\s*<\s*" + \
-                                _os8_PA_fspec + "((/" + _pal8_opts + ")+|\(" + _pal8_opts + "+\))?$")
+# Regex to parse a valid OS/8 option string either with slash or parens.
+_opt_str =  "((/[A-Z0-9])+|\([A-Z0-9]+\))?"
 
 # Regular expression for syntax checking inside ABSLDR
+# FIXME: Use (and test) _opt_str for full OS/8 Option spec compatibility
 # One or more OS/8 binary files and optional args beginning with a slash.
 
 _absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$")
@@ -1235,61 +1199,6 @@ class os8script:
       return False
   
 
-  #### call_pal8 #######################################################
-  # Generic call out to PAL8 with error recovery.
-  # We rely on the caller to have good specifications for source,
-  # binary and optional listing files.
-  
-  def call_pal8 (self, source, binary, listing, options):
-  
-    if self.verbose: print("Assembling " + source)
-    if listing != "": list_arg = "," + listing
-    else: list_arg = ""
-    com_line = binary + list_arg  + "<" + source + options
-    reply = self.simh.os8_cmd ("R PAL8")
-    # Did the command successfully run and enter the command decoder?
-    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "call_pal8") == False:
-      print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
-      return "fail"
-
-    # Send our command and harvest results.
-    reply = self.simh.os8_cmd (com_line, self._pal8_replies_rex)
-    err_count = 0
-    executed_line = self.simh._child.before.decode().strip()
-    reply_match_str = self.simh._child.after.decode().strip()
-    ed  = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
-    mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
-    cd  = self.simh.test_result(reply, "Command Decpder Prompt", self._pal8_replies, "")
-    lg  = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
-    err_string = ""
-    ret_val = "success"
-    # We're going to print all the errors we see
-    # and keep looking till we get either a monitor or command decoder prompt.
-    while not mon:
-      if ed:   # Got Errors Detected. Count them.
-        self.simh._child.expect("\d+")
-        err_count = int(self.simh._child.after.decode().strip())
-      elif lg: 
-        self.simh._child.expect("\d+")
-        link_count = int(self.simh._child.after.decode().strip())
-      elif cd: # Got Command Decoder. Exit with failure.
-        if self.debug: print ("call_pal8: Non-fatal error: Sending ^C")
-        # Exit pal8. We'll confirm we got back to OS/8 monitor below.
-        self.simh.os8_send_ctrl ('c')      
-      else:
-        err_string += ("\t" + self.simh._child.after.decode().strip() + "\n")
-      reply = self.simh._child.expect(self._pal8_replies_rex)
-      ed = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
-      mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
-      cd = self.simh.test_result(reply, "Command Decoder Prompt", self._pal8_replies, "")
-      lg = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
-    if err_count > 0 or err_string != "":
-      print ("PAL8 Error: \n\t" + executed_line)
-      print (err_string)
-      return "fail"
-    return "success"
-
-
   #### simh_command ####################################################
   # I tried to avoid including this command but sometimes you just
   # have to reconfigure subtle bits of device drivers.
@@ -1584,33 +1493,6 @@ class os8script:
       print ("PAL8 Error: \n\t" + executed_line)
       print (err_string)
       return "fail"
-    return "success"
-
-
-  def old_pal8_command (self, line, script_file):
-    if not self.booted:
-      print("Cannot run pal8 command at line " + \
-        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
-      return "die"
-
-    m_2form = re.match (_two_arg_pal_re, line)
-    if m_2form != None:
-      # Call the 2arg pal8 code that works hard at error analysis.
-      if m_2form.group(7) == None:
-        options = ""
-      else:
-        options = m_2form.group(7)
-      return self.call_pal8 (m_2form.group(4), m_2form.group(1), "", options)
-    else:
-      m_3form = re.match (_three_arg_pal_re, line)
-      if m_3form != None:
-        if m_3form.group(10) == None: options = ""
-        else: options = m_3form.group(10)
-        return self.call_pal8 (m_3form.group(7), m_3form.group(1), m_3form.group(4), options)
-      else:
-        print("At line " + str(self.line_ct_stack[0]) + \
-          ": Unrecognized pal8 form: {" + line + "}.")
-        return "fail"
     return "success"
 
 

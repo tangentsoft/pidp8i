@@ -85,8 +85,7 @@ running SIMH.
 Monitor. This includes BATCH scripts.
 * run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the OS/8
 Command Decoder.
-* run `PAL8` with either a 3 argument form that produces a listing file,
-or a 2 argument form that does not.
+* run `PAL8` and report any errors encountered.
 * run `BUILD` with arbitrarily complex configuration scripts, including
 the `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
 * configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow
@@ -694,36 +693,13 @@ This transcript capability provides a fine grained debugging aid.
 
 ### <a id="pal8-comm"></a>`pal8` — Run OS/8 `PAL8` assembler.
 
-Run `PAL8` with either a 3 argument form that produces a listing file,
-or a 2 argument form that does not.
-
 Actually, the `PAL8` assembler can be called just fine
 by using the `os8` command, for example:
 
     os8 PAL8 RKB1:RL0.BN<RKA1:RL0.PA
    
 However, an separate pal8 command was created to enable richer display
-of errors.  For now, two forms of the `pal8` command are supported with
-the following limitations:
-
-`pal8` _os8-bn-spec_ `<` _os8-pa-spec_ options_spec
-
-`pal8` _os8-bn-spec_ `,` _os8-ls-spec_ `<` _os8-pa-spec_ options_spec
-
-Note that the parser for this wrapper for `PAL8` is quite
-conservative in what it allows:
-
-* Only valid `PAL8` options are allowed.
-* Only two ways to call `PAL8`:
-    * two argument form with binary and source or
-    * three argument form with binary, listing, and source.
-* _os8-bn-spec_ must specify a binary filename ending in `.BN`
-* _os8-ls-spec_ must specify a listing filename ending in `.LS`
-* _os8-pa-spec_ must specify a single source filename ending in `.PA`
-
-Perhaps these limits will be relaxed in future.
-
-The file name specifiers can include an OS/8 device specification.
+of errors.
 
 Examples:
 
