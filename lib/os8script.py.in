@@ -1510,13 +1510,18 @@ class os8script:
       print (self.simh._child.before.decode().strip())
 
     mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 1")
+    cd  = self.simh.os8_test_result (reply, "Command Decoder Prompt", "")
     while not mon:
       retval = "fail"
+      if cd: continue
       # If this was not a fatal error, we need to ^C to get back to Monitor.
+      # But sometimes OS/8 is not yet ready for ^C, so we wait half a second.
       if self.simh._os8_replies[reply][2] == False:
+        time.sleep (.5)
         self.simh.os8_send_ctrl ('c')
       reply = self.simh._child.expect (self.simh._os8_replies_rex)
       mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 2")
+      cd  = self.simh.os8_test_result (reply, "Command Decoder Prompt", "")
     return retval
 
 
@@ -1527,6 +1532,62 @@ class os8script:
   # We do the 3 argument form with a simple "os8" script command.
   
   def pal8_command (self, line, script_file):
+    if not self.booted:
+      print("Cannot run pal8 command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
+      return "die"
+
+    if self.verbose: print("Running PAL8 on: " + line)
+    reply = self.simh.os8_cmd ("R PAL8")
+    # Did the command successfully run and enter the command decoder?
+    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "call_pal8") == False:
+      print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
+      return "fail"
+
+    com_line = line
+    retval = "success"
+    if self.verbose: print("Line: " + \
+       str(self.line_ct_stack[0]) + ": pal8_command: " + com_line)
+
+    # Send our command and harvest results.
+    reply = self.simh.os8_cmd (com_line, self._pal8_replies_rex)
+    err_count = 0
+    executed_line = self.simh._child.before.decode().strip()
+    reply_match_str = self.simh._child.after.decode().strip()
+    ed  = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
+    mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
+    cd  = self.simh.test_result(reply, "Command Decpder Prompt", self._pal8_replies, "")
+    lg  = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+    err_string = ""
+    ret_val = "success"
+    # We're going to print all the errors we see
+    # and keep looking till we get either a monitor or command decoder prompt.
+    while not mon:
+      if ed:   # Got Errors Detected. Count them.
+        self.simh._child.expect("\d+")
+        err_count = int(self.simh._child.after.decode().strip())
+      elif lg: 
+        self.simh._child.expect("\d+")
+        link_count = int(self.simh._child.after.decode().strip())
+      elif cd: # Got Command Decoder. Exit with failure.
+        if self.debug: print ("call_pal8: Non-fatal error: Sending ^C")
+        # Exit pal8. We'll confirm we got back to OS/8 monitor below.
+        self.simh.os8_send_ctrl ('c')      
+      else:
+        err_string += ("\t" + self.simh._child.after.decode().strip() + "\n")
+      reply = self.simh._child.expect(self._pal8_replies_rex)
+      ed = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
+      mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
+      cd = self.simh.test_result(reply, "Command Decoder Prompt", self._pal8_replies, "")
+      lg = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+    if err_count > 0 or err_string != "":
+      print ("PAL8 Error: \n\t" + executed_line)
+      print (err_string)
+      return "fail"
+    return "success"
+
+
+  def old_pal8_command (self, line, script_file):
     if not self.booted:
       print("Cannot run pal8 command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
