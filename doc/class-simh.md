@@ -373,9 +373,15 @@ The lower level method to send an escape character is `os8_send_ctrl`
 if your control flow is such that you need to do more before checking
 the OS/8 output.
 
-Yes, <kbd>Escape</kbd> is <kbd>Ctrl-\[</kbd>. Now you can be the life of
+Note: OS/8 will respond to this escape IMMEDIATELY, even if it has
+pending output.  You will need to make sure all pending output is in a
+known state and the running program is quiescent before calling this
+method. Otherwise pexpect may get lost.
+
+(Yes, <kbd>Escape</kbd> is <kbd>Ctrl-\[</kbd>. Now you can be the life of
 the party with that bit of trivia up your sleeve. Or maybe you go to
-better parties than I do.
+better parties than I do.)
+
 
 ## Sending without testing results.
 
@@ -396,6 +402,48 @@ way than that used by `os8_cmd` and `simh_cmd`.  Here is what you need:
 | `os8_send_str`   | Send a string of characters to OS/8, and wait for os8_kbd_delay afterwards. |
 | `os8_send_line`  | Add a carriage return to the given string and calk os8_send_str` to send it to OS/8.|
 
+
+## Higher Level Operations
+
+### Quitting the simulator
+
+It is recommended that you use the `quit` method to exit the simulator.
+It will make sure it selects the simh context before trying to quit.
+
+Indeed it's further recommended that you send a command to simh to
+detach all devices to make sure any buffered output is flushed.
+You need to test for the SIMH prompt to make sure you've succeeded.
+
+
+```
+  s.simh_cmd ("detach all")
+  s.simh_test_result(reply, "Prompt", "myprog")
+  s._child.sendline("quit")
+
+```
+
+
+### Zero Core
+
+SIMH's PDP-8 simulator doesn't start with core zeroed, on purpose,
+because the actual hardware did not do that.  SIMH does not attempt to
+simulate the persistence of core memory by saving it to disk between
+runs, but the SIMH developers are right to refuse to do this by
+default: you cannot trust the prior state of a PDP-8's core memory
+before initializing it yourself.
+
+
+### Zero OS/8 Core
+
+Sometimes we want to zero out core, but leave OS/8 in tact.
+The `os8_zero_core` method zeros  all of core excepting:
+
+ * 0. page zero - many apps put temporary data here
+ * 1. the top pages of fields 1 & 2 - OS/8 is resident here
+ *  2. the top page of field 2 - OS/8's TD8E driver (if any) lives here
+
+We then restart OS/8, which means we absolutely need to do #1 and
+may need to do #2.  We could probably get away with zeroing page 0.
 
 
 ## But There's More!

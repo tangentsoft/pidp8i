@@ -581,8 +581,10 @@ class simh:
             det_comm = "det " + from_tape + unit
             if self.verbose:
               print(det_comm + "(Had: " + attached_from[unit] + ")")
-            self.simh_cmd(det_comm)
-        self.simh_cmd("set " + from_tape + " disabled")
+            reply = self.simh_cmd(det_comm)
+            self.simh_test_result(reply, "Prompt", "set_tape_config: " + det_com)
+        reply = self.simh_cmd("set " + from_tape + " disabled")
+        self.simh_test_result(reply, "Prompt", "set_tape_config disable " + from_tape)
 
     lines = self.do_simh_show(to_tape)
     to_status = self.parse_show_tape_dev(lines)
@@ -595,7 +597,8 @@ class simh:
     elif to_status != "disabled":
       print(to_tape + " already is enabled.")
     else:
-      self.simh_cmd("set " + to_tape + " enabled")    
+      reply = self.simh_cmd("set " + to_tape + " enabled")
+      self.simh_test_result(reply, "Prompt", "set_tape_config enable " + to_tape)
 
     # Test to confirm to_tape is now enabled.
 
@@ -669,7 +672,8 @@ class simh:
       return False
     elif rx_type == "disabled":
       if self.verbose: print("rx is disabled. Enabling...")
-      self.simh_cmd("set rx enabled")
+      reply = self.simh_cmd("set rx enabled")
+      self.simh_test_result(reply, "Prompt", "set_rx_config enable  rx")
       # Retry getting rx info
       lines = self.do_simh_show("rx")
       rx_type = self.parse_show_rx_dev (lines)
@@ -695,9 +699,11 @@ class simh:
           det_comm = "det rx" + unit
           if self.verbose:
             print(det_comm + "(Had: " + attached_rx[unit] + ")")
-          self.simh_cmd(det_comm)
+          reply = self.simh_cmd(det_comm)
+          self.simh_test_result(reply, "Prompt", "set_rx_config detach: " + det_comm)
 
-    self.simh_cmd("set rx " + to_rx)
+    reply = self.simh_cmd("set rx " + to_rx)
+    self.simh_test_result(reply, "Prompt", "set_rx_config set rx " + to_rx)
 
     # Test to confirm new setting of RX
     lines = self.do_simh_show("rx")
@@ -750,7 +756,8 @@ class simh:
       print("tti device is already set to " + to_tti)
       return None
 
-    self.simh_cmd("set tti " + to_tti)
+    reply = self.simh_cmd("set tti " + to_tti)
+    self.simh_test_result(reply, "Prompt", "set_tti_config setting tti " + to_tti)
 
     # Test to confirm new setting of tti
     lines = self.do_simh_show("tti")
@@ -877,6 +884,11 @@ class simh:
   # Return to OS/8 monitor using the given escape character.
   # Confirm we got our monitor prompt.
   # Optional caller argument enables a message if escape failed.
+  # Note: OS/8 will respond to this escape IMMEDIATELY,
+  # even if it has pending output.
+  # You will need to make sure all pending output is in
+  # a known state and the running program is quiescent
+  # before calling this method. Otherwise pexpect may get lost.
 
   def os8_escape (self, char, caller = "", debug=False):
     self.os8_send_ctrl (char)
@@ -1015,7 +1027,8 @@ class simh:
     # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
     # the file.
     self.esc_to_simh (debug)
-    self.simh_cmd ('attach -r ptr ' + pt, debug=debug)
+    reply = self.simh_cmd ('attach -r ptr ' + pt, debug=debug)
+    self.simh_test_result(reply, "Prompt", "os8_pip_to attaching ptr")
     # Enter OS/8.
     self.simh_restart_os8 (caller="os8_pip_to")
     
@@ -1087,7 +1100,8 @@ class simh:
       return
 
     self.esc_to_simh(debug)
-    self.simh_cmd ('attach ptp ' + path, debug=debug)
+    reply = self.simh_cmd ('attach ptp ' + path, debug=debug)
+    self.simh_test_result(reply, "Prompt", "os8_pip_from attachng ptp")
     # Enter OS/8.
     self.simh_restart_os8 (caller="os8_pip_from 0")
     
@@ -1112,7 +1126,8 @@ class simh:
     self.os8_test_result (reply, "Monitor Prompt", "os8_pip_from 2")
 
     self.esc_to_simh(debug)
-    self.simh_cmd ('detach ptp', debug=debug)  # Clean flush of buffers.
+    reply = self.simh_cmd ('detach ptp', debug=debug)  # Clean flush of buffers.
+    self.simh_test_result(reply, "Prompt", "os8_pip_from detaching ptp")
     # Enter OS/8.
     self.simh_restart_os8(caller="os8_pip_from 3")
 
