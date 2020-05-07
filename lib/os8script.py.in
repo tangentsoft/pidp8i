@@ -1149,6 +1149,12 @@ class os8script:
     the_command = ""
     the_command_parser = None
     
+    # Any os8-run command may be called after a simh command that left us
+    # in simh context. Check to see if we need to restart OS/8.
+    # We could resume, but restart is safer.
+    if self.simh._context == "simh":
+      self.restart_command(line, script_file)
+
     for line in patch_file:
       line = line.rstrip()
       if line == "": continue
@@ -1410,9 +1416,11 @@ class os8script:
     if self.verbose: print("Line: " + \
        str(self.line_ct_stack[0]) + ": os8_command: " + os8_comm)
 
-    # Resume OS/8 if necessary.
+    # Any os8-run command may be called after a simh command that left us
+    # in simh context. Check to see if we need to restart OS/8.
+    # We could resume, but restart is safer.
     if self.simh._context == "simh":
-      self.resume_command(line, script_file)
+      self.restart_command(line, script_file)
 
     reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
     if "transcript" in self.options_enabled:
@@ -1457,6 +1465,12 @@ class os8script:
     retval = "success"
     if self.verbose: print("Line: " + \
        str(self.line_ct_stack[0]) + ": pal8_command: " + com_line)
+
+    # Any os8-run command may be called after a simh command that left us
+    # in simh context. Check to see if we need to restart OS/8.
+    # We could resume, but restart is safer.
+    if self.simh._context == "simh":
+      self.restart_command(line, script_file)
 
     # Send our command and harvest results.
     reply = self.simh.os8_cmd (com_line, self._pal8_replies_rex)
@@ -1518,6 +1532,12 @@ class os8script:
       self.ignore_to_subcomm_end(line, script_file, "")
       return "fail"
     else:
+      # Any os8-run command may be called after a simh command that left us
+      # in simh context. Check to see if we need to restart OS/8.
+      # We could resume, but restart is safer.
+      if self.simh._context == "simh":
+        self.restart_command(line, script_file)
+
       return sub_commands[m.group(1)](m.group(3), script_file)
   
   
