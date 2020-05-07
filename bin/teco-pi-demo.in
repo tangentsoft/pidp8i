@@ -156,7 +156,6 @@ def main ():
     # Normal mode.  Tell SIMH and throttle down to a rate suitable for a
     # blinkenlights demo.  1/17 means SIMH runs one instruction then
     # waits for 17ms, yielding ~59 IPS.
-    time.sleep (0.02)       # FIXME: simulator chokes on 'cont' without this
     s.simh_cmd ('set throttle 1/17')
 
     # You can't hit Ctrl-E while running this script in the foreground
