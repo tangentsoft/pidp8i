@@ -93,6 +93,8 @@ begin enabled tc08
 
   begin enabled v3f
     mount dt0 $os8mo/v3f-tc08.tu56 new
+    # v3f needs device drivers from a V3d Distribution DECtape
+    mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 readonly required
   end enabled v3f
 
 end enabled tc08
@@ -157,9 +159,6 @@ begin enabled v3d
 end enabled v3d
 
 begin enabled v3f
-  # v3f needs device drivers from a V3d Distribution DECtape
-  mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 readonly required
-
   os8 COPY DSK:<RKB1:OS8.BN,CD.BN
 
   begin build RKB1:BUILD
@@ -241,7 +240,13 @@ begin enabled v3f
   end build
 
   # Explicit unmount to avoid possible race condition.
-  umount dt1
+  # Unmount the right device
+  begin enabled td8e
+    umount td1
+  end enabled td8e
+  begin enabled tc08
+    umount dt1
+  end enabled tc08
 end enabled v3f
 
 os8 SAVE DTA0 BUILD.SV
