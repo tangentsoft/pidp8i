@@ -557,25 +557,21 @@ hangs for a while and then gives a timeout backtrace.
 
 `resume`
 
-As explained above in the [Execution contexts](#contexts) section, we
-can't just issue a SIMH `continue` command because we need some output
-from OS/8 running within SIMH to re-synchronize Python expect to.
+The least disruptive way to resume operations under SIMH is to issue
+the `continue` command. Although it took a while, we finally got this
+command working reliably.  There were timing and workflow issues
+that had to be resolved.
 
-After trying several different things that did not work, the least
-disruptive action is to send `CTRL/C` and a newline with some keyboard
-delays. The `resume` command does this.
-
-However, because the context switches are well-defined, the `resume`
-command is completely optional in scripts.  Instead `os8-run`, when it
-detects the need to return to OS/8 from SIMH command level, will issue
-a `resume` command to force a context switch. 
+The `resume` command checks to see if OS/8 has been booted and refuses
+to act if it has not.
 
 
 ### <a id="restart-comm"></a>`restart` — Restart OS/8.
 
 `restart`
 
-Equivalent to the SIMH command line of \"`go 7600`\".
+Equivalent to the SIMH command line of \"`go 7600`\", but which confirms
+we got our Monitor prompt.
 
 Before `resume` was developed, the next less disruptive way to get an
 OS/8 Keyboard Monitor prompt was to restart SIMH at address 07600.
@@ -584,8 +580,8 @@ a `boot` command, because the `boot` command loads OS/8 into main
 memory from the boot device, whereas restarting at location 07600 is
 just a resart without a reload.
 
-The restart does re-initilaize some state so it is more disruptive
-than the `CTRL/C` resume documented above.
+The `restart` command checks to see if OS/8 has been booted and refuses
+to act if it has not.
 
 
 ### <a id="copy-comm"></a>`copy` — Make a copy of a POSIX file.
@@ -677,6 +673,23 @@ prompt, "`.`" will be produced.
 This command should be used ONLY for OS/8 commands that return
 immediately to command level.  `BATCH` scripts do this, and they can
 be run from here.
+
+The `os8` command is aware of a special enablement keyword: `transcript`.
+(See the [`enable` \ `disable`](#en-dis-comm) section below.)
+If `transcript` is enabled, the output from running the OS/8
+command line is printed.  
+
+For example, if you wanted to display the contents of a DECtape image
+you are constructing but no other command lines fed to the `os8`
+command you would do this:
+
+```
+enable transcript
+os8 DIR DTA0:
+disable transcript
+```
+
+This transcript capability provides a fine grained debugging aid.
 
 
 ### <a id="pal8-comm"></a>`pal8` — Run OS/8 `PAL8` assembler.
@@ -1013,7 +1026,6 @@ world.
 
 ## TODOs
 
-* Allow passing in of arguments to PAL8.
 * Add sanity check parse of sub-commands to confirm command. **OR** Change the 
 begin command to treat _argument_ not as a full command, but merely
 a device from which to fetch the command.  Maybe make _argument_ optional.

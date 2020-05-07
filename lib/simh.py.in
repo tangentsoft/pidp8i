@@ -897,6 +897,24 @@ class simh:
     self.os8_test_result(reply, "Monitor Prompt", caller)
 
     
+  #### simh_resume_os8 ##########################################################
+  # Continue execution of OS/8.
+  # This has been extremely tricky to get right.
+  # What we must do is give OS/8 a chance to wake up.
+  # We do this by asking pexpect to show us our "cont\n" echo and then
+  # we do an os8_kbd_delay()
+  # We carefully use simh_send_line to send the command so that we
+  # know to set the os8 context.
+  # WARNING! Using simh_resume_os8 without having booted OS/8
+  # has undefined reslts.
+
+  def simh_resume_os8 (self):
+    self.simh_send_line ("cont")
+    # Give OS/8 a chance to wake up.
+    self._child.expect("cont\r")
+    self.os8_kbd_delay()
+
+
   #### os8_zero_core ###################################################
   # Starting from OS/8 context, bounce out to SIMH context and zero all
   # of core excepting:

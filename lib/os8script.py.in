@@ -845,13 +845,15 @@ class os8script:
   # Call the os8_resume in simh to resume OS/8.
 
   def resume_command (self, line, script_file):
+    if not self.booted:
+      print("Cannot run resume command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
+      return "die"
+
     if self.verbose:
       print("Resuming OS/8 at line " + str(self.line_ct_stack[0]) + ".")
 
-    self.simh.simh_send_line ("cont", debug=self.debug)
-    # Give OS/8 a chance to wake up.
-    self.simh._child.expect("cont\r")
-    self.simh.os8_kbd_delay()
+    self.simh.simh_resume_os8()
     return "success"
 
 
@@ -859,6 +861,11 @@ class os8script:
   # Call the os8_restart in simh to resume OS/8.
 
   def restart_command (self, line, script_file):
+    if not self.booted:
+      print("Cannot run restart command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
+      return "die"
+
     if self.verbose:
       print("Restarting OS/8 at line " + str(self.line_ct_stack[0]) + ".")
 
@@ -1029,6 +1036,10 @@ class os8script:
           " at line " +  str(self.line_ct_stack[0]) + ":")
         print("\t" + line)
         sys.exit(-1)
+      elif retval == "fail":
+        print("Non-fatal error encountered in " + script_path + \
+          " at line " +  str(self.line_ct_stack[0]) + ":")
+        print("\t" + line + "\n")
 
     # Done.  Pop the line count off our line_ct_stack
     self.line_ct_stack.pop(0)
@@ -1262,14 +1273,14 @@ class os8script:
         self.simh._child.expect("\d+")
         link_count = int(self.simh._child.after.decode().strip())
       elif cd: # Got Command Decoder. Exit with failure.
-        print ("Sending ^C")
+        if self.debug: print ("call_pal8: Non-fatal error: Sending ^C")
         # Exit pal8. We'll confirm we got back to OS/8 monitor below.
         self.simh.os8_send_ctrl ('c')      
       else:
         err_string += ("\t" + self.simh._child.after.decode().strip() + "\n")
       reply = self.simh._child.expect(self._pal8_replies_rex)
       ed = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
-      mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "", debug=self.debug)
+      mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
       cd = self.simh.test_result(reply, "Command Decoder Prompt", self._pal8_replies, "")
       lg = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
     if err_count > 0 or err_string != "":
@@ -1486,6 +1497,7 @@ class os8script:
       return "die"
 
     os8_comm = line
+    retval = "success"
     if self.verbose: print("Line: " + \
        str(self.line_ct_stack[0]) + ": os8_command: " + os8_comm)
 
@@ -1494,12 +1506,18 @@ class os8script:
       self.resume_command(line, script_file)
 
     reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
-    if self.verbose:
-      print (self.simh._child.before.decode())
+    if "transcript" in self.options_enabled:
+      print (self.simh._child.before.decode().strip())
 
-    self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command")
-
-    return "success"
+    mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 1")
+    while not mon:
+      retval = "fail"
+      # If this was not a fatal error, we need to ^C to get back to Monitor.
+      if self.simh._os8_replies[reply][2] == False:
+        self.simh.os8_send_ctrl ('c')
+      reply = self.simh._child.expect (self.simh._os8_replies_rex)
+      mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 2")
+    return retval
 
 
   #### pal8_command ####################################################
@@ -1805,8 +1823,8 @@ class os8script:
         else:
           print ("Non-fatal error encountered with: " + line)
           print ("\t" + self.simh._os8_replies[reply][0])
-          # To continue, we need to ask pexpect to get that BUILD prompt before
-          # resuming after an error. Ignore everything until we get it.
+          # To continue, we need to ask pexpect to get that Command Decoder
+          # prompt before resuming after an error. Ignore everything until we get it.
           self.simh._child.expect("\n\\*$")
     print("Warning end of file encountered at line " + \
         str(self.line_ct_stack[0]) + \
