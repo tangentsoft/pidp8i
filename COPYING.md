@@ -83,7 +83,7 @@ generation.  Ian Schofield took some of the library routines from this
 implementation.
 
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
-[gpl3]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/LICENSE.txt
+[gpl3]: https://tangentsoft.com/pidp8i/doc/trunk/src/cc8/GPL3.txt
 [smc]:  https://en.wikipedia.org/wiki/Small-C
 [smsc]: http://so-much-stuff.com/pdp8/C/C.php
 

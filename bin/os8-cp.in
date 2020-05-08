@@ -670,7 +670,7 @@ def main ():
     abort_prog ("Requested boot image file: " + imagename + " not found.")
   if VERBOSE or DEBUG:
     print("Attaching " + simh_boot_dev + " to " + imagename)
-  s.send_cmd ("att " + simh_boot_dev + " " + imagename)
+  s.simh_cmd ("att " + simh_boot_dev + " " + imagename, debug=DEBUG)
 
   images_to_zero = []
   
@@ -688,10 +688,12 @@ def main ():
       images_to_zero.append (att_spec)
     if VERBOSE or DEBUG:
       print("Attaching " + simh_dev + " to " + imagename)
-    s.send_cmd ("att " + simh_dev + " " + imagename)
+    s.simh_cmd ("att " + simh_dev + " " + imagename, debug=DEBUG)
 
   if VERBOSE or DEBUG: print("Booting " + simh_boot_dev + "...")
-  s.send_cmd ("boot " + simh_boot_dev)
+  # Confirm successful boot into OS/8. Note we call simh_cmd with _os8_replies!
+  reply = s.simh_cmd ("boot " + simh_boot_dev, s._os8_replies_rex, debug=DEBUG)
+  s.os8_test_result (reply, "Monitor Prompt", "os8-cp")
 
   for att_spec in images_to_zero:
     os8dev = _os8_from_simh_dev[att_spec[0]]
@@ -701,13 +703,13 @@ def main ():
         if VERBOSE or DEBUG:
           print("Initializing directory of " + os8name + " in " + \
               imagename)
-        s.os8_send_cmd ('\\.', "ZERO " + os8name)
+        s.os8_cmd ("ZERO " + os8name, debug=DEBUG)
     else:
       os8name = os8dev + att_spec[1] + ":"
       if VERBOSE or DEBUG:
         print("Initializing directory of " + os8name + " in " + \
             imagename)
-      s.os8_send_cmd ('\\.', "ZERO " + os8name)
+      s.os8_cmd ("ZERO " + os8name, debug=DEBUG)
 
   # Perform copy operations
   for do_copy in action_plan["copy"]:
@@ -731,7 +733,7 @@ def main ():
     # "within" -- Use COPY.
     
     if copy_type == "into":
-      s.os8_pip_to(source, destination, pip_option)
+      s.os8_pip_to(source, destination, pip_option, debug=DEBUG)
     elif copy_type == "from":
       if has_os8_wildcards(source):
         # Split off device from source:
@@ -740,44 +742,46 @@ def main ():
         # Use OS/8 Direct to enumerate our input files.
         if DEBUG:
           print("Calling OS/8 DIRECT on wild card filespec: " + source)
-        s.os8_send_cmd ('\\.', "DIR " + source + "/F=1")
+        s.os8_cmd ("DIR " + source + "/F=1", "\d+\s+FREE BLOCKS", debug=DEBUG)
         # Now harvest direct output.  One file per line.  Ignore blank lines.
         # Maybe parse the FREE BLOCKS Output.
         # Done when we see a dot.
-        s._child.expect("\d+\s+FREE BLOCKS")
-        files = file_list_from_expect(s._child.before)
+        # s._child.expect("\d+\s+FREE BLOCKS")
+        files = file_list_from_expect(s._child.before.decode())
+	# Confirm return to monitor after call to DIR command.
+        s.os8_cfm_monitor ("os8_cp")  
         for filename in files:
           if VERBOSE or DEBUG:
             print("Wildcard call os8_pip_from: copy from: " + \
                 "{" + os8dev + "}{" + filename + "}" + \
                 " to: " + destination + ", mode: " + pip_option)
-          s.os8_pip_from(os8dev + filename, destination, pip_option)
+          s.os8_pip_from(os8dev + filename, destination, pip_option, debug=DEBUG)
       else:
         if VERBOSE or DEBUG:
           print("Call os8_pip_from: copy from: " + source + " to " + \
               destination + ", mode: " + pip_option)
-        s.os8_pip_from(source, destination, pip_option)
+        s.os8_pip_from(source, destination, pip_option, debug=DEBUG)
     elif copy_type == "within":
       if VERBOSE or DEBUG:
         print("Call COPY of: " + source + " to " + destination)
-      s.os8_send_cmd ('\\.', "COPY " + destination + "< " + source)
+      s.os8_cmd ("COPY " + destination + "< " + source)
     else:
       abort_prog ("Unrecognized copy type: " + copy_type)  # Should never happen.
       
   # Detach all mounts and then sys.
-  s.back_to_cmd ('\\.')
+  s.esc_to_simh()
   for att_spec in action_plan["mount"]:
     simh_dev = att_spec[0] + att_spec[1]     # Compose simh dev from name and unit.
     if VERBOSE or DEBUG:
       print("Detaching " + simh_dev)
-    s.send_cmd ("det " + simh_dev)
+    s.simh_cmd ("det " + simh_dev, debug=DEBUG)
   if VERBOSE or DEBUG:
     print("Detaching " + simh_boot_dev)
-  s.send_cmd ("det " + simh_boot_dev)
+  s.simh_cmd ("det " + simh_boot_dev, debug=DEBUG)
 
   # And shut down the simulator.
   if VERBOSE or DEBUG:
     print("Quitting simh.")
-  s.send_cmd ('quit')
+  s._child.sendline("quit")
 
 if __name__ == "__main__": main()

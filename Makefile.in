@@ -261,7 +261,6 @@ INFILES = \
 	@srcdir@/bin/os8-cp.in \
 	@srcdir@/bin/os8-run.in \
 	@srcdir@/bin/teco-pi-demo.in \
-	@srcdir@/bin/txt2os8.in \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
 	@srcdir@/boot/2.script.in \
@@ -279,7 +278,6 @@ INFILES = \
 	@srcdir@/lib/simh.py.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
-	@srcdir@/tools/test-os8-send-file.in \
 	$(OS8RUN_INFILES)
 OS8RUN_OUTFILES := $(subst @srcdir@/,,$(OS8RUN_INFILES))
 OS8RUN_OUTFILES := $(subst .in,,$(OS8RUN_OUTFILES))
@@ -378,7 +376,7 @@ clean:
 		$(OS8_UNI_BF2_SRC_RK05) $(OS8_UNI_BF2_OBJ_RK05) \
 		$(OS8_UNI_FIV_SRC_RK05) $(OS8_UNI_FIV_OBJ_RK05) \
 		config.log cscope.out tags \
-		bin/*.pt  bin/*.save bin/txt2ptp \
+		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
 		obj/*.log obj/*.pt obj/os8.opts \
 		src/config.h \
