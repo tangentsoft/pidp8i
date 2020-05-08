@@ -188,10 +188,12 @@ CC_OS8_SRCS := \
 	@srcdir@/src/cc8/os8/header.sb
 
 CC_OS8_DEMOS := \
-	obj/cc8/os8/fib.c \
 	obj/cc8/os8/calc.c \
+	obj/cc8/os8/fib.c \
+	obj/cc8/os8/forth.c \
+	obj/cc8/os8/hlb.c \
+	obj/cc8/os8/pd.c \
 	obj/cc8/os8/ps.c \
-
 
 D8TAPE_OBJS := \
 	obj/d8tape/dasm.o \

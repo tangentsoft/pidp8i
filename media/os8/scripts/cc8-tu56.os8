@@ -19,7 +19,7 @@ os8 ZERO DTA0:
 # libc, c8, n8, p8
 
 # Example Programs:
-# fib.c, calc,c, ps.c
+# src/cc8/os8/*.c
 
 # Copy source files into DSK for use.
 cpto $src/src/cc8/os8/header.sb DSK:
@@ -67,6 +67,9 @@ P8,DTA0:LIBC/I/O
 end  cdprog SYS:LOADER
 os8 SAVE DTA0 CC2
 
-cpto $obj/cc8/os8/fib.c DTA0:
 cpto $obj/cc8/os8/calc.c DTA0:
+cpto $obj/cc8/os8/fib.c DTA0:
+cpto $obj/cc8/os8/forth.c DTA0:
+cpto $obj/cc8/os8/hlb.c DTA0:
+cpto $obj/cc8/os8/pd.c DTA0:
 cpto $obj/cc8/os8/ps.c DTA0:
