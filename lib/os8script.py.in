@@ -320,7 +320,12 @@ class os8script:
   ]
   
   _build_rep_adds = [
-    # Prompts come from the existing _os8_replies
+    # Prompts:
+    # Add the BUILD prompt
+    # Subtle point:  Dollar sign appears in all kinds of output
+    # so we try to minimize where we look for it so as to avoid
+    # confusing pexpect.
+    ["BUILD Prompt", "\n\\$$", True],
     # Status:
     ["SYS BUILT", "SYS BUILT", False],
     ["WRITE ZERO DIRECT?", "WRITE ZERO DIRECT\\?", False],
@@ -1555,8 +1560,9 @@ class os8script:
       print("Line " + str(self.line_ct_stack[0]) + ": " + os8_comm)
 
     # Run BUILD and confirm it has started successfully.
-    reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
-    if self.simh.os8_test_result (reply, "BUILD Prompt", "build_subcomm 0", debug=self.debug) == False:
+    reply = self.simh.os8_cmd (os8_comm, self._build_replies_rex, debug=self.debug)
+    if self.simh.test_result (reply, "BUILD Prompt", self._build_replies, \
+                              "build_subcomm startup " + os8_comm, debug=self.debug) == False:
       print ("Line " + str(self.line_ct_stack[0]) + ": " + os8_comm + " failed.")
       print ("Ignoring the rest of this block.")
       self.ignore_to_subcomm_end(os8_comm, script_file, "build")

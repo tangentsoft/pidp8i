@@ -156,8 +156,6 @@ class simh:
     ["Monitor Prompt", "\n\\.$", True],
     ["Command Decoder Prompt", "\n\\*$", False],
     ["PIP Continue", "\\^$", True],                  # Newline NOT always present! 
-    ["Monitor Escape", "\n\\.\\$\\.$", True],        # Benign unexpected prompt.
-    ["BUILD Prompt", "\n\\$$", True],
     # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
     ["Directory I/O Error", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
     ["I/O Error on SYS", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
