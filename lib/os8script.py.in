@@ -1030,7 +1030,7 @@ class os8script:
     match = _odt_parse.match(line)
     if match == None:
       print("Aborting because of bad ODT line: " + line)
-      self.simh.os8_escape('c', caller="parse_odt")
+      self.simh.os8_ctrl_c (caller="parse_odt")
       return "err"
     loc = match.group(1)
     old_val = match.group(2)
@@ -1049,7 +1049,7 @@ class os8script:
         print("\tOld value: " + found_val + " does not match " +
             old_val + ". Aborting patch.")
         # Abort out of ODT back to the OS/8 Monitor
-        self.simh.os8_escape('c', "parse_odt 2")
+        self.simh.os8_ctrl_c ("parse_odt 2")
         return "err"
   
     self.simh.os8_send_line (new_val)
@@ -1070,7 +1070,7 @@ class os8script:
     match = _com_split_parse.match(line)
     if match == None:
       print("Aborting because of mal-formed FUTIL FILE command: " + line)
-      self.simh.os8_escape('c', caller="futil_file")
+      self.simh.os8_ctrl_c (caller="futil_file")
       return "err"
     fname = match.group(2)
     expect_futil_file_str = "\n" + fname + "\s+(.*)$"
@@ -1081,11 +1081,11 @@ class os8script:
     if match == None:
       print("Aborting because unexpected return status: " + result + \
           " from: " + line)
-      self.simh.os8_escape('c', caller="futil_file 2")
+      self.simh.os8_ctrl_c (caller="futil_file 2")
       return "err"
     if match.group(2).strip() == "LOOKUP FAILED":
       print("Aborting because of FUTIL lookup failure on: " + fname)
-      self.simh.os8_escape('c', caller="futil_file 3")
+      self.simh.os8_ctrl_c (caller="futil_file 3")
       return "err"
     else:
       return "cont"
@@ -1163,7 +1163,7 @@ class os8script:
         retval = the_command_parser (the_command, line)
         if retval == "break":
           inside_a_command = False
-          self.simh.os8_escape('c', caller="run_patch_file")
+          self.simh.os8_ctrl_c (caller="run_patch_file")
         elif retval == "err":
           patch_file.close()
           return "fail"
@@ -1590,13 +1590,13 @@ class os8script:
         if rest == "":
           print("Warning! end statement encountered inside build with no argument at line " + \
               str(self.line_ct_stack[0]) + ".\nExiting build.")
-          self.simh.os8_escape ('c', caller="build_subcomm end 1")      # Exit BUILD
+          self.simh.os8_ctrl_c (caller="build_subcomm end 1")      # Exit BUILD
           return "fail"
         elif rest != "build": 
           print("Warning! Mismatched begin/end blocks in BUILD at line " + \
               str(self.line_ct_stack[0]) + ".\nEncountered end: {" + \
               rest + "}. Exiting BUILD.")
-          self.simh.os8_escape ('c', caller="build_subcomm end 2")      # Exit BUILD
+          self.simh.os8_ctrl_c (caller="build_subcomm end 2")      # Exit BUILD
           return "fail"
         
         # We're done.  Print any desired verbose or debug status
@@ -1607,7 +1607,7 @@ class os8script:
           print("before: " + self.simh._child.before.decode().strip())
           print("after: " + self.simh._child.after.decode().strip())
         # Return to monitor level unless need_exit == False.
-        self.simh.os8_escape ('c', caller="build_subcomm end success")      # Exit BUILD
+        self.simh.os8_ctrl_c (caller="build_subcomm end success")      # Exit BUILD
         return "success"
         
       # Now perform sub-commands within BUILD. They have a discernable format.
@@ -1760,7 +1760,7 @@ class os8script:
           print("Exiting cdprog, possibly earlier than expected at line " + \
             str(self.line_ct_stack[0]) + ".")
         # Return to Monitor
-        self.simh.os8_escape ('[', caller="cdprog2")
+        self.simh.os8_escape (caller="cdprog2")
         return retval
   
       # We could do some basic OS/8 command decoder synax checking here.
@@ -1796,7 +1796,7 @@ class os8script:
         str(self.line_ct_stack[0]) + \
         " with no end of cdprog command block.")
     # Exit command back to OS/8 monitor.
-    self.simh.os8_escape ('[', caller="cdprog 2")
+    self.simh.os8_escape (caller="cdprog 2")
     return "fail"
 
 

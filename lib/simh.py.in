@@ -880,8 +880,9 @@ class simh:
     return self.os8_test_result(reply, "Monitor Prompt", caller, debug=debug)
 
 
-  #### os8_escape ##################################################
-  # Return to OS/8 monitor using the given escape character.
+  #### os8_ctrl_c ##################################################
+  # Return to OS/8 monitor using the ^C given escape character.
+  # We need to listen for the ^C echo or else cfm_monitor gets confused.
   # Confirm we got our monitor prompt.
   # Optional caller argument enables a message if escape failed.
   # Note: OS/8 will respond to this escape IMMEDIATELY,
@@ -890,8 +891,26 @@ class simh:
   # a known state and the running program is quiescent
   # before calling this method. Otherwise pexpect may get lost.
 
-  def os8_escape (self, char, caller = "", debug=False):
-    self.os8_send_ctrl (char)
+  def os8_ctrl_c (self, caller = "", debug=False):
+    self.os8_send_ctrl ("c")
+    self._child.expect("\\^C")
+    return self.os8_cfm_monitor (caller)
+
+
+  #### os8_escape ##################################################
+  # Return to OS/8 monitor using the escape (^]) character.
+  # We need to listen for the $ echo or else cfm_monitor gets confused.
+  # Confirm we got our monitor prompt.
+  # Optional caller argument enables a message if escape failed.
+  # Note: OS/8 will respond to this escape IMMEDIATELY,
+  # even if it has pending output.
+  # You will need to make sure all pending output is in
+  # a known state and the running program is quiescent
+  # before calling this method. Otherwise pexpect may get lost.
+
+  def os8_escape (self, caller = "", debug=False):
+    self.os8_send_ctrl ('[')
+    self._child.expect("\\$")
     return self.os8_cfm_monitor (caller)
 
 
