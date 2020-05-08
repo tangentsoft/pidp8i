@@ -16,18 +16,20 @@ os8 DEL RKB1:LIBSET.BN
 
 print Assemble Library Modules
 print ATAN
-begin cdprog1 RKB1:SABR.SV
+begin cdprog RKB1:SABR.SV
 RKB1:ATAN.RL<RKA1:ATAN.SB
-end cdprog1 RKB1:SABR.SV
+end cdprog RKB1:SABR.SV
 
 print What happens if we give too many args?
 print SQRT / TRIG Bad.
-begin cdprog1 RKB1:SABR.SV
+begin cdprog RKB1:SABR.SV
 RKB1:SQRT.RL<RKA1:SQRT.SB
 RKB1:TRIG.RL<RKA1:TRIG.SB
-end cdprog1 RKB1:SABR.SV
+end cdprog RKB1:SABR.SV
 
+enable transcript
 os8 DIR RKA1:
+disable transcript
 
 # print Use our newly build LIBSET to create LIB8.RL from our library RL files.
 
