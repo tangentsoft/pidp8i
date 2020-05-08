@@ -254,8 +254,12 @@ the OS/8 Command Decoder, or some read/eval/print loop in
 a program being run.
 
 Your use of the simh class needs to be mindful of this.
+Throughout this document every attempt has been made to be clear
+on which methods keep track of context switches for you and
+which do not.
 
-### Within a program under OS/8
+
+### Context Within a program under OS/8
 
 If you've forgotten to exit a sub-program, that program
 will still be getting your subsequent commands instead of
@@ -265,22 +269,56 @@ You may have a program that keeps running and asking for more input,
 for example OS/8 `PIP` returns to the command decoder after each
 action.
 
-The `os8_send_ctrl` method enables you to send an interrupt character.
-For example:
+There is a subtle issue with program interrupts:  You **need**
+to check for the string that gets echoed when you do an interrupt.
+Otherwise pexpect can get confused.
+
+Two methods that abstract this for you are provided: `os8_ctrl_c`
+and `os8_escape` which send those interrupt characters, ask
+pexpect to listen for their echo back (`$` comes back from
+escape), and confirms a return to the OS/8 monitor.
+
+Here is the implementation of `os8_ctrl_c` as an example if you
+need to run a sub-program with a different interrupt character:
+
 
 ```
-    s.os8_send_ctrl ('c')
+  #### os8_ctrl_c ##################################################
+  # Return to OS/8 monitor using the ^C given escape character.
+  # We need to listen for the ^C echo or else cfm_monitor gets confused.
+  # Confirm we got our monitor prompt.
+  # Optional caller argument enables a message if escape failed.
+  # Note: OS/8 will respond to this escape IMMEDIATELY,
+  # even if it has pending output.
+  # You will need to make sure all pending output is in
+  # a known state and the running program is quiescent
+  # before calling this method. Otherwise pexpect may get lost.
+
+  def os8_ctrl_c (self, caller = "", debug=False):
+    self.os8_send_ctrl ("c")
+    self._child.expect("\\^C")
+    return self.os8_cfm_monitor (caller)
+
 ```
 
-You should then check the results.  A handy wrapper for the
-test that will test for and consume the monitor prompt making
-ready for your next OS/8 command is, `os8_cmf_monitor`. For example:
+### Sending Control Characters
 
-    self.simh.os8_cfm_monitor ("myprog")      
+Several OS/8 programs expect an <kbd>Escape</kbd> (a.k.a. `ALTMODE`)
+keystroke to do things. Examples are `TECO` and `FRTS`. 
 
-### Between SIMH and OS/8
+(Yes, <kbd>Escape</kbd> is <kbd>Ctrl-\[</kbd>. Now you can be the life of
+the party with that bit of trivia up your sleeve. Or maybe you go to
+better parties than I do.)
 
-Similarly it is important to make sure that commands intended for SIMH
+The `os8_send_ctrl` method enables you to send arbitrary control
+characters but it does not keep track of whether you're in the OS/8 or
+SIMH context.  Note also that the `e` control character escapes to SIMH.
+So avoid writing programs that need that control character as input.
+
+
+### Context Between SIMH and OS/8
+
+It is important to make sure that commands intended for SIMH
 go there, and not to OS/8 or any programs running under SIMH.  The
 `os8_cmd` amd `simh_cmd` methods keep track of context. If
 you call the `simh_cmd` method but aren't actually escaped out to
@@ -359,30 +397,6 @@ quick and easy to print an error if returning to the monitor failed.
 `os8-run` uses this option extensively.
 
 
-## Sending Escape Characters
-
-Several OS/8 programs expect an <kbd>Escape</kbd> (a.k.a. `ALTMODE`)
-keystroke to do things. Examples are `TECO` and `FRTS`. A higher
-level method that does this, confirms the return to the OS/8 monitor,
-gives the option to provide an error report, and returns `True`
-if successful or `False` if not.
-
-    if not s.os8_escape ('[', caller="myprog"): print ("More error reporting") 
-
-The lower level method to send an escape character is `os8_send_ctrl`
-if your control flow is such that you need to do more before checking
-the OS/8 output.
-
-Note: OS/8 will respond to this escape IMMEDIATELY, even if it has
-pending output.  You will need to make sure all pending output is in a
-known state and the running program is quiescent before calling this
-method. Otherwise pexpect may get lost.
-
-(Yes, <kbd>Escape</kbd> is <kbd>Ctrl-\[</kbd>. Now you can be the life of
-the party with that bit of trivia up your sleeve. Or maybe you go to
-better parties than I do.)
-
-
 ## Sending without testing results.
 
 At some point you always need to test your results and make sure
@@ -403,7 +417,7 @@ way than that used by `os8_cmd` and `simh_cmd`.  Here is what you need:
 | `os8_send_line`  | Add a carriage return to the given string and calk os8_send_str` to send it to OS/8.|
 
 
-## Higher Level Operations
+## Other Operations
 
 ### Quitting the simulator
 
@@ -417,7 +431,7 @@ You need to test for the SIMH prompt to make sure you've succeeded.
 
 ```
   s.simh_cmd ("detach all")
-  s.simh_test_result(reply, "Prompt", "myprog")
+  s.simh_test_result(reply, "Prompt", my_replies_rex, "myprog")
   s._child.sendline("quit")
 
 ```
@@ -449,11 +463,19 @@ may need to do #2.  We could probably get away with zeroing page 0.
 ## But There's More!
 
 The above introduced you to most of the functionality of `class simh`
-used by `teco-pi-demo`, but there's more to the class than that,
-primarily because the `os8-run` script's needs are broader.  Rather than
-just recapitulate the class documentation here, please read through [the
-class's source code][ssc], paying particular attention to the method
-comments. It's a pretty simple class, making it a quick read.
+used by `teco-pi-demo`. It is a useful exercise to read through [the
+simh class's source code][ssc]. There are many useful and interesting
+methods in the simh class that are documented there not here. Although
+it started off as a simple class amenable to quick study, some heavy
+duty drivers for configuration of OS/8 devices under SIMH were added.
+The source file is organized places the lower level methods first and
+proceeds through progressively higher level ones, first for simh
+direct interaction and the OS/8 interaction.
+
+The `os8-run` script has a whole [higher level library][os8script]
+built on top of the simh class that includes state machines for
+executing complex commands like BUILD and applying patches with
+ODT and FUTIL.
 
 Another useful module is [`pidp8i.dirs`][dsc] which contains paths to
 many directories in the PiDP-8/I system, which you can reuse to avoid
@@ -463,8 +485,9 @@ time via `./configure --prefix=/some/path`, but also allows it to run
 correctly from the PiDP-8/I software's build directory, which has a
 somewhat different directory structure from the installation tree.
 
-[ssc]: https://tangentsoft.com/pidp8i/file/lib/simh.py
-[dsc]: https://tangentsoft.com/pidp8i/file/lib/pidp8i/dirs.py
+[ssc]: https://tangentsoft.com/pidp8i/file/lib/simh.py.in
+[dsc]: https://tangentsoft.com/pidp8i/file/lib/pidp8i/dirs.py.in
+[os8script]: https://tangentsoft.com/pidp8i/file/lib/os8script.py.in
 
 
 ## <a id="license" name="credits"></a>Credits and License
