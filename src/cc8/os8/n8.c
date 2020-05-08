@@ -16,6 +16,31 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * This file is the core of the native C compiler for the PDP-8 series of computers.
+ * Linked with LIBC.RL to create CC1.SV
+ * Hardware requirements:
+ * 1. PDP/8 processor with minimal EAE (MQ register is heavily used).
+ * 2. 20K (5x4K banks) of core.
+ * 3. OS/8 operating system with FORTRAN II library (LIB8.RL)
+ * 4.                            SABR assembler (SABR.SV)
+ * 5.                            Linking loader (LOADER.SV)
+ *
+ * 1. The compiler consists of 3 files: CC0.SV, CC1.SV, CC2.SV on system device. (SYS:)
+ * The runtime support files are:
+ * 1. The c library created from libc.c and assembled to LIBC.RL on the user device.
+ * 2. A runtime support file: HEADER.SB on the user device (DSK:)
+
+ * These 3 .SV files run in sequence:
+ * CC0: C pre-processor: Asks for ONE source file and creates CC.CC for CC1.SV.
+ *      And, generates an intermediate file (CASM.TX) used by CC2.SV.
+ * CC1: C tokeniser: Reads CC.CC and converts the code to a token list in FIELD 4
+ * CC2: SABR code generator: Reads token list and generates CC.SB from
+ *      a collection of code fragments. 
+ * Finally, the SABR assembler is used on CC.SB and the runtime is generated
+ * by LOADER.SV using CC.RL and LIBC.RL
+
+ */
 
 #include <libc.h>
 #include <init.h>
@@ -23,7 +48,7 @@
 #define SMAX 10
 #define CMAX 280
 #define BMAX 64
-#define LMAX 32
+#define LMAX 64
 #define DMAX 32
 #define CBMX 1024
 #define LXMX 999
@@ -31,21 +56,20 @@
 int ltbf[512];
 int xlt[CMAX];
 int gm[512];		/* Global symbol table */
-int tkbf[LMAX];
+int tkbf[DMAX];
 int *p,*q,*s,*ltpt;
-int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,cop;
-int glim,*n,ccm;
+int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,glim;
+int cop,*n,ccm;
 int tmp;
 int tkn[BMAX];
 int bfr[BMAX];
-int tmbf[LMAX];
-int smbf[LMAX];
-int Lb[BMAX];
+int smbf[DMAX];
 int lm[CMAX];		/* Auto symbol table */
 int fstk[BMAX];		/* Push down stack for For etc. */
 int inproc,addr,cbrk;
 int izf,ixf,idf,ssz,icd;
-
+int Lb[128];
+int tmbf[128];
 
 skpsp()
 {
@@ -96,7 +120,7 @@ J(  ) {
 	K( );
 	switch(*p++){
 	case '&': J( ); stri(20); break;
-	case '|': J( ); stri(-20); break;
+	case '|': J( ); stri(4076); break;
 	default: p--; return;
 	}
 	stkp--;
@@ -107,7 +131,10 @@ K(  ) {
 	V( );
 	switch(*p++){
 	case '<': K( ); stri(11); break;
-	case '>': K( ); stri(-11); break;
+	case '>': K( ); stri(4085); break;          /* -11 */
+	case '@': K( ); stri(11); stri(4070); break;
+    case '#': K( ); stri(4085); stri(4070); break;
+    case '_': K( ); stri(24); stri(4070); break;
 	case '$': K( ); stri(24); break;
 	default: p--; return;
 	}
@@ -129,11 +156,10 @@ W(  ) {
 
 	Y( );
 	skpsp();
-	cop=*p;
-	switch(*p++) {
+	switch(cop=*p++) {
 	case '*': W( ); stri(13); break;
 	case '/': W( ); stri(14); break;
-	case '%': W( ); stri(14);stri(-14); break;
+	case '%': W( ); stri(14);stri(4082); break;
 	case '=': if (*p=='=') {
 				*p='$';return;
 			  }
@@ -161,17 +187,8 @@ Y(  ) {
 	if (*p=='"') {
 		stri(10);
 		stri(ltpt-ltbf);
-		while (*++p-'"') {
-			if (*p=='\\')
-				switch (*++p) {
-				case 'r':
-					*p=13;
-					break;
-				case 'n':
-					*p=10;
-			}
+		while (*++p-'"') 
 			*ltpt++=*p;
-		}
 		*ltpt++=0;
 		p++;
 		return;
@@ -209,8 +226,11 @@ Y(  ) {
 				return;
 			case '~':
 				Y();
-				stri(-26);
+				stri(4070);
 				return;
+	        case '`':
+		        stri(29);
+                return;
 			case '(':
 				S();
 				return;
@@ -228,11 +248,11 @@ Y(  ) {
 		ctx=o=0;p++;
 		while (*p && !o) {
 			o=S( );
-			if (icd)
-				break;
 			stkp++;
 			stri(19);
 			ctx++;		/* arg count */
+			if (icd)
+				break;
 		}
 		stri(9);
 		stri(ctx);
@@ -288,7 +308,7 @@ Y(  ) {
 			if (*q=='=')
 				break;
 			tmp=8;
-			if (ixf)
+			if (ixf && ssz==1)
 				tmp=-8;
 			ixf=0;
 			stkp++;
@@ -317,7 +337,7 @@ char trm;
 		ccm-=tm==',';
 		if (!ctr || tm==trm)
 			break;
-		*q++=tm;
+		*q++=tm&127;
 	}
 	*q=0;
 	if (inproc)
@@ -328,11 +348,7 @@ char trm;
 strpad(sym)
 char *sym;
 {
-	char *a,*b;
-
-	strcpy(a=smbf,"         ");  /* 9 spaces */
-	while (*sym)
-		*a++=*sym++;
+    strpd(smbf,sym);
 }
 
 addsym(sym,sz)
@@ -362,12 +378,12 @@ char *sym;
 	smbf[7]=0;
 	if (s=strstr(lm,smbf)) {
 		ssz=s[8];
-		s=s+7;
+		s+=7;
 		return *s-stkp;
 	}
 	if (s=strstr(gm,smbf)) {
 		ssz=s[8];
-		s=s+7;
+		s+=7;
 		return *s;
 	}
 	return 0;
@@ -401,8 +417,15 @@ popfr()
 
 dostt()
 {
+    int flg;
+
 	p=tmbf;
-	while (tm!=';') {
+    flg=0;
+	while (1) {
+        if (!(tm-';' | flg))
+            break;
+        if (!(tm-'"'))
+            flg=!flg;
 		*p++=tm;
 		tm=fgetc();
 	}
@@ -463,7 +486,7 @@ next()
 				}
 				stkp=0;
 				tm=gettk();
-				cbrk=200;
+				cbrk=400;
 				break;
 			case ',':
 			case ';':
@@ -473,7 +496,7 @@ next()
 				}					/* end case 0: */
 				break;
 			case 4:
-				fflg=fflg+200;
+				fflg=fflg+400;
 			case 12:
 				fnbrk();
 				stri(5);
@@ -483,7 +506,7 @@ next()
 				stri(12);
 				stri(tm=*fptr+2);
 				*++fptr=cbrk;
-				if (fflg<200)
+				if (fflg<400)
 					cbrk=tm;
 				*++fptr=inproc;
 				lctr+=3;
@@ -498,12 +521,11 @@ next()
 				stri(cbrk);
 				break;
 			case 24:
-				if (tm-';') {
+				if (tm-';')
 					procst(';');
-					stri(-23);
-					stri(ectr);
-					tm=1;
-				}
+				stri(4073);
+				stri(ectr);
+				tm=1;
 				break;
 			case 31:
 				fnbrk();
@@ -551,10 +573,6 @@ next()
 					HLT
 FNM,				TEXT "CC2@@@"
 #endasm
-				case '/':
-					while (fgetc()!='/');			/* Skip comment */
-					tm=1;
-					break;
 				default:
 					dostt();
 	}
@@ -567,14 +585,14 @@ main()
 {
 	char trm;
 
-	memset(ltbf,0,&ssz-ltbf);
+	memset(ltbf,0,tmbf-ltbf);
 	fopen("CC.CC","r");
 	strcpy(tkn,"int if else while break return for ");
 	lctr = 10;
 	ectr = 900;
 	ltpt = ltbf;
 	fptr = fstk;
-	*fptr = -1;
+	*fptr = 4095;
 	gadr = 128; /* Start of globals */
 	iinit(128);
 	tm=gettk();
@@ -599,10 +617,10 @@ main()
 			case 1:
 				stri(99);
 				if (!strcmp("else",tkbf)) {
-					stri(-23);
-					stri(200+lctr+2);
+					stri(4073);
+					stri(400+lctr+2);
 					popfr();
-					*++fptr=200+lctr++;
+					*++fptr=400+lctr++;
 					*++fptr=cbrk;
 					*++fptr=inproc;
 				}
