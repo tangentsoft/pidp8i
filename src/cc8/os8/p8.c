@@ -49,7 +49,7 @@
 #define SMAX 10
 #define CMAX 280
 #define BMAX 64
-#define LMAX 32
+#define LMAX 64
 #define DMAX 32
 #define CBMX 1024
 #define LXMX 999
@@ -57,10 +57,9 @@
 int ltbf[512];
 int xlt[CMAX];
 int gm[512];		/* Global symbol table */
-int tkbf[LMAX];
+int tkbf[DMAX];
 int *p,*q,*s,*ltpt;
-int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr;
-int glim;
+int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,glim;
 int ltsz,pflg,t;
 int tmstr[32];
 
@@ -101,7 +100,7 @@ main()
 			case 5:
 				tm=strd();
 				if (tm<0)
-					tm=200-tm;
+					tm=400-tm;
 				fprintf("CC%o,\r\n",tm);
 				break;
 			case 6:
@@ -197,7 +196,7 @@ main()
 				fputs("\tDCA JLC\r\n\tTADI JLC\r\n");
 				break;
 			case 23:
-				if (strl()<200)
+				if (strl()<400)
 					fprintf("\tJMP CC%o\r\n",strl());
 				strd();
 				break;

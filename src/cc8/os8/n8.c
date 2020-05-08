@@ -48,7 +48,7 @@
 #define SMAX 10
 #define CMAX 280
 #define BMAX 64
-#define LMAX 32
+#define LMAX 64
 #define DMAX 32
 #define CBMX 1024
 #define LXMX 999
@@ -56,20 +56,20 @@
 int ltbf[512];
 int xlt[CMAX];
 int gm[512];		/* Global symbol table */
-int tkbf[LMAX];
+int tkbf[DMAX];
 int *p,*q,*s,*ltpt;
-int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,cop;
-int glim,*n,ccm;
+int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,glim;
+int cop,*n,ccm;
 int tmp;
 int tkn[BMAX];
 int bfr[BMAX];
-int tmbf[LMAX];
-int smbf[LMAX];
-int Lb[BMAX];
+int smbf[DMAX];
 int lm[CMAX];		/* Auto symbol table */
 int fstk[BMAX];		/* Push down stack for For etc. */
 int inproc,addr,cbrk;
 int izf,ixf,idf,ssz,icd;
+int Lb[128];
+int tmbf[128];
 
 skpsp()
 {
@@ -131,10 +131,10 @@ K(  ) {
 	V( );
 	switch(*p++){
 	case '<': K( ); stri(11); break;
-	case '>': K( ); stri(-11); break;
-	case '?': K( ); stri(11); stri(-26); break;
-    case '#': K( ); stri(-11); stri(-26); break;
-    case '£': K( ); stri(24); stri(-26); break;
+	case '>': K( ); stri(4085); break;          /* -11 */
+	case '@': K( ); stri(11); stri(4070); break;
+    case '#': K( ); stri(4085); stri(4070); break;
+    case '_': K( ); stri(24); stri(4070); break;
 	case '$': K( ); stri(24); break;
 	default: p--; return;
 	}
@@ -187,17 +187,8 @@ Y(  ) {
 	if (*p=='"') {
 		stri(10);
 		stri(ltpt-ltbf);
-		while (*++p-'"') {
-			if (*p=='\\')
-				switch (*++p) {
-				case 'r':
-					*p=13;
-					break;
-				case 'n':
-					*p=10;
-			}
+		while (*++p-'"') 
 			*ltpt++=*p;
-		}
 		*ltpt++=0;
 		p++;
 		return;
@@ -235,8 +226,11 @@ Y(  ) {
 				return;
 			case '~':
 				Y();
-				stri(-26);
+				stri(4070);
 				return;
+	        case '`':
+		        stri(29);
+                return;
 			case '(':
 				S();
 				return;
@@ -254,11 +248,11 @@ Y(  ) {
 		ctx=o=0;p++;
 		while (*p && !o) {
 			o=S( );
-			if (icd)
-				break;
 			stkp++;
 			stri(19);
 			ctx++;		/* arg count */
+			if (icd)
+				break;
 		}
 		stri(9);
 		stri(ctx);
@@ -314,7 +308,7 @@ Y(  ) {
 			if (*q=='=')
 				break;
 			tmp=8;
-			if (ixf)
+			if (ixf && ssz==1)
 				tmp=-8;
 			ixf=0;
 			stkp++;
@@ -343,7 +337,7 @@ char trm;
 		ccm-=tm==',';
 		if (!ctr || tm==trm)
 			break;
-		*q++=tm;
+		*q++=tm&127;
 	}
 	*q=0;
 	if (inproc)
@@ -423,8 +417,15 @@ popfr()
 
 dostt()
 {
+    int flg;
+
 	p=tmbf;
-	while (tm!=';') {
+    flg=0;
+	while (1) {
+        if (!(tm-';' | flg))
+            break;
+        if (!(tm-'"'))
+            flg=!flg;
 		*p++=tm;
 		tm=fgetc();
 	}
@@ -485,7 +486,7 @@ next()
 				}
 				stkp=0;
 				tm=gettk();
-				cbrk=200;
+				cbrk=400;
 				break;
 			case ',':
 			case ';':
@@ -495,7 +496,7 @@ next()
 				}					/* end case 0: */
 				break;
 			case 4:
-				fflg=fflg+200;
+				fflg=fflg+400;
 			case 12:
 				fnbrk();
 				stri(5);
@@ -505,7 +506,7 @@ next()
 				stri(12);
 				stri(tm=*fptr+2);
 				*++fptr=cbrk;
-				if (fflg<200)
+				if (fflg<400)
 					cbrk=tm;
 				*++fptr=inproc;
 				lctr+=3;
@@ -520,12 +521,11 @@ next()
 				stri(cbrk);
 				break;
 			case 24:
-				if (tm-';') {
+				if (tm-';')
 					procst(';');
-					stri(4073);
-					stri(ectr);
-					tm=1;
-				}
+				stri(4073);
+				stri(ectr);
+				tm=1;
 				break;
 			case 31:
 				fnbrk();
@@ -573,10 +573,6 @@ next()
 					HLT
 FNM,				TEXT "CC2@@@"
 #endasm
-				case '/':
-					while (fgetc()!='/');			/* Skip comment */
-					tm=1;
-					break;
 				default:
 					dostt();
 	}
@@ -589,7 +585,7 @@ main()
 {
 	char trm;
 
-	memset(ltbf,0,&ssz-ltbf);
+	memset(ltbf,0,tmbf-ltbf);
 	fopen("CC.CC","r");
 	strcpy(tkn,"int if else while break return for ");
 	lctr = 10;
@@ -622,9 +618,9 @@ main()
 				stri(99);
 				if (!strcmp("else",tkbf)) {
 					stri(4073);
-					stri(200+lctr+2);
+					stri(400+lctr+2);
 					popfr();
-					*++fptr=200+lctr++;
+					*++fptr=400+lctr++;
 					*++fptr=cbrk;
 					*++fptr=inproc;
 				}

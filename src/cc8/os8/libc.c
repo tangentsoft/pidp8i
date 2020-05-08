@@ -632,7 +632,7 @@ char *dm,*sm;
 
 	rsl=0;
 	while (*dm)
-		rsl+=(*sm++-*dm++);
+		rsl|=(*sm++-*dm++);
 	return rsl;
 }
 
@@ -688,7 +688,7 @@ int vl;
 		TAD (D-10		/ # OF DECIMAL DIGITS
 		SMA CLA
 XNO,	CLA SKP
-		IAC
+		CMA
 #endasm
 }
 
@@ -702,7 +702,7 @@ int vl;
 		TAD (D-33		/ ONE PAST ASCII ' '
 		SMA CLA
 YNO,	CLA SKP
-		IAC
+		CMA
 #endasm
 }
 
@@ -724,7 +724,7 @@ int vl;
 		TAD (D-26		/ # OF LOWERCASE ENGLISH LETTERS
 BNO,	SMA CLA
 ANO,	CLA SKP
-		IAC
+		CMA
 #endasm
 }
 
