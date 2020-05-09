@@ -1,7 +1,7 @@
 ; This script loads ETOS V5B from the RK05 cartridge disk drive.
 ;
 echo Loading ETOS from the RK05 cartridge disk drive...
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 set tsc enabled
 attach ttix 4000

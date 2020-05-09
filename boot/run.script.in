@@ -3,7 +3,7 @@
 ; by "make run" so you don't have to "make mediainstall" first.
 ;
 echo Loading OS/8 from the RK05 cartridge disk in the build directory...
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 @define SHORTNAME run
 @include @srcdir@/boot/savestate.script

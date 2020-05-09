@@ -22,7 +22,7 @@
 ; of its other functions.  See the PiDP-8/I instructions for details.
 ;
 echo Loading OS/8 from the RK05 cartridge disk...
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 @define SHORTNAME 0
 @include @srcdir@/boot/savestate.script

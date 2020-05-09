@@ -3,7 +3,7 @@
 ; RF08 disk controller.
 ;
 echo Loading TSS/8 from the RS08 fixed-head disk...
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 set rf enabled
 

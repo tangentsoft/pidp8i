@@ -17,7 +17,7 @@ echo Press Ctrl-E to pause the simulator and return to the SimH
 echo command prompt, where you can say "quit", "help" and other
 echo things.  See the SimH manual for details.
 echo
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 at ttix 2222
 set ttox0 8b

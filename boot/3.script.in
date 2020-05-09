@@ -2,7 +2,7 @@
 ; in 0.script.
 ;
 echo Loading OS/8 from DECtape type @OS8_TAPE_DEVICE@...
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 @if SIMH_TAPE_DEVICE eq "td"
 set dt disabled
