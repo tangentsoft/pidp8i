@@ -6,7 +6,7 @@ echo Loading OS/8 from the RK05 cartridge disk in the build directory...
 @include boot/common.script
 
 @define SHORTNAME run
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 att rk0 bin/@OS8_BOOT_DISK@
 boot rk0

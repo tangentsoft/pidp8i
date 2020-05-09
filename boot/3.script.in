@@ -11,7 +11,7 @@ set td enabled
 @endif
 
 @define SHORTNAME 3
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 attach @SIMH_TAPE_DEVICE@0 @MEDIADIR@/os8/@OS8_BOOT_TAPE@
 boot @SIMH_TAPE_DEVICE@0

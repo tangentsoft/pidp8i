@@ -12,7 +12,7 @@ set rf enabled
 !cp -n media/tss8/tss8_rf.dsk bin
 
 @define SHORTNAME tss8
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 !cp media/tss8/tss8_init.bin bin
 load bin/tss8_init.bin

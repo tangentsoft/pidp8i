@@ -23,7 +23,7 @@ at ttix 2222
 set ttox0 8b
 
 @define SHORTNAME 4
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 load @MEDIADIR@/spacewar/spacewar.bin
 g 200

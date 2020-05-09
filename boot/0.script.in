@@ -25,7 +25,7 @@ echo Loading OS/8 from the RK05 cartridge disk...
 @include boot/common.script
 
 @define SHORTNAME 0
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 att rk0 @MEDIADIR@/os8/@OS8_BOOT_DISK@
 boot rk0

@@ -8,7 +8,7 @@ echo Loading TSS/8 from the RS08 fixed-head disk...
 set rf enabled
 
 @define SHORTNAME 2
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 load @MEDIADIR@/tss8/tss8_init.bin
 attach rf @MEDIADIR@/tss8/tss8_rf.dsk
