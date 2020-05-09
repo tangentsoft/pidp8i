@@ -89,8 +89,7 @@ RKA0:<RKB2:HELP.SV
 RKA0:<RKB2:RXCOPY.SV
 RKA0:<RKA1:HELP.HL
 RKA0:<RKB2:TECO.SV
-# BATCH scripts must be on DSK:
-RKB0:<RKA1:??SYS.BI
+RKA0:<RKA1:??SYS.BI
 end cdprog RKB2:FOTP.SV
 
 os8 R CCL
@@ -182,10 +181,6 @@ end default macrel
 
 # Files from local.tu56
 mount dt1 $os8mi/local.tu56 ro required
-# resume
-# Case conversion batch scripts
-os8 COPY RKA0:<DTA1:?CSYS.BI
-os8 COPY RKA0:<DTA1:?CBAS.BI
 
 begin default chess
 os8 COPY RKA0:<DTA1:CHESS.*
