@@ -103,22 +103,24 @@ parse()
     dfp+=10;
 }
 
-dorep()
+void dorep()
 {
-    p=dflst;
-    while (*p) {
-        q=strstr(ln,p);
-        if (q) {
-            memset(tmln,0,80);
-            if (q-p)
-                memcpy(tmln,ln,q-ln);
-            strcat(tmln,p+512);
-            strcat(tmln,q+strlen(p));
-            memcpy(ln,tmln,80);
-        }
-        p+=10;
-    }
+	p=dflst;
+	while (*p) {
+		q=strstr(ln,p);
+		while (q) {
+			memset(tmln,0,80);
+			if (q-p)
+				memcpy(tmln,ln,q-ln);
+			strcat(tmln,p+512);
+			strcat(tmln,q+strlen(p));
+			memcpy(ln,tmln,80);
+            q=strstr(ln,p);
+		}
+		p+=10;
+	}
 }
+
 
 /* Set bit 7 in string constants to exclude from processing */
 /* Also, translate control chara .. /n etc. to actual values */
@@ -209,14 +211,16 @@ main()
         /* Convert type char to int */
 
         p=ln;
-        q=getsym();
-        if (strcmp(q,"char")) {
-            q=strstr(ln,"char");
-            memcpy(q,"int ",4);
-        } else
-        if (strcmp(q,"void")) {
-            q=strstr(ln,"void");
-            memcpy(q,"int ",4);
+        getsym();
+        if (*tkbf) {
+            if (!strcmp(tkbf,"char")) {
+                q=strstr(ln,"char ");
+                memcpy(q,"int ",4);
+            } else
+                if (!strcmp(tkbf,"void")) {
+                    q=strstr(ln,"void ");
+                    memcpy(q,"int ",4);
+                }
         }
 
         /* Call dorep to replace #defines */
