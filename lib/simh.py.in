@@ -189,11 +189,14 @@ class simh:
       self._os8_error_match_strings.append(error_spec[0])
       self._os8_fatal_check.append(error_spec[1])
 
-    self._pip_to_replies = ['\\^']
-    self._pip_to_replies.extend(self._os8_error_match_strings)
     # Did command start the command decoder or die with a monitor error?
     self._cd_replies = ['\\*']
     self._cd_replies.extend(self._os8_error_match_strings)
+
+    # Lots of messages. Let's pre-compile their regexps.
+    self._cd_rep_compiled = []
+    for reply in self._cd_replies:
+      self._cd_rep_compiled.append(re.compile(reply.encode()))
 
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
@@ -404,7 +407,7 @@ class simh:
 
   def pip_error_handler(self, caller, reply):
     print("PIP error from inside " + caller + ": ")
-    print("\t" + self._child.before.decode().strip())
+    # print("\t" + self._child.before.decode().strip())
     print("\t" + self._child.after.decode().strip())
     
     # Was this error fatal or do we need to clean up?
@@ -470,22 +473,21 @@ class simh:
     self.os8_restart ()
     self.os8_send_cmd ('\\.', 'R PIP')
     # Was the start of PIP successful, or did we get a Monitor error?
-    reply = self._child.expect (self._cd_replies)
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply != 0:
       self.pip_error_handler ("os8_pip_to", reply)
       return
 
     # Has the read-in been successful?
     self.os8_send_line (dest + '<PTR:' + option)
-    reply = self._child.expect (self._pip_to_replies)
+    self._child.expect ('\\^')
+    self.os8_send_ctrl ('[')      # finish transfer
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply !=0:
       self.pip_error_handler("os8_pip_to", reply)
       if did_conversion:
         os.remove(pt)
       return
-
-    self.os8_send_ctrl ('[')      # finish transfer
-    self._child.expect ('\\*')
     self.os8_send_ctrl ('[')      # exit PIP
     # We could detach ptr and restart OS/8 here, but we don't need to.
     # Do remove the temp file if we created one.
@@ -530,14 +532,14 @@ class simh:
     
     self.os8_send_cmd ('\\.', 'R PIP')
     # Was the start of PIP successful or did we get a Monitor error?
-    reply = self._child.expect (self._cd_replies)
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply != 0:
       self.pip_error_handler ("os8_pip_from", reply)
       return
     
     self.os8_send_line ('PTP:<' + os8name + option)
 
-    reply = self._child.expect (self._cd_replies)
+    reply = self._child.expect (self._cd_rep_compiled)
     if reply !=0:
       self.pip_error_handler ("os8_pip_from", reply)
       # There is an empty PTP file we need to remove.

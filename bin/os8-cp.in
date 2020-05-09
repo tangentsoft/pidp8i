@@ -745,7 +745,7 @@ def main ():
         # Maybe parse the FREE BLOCKS Output.
         # Done when we see a dot.
         s._child.expect("\d+\s+FREE BLOCKS")
-        files = file_list_from_expect(s._child.before)
+        files = file_list_from_expect(s._child.before.decode())
         for filename in files:
           if VERBOSE or DEBUG:
             print("Wildcard call os8_pip_from: copy from: " + \
