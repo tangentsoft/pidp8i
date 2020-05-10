@@ -2,7 +2,7 @@
 ; in 0.script.
 ;
 echo Loading OS/8 from DECtape type @OS8_TAPE_DEVICE@...
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 @if SIMH_TAPE_DEVICE eq "td"
 set dt disabled
@@ -11,7 +11,7 @@ set td enabled
 @endif
 
 @define SHORTNAME 3
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 attach @SIMH_TAPE_DEVICE@0 @MEDIADIR@/os8/@OS8_BOOT_TAPE@
 boot @SIMH_TAPE_DEVICE@0

@@ -564,6 +564,7 @@ test-tmp-tools:
 		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
+	! test -e $${src}c || \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
 	  done \
 	)
@@ -641,6 +642,7 @@ $(OS8_SRC_RK05): $(OS8_DIST_RK05) $(OS8_SRC_SRCS) | $(PIDP8I_SIM) $(OS8_BOOT_DIS
 
 # Build the source disk for OS/8 V3F
 $(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_BOOT_DISK)
+	rm -f $(V3F_BUILD_RK05)
 	cd $(V3F_SRCDIR); @builddir@/bin/os8-cp -v --action-file $(V3F_MANIFEST)
 
 # Make a disk with binaries assembled from the V3F source disk
