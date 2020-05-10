@@ -1596,13 +1596,17 @@ class os8script:
         if rest == "":
           print("Warning! end statement encountered inside build with no argument at line " + \
               str(self.line_ct_stack[0]) + ".\nExiting build.")
-          self.simh.os8_ctrl_c (caller="build_subcomm end 1")      # Exit BUILD
+          # Exit BUILD. Note! Unlike many commands build does NOT echo "^C!"
+          self.simh.os8_send_ctrl ('c')
+          self.simh.os8_cfm_monitor ("build_subcomm end with no argument")
           return "fail"
         elif rest != "build": 
           print("Warning! Mismatched begin/end blocks in BUILD at line " + \
               str(self.line_ct_stack[0]) + ".\nEncountered end: {" + \
               rest + "}. Exiting BUILD.")
-          self.simh.os8_ctrl_c (caller="build_subcomm end 2")      # Exit BUILD
+          # Exit BUILD. Note! Unlike many commands build does NOT echo "^C!"
+          self.simh.os8_send_ctrl ('c')
+          self.simh.os8_cfm_monitor ("build_subcomm mismatched begin/end")
           return "fail"
         
         # We're done.  Print any desired verbose or debug status
@@ -1612,8 +1616,10 @@ class os8script:
         if self.debug:
           print("before: " + self.simh._child.before.decode().strip())
           print("after: " + self.simh._child.after.decode().strip())
-        # Return to monitor level unless need_exit == False.
-        self.simh.os8_ctrl_c (caller="build_subcomm end success")      # Exit BUILD
+        # Return to monitor.
+        # Note! Unlike many commands build does NOT echo "^C!"
+        self.simh.os8_send_ctrl ('c')
+        self.simh.os8_cfm_monitor ("build_subcomm end with no argument.")
         return "success"
         
       # Now perform sub-commands within BUILD. They have a discernable format.
@@ -1773,7 +1779,10 @@ class os8script:
       comm = line
       if self.verbose:
         print("Line: " + str(self.line_ct_stack[0]) + ": * " + line)
+        print("Sending...")
       reply = self.simh.os8_cmd (line)
+      if self.debug:
+        print ("cdprog sent line. Got reply: " + str(reply) + self.simh._os8_replies [reply][0])
       mon = self.simh.os8_test_result(reply, "Monitor Prompt", "")
       cd  = self.simh.os8_test_result(reply, "Command Decoder Prompt", "")
       if mon:

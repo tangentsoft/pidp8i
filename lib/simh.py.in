@@ -160,7 +160,7 @@ class simh:
     ["Directory I/O Error", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
     ["I/O Error on SYS", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
     ["Directory I/O Error", "MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)\r", True],
-    ["File not available", "(\S+) NOT AVAILABLE", False],
+    ["Device not available", "(\S+) NOT AVAILABLE", False],
     ["File not found", "(\S+) NOT FOUND", False],
     #  OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
     ["Illegal Syntax", "ILLEGAL SYNTAX", False],
@@ -199,7 +199,7 @@ class simh:
     ["ERROR READING INPUT DIRECTORY", "ERROR READING INPUT DIRECTORY", False],
     ["ERROR READING OUTPUT DIRECTORY", "ERROR READING OUTPUT DIRECTORY", False],
     ["ILLEGAL ?", "ILLEGAL \\?", False],
-    ["NO FILES OF THE FORM", "NO FILES OF THE FORM (\S+)", False],
+    ["NO FILES OF THE FORM", "NO FILES OF THE FORM: (\S+)", False],
     ["NO ROOM, SKIPPING", "NO ROOM, SKIPPING \\((\S+)\\)", False],
     ["SYSTEM ERROR-CLOSING FILE", "SYSTEM ERROR-CLOSING FILE", False],
     ["USE PIP FOR NON-FILE STRUCTURED DEVICE", "USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
