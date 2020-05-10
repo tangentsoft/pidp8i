@@ -6,7 +6,7 @@
 ; normally run as "make run-v3f".
 ;
 echo Loading OS/8 from DECtape type @OS8_TAPE_DEVICE@...
-@include @srcdir@/boot/common.script
+@include boot/common.script
 
 @if SIMH_TAPE_DEVICE eq "td"
 set dt disabled
@@ -15,7 +15,7 @@ set td enabled
 @endif
 
 @define SHORTNAME run-v3f
-@include @srcdir@/boot/savestate.script
+@include @ABSSRCDIR@/boot/savestate.script
 
 attach @SIMH_TAPE_DEVICE@0 bin/v3f-@OS8_TAPE_DEVICE@.tu56
 boot @SIMH_TAPE_DEVICE@0
