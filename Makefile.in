@@ -598,6 +598,8 @@ test-tmp-tools:
 		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
+	! test -e $${src}c || \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
 	  done \
 	)
 	@( for src in $(TEST_TMP_BINS) ; do \
