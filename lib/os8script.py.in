@@ -1782,7 +1782,8 @@ class os8script:
         print("Sending...")
       reply = self.simh.os8_cmd (line)
       if self.debug:
-        print ("cdprog sent line. Got reply: " + str(reply) + self.simh._os8_replies [reply][0])
+        print ("cdprog sent line. Got reply: " + str(reply) + " -> " + \
+               self.simh._os8_replies [reply][0])
       mon = self.simh.os8_test_result(reply, "Monitor Prompt", "")
       cd  = self.simh.os8_test_result(reply, "Command Decoder Prompt", "")
       if mon:
