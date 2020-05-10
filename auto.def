@@ -613,6 +613,7 @@ make-template lib/pidp8i/ips.py.in
 make-template lib/simh.py.in
 make-template media/os8/init.tx.in
 make-template media/os8/3finit.tx.in
+make-template media/os8/uni-init.tx.in
 make-template src/Makefile.in
 make-template src/cc8/Makefile.in
 make-template src/cc8/os8/Makefile.in

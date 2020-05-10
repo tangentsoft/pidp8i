@@ -232,7 +232,7 @@ begin default init
 cpto $os8mi/init.cm
 # Location of init.tx is funky so that test-os8-run will be able to
 # sanitize it.
-cpto $build/media/os8/init.tx
+cpto $build/media/os8/uni-init.tx DSK:INIT.TX
 os8 SET SYS INIT
 end default init
 

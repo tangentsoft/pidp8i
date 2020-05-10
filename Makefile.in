@@ -248,6 +248,7 @@ OS8RUN_INFILES = \
 	@srcdir@/lib/pidp8i/ips.py.in \
 	@srcdir@/media/os8/init.tx.in \
 	@srcdir@/media/os8/3finit.tx.in \
+	@srcdir@/media/os8/uni-init.tx.in \
 	@srcdir@/src/pidp8i/main.c.in \
 	$(PIDP8I_DIN)
 PRECIOUS_INFILES = \
