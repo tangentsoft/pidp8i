@@ -452,7 +452,7 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
 
 8.  <a name="2cbo"></a>`&&` and &#x7C;&#x7C; work, but because they
     are internally converted to `&` and &#x7C;, their precedence has
-    changed, and `&&` does not short-circuit as in a conforming C
+    changed, and they do not short-circuit as in a conforming C
     compiler.
 
     You can work around such differences with clever coding. For
