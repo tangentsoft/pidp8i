@@ -132,7 +132,7 @@ int strip()
     cm=0;
     p=ln;
     while(*p) {
-        if (*p==39)
+        if (*p==39 && !cm)
             p+=3;
         if (*p=='"') {
             cm=!cm;
