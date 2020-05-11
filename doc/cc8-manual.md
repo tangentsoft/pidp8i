@@ -744,18 +744,23 @@ below, so we use this shorthand.
 
 ### <a id="atoi"></a>`int atoi(s, *result)`
 
-Takes a null-terminated ASCII character string pointer `s` and returns a
-12-bit PDP-8 two’s complement signed integer. The length of the numeric
-string is returned in `*outlen`.
+Takes a null-terminated ASCII character string pointer `s` and tries to
+interpret it as a 12-bit PDP-8 two’s complement signed integer, storing
+the value in `*result` and returning the number of bytes in `s`
+consumed.
 
 **Standard Violations:**
 
+*   Instead of returning the converted integer, this function stores
+    that value in `*result`.
+
+*   Whereas `atoi()` in Standard C returns the converted value, in this
+    function, `s[retval]` is the first invalid — non-sign, non-digit,
+    non-space — character in the string, where `retval` is the return
+    value.
+
 *   Skips leading ASCII 32 (space) characters only, not those matched by
     [`isspace()`](#isspace), as the Standard requires.
-
-*   The return value is the number of characters interepreted as the number.
-
-*   The result of the conversion is stored in result.
 
 
 ### <a id="cupper"></a>`cupper(p)`
