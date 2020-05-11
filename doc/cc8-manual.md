@@ -367,10 +367,11 @@ OS/8 CC8 compiler:
 The OS/8 version of CC8 supports a subset of the C dialect understood by
 [the cross-compiler](#cross), and thus of K&R C:
 
-1.  <a id="typeless"></a>The language is largely typeless in that all
-    simple variables are 12 bit integers. Any variable/array can
-    interpreted as `int`, `char` or pointer.  All variables and arrays
-    must be declared as `int`.
+1.  <a id="typeless"></a>The language is typeless in that everything is
+    a 12 bit integer, and any variable/array can interpreted as `int`,
+    `char` or pointer.  All variables and arrays must be declared as
+    `int`. As with K&R C, the return type may be left off of a
+    function's definition; it is implicitly `int` in all cases.
 
     It is not necessary to give argument types when declaring function
     arguments, but you must declare a return type with the OS/8 CC8
@@ -384,17 +385,17 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
     Contrast the CC8 cross-compiler, which requires function argument
     types to be declared but not the return type, per K&R C rules:
 
-        myfn(n)
+        int myfn(n)
         int n;
         {
             /* do something with n, then _maybe_ return something */
         }
 
-    The cross-compiler supports `void` as an extension to K&R C. This
-    type is converted to `int` in the pre-processor. Similarly, the type
-    `char` is converted. You may use these types for readability
-    purposes, but they have no real effect on the code the compiler
-    generates.
+	`The type int is mandatory for all functions.`
+
+    The cross-compiler supports `void` as an extension to K&R C, this type
+	is converted to int in the pre-processor. Similarly, the type `char` is
+     converted. These type may be used for readability purposes.
 
 2.  There must be an `int main()`, and it must be the last function
     in the single input C file.
@@ -520,8 +521,16 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
         int temp = *p++;
         switch (temp) {....}
 
-    Note that this limitation does not affect the CC8 *cross* compiler!
-    It handles `switch` in K&R C fashion.
+    ii.  There **must** be a default: condition terminated with a break statement.
+        Switch statements do not ‘fall through’ the terminating  }.
+
+    iii. Case statements do not ‘fall through’. i.e each case statement is evaluated
+         separately. 
+
+
+
+13.  The ternary operator ?: is now implemented. In addition this may be nested. 
+
 
 
 
@@ -611,6 +620,8 @@ is that these routines are not carefully masking off the top 4 or 5 bits
 to check *only* against a 7- or 8-bit NUL character.
 
 This is another manifestation of [CC8’s typeless nature](#typeless).
+In this context, [`sizeof()`](#typeless) is not implemented as it would
+ always return 1.
 
 
 ### <a id="fiolim"></a>File I/O Limitations
@@ -690,7 +701,7 @@ such as `feof()` or `fseek()`.  Keep in mind that the library is
 currently restricted to [a single 4&nbsp;kWord field](#memory), and we
 don’t want to lift that restriction. Since the current implementation
 nearly fills that space, it is unlikely that we’ll add much more
-functionality beyond the currently provided 43 functions. If we ever fix
+functionality beyond the currently provided 41 functions. If we ever fix
 any of the limitations we’ve identified below, consider it “gravy”
 rather than any kind of obligation fulfilled.
 
