@@ -391,11 +391,11 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
             /* do something with n, then _maybe_ return something */
         }
 
-	`The type int is mandatory for all functions.`
+    The type int is mandatory for all functions.
 
-    The cross-compiler supports `void` as an extension to K&R C, this type
-	is converted to int in the pre-processor. Similarly, the type `char` is
-     converted. These type may be used for readability purposes.
+    The cross-compiler supports `void` as an extension to K&R C. This type
+    is converted to `int` in the pre-processor. Similarly, the type `char` is
+    converted. These type may be used for readability purposes.
 
 2.  There must be an `int main()`, and it must be the last function
     in the single input C file.
@@ -521,16 +521,18 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
         int temp = *p++;
         switch (temp) {....}
 
-    ii.  There **must** be a default: condition terminated with a break statement.
-        Switch statements do not ‘fall through’ the terminating  }.
+    Also, there **must** be a `default` case, and cases (including the
+    default case) must be terminated with a `break`. CC8 does not allow
+    for cases that fall through to the following case. The following
+    code has at least three syntax errors:
 
-    iii. Case statements do not ‘fall through’. i.e each case statement is evaluated
-         separately. 
+        switch (x) {
+            case 1:  foo();
+            case 2:  bar();
+            default: qux();
+        }
 
-
-
-13.  The ternary operator ?: is now implemented. In addition this may be nested. 
-
+13. `sizeof()` is not implemented.
 
 
 
@@ -620,8 +622,6 @@ is that these routines are not carefully masking off the top 4 or 5 bits
 to check *only* against a 7- or 8-bit NUL character.
 
 This is another manifestation of [CC8’s typeless nature](#typeless).
-In this context, [`sizeof()`](#typeless) is not implemented as it would
- always return 1.
 
 
 ### <a id="fiolim"></a>File I/O Limitations
@@ -701,9 +701,10 @@ such as `feof()` or `fseek()`.  Keep in mind that the library is
 currently restricted to [a single 4&nbsp;kWord field](#memory), and we
 don’t want to lift that restriction. Since the current implementation
 nearly fills that space, it is unlikely that we’ll add much more
-functionality beyond the currently provided 41 functions. If we ever fix
-any of the limitations we’ve identified below, consider it “gravy”
-rather than any kind of obligation fulfilled.
+functionality beyond the currently provided 33 LIBC functions plus [the
+9 additional functions](#addfn). If we ever fix any of the limitations
+we’ve identified below, consider it “gravy” rather than any kind of
+obligation fulfilled.
 
 Some of these missing functions are less useful in the CC8 world than in
 more modern C environments. The low-memory nature of this world
@@ -1400,7 +1401,7 @@ it’s called from several places within CC8 itself.
 **Nonstandard.**
 
 
-## Additional Utility Routines
+## <a id="addfn"></a>Additional Utility Routines
 
 The functions that CC8 uses to manipulate the software stack are also
 available to be called by end-user programs: `PUSH`, `POP`, `PUTSTK`,
