@@ -1785,6 +1785,11 @@ class os8script:
       if self.debug:
         print ("cdprog sent line. Got reply: " + str(reply) + " -> " + \
                self.simh._os8_replies [reply][0])
+
+      # Transcribe our output if desired.
+      if "transcript" in self.options_enabled:
+        print (self.simh._child.before.decode().strip())
+
       mon = self.simh.os8_test_result(reply, "Monitor Prompt", "")
       cd  = self.simh.os8_test_result(reply, "Command Decoder Prompt", "")
       if mon:
