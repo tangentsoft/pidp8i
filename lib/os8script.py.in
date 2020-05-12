@@ -1734,13 +1734,13 @@ class os8script:
       print("Line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
 
     reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
-    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "cdprog 0", \
-                                  debug=self.debug) == False:
-      print ("Line " + str(self.line_ct_stack[0]) + ": " + os8_comm + " failed.")
+    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "cdprog: " + \
+                                  os8_comm, debug=self.debug) == False:
+      print (" failed at Line " + str(self.line_ct_stack[0]))
       print ("Ignoring the rest of this block.")
       self.ignore_to_subcomm_end(os8_comm, script_file, end_str)
       # Confirm we're back to monitor command level.
-      self.simh.os8_cfm_monitor ("cdprog 1")
+      self.simh.os8_cfm_monitor ("cdprog OS/8 restart after failed RU command")
       return "fail"
 
     # Submit the lines from script file to the running command.
@@ -1772,11 +1772,12 @@ class os8script:
           print("Exiting cdprog, possibly earlier than expected at line " + \
             str(self.line_ct_stack[0]) + ".")
         # Return to Monitor
-        self.simh.os8_escape (caller="cdprog2")
+        reply = self.simh.os8_escape (caller="Sending escape failed. Trying ^c")
+        self.simh.os8_send_ctrl ('c')
+        self.simh.os8_cfm_monitor ("cdprog: ^c failed. State machine will be confused.")
         return retval
   
       # We could do some basic OS/8 command decoder synax checking here.
-      comm = line
       if self.verbose:
         print("Line: " + str(self.line_ct_stack[0]) + ": * " + line)
         print("Sending...")
@@ -1799,8 +1800,10 @@ class os8script:
         if self.simh._os8_replies[reply][2] == True:
           print ("Fatal error. Ignoring rest of this block.")
           self.ignore_to_subcomm_end(os8_comm, script_file, end_str)
+          # Print error message.
+          self.simh.os8_test_result(reply, "Command Decoder Prompt", "cdprog failure")
           # Confirm we're back at Monitor
-          self.simh.os8_cfm_monitor ("build_subcomm 9")
+          self.simh.os8_cfm_monitor ("cdprog error handler return to monitor fail")
           return "fail"
         else:
           print ("Non-fatal error encountered with: " + line)
@@ -1812,7 +1815,10 @@ class os8script:
         str(self.line_ct_stack[0]) + \
         " with no end of cdprog command block.")
     # Exit command back to OS/8 monitor.
-    self.simh.os8_escape (caller="cdprog 2")
+    self.simh.os8_escape (caller="cdprog escape from decoder failed sending ^c")
+    self.simh.os8_send_ctrl ('c')
+    self.simh.os8_cfm_monitor ("failed to get to monitor with ^c")
+
     return "fail"
 
 
