@@ -591,6 +591,7 @@ make-config-header src/config.h \
 make-template bin/pidp8i.in
 make-template bin/os8-cp.in
 make-template bin/os8-run.in
+make-template tools/os8-cmp.in
 make-template bin/teco-pi-demo.in
 make-template boot/common.script.in
 make-template boot/0.script.in

@@ -260,6 +260,7 @@ PRECIOUS_INFILES = \
     @srcdir@/src/SIMH/PDP8/Makefile.in
 INFILES = \
 	@srcdir@/bin/os8-cp.in \
+	@srcdir@/tools/os8-cmp.in \
 	@srcdir@/bin/os8-run.in \
 	@srcdir@/bin/teco-pi-demo.in \
 	@srcdir@/bin/pidp8i.in \
