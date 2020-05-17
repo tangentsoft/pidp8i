@@ -130,9 +130,6 @@ patch $os8mi/patches/TECO-31.20.13M-v5.08.patch8
 # OVRDRV 40.6.1 is a source level patch
 ## OVRDRV-40.6.1M-v1B-8srccom
 
-os8 SQUISH DSK:/O
-os8 SQUISH SYS:/O
-
 # Ian Schofield's CC8 compiler
 # Don't install this in v3d-dist because we need
 # v3d packs to build it.
@@ -144,3 +141,7 @@ os8 COPY RKA0:<DTA1:*.SV
 os8 COPY RKB0:<DTA1:*.SV/V
 end default cc8
 
+# Squish our device as our last step!
+
+os8 SQUISH DSK:/O
+os8 SQUISH SYS:/O
