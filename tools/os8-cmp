@@ -60,7 +60,6 @@ VERBOSE = False
 QUIET = False
 SYSTEM = False
 FORCE = False
-EXTRACT = True
 
 # Default RK05 system image to attach if no sys specified.
 _default_sys_image = "v3d.rk05"
@@ -228,7 +227,7 @@ def file_list_from_expect(before):
 # the USAGE message below.  (Look for "colon".)
 
 TERSE_USAGE = 'usage: ' + os.path.basename (__file__) + \
-              " [-dhvqycf] [-<dev><unit>[s] image1] [-<dev><unit>[s] image2] [[-y]\n" + \
+              " [-dhvqyf] [-<dev><unit>[s] image1] [-<dev><unit>[s] image2] [[-y]\n" + \
 """
 
     <dev> is one of rk, td, dt, rx, corresponding to SIMH PDP-8 devices
@@ -268,7 +267,6 @@ VERBOSE_USAGE = TERSE_USAGE + """
     Give -d to run in debug mode.
     Give -h -v to print this message.
     Give -v to enable verbose status reporting.
-    Give -c to compare only with no extract.
 """
 
 ##### parse_args ################################################################
@@ -280,7 +278,6 @@ def parse_args ():
   global VERBOSE
   global QUIET
   global SYSTEM
-  global EXTRACT
   global FORCE
 
   action_plan = {}
@@ -318,8 +315,6 @@ def parse_args ():
       VERBOSE = 1
     elif arg == "-f":
       FORCE = True
-    elif arg == "-c":
-      EXTRACT = False
     elif arg == "-y":
       SYSTEM = True
 
@@ -452,21 +447,20 @@ def main ():
   s.os8_test_result (reply, "Monitor Prompt", "os8-cp")
 
   # Perform file extraction from all partitions of all attached images.
-  if EXTRACT:
-    for att_spec in action_plan["mount"]:
-      for i in range(att_spec["part_count"]):
-        os8dev = att_spec["devices"][i]
-        suffix = os8dev[:-1]
-        att_dir = os.path.basename(att_spec["image"]) + "_" + suffix
-        found = find_or_mkdir (att_dir)
-        if found:
-          print ("Existing extraction found: " + att_dir)
-          if FORCE:
-            if VERBOSE: print ("Overwrite forced.")
-            extract (s, os8dev, att_dir)
-        else:
-          print ("Existing dir not found.")
+  for att_spec in action_plan["mount"]:
+    for i in range(att_spec["part_count"]):
+      os8dev = att_spec["devices"][i]
+      suffix = os8dev[:-1]
+      att_dir = os.path.basename(att_spec["image"]) + "_" + suffix
+      found = find_or_mkdir (att_dir)
+      if found:
+        print ("Existing extraction found: " + att_dir)
+        if FORCE:
+          if VERBOSE: print ("Overwrite forced.")
           extract (s, os8dev, att_dir)
+      else:
+        print ("Existing dir not found.")
+        extract (s, os8dev, att_dir)
 
   # Detach all mounts and then sys.
   s.esc_to_simh()
