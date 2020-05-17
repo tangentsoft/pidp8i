@@ -1028,7 +1028,7 @@ class os8script:
   
   #### parse_odt #######################################################
   
-  def parse_odt (self, com, line):
+  def parse_odt (self, line):
     if self.debug: print(line)
     
     if line == "\\c": return "break"
@@ -1063,14 +1063,14 @@ class os8script:
 
   #### futil_exit ########################################################
   
-  def futil_exit (self, com, line):
+  def futil_exit (self, line):
     self.simh.os8_send_line(line)
     return "break"
 
 
   #### futil_file ########################################################
   
-  def futil_file (self, com, line):
+  def futil_file (self, line):
     # Redundant re-parse of line but nobody else wants args right now.
     match = _com_split_parse.match(line)
     if match == None:
@@ -1107,7 +1107,7 @@ class os8script:
   #
   # When we encounter the EXIT command, we return success.
   
-  def parse_futil (self, com, line):
+  def parse_futil (self, line):
     futil_specials = {
       "EXIT": self.futil_exit,
       "FILE": self.futil_file
@@ -1115,7 +1115,7 @@ class os8script:
   
     if line[0].isdigit():
       # Treat the line as ODT
-      return self.parse_odt(com, line)
+      return self.parse_odt(line)
     else:
       match = _com_split_parse.match(line)
       if match == None:
@@ -1129,7 +1129,7 @@ class os8script:
         self.simh.os8_send_line(line)
         return "cont"
       else:
-        return futil_specials[fcom](fcom, line)
+        return futil_specials[fcom](line)
 
 
   #### run_patch_file ##################################################
@@ -1143,29 +1143,36 @@ class os8script:
     except IOError:
       print(pathname + " not found. Skipping.")
       return "fail"
-  
-    special_commands = {
+    
+    # Supported parsers.
+    # Note tht FUTIL has not been tested since we flipped the expect order.
+    parsers = {
       "ODT": self.parse_odt,
-      "R": None,               # Get next parser.
       "FUTIL": self.parse_futil
     }
-  
+
+    # What prompt do we want when we run an allowed command?
+    # If there is none, we don't wait.  But if we want one,
+    # We BETTER wait for it.  A race condition has been observed
+    # where, if we don't wait for SAVE, it might not happen.
+    allowed_commands = ["ODT", "R", "GET", "GE",  "SAVE", "SA"]
+    
     inside_a_command = False
     the_command = ""
     the_command_parser = None
     
     # Any os8-run command may be called after a simh command that left us
     # in simh context. Check to see if we need to restart OS/8.
-    # We could resume, but restart is safer.
+    # We resume OS/8. It should be non-disruptive and work well.
     if self.simh._context == "simh":
-      self.restart_command(line, script_file)
+      self.resume_command(line, script_file)
 
     for line in patch_file:
       line = line.rstrip()
       if line == "": continue
       elif line[0] == '#': continue     # Ignore Comments
       elif inside_a_command:
-        retval = the_command_parser (the_command, line)
+        retval = the_command_parser (line)
         if retval == "break":
           inside_a_command = False
           self.simh.os8_ctrl_c (caller="run_patch_file")
@@ -1180,19 +1187,40 @@ class os8script:
         com = match.group(1)
         rest = match.group(2)
   
-        if com in special_commands:
-          if com == "R":
-            # Run command is special.  Take arg as the command and run it.
-            com = rest
-          inside_a_command = True
-          the_command = com
-          the_command_parser = special_commands[com]
-  
-        # We carefully separate com and args
-        # But don't make much use of that yet.
+        if com not in allowed_commands:
+          print ("Command " + com + " not allowed in patch. Ignoring.")
+          continue
+        # Fall through to start up our command.
+        # Maybe command is ".ODT", maybe it's "R FUTIL"
+        if com == "R":
+          # Check to see if we can run this.
+          if rest not in parsers:
+            print ("Not allowed to run " + rest + " in a patch file.  Aborting.")
+            return "fail"
+          com = rest     # Now fall through an set the_command
+        the_command = com
+        
+        # Noisy debug output. Our line.
         if self.verbose and self.debug: print(line)
-        self.simh.os8_send_line (line[1:])  # Skip Prompt.
-  
+
+        # Are we going to be inside a command after we do the run?
+        if com in parsers:
+          the_command_parser = parsers[com]
+          inside_a_command = True
+          # Run the line blind, skipping over the dot at the beginning.
+          # We won't get a prompt.
+          self.simh.os8_send_line (line[1:])
+        # It's an OS/8 command
+        else:
+          # We must test for monitor prompt to signify success.
+          # Otherwise a race condition has been shown to prevent save of
+          # patched binary because our exit of SIMH happens too quickly!
+          reply = self.simh.os8_cmd (line[1:])  # Skip over Prompt in line.
+          # We need to confirm we succeeded.
+          # If we fail, we just complain and keep going.
+          self.simh.os8_test_result (reply, "Monitor Prompt", "run_patch_file command " \
+                                      + line[1:])
+    # Done with all patch file lines.
     patch_file.close()
   
     print("Success.")
