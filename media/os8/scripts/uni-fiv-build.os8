@@ -55,8 +55,3 @@ os8 COPY DSK:<RKA1:FORLIB.BI
 os8 ASSIGN RKA1 SRCE
 os8 ASSIGN RKB1 TARG
 os8 SUBMIT FORLIB.BI
-
-enable transcript
-os8 DIR RKB1:
-disable transcript
-
