@@ -49,13 +49,17 @@ end enabled td8e
 mount rk0 $bin/v3d.rk05 required scratch
 boot rk0
 
+# Our built image inherits whether or not INIT is set.
+# A blank tape will complain "NO CCL!" on first boot.
+# So first thing SET SYS NO INIT
+
+os8 SET SYS NO INIT
+
 begin enabled td8e
   # For TD8E we run BUILD twice
   # First from SYS to change switch from TC08 to TD8E
   # Then  to build the TD8E head from either RKB1 for v3f or from SYS for v3d.
 
-  os8 SET SYS NO INIT
-  
   begin build SYS:BUILD
     DELETE DTA0,DTA1
     INSERT TD8A,DTA0,DTA1
@@ -89,6 +93,8 @@ begin enabled tc08
 
   begin enabled v3f
     mount dt0 $os8mo/v3f-tc08.tu56 new
+    # v3f needs device drivers from a V3d Distribution DECtape
+    mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 readonly required
   end enabled v3f
 
 end enabled tc08
@@ -153,9 +159,6 @@ begin enabled v3d
 end enabled v3d
 
 begin enabled v3f
-  # v3f needs device drivers from a V3d Distribution DECtape
-  mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 readonly required
-
   os8 COPY DSK:<RKB1:OS8.BN,CD.BN
 
   begin build RKB1:BUILD
@@ -237,7 +240,13 @@ begin enabled v3f
   end build
 
   # Explicit unmount to avoid possible race condition.
-  umount dt1
+  # Unmount the right device
+  begin enabled td8e
+    umount td1
+  end enabled td8e
+  begin enabled tc08
+    umount dt1
+  end enabled tc08
 end enabled v3f
 
 os8 SAVE DTA0 BUILD.SV

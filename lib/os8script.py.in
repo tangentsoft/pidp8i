@@ -37,6 +37,7 @@
 import os
 import sys
 import tempfile
+import time
 sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
 sys.path.insert (0, os.getcwd () + '/lib')
 
@@ -158,35 +159,12 @@ _os8_fspec = Template ("((\S+:)?([A-Z0-9]{1,6}|[A-Z0-9]{1,6}\.$ext))")
 _os8_BN_fspec = _os8_fspec.substitute(ext="BN")
 _os8_PA_fspec = _os8_fspec.substitute(ext="PA")
 _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
-_pal8_opts = "[B-J-LNOSTW]"
 
-# For the two arg form:
-# The full destination spec is in group(1), The full source spec is in group(4).
-# The device components, if any, are in group(2) for destination, and
-# group(5) for source.
-# The file components are in group(3) for destination, and group (6) for source.
-# The destination file must either end in ".BN" or have no extension.
-# The source must file either end in ".PA" or have no extension.
-# The command line arguments, if any, are in group(7)
-_two_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*<\s*" + _os8_PA_fspec + "((/" + \
-                              _pal8_opts + ")+|\(" + _pal8_opts + "+\))?$")
-
-# For the 3 arg form:
-# The full destination spec is in group(1), The full source spec is in group(7).
-# The full listing spec is in group(4)
-# The device components, if any, are in group(2) for destination, group(5)
-# for listing, and group(8) for source.
-# The file components are in group(3) for destination, and group(9) for source,
-# and group(6) for listing.
-# The destination file must either end in ".BN" or have no extension.
-# The source must file either end in ".PA" or have no extension.
-# The listing must either end in "LS" or have no extension.
-# The command line arguments, if any, are in group(10)
-
-_three_arg_pal_re = re.compile ("^" + _os8_BN_fspec + "\s*,\s*" + _os8_LS_fspec + "\s*<\s*" + \
-                                _os8_PA_fspec + "((/" + _pal8_opts + ")+|\(" + _pal8_opts + "+\))?$")
+# Regex to parse a valid OS/8 option string either with slash or parens.
+_opt_str =  "((/[A-Z0-9])+|\([A-Z0-9]+\))?"
 
 # Regular expression for syntax checking inside ABSLDR
+# FIXME: Use (and test) _opt_str for full OS/8 Option spec compatibility
 # One or more OS/8 binary files and optional args beginning with a slash.
 
 _absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$")
@@ -217,17 +195,6 @@ _build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
                     "PRINT" : None,
                     "BOOT"  : None,
                     "end"   : None}
-
-_build_replies = ["\\$", "SYS BUILT", "WRITE ZERO DIRECT\\?", "\\?BAD ARG",
-                  "\\?BAD INPUT", "\\?BAD LOAD",
-                  "\\?BAD ORIGIN", "\\?CORE", "\\?DSK", "\\?HANDLERS",
-                  "I/O ERR", "\\?NAME", "NO ROOM", "SYS NOT FOUND",
-                  "\\?PLAT", "\\?SYNTAX", "\\?SYS", "SYS ERR",
-                  "\S+ NOT FOUND"]
-
-_pal8_replies = ["ERRORS DETECTED: ", "BE\s+\S+", "CF\s+\S+", "DE\s+\S+", "DF\r", "IC\s+\S+", "ID\s+\S+",
-                    "IE\s+\S+", "II\s+\S+", "IP\s+\S+", "IZ\s+\S+", "LD\s+\S+", "LG\s+\S+", "PE\s+\S+",
-                    "PH\s+\S+", "RD\s+\S+", "SE\s+\S+", "UO\s+\S+", "US\s+\S+", "ZE\s+\S+", "\S+ NOT FOUND"]
 
 
 # Parse two whitspace separated arguments into group(1) and group(2)
@@ -322,8 +289,68 @@ class os8script:
   # Contains a simh object, other global state and methods
   # for running OS/8 scripts under simh.
   #### globals and constants ###########################################
+
+  # Replies that pal8 adds.
+  _pal8_rep_adds = [
+    # Prompts come from the existing _os8_replies
+    # Status:
+    ["ERRORS DETECTED", "ERRORS DETECTED: ", False],
+    ["LINKS GENERATED", "LINKS GENERATED: ", False],
+    # Errors:
+    ["Buffer Exceeded", "BE\s+\S+.*\r", True],
+    ["Cref not Found", "CF\s+\S+.*\r", False],
+    ["Device Error", "DE\s+\S+.*\r", True],
+    ["Device Full", "DF\r", True],
+    ["Illegal Character", "IC\s+\S+.*\r", False],
+    ["Illegal re-Definition", "ID\s+\S+.*\r", False],
+    ["Illegal Equals", "IE\s+\S+.*\r", False],
+    ["Illegal Indirect", "II\s+\S+.*\r", False],
+    ["Illegal PseudoOp", "IP\s+\S+.*\r", False],
+    ["Illegal page Zero reference", "IZ\s+\S+.*\r", False],
+    ["Loader not founD", "LD\s+\S+.*\r", False],
+    ["Link Generated", "LG\s+\S+.*\r", False],
+    ["current Page Exceeded", "PE\s+\S+.*\r", False],
+    ["PHase Error", "PH\s+\S+.*\r", False],
+    ["Re Definition", "RD\s+\S+.*\r", False],
+    ["Symbol table Exceeded", "SE\s+\S+.*\r", False],
+    ["Undefined Origin", "UO\s+\S+.*\r", False],
+    ["Undefined Symbol", "US\s+\S.*\r", False],
+    ["page Zero Exceeded", "ZE\s+\S+.*\r", False],
+    ["NOT FOUND", "\S+ NOT FOUND", False],
+  ]
   
-  
+  _build_rep_adds = [
+    # Prompts:
+    # Add the BUILD prompt
+    # Subtle point:  Dollar sign appears in all kinds of output
+    # so we try to minimize where we look for it so as to avoid
+    # confusing pexpect.
+    ["BUILD Prompt", "\n\\$$", True],
+    # Status:
+    ["SYS BUILT", "SYS BUILT", False],
+    ["WRITE ZERO DIRECT?", "WRITE ZERO DIRECT\\?", False],
+    ["LOAD OS8", "LOAD OS/8: ", False],
+    ["LOAD CD", "LOAD CD: ", False],
+    # Errors:
+    ["BAD ARG", "\\?BAD ARG", False],
+    ["BAD INPUT", "\\?BAD INPUT", False],
+    ["BAD LOAD", "\\?BAD LOAD", False],
+    ["BAD ORIGIN", "\\?BAD ORIGIN", False],
+    ["CORE", "\\?CORE", False],
+    ["DSK", "\\?DSK", False],
+    ["HANDLERS", "\\?HANDLERS", False],
+    ["I/O ERR", "I/O ERR", False],
+    ["NAME", "\\?NAME", False],
+    ["NO ROOM", "NO ROOM", False],
+    ["SYS NOT FOUND", "SYS NOT FOUND", False],
+    ["PLAT", "\\?PLAT", False],
+    ["SYNTAX", "\\?SYNTAX", False],
+    ["SYS", "\\?SYS", False],
+    ["SYS ERR", "SYS ERR", False],
+    ["File NOT FOUND", "\S+ NOT FOUND", False]
+  ]
+
+
   def __init__ (self, simh, enabled_options, disabled_options, verbose=False, debug=True):
     self.lang_version = LANG_VERSION
     self.verbose = verbose
@@ -337,6 +364,24 @@ class os8script:
     self.scratch_list = []
     self.booted = False
     self.line_ct_stack = []
+
+    # _pal8_replies is the union of _pal8_rep_adds and _os8_replies
+    self._pal8_replies = self._pal8_rep_adds
+    self._pal8_replies.extend(self.simh._os8_replies)
+    # Pre-compile our pal8_replies regexps.
+    self._pal8_replies_rex = []
+    for item in self._pal8_replies:
+      self._pal8_replies_rex.append(re.compile(item[1].encode()))
+
+    # _build_replies is the union of _build_rep_adds and _os8_replies
+    self._build_replies = self._build_rep_adds
+    self._build_replies.extend(self.simh._os8_replies)
+    # Pre-compile our build_replies regexps.
+    self._build_replies_rex = []
+    for item in self._build_replies:
+      self._build_replies_rex.append(re.compile(item[1].encode()))
+
+
 
 
   #### path_expand #######################################################
@@ -562,7 +607,7 @@ class os8script:
   
   
   #### include_command #################################################
-  # Call run_system_script recursively on the file path provided.
+  # Call run_script_file recursively on the file path provided.
   
   def include_command (self, line, script_file):
     path = self.path_expand(line)
@@ -769,10 +814,15 @@ class os8script:
   # Call the os8_resume in simh to resume OS/8.
 
   def resume_command (self, line, script_file):
+    if not self.booted:
+      print("Cannot run resume command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
+      return "die"
+
     if self.verbose:
       print("Resuming OS/8 at line " + str(self.line_ct_stack[0]) + ".")
 
-    self.simh.os8_restart()
+    self.simh.simh_resume_os8()
     return "success"
 
 
@@ -780,10 +830,15 @@ class os8script:
   # Call the os8_restart in simh to resume OS/8.
 
   def restart_command (self, line, script_file):
+    if not self.booted:
+      print("Cannot run restart command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
+      return "die"
+
     if self.verbose:
       print("Restarting OS/8 at line " + str(self.line_ct_stack[0]) + ".")
 
-    self.simh.os8_restart()
+    self.simh.simh_restart_os8()
     return "success"
 
 
@@ -950,6 +1005,10 @@ class os8script:
           " at line " +  str(self.line_ct_stack[0]) + ":")
         print("\t" + line)
         sys.exit(-1)
+      elif retval == "fail":
+        print("Non-fatal error encountered in " + script_path + \
+          " at line " +  str(self.line_ct_stack[0]) + ":")
+        print("\t" + line + "\n")
 
     # Done.  Pop the line count off our line_ct_stack
     self.line_ct_stack.pop(0)
@@ -969,14 +1028,14 @@ class os8script:
   
   #### parse_odt #######################################################
   
-  def parse_odt (self, com, line):
+  def parse_odt (self, line):
     if self.debug: print(line)
     
     if line == "\\c": return "break"
     match = _odt_parse.match(line)
     if match == None:
       print("Aborting because of bad ODT line: " + line)
-      self.simh.os8_send_ctrl('C')
+      self.simh.os8_ctrl_c (caller="parse_odt")
       return "err"
     loc = match.group(1)
     old_val = match.group(2)
@@ -995,7 +1054,7 @@ class os8script:
         print("\tOld value: " + found_val + " does not match " +
             old_val + ". Aborting patch.")
         # Abort out of ODT back to the OS/8 Monitor
-        self.simh.os8_send_ctrl('C')
+        self.simh.os8_ctrl_c ("parse_odt 2")
         return "err"
   
     self.simh.os8_send_line (new_val)
@@ -1004,19 +1063,19 @@ class os8script:
 
   #### futil_exit ########################################################
   
-  def futil_exit (self, com, line):
+  def futil_exit (self, line):
     self.simh.os8_send_line(line)
     return "break"
 
 
   #### futil_file ########################################################
   
-  def futil_file (self, com, line):
+  def futil_file (self, line):
     # Redundant re-parse of line but nobody else wants args right now.
     match = _com_split_parse.match(line)
     if match == None:
       print("Aborting because of mal-formed FUTIL FILE command: " + line)
-      self.simh.os8_send_ctrl('C')
+      self.simh.os8_ctrl_c (caller="futil_file")
       return "err"
     fname = match.group(2)
     expect_futil_file_str = "\n" + fname + "\s+(.*)$"
@@ -1027,11 +1086,11 @@ class os8script:
     if match == None:
       print("Aborting because unexpected return status: " + result + \
           " from: " + line)
-      self.simh.os8_send_ctrl('C')
+      self.simh.os8_ctrl_c (caller="futil_file 2")
       return "err"
     if match.group(2).strip() == "LOOKUP FAILED":
       print("Aborting because of FUTIL lookup failure on: " + fname)
-      self.simh.os8_send_ctrl('C')
+      self.simh.os8_ctrl_c (caller="futil_file 3")
       return "err"
     else:
       return "cont"
@@ -1048,7 +1107,7 @@ class os8script:
   #
   # When we encounter the EXIT command, we return success.
   
-  def parse_futil (self, com, line):
+  def parse_futil (self, line):
     futil_specials = {
       "EXIT": self.futil_exit,
       "FILE": self.futil_file
@@ -1056,7 +1115,7 @@ class os8script:
   
     if line[0].isdigit():
       # Treat the line as ODT
-      return self.parse_odt(com, line)
+      return self.parse_odt(line)
     else:
       match = _com_split_parse.match(line)
       if match == None:
@@ -1070,7 +1129,7 @@ class os8script:
         self.simh.os8_send_line(line)
         return "cont"
       else:
-        return futil_specials[fcom](fcom, line)
+        return futil_specials[fcom](line)
 
 
   #### run_patch_file ##################################################
@@ -1084,18 +1143,27 @@ class os8script:
     except IOError:
       print(pathname + " not found. Skipping.")
       return "fail"
-  
-    special_commands = {
+    
+    # Supported parsers.
+    # Note tht FUTIL has not been tested since we flipped the expect order.
+    parsers = {
       "ODT": self.parse_odt,
-      "R": None,               # Get next parser.
       "FUTIL": self.parse_futil
     }
-  
+
+    # What prompt do we want when we run an allowed command?
+    # If there is none, we don't wait.  But if we want one,
+    # We BETTER wait for it.  A race condition has been observed
+    # where, if we don't wait for SAVE, it might not happen.
+    allowed_commands = ["ODT", "R", "GET", "GE",  "SAVE", "SA"]
+    
     inside_a_command = False
     the_command = ""
     the_command_parser = None
     
-    # Resume OS/8 if necessary.
+    # Any os8-run command may be called after a simh command that left us
+    # in simh context. Check to see if we need to restart OS/8.
+    # We resume OS/8. It should be non-disruptive and work well.
     if self.simh._context == "simh":
       self.resume_command(line, script_file)
 
@@ -1104,10 +1172,10 @@ class os8script:
       if line == "": continue
       elif line[0] == '#': continue     # Ignore Comments
       elif inside_a_command:
-        retval = the_command_parser (the_command, line)
+        retval = the_command_parser (line)
         if retval == "break":
           inside_a_command = False
-          self.simh.os8_send_ctrl('C')
+          self.simh.os8_ctrl_c (caller="run_patch_file")
         elif retval == "err":
           patch_file.close()
           return "fail"
@@ -1119,19 +1187,40 @@ class os8script:
         com = match.group(1)
         rest = match.group(2)
   
-        if com in special_commands:
-          if com == "R":
-            # Run command is special.  Take arg as the command and run it.
-            com = rest
-          inside_a_command = True
-          the_command = com
-          the_command_parser = special_commands[com]
-  
-        # We carefully separate com and args
-        # But don't make much use of that yet.
+        if com not in allowed_commands:
+          print ("Command " + com + " not allowed in patch. Ignoring.")
+          continue
+        # Fall through to start up our command.
+        # Maybe command is ".ODT", maybe it's "R FUTIL"
+        if com == "R":
+          # Check to see if we can run this.
+          if rest not in parsers:
+            print ("Not allowed to run " + rest + " in a patch file.  Aborting.")
+            return "fail"
+          com = rest     # Now fall through an set the_command
+        the_command = com
+        
+        # Noisy debug output. Our line.
         if self.verbose and self.debug: print(line)
-        self.simh.os8_send_cmd ("\\.", line[1:])  # Skip Prompt.
-  
+
+        # Are we going to be inside a command after we do the run?
+        if com in parsers:
+          the_command_parser = parsers[com]
+          inside_a_command = True
+          # Run the line blind, skipping over the dot at the beginning.
+          # We won't get a prompt.
+          self.simh.os8_send_line (line[1:])
+        # It's an OS/8 command
+        else:
+          # We must test for monitor prompt to signify success.
+          # Otherwise a race condition has been shown to prevent save of
+          # patched binary because our exit of SIMH happens too quickly!
+          reply = self.simh.os8_cmd (line[1:])  # Skip over Prompt in line.
+          # We need to confirm we succeeded.
+          # If we fail, we just complain and keep going.
+          self.simh.os8_test_result (reply, "Monitor Prompt", "run_patch_file command " \
+                                      + line[1:])
+    # Done with all patch file lines.
     patch_file.close()
   
     print("Success.")
@@ -1149,42 +1238,6 @@ class os8script:
       return False
   
 
-  #### call_pal8 #######################################################
-  # Generic call out to PAL8 with error recovery.
-  # We rely on the caller to have good specifications for source,
-  # binary and optional listing files.
-  
-  def call_pal8 (self, source, binary, options):
-  
-    if self.verbose: print("Assembling " + source)
-    com_line = binary + "<" + source + options
-    self.simh.os8_send_cmd ("\\.", "R PAL8")
-    # Did the command successfully run and enter the command decoder?
-    reply = self.simh._child.expect (self.simh._cd_rep_compiled)
-    if reply != 0:
-      print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
-      return "fail"
-
-    self.simh.os8_send_line (com_line)
-    err_count = 0
-    reply = self.simh._child.expect (_pal8_replies)
-    executed_line = self.simh._child.before.decode().strip()
-    reply_str = self.simh._child.after.decode().strip()
-    if reply == 0:
-      self.simh._child.expect("\d+")
-      err_count = int(self.simh._child.after.decode().strip())
-      reply_str += " " + self.simh._child.after.decode().strip()
-    if reply > 0 or err_count > 0:
-      print("PAL8 Error: ")
-      print("\t*" + executed_line)
-      print("\t" + reply_str)
-      self.simh.os8_send_ctrl ('c')      # exit PAL8 Just in case.
-      # We could do something better than just dying, I expect.
-      return "fail"
-    # self.simh.os8_send_ctrl ('[')      # exit PAL8
-    return "success"
-
-
   #### simh_command ####################################################
   # I tried to avoid including this command but sometimes you just
   # have to reconfigure subtle bits of device drivers.
@@ -1197,7 +1250,8 @@ class os8script:
       str(self.line_ct_stack[0]) + " ignored.")
     return "fail"
     if self.verbose: print(line)
-    self.simh.send_cmd(line)
+    reply = self.simh.simh_cmd(line)
+    self.simh.simh_test_result(reply, "Prompt", "simh_command")
     return "success"
 
 
@@ -1206,7 +1260,8 @@ class os8script:
     detach_comm = "det " + line
     if self.verbose: print("line: " + \
         str(self.line_ct_stack[0]) + ": " + detach_comm)
-    self.simh.send_cmd(detach_comm)
+    reply = self.simh.simh_cmd(detach_comm)
+    self.simh.simh_test_result(reply, "Prompt", "umount_command")
     return "success"
 
 
@@ -1341,7 +1396,8 @@ class os8script:
     if self.verbose:
       print("Line " + str(self.line_ct_stack[0]) + ": mount: " + \
           attach_comm)
-    self.simh.send_cmd(attach_comm)
+    reply = self.simh.simh_cmd(attach_comm)
+    self.simh.simh_test_result(reply, "Prompt", "mount_command")
     return "success"
 
 
@@ -1355,17 +1411,17 @@ class os8script:
     # First confirm something is attached to boot from.
     ucname = line.upper()
     boot_replies = [ucname + "\s+(.+)\r", "Non-existent device"]
-    self.simh.send_cmd("show " + line)
+    self.simh.simh_send_line("show " + line)
     retval = self.simh._child.expect(boot_replies)
     if retval == 1:
       print("Attempt to boot non-existent device: " + line)
       return "die"
-    reply = self.simh._child.after.decode()
+    reply_str = self.simh._child.after.decode()
     m = re.match("^(\S+)\s(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
-        reply)
+        reply_str)
     if m == None:
       print("Could not determine if device " + line + " is attached; " +
-          "got '" + reply + "'")
+          "got '" + reply_str + "'")
       return "die"
 
     # Caution match group we want ends with a space.
@@ -1376,7 +1432,9 @@ class os8script:
     boot_comm = "boot " + line
     if self.verbose:
       print("Line " + str(self.line_ct_stack[0]) + ": " + boot_comm)
-    self.simh.send_cmd(boot_comm)
+    reply = self.simh.simh_cmd(boot_comm, self.simh._os8_replies_rex)
+    # We're in OS/8 now use that tester.
+    self.simh.os8_test_result (reply, "Monitor Prompt", "boot_command")
     self.booted = True
     return "success"
 
@@ -1390,15 +1448,34 @@ class os8script:
       return "die"
 
     os8_comm = line
+    retval = "success"
     if self.verbose: print("Line: " + \
        str(self.line_ct_stack[0]) + ": os8_command: " + os8_comm)
 
-    # Resume OS/8 if necessary.
+    # Any os8-run command may be called after a simh command that left us
+    # in simh context. Check to see if we need to restart OS/8.
+    # We could resume, but restart is safer.
     if self.simh._context == "simh":
-      self.resume_command(line, script_file)
+      self.restart_command(line, script_file)
 
-    self.simh.os8_send_cmd ("\\.", os8_comm, self.debug)
-    return "success"
+    reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
+    if "transcript" in self.options_enabled:
+      print (self.simh._child.before.decode().strip())
+
+    mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 1")
+    cd  = self.simh.os8_test_result (reply, "Command Decoder Prompt", "")
+    while not mon:
+      retval = "fail"
+      if cd: continue
+      # If this was not a fatal error, we need to ^C to get back to Monitor.
+      # But sometimes OS/8 is not yet ready for ^C, so we wait half a second.
+      if self.simh._os8_replies[reply][2] == False:
+        time.sleep (.5)
+        self.simh.os8_send_ctrl ('c')
+      reply = self.simh._child.expect (self.simh._os8_replies_rex)
+      mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 2")
+      cd  = self.simh.os8_test_result (reply, "Command Decoder Prompt", "")
+    return retval
 
 
   #### pal8_command ####################################################
@@ -1413,32 +1490,59 @@ class os8script:
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
       return "die"
 
-    m_2form = re.match (_two_arg_pal_re, line)
-    if m_2form != None:
+    if self.verbose: print("Running PAL8 on: " + line)
+    reply = self.simh.os8_cmd ("R PAL8")
+    # Did the command successfully run and enter the command decoder?
+    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "call_pal8") == False:
+      print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
+      return "fail"
 
-      # Resume OS/8 if necessary.
-      if self.simh._context == "simh":
-        self.resume_command(line, script_file)
+    com_line = line
+    retval = "success"
+    if self.verbose: print("Line: " + \
+       str(self.line_ct_stack[0]) + ": pal8_command: " + com_line)
 
-      # Call the 2arg pal8 code that works hard at error analysis.
-      if m_2form.group(7) == None:
-        options = ""
+    # Any os8-run command may be called after a simh command that left us
+    # in simh context. Check to see if we need to restart OS/8.
+    # We could resume, but restart is safer.
+    if self.simh._context == "simh":
+      self.restart_command(line, script_file)
+
+    # Send our command and harvest results.
+    reply = self.simh.os8_cmd (com_line, self._pal8_replies_rex)
+    err_count = 0
+    executed_line = self.simh._child.before.decode().strip()
+    reply_match_str = self.simh._child.after.decode().strip()
+    ed  = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
+    mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
+    cd  = self.simh.test_result(reply, "Command Decpder Prompt", self._pal8_replies, "")
+    lg  = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+    err_string = ""
+    ret_val = "success"
+    # We're going to print all the errors we see
+    # and keep looking till we get either a monitor or command decoder prompt.
+    while not mon:
+      if ed:   # Got Errors Detected. Count them.
+        self.simh._child.expect("\d+")
+        err_count = int(self.simh._child.after.decode().strip())
+      elif lg: 
+        self.simh._child.expect("\d+")
+        link_count = int(self.simh._child.after.decode().strip())
+      elif cd: # Got Command Decoder. Exit with failure.
+        if self.debug: print ("call_pal8: Non-fatal error: Sending ^C")
+        # Exit pal8. We'll confirm we got back to OS/8 monitor below.
+        self.simh.os8_send_ctrl ('c')      
       else:
-        options = m_2form.group(7)
-      return self.call_pal8 (m_2form.group(4), m_2form.group(1), options)
-    else:
-      m_3form = re.match (_three_arg_pal_re, line)
-      if m_3form != None:
-        # Just run the OS/8 command.
-        os8_comm = "pal8 " + line
-        if self.verbose:
-          print("Line: " + str(self.line_ct_stack[0]) + \
-              ": Calling 3-arg pal8 command: " + os8_comm)
-        self.simh.os8_send_cmd ("\\.", os8_comm)
-      else:
-        print("At line " + str(self.line_ct_stack[0]) + \
-          ": Unrecognized pal8 form: {" + line + "}.")
-        return "fail"
+        err_string += ("\t" + self.simh._child.after.decode().strip() + "\n")
+      reply = self.simh._child.expect(self._pal8_replies_rex)
+      ed = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
+      mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
+      cd = self.simh.test_result(reply, "Command Decoder Prompt", self._pal8_replies, "")
+      lg = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+    if err_count > 0 or err_string != "":
+      print ("PAL8 Error: \n\t" + executed_line)
+      print (err_string)
+      return "fail"
     return "success"
 
 
@@ -1464,47 +1568,38 @@ class os8script:
       self.ignore_to_subcomm_end(line, script_file, "")
       return "fail"
     else:
-      # Resume OS/8 if necessary.
+      # Any os8-run command may be called after a simh command that left us
+      # in simh context. Check to see if we need to restart OS/8.
+      # We could resume, but restart is safer.
       if self.simh._context == "simh":
-        self.resume_command(line, script_file)
+        self.restart_command(line, script_file)
 
       return sub_commands[m.group(1)](m.group(3), script_file)
   
   
-  #### run_build_build #################################################
-  # ***CAUTION***
-  # When you do this you are instructing BUILD to
-  # OVERWRITE the system area.  If you do this to your
-  # running RK05 pack by mistake, you WILL make a mess
-  # and need to re-run mkos8 to re-make it.
-  
-  def run_build_build (self, os8_spec, cd_spec):
-    self.simh.os8_send_cmd ("\\$", "BUILD", debug=True)
-    self.simh.os8_send_cmd ("LOAD OS/8: ", os8_spec, debug=True)
-    self.simh.os8_send_cmd ("LOAD CD: ", cd_spec, debug=True)
-    return "success"
-
-
   #### build_subcomm ###################################################
+  # Run system BUILD command.
+  # Use RU not R because we will save it.
+  # Allow specifying WHICH version of build on the command line.
   
   def build_subcomm (self, old_line, script_file):
-    # A race condition results if we send ^C when we are already at
-    # Monitor level.  So need_exit gets set to False, when we know
-    # we have already exited build, and are at the monitor prompt.
-    need_exit = True
     os8_comm = "RU " + old_line
     if self.verbose:
       print("Line " + str(self.line_ct_stack[0]) + ": " + os8_comm)
-    prompt_str = "\n\\$$"
-    if self.debug:
-      print("sending to simh: " + os8_comm)
-      print(" and expecting prompt: '\\n\\\\$$'")
-    self.simh.os8_send_cmd ("\\.", os8_comm)
-    self.simh._child.expect(prompt_str)
-    
+
+    # Run BUILD and confirm it has started successfully.
+    reply = self.simh.os8_cmd (os8_comm, self._build_replies_rex, debug=self.debug)
+    if self.simh.test_result (reply, "BUILD Prompt", self._build_replies, \
+                              "build_subcomm startup " + os8_comm, debug=self.debug) == False:
+      print ("Line " + str(self.line_ct_stack[0]) + ": " + os8_comm + " failed.")
+      print ("Ignoring the rest of this block.")
+      self.ignore_to_subcomm_end(os8_comm, script_file, "build")
+      # Confirm we're back to monitor command level.
+      self.simh.os8_cfm_monitor ("build_subcomm 1")
+      return "fail"
+
+    # Submit the lines from script file to BUILD sub-command.
     for line in script_file:
-      # if self.debug:
-      #  print("line: " + line)
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
   
@@ -1518,33 +1613,44 @@ class os8script:
       rest = m.group(3)
       if rest == None: rest = ""
       
+      if self.debug: print ("build_sub: " + build_sub)
       if build_sub not in _build_comm_regs:
         print("Unrecognized BUILD command at line " + \
             str(self.line_ct_stack[0]) + ": " + build_sub)
         continue
-  
+
+      # Handle the exit from BUILD when we hit an "end" statement.
       if build_sub == "end":
         if rest == "":
           print("Warning! end statement encountered inside build with no argument at line " + \
               str(self.line_ct_stack[0]) + ".\nExiting build.")
+          # Exit BUILD. Note! Unlike many commands build does NOT echo "^C!"
+          self.simh.os8_send_ctrl ('c')
+          self.simh.os8_cfm_monitor ("build_subcomm end with no argument")
           return "fail"
         elif rest != "build": 
           print("Warning! Mismatched begin/end blocks in BUILD at line " + \
               str(self.line_ct_stack[0]) + ".\nEncountered end: {" + \
               rest + "}. Exiting BUILD.")
+          # Exit BUILD. Note! Unlike many commands build does NOT echo "^C!"
+          self.simh.os8_send_ctrl ('c')
+          self.simh.os8_cfm_monitor ("build_subcomm mismatched begin/end")
           return "fail"
         
+        # We're done.  Print any desired verbose or debug status
+        # then ^C to exit and confirm we're at monitor level.
         if self.verbose:
           print("Line " + str(self.line_ct_stack[0]) + ": end BUILD")
         if self.debug:
           print("before: " + self.simh._child.before.decode().strip())
           print("after: " + self.simh._child.after.decode().strip())
-        # Return to monitor level unless need_exit == False.
-        if need_exit:
-          self.simh.os8_send_ctrl ('c')
-
+        # Return to monitor.
+        # Note! Unlike many commands build does NOT echo "^C!"
+        self.simh.os8_send_ctrl ('c')
+        self.simh.os8_cfm_monitor ("build_subcomm end with no argument.")
         return "success"
         
+      # Now perform sub-commands within BUILD. They have a discernable format.
       build_re = _build_comm_regs[build_sub]
   
       if build_re != None:
@@ -1571,110 +1677,80 @@ class os8script:
           if self.verbose:
             print("Line " + str(self.line_ct_stack[0]) + \
                  ": BUILD KBM: " + kbm_arg + ", CD: " + cd_arg)
-          if self.debug:
-            print("sending to simh: BUILD")
-          self.simh.os8_send_line ("BUILD")
 
-          build_build_replies = ["LOAD OS/8: "]
-          build_build_replies.extend(_build_replies)
-          
-          if self.debug:
-            print("expecting: " + str(build_build_replies))
-          reply = self.simh._child.expect(build_build_replies)
-          if self.debug:
-            print("reply: " + str(reply))
-            print("before: " + self.simh._child.before.decode().strip())
-            print("after: " + self.simh._child.after.decode().strip())
-          if reply != 0:
+          # Confirm prompted for OS8 binary.
+          reply = self.simh.os8_cmd ("BUILD", self._build_replies_rex, debug=self.debug)
+          if self.simh.test_result(reply, "LOAD OS8", self._build_replies, "build_subcomm 5") == False:
             print("No prompt for LOAD OS/8 in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + ".")
-            print("Instead got: {" + self.simh._child.after.decode() + "}.")
-            print("Exiting BUILD.")
+            print("Fatal error. Aborting script.")
             return "die"
-          if self.debug:
-            print("sending to simh: " + kbm_arg)
-          self.simh.os8_send_line (kbm_arg)
 
-          build_build_replies = ["LOAD CD: "]
-          build_build_replies.extend(_build_replies)
-          
-          if self.debug:
-            print("expecting: " + str(build_build_replies))
-          reply = self.simh._child.expect(build_build_replies)
-          if self.debug:
-            print("reply: " + str(reply))
-            print("before: " + self.simh._child.before.decode().strip())
-            print("after: " + self.simh._child.after.decode().strip())
-          if reply != 0:
+          # Send it and confirm prompted for CD binary.
+          reply = self.simh.os8_cmd (kbm_arg, self._build_replies_rex, debug=self.debug)
+          if self.simh.test_result(reply, "LOAD CD", self._build_replies, "build_subcomm 6") == False:
             print("No prompt for LOAD CD in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + ".")
-            print("Instead got: {" + self.simh._child.after.decode() + "}.")
-            print("Exiting BUILD.")
+            print("Fatal error. Aborting script.")
             return "die"
-          if self.debug:
-            print("sending to simh: " + cd_arg)
-          self.simh.os8_send_line (cd_arg)
-
-          # Done with BUILD command dialog within BUILD.SV
-          # Get that BUILD.SV prompt.
-          if self.debug:
-            print("Expecting prompt: '\\n\\\\$$'")
-          self.simh._child.expect(prompt_str)
+          # Send it and confirm we're back in BUILD command mode.
+          reply = self.simh.os8_cmd (cd_arg, self._build_replies_rex, debug=self.debug)
+          if self.simh.test_result(reply, "BUILD Prompt", self._build_replies, "build_subcomm 7") == False:
+            print ("BUILD command within build failed.  Aborting script.")
+            return "die"
           if self.debug:
             print("Resume BUILD.SV command loop.")
           continue
 
+      # Normal case: commands within BUILD.
       comm = build_sub + " " + rest
       if self.verbose:
         print("Line " + str(self.line_ct_stack[0]) + ": BUILD-> " + comm)
+      reply = self.simh.os8_cmd (comm, self._build_replies_rex, debug=self.debug)
 
-      if self.debug:
-        print("sending to simh: " + comm)
-      self.simh.os8_send_line (comm)
-      if self.debug:
-        print("expecting: " + str(_build_replies))
-      reply = self.simh._child.expect(_build_replies)
-      if self.debug:
-        print("reply: " + str(reply))
-        print("before: " + self.simh._child.before.decode().strip())
-        print("after: " + self.simh._child.after.decode().strip())
-      if reply > 3:
+      # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
+      # Will give a monitor prompt when done.
+      if build_sub == "BOOT":
+        if self.simh.test_result(reply, "WRITE ZERO DIRECT?", self._build_replies, \
+                                 "", debug=self.debug):
+          if self.debug:
+            print("Got, \"WRITE ZERO DIRECT?\". Sending \"Y\".")
+          reply = self.simh.os8_cmd("Y", self._build_replies_rex, debug=self.debug)
+
+        if self.simh.test_result(reply, "SYS BUILT", self._build_replies, "", debug=self.debug):
+          # Successful boot.  We're now at monitor level.
+          # Simplest to ignore anything else in the script up to "end build"
+          # Return success or failure based on finding that monitor prompt.
+          self.ignore_to_subcomm_end(os8_comm, script_file, "build")
+          if self.simh.os8_cfm_monitor ("build_subcomm 8"):
+            return "success"
+          else:
+            return "fail"
+
+      # At this point we either have a BUILD prompt or an error message.
+      # If it's not the BUILD prompt, we print an error.
+      # If the error is fatal, ignore rest of build block,
+      # exit back to OS/8 if necessary and return fail.
+      # If it's not fatal, continue running BUILD.
+      if self.simh.test_result(reply, "BUILD Prompt", self._build_replies, \
+                               "build_subcomm 9", debug=self.debug) == False:
         print("BUILD error at line " + str(self.line_ct_stack[0]) + \
           " with command " + self.simh._child.before.decode().strip())
-        print("\t" + self.simh._child.after.decode().strip())
-        self.simh.os8_send_ctrl ('c')
-      # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
-      if build_sub == "BOOT":
-        if reply == 2:
-          if self.debug:
-            print("Boot received \"WRITE ZERO DIRECT?\"")
-            print("sending to simh: Y")
-          self.simh.os8_send_line("Y")
-          if self.debug:
-            print("Expecting \"SYS BUILT\"")
-          reply = self.simh._child.expect("SYS BUILT")
-          if self.debug:
-            print("ZeroDir: reply: " + str(reply))
-            print("before: " + self.simh._child.before.decode().strip())
-            print("after: " + self.simh._child.after.decode().strip())
-          need_exit = False
-        elif reply == 0:
-          reply = self.simh._child.expect("SYS BUILT")
-          if self.debug:
-            print("$: reply: " + str(reply))
-            print("before: " + self.simh._child.before.decode().strip())
-            print("after: " + self.simh._child.after.decode().strip())
-          need_exit = False
-        elif reply == 1:
-          reply = self.simh._child.expect("\\.")
-          if self.debug:
-            print("SysBuilt: reply: " + str(reply))
-            print("before: " + self.simh._child.before.decode().strip())
-            print("after: " + self.simh._child.after.decode().strip())
+        if self._build_replies[reply][2] == True:
+          print ("Fatal error.  Ignoring rest of this block.")
+          self.ignore_to_subcomm_end(os8_comm, script_file, "build")
+          # Confirm we're back at the monitor as expected.
+          self.simh.os8_cfm_monitor ("build_subcomm 10")
+          return "fail"
+        # To continue, we need to ask pexpect to get that BUILD prompt before
+        # resuming after an error. Ignore everything until we get it.
+        self.simh._child.expect("\n\\$$")
+        
     print("Warning end of file encountered with no end of BUILD command block at line " + \
       str(self.line_ct_stack[0]) + ".")
     return "fail"
-  
+
+
   #### cdprog_subcomm ##################################################
   # Cycle through OS/8 command decoder with the command specified
   # in the argument.
@@ -1684,8 +1760,20 @@ class os8script:
     end_str = "cdprog " + old_line
     if self.verbose:
       print("Line: " + str(self.line_ct_stack[0]) + ": " + os8_comm)
-    self.simh.os8_send_cmd ("\\.", os8_comm)
-    
+
+    reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
+    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "cdprog: " + \
+                                  os8_comm, debug=self.debug) == False:
+      print (" failed at Line " + str(self.line_ct_stack[0]))
+      print ("Ignoring the rest of this block.")
+      self.ignore_to_subcomm_end(os8_comm, script_file, end_str)
+      # Confirm we're back to monitor command level.
+      self.simh.os8_cfm_monitor ("cdprog OS/8 restart after failed RU command")
+      return "fail"
+
+    # Submit the lines from script file to the running command.
+    # Track whether we return to the Comnand Decoder for more or exit.
+    # Track whether we need to exit and ignore the rest of the block.
     for line in script_file:
       line = self.basic_line_parse(line, script_file)
       if line == None: continue
@@ -1711,18 +1799,59 @@ class os8script:
         if retval == "fail":
           print("Exiting cdprog, possibly earlier than expected at line " + \
             str(self.line_ct_stack[0]) + ".")
-        self.simh.os8_send_ctrl ('[')
+        # Return to Monitor
+        reply = self.simh.os8_escape (caller="Sending escape failed. Trying ^c")
+        self.simh.os8_send_ctrl ('c')
+        self.simh.os8_cfm_monitor ("cdprog: ^c failed. State machine will be confused.")
         return retval
   
       # We could do some basic OS/8 command decoder synax checking here.
-      comm = line
       if self.verbose:
         print("Line: " + str(self.line_ct_stack[0]) + ": * " + line)
-      self.simh.os8_send_cmd ("\\*", line)
+        print("Sending...")
+      reply = self.simh.os8_cmd (line)
+      if self.debug:
+        print ("cdprog sent line. Got reply: " + str(reply) + " -> " + \
+               self.simh._os8_replies [reply][0])
+
+      # Transcribe our output if desired.
+      if "transcript" in self.options_enabled:
+        print (self.simh._child.before.decode().strip())
+
+      mon = self.simh.os8_test_result(reply, "Monitor Prompt", "")
+      cd  = self.simh.os8_test_result(reply, "Command Decoder Prompt", "")
+      if mon:
+        # Case of command running to completion and returning to OS/8
+        # Clean up the parse to the end of the block and return success.
+        self.ignore_to_subcomm_end(os8_comm, script_file, end_str)
+        return "success"
+      elif not cd:
+        # We didn't return to command decoder.  That means we have an error.
+        # Test the fatal bit in the error structure.
+        # IF True: we returned to OS/8. Say we're ignoring the block and return failure.
+        # Otherwise we should continue.
+        if self.simh._os8_replies[reply][2] == True:
+          print ("Fatal error. Ignoring rest of this block.")
+          self.ignore_to_subcomm_end(os8_comm, script_file, end_str)
+          # Print error message.
+          self.simh.os8_test_result(reply, "Command Decoder Prompt", "cdprog failure")
+          # Confirm we're back at Monitor
+          self.simh.os8_cfm_monitor ("cdprog error handler return to monitor fail")
+          return "fail"
+        else:
+          print ("Non-fatal error encountered with: " + line)
+          print ("\t" + self.simh._os8_replies[reply][0])
+          # To continue, we need to ask pexpect to get that Command Decoder
+          # prompt before resuming after an error. Ignore everything until we get it.
+          self.simh._child.expect("\n\\*$")
     print("Warning end of file encountered at line " + \
         str(self.line_ct_stack[0]) + \
         " with no end of cdprog command block.")
-    self.simh.os8_send_ctrl ('[')
+    # Exit command back to OS/8 monitor.
+    self.simh.os8_escape (caller="cdprog escape from decoder failed sending ^c")
+    self.simh.os8_send_ctrl ('c')
+    self.simh.os8_cfm_monitor ("failed to get to monitor with ^c")
+
     return "fail"
 
 
@@ -1737,110 +1866,3 @@ class os8script:
           print("Required file: " + image_path + " not found.")
           mkos8_abort(s)
       # else: print("Found " + image_path)
-  
-     
-  #### Data Structures ################################################
-  #
-  # The make procedures use helper procedures
-  # to confirm that the relevant input image file exists and
-  # to perform the file copies.
-  #
-  # A data structure called "image copyin"
-  #    describes the image file pathname relative to an implied root,
-  #    provides a message string when the action is run,
-  #    names a default destination device for whole image content copies,
-  #    offers an optional array of specific file copy actions.
-  #
-  # FUTURE: Parse source path for ".tu56" vs. ".rk05" for more general use.
-  # Currently all code assumes a copyin comes from a DECtape image.
-  #
-  # Example: We Install all files for ADVENT, the Adventure game:
-  #
-  # advent_copyin = ['RKB0:', 'subsys/advent.tu56',  "Installing ADVENT...", None]
-  #
-  # A DECtape device is chosen for attachment in SIMH and
-  # a 'COPY *.*' command is filled in with the Destination device, and the chosen DECtape.
-  #
-  # A data structer called "file copyin"
-  #     provides override destination to allow renames or varied destinations.
-  #     names individual files within a copyin to use
-  #
-  # Example:  To copy the C compiler we want all .SV files on SYS
-  #           but everything else to RKB0:
-  #           (Note the useful /V option to invert the match.)
-  #
-  # cc8_sv_file_copyin   = ['SYS:', '*.SV']
-  # cc8_rest_file_copyin = ['RKB0:', '*.SV/V']
-  #
-  # A 'COPY' command is filled in with the override destination and
-  # The file spec is used with the chosen dectape instead of "*.*"
-  #
-  
-  #### copyin_pair #####################################################
-  # Copy two images into two destinations with two messages
-  #
-  # Assumes our context is "in simh".
-  # Assumes dt0 and dt1 are free.
-  # Assumes rk0 is the boot device
-  # Detaches dt0 and dt1 after using them.
-  # copyin0 mounts on dt0.  copyin1 mounts on dt1.
-  # Either copyin or both can be None
-  
-  def copyin_pair (s, copyin0, copyin1, debug):
-    if debug:
-      if copyin0:
-        print("Copying: " + copyin0[1] + " to: " + copyin0[0] + "from dt0")
-      else:
-        print("copyin0 is empty.")
-
-      if copyin1:
-        print("Copying: " + copyin1[1] + " to: " + copyin1[0] + "from dt1")
-      else:
-        print("copyin1 is empty.")
-      
-    if not copyin0 and not copyin1: return   # Nothing to do.
-  
-    # The order of events here is a bit funky because we want
-    # to use both DECtape drives but also
-    # switch between SIMH and OS/8 as infrequently as possible.
-  
-    if copyin0: self.simh.send_cmd ("attach -r dt0 " + dirs.os8mi + copyin0[1])
-    if copyin1: self.simh.send_cmd ("attach -r dt1 " + dirs.os8mi + copyin1[1])
-  
-    self.simh.os8_restart()
-  
-    if copyin0:
-      if self.verbose: print(copyin0[2])
-      if copyin0[3]:                    # We have specific files to do.
-        for file_copyin in copyin0[3]:
-          self.simh.os8_send_cmd ("\\.", "COPY " + file_copyin[0] + "<DTA0:" + file_copyin[1])
-      else:
-        self.simh.os8_send_cmd ("\\.", "COPY " + copyin0[0] + "<DTA0:*.*")
-  
-    if copyin1:
-      if self.verbose: print(copyin1[2])
-      if copyin1[3]:                    # We have specific files to do.
-        for file_copyin in copyin1[3]:
-          self.simh.os8_send_cmd ("\\.", "COPY " + file_copyin[0] + "<DTA1:" + file_copyin[1])
-      else:
-        self.simh.os8_send_cmd ("\\.", "COPY " + copyin1[0] + "<DTA1:*.*")
-  
-    self.simh.back_to_cmd("\\.")
-  
-    if copyin0: self.simh.send_cmd ("detach dt0")
-    if copyin1: self.simh.send_cmd ("detach dt1")
-  
-  
-  #### do_all_copyins ##################################################
-  
-  def do_all_copyins (s, copyins, debug):
-    pair_idx = 0
-    pair_ct = int(len(copyins) / 2)
-    while pair_idx < pair_ct:
-      copyin_pair(s, copyins[pair_idx * 2], copyins[pair_idx * 2 + 1], debug)
-      pair_idx += 1
-    if pair_ct * 2 < len(copyins):
-      copyin_pair(s, copyins[len(copyins) - 1], None, debug)
-  
-  
-  

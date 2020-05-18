@@ -6,7 +6,7 @@
 #
 #   See ../doc/class-simh.md for a usage tutorial.
 #
-# Copyright © 2017 by Jonathan Trites, © 2017-2019 by William Cattey
+# Copyright © 2017 by Jonathan Trites, © 2017-2020 by William Cattey
 # and Warren Young.
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -45,7 +45,20 @@ import sys
 
 import pidp8i
 
-class simh: 
+#### simh #############################################################
+# Object to manage a running SIMH process programmatically with pexpect.
+# Functions in this file are organized from lower level to higher
+# level where possible.
+
+
+#### Private functions ################################################
+
+
+#######################################################################
+#  simh class
+
+class simh:
+  #### constants ######################################################
   # pexpect object instance, set by ctor
   _child = None
 
@@ -91,62 +104,108 @@ class simh:
   _host_safe_cps = _pdp8i_safe_bps * _ips_ratio / _bpc       # [4]
   _os8_kbd_delay = 1 / _host_safe_cps                        # [5]
 
-  # Known OS/8 error strings and a flag indicating whether the error
-  # dumps us back out to the OS/8 command monitor or leaves us in the
-  # called program.
 
-  _os8_errors = [
-    # The date comment tells when each message is observed and validated
-    #
+  #### _simh_replies #################################################
+  # Array of items that describe replies one might get from SIMH.
+  # Each item is a 2 element array consisting of:
+  #    [0] A help string that describes the reply.
+  #        Match against this string when testing error values.
+  #        This value may not be unique. When not unique
+  #        the multiple values should represent the same error.
+  #
+  #    [1] A regular expression for pexpect to use to match on it.
+  #        It is a good idea to terminate status messages with "\r"
+  #        in order to confirm we've got the whole line,
+  #        and prompts with "$" to terminate the search.
+  #
+  #        For speed and efficiency an array of compiled
+  #        regular expressions, indexed to _simh_replies
+  #        is created by __init__: simh_replies_rex
+  
+  _simh_replies = [
+    # Prompts:
+    ["Prompt", "sim> $"],
+    # Guard against case we used the simh table when we meant the OS/8 table. 
+    ["Monitor Prompt", "\n\\.$"],
+    ["Non-existent device", "Non-existent device"],
+    ]
+
+  ####_os8_replies ##################################################
+  # Simiar to _simh_replies, but describing replies from OS/8
+  # when it is running under SIMH.
+  # Each item is a 3 element array consisting of:
+  #    [0] A help string that describes the reply.
+  #        Match against this string when testing error values.
+  #        This value may not be unique. When not unique
+  #        the multiple values should represent the same error.
+  #
+  #    [1] A regular expression for pexpect to use to match on it.
+  #        It is a good idea to terminate status messages with "\r"
+  #        in order to confirm we've got the whole line,
+  #        and prompts with "$" to terminate the search.
+  #
+  #        For speed and efficiency an array of compiled
+  #        regular expressions, indexed to _simh_replies
+  #        is created by __init__: os8_replies_rex
+  #
+  #    [2] A True/False indicator if the command returned to the
+  #        keyboard monitor, rather than continuing in the program.    
+
+  _os8_replies = [
+    # Prompts:
+    ["Monitor Prompt", "\n\\.$", True],
+    ["Command Decoder Prompt", "\n\\*$", False],
+    ["PIP Continue", "\\^$", True],                  # Newline NOT always present! 
     # OS/8 Handbook 1974 page 1-43/81 Keyboard Monitor Error Messages:
-    ["MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],   # 2018.02.11
-    ["MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
-    ["MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
-    ["(\S+) NOT AVAILABLE", False],
-    ["(\S+) NOT FOUND", False],                                   # 2018.02.11
-    # OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
-    ["ILLEGAL SYNTAX", False],                                    # 2018.02.11
-    ["(\S+) DOES NOT EXIST", False],
-    # ["(\S+) NOT FOUND", False],                                 # See above
-    ["TOO MANY FILES", False],
-    # OS/8 Handbook 1974 page 1-75/113 CCL Error Messages
-    ["BAD DEVICE", False],
-    ["BAD EXTENSION", False],
-    # OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
-    ["ARE YOU SURE", False],
-    ["BAD DIRECTORY ON DEVICE #\s?\d+", False],
-    ["BAD SYSTEM HEAD", False],
-    ["CAN'T OPEN OUTPUT FILE", False],
-    ["DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
-    ["DIRECTORY ERROR", False],
-    ["ERROR DELETING FILE", False],
-    ["ILLEGIAL BINARY INPUT, FILE #\d+", False],
-    ["INPUT ERROR, FILE #\s?\d+", False],
-    ["IO ERROR IN \\(file name\\) --CONTINUING", False],
-    ["NO ROOM FOR OUTPUT FILE", False],
-    ["NO ROOM IN \\(file name\\) --CONTINUING", False],
-    ["OUTPUT ERROR", False],
-    ["PREMATURE END OF FILE, FILE #\s?\d+", False],
-    ["ZERO SYS?", False],
-    # OS/8 Handbook 1974 page 2-81/244: DIRECT Error Messages
-    ["BAD INPUT DIRECTORY", False],
-    ["DEVICE DOES NOT HAVE A DIRECTORY", False],
-    ["ERROR CLOSING FILE", False],
-    ["ERROR CLOSING FILE", False],
-    ["ERROR READING INPUT DIRECTORY", False],
-    ["ILLEGAL \\*", False],
-    # OS/8 Handbook 1974 page: 2-109/272: FOTP Error Messages
-    ["ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
-    ["ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
-    ["ERROR READING INPUT DIRECTORY", False],
-    ["ERROR READING OUTPUT DIRECTORY", False],
-    ["ILLEGAL \\?", False],
-    ["NO FILES OF THE FORM (\S+)", False],
-    ["NO ROOM, SKIPPING \\((\S+)\\)", False],
-    ["SYSTEM ERROR-CLOSING FILE", False],
-    ["USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
-    ["LINE TOO LONG IN FILE#\d+", False],
-  ]
+    ["Directory I/O Error", "MONITOR ERROR 2 AT \d+ \\(DIRECTORY I/O ERROR\\)", True],
+    ["I/O Error on SYS", "MONITOR ERROR 5 AT \d+ \\(I/O ERROR ON SYS\\)", True],
+    ["Directory I/O Error", "MONITOR ERROR 6 AT \d+ \\(DIRECTORY I/O ERROR\\)\r", True],
+    ["Device not available", "(\S+) NOT AVAILABLE", False],
+    ["File not found", "(\S+) NOT FOUND", False],
+    #  OS/8 Handbook 1974 page 1-51/89 Command Decoder Error Messages
+    ["Illegal Syntax", "ILLEGAL SYNTAX", False],
+    ["File does not exist", "(\S+) DOES NOT EXIST", False],
+    #  ["(\S+) NOT FOUND", False],                                 # See above
+    ["Too many files", "TOO MANY FILES", False],
+    #  OS/8 Handbook 1974 page 1-75/113 CCL Error Messages
+    ["Bad Device", "BAD DEVICE", False],
+    ["Bad Extension", "BAD EXTENSION", False],
+    #"",  OS/8 Handbook 1974 page 1-106/144 PIP Error Messages
+    ["ARE YOU SURE?", "ARE YOU SURE\\?", False],
+    ["BAD DIRECTORY ON DEVICE", "BAD DIRECTORY ON DEVICE #\s?\d+", False],
+    ["BAD SYSTEM HEAD", "BAD SYSTEM HEAD", False],
+    ["CAN'T OPEN OUTPUT FILE", "CAN'T OPEN OUTPUT FILE", False],
+    ["DEVICE NOT A DIRECTORY DEVICE", "DEVICE #\d+ NOT A DIRECTORY DEVICE", False],
+    ["DIRECTORY ERROR", "DIRECTORY ERROR", False],
+    ["ERROR DELETING FILE", "ERROR DELETING FILE", False],
+    ["ILLEGIAL BINARY INPUT, FILE", "ILLEGIAL BINARY INPUT, FILE #\d+", False],
+    ["INPUT ERROR", "INPUT ERROR, FILE #\s?\d+", False],
+    ["IO ERROR--CONTINUING", "IO ERROR IN \\(file name\\) --CONTINUING", False],
+    ["NO ROOM FOR OUTPUT FILE", "NO ROOM FOR OUTPUT FILE", False],
+    ["NO ROOM--CONTINUING", "NO ROOM IN \\(file name\\) --CONTINUING", False],
+    ["OUTPUT ERROR", "OUTPUT ERROR", False],
+    ["PREMATURE END OF FILE", "PREMATURE END OF FILE, FILE #\s?\d+", False],
+    ["ZERO SYS?", "ZERO SYS?", False],
+    #"",  OS/8 Handbook 1974 page 2-81/244: DIRECT Error Messages
+    ["BAD INPUT DIRECTORY", "BAD INPUT DIRECTORY", False],
+    ["DEVICE DOES NOT HAVE A DIRECTORY", "DEVICE DOES NOT HAVE A DIRECTORY", False],
+    ["ERROR CLOSING FILE", "ERROR CLOSING FILE", False],
+    ["ERROR CLOSING FILE", "ERROR CLOSING FILE", False],
+    ["ERROR READING INPUT DIRECTORY", "ERROR READING INPUT DIRECTORY", False],
+    ["ILLEGAL *", "ILLEGAL \\*", False],
+    #"",  OS/8 Handbook 1974 page: 2-109/272: FOTP Error Messages
+    ["ERROR ON INPUT DEVICE, SKIPPING", "ERROR ON INPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR ON OUTPUT DEVICE, SKIPPING", "ERROR ON OUTPUT DEVICE, SKIPPING \\((\S+)\\)", False],
+    ["ERROR READING INPUT DIRECTORY", "ERROR READING INPUT DIRECTORY", False],
+    ["ERROR READING OUTPUT DIRECTORY", "ERROR READING OUTPUT DIRECTORY", False],
+    ["ILLEGAL ?", "ILLEGAL \\?", False],
+    ["NO FILES OF THE FORM", "NO FILES OF THE FORM: (\S+)", False],
+    ["NO ROOM, SKIPPING", "NO ROOM, SKIPPING \\((\S+)\\)", False],
+    ["SYSTEM ERROR-CLOSING FILE", "SYSTEM ERROR-CLOSING FILE", False],
+    ["USE PIP FOR NON-FILE STRUCTURED DEVICE", "USE PIP FOR NON-FILE STRUCTURED DEVICE", False],
+    ["LINE TOO LONG IN FILE", "LINE TOO LONG IN FILE#\d+", False],
+    ]
+  
 
   # Pattern to match a SIMH command.  The command verb ends up in
   # match().group(1), and anything after the verb in group(3).
@@ -179,25 +238,19 @@ class simh:
     self._os8_fatal_check = []
     self.verbose = False
 
-    # We keep track of what our command context is so our caller does
-    # not need to explicitly call back_to_cmd() or sendcontrol ('e').
     # We keep track of the command context and transition automatically.
     self._context = "simh"
     
-    # Parse our OS/8 Errors table into actionable chunks
-    for error_spec in self._os8_errors:
-      self._os8_error_match_strings.append(error_spec[0])
-      self._os8_fatal_check.append(error_spec[1])
+    # Pre-compile our os8_replies regexps.
+    self._os8_replies_rex = []
+    for item in self._os8_replies:
+      self._os8_replies_rex.append(re.compile(item[1].encode()))
 
-    # Did command start the command decoder or die with a monitor error?
-    self._cd_replies = ['\\*']
-    self._cd_replies.extend(self._os8_error_match_strings)
-
-    # Lots of messages. Let's pre-compile their regexps.
-    self._cd_rep_compiled = []
-    for reply in self._cd_replies:
-      self._cd_rep_compiled.append(re.compile(reply.encode()))
-
+    # Pre-compile our simh_replies regexps.
+    self._simh_replies_rex = []
+    for item in self._simh_replies:
+      self._simh_replies_rex.append(re.compile(item[1].encode()))
+        
     # Turn off pexpect's default inter-send() delay.  We add our own as
     # necessary.  The conditional tracks an API change between 3 and 4.
     pev4 = (pkg_resources.get_distribution("pexpect").parsed_version >
@@ -209,470 +262,21 @@ class simh:
       raise RuntimeError ('Simulator failed to start')
 
 
-  #### back_to_cmd ######################################################
-  # Pause the simulation and return to the SIMH command prompt when the
-  # simulated software emits the given prompt string.  Typically used to
-  # wait for OS/8 to finish running a command so we can do something
-  # down at the SIMH layer instead.
-
-  def back_to_cmd (self, prompt):
-    self._child.expect ("\n%s$" % prompt)
-    self.os8_kbd_delay ()
-    self._child.sendcontrol ('e')
-    self._context = "simh"
-
-
-  #### os8_get_file ####################################################
-  # Rough inverse of os8_send_file.
-  #
-  # Both paths must be given and are used literally.  (Contrast our
-  # inverse, where the destinatinon file name is produced from the
-  # source if not given.)
-  #
-  # When this function is called to pull a file sent by our inverse, the
-  # conversion should be lossless except for the transforms done by our
-  # underlying utility tools, such as the LF -> CR+LF done by txt2ptp
-  # but not undone by ptp2txt.
-  #
-  # Entry context should be inside OS/8.  Exit context is inside OS/8.
-
-  def os8_get_file (self, intname, extname):
-    # Attach a blank paper tape to the simulator.
-    ptf = tempfile.NamedTemporaryFile (suffix = '.pt', delete = False)
-    ptf.close ()
-    ptn = ptf.name
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach ptp ' + ptn)
-
-    # Punch internal file to external paper tape image
-    self.os8_restart ()
-    self.os8_send_cmd ('\\.', 'PUNCH ' + intname);
-    self.back_to_cmd ('\\.')        # wait for transfer to finish
-
-    # Convert text file from SIMH paper tape format
-    tool = os.path.join (pidp8i.dirs.build, 'bin', 'ptp2txt')
-    self.send_cmd ('detach ptp')
-    subprocess.call (tool + ' < ' +  ptn + ' > ' + extname, shell = True)
-
-    # Return to OS/8, just because that's where we were on entry, so we
-    # should not change that.
-    self.os8_restart ()
-
-
-  #### os8_kbd_delay ###################################################
-  # Artificially delay the media generation process to account for the
-  # fact that OS/8 lacks a modern multi-character keyboard input buffer.
-  # It is unsafe to send text faster than a contemporary terminal could,
-  # though we can scale it based on how much faster this host is than a
-  # real PDP-8.  See the constants above for the calculation.
-
-  def os8_kbd_delay (self):
-    time.sleep (self._os8_kbd_delay)
-
-
-  #### os8_send_cmd ####################################################
-  # Wait for an OS/8 command prompt running within SIMH, then send the
-  # given line.
-  #
-  # The default timeout may seem excessive, but it is based on hard
-  # experience: when SIMH is running on a slow host with slow devices
-  # (e.g. the byte-by-byte transfer of the TD8E tape controller) a
-  # single OS/8 command can take a very long time if it requires a lot
-  # of I/O.  If you are calling this for a command that you know for a
-  # fact takes less time on all hosts and with all practical device
-  # configurations, we encourage you to pass a smaller value.
-  #
-  # The caller must pass a prompt string because OS/8 has several
-  # different prompt types: ., *, $, and #, at least.  Beware in passing
-  # these that they're treated as regular expressions, so characters
-  # special in Python REs must be escaped.  And then since the RE escape
-  # character (\) is also special in Python strings, you must double-
-  # escape *it*.  So, '\\$' is a reasonable thing to pass as the prompt
-  # value, meaning "look for a literal $ character."
-  #
-  # This routine requires the caller to ensure that the system is in
-  # OS/8 Keyboard Monitor context — that is, ready for another OS/8
-  # command — before calling it.  While this routine is able to check
-  # whether we're in OS/8 context as a prerequisite, it is not practical
-  # for us to return the system to OS/8 context automatically from some
-  # other context because that would require us to know the current
-  # context in detail, but only the caller has that full knowledge.
-  # 
-  # Part of the problem is that in order to synchronize this object's
-  # internal state machine with the SIMH + OS/8 + running program state,
-  # we have to somehow provoke a prompt character from the running
-  # program.  How do we do that without knowing the current context?
-  # In some contexts, a CR or LF will do it, in others BS, and in others
-  # it'll take Ctrl-C.  Then you have a new problem, with is that those
-  # same characters aren't harmless: they'll change the very context
-  # we're trying to probe!  For instance, a Ctrl-C sent to the OS/8
-  # Keyboard Monitor just results in another prompt, but a Ctrl-C sent
-  # to a program running *under* OS/8 might kill it.  Or it might be
-  # treated as input.  Or it might be ignored entirely.
-  #
-  # There is no magic sequence we can send to SIMH or OS/8 to return the
-  # system to OS/8 Keyboard Monitor context without either changing the
-  # context in some way that might break the caller's needed state (e.g.
-  # Ctrl-E, go 7600) or lose data (e.g. Ctrl-C) or fail entirely (e.g.
-  # Enter.)  It's up to the caller to arrange this.
-
-  def os8_send_cmd (self, prompt, line, debug=False, timeout=60):
-    if self._context != 'os8': 
-      print("OS/8 is not running. Cannot execute: " + lin)
-      return
-    if debug:
-      print("os8_send_cmd: expecting: " + prompt)
-      print("\tLast match before: {" + self._child.before.decode() + "}")
-      print("\tLast match after: {" + self._child.after.decode() + "}")
-    self._child.expect ("\n%s$" % prompt, timeout = timeout)
-    self.os8_send_line (line)
-
-
-  #### os8_send_ctrl ###################################################
-  # Send a control character to OS/8 corresponding to the ASCII letter
-  # given.  We precede it with the OS/8 keyboard delay, since we're
-  # probably following a call to os8_send_line or os8_send_cmd.
-
-  def os8_send_ctrl (self, char):
-    cc = char[0].lower ()
-    self.os8_kbd_delay ()
-    self._child.sendcontrol (cc)
-    
-    if cc == 'e': self._context = 'simh'
-
-
-  #### mk_os8_name # ###################################################
-  # Create an OS/8 filename: of the form XXXXXX.YY
-  # From a POSIX path.
-
-  def mk_os8_name(self, dev, path):
-    bns = os.path.basename (path)
-    bns = re.sub("-|:|\(|\)|!", "", bns)
-    bns = bns.upper()
-    if "." not in bns:
-      return dev + bns[:min(6, len(bns))]
-    else:
-      dot = bns.index('.')
-      return dev + bns[:min(6, dot, len(bns))] + "." + bns[dot+1: dot+3]
-
-
-  #### os8_send_file ###################################################
-  # Send a copy of a local text file to OS/8.  The local path may
-  # contain directory components, but the remote must not, of course.
-  #
-  # If the destination file name is not uppercase, it will be so forced.
-  #
-  # If the destination file name is not given, it is taken as the
-  # basename of the source file name.
-  #
-  # The file is sent via the SIMH paper tape device through PIP in its
-  # default ASCII mode, rather than character by character for two reasons:
-  #
-  # 1. It's faster.  It runs as fast as the simulator can process the
-  #    I/O instructions, without any os8_kbd_delay() hooey.
-  #
-  # 2. It allows lowercase input regardless of the way the simulator is
-  #    configured.  ASCII is ASCII.
-  #
-  # Entry context should be inside OS/8.  Exit context is inside OS/8.
-
-  def os8_send_file (self, source, dest = None):
-    # Create path and file names not given
-    bns = os.path.basename (source)
-    if dest == None: dest = bns
-    dest = dest.upper ()
-
-    # Convert text file to SIMH paper tape format
-    bdir = pidp8i.dirs.build
-    pt   = os.path.join (bdir, 'obj', bns + '.pt')
-    tool = os.path.join (bdir, 'bin', 'txt2ptp')
-    subprocess.call (tool + ' < ' + source + ' > ' + pt, shell = True)
-
-    # Paper tape created, so attach it read-only and copy it in.  We're
-    # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
-    # the file.
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach -r ptr ' + pt)
-    self.os8_restart ()
-    self.os8_send_cmd ('\\.', 'R PIP')
-    self.os8_send_cmd ('\\*', dest + '<PTR:')
-    self._child.expect ('\\^')
-    self.os8_send_ctrl ('[')      # finish transfer
-    self._child.expect ('\\*')
-    self.os8_send_ctrl ('[')      # exit PIP
-
-
-  #### pip_error_handler ###############################################
-  # Common error handler for os8_pip_to and os8_pip_from
-
-  def pip_error_handler(self, caller, reply):
-    print("PIP error from inside " + caller + ": ")
-    # print("\t" + self._child.before.decode().strip())
-    print("\t" + self._child.after.decode().strip())
-    
-    # Was this error fatal or do we need to clean up?
-    # Remember we subtract 1 from reply to get index into error tables.
-    if not self._os8_fatal_check[reply - 1]:
-      # Non fatal error.  Exit pip to the monitor
-      self.os8_send_ctrl ('[')      # exit PIP
-
-
-  #### os8_pip_to ###################################################
-  # Send a copy of a local file to OS/8 using PIP.
-  #
-  # The file is sent via the SIMH paper tape device through PIP
-  # specifying a transfer option.  If no option is specified,
-  # ASCII is assumed.
-  #
-  # In ASCII mode, we pre-process with txt2ptp which translates
-  # POSIX ASCII conventions to OS/8 conventions.  In all other
-  # modes, we do not do any translation.
-  #
-  # However, we should supply a sacrificial NULL as an additional character
-  # because the OS/8 PTR driver throws the last character away. (NOT DONE YET)
-  #
-  # Entry context should be inside OS/8.  Exit context is inside OS/8.
-
-  def os8_pip_to (self, path, os8name, option = None):
-    if option == None: option = ""
-    # If os8name is just a device, synthesize an upcased name from
-    # the POSIX file basename.
-    if not os.path.exists(path):
-      print(path + " not found. Skipping.")
-      return
-    m = re.match(self._os8_file_re, os8name)
-    if m != None and (m.group(2) == None or m.group(2) == ""):
-        dest = self.mk_os8_name(os8name, path)
-    else:
-        dest = os8name
-
-    did_conversion = False
-    if option == "" or option == "/A":
-      # Convert text file to SIMH paper tape format in current dir of path.
-      if self.verbose: print("Format converting " + path)
-      bdir = pidp8i.dirs.build
-      # Create uniquified temp path name.
-      pt   = path + "-" + str(os.getpid()) + ".pt_temp"
-      tool = os.path.join (bdir, 'bin', 'txt2ptp')
-      subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
-      did_conversion = True
-    elif option not in self._valid_pip_options:
-      print("Invalid PIP option: " + option + ". Ignoring: " + path + \
-          " to OS/8.")
-      return
-    else:
-      pt = path
-
-    # TODO: Sacrificial extra character code goes here.
-
-    # Paper tape created, so attach it read-only and copy it in.  We're
-    # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
-    # the file.
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach -r ptr ' + pt)
-    self.os8_restart ()
-    self.os8_send_cmd ('\\.', 'R PIP')
-    # Was the start of PIP successful, or did we get a Monitor error?
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply != 0:
-      self.pip_error_handler ("os8_pip_to", reply)
-      return
-
-    # Has the read-in been successful?
-    self.os8_send_line (dest + '<PTR:' + option)
-    self._child.expect ('\\^')
-    self.os8_send_ctrl ('[')      # finish transfer
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply !=0:
-      self.pip_error_handler("os8_pip_to", reply)
-      if did_conversion:
-        os.remove(pt)
-      return
-    self.os8_send_ctrl ('[')      # exit PIP
-    # We could detach ptr and restart OS/8 here, but we don't need to.
-    # Do remove the temp file if we created one.
-    if did_conversion:
-      os.remove (pt)
-
-
-  #### os8_pip_from ###################################################
-  # Fetch a file from OS/8 to a local path using PIP.
-  #
-  # The OS/8 source filename is synthesized from the basename of the path,
-  # upcasing if necessary.
-  #
-  # The file is sent via the SIMH paper tape device through PIP
-  # specifying a transfer option.  If no option is specified,
-  # ASCII is assumed.
-  #
-  # In ASCII mode, we post-process with ptp2txt which translates
-  # POSIX ASCII conventions to OS/8 conventions.  In all other
-  # modes, we do not do any translation.
-  #
-  # Entry context should be inside OS/8.  Exit context is inside OS/8.
-
-  def os8_pip_from (self, os8name, path, option = None):
-    if option == None: option = ""
-    # If path is not a file, use the name portion of os8name.
-    if os.path.isdir(path):
-      colon = os8name.find(':')
-      if colon == -1:                # No dev, just a name.
-        path = path + "/" + os8name
-      else:
-        path = path + "/" + os8name[colon+1:]
-
-    if option != "" and option not in self._valid_pip_options:
-      print("Invalid PIP option: " + option + \
-          ". Ignoring os8_pip_from on: " + path)
-      return
-
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('attach ptp ' + path)
-    self.os8_restart ()
-    
-    self.os8_send_cmd ('\\.', 'R PIP')
-    # Was the start of PIP successful or did we get a Monitor error?
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply != 0:
-      self.pip_error_handler ("os8_pip_from", reply)
-      return
-    
-    self.os8_send_line ('PTP:<' + os8name + option)
-
-    reply = self._child.expect (self._cd_rep_compiled)
-    if reply !=0:
-      self.pip_error_handler ("os8_pip_from", reply)
-      # There is an empty PTP file we need to remove.
-      os.remove(path)
-      return
-
-    self.os8_send_ctrl ('[')      # exit PIP
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('detach ptp')  # Clean flush of buffers.
-    self.os8_restart ()
-
-    if option == "" or option == "/A":
-      if self.verbose: print("Format converting " + path)
-      # Convert text file to SIMH paper tape format
-      bdir = pidp8i.dirs.build
-      # Create uniquified temp path name.
-      pf = path + "-" + str(os.getpid()) + ".pf_temp"
-      os.rename(path, pf)
-      tool = os.path.join (bdir, 'bin', 'ptp2txt')
-      subprocess.call (tool + ' < ' + pf + ' > ' + path, shell = True)
-      os.remove(pf)
-
-
-  #### os8_send_line ###################################################
-  # Core of os8_send_cmd.  Also used by code that needs to send text
-  # "blind" to OS/8, without expecting a prompt, as when driving EDIT.
-
-  def os8_send_line (self, line):
-    self.os8_send_str (line)
-    self._child.send ("\r")
-
-
-  #### os8_send_str ########################################################
-  # Core of os8_send_line.  Also used by code that needs to send text
-  # "blind" to OS/8, without expecting a prompt and without a CR, as
-  # when driving TECO.
-
-  def os8_send_str (self, str):
-    for i in range (0, len (str)):
-      self._child.send (str[i])
-      self.os8_kbd_delay ()
-
-
-  #### os8_resume #######################################################
-  # Resume OS/8.
-  #
-  # It would be nice if we could just send  the "cont" command
-  # and have python expect and OS/8 synch right up.
-  # But so far we have not figured out how to do that.
-  # To resume OS/8 from SIMH we need to provoke a prompt.
-  # Typing a rubout or ^U at a SIMH terminal session does this.
-  # But not when SIMH is run under python expect.
-  # We don't know why.
-  #
-  # boot works
-  # go 7600 works
-  # ^C <pause> \n\r works.
-  #
-  # The resume command uses the ^C method as the least disruptive
-  # to system state.
-
-  def os8_resume (self):
-    if self._context == "os8": return   # Already running.
-    
-    self.send_cmd("cont")   # sets os8 context for us.
-
-    # Now provoke a keyboard monitor prompt.
-    self.os8_send_ctrl('c')
-    self.os8_kbd_delay()
-    self.os8_send_str('\r\n')
+  #################### simh pexpect Abstraction layer ##################
+  # Ideally these should be the public interface to pexpect
+  # used with the simh object
   
+  #### set_logfile #####################################################
 
-  #### os8_restart #######################################################
-  # Called while in the SIMH command prompt, this restarts OS/8.
-  #
-  # This one-line function exists to abstract the method we use and to
-  # document the reason we do it this way.
-  #
-  # Currently we do this by calling the OS/8 command entry point, which
-  # has the virtue that it forces another . prompt, which keeps the
-  # send/expect sequencing simple when switching between OS/8 and SIMH
-  # command modes.
-  #
-  # That is why we don't use "cont" here instead: it requires that the
-  # caller always be aware of when the . prompt went out; complicated.
-  #
-  # Another simple alternative is "boot rk0", which actually benchmarks
-  # a smidge faster here.  We choose this method instead because we
-  # expect that some of our callers will want to do several different
-  # things in a single OS/8 session, which rebooting would screw up.
-
-  def os8_restart (self):
-    self.send_cmd ("go 7600")
+  def set_logfile (self, lf):
+    self._child.logfile = lf
 
 
-  #### os8_squish ########################################################
-  # Wraps the OS/8 SQUISH command for a given device.
+  #### send_line #######################################################
+  # Sends the given line "blind", without before or after checks
 
-  def os8_squish (self, device):
-    self.os8_send_cmd ('\\.', "SQUISH " + device + ":")
-    self.os8_kbd_delay ()
-    self._child.send ("Y\r");
-
-
-  #### os8_zero_core ###################################################
-  # Starting from OS/8 context, bounce out to SIMH context and zero all
-  # of core excepting:
-  #
-  # 0. zero page - many apps put temporary data here
-  # 1. the top pages of fields 1 & 2 - OS/8 is resident here
-  # 2. the top page of field 2 - OS/8's TD8E driver (if any) lives here
-  #
-  # We then restart OS/8, which means we absolutely need to do #1 and
-  # may need to do #2.  We could probably get away with zeroing page 0.
-  #
-  # All of the above explains why we have this special OS/8 alternative
-  # to the zero_core() method.
-
-  def os8_zero_core (self):
-    self.back_to_cmd ('\\.')
-    self.send_cmd ('de 00200-07577 0')
-    self.send_cmd ('de 10000-17577 0')
-    self.send_cmd ('de 20000-27577 0')
-    self.send_cmd ('de 30000-77777 0')
-    self.os8_restart ()
-
-
-  #### quit ############################################################
-  # Quits the simulator and waits for it to exit
-
-  def quit (self):
-    self.send_cmd ("q")
-    self._child.expect (pexpect.EOF)
+  def send_line (self, line):
+    self._child.sendline (line)
 
 
   #### read_tail #######################################################
@@ -681,48 +285,6 @@ class simh:
   def read_tail (self, head, timeout = -1):
     self._child.expect_exact ([head], timeout)
     return self._child.readline ()
-
-
-  #### send_cmd ########################################################
-  # Wait for a SIMH command prompt and then send the given command.
-  # If we are not in the simh context send ^e and set context "simh".
-  # If we are not in simh context, send ^e set context "simh"
-  #    and hope for the best.
-  # If we issue a command that enters os8 context, set context "os8".
-  # Note exiting out of OS/8 into the SIMH context is a bit of a
-  # trap door. Resynchronizing with python expect requires provoking
-  # a prompt, and prompts are context specific.
-  # Perhaps we should require separate and explicit commands to
-  # escape to SIMH. But for now, just be careful to use os8_resume
-  # after calling send_cmd.
-  
-  def send_cmd (self, cmd):
-    if self._context == "os8":
-      self._child.expect ("\n\\.$")
-      self._child.sendcontrol ('e')
-      self._context = "simh"
-    elif self._context != "simh":
-      self._child.sendcontrol ('e')
-      self._context = "simh"
-      
-    self._child.expect ("sim> $")
-    self._child.sendline (cmd)
-    m = re.match (self._simh_comm_re, cmd)
-    if m != None and m.group(1)[:1].upper() in self._enters_os8_context:
-      self._context = "os8"
-
-
-  #### send_line #######################################################
-  # Sends the given line "blind", without waiting for a prompt.
-
-  def send_line (self, line):
-    self._child.sendline (line)
-
-
-  #### set_logfile #####################################################
-
-  def set_logfile (self, lf):
-    self._child.logfile = lf
 
 
   #### spin ############################################################
@@ -753,6 +315,106 @@ class simh:
       return False
 
 
+  ######################## Utility Functions #############################
+    
+  #### test_result ######################################################
+  # Given a result number, an expected result, and an array of result elements,
+  # return True if the result matched expected value.
+  # If caller is not the empty string, print a message about it.
+  #
+  # This routine does the repetitive work of testing results returned
+  # from running a command, and optionally printing status.
+
+  def test_result (self, reply, expected, results, caller, debug=False):
+    # Cover case of utter failure.
+    if reply == -1:
+      if debug or caller != "":
+        print (caller + ": failure.")
+      return False
+    reply_ID = results[reply][0]
+    if debug:
+      print ("test_result: Got reply: " + str(reply) + " -> "  + reply_ID)
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
+    if reply_ID.lower() == expected.lower():
+      return True
+    else:
+      if caller != "":
+        print (caller + ": Expected: \"" + expected + "\". Instead got: \"" + reply_ID + "\".")
+      return False      
+
+  
+  ##################### Basic SIMH Interaction ###########################
+  # Use these to work with simh under pexpect
+
+  
+  #### esc_to_simh  ######################################################
+  # Unconditionally go to SIMH
+  def esc_to_simh (self, debug=False):
+    self._child.sendcontrol ('e')
+    reply = self._child.expect (self._simh_replies_rex)  # Wait to get simh prompt
+    self.simh_test_result(reply, "Prompt", "esc_to_simh")
+    self._context = "simh"
+    if debug:
+      print("esc_to_simh: reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
+    return reply
+
+
+  #### simh_test_result #################################################
+  # Convenience wrapper for test_result that uses SIMH replies.
+
+  def simh_test_result (self, reply, expected, caller, debug=False):
+    return self.test_result (reply, expected, self._simh_replies, caller)
+
+  
+  #### simh_send_line ########################################################
+  # Send a line to simh while managing context.
+  # If we are not in the simh context call esc_to_simh which will
+  #    send ^e, and set the context to simh.
+  # If we issue a command that enters os8 context, set context "os8".
+  # It is up to the caller to then do an expect to confirm success.
+
+  def simh_send_line (self, cmd, debug=False):
+    if debug: print ("Context: " + self._context)
+    if self._context != "simh":
+      self.esc_to_simh()
+    if debug: print ("simh_send_line: Sending: " + cmd)
+    self._child.sendline (cmd)
+    m = re.match (self._simh_comm_re, cmd)
+    if m != None and m.group(1)[:1].upper() in self._enters_os8_context:
+      self._context = "os8"
+
+  
+
+  #### simh_cmd ########################################################
+  # If we are not in the simh context call esc_to_simh which will
+  #    send ^e, and set the context to simh.
+  # If we issue a command that enters os8 context, set context "os8".
+  # Wait for a reply for error checking.
+  # replies is an optional argument that defaults to _simh_replies_rex
+  
+  def simh_cmd (self, cmd, replies=None, debug=False):
+    if replies == None: replies = self._simh_replies_rex
+    self.simh_send_line (cmd, debug=debug)
+    reply = self._child.expect(replies)
+    if debug:
+      print("\tGot reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
+    return reply
+
+
+  #### quit ############################################################
+  # Quits the simulator and waits for it to exit
+  # By calling simh_send_line, we are careful to look to our context
+  # and escape to SIMH if necessary.
+
+  def quit (self):
+    self.simh_send_line("quit")
+  
+
   #### zero_core #######################################################
   # From SIMH context, zero the entire contents of core, which is
   # assumed to be 32 kWords.
@@ -768,9 +430,14 @@ class simh:
   # when running under OS/8.
 
   def zero_core (self):
-    self.send_cmd ('de all 0')
-  
+    reply = self.simh_cmd ('de all 0')
+    self.simh_test_result(reply, "Prompt", "simh_zero_core")
 
+
+  ################# PDP-8 SIMH Interaction #############################
+  # High level interfaces to learn about and change device configurations
+  # for the PDP-8 under SIMH.
+  
   #### describe_dev_config #############################################
   # We provide an interface to alter SIMH device configurations for
   # specific parameters and specific devices
@@ -805,13 +472,14 @@ class simh:
   #### do_simh_show  ###################################################
   # Calls show on the device name.
   # Returns array of lines from output.
+  # This is focused on OS/8 devices.
 
   def do_simh_show (self, name):
     supported_shows = ["dt", "td", "tti", "rx"]
     if name not in supported_shows: return None
     
     ucname = name.upper()
-    self.send_cmd("show " + name)
+    self.simh_send_line("show " + name)
     self._child.expect(ucname + "\s+(.+)\r")
     lines = self._child.after.decode().split ("\r")
     return lines
@@ -911,8 +579,10 @@ class simh:
             det_comm = "det " + from_tape + unit
             if self.verbose:
               print(det_comm + "(Had: " + attached_from[unit] + ")")
-            self.send_cmd(det_comm)
-        self.send_cmd("set " + from_tape + " disabled")
+            reply = self.simh_cmd(det_comm)
+            self.simh_test_result(reply, "Prompt", "set_tape_config: " + det_com)
+        reply = self.simh_cmd("set " + from_tape + " disabled")
+        self.simh_test_result(reply, "Prompt", "set_tape_config disable " + from_tape)
 
     lines = self.do_simh_show(to_tape)
     to_status = self.parse_show_tape_dev(lines)
@@ -925,7 +595,8 @@ class simh:
     elif to_status != "disabled":
       print(to_tape + " already is enabled.")
     else:
-      self.send_cmd("set " + to_tape + " enabled")    
+      reply = self.simh_cmd("set " + to_tape + " enabled")
+      self.simh_test_result(reply, "Prompt", "set_tape_config enable " + to_tape)
 
     # Test to confirm to_tape is now enabled.
 
@@ -999,7 +670,8 @@ class simh:
       return False
     elif rx_type == "disabled":
       if self.verbose: print("rx is disabled. Enabling...")
-      self.send_cmd("set rx enabled")
+      reply = self.simh_cmd("set rx enabled")
+      self.simh_test_result(reply, "Prompt", "set_rx_config enable  rx")
       # Retry getting rx info
       lines = self.do_simh_show("rx")
       rx_type = self.parse_show_rx_dev (lines)
@@ -1025,9 +697,11 @@ class simh:
           det_comm = "det rx" + unit
           if self.verbose:
             print(det_comm + "(Had: " + attached_rx[unit] + ")")
-          self.send_cmd(det_comm)
+          reply = self.simh_cmd(det_comm)
+          self.simh_test_result(reply, "Prompt", "set_rx_config detach: " + det_comm)
 
-    self.send_cmd("set rx " + to_rx)
+    reply = self.simh_cmd("set rx " + to_rx)
+    self.simh_test_result(reply, "Prompt", "set_rx_config set rx " + to_rx)
 
     # Test to confirm new setting of RX
     lines = self.do_simh_show("rx")
@@ -1080,7 +754,8 @@ class simh:
       print("tti device is already set to " + to_tti)
       return None
 
-    self.send_cmd("set tti " + to_tti)
+    reply = self.simh_cmd("set tti " + to_tti)
+    self.simh_test_result(reply, "Prompt", "set_tti_config setting tti " + to_tti)
 
     # Test to confirm new setting of tti
     lines = self.do_simh_show("tti")
@@ -1097,4 +772,389 @@ class simh:
     else:
       return True
 
+  ############### Basic OS/8 Interaction ###############################
+  # Intereact with OS/8 under SIMH.
 
+  #### os8_kbd_delay ###################################################
+  # Artificially delay the media generation process to account for the
+  # fact that OS/8 lacks a modern multi-character keyboard input buffer.
+  # It is unsafe to send text faster than a contemporary terminal could,
+  # though we can scale it based on how much faster this host is than a
+  # real PDP-8.  See the constants above for the calculation.
+
+  def os8_kbd_delay (self):
+    time.sleep (self._os8_kbd_delay)
+
+
+  #### os8_send_str ########################################################
+  # Core of os8_send_line.  Also used by code that needs to send text
+  # "blind" to OS/8, without expecting a prompt and without a CR, as
+  # when driving TECO.
+
+  def os8_send_str (self, str):
+    for i in range (0, len (str)):
+      self.os8_kbd_delay ()
+      self._child.send (str[i])
+
+
+  #### os8_send_ctrl ###################################################
+  # Send a control character to OS/8 corresponding to the ASCII letter
+  # given.  We precede it with the OS/8 keyboard delay, since we're
+  # probably following a call to os8_send_line or os8_cmd.
+
+  def os8_send_ctrl (self, char):
+    cc = char[0].lower ()
+    self.os8_kbd_delay ()
+    self._child.sendcontrol (cc)
+    
+    if cc == 'e': self._context = 'simh'
+
+
+  #### os8_send_line ###################################################
+  # Core of os8_cmd.  Also used by code that needs to send text
+  # "blind" to OS/8, without expecting a prompt, as when driving EDIT.
+
+  def os8_send_line (self, line):
+    self.os8_send_str (line)
+    self._child.send ("\r")
+
+
+  #### os8_test_result ##################################################
+  # Convenience wrapper for test_result that uses OS/8 replies.
+
+  def os8_test_result (self, reply, expected, caller, debug=False):
+    return self.test_result (reply, expected, self._os8_replies, caller, debug)
+
+
+  #### mk_os8_name # ###################################################
+  # Create an OS/8 filename: of the form XXXXXX.YY
+  # From a POSIX path.
+
+  def mk_os8_name(self, dev, path):
+    bns = os.path.basename (path)
+    bns = re.sub("-|:|\(|\)|!", "", bns)
+    bns = bns.upper()
+    if "." not in bns:
+      return dev + bns[:min(6, len(bns))]
+    else:
+      dot = bns.index('.')
+      return dev + bns[:min(6, dot, len(bns))] + "." + bns[dot+1: dot+3]
+
+
+  #### os8_cmd_ ###################################################
+  # Send the given command to OS/8.
+  # replies is an array of possible replies that command will get.
+  # Returns the index into the replies array that pexpect got,
+  # or -1 if the command could not be run.
+  # replies is an optional argument which defaults to _os8_replies_rex
+
+  def os8_cmd (self, cmd, replies=None, debug=False, timeout=60):
+    if replies == None: replies = self._os8_replies_rex
+    if self._context != 'os8': 
+      print("OS/8 is not running. Cannot execute: " + cmd)
+      return -1
+    if debug:
+      print("os8_cmd: sending: " + cmd)
+      print("\tPrevious match before: {" + self._child.before.decode() + "}")
+      print("\tPrevious match after: {" + self._child.after.decode() + "}")
+    self.os8_send_line (cmd)
+    reply = self._child.expect (replies, timeout = timeout)
+    if debug:
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      print("\tmatch after: {" + self._child.after.decode() + "}")
+    return reply
+    
+
+  #### os8_cfm_monitor ##################################################
+  # Confirm return to OS/8 monitor.
+  # This function is necessary so that we know our command has returned to OS/8.
+  # Without this test, the next _child.expect hits a monitor prompt instead of
+  # what it will be looking for.
+  # If caller is not empty, it will emit an error string if the prompt wasn't seen.
+  # Returns True if we are where we expect.
+
+  def os8_cfm_monitor (self, caller, debug=False):
+    reply = self._child.expect(self._os8_replies_rex)
+    return self.os8_test_result(reply, "Monitor Prompt", caller, debug=debug)
+
+
+  #### os8_ctrl_c ##################################################
+  # Return to OS/8 monitor using the ^C given escape character.
+  # We need to listen for the ^C echo or else cfm_monitor gets confused.
+  # Confirm we got our monitor prompt.
+  # Optional caller argument enables a message if escape failed.
+  # Note: OS/8 will respond to this escape IMMEDIATELY,
+  # even if it has pending output.
+  # You will need to make sure all pending output is in
+  # a known state and the running program is quiescent
+  # before calling this method. Otherwise pexpect may get lost.
+
+  def os8_ctrl_c (self, caller = "", debug=False):
+    self.os8_send_ctrl ("c")
+    self._child.expect("\\^C")
+    return self.os8_cfm_monitor (caller)
+
+
+  #### os8_escape ##################################################
+  # Return to OS/8 monitor using the escape (^]) character.
+  # We need to listen for the $ echo or else cfm_monitor gets confused.
+  # Confirm we got our monitor prompt.
+  # Optional caller argument enables a message if escape failed.
+  # Note: OS/8 will respond to this escape IMMEDIATELY,
+  # even if it has pending output.
+  # You will need to make sure all pending output is in
+  # a known state and the running program is quiescent
+  # before calling this method. Otherwise pexpect may get lost.
+
+  def os8_escape (self, caller = "", debug=False):
+    self.os8_send_ctrl ('[')
+    self._child.expect("\\$")
+    return self.os8_cfm_monitor (caller)
+
+
+  #### simh_restart_os8 #######################################################
+  # Abstraction on returning to OS/8 monitor from within SIMH.
+  # It is common practice to "load address 7600; start" at the console.
+  
+  def simh_restart_os8 (self, caller = "", debug=False):
+    # Note we're calling simh with os8 replies because we will
+    # be switching contexts.
+    # simh_cmd manages the context, and checks for success
+    # by expecting a command prompt.
+    reply = self.simh_cmd ('go 7600', self._os8_replies_rex, debug=debug)
+    # We test our reply with os8_test result because we're in OS/8 now.
+    self.os8_test_result(reply, "Monitor Prompt", caller)
+
+    
+  #### simh_resume_os8 ##########################################################
+  # Continue execution of OS/8.
+  # This has been extremely tricky to get right.
+  # What we must do is give OS/8 a chance to wake up.
+  # We do this by asking pexpect to show us our "cont\n" echo and then
+  # we do an os8_kbd_delay()
+  # We carefully use simh_send_line to send the command so that we
+  # know to set the os8 context.
+  # WARNING! Using simh_resume_os8 without having booted OS/8
+  # has undefined reslts.
+
+  def simh_resume_os8 (self):
+    self.simh_send_line ("cont")
+    # Give OS/8 a chance to wake up.
+    self._child.expect("cont\r")
+    self.os8_kbd_delay()
+
+
+  #### os8_zero_core ###################################################
+  # Starting from OS/8 context, bounce out to SIMH context and zero all
+  # of core excepting:
+  #
+  # 0. zero page - many apps put temporary data here
+  # 1. the top pages of fields 1 & 2 - OS/8 is resident here
+  # 2. the top page of field 2 - OS/8's TD8E driver (if any) lives here
+  #
+  # We then restart OS/8, which means we absolutely need to do #1 and
+  # may need to do #2.  We could probably get away with zeroing page 0.
+  #
+  # All of the above explains why we have this special OS/8 alternative
+  # to the zero_core() method.
+
+  def os8_zero_core (self):
+    reply = self.simh_cmd ('de 00200-07577 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core 00200-07577")
+    reply = self.simh_cmd ('de 10000-17577 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core de 10000-17577 0")
+    reply = self.simh_cmd ('de 20000-27577 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core de 20000-27577 0")
+    reply = self.simh_cmd ('de 30000-77777 0')
+    self.simh_test_result(reply, "Prompt", "os8_zero_core de 30000-37577 0")
+    self.simh_restart_os8 ()
+
+
+  #### os8_squish ########################################################
+  # Wraps the OS/8 SQUISH command for a given device.
+
+  def os8_squish (self, device, caller = ""):
+    reply = self.os8_cmd ("SQUISH " + device + ":")
+    self.os8_test_result (reply, "ARE YOU SURE?", caller)
+    reply = self.os8_cmd ("Y")
+    self.os8_test_result (reply, "Monitor Prompt", caller)
+
+
+  #### os8_pip_to ###################################################
+  # Send a copy of a local file to OS/8 using PIP.
+  #
+  # The file is sent via the SIMH paper tape device through PIP
+  # specifying a transfer option.  If no option is specified,
+  # ASCII is assumed.
+  #
+  # In ASCII mode, we pre-process with txt2ptp which translates
+  # POSIX ASCII conventions to OS/8 conventions.  In all other
+  # modes, we do not do any translation.
+  #
+  # However, we should supply a sacrificial NULL as an additional character
+  # because the OS/8 PTR driver throws the last character away. (NOT DONE YET)
+  #
+  # Entry context should be inside OS/8.  Exit context is inside OS/8.
+  #
+
+  def os8_pip_to (self, path, os8name, option = None, debug=False):
+    if option == None: option = ""
+    # If os8name is just a device, synthesize an upcased name from
+    # the POSIX file basename.
+    if not os.path.exists(path):
+      print(path + " not found. Skipping.")
+      return
+    m = re.match(self._os8_file_re, os8name)
+    if m != None and (m.group(2) == None or m.group(2) == ""):
+        dest = self.mk_os8_name(os8name, path)
+    else:
+        dest = os8name
+
+    # Gross hack:
+    # The command decoder prompt that comes when we continue a PTR/PTP
+    # does not have a newline.  But everything else that matches on
+    # a command decoder prompt NEEDS that newline. Otherwise we match
+    # on asterisks in file specs.
+    # Remember to decrement replies on this rex list if we use
+    # _os8_replies
+
+    pip_rex = [re.compile("\\*$".encode())]
+    pip_rex.extend(self._os8_replies_rex)
+    
+    did_conversion = False
+    if option == "" or option == "/A":
+      # Convert text file to SIMH paper tape format in current dir of path.
+      if self.verbose: print("Format converting " + path)
+      bdir = pidp8i.dirs.build
+      # Create uniquified temp path name.
+      pt   = path + "-" + str(os.getpid()) + ".pt_temp"
+      tool = os.path.join (bdir, 'bin', 'txt2ptp')
+      subprocess.call (tool + ' < ' + path + ' > ' + pt, shell = True)
+      did_conversion = True
+    elif option not in self._valid_pip_options:
+      print("Invalid PIP option: " + option + ". Ignoring: " + path + \
+          " to OS/8.")
+      return
+    else:
+      pt = path
+
+    # TODO: Sacrificial extra character code goes here.
+
+    # Paper tape created, so attach it read-only and copy it in.  We're
+    # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
+    # the file.
+    self.esc_to_simh (debug)
+    reply = self.simh_cmd ('attach -r ptr ' + pt, debug=debug)
+    self.simh_test_result(reply, "Prompt", "os8_pip_to attaching ptr")
+    # Enter OS/8.
+    self.simh_restart_os8 (caller="os8_pip_to")
+    
+    reply = self.os8_cmd ('R PIP', debug=debug)
+    # Has PIP Startup been successful?
+    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_to 0", \
+                             debug=debug) == False: return
+
+    # Give file and test for ready to send,
+    reply = self.os8_cmd (dest + '<PTR:' + option, debug=debug)
+    if self.os8_test_result (reply, "PIP Continue", "os8_pip_to 1", debug=debug) == False:
+      # If we got "PIP Continue" we keep going. Otherwise return.
+      # Send escape if reply indicates we didn't go back to the monitor.
+      if self._os8_replies[reply][2] == False:
+        self.os8_send_ctrl ('[')
+      return
+
+    # Finish transfer
+    # The test for success is implicit.
+    self.os8_send_ctrl ('[')
+    reply = self._child.expect (pip_rex)
+    if reply != 0:
+      self.os8_test_result (reply - 1, "Command Decoder Prompt", "os8_pip_to 2", debug=debug)
+    # If we did not return to monitor hit escape to exit PIP.
+    if self._os8_replies[reply - 1][2] == False:
+        self.os8_send_ctrl ('[')      # Success or Non-fatal error.
+        # Must exit PIP and wait for monitor prompt. Complain if we don't get it!
+        reply = self._child.expect (self._os8_replies_rex)
+        self.os8_test_result (reply, "Monitor Prompt", "os8_pip_to 3")
+    # detach ptr
+    # self.esc_to_simh ()
+    # self.simh_cmd ('detach ptr ')
+    # self.os8_restart ()
+    
+    # Remove the temp file if we created one.
+    if did_conversion:
+      os.remove (pt)
+
+
+  #### os8_pip_from ###################################################
+  # Fetch a file from OS/8 to a local path using PIP.
+  #
+  # The OS/8 source filename is synthesized from the basename of the path,
+  # upcasing if necessary.
+  #
+  # The file is sent via the SIMH paper tape device through PIP
+  # specifying a transfer option.  If no option is specified,
+  # ASCII is assumed.
+  #
+  # In ASCII mode, we post-process with ptp2txt which translates
+  # POSIX ASCII conventions to OS/8 conventions.  In all other
+  # modes, we do not do any translation.
+  #
+  # Entry context should be inside OS/8.  Exit context is inside OS/8.
+
+  def os8_pip_from (self, os8name, path, option = None, debug=False):
+    if option == None: option = ""
+    # If path is not a file, use the name portion of os8name.
+    if os.path.isdir(path):
+      colon = os8name.find(':')
+      if colon == -1:                # No dev, just a name.
+        path = path + "/" + os8name
+      else:
+        path = path + "/" + os8name[colon+1:]
+
+    if option != "" and option not in self._valid_pip_options:
+      print("Invalid PIP option: " + option + \
+          ". Ignoring os8_pip_from on: " + path)
+      return
+
+    self.esc_to_simh(debug)
+    reply = self.simh_cmd ('attach ptp ' + path, debug=debug)
+    self.simh_test_result(reply, "Prompt", "os8_pip_from attachng ptp")
+    # Enter OS/8.
+    self.simh_restart_os8 (caller="os8_pip_from 0")
+    
+    reply = self.os8_cmd ('R PIP', debug=debug)
+    # Has PIP Startup been successful?
+    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_from 0") == False: return
+    
+    # Issue file transfer spec.
+    reply = self.os8_cmd ('PTP:<' + os8name + option, debug=debug)
+    # Test for Success
+    if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_from 1") == False:
+      # There is an empty PTP file we need to remove.
+      os.remove(path)
+      # Was this a fatal error?
+      if self._os8_replies[reply][2] == False:
+        self.os8_send_ctrl ('[')      # Non-fatal error. Must exit PIP
+      return
+
+    self.os8_send_ctrl ('[')      # exit PIP
+    # Must wait for monitor prompt. Complain if we don't get it!
+    reply = self._child.expect (self._os8_replies_rex)
+    self.os8_test_result (reply, "Monitor Prompt", "os8_pip_from 2")
+
+    self.esc_to_simh(debug)
+    reply = self.simh_cmd ('detach ptp', debug=debug)  # Clean flush of buffers.
+    self.simh_test_result(reply, "Prompt", "os8_pip_from detaching ptp")
+    # Enter OS/8.
+    self.simh_restart_os8(caller="os8_pip_from 3")
+
+    if option == "" or option == "/A":
+      if self.verbose: print("Format converting " + path)
+      # Convert text file to SIMH paper tape format
+      bdir = pidp8i.dirs.build
+      # Create uniquified temp path name.
+      pf = path + "-" + str(os.getpid()) + ".pf_temp"
+      os.rename(path, pf)
+      tool = os.path.join (bdir, 'bin', 'ptp2txt')
+      subprocess.call (tool + ' < ' + pf + ' > ' + path, shell = True)
+      os.remove(pf)

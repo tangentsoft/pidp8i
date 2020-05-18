@@ -218,9 +218,9 @@ def main ():
     if os8.verbose: print("Deleting scratch_copy: " + filename)
     os.remove(filename)
     
-  s.send_cmd ("detach all")
+  s.simh_cmd ("detach all")
 
-  s.quit ()
+  s._child.sendline("quit")
   if VERBOSE: print("Done!")
 
   

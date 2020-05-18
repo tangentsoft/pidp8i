@@ -1,0 +1,20 @@
+# Takes an OS8 V3D binary rk05 image and applies patches.
+# Bootstrapping issue: we use XXX-dist.rk05 to build the C compiler.
+# So we install it in this phase.
+
+copy $os8mo/uni-dist.rk05 $os8mo/uni.rk05
+mount rk0 $os8mo/uni.rk05 required
+
+boot rk0
+
+# Perform patching here.
+
+# Ian Schofield's CC8 compiler
+# Don't install this in v3d-dist because we need
+# v3d packs to build it.
+begin default cc8
+umount dt1
+mount dt1 $os8mo/cc8.tu56 ro required
+os8 COPY RKA0:<DTA1:*.SV
+os8 COPY RKB0:<DTA1:*.SV/V
+end default cc8

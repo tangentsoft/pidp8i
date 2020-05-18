@@ -591,8 +591,8 @@ make-config-header src/config.h \
 make-template bin/pidp8i.in
 make-template bin/os8-cp.in
 make-template bin/os8-run.in
+make-template tools/os8-cmp.in
 make-template bin/teco-pi-demo.in
-make-template bin/txt2os8.in
 make-template boot/common.script.in
 make-template boot/0.script.in
 make-template boot/2.script.in
@@ -614,6 +614,7 @@ make-template lib/pidp8i/ips.py.in
 make-template lib/simh.py.in
 make-template media/os8/init.tx.in
 make-template media/os8/3finit.tx.in
+make-template media/os8/uni-init.tx.in
 make-template src/Makefile.in
 make-template src/cc8/Makefile.in
 make-template src/cc8/os8/Makefile.in
@@ -622,7 +623,6 @@ make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
-make-template tools/test-os8-send-file.in
 make-template Makefile.in
 foreach f [concat [glob "$builddir/bin/*"] [glob "$builddir/tools/*"]] {
     exec chmod +x $f
