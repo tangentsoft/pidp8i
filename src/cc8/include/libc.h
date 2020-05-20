@@ -68,6 +68,7 @@
 #define fgets libc36
 #define revcpy libc37
 #define toupper libc40
+#define strpd libc41
 
 /* Declare function aliases. */ 
 #define isdigit isnum

@@ -1,4 +1,4 @@
-//
+///
 // This file is part of the CC8 OS/8 C compiler.
 //
 // The CC8 OS/8 C compiler is free software: you can redistribute it
@@ -32,6 +32,7 @@ OPDEF MQA 7501
 OPDEF SWP 7521
 OPDEF CDF1 6211
 OPDEF CDF0 6201
+OPDEF CDF4 6241
 OPDEF RIF 6224
 OPDEF CAF0 6203
 OPDEF BSW 7002
@@ -41,6 +42,7 @@ OPDEF DILY 6054
 OPDEF DIXY 6055
 
 / DECLARE INIT CODE GLOBALS.  SEE INIT.H COMMENTARY.
+ABSYM STRV 157
 ABSYM POP 160
 ABSYM PSH 161
 ABSYM JLC 162
@@ -134,4 +136,34 @@ MVL,    PUTSTK
 SVL,    STK
 PVR,    POPRET
 PVC,    PCALL
+IINIT,	CLA
+	TAD STKP
+	TAD (-1
+	DCA JLC
+	TADI JLC
+        DCA STRV
+        JMPI POPR
+STRI,	CLA
+	TAD STKP
+	TAD (-1
+	DCA JLC
+	TADI JLC
+        CDF4
+        DCAI STRV
+        CDF1
+        ISZ STRV
+	NOP
+        JMPI POPR
+STRD,   CDF4
+        CLA
+        TADI STRV
+        CDF1
+        ISZ STRV
+	NOP
+        JMPI POPR       
+STRL,   CDF4
+        CLA
+        TADI STRV
+        CDF1
+        JMPI POPR      
 /

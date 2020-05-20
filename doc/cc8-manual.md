@@ -32,7 +32,7 @@ its developers decided to rewrite the operating system in C, for Version
 4 Unix, released in 1973. That decision allowed Unix to be relatively
 easily ported to a wholly different platform — the Interdata 8/32 — in
 1978 by writing a new code generator for the C compiler, then
-cross-compiling everything. That success in porting Unix lead to C’s own
+cross-compiling everything. That success in porting Unix led to C’s own
 success first as a systems programming language, and then later as a
 general-purpose programming language.
 
@@ -83,7 +83,7 @@ PDP-8 compiler.
 
 The CC8 system generally assumes the availability of:
 
-*   [At least 12&nbsp;kWords of core](#memory) at run time for programs
+*   [At least 16&nbsp;kWords of core](#memory) at run time for programs
     compiled with CC8.  The [native OS/8 CC8 compiler passes](#ncpass)
     require 20&nbsp;kWords to compile programs.
 
@@ -330,14 +330,20 @@ OS/8 CC8 compiler:
 
 1.  **Simple arithmetic operators:** `+`, `-`, `*`, `/`, etc.
 
-1.  **Bitwise operators:** `&`, &brvbar;, `~` and `!`
+1.  **Bitwise operators:** `&`, &#x7C;, `~` and `!`
 
 1.  **Simple comparison operators:** False expressions evaluate as 0 and
     true as -1 in two’s complement form, meaning all 1's in binary form.
     See the list of limitations below for the operators excluded by our
     "simple" qualifier.
 
-1.  **A few 2-character operators:** `++`, `--` (postfix only) and `==`.
+1.  **2-character operators:** `++`, `--`, `==`, `!=`,`>=`, `<=`, `&&`,
+    and &#x7C;&#x7C;. Note that `++` and `--` are postfix only, and
+    that `&&` and &#x7C;&#x7C; are [implemented as `&` and
+    &#x7C;](#2cbo).
+
+1.  **Ternary operator:** The `?:` operator works as of May 2020; it may
+    be nested.
 
 1.  **Limited library:** See [below](#libc) for a list of library
     functions provided, including their known limitations relative to
@@ -347,11 +353,13 @@ OS/8 CC8 compiler:
     even K&R C, which are documented below.
 
 1.  **Limited structuring constructs:** `if`, `while`, `for`, etc. are
-    supported, but they may not work as expected when deeply nested or
-    in long `if/else if/...` chains.
+    supported. There is a nesting limit of 10 which is rarely exceeded in 
+    most applications. In addition, `switch` statements are now supported
+    via a code re-write in the C pre-processor (cc.sv). See  [`FORTH.C`][forth]
+    for an example.
 
-[fib]: /doc/trunk/src/cc8/examples/fib.c
-
+[fib]:   /doc/trunk/src/os8/examples/fib.c
+[forth]: /doc/trunk/src/os8/examples/forth.c
 
 <a id="nlim" name="limitations"></a>
 ### Known Limitations of the OS/8 CC8 Compiler
@@ -365,27 +373,29 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
     `int`. As with K&R C, the return type may be left off of a
     function's definition; it is implicitly `int` in all cases.
 
-    Because the types are already known, it is not necessary to give
-    types when declaring function arguments:
+    It is not necessary to give argument types when declaring function
+    arguments, but you must declare a return type with the OS/8 CC8
+    compiler:
 
-        myfn(n) { /* do something with n */ }
+        int myfn(n) { /* do something with n */ }
 
     This declares a function taking an `int` called `n` and returning
     an `int`.
     
     Contrast the CC8 cross-compiler, which requires function argument
-    types to be declared, if not the return type, per K&R C rules:
+    types to be declared but not the return type, per K&R C rules:
 
-        myfn(n)
+        int myfn(n)
         int n;
         {
-            /* do something with n */
+            /* do something with n, then _maybe_ return something */
         }
 
-    The cross-compiler supports `void` as an extension to K&R C, but the
-    native compiler does not, and it is not yet smart enough to flag
-    code including it with an error. It will simply generate bad code
-    when you try to use `void`.
+    The type int is mandatory for all functions.
+
+    The cross-compiler supports `void` as an extension to K&R C. This type
+    is converted to `int` in the pre-processor. Similarly, the type `char` is
+    converted. These type may be used for readability purposes.
 
 2.  There must be an `int main()`, and it must be the last function
     in the single input C file.
@@ -424,7 +434,8 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
 
     *   No conditional compilation: `#if`, `#ifdef`, `#else`, etc.
 
-    *   [Inline assmembly](#asm) via `#asm`.
+    *   [Inline assmembly](#asm) via `#asm` / `#endasm`. See
+        [`FIB.C`][fib] for an example
 
 5.  Variables are implicitly `static`, even when local.
 
@@ -440,19 +451,19 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
         int i;
         i = 5;
 
-8.  There is no `&&` nor &brvbar;&brvbar;, nor are there plans to add
-    them in the future.  Neither is there support for complex relational
-    operators like `>=` nor even `!=`.  Abandon all hope for complex
-    assignment operators like `+=`.
+8.  <a name="2cbo"></a>`&&` and &#x7C;&#x7C; work, but because they
+    are internally converted to `&` and &#x7C;, their precedence has
+    changed, and they do not short-circuit as in a conforming C
+    compiler.
 
-    Most of this can be worked around through clever coding. For
-    example, this:
+    You can work around such differences with clever coding. For
+    example, this code for a conforming C compiler:
 
         if (i != 0 || j == 5)
 
-    could be rewritten to avoid both missing operators as:
+    should be rewritten for CC8 to avoid the precedence changes as:
 
-        if (!(i == 0) | (j == 5))
+        if (!(i == 0) || (j == 5))
 
     because a true result in each subexpression yields -1 per the
     previous point, which when bitwise OR'd together means you get -1 if
@@ -492,7 +503,37 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
 
     We have no intention to fix this.
 
-12. `switch` doesn't work.
+12. As of May 2020, `switch` is implemented via re-write to cascading
+    `if`/`then` statements. There are a number of limitations to this
+    approach that a CC8 user should be aware of.
+
+    The primary one to keep in mind is that that if you use a
+    memory-mutating expression in the `switch` clause with a conforming
+    C compiler, it is evaluated just once at the start of the block, but
+    in CC8, it is evaluated once for each generated `if` sub-expression
+    that the code visits. That is, you should not say things like this
+    in code meant to be compiled with the CC8 native compiler:
+
+        switch (*p++) {...}
+
+    Say instead:
+
+        int temp = *p++;
+        switch (temp) {....}
+
+    Also, there **must** be a `default` case, and cases (including the
+    default case) must be terminated with a `break`. CC8 does not allow
+    for cases that fall through to the following case. The following
+    code has at least three syntax errors:
+
+        switch (x) {
+            case 1:  foo();
+            case 2:  bar();
+            default: qux();
+        }
+
+13. `sizeof()` is not implemented.
+
 
 
 <a id="warning"></a>
@@ -660,9 +701,10 @@ such as `feof()` or `fseek()`.  Keep in mind that the library is
 currently restricted to [a single 4&nbsp;kWord field](#memory), and we
 don’t want to lift that restriction. Since the current implementation
 nearly fills that space, it is unlikely that we’ll add much more
-functionality beyond the currently provided 33 functions. If we ever fix
-any of the limitations we’ve identified below, consider it “gravy”
-rather than any kind of obligation fulfilled.
+functionality beyond the currently provided 33 LIBC functions plus [the
+9 additional functions](#addfn). If we ever fix any of the limitations
+we’ve identified below, consider it “gravy” rather than any kind of
+obligation fulfilled.
 
 Some of these missing functions are less useful in the CC8 world than in
 more modern C environments. The low-memory nature of this world
@@ -712,18 +754,25 @@ below, so we use this shorthand.
 [libcsrc]: /doc/trunk/src/cc8/os8/libc.c
 
 
-### <a id="atoi"></a>`atoi(s, outlen)`
+### <a id="atoi"></a>`int atoi(s, *result)`
 
-Takes a null-terminated ASCII character string pointer `s` and returns a
-12-bit PDP-8 two’s complement signed integer. The length of the numeric
-string is returned in `*outlen`.
+Takes a null-terminated ASCII character string pointer `s` and tries to
+interpret it as a 12-bit PDP-8 two’s complement signed integer, storing
+the value in `*result` and returning the number of bytes in `s`
+consumed.
 
 **Standard Violations:**
 
+*   Instead of returning the converted integer, this function stores
+    that value in `*result`.
+
+*   Whereas `atoi()` in Standard C returns the converted value, in this
+    function, `s[retval]` is the first invalid — non-sign, non-digit,
+    non-space — character in the string, where `retval` is the return
+    value.
+
 *   Skips leading ASCII 32 (space) characters only, not those matched by
     [`isspace()`](#isspace), as the Standard requires.
-
-*   The `outlen` parameter is nonstandard.
 
 
 ### <a id="cupper"></a>`cupper(p)`
@@ -1352,6 +1401,35 @@ it’s called from several places within CC8 itself.
 **Nonstandard.**
 
 
+## <a id="addfn"></a>Additional Utility Routines
+
+The functions that CC8 uses to manipulate the software stack are also
+available to be called by end-user programs: `PUSH`, `POP`, `PUTSTK`,
+`POPRET`, and `PCALL`. The page zero pointers for this stack are
+initialized by code in `header.sb`, which is injected into your
+program’s startup sequence during compilation.
+
+In addition, there are a set of functions that may be used to provide
+temporary storage in field 4, acting like a temporary binary file:
+
+`void iinit(int address)`: Reset the file pointer to an arbitrary
+address range 0-4095.
+
+`void stri(int value)`: Store ‘value’ at the current address, and
+increment the address pointer.
+
+`int strl()`: Read the word at the current address, and do not increment
+the address.
+
+`int strd()`: Read the word at the current address, and increment the
+address.
+
+As field 4 is not used by OS/8, your program may use the entire field.
+This library code does not check for overflow: going beyond address 4095
+will simply wrap to address 0.
+
+
+
 <a id="examples"></a>
 ## Trying the Examples
 
@@ -1373,20 +1451,34 @@ The other examples preinstalled are:
 
 *   **<code>calc.c</code>** - A simple 4-function calculator program.
 
+*   **<code>pd.c</code>** - Shows methods for doing double-precision
+    (i.e. 24-bit) integer calculations.
+
+*   **<code>hlb.c</code>** - Generates [Hilbert curves][hc] on a Tek4010
+    series display using raw terminal codes. Therefore, you must be
+    running a Tek4010 emulator when running this program, else you will
+    get garbage on the display!
+
 *   **<code>fib.c</code>** - Calculates the first 10 Fibonacci numbers.
     This implicitly demonstrates CC8's ability to handle recursive
     function calls.
 
-If you look in `src/cc8/examples`, you will find these same programs
-plus `basic.c`, a simple BASIC language interpreter. This one is
-not preinstalled because its complexity is currently beyond the
-capability of the OS/8 version of CC8. To build it, you will have
-to use [the cross-compiler](#cross), then assemble the resulting
-`basic.sb` file under OS/8.
+*   **<code>basic.c</code>** - A simple Basic interpreter used to test
+    a simple recursive expression processor.
+
+*   **<code>forth.c</code>** - A simple Forth interpreter used to test
+    switch statemments etc.
+
+The two interpeters are quite complex, particularly the Forth
+interpreter, which contains 300 lines of code and implements a number of
+basic Forth functions. This example is intended to show what can be
+crammed into 4k of core.
+
 
 Another set of examples not preinstalled on the OS/8 disk are
 `examples/pep001-*.c`, which are described [elsewhere][pce].
 
+[hc]:  https://en.wikipedia.org/wiki/Hilbert_curve
 [pce]: /wiki?name=PEP001.C
 
 
@@ -1427,6 +1519,7 @@ choose:
 
 **Field 3:** The LIBC library code
 
+**Field 4:** (Optional) see the binary utilities above (stri...).
 
 ### <a id="os8res"></a>OS/8 Reservations
 
@@ -1584,15 +1677,15 @@ evolution between the two.
 
 ### <a id="vonn"></a>There Are No Storage Type Distinctions
 
-It may surprise you to learn that literals are placed in the same field
-as globals and the call stack.
+Literals are placed in the same field as globals and the call stack,
+rather that inline within the generated executable code. This may cause
+surprise size limitations of the user programs.
 
-Other C compilers place literals in among the executable code instead, a
-fact that’s especially helpful on [Harvard architecture
-microcontrollers][harch] with limited RAM. We don’t do it that way in
-CC8 because literals are implemented in terms of the SABR `COMMN`
-feature, which in turn is how OS/8 FORTRAN II implements `COMMON`. These
-subsystems have no concept of “storage type” as in modern C compilers.
+CC8 does it this way because the FORTRAN II / SABR system does allow any
+initialisation of COMMON storage in field 1, so the literals have to be
+stored in the user program page and then be copied into field 1 at
+program initialization time.  Various pointers to these regions are
+mainatined by the compiler.
 
 
 ### <a id="sover"></a>Stack Overflow
@@ -1607,8 +1700,6 @@ the page OS/8 is using at the top of field 1. If you manage to blow the
 stack by more than a page without crashing the program or the computer
 first, the [stack pointer will wrap around](#ptrwrap) and the stack will
 begin overwriting the first page of field 1.
-
-[harch]: https://en.wikipedia.org/wiki/Harvard_architecture
 
 
 ### <a id="flayout"></a>Field Layout, Concrete Example
@@ -1925,7 +2016,7 @@ from CC8, allowing your SABR code to use these as well:
 |`ACL`  |7701 |load AC from MQ (use `CLA SWP` to give inverse of `MQL`)|
 |`MQA`  |7501 |OR MQ with AC, result in MQ|
 |`SWP`  |7521 |swap AC and MQ|
-|`DILX` |6053 |set VC8E X coordinate (used by [`dispxy()`](#dispxy)|
+|`DILX` |6053 |set VC8E X coordinate (used by [`dispxy()`](#dispxy))|
 |`DILY` |6054 |set VC8E Y coordinate|
 |`DIXY` |6054 |pulse VC8E at (X,Y) set by `DIXY`,`DILY`|
 |`CDF0` |6201 |change DF to field 0|

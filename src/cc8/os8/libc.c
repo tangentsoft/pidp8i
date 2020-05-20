@@ -200,6 +200,7 @@ CLIST,	ITOA
 		FGETS
 		REVCPY
 		TOUPPER
+        STRPD
 #endasm
 
 #define stdout 0
@@ -631,7 +632,7 @@ char *dm,*sm;
 
 	rsl=0;
 	while (*dm)
-		rsl+=(*sm++-*dm++);
+		rsl|=(*sm++-*dm++);
 	return rsl;
 }
 
@@ -687,7 +688,7 @@ int vl;
 		TAD (D-10		/ # OF DECIMAL DIGITS
 		SMA CLA
 XNO,	CLA SKP
-		IAC
+		CMA
 #endasm
 }
 
@@ -701,7 +702,7 @@ int vl;
 		TAD (D-33		/ ONE PAST ASCII ' '
 		SMA CLA
 YNO,	CLA SKP
-		IAC
+		CMA
 #endasm
 }
 
@@ -723,7 +724,7 @@ int vl;
 		TAD (D-26		/ # OF LOWERCASE ENGLISH LETTERS
 BNO,	SMA CLA
 ANO,	CLA SKP
-		IAC
+		CMA
 #endasm
 }
 
@@ -772,6 +773,14 @@ TPP2,
 #endasm
 }
 
+strpd(buff,sym)
+char *buff,*sym;
+{
+	strcpy(buff,"         ");  /* 9 spaces */
+	while (*sym)
+		*buff++=*sym++;
+
+}
 
 /* Arbitrary fgets(). Read until LF, CR/LF are retained*/
 /* EOF returns null, else strlen(*p) */

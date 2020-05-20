@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
-<a id="202004xx"></a>
-## Version 2020.04.xx — The Quarantine Release
+<a id="202005xx"></a>
+## Version 2020.05.xx — The Quarantine Release
 
 *   Raspberry Pi 4 support.
 
@@ -36,6 +36,15 @@
     *   Many improvements to tape device handling.  (Nothing PDP-8
         specific, just generic SIMH improvements.)
 
+*   Updated Ian Schofield’s CC8 C compiler, adding:
+
+    *   `switch` statement support
+
+    *   support for several more 2-character operators: `!=`, `>=`, `<=`
+        and `?:`
+
+    *   several more examples, including a Forth interpreter
+    
 *   The build system now detects the availability of Python 3 and
     prefers it if available.
 
