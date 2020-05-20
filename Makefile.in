@@ -7,7 +7,7 @@
 # re-build Makefile from that modified Makefile.in before proceeding to
 # do the "make" operation.
 #
-# Copyright © 2015 by Oscar Vermeulen, © 2016-2019 by Warren Young
+# Copyright © 2015 by Oscar Vermeulen, © 2016-2020 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -36,18 +36,26 @@
 
 # Git commit ID and time of the latest version of the SIMH 4 project on
 # GitHub that has been merged into this source base.
-SGCID=4e0450cff96830c5aced36928a4427adfc5314f8
-SGCTM=2019-04-18T20:03:17-07:00
+SGCID=cabd3784bc7e33d63906602e33a5d01b60c1dee1
+SGCTM=2020-04-17T18:20:27-07:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) -DPIDP8I \
-	-DSIM_ASYNCH_IO -DHAVE_REGEX_H -DHAVE_GLOB \
+	-DSIM_ASYNCH_IO -DHAVE_GLOB \
 	-DSIM_GIT_COMMIT_ID=$(SGCID) -DSIM_GIT_COMMIT_TIME=$(SGCTM) \
+	-DSIM_BUILD_TOOL='autosetup+gmake' \
 	-D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
 	-I @srcdir@/src/SIMH -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
+ifneq "@HAVE_PCRE_H@" "0"
+SIM_CFLAGS += -DHAVE_PCRE_H
+SIM_LFLAGS := -lpcre
+endif
+ifneq "@HAVE_PCREPOSIX_H@" "0"
+SIM_CFLAGS += -DHAVE_PCREPOSIX_H
+endif
 PIDP8I_CFLAGS = $(SIM_CFLAGS)
 SIMH_CFLAGS = $(SIM_CFLAGS)
 SIMH_PDP8_CFLAGS = $(SIM_CFLAGS)
@@ -240,6 +248,7 @@ OS8RUN_INFILES = \
 	@srcdir@/lib/pidp8i/ips.py.in \
 	@srcdir@/media/os8/init.tx.in \
 	@srcdir@/media/os8/3finit.tx.in \
+	@srcdir@/media/os8/uni-init.tx.in \
 	@srcdir@/src/pidp8i/main.c.in \
 	$(PIDP8I_DIN)
 PRECIOUS_INFILES = \
@@ -251,6 +260,9 @@ PRECIOUS_INFILES = \
     @srcdir@/src/SIMH/PDP8/Makefile.in
 INFILES = \
 	@srcdir@/bin/os8-cp.in \
+	@srcdir@/tools/os8-cmp.in \
+	@srcdir@/bin/os8-run.in \
+	@srcdir@/bin/teco-pi-demo.in \
 	@srcdir@/bin/pidp8i.in \
 	@srcdir@/boot/0.script.in \
 	@srcdir@/boot/2.script.in \
@@ -264,6 +276,8 @@ INFILES = \
 	@srcdir@/etc/pidp8i.service.in \
 	@srcdir@/etc/sudoers.in \
 	@srcdir@/etc/usb-mount@.service.in \
+	@srcdir@/lib/os8script.py.in \
+	@srcdir@/lib/simh.py.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
 	@srcdir@/tools/simh-update.in \
 	$(OS8RUN_INFILES)
@@ -277,7 +291,9 @@ OUTFILES := $(subst .in,,$(OUTFILES))
 OS8_DIST_RK05 = bin/v3d-dist.rk05
 OS8_SRC_RK05 = @OS8_SRC_RK05@
 OS8_BOOT_DISK = bin/@OS8_BOOT_DISK@
-OS8_RK05S = $(OS8_DIST_RK05) $(OS8_BOOT_DISK) $(OS8_SRC_RK05)
+OS8_RK05S = $(OS8_DIST_RK05) $(OS8_BOOT_DISK) $(OS8_SRC_RK05) $(OS8_UNI_DIST_RK05) $(OS8_UNI_RK05)
+
+
 
 OS8_SCRIPTS_DIR = @srcdir@/media/os8/scripts
 
@@ -293,6 +309,38 @@ V3F_MADE_RK05 = bin/v3f-made.rk05
 
 V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
 
+# OS/8 Combined Kit. Build from Source.
+# We build each object rk05 image in one large script
+# Because otherwise mmake would have terrible race conditions.
+# We cut the tree up into chunks to fit them on rk05 images:
+# SYS: The System Head and device Handlers and key system CUSPS.
+# CUSPS: The remaining Commonly Used System Programs (CUSPS)
+# BF2: BASIC and FORTRAN II
+# FIV: FORTRAN IV
+
+OS8_UNI_SRCDIR = @srcdir@/src/os8/uni
+
+OS8_UNI_SYS_SRC_RK05 = obj/uni-sys-src.rk05
+OS8_UNI_SYS_OBJ_RK05 = bin/uni-sys-obj.rk05
+OS8_UNI_SYS_MAKER = $(OS8_SCRIPTS_DIR)/uni-sys-build.os8
+
+OS8_UNI_CUSPS_SRC_RK05 = obj/uni-cusps-src.rk05
+OS8_UNI_CUSPS_OBJ_RK05 = bin/uni-cusps-obj.rk05
+OS8_UNI_CUSPS_MAKER = $(OS8_SCRIPTS_DIR)/uni-cusps-build.os8
+
+OS8_UNI_BF2_SRC_RK05 = obj/uni-bf2-src.rk05
+OS8_UNI_BF2_OBJ_RK05 = bin/uni-bf2-obj.rk05
+OS8_UNI_BF2_MAKER = $(OS8_SCRIPTS_DIR)/uni-bf2-build.os8
+
+OS8_UNI_FIV_SRC_RK05 = obj/uni-fiv-src.rk05
+OS8_UNI_FIV_OBJ_RK05 = bin/uni-fiv-obj.rk05
+OS8_UNI_FIV_MAKER = $(OS8_SCRIPTS_DIR)/uni-fiv-build.os8
+
+OS8_UNI_DIST_RK05 = bin/uni-dist.rk05
+OS8_UNI_DIST_MAKER = $(OS8_SCRIPTS_DIR)/uni-dist-rk05.os8
+OS8_UNI_RK05_MAKER = $(OS8_SCRIPTS_DIR)/uni-rk05.os8
+OS8_UNI_RK05 = bin/uni.rk05
+
 ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
 CUSP_COPYIN_SCRIPT = $(OS8_SCRIPTS_DIR)/cusp-copyin.os8
@@ -305,6 +353,8 @@ V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
 CC8_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/cc8-tu56.os8
+
+RCFILE := @ABSPREFIX@/etc/pidp8i.rc
 
 CLTXT = /boot/cmdline.txt
 
@@ -328,8 +378,13 @@ clean:
 		$(OUTFILES) $(ADF) \
 		$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_BUILD_RK05) $(V3D_TC08_TU56) \
 		$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) \
+		$(OS8_UNI_SYS_SRC_RK05) $(OS8_UNI_SYS_OBJ_RK05) \
+		$(OS8_UNI_CUSPS_SRC_RK05) $(OS8_UNI_CUSPS_OBJ_RK05) \
+		$(OS8_UNI_BF2_SRC_RK05) $(OS8_UNI_BF2_OBJ_RK05) \
+		$(OS8_UNI_FIV_SRC_RK05) $(OS8_UNI_FIV_OBJ_RK05) \
+		$(OS8_UNI_DIST_RK05) \
 		config.log cscope.out tags \
-		bin/*.pt  bin/*.save bin/txt2ptp \
+		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
 		obj/*.log obj/*.pt obj/os8.opts \
 		src/config.h \
@@ -427,6 +482,9 @@ endif
 		    /etc/sudoers.d/099_pidp8i \
 	) || true
 
+	@# Install runtime config file if there isn't one there already.
+	@test -f $(RCFILE) || @INSTALL@ -m 644 -o @INSTUSR@ @srcdir@/etc/pidp8i.rc $(RCFILE)
+
 	@# Add installation bin dir to the non-root user's PATH unless it's
 	@# already in there or we aren't running under sudo.
 	@(for p in .profile .bash_profile ; do \
@@ -470,7 +528,6 @@ endif
 		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
-	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
 	  done \
 	)
 	@sed -e 's#^build =.*#build = "@ABSPREFIX@"#' \
@@ -478,6 +535,9 @@ endif
 	     -e 's#^os8mo =.*#os8mo = os8mi#' \
 		 < $(PIDP8I_DIRS) > @prefix@/$(PIDP8I_DIRS)
 	@chgrp @INSTGRP@ @prefix@/$(PIDP8I_DIRS)
+
+	@# We need a directory for PIDs and such in some cases
+	@@INSTALL@ -d -m 755 @prefix@/run
 
 instdirs:
 	@echo "Creating installation directory tree..."
@@ -543,6 +603,7 @@ test-tmp-tools:
 		dest=./$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
 		echo "Installing $$src to $$dest..." ; \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
+	! test -e $${src}c || \
 	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}c $${dest}c ; \
 	  done \
 	)
@@ -596,12 +657,52 @@ V3F_SOURCES := \
 	@srcdir@/src/os8/v3f/*.MA \
 	@srcdir@/src/os8/v3f/*.BI
 
+# Dependency on the contents of the uni source directory.
+OS8_UNI_SYS_SOURCES := \
+	@srcdir@/src/os8/uni/SYSTEM/*.PA \
+	@srcdir@/src/os8/uni/SYSTEM/*.MA \
+	@srcdir@/src/os8/uni/SYSTEM/*.BI \
+	@srcdir@/src/os8/uni/HANDLERS/*.PA \
+	@srcdir@/src/os8/uni/CUSPS/*.MA \
+	@srcdir@/src/os8/uni/CUSPS/*.BI \
+	@srcdir@/src/os8/uni/CUSPS/*.HL
+
+OS8_UNI_CUSPS_SOURCES :=\
+	@srcdir@/src/os8/uni/CUSPS/*.PA
+
+OS8_UNI_BF2_SOURCES := \
+	@srcdir@/src/os8/uni/LANGUAGE/BASIC/*.PA \
+	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/*.PA \
+	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/*.CO \
+	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/LIBRARY/*.SB
+
+OS8_UNI_FIV_SOURCES := \
+	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN4/*.PA \
+	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN4/*.BI \
+	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN4/LIBRARY/*.RA
+
+# We could make FIV conditional here.
+OS8_UNI_DIST_SRCS := \
+	$(OS8RUN) $(PIDP8I_DIN) \
+	lib/pidp8i/dirs.py \
+	$(OS8_UNI_DIST_MAKER) \
+	@srcdir@/media/os8/al-*-ba-*.tu56 \
+	@srcdir@/media/os8/subsys/*.tu56 \
+	$(OS8_UNI_SYS_OBJ_RK05) $(OS8_UNI_CUSPS_OBJ_RK05) \
+	$(OS8_UNI_BF2_OBJ_RK05) $(OS8_UNI_FIV_OBJ_RK05)
+
+UNI_PATCHES := \
+	# @srcdir@/media/os8/patches/uni/*.patch8
 
 $(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
 $(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) @CC8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
+
+
+$(OS8_UNI_RK05): $(OS8_UNI_RK05_MAKER) $(OS8_UNI_DIST_RK05) $(UNI_PATCHES) @CC8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+	$(OS8RUN)@OS8_OPTS@ $(OS8_UNI_RK05_MAKER)
 
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
@@ -620,11 +721,47 @@ $(OS8_SRC_RK05): $(OS8_DIST_RK05) $(OS8_SRC_SRCS) | $(PIDP8I_SIM) $(OS8_BOOT_DIS
 
 # Build the source disk for OS/8 V3F
 $(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_BOOT_DISK)
+	rm -f $(V3F_BUILD_RK05)
 	cd $(V3F_SRCDIR); @builddir@/bin/os8-cp -v --action-file $(V3F_MANIFEST)
 
 # Make a disk with binaries assembled from the V3F source disk
 $(V3F_MADE_RK05): $(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(OS8RUN) $(V3F_MAKER)
+
+# Build the source disk for OS/8 UNI SYS Component.
+$(OS8_UNI_SYS_SRC_RK05): $(OS8_UNI_SYS_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_SYS_SRC_RK05) -z -a $(OS8_UNI_SYS_SOURCES) RKA1:
+
+# Make a disk with binaries assembled from the OS8_UNI SYS source disk
+$(OS8_UNI_SYS_OBJ_RK05): $(OS8_UNI_SYS_SRC_RK05) $(OS8_UNI_SYS_MAKER)
+	$(OS8RUN) $(OS8_UNI_SYS_MAKER)
+
+# Build the source disk for OS/8 UNI CUSPS Component.
+$(OS8_UNI_CUSPS_SRC_RK05): $(OS8_UNI_CUSPS_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_CUSPS_SRC_RK05) -z -a $(OS8_UNI_CUSPS_SOURCES) RKA1:
+
+# Make a disk with binaries assembled from the OS8_UNI SYS source disk
+$(OS8_UNI_CUSPS_OBJ_RK05): $(OS8_UNI_CUSPS_SRC_RK05) $(OS8_UNI_CUSPS_MAKER)
+	$(OS8RUN) $(OS8_UNI_CUSPS_MAKER)
+
+# Build the source disk for OS/8 UNI BASIC and FORTRAN II Component.
+$(OS8_UNI_BF2_SRC_RK05): $(OS8_UNI_BF2_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_BF2_SRC_RK05) -z -a $(OS8_UNI_BF2_SOURCES) RKA1:
+
+# Make a disk with binaries assembled from the OS8_UNI FIRTRAN II source disk
+$(OS8_UNI_BF2_OBJ_RK05): $(OS8_UNI_BF2_SRC_RK05) $(OS8_UNI_BF2_MAKER)
+	$(OS8RUN) $(OS8_UNI_BF2_MAKER)
+
+# Build the source disk for OS/8 UNI FORTRAN IV Component.
+$(OS8_UNI_FIV_SRC_RK05): $(OS8_UNI_FIV_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_FIV_SRC_RK05) -z -a $(OS8_UNI_FIV_SOURCES) RKA1:
+
+# Make a disk with binaries assembled from the OS8_UNI FORTRAN IV source disk
+$(OS8_UNI_FIV_OBJ_RK05): $(OS8_UNI_FIV_SRC_RK05) $(OS8_UNI_FIV_MAKER)
+	$(OS8RUN) $(OS8_UNI_FIV_MAKER)
+
+$(OS8_UNI_DIST_RK05): $(OS8_UNI_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+	$(OS8RUN)@OS8_OPTS@ $(OS8_UNI_DIST_MAKER)
 
 # Make a bootable OS/8 v3f TCO8 DECtape image
 $(V3F_TC08_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
@@ -690,7 +827,7 @@ $(BUILDDIRS):
 	mkdir -p $@
 
 $(PIDP8I_SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
-	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) $(SIM_LFLAGS) @PI_LIBS@
 	ln -f bin/pidp8i-sim bin/pdp8
 
 bin/cc8: $(CC8_OBJS)

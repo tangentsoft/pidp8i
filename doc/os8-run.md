@@ -79,14 +79,13 @@ The goals of the project are:
 * boot OS/8 on an arbitrary attached device image.
 * create a duplicate of an existing file. This is the use case of building new image files from an existing baseline while preserving the baseline image file.
 * copy files from the running OS/8 environment into the POSIX environment
-* copy files to the running OS/8 from the POSIX environment running SIMH.
 running SIMH.
+* copy files to the running OS/8 from the POSIX environment running SIMH.
 * run any OS/8 command as long as it returns immediately to the OS/8 Keyboard
 Monitor. This includes BATCH scripts.
 * run `ABSLDR` and `FOTP`, cycling an arbitrary number of times through the OS/8
 Command Decoder.
-* run `PAL8` with either a 3 argument form that produces a listing file,
-or a 2 argument form that does not.
+* run `PAL8` and report any errors encountered.
 * run `BUILD` with arbitrarily complex configuration scripts, including
 the `BUILD` of a system head that inputs `OS8.BN` and `CD.BN`.
 * configure the `tti`, `rx`, `td`, and `dt` devices at run time to allow
@@ -557,25 +556,21 @@ hangs for a while and then gives a timeout backtrace.
 
 `resume`
 
-As explained above in the [Execution contexts](#contexts) section, we
-can't just issue a SIMH `continue` command because we need some output
-from OS/8 running within SIMH to re-synchronize Python expect to.
+The least disruptive way to resume operations under SIMH is to issue
+the `continue` command. Although it took a while, we finally got this
+command working reliably.  There were timing and workflow issues
+that had to be resolved.
 
-After trying several different things that did not work, the least
-disruptive action is to send `CTRL/C` and a newline with some keyboard
-delays. The `resume` command does this.
-
-However, because the context switches are well-defined, the `resume`
-command is completely optional in scripts.  Instead `os8-run`, when it
-detects the need to return to OS/8 from SIMH command level, will issue
-a `resume` command to force a context switch. 
+The `resume` command checks to see if OS/8 has been booted and refuses
+to act if it has not.
 
 
 ### <a id="restart-comm"></a>`restart` — Restart OS/8.
 
 `restart`
 
-Equivalent to the SIMH command line of \"`go 7600`\".
+Equivalent to the SIMH command line of \"`go 7600`\", but which confirms
+we got our Monitor prompt.
 
 Before `resume` was developed, the next less disruptive way to get an
 OS/8 Keyboard Monitor prompt was to restart SIMH at address 07600.
@@ -584,8 +579,8 @@ a `boot` command, because the `boot` command loads OS/8 into main
 memory from the boot device, whereas restarting at location 07600 is
 just a resart without a reload.
 
-The restart does re-initilaize some state so it is more disruptive
-than the `CTRL/C` resume documented above.
+The `restart` command checks to see if OS/8 has been booted and refuses
+to act if it has not.
 
 
 ### <a id="copy-comm"></a>`copy` — Make a copy of a POSIX file.
@@ -678,44 +673,33 @@ This command should be used ONLY for OS/8 commands that return
 immediately to command level.  `BATCH` scripts do this, and they can
 be run from here.
 
+The `os8` command is aware of a special enablement keyword: `transcript`.
+(See the [`enable` \ `disable`](#en-dis-comm) section below.)
+If `transcript` is enabled, the output from running the OS/8
+command line is printed.  
+
+For example, if you wanted to display the contents of a DECtape image
+you are constructing but no other command lines fed to the `os8`
+command you would do this:
+
+```
+enable transcript
+os8 DIR DTA0:
+disable transcript
+```
+
+This transcript capability provides a fine grained debugging aid.
+
 
 ### <a id="pal8-comm"></a>`pal8` — Run OS/8 `PAL8` assembler.
-
-Run `PAL8` with either a 3 argument form that produces a listing file,
-or a 2 argument form that does not.
 
 Actually, the `PAL8` assembler can be called just fine
 by using the `os8` command, for example:
 
     os8 PAL8 RKB1:RL0.BN<RKA1:RL0.PA
    
-However, an separate pal8 command was created to enable richer parsing
-of errors when no listing file is created.  This decision is currently
-under review, and the `pal8` command may go away in a subsequent version
-of `os8-run`.  For now, two forms of the `pal8` command are supported with
-an unreasonable number of limitations:
-
-`pal8` _os8-bn-spec_ `<` _os8-pa-spec_
-
-`pal8` _os8-bn-spec_ `,` _os8-ls-spec_ `<` _os8-pa-spec_
-
-Note that the parser for this wrapper for `PAL8` is much too
-conservative in what it allows:
-
-* No `PAL8` options are allowed.
-* Only two ways to call `PAL8`:
-    * two argument form with binary and source or
-    * three argument form with binary, listing, and source.
-* _os8-bn-spec_ must specify a binary filename ending in `.BN`
-* _os8-ls-spec_ must specify a listing filename ending in `.LS`
-* _os8-pa-spec_ must specify a source filename ending in `.PA`
-
-This should be improved.  The reason why this wrapper is so
-constrained is that it evolved from extremely rudimentary, hard-coded
-scripts, and hasn't been worked on since reaching minimum necessary
-functionality.
-
-The three file name specifiers can include an OS/8 device specification.
+However, an separate pal8 command was created to enable richer display
+of errors.
 
 Examples:
 
@@ -1018,7 +1002,6 @@ world.
 
 ## TODOs
 
-* Allow passing in of arguments to PAL8.
 * Add sanity check parse of sub-commands to confirm command. **OR** Change the 
 begin command to treat _argument_ not as a full command, but merely
 a device from which to fetch the command.  Maybe make _argument_ optional.

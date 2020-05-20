@@ -2,7 +2,7 @@
 # auto.def - Configure file for the PiDP-8/I software build system,
 #            based on autosetup.
 #
-# Copyright © 2016-2019 Warren Young
+# Copyright © 2016-2020 Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -36,8 +36,10 @@ use cc-lib
 use cc-shared
 
 # Canonicalize some paths which may be relative and generate others from them
-set abspfx [file-normalize [get-define prefix]]
+set abspfx    [file-normalize [get-define prefix]]
+set abssrcdir [file-normalize [get-define srcdir]]
 define ABSPREFIX $abspfx
+define ABSSRCDIR $abssrcdir
 define SHAREDIR "$abspfx/share"
 define BOOTDIR  "$abspfx/share/boot"
 define MEDIADIR "$abspfx/share/media"
@@ -341,6 +343,7 @@ if {($cores < 2) || [opt-bool no-lamp-simulator]} {
 # Check for headers, functions, etc. whose absence we can work around
 cc-check-decls __progname
 cc-check-includes time.h
+cc-check-includes pcre.h pcreposix.h
 cc-check-function-in-lib clock_gettime rt
 cc-check-functions clock_nanosleep nanosleep usleep
 cc-check-functions sched_yield
@@ -469,32 +472,52 @@ set user $::env(USER)
 define BUILDUSER "$user@$host"
 define BUILDTS [clock format [clock seconds] -format "%Y.%m.%d at %T %Z"]
 
-# The os8-run script requires Python and some non-core modules.
-set status [catch {exec python -c exit} result]
-if {$status != 0} {
-    user-error "Python 2 does not appear to be installed here.  It is required."
+# The os8-run script requires Python 2 or 3 and some non-core modules.
+set status [catch {exec python3 -c exit} result]
+if {$status == 0} {
+    set pyver 3
+    set pycmd "python3"
+} else {
+    set status [catch {exec python2 -c exit} result]
+    if {$status == 0} {
+        set pyver 2
+        set pycmd "python2"
+    } else {
+        set status [catch {exec python -c exit} result]
+        if {$status == 0} {
+            set status [catch {exec python --version | grep -q 'Version 2'} result]
+            set pyver [expr $status == 0 ? 2 : 3]
+            set pycmd "python"
+        }
+    }
 }
-msg-result "Python 2 is installed here."
-set status [catch {exec python -c "import pexpect" 2> /dev/null} result]
+if {$pyver == ""} {
+    user-error "Python does not appear to be installed here.  It is required."
+}
+define PYCMD $pycmd
+define PYVER $pyver
+msg-result "Python $pyver is installed here as '$pycmd'."
+set status [catch {exec $pycmd -c "import pexpect" 2> /dev/null} result]
 if {$status != 0} {
     set msg "The Python pexpect module is not installed here.  Fix with\n\n"
-    append msg "    sudo apt install python-pip\n"
-    append msg "    sudo pip install pexpect\n"
+    append msg "    sudo apt install $pycmd-pip\n"
+    append msg "\nTHEN:\n"
+    append msg "    sudo pip$pyver install pexpect\n"
     append msg "\nOR:\n"
     append msg "\n    sudo easy_install pexpect\n"
     append msg "\nOR:\n"
-    append msg "\n    sudo apt install python-pexpect\n"
+    append msg "\n    sudo apt install $pycmd-pexpect\n"
     user-error $msg
 }
 msg-result "Python module pexpect is installed here."
-set status [catch {exec python -c "import pkg_resources" 2> /dev/null} result]
+set status [catch {exec $pycmd -c "import pkg_resources" 2> /dev/null} result]
 if {$status != 0} {
     set msg "The Python pkg_resources module is not installed here.  Fix with\n"
-    append msg "\n    sudo pip install pkg_resources\n"
+    append msg "\n    sudo pip$pyver install pkg_resources\n"
     append msg "\nOR:\n"
     append msg "\n    sudo easy_install pkg_resources\n"
     append msg "\nOR:\n"
-    append msg "\n    sudo apt install python-pkg-resources\n"
+    append msg "\n    sudo apt install $pycmd-pkg-resources\n"
     user-error $msg
 }
 msg-result "Python module pkg_resources is installed here."
@@ -567,6 +590,9 @@ make-config-header src/config.h \
     -bare {ILS_MODE PCB_*}
 make-template bin/pidp8i.in
 make-template bin/os8-cp.in
+make-template bin/os8-run.in
+make-template tools/os8-cmp.in
+make-template bin/teco-pi-demo.in
 make-template boot/common.script.in
 make-template boot/0.script.in
 make-template boot/2.script.in
@@ -581,11 +607,14 @@ make-template etc/pidp8i.service.in
 make-template etc/sudoers.in
 make-template etc/usb-mount@.service.in
 make-template examples/Makefile.in
+make-template lib/os8script.py.in
 make-template lib/pidp8i/__init__.py.in
 make-template lib/pidp8i/dirs.py.in
 make-template lib/pidp8i/ips.py.in
+make-template lib/simh.py.in
 make-template media/os8/init.tx.in
 make-template media/os8/3finit.tx.in
+make-template media/os8/uni-init.tx.in
 make-template src/Makefile.in
 make-template src/cc8/Makefile.in
 make-template src/cc8/os8/Makefile.in
@@ -595,4 +624,6 @@ make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
 make-template tools/simh-update.in
 make-template Makefile.in
-exec chmod +x "$builddir/bin/pidp8i" "$builddir/tools/simh-update" "$builddir/bin/os8-cp"
+foreach f [concat [glob "$builddir/bin/*"] [glob "$builddir/tools/*"]] {
+    exec chmod +x $f
+}

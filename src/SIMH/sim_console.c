@@ -182,6 +182,13 @@ int32 sim_del_char = '\b';                              /* delete character */
 #else
 int32 sim_del_char = 0177;
 #endif
+t_bool sim_signaled_int_char                            /* WRU character detected by signal while running */
+#if defined (_WIN32) || defined (_VMS) || defined (__CYGWIN__)
+                             = FALSE;
+#else
+                             = TRUE;
+#endif
+uint32 sim_last_poll_kbd_time;                          /* time when sim_poll_kbd was called */
 extern TMLN *sim_oline;                                 /* global output socket */
 
 static t_stat sim_con_poll_svc (UNIT *uptr);                /* console connection poll routine */
@@ -430,7 +437,7 @@ if (*cptr == 0) {                                       /* show all */
 while (*cptr != 0) {
     cptr = get_glyph (cptr, gbuf, ',');                 /* get modifier */
     if ((shptr = find_shtab (show_con_tab, gbuf)))
-        shptr->action (st, dptr, uptr, shptr->arg, cptr);
+        shptr->action (st, dptr, uptr, shptr->arg, NULL);
     else return SCPE_NOPARAM;
     }
 return SCPE_OK;
@@ -632,9 +639,9 @@ for (i=connections=0; i<sim_rem_con_tmxr.lines; i++) {
         DEVICE *dptr = NULL;
 
         if (rem->smp_sample_dither_pct)
-            fprintf (st, "Register Bit Sampling is occurring every %d cycles (dithered %d percent)\n", rem->smp_sample_interval, rem->smp_sample_dither_pct);
+            fprintf (st, "Register Bit Sampling is occurring every %d %s (dithered %d percent)\n", rem->smp_sample_interval, sim_vm_interval_units, rem->smp_sample_dither_pct);
         else
-            fprintf (st, "Register Bit Sampling is occurring every %d cycles\n", rem->smp_sample_interval);
+            fprintf (st, "Register Bit Sampling is occurring every %d %s\n", rem->smp_sample_interval, sim_vm_interval_units);
         fprintf (st, " Registers being sampled are: ");
         for (reg = 0; reg < rem->smp_reg_count; reg++) {
             if (rem->smp_regs[reg].indirect)
@@ -2202,13 +2209,14 @@ sim_set_logoff (0, NULL);                               /* close cur log */
 r = sim_open_logfile (gbuf, FALSE, &sim_log, &sim_log_ref); /* open log */
 if (r != SCPE_OK)                                       /* error? */
     return r;
-if (!sim_quiet)
+if ((!sim_quiet) && (!(sim_switches & SWMASK ('Q'))))
     fprintf (stdout, "Logging to file \"%s\"\n", 
              sim_logfile_name (sim_log, sim_log_ref));
 fprintf (sim_log, "Logging to file \"%s\"\n", 
              sim_logfile_name (sim_log, sim_log_ref));  /* start of log */
 time(&now);
-fprintf (sim_log, "Logging to file \"%s\" at %s", sim_logfile_name (sim_log, sim_log_ref), ctime(&now));
+if ((!sim_quiet) && (!(sim_switches & SWMASK ('Q'))))
+    fprintf (sim_log, "Logging to file \"%s\" at %s", sim_logfile_name (sim_log, sim_log_ref), ctime(&now));
 return SCPE_OK;
 }
 
@@ -2220,7 +2228,7 @@ if (cptr && (*cptr != 0))                               /* now eol? */
     return SCPE_2MARG;
 if (sim_log == NULL)                                    /* no log? */
     return SCPE_OK;
-if (!sim_quiet)
+if ((!sim_quiet) && (!(sim_switches & SWMASK ('Q'))))
     fprintf (stdout, "Log file closed\n");
 fprintf (sim_log, "Log file closed\n");
 sim_close_logfile (&sim_log_ref);                       /* close log */
@@ -2834,6 +2842,7 @@ t_stat sim_poll_kbd (void)
 {
 t_stat c;
 
+sim_last_poll_kbd_time = sim_os_msec ();                    /* record when this poll happened */
 if (sim_send_poll_data (&sim_con_send, &c))                 /* injected input characters available? */
     return c;
 if (!sim_rem_master_mode) {
@@ -4210,7 +4219,7 @@ static t_stat sim_os_putchar (int32 out)
 char c;
 
 c = out;
-(void)write (1, &c, 1);
+if (write (1, &c, 1)) {};
 return SCPE_OK;
 }
 

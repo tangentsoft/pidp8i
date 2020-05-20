@@ -1616,6 +1616,21 @@ pcq_r->qptr = pcq_p;                                    /* update pc q ptr */
 return reason;
 }                                                       /* end sim_instr */
 
+/*
+ * This sequence of instructions is a mix that hopefully
+ * represents a resonable instruction set that is a close 
+ * estimate to the normal calibrated result.
+ */
+
+static const char *pdp8_clock_precalibrate_commands[] = {
+    "106 100"
+    "-m 100 MQL MQA"
+    "-m 101 ISZ 112",
+    "-m 102 JMP I 106",
+    "-m 103 JMP I 106",
+    "PC 100",
+    NULL};
+
 /* Reset routine */
 
 t_stat cpu_reset (DEVICE *dptr)
@@ -1627,7 +1642,10 @@ UF = UB = gtf = emode = 0;
 pcq_r = find_reg ("PCQ", NULL, dptr);
 if (pcq_r)
     pcq_r->qptr = 0;
-else return SCPE_IERR;
+else 
+    return SCPE_IERR;
+sim_clock_precalibrate_commands = pdp8_clock_precalibrate_commands;
+sim_vm_initial_ips = 10 * SIM_INITIAL_IPS;
 sim_brk_types = SWMASK ('E') | SWMASK('I');
 sim_brk_dflt = SWMASK ('E');
 return SCPE_OK;

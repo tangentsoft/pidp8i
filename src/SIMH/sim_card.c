@@ -141,7 +141,7 @@ static const uint16          ascii_to_hol_026[128] = {
     0xC04, 0xC02, 0xC01, 0x680, 0x640, 0x620, 0x610, 0x608,
    /*   x      y      z      {      |      }      ~    del */
    /*                     T79     Y78   Y79     79         */
-    0x604, 0x602, 0x601, 0x406, 0x806, 0x006, 0x005, 0xf000
+    0x604, 0x602, 0x601, 0x406, 0x806, 0x805, 0x005, 0xf000
 };
 
 /* Set for Burrough codes */
@@ -599,12 +599,12 @@ sim_card_eof(UNIT *uptr)
 
 
 struct _card_buffer {
-   char                  buffer[8192+500];    /* Buffer data */
+   uint8                 buffer[8192+500];    /* Buffer data */
    int                   len;                 /* Amount of data in buffer */
    int                   size;                /* Size of last card read */
 };
 
-static int _cmpcard(const char *p, const char *s) {
+static int _cmpcard(const uint8 *p, const char *s) {
    int  i;
    if (p[0] != '~')
         return 0;
@@ -629,7 +629,7 @@ _sim_parse_card(UNIT *uptr, DEVICE *dptr, struct _card_buffer *buf, uint16 (*ima
 
         /* Check buffer to see if binary card in it. */
         for (i = 0, temp = 0; i < 160 && i <buf->len; i+=2)
-            temp |= buf->buffer[i];
+            temp |= (uint16)(buf->buffer[i] & 0xFF);
         /* Check if every other char < 16 & full buffer */
         if ((temp & 0x0f) == 0 && i == 160)
             mode = MODE_BIN;        /* Probably binary */
@@ -789,9 +789,9 @@ _sim_parse_card(UNIT *uptr, DEVICE *dptr, struct _card_buffer *buf, uint16 (*ima
         }
         /* Move data to buffer */
         for (col = i = 0; i < 160;) {
-            temp |= buf->buffer[i];
+            temp |= (uint16)(buf->buffer[i] & 0xff);
             (*image)[col] = (buf->buffer[i++] >> 4) & 0xF;
-            (*image)[col++] |= ((uint16)buf->buffer[i++]) << 4;
+            (*image)[col++] |= ((uint16)buf->buffer[i++] & 0xff) << 4;
         }
         /* Check if format error */
         if (temp & 0xF)
@@ -802,8 +802,8 @@ _sim_parse_card(UNIT *uptr, DEVICE *dptr, struct _card_buffer *buf, uint16 (*ima
     case MODE_CBN:
         sim_debug(DEBUG_CARD, dptr, "cbn\n");
         /* Check if first character is a tape mark */
-        if (((uint8)buf->buffer[0]) == 0217 &&
-                   (buf->len == 1 || (((uint8)buf->buffer[1]) & 0200) != 0)) {
+        if (buf->buffer[0] == 0217 &&
+                   (buf->len == 1 || (buf->buffer[1] & 0200) != 0)) {
             i = 1;
             (*image)[0] |= CARD_EOF;
             break;
@@ -844,7 +844,7 @@ _sim_parse_card(UNIT *uptr, DEVICE *dptr, struct _card_buffer *buf, uint16 (*ima
     case MODE_BCD:
         sim_debug(DEBUG_CARD, dptr, "bcd [");
         /* Check if first character is a tape mark */
-        if (((uint8)buf->buffer[0]) == 0217 && (((uint8)buf->buffer[1]) & 0200) != 0) {
+        if (buf->buffer[0] == 0217 && (buf->buffer[1] & 0200) != 0) {
             i = 1;
             (*image)[0] |= CARD_EOF;
             break;
@@ -885,7 +885,7 @@ _sim_parse_card(UNIT *uptr, DEVICE *dptr, struct _card_buffer *buf, uint16 (*ima
             (*image)[0] |= CARD_ERR;
         /* Move data to buffer */
         for (i = 0; i < 80 && i < buf->len; i++) {
-            temp = buf->buffer[i] & 0xFF;
+            temp = (uint16)(buf->buffer[i]) & 0xFF;
             (*image)[i] = ebcdic_to_hol[temp];
         }
         break;
@@ -931,9 +931,9 @@ _sim_read_deck(UNIT * uptr, int eof)
         if (data->hopper_cards >= data->hopper_size) {
             data->hopper_size += DECK_SIZE;
             data->images = (uint16 (*)[1][80])realloc(data->images,
-                       data->hopper_size * sizeof(*(data->images)));
+                       (size_t)data->hopper_size * sizeof(*(data->images)));
             memset(&data->images[data->hopper_cards], 0,
-                       (data->hopper_size - data->hopper_cards) *
+                       (size_t)(data->hopper_size - data->hopper_cards) *
                              sizeof(*(data->images)));
         }
 
@@ -961,9 +961,9 @@ _sim_read_deck(UNIT * uptr, int eof)
           if (data->hopper_cards >= data->hopper_size) {
               data->hopper_size += DECK_SIZE;
               data->images = (uint16 (*)[1][80])realloc(data->images,
-                         data->hopper_size * sizeof(*(data->images)));
+                         (size_t)data->hopper_size * sizeof(*(data->images)));
               memset(&data->images[data->hopper_cards], 0,
-                         (data->hopper_size - data->hopper_cards) *
+                         (size_t)(data->hopper_size - data->hopper_cards) *
                                sizeof(*(data->images)));
           }
 
@@ -1318,7 +1318,7 @@ sim_card_attach(UNIT * uptr, CONST char *cptr)
                 sprintf (uptr->filename, "%s-F %s %s", (eof)?"-E ": "", fmt, cptr);
             }
             r = sim_messagef(SCPE_OK, "%s: %d card Deck Loaded from %s\n",
-                       sim_uname(uptr), data->hopper_cards - previous_cards, cptr);
+                       sim_uname(uptr), (int)(data->hopper_cards - previous_cards), cptr);
         } else {
             if (uptr->dynflags & UNIT_ATTMULT)
                 uptr->flags |= UNIT_ATT;
@@ -1430,22 +1430,22 @@ sprintf (cmd, "%s -S -E File40.deck", dptr->name);
 SIM_TEST(attach_cmd (0, cmd));
 sprintf (saved_filename, "%s %s", dptr->name, dptr->units->filename);
 show_cmd (0, dptr->name);
-sim_printf ("Input Hopper Count:  %d\n", sim_card_input_hopper_count(dptr->units));
-sim_printf ("Output Hopper Count: %d\n", sim_card_output_hopper_count(dptr->units));
+sim_printf ("Input Hopper Count:  %d\n", (int)sim_card_input_hopper_count(dptr->units));
+sim_printf ("Output Hopper Count: %d\n", (int)sim_card_output_hopper_count(dptr->units));
 while (!sim_card_eof (dptr->units))
     SIM_TEST(sim_read_card (dptr->units, card_image));
-sim_printf ("Input Hopper Count:  %d\n", sim_card_input_hopper_count(dptr->units));
-sim_printf ("Output Hopper Count: %d\n", sim_card_output_hopper_count(dptr->units));
+sim_printf ("Input Hopper Count:  %d\n", (int)sim_card_input_hopper_count(dptr->units));
+sim_printf ("Output Hopper Count: %d\n", (int)sim_card_output_hopper_count(dptr->units));
 sim_printf ("Detaching %s\n", dptr->name);
 SIM_TEST(detach_cmd (0, dptr->name));
 show_cmd (0, dptr->name);
-sim_printf ("Input Hopper Count:  %d\n", sim_card_input_hopper_count(dptr->units));
-sim_printf ("Output Hopper Count: %d\n", sim_card_output_hopper_count(dptr->units));
+sim_printf ("Input Hopper Count:  %d\n", (int)sim_card_input_hopper_count(dptr->units));
+sim_printf ("Output Hopper Count: %d\n", (int)sim_card_output_hopper_count(dptr->units));
 sim_printf ("Attaching Saved Filenames: %s\n", saved_filename + strlen(dptr->name));
 SIM_TEST(attach_cmd (0, saved_filename));
 show_cmd (0, dptr->name);
-sim_printf ("Input Hopper Count:  %d\n", sim_card_input_hopper_count(dptr->units));
-sim_printf ("Output Hopper Count: %d\n", sim_card_output_hopper_count(dptr->units));
+sim_printf ("Input Hopper Count:  %d\n", (int)sim_card_input_hopper_count(dptr->units));
+sim_printf ("Output Hopper Count: %d\n", (int)sim_card_output_hopper_count(dptr->units));
 SIM_TEST(detach_cmd (0, dptr->name));
 (void)remove ("file10.deck");
 (void)remove ("file20.deck");

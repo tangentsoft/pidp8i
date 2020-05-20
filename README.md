@@ -56,8 +56,8 @@ development project.
 <a id="preparing"></a>
 ## Preparing Your Pi
 
-If you have a working Raspberry Pi setup, you can probably just skip
-ahead.
+If you have a working Raspberry Pi setup, you can probably [skip
+ahead](#unpacking).
 
 If you’ve just barely unpacked Raspbian onto an SD card and are now
 trying to get the PiDP-8/I software distribution working on it, stop and
@@ -65,7 +65,7 @@ go through the [Rasbperry Pi documentation][rpd] first. At the absolute
 minimum, run `raspi-config` and make sure the Localization settings are
 correct. The defaults are for the United Kingdom, home of the Raspberry
 Pi Foundation, so unless you live there, the defaults are probably not
-correct out of the box.
+correct for you, in *your* location.
 
 [rpd]: https://www.raspberrypi.org/documentation/
 
@@ -74,8 +74,8 @@ correct out of the box.
 ## Getting the Software onto Your Pi
 
 If you're reading this file within an unpacked distribution of the
-PiDP-8/I software, you may skip this section, because you have
-already achieved its aim.
+PiDP-8/I software, you may [skip to the next section](#configuring),
+'ecause you have already achieved this section's aim.
 
 If you are reading this [online][this] and have not yet downloaded and
 unpacked the software source code onto your Pi, this section will get
@@ -87,7 +87,7 @@ you going.
 <a id="transferring"></a>
 ### Transferring the File to the Pi
 
-The first step is to get the tarball (`*.tar.gz` file) or Zip file onto
+The first step is to get the tarball (`*.tar.gz` file) onto
 the Pi. There are many options:
 
 1.  **Copy the file to the SD card** you're using to boot the Pi.
@@ -96,7 +96,7 @@ the Pi. There are many options:
     larger partition on the SD card, but most PCs cannot see it.)
     There should be enough free space left in this small partition to
     copy the file over.  When you boot the Pi up with that SD card,
-    you will find the tarball or Zip file in `/boot`.
+    you will find the tarball in `/boot`.
 
 2.  **Pull the file down to the Pi** over the web, directly to the Pi:
 
@@ -108,7 +108,7 @@ the Pi. There are many options:
     instead!)
 
 3.  **SCP the file over** to a running Pi from another machine.
-    If your Pi has OpenSSH installed and running, you can use
+    If your Pi has [OpenSSH installed and running](#sshd), you can use
     [WinSCP][wscp], [Cyberduck][cd], [FileZilla][fz] or another SCP
     or SFTP-compatible file transfer program to copy the file to the
     Pi over the network.
@@ -290,7 +290,7 @@ build and run `systemctl` commands for you when you pass it arguments:
     $ pidp8i restart
     $ pidp8i status -l
 
-If you run it without arguments, it attaches to the GNU screen(1)
+If you run it without arguments, it attaches to the screen manager
 session, just as it always has.
 
 The last command above shows that *all* arguments are passed to
@@ -313,14 +313,14 @@ install and enable the replacement systemd user service.
 
 
 <a id="options"></a>
-### Configure Script Options
+## Configure Script Options
 
 You can change many things about the way the software is built and
 installed by giving options to the `configure` script:
 
 
 <a id="prefix"></a>
-#### --prefix
+### --prefix
 
 Perhaps the most widely useful `configure` script option is `--prefix`,
 which lets you override the default installation directory, `/opt/pidp8i`.
@@ -342,7 +342,7 @@ levels, which improves the quality of the display, particularly with the
 
 
 <a id="lowercase"></a>
-#### --lowercase
+### --lowercase
 
 The American Standards Association (predecessor to ANSI) delivered the
 second major version of the ASCII character encoding standard the same
@@ -409,7 +409,7 @@ PDP-8/I to react to lowercase input:
 
 
 <a id="nls"></a>
-#### --no-lamp-simulator
+### --no-lamp-simulator
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
 normally built with the [incandescent lamp simulator][ils] feature,
@@ -430,7 +430,7 @@ helpful when the CPU is [heavily throttled][thro].
 
 
 <a id="serial-mod"></a>
-#### --serial-mod
+### --serial-mod
 
 If you have done [Oscar's serial mod][sm1] to your PiDP-8/I PCB and the
 Raspberry Pi you have connected to it, add `--serial-mod` to the
@@ -446,7 +446,7 @@ work correctly.
 
 
 <a id="alt-serial-mod"></a>
-#### --alt-serial-mod
+### --alt-serial-mod
 
 This flag is for an [alternative serial mod by James L-W][sm2]. It
 doesn't require mods to the Pi, and the mods to the PiDP-8/I board are
@@ -462,7 +462,7 @@ This option is a pure alternative to [`--serial-mod`](#serial-mod): you
 can leave both off, but you cannot pass both.
 
 
-#### --throttle
+### --throttle
 
 See [`README-throttle.md`][thro] for the values this option takes.  If
 you don't give this option, the simulator runs as fast as possible, more
@@ -470,7 +470,7 @@ or less.
 
 
 <a id="savestate"></a>
-#### --enable-savestate
+### --enable-savestate
 
 By default, the PiDP-8/I starts up with the core state undefined and
 runs the boot script you’ve selected either with the IF switches or by
@@ -527,7 +527,7 @@ That zeroes the key registers and prevents the CPU from running as it
 normally would after giving the `RESTORE` command to SIMH.
 
 
-#### --disable-usb-automount
+### --disable-usb-automount
 
 When you install the software on a [systemd][systemd]-based Linux
 system, we normally configure the OS to automatically mount USB drives
@@ -547,7 +547,7 @@ disable the feature.
 USB setup rather than conflicting with it.)
 
 
-#### --disable-cc8-cross
+### --disable-cc8-cross
 
 Give this option if you do not want to build Ian Schofield's `cc8` C
 cross-compiler on the host.
@@ -559,7 +559,7 @@ to be left off the bootable OS/8 RK05 disk image, as if you’d passed the
 
 
 <a id="disable-os8"></a>
-#### --disable-os8-\*
+### --disable-os8-\*
 
 Several default components of the [OS/8 RK05 disk image](#os8di) used by
 boot options IF=0 and IF=7 can be left out to save space and build time:
@@ -631,7 +631,7 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 
 
 <a id="enable-os8"></a>
-#### --enable-os8-\*
+### --enable-os8-\*
 
 There are a few file sets not normally installed to the [OS/8 RK05 disk
 image](#os8di) used by boot options IF=0 and IF=7. You can install them
@@ -695,7 +695,7 @@ with the following options:
 [suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
 
 
-#### --os8-minimal
+### --os8-minimal
 
 If you set this flag, it sets all `--enable-os8-*` flags to false and
 all `--disable-os8-*` flags to true.  If you give this along with any
@@ -728,9 +728,65 @@ This option does not control some things you might think it should:
     the file acts as build documentation as well as a "welcome" message.
 
 
-#### --help
+### --help
 
 Run `./configure --help` for more information on your options here.
+
+
+<a id="runtime"></a>
+## Runtime Configuration
+
+The `pidp8i` command may be configured by the `pidp8i.rc` file,
+located by default in `/opt/pidp8i/etc/`.  This is a Bourne shell script
+which is sourced by `pidp8i` if it exists which may set the following
+variables for the `pidp8i` script to affect how it works:
+
+
+<a id="rc-screen-manager"></a>
+### `SCREEN_MANAGER=screen`
+
+By default, the PiDP-8/I software distribution installs and uses [GNU
+`screen(1)`][gscr] to allow the simulator to run in the background yet be
+reattached from a later terminal session, then possibly later to be
+backgrounded once again. Without the intermediation of something like
+`screen`, the simulator would either forever be in the background and
+we’d have to export the console [another way][scons] or you’d have to
+fire it up interactively any time you wanted to use it. This scheme lets
+us have it both ways.
+
+The `SCREEN_MANAGER` setting is for use by those that need something
+other than GNU `screen`. There are several alternatives:
+
+*   **screen**: The default, per above.
+
+*   [**tmux**][tmux]: A popular alternative to `screen`, especially on
+    on BSD platforms. Note that the "attention" character for `tmux`
+    is <kbd>Ctrl-B</kbd> by default, not <kbd>Ctrl-A</kbd> as with
+    `screen`.
+
+*   **none**: This mode is for interactive use, allowing you to
+    run the installed simulator with the installed media without any
+    screen manager at all.
+
+    In this mode, the `pidp8i` and `pidp8i start` commands do the
+    same thing: run the simulator directly attached to your current
+    interactive terminal. The `pidp8i stop` command becomes a no-op,
+    since stopping the simulator is then done in the standard SIMH way:
+    <kbd>Ctrl-E, quit</kbd>.
+
+Note that the alternative screen managers are not installed by default.
+If you set `SCREEN_MANAGER=tmux`, you must then ensure that `tmux` is in
+fact installed before the `pidp8i` script goes to try and use it. On
+Raspbian, this is done by:
+
+    $ sudo apt install tmux
+
+Switching between configured screen managers must be done while the
+simulator is stopped.
+
+[gscr]:  https://www.gnu.org/software/screen/
+[scons]: /wiki?name=Serial+or+Telnet+PDP-8+Console
+[tmux]:  https://tmux.github.io/
 
 
 ## <a id="os8di"></a>The OS/8 RK05 Disk Image
@@ -964,7 +1020,7 @@ rely on you, the system’s administrator, to do it interactively with
 
 ## License
 
-Copyright © 2016-2019 by Warren Young. This document is licensed under
+Copyright © 2016-2020 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 

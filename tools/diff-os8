@@ -17,16 +17,7 @@ fi
 lz4 -dq last.rklz last.rk05
 lz4 -dq fail.rklz fail.rk05
 
-mkdir rka_last rkb_last rka_fail rkb_fail
+../../tools/os8xplode --rk fail.rk05 --rk last.rk05
 
-echo "unpack 1 of 4: last rka"
-../../bin/os8-cp -rk0s last.rk05 -i RKA0:*.* rka_last/
-echo "unpack 2 of 4: last rkb:"
-../../bin/os8-cp -rk0s last.rk05 -i RKB0:*.* rkb_last/
-echo "unpack 3 of 4: fail rka"
-../../bin/os8-cp -rk0s fail.rk05 -i RKA0:*.* rka_fail/
-echo "unpack 4 of 4: fail rkb"
-../../bin/os8-cp -rk0s fail.rk05 -i RKB0:*.* rkb_fail/
-
-diff rka_last rka_fail
-diff rkb_last rkb_fail
+diff -q last.0 fail.0
+diff -q last.1 fail.1

@@ -57,7 +57,7 @@ DTA0:<RKB1:RESORC.SV
 DTA0:<RKB1:BATCH.SV
 DTA0:<RKA1:?CSYS.BI
 begin default basic
-DTA0:<RKA1:?CBAS.BI
+DTA0:<RKA0:?CBAS.BI
 end default basic
 end cdprog RKA0:FOTP.SV
 end enabled v3f
