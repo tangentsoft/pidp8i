@@ -330,7 +330,7 @@ OS/8 CC8 compiler:
 
 1.  **Simple arithmetic operators:** `+`, `-`, `*`, `/`, etc.
 
-1.  **Bitwise operators:** `&`, &#x7C;, `~` and `!`
+1.  **Bitwise operators:** `&`, `|`, `~` and `!`
 
 1.  **Simple comparison operators:** False expressions evaluate as 0 and
     true as -1 in two’s complement form, meaning all 1's in binary form.
@@ -338,9 +338,8 @@ OS/8 CC8 compiler:
     "simple" qualifier.
 
 1.  **2-character operators:** `++`, `--`, `==`, `!=`,`>=`, `<=`, `&&`,
-    and &#x7C;&#x7C;. Note that `++` and `--` are postfix only, and
-    that `&&` and &#x7C;&#x7C; are [implemented as `&` and
-    &#x7C;](#2cbo).
+    and `||`. Note that `++` and `--` are postfix only, and
+    that `&&` and `||` are [implemented as `&` and `|`](#2cbo).
 
 1.  **Ternary operator:** The `?:` operator works as of May 2020; it may
     be nested.
@@ -451,8 +450,8 @@ The OS/8 version of CC8 supports a subset of the C dialect understood by
         int i;
         i = 5;
 
-8.  <a name="2cbo"></a>`&&` and &#x7C;&#x7C; work, but because they
-    are internally converted to `&` and &#x7C;, their precedence has
+8.  <a name="2cbo"></a>`&&` and `||` work, but because they
+    are internally converted to `&` and `|`, their precedence has
     changed, and they do not short-circuit as in a conforming C
     compiler.
 
