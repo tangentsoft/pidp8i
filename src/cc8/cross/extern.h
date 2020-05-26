@@ -1,7 +1,3 @@
-/*
- * File extern.h: 1.0 (2018/12/29,22:45)
- */
-
 /**
  * The functions created to implement this C compiler have wide and diverse
  * couplings and dependencies.

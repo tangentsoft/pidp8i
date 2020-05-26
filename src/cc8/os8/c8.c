@@ -46,17 +46,6 @@
 */
 
 /* Ask for input file, copy to CC.CC and run CC1 */
-/* Update Feb 2018 */
-/* 1. Read file line by line */
-/* 2. Exclude FF (12) */
-/* 3. Implement simple #define directive **Warning** quoted text is not ignored */
-/* 4. Implement #asm/#endasm directive */
-/* Update April 2020 */
-/* 5. Implement switch satement via re-write */
-/* *** 1: default: must be included 2: Fall through is not implemented */
-/*     3: Nesting is allowed */
-/* 6: Implement logical operators !=,>=,<= via token symbols #,_,? */
-/* 7. Permit multiline comments */
 
 int ln[128],*p,*q,*tm,*dfp,tkbf[10],smbf[10];
 int dflst[1024],tmln[80];
