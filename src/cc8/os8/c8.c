@@ -55,7 +55,7 @@
 /* 5. Implement switch satement via re-write */
 /* *** 1: default: must be included 2: Fall through is not implemented */
 /*     3: Nesting is allowed */
-/* 6: Implement logical operators !=,>=,<= via token symbols #,_,@ */
+/* 6: Implement logical operators !=,>=,<= via token symbols #,£,? */
 /* 7. Permit multiline comments */
 
 int ln[128],*p,*q,*tm,*dfp,tkbf[10],smbf[10];
@@ -233,6 +233,9 @@ main()
         while (*p) {
             tm=p;
             switch (*p++) {
+                case '"':
+                    while (*p++!='"');
+                    break;
                 case 12:
                 case 9:
                     *tm=' ';
@@ -246,9 +249,6 @@ main()
                 case 39:
                     sprintf(tmln,"%3d",*p);
                     memcpy(tm,tmln,3);
-                    break;
-                case '"':
-                    while (*p++!='"');
                     break;
                 case '>':
                     if (*p=='=') {
