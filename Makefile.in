@@ -674,6 +674,7 @@ OS8_UNI_CUSPS_SOURCES :=\
 
 OS8_UNI_BF2_SOURCES := \
 	@srcdir@/src/os8/uni/LANGUAGE/BASIC/*.PA \
+	@srcdir@/src/os8/uni/LANGUAGE/BASIC/*.BA \
 	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/*.PA \
 	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/*.CO \
 	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/LIBRARY/*.SB

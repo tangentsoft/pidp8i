@@ -117,10 +117,12 @@ print copying in BASIC and SABR and LOADER
 begin cdprog SYS:FOTP.SV
 RKA0:<RKB1:BLOAD.SV
 RKA0:<RKB1:BRTS.SV
+RKA0:<RKB1:EABRTS.BN
 RKA0:<RKB1:BCOMP.SV
 RKA0:<RKB1:BASIC.*
 RKA0:<RKB1:SABR.SV
 RKA0:<RKB1:LOADER.SV
+RKA0:<RKA1:RESEQ.BA
 # Copy in the BASIC UF.PA source. Maybe make it later
 # Note it's starting address on the v3d dist is 7605.
 RKB0:<RKA1:UF.PA
@@ -133,6 +135,7 @@ begin cdprog SYS:FOTP.SV
 RKA0:<RKB1:FORT.SV
 RKA0:<RKB1:LIBSET.SV
 RKA0:<RKB1:*.RL
+RKA0:<RKA1:GENIOX.SB
 end cdprog SYS:FOTP.SV
 end default fortran-ii
 
