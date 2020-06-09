@@ -139,7 +139,7 @@ char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
                 stop_pidp8i_gpio_thread ();
                 printf ("GPIO thread topped...\r\n");
             }
-            execlp (self_path, self_path, script_path);
+            execlp (self_path, self_path, script_path, NULL);
             return 0;
         }
         else {
