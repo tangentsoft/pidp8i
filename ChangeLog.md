@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
-<a id="202005xx"></a>
-## Version 2020.05.xx — The Quarantine Release
+<a id="202006xx"></a>
+## Version 2020.06.xx — The Quarantine Release
 
 *   Raspberry Pi 4 support.
 
@@ -45,6 +45,17 @@
 
     *   several more examples, including a Forth interpreter
     
+*   Fixed a bug in the `SING_STEP` + `IF` feature for switching between
+    boot scripts (e.g. IF=2 for running TSS/8) that could cause the
+    simulator to crash rather than execute the new script.
+
+    In typical use, this may not even be noticed by the user because
+    systemd will restart a crashed simulator, which will then choose its
+    boot script based on the same `IF` switch setting.
+
+    Likely the only people to notice this fix are those running the
+    simulator attached to a terminal, such as in development.
+
 *   The build system now detects the availability of Python 3 and
     prefers it if available.
 
@@ -321,6 +332,13 @@
     this example was entirely broken since being shipped.  Our thanks
     for the tests and diagnosis of these problems go to Greg Christie
     and Bill Cattey.
+
+*   The `SING_STEP` + `IF` switch combo to restart the simulator with a
+    new boot script (e.g. IF=2 for TSS/8) now does a full restart of the
+    simulator rather than simply executing the script’s commands in the
+    context of the current simulator instance.  This can make the
+    relaunch more reliable by starting with the simulator with known
+    register values, device states, etc.
 
 *   Improved `examples/pep001.pal`:
 
