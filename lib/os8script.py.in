@@ -1462,20 +1462,41 @@ class os8script:
     if "transcript" in self.options_enabled:
       print (self.simh._child.before.decode().strip())
 
-    mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 1")
+    # We expect that the command will exit to the OS/8 monitor when done.
+    # What if it doesn't?
+    # We want to print errors
+    mon = self.simh.os8_test_result (reply, "Monitor Prompt", "")
+    if mon: return "success"
     cd  = self.simh.os8_test_result (reply, "Command Decoder Prompt", "")
-    while not mon:
-      retval = "fail"
-      if cd: continue
-      # If this was not a fatal error, we need to ^C to get back to Monitor.
-      # But sometimes OS/8 is not yet ready for ^C, so we wait half a second.
-      if self.simh._os8_replies[reply][2] == False:
-        time.sleep (.5)
-        self.simh.os8_send_ctrl ('c')
-      reply = self.simh._child.expect (self.simh._os8_replies_rex)
-      mon = self.simh.os8_test_result (reply, "Monitor Prompt", "os8_command moncheck 2")
-      cd  = self.simh.os8_test_result (reply, "Command Decoder Prompt", "")
-    return retval
+    retval = "fail"
+    if cd:
+      # OS/8 command returned to command decoder.  We escape.
+      mon = self.simh.os8_escape ("")
+      if mon == false:
+        print ("os8_command: Escape from command decoder failed. Trying ^C.")
+        mon = self.simh.os8_ctrl_c ("")
+        if mon == false:
+          print ("^C failed to return to monitor. Killing script.")
+          return "die"
+    print ("os8_command Error: \n\t" + os8_comm)
+    print ("\t" + self.simh._child.after.decode().strip())
+    # If this was not a fatal error, we need to ^C to get back to Monitor.
+    # But sometimes OS/8 is not yet ready for ^C, so we wait half a second.
+    if self.simh._os8_replies[reply][2] == False:
+      time.sleep (.5)
+      print ("Sending ^C to return to monitor.")
+      escape = self.simh.os8_ctrl_c ("")
+      if escape: return "fail"
+      else:
+        print ("^C failed to return to monitor. Killing script.")
+        return "die"
+    else:
+      # Got fatal error. Expect monitor prompt so state machine is in the right place.
+      mon = self.simh.os8_cfm_monitor("")
+      if mon: return "fail"
+      else:
+        print ("os8_command: Failed to return to monitor after fatal error. Killin script.")
+        return "die"
 
 
   #### pal8_command ####################################################
