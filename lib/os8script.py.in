@@ -1646,16 +1646,14 @@ class os8script:
           print("Warning! end statement encountered inside build with no argument at line " + \
               str(self.line_ct_stack[0]) + ".\nExiting build.")
           # Exit BUILD. Note! Unlike many commands build does NOT echo "^C!"
-          self.simh.os8_send_ctrl ('c')
-          self.simh.os8_cfm_monitor ("build_subcomm end with no argument")
+          self.simh.os8_ctrl_c ("build_subcomm end with no argument")
           return "fail"
         elif rest != "build": 
           print("Warning! Mismatched begin/end blocks in BUILD at line " + \
               str(self.line_ct_stack[0]) + ".\nEncountered end: {" + \
               rest + "}. Exiting BUILD.")
           # Exit BUILD. Note! Unlike many commands build does NOT echo "^C!"
-          self.simh.os8_send_ctrl ('c')
-          self.simh.os8_cfm_monitor ("build_subcomm mismatched begin/end")
+          self.simh.os8_ctrl_c ("build_subcomm mismatched begin/end")
           return "fail"
         
         # We're done.  Print any desired verbose or debug status
@@ -1667,8 +1665,7 @@ class os8script:
           print("after: " + self.simh._child.after.decode().strip())
         # Return to monitor.
         # Note! Unlike many commands build does NOT echo "^C!"
-        self.simh.os8_send_ctrl ('c')
-        self.simh.os8_cfm_monitor ("build_subcomm end with no argument.")
+        self.simh.os8_ctrl_c ("build_subcomm end with no argument.")
         return "success"
         
       # Now perform sub-commands within BUILD. They have a discernable format.
@@ -1822,8 +1819,7 @@ class os8script:
             str(self.line_ct_stack[0]) + ".")
         # Return to Monitor
         reply = self.simh.os8_escape (caller="Sending escape failed. Trying ^c")
-        self.simh.os8_send_ctrl ('c')
-        self.simh.os8_cfm_monitor ("cdprog: ^c failed. State machine will be confused.")
+        self.simh.os8_ctrl_c ("cdprog: ^c failed. State machine will be confused.")
         return retval
   
       # We could do some basic OS/8 command decoder synax checking here.
@@ -1869,11 +1865,15 @@ class os8script:
         str(self.line_ct_stack[0]) + \
         " with no end of cdprog command block.")
     # Exit command back to OS/8 monitor.
-    self.simh.os8_escape (caller="cdprog escape from decoder failed sending ^c")
-    self.simh.os8_send_ctrl ('c')
-    self.simh.os8_cfm_monitor ("failed to get to monitor with ^c")
-
-    return "fail"
+    mon = self.simh.os8_escape ("")
+    if mon: return "fail"
+    else:
+      print ("cdprog: Escape from Command Decoder failed. Sending ^c")
+      mon = self.simh.os8_ctrl_c ("")
+      if mon: return "fail"
+      else:
+        print ("Failed to get to monitor with ^c. Killing script.")
+        return "die"
 
 
   #### check_exists ####################################################

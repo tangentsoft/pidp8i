@@ -880,7 +880,8 @@ class simh:
 
   #### os8_ctrl_c ##################################################
   # Return to OS/8 monitor using the ^C given escape character.
-  # We will probably, but perhaps not always get an echo of ^C.
+  # We will probably, but not always get an echo of ^C.
+  # For example BUILD is known NOT to.
   # Our testing makes it optional.
   # We listen for an uparow and assume the C follows, and listen again
   # for the monitor prompt.
