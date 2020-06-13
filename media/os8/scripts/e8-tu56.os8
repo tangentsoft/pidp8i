@@ -11,15 +11,15 @@ boot rk0
 os8 ZERO DTA0:
 
 # Copy source and doc files into the tape image.
-cpto $src/src/os8/e8/AUTHORS.md DTA0:AUTHOR.MD
-cpto $src/src/os8/e8/COPYING.md DTA0:COPY.MD
-# cpto $src/src/os8/e8/doc/manual.md DTA0:/I
-# cpto $src/src/os8/e8/doc/e8Buffer.svg DTA0:BUFSVG.XX/I
-# cpto $src/src/os8/e8/doc/pdf.css DTA0:PDFCSS.XX/I
-cpto $src/src/os8/e8/README.TX DTA0:
-cpto $src/src/os8/e8/e8base.pa DTA0:
-cpto $src/src/os8/e8/e8file.pa DTA0:
-cpto $src/src/os8/e8/e8srch.pa DTA0:
+cpto $src/src/e8/AUTHORS.md DTA0:AUTHOR.MD
+cpto $src/src/e8/COPYING.md DTA0:COPY.MD
+# cpto $src/doc/e8-manual.md DTA0:/I
+# cpto $src/doc/graphics/e8-buffer.svg DTA0:BUFSVG.XX/I
+# cpto $src/src/e8/doc/pdf.css DTA0:PDFCSS.XX/I
+cpto $src/src/e8/README.TX DTA0:
+cpto $src/src/e8/e8base.pa DTA0:
+cpto $src/src/e8/e8file.pa DTA0:
+cpto $src/src/e8/e8srch.pa DTA0:
 
 pal8 E8.BN,E8.LS<DTA0:E8BASE.PA,DTA0:E8FILE.PA,DTA0:E8SRCH.PA
 
