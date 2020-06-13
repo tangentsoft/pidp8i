@@ -212,6 +212,17 @@ ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
 
+E8_SRCS:= \
+	@srcdir@/src/os8/e8/AUTHORS.md \
+	@srcdir@/src/os8/e8/COPYING.md \
+	@srcdir@/src/os8/e8/doc/manual.md \
+	@srcdir@/src/os8/e8/doc/e8Buffer.svg \
+	@srcdir@/src/os8/e8/doc/pdf.css \
+	@srcdir@/src/os8/e8/README.TX \
+	@srcdir@/src/os8/e8/e8base.pa \
+	@srcdir@/src/os8/e8/e8file.pa \
+	@srcdir@/src/os8/e8/e8srch.pa
+
 TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
 LIBS = -lm -ldl -lpthread
@@ -355,6 +366,8 @@ V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
 CC8_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/cc8-tu56.os8
+
+E8_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/e8-tu56.os8
 
 RCFILE := @ABSPREFIX@/etc/pidp8i.rc
 
@@ -569,6 +582,7 @@ mediainstall: instdirs
 os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 	$(OS8RUN) $(CC8_TU56_SCRIPT)
+	$(OS8RUN) $(E8_TU56_SCRIPT)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
@@ -700,7 +714,7 @@ UNI_PATCHES := \
 $(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
-$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) @CC8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
@@ -785,6 +799,10 @@ $(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK)
 # Create the CC8 distribution DECtape image
 bin/cc8.tu56: $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) $(CC8_TU56_SCRIPT) | $(OS8_DIST_RK05)
 	$(OS8RUN) $(CC8_TU56_SCRIPT)
+
+# Create the E8 distribution DECtape image
+bin/e8.tu56: $(E8_SRCS) $(E8_TU56_SCRIPT) | $(OS8_DIST_RK05)
+	$(OS8RUN) $(E8_TU56_SCRIPT)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart

@@ -1,0 +1,20 @@
+#!/usr/bin/env perl
+# splitpal - A utility designed to split e8all.pa into e?.pa based on
+#            sepcial PAL8 comments in the file. 
+#
+# This file is © 2020 by Warren Young and is offered under the SIMH
+# license.  See COPYING.md for details.
+
+use strict;
+use warnings;
+
+my $ofile;
+while (<>) {
+    my ($fnbase) = m{^/#(\w+)#};
+    if ($fnbase) {
+        close $ofile if $ofile;
+        my $fn = (lc $fnbase) . '.pa';
+        open $ofile, '>', $fn or die "Cannot create $fn: $!\n";
+    }
+    print $ofile $_ if $ofile;
+}

@@ -70,6 +70,7 @@ set os8opts {
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"
     vtedit      0  "the TECO VTEDIT setup"
+    e8		1  "Emacs-like Editor"
 }
 
 set alloptions {}
@@ -132,6 +133,10 @@ if {![opt-bool os8-focal]} {
 
 # -- do not use opt-bool os8-* below this point
 # -- use the os8bool() array
+
+if {$os8bool(e8)} {
+   define E8_TU56 bin/e8.tu56
+}
 
 # Handle interdependent options
 if {$os8bool(cc8) && !$os8bool(fortran-ii)} {
