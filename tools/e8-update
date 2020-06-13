@@ -1,5 +1,6 @@
 #!/bin/bash -e
 d=e8-update
+test -d src/e8      # fail if this isn't run from @topsrcdir@
 mkdir -p $d
 cd $d
 rm -rf *            # safe: we're under -e, so mkdir & cd succeded
