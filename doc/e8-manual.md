@@ -469,7 +469,7 @@ to the beginning, which takes slightly over 1 second.
 
 Text buffer memory looks like this:
 
-![e8Buffer](./e8Buffer.svg)
+![E8 text buffer memory layout diagram](graphics/e8-buffer.svg)
 
 Almost all actions operate on text that is exclusively either ahead of
 or behind the point, the characters of which are always contiguous in
