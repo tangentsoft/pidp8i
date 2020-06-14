@@ -10,4 +10,5 @@ mv doc/manual-pdf.css ../doc/e8-manual-pdf.css
 mv doc/graphics/e8-buffer.svg ../doc/graphics
 mv tools/* ../tools
 rm ../tools/splitpal    # we don't use this
+rm COPYING.md           # duplicate: SIMH-LICENSE.md
 mv *.{md,pa} ../src/e8
