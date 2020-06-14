@@ -213,7 +213,7 @@ on the net.)
     mount rk0 $bin/v3d.rk05 required
     mount rk1 $bin/os8-v3f-build.rk05 preserve
     
-    cpto $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
+    cpto $src/os8/v3f/BUILD.PA RKA1:BUILD.PA /A
     
     boot rk0
     
@@ -618,6 +618,10 @@ The option is either empty or exactly one of
 
 If no option is specified, `/A` is assumed.
 
+**IMPORTANT:** Because we are parsing both OS/8 and POSIX file specifications,
+we can't just parse out the slash in the options. Options must be preceded with
+whitespace. Otherwise it would be mis-parsed as part of a file spec.
+
 In the first form of the command, the OS/8 file specification is left
 out, and one is synthesized from the file component of the _posix-path_.
 
@@ -645,6 +649,10 @@ The option is either empty or exactly one of
 | `/I` | OS/8 `PIP` image format. Bit for Bit copy.
 
 If no option is specified, `/A` is assumed.
+
+**IMPORTANT:** Because we are parsing both OS/8 and POSIX file specifications,
+we can't just parse out the slash in the options. Options must be preceded with
+whitespace. Otherwise it would be mis-parsed as part of a file spec.
 
 Unlike `cpto` there is only one form of the command.  Both the
 _os8-filespec_ and the _posix-path_ must be specified.  The options

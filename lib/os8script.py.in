@@ -749,7 +749,7 @@ class os8script:
       if path == None:
         print("Ignoring: \n\tcpto " + line)
         return "fail"
-      self.simh.os8_pip_to (path, m.group(2), m.group(4))
+      self.simh.os8_pip_to (path, m.group(2), m.group(4), self.debug)
     return "success"
 
 
