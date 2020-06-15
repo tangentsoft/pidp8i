@@ -41,7 +41,7 @@
 #define	getc libc3
 #define	gets libc4
 #define	atoi libc5
-#define	sscanf vlibc6
+#define	strpd libc6
 #define	xinit libc7
 #define	memcpy libc10
 #define	kbhit libc11
@@ -52,23 +52,25 @@
 #define	exit libc16
 #define	isnum libc17
 #define	isalpha libc20
-#define	sprintf vlibc21
+#define	toupper libc21
 #define	memset libc22
 #define	fgetc libc23
 #define	fopen libc24
 #define fputc libc25
 #define fclose libc26
-#define printf vlibc27
+#define revcpy libc27
 #define isalnum libc30
 #define isspace libc31
-#define fprintf vlibc32
+#define fgets libc32
 #define	fputs libc33
 #define strcmp libc34
 #define cupper libc35
-#define fgets libc36
-#define revcpy libc37
-#define toupper libc40
-#define strpd libc41
+#define fprintf vlibc36
+#define printf vlibc37
+#define sprintf vlibc40
+#define sscanf vlibc41
+#define scanf vlibc42
+#define fscanf vlibc43
 
 /* Declare function aliases. */ 
 #define isdigit isnum

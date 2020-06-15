@@ -1,6 +1,9 @@
-/* Print the Fibonacci series. For OS/8 native compiler */
+/* Print the Fibonacci series. For OS/8 native compiler or cc8 */
 /* Invoke with .EXE CCR and enter this filename */
 /* Note use of recursion */
+
+#include <init.h>
+#include <libc.h>
 
 int fib(n)
 {
@@ -18,10 +21,10 @@ int main()
 	while (1) {
 		rsl=fib(i);
 		if (rsl<0) {
-			printf("Overflow:%d\r\n",i);
+			printf("Overflow at #%d = %u\r\n",i,rsl);
 			break;
 		}
-		printf("Fib #%d = %d\r\n",i,rsl);
+		printf("Fib #%2d = %d\r\n",i,rsl);
 		i++;
 	}
 }

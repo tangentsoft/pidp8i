@@ -167,13 +167,13 @@ CPNT,	CLIST
 /		THIS IS THE DISPATCH LIST FOR THIS LIBRARY
 /		MAKE SURE LIBC.H MATCHES
 /
-CLIST,	ITOA
+CLIST,  ITOA
 		PUTS
 		DISPXY
 		GETC
 		GETS
 		ATOI
-		SSCANF
+		STRPD
 		XINIT
 		MEMCPY
 		KBHIT
@@ -184,23 +184,25 @@ CLIST,	ITOA
 		EXIT
 		ISNUM
 		ISALPHA
-		SPRINTF
+		TOUPPER
 		MEMSET
 		FGETC
 		FOPEN
 		FPUTC
 		FCLOSE
-		PRINTF
+		REVCPY
 		ISALNUM
 		ISSPACE
-		FPRINTF
+		FGETS
 		FPUTS
 		STRCMP
 		CUPPER
-		FGETS
-		REVCPY
-		TOUPPER
-        STRPD
+		FPRINTF
+		PRINTF
+        SPRINTF
+		SSCANF
+        SCANF
+        FSCANF
 #endasm
 
 #define stdout 0
@@ -342,6 +344,46 @@ int *p;
 		ARG FRSL
 		CDF1
 #endasm
+}
+
+xinit()
+{
+	puts("PDP-8 C Compiler V2.0:\r\n");
+}
+
+
+memcpy(dst,src,cnt)
+int dst,src,cnt;
+{
+#asm
+	CLA
+	TAD STKP
+	TAD (-4
+	DCA 14
+	CMA
+	TADI 14
+	DCA 13
+	CMA
+	TADI 14
+	DCA 12
+	TADI 14
+	CIA
+	DCA ZTMP
+CP1,	TADI 12
+		DCAI 13
+		ISZ ZTMP
+		JMP CP1
+#endasm
+
+}
+
+kbhit()
+{
+#asm
+		CLA CMA
+		KSF
+		CLA
+#endasm	
 }
 
 
@@ -515,104 +557,108 @@ int q,tm;
 	return q;		
 }
 
-
 atoi(p,rsl)
 char *p;
 int *rsl;
 {
+    *p;
 #asm
-	DCA ZTMP
-	DCA ZCTR
-	TAD (7000		/ NOP
-	DCA XINV
-	CDF1			/ Change DF back to 1 in case SABR changes it!
-#endasm
-	while (*p==' ')
-	 p++;
-	if (*p=='-') {
-#asm
-	CLA
-	TAD (7041       / CIA
-	DCA XINV
+    OPDEF MUY 7405
+
+    CLA CLL
+   	DCA ZTMP        / FINAL VALUE
+	DCA ZCTR        / CAHR COUNTER
+AT777,    TADI JLC
+    TAD(-40         / SPACE+1
+    SZA CLA
+    JMP AT000
+    ISZ JLC
+    JMP AT777
+AT000,	TAD (7000		/ NOP
+	DCA TMP             / STORE SIGN
+	TADI JLC
+	TAD (-55		/ -
+	SZA CLA
+	JMP AT001
+	TAD (7041		/ CIA
+	DCA TMP
+	ISZ JLC
+	ISZ ZCTR
+AT001,	TAD (12		/ DEFAULT BASE 10
+	DCA FPTR
+	TADI JLC
+	TAD (-60		/ 0
+	SZA CLA
+	JMP AT004
+	TAD (10
+	DCA FPTR
+	ISZ JLC
+	ISZ ZCTR
+AT002,	TADI JLC
+	TAD (-170		/ LC X
+	SZA CLA
+	JMP AT003
+	TAD (20
+	DCA FPTR
+	ISZ JLC
+	ISZ ZCTR
+AT003,	TADI JLC
+	TAD (-142		/ LC B
+	SZA CLA
+	JMP AT004
+	CLA CLL IAC RAL
+	DCA FPTR
+	ISZ JLC
+	ISZ ZCTR
+AT004,	TADI JLC
+	SNA
+	JMP AT006
+	TAD (-60		/ 0
+	SPA
+	JMP AT006
+	TAD (-12		/ 10
+	SMA
+	JMP AT005
+	TAD (12
+    JMP AT51        / RANGE 0-9
+AT005,  TAD (-47    / LC A-F 0-5
+     SPA
+     JMP AT006
+     TAD (12
+AT51,    DCA ZPTR
+    TAD FPTR
+    CIA
+    TAD ZPTR
+    SMA CLA
+    JMP AT006
+    TAD ZTMP
+	CALL 1,MPY
+    ARG FPTR
 	CDF1
-#endasm
-	p++;
-	}
-	while (*p++) {
-#asm
-	TAD (D-48		/ ASCII '0'
-	DCA JLC
-	TAD JLC
-	SPA CLA
-	JMP XRET
-	TAD (D-10       / # OF DECIMAL DIGITS
-	TAD JLC
-	SMA CLA
-	JMP XRET		/ EXIT IF NOT NUMBER
-	TAD ZTMP
-	CLL RTL			/ *4
-	TAD ZTMP		/ *5
-	CLL RAL			/ *10
-	TAD JLC
+	TAD ZPTR
 	DCA ZTMP
-	ISZ ZCTR		/ CHAR COUNTER
-#endasm
-	}
-#asm
-XRET,	TAD ZCTR
-		MQL
-		CMA
-		TAD STKP	/ ->RSL
-		DCA TMP
-		TADI TMP
-		DCA TMP
-		TAD ZTMP
-XINV,	NOP
-		DCAI TMP	/ WRITE RSL
-		ACL			/ RETURN LENGTH
-#endasm
-}
-
-
-xinit()
-{
-	puts("PDP-8 C Compiler V1.0:\r\n");
-}
-
-
-memcpy(dst,src,cnt)
-int dst,src,cnt;
-{
-#asm
-	CLA
+	ISZ JLC
+	ISZ ZCTR
+	JMP AT004
+AT006,	CLA
+    TAD TMP
+    DCA XINV
+    CLA CLL CMA
 	TAD STKP
-	TAD (-4
-	DCA 14
-	CMA
-	TADI 14
-	DCA 13
-	CMA
-	TADI 14
-	DCA 12
-	TADI 14
-	CIA
-	DCA ZTMP
-CP1,	TADI 12
-		DCAI 13
-		ISZ ZTMP
-		JMP CP1
+	DCA TMP
+	TADI TMP
+	DCA TMP
+	TAD ZTMP
+XINV,	NOP
+	DCAI TMP
+    DCA FPTR
+    DCA ZPTR
+	TAD ZCTR	
 #endasm
-
+;
 }
 
-kbhit()
-{
-#asm
-		CLA CMA
-		KSF
-		CLA
-#endasm	
-}
+
 
 putc(p)
 char p;
@@ -757,7 +803,7 @@ int p;
 {
 	p;
 #asm
-		DCA ZTMP
+TPP1,		DCA ZTMP    / AALT ENTRY USED BY ATOI
 		TAD ZTMP
 		TAD (D-97		/ SEE cupper() COMMENTARY
 		SPA
@@ -802,10 +848,26 @@ memset(dst, dt, sz)
 char *dst;
 int dt,sz;
 {
-	int i;
-	for (i=0;i<sz;i++)
-		*dst++=dt;
+#asm
+	CLA
+	TAD STKP
+	TAD (-4
+	DCA 14
+	CMA
+	TADI 14
+	DCA 13
+	TADI 14
+	DCA 12
+	TADI 14
+	CIA
+	DCA ZTMP
+CP2,	TAD  12
+		DCAI 13
+		ISZ ZTMP
+		JMP CP2
+#endasm
 }
+
 
 /*
 ** reverse string in place 
@@ -971,12 +1033,37 @@ itoab(n, s, b) int n; char *s; int b; {
 strlen(p)
 char *p;
 {
-	int n;
-
-	n=0;
+#asm
+    DCA TMP
+#endasm
 	while (*p++)
-		n++;
-	return n;
+#asm
+        ISZ TMP
+#endasm
+#asm
+        TAD TMP
+#endasm
+}
+
+fscanf(nxtarg) int nxtarg;
+{
+    fgets(16);     /* USE PRINTF BUFFER FOR INPUT STRING */
+#asm
+	JMP SC1
+#endasm
+}
+
+
+
+scanf(nxtarg) int nxtarg;
+{
+    gets(16);     /* USE PRINTF BUFFER FOR INPUT STRING */
+#asm
+SC1, CLA CLL
+    TAD (20
+    DCA ZPTR      / FOR FSCANF,SCANF, BUFFER LOCATION IN ZPTR = 20 (8)
+	JMP SSCANF
+#endasm
 }
 
 #define EOF 0
@@ -984,10 +1071,18 @@ char *p;
 sscanf(nxtarg) int nxtarg; {
   char *ctl;
   int u;
-  int  *narg, wast, ac, width, ch, cnv, base, ovfl, sign, *ibfr;
+  int  *narg, ac, width, ch, cnv, base, ovfl, sign, *ibfr,zptr;
+
+#asm
+	TAD ZPTR
+	DCAI STKP	/ POINTS TO ZPTR
+#endasm
   ac = 0;
   nxtarg = &nxtarg-nxtarg;
-  ibfr = *nxtarg++;
+  if (zptr)
+    ibfr=zptr;
+  else
+	ibfr = *nxtarg++;
   ctl = *nxtarg++;
   while(*ctl) {
     if(*ctl++ != '%') continue;
@@ -1015,6 +1110,8 @@ sscanf(nxtarg) int nxtarg; {
           }
         *narg = u = 0;
 		sign = 1;
+        while (isspace(*ibfr))
+            ibfr++;
         while(width-- && (ch=*ibfr++)>32) {
           if(ch == '-') {sign = -1; continue;}
           if(ch < '0') break;
@@ -1027,6 +1124,11 @@ sscanf(nxtarg) int nxtarg; {
       }
     ++ac;                          
     }
+#asm
+    	CLA
+		DCA ZPTR        / CLEAR FLAGS
+		DCA FPTR
+#endasm
   return (ac);
   }
 
