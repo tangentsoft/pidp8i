@@ -253,7 +253,7 @@ os8 SAVE DTA0 BUILD.SV
 
 # cusp-copyin.os8 uses the value of v3d or v3f enablement
 # already present in the environment.
-include $media/os8/scripts/cusp-copyin.os8
+include $src/scripts/include/cusp-copyin.os8
 
 # Lastly copy in the appropriate DECtape utilities.
 begin cdprog RKA0:FOTP.SV
