@@ -15,5 +15,5 @@ The copy presented here is [automatically merged in][up] from that repo.
 
 [pdf]:  https://tangentsoft.com/e8/uv/doc/manual.pdf
 [repo]: https://tangentsoft.com/e8/
-[up]:   ../../../tools/e8-update
+[up]:   ../../tools/e8-update
 [v0]:   https://groups.google.com/d/msg/pidp-8/d6edAjHiWWY/8MLYob9_BwAJ
