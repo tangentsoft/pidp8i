@@ -463,8 +463,10 @@ The directory structure of the PiDP-8/I project is as follows:
 
     Fossil’s [embedded documentation][edoc] feature allows us to present
     the contents of `doc` to web site users all but indistinguishably
-    from a wiki page. Why are there two different ways to achieve the
-    same end, and how do we decide which mechanism to use?
+    from a wiki page.
+
+    You may then ask, “Why are there two different ways to achieve the
+    same end, and how do we decide which mechanism to use?”
 
     The rule is simple: if a given document’s change history is tied to
     the history of the PiDP-8/I project itself, it goes in `doc`, else
@@ -538,7 +540,8 @@ The directory structure of the PiDP-8/I project is as follows:
     helper.
 
 *   <b>`media`</b> — Binary media images used either by SIMH directly or
-    by tools like `os8-run` to produce media used by SIMH.
+    inputs consumed by tools like `os8-run` to *produce* media used by
+    SIMH.
 
     The contents of this tree are installed to `$prefix/share/media`.
 
@@ -550,6 +553,10 @@ The directory structure of the PiDP-8/I project is as follows:
     (Contrast `bin` which does have some files checked into Fossil; all
     of the *other* files that end up in `bin` can be recreated by
     `make`, but not these few hand-written programs.)
+
+*   <b>`scripts`</b> — Scripts driving `os8-run`, most of which are
+    invoked by the build system, though some are meant to be run by
+    hand, such as the content of `scripts/test`.
 
 *   <b>`src`</b> — Source code for the project’s programs, especially
     those that cannot be used until they are built. The great majority

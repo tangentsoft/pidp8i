@@ -310,7 +310,9 @@ OS8_RK05S = $(OS8_DIST_RK05) $(OS8_BOOT_DISK) $(OS8_SRC_RK05) $(OS8_UNI_DIST_RK0
 
 
 
-OS8_SCRIPTS_DIR = @srcdir@/media/os8/scripts
+INC_SCRIPTS_DIR = @srcdir@/scripts/include
+MISC_SCRIPTS_DIR = @srcdir@/scripts/misc
+OS8_SCRIPTS_DIR = @srcdir@/scripts/os8
 
 V3D_DIST_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-dist-rk05.os8
 V3D_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-src-rk05.os8
@@ -358,7 +360,7 @@ OS8_UNI_RK05 = bin/uni.rk05
 
 ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
-CUSP_COPYIN_SCRIPT = $(OS8_SCRIPTS_DIR)/cusp-copyin.os8
+CUSP_COPYIN_SCRIPT = $(INC_SCRIPTS_DIR)/cusp-copyin.os8
 
 OS8_BOOT_TAPE = bin/@OS8_BOOT_TAPE@
 V3D_TC08_TU56 = bin/v3d-tc08.tu56
@@ -367,9 +369,9 @@ V3F_TC08_TU56 = bin/v3f-tc08.tu56
 V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
-CC8_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/cc8-tu56.os8
+CC8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/cc8-tu56.os8
 
-E8_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/e8-tu56.os8
+E8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/e8-tu56.os8
 
 RCFILE := @ABSPREFIX@/etc/pidp8i.rc
 
@@ -564,7 +566,6 @@ mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
 	@cd @srcdir@ ; \
 	find media \( \
-		-name \*.os8 -o \
 		-name \*.bin  -o \
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
