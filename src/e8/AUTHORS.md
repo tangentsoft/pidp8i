@@ -1,16 +1,19 @@
-E8 was created by Bill Silver <bsilver@tidewater.net>.  The first
-version was [posted to the PiDP-8/I mailing list][op] on 2020.04.05; it
-is tagged “v0” in the Fossil repository. The subsequent 8 versions were
-also posted to the mailing list and are tagged with their version
-numbers and posting timestamps.
+**[Bill Silver](mailto:bsilver@tidewater.net)** created E8, an
+Emacs-like editor for the PDP-8.  He posted the first version
+[to the PiDP-8/I mailing list][v0] on 2020.04.05; it is tagged “v0” in
+[its separate Fossil repository][repo].  The subsequent 8 versions
+posted to the mailing list are also checked into that repo, tagged with
+their version numbers and posting timestamps.
 
-Warren Young <wyoung@tangentsoft.com> converted these zip files to [a
-Fossil repository][repo] and converted the PDF user manual to Markdown
-format on 2020.04.25, making some improvements to the manual along the
-way.
+Warren Young converted Bill Silver’s original PDF user manual to
+Markdown, making some improvements to the manual along the way.  That
+version is automatically converted to [a new PDF manual][pdf] on
+demand after the Markdown version is updated.
 
-From v9 onward, development happened on the Fossil repository.
+From v9 onward, all E8 development occurred on the Fossil repository.
+The copy presented here is [automatically merged in][up] from that repo.
 
-
-[op]: https://groups.google.com/d/msg/pidp-8/d6edAjHiWWY/8MLYob9_BwAJ
+[pdf]:  https://tangentsoft.com/e8/uv/doc/manual.pdf
 [repo]: https://tangentsoft.com/e8/
+[up]:   ../../../tools/e8-update
+[v0]:   https://groups.google.com/d/msg/pidp-8/d6edAjHiWWY/8MLYob9_BwAJ
