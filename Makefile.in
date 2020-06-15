@@ -214,7 +214,6 @@ endif
 
 E8_SRCS:= \
 	@srcdir@/src/e8/AUTHORS.md \
-	@srcdir@/src/e8/COPYING.md \
 	@srcdir@/doc/e8-manual.md \
 	@srcdir@/doc/e8-manual-pdf.css \
 	@srcdir@/doc/graphics/e8-buffer.svg \
