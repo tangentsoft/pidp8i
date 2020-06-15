@@ -859,7 +859,7 @@ class os8script:
         ": Patch file: " + path + " not found.")
       return "fail"
 
-    self.run_patch_file (path)
+    self.run_patch_file (path, line, script_file)
     return "success"
 
 
@@ -1134,7 +1134,7 @@ class os8script:
 
   #### run_patch_file ##################################################
   
-  def run_patch_file (self, pathname):
+  def run_patch_file (self, pathname, line, script_file):
     sys.stdout.write ("Applying patch " + os.path.basename (pathname) + "...")
     sys.stdout.flush ()
 
