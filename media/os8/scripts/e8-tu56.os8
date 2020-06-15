@@ -13,9 +13,8 @@ os8 ZERO DTA0:
 # Copy source and doc files into the tape image.
 cpto $src/src/e8/AUTHORS.md DTA0:AUTHOR.MD
 cpto $src/src/e8/COPYING.md DTA0:COPY.MD
-cpto $src/doc/e8-manual.md DTA0: /I
+cpto $src/doc/e8-manual.md DTA0:E8MANU.MD /I
 cpto $src/doc/graphics/e8-buffer.svg DTA0:BUFSVG.XX /I
-cpto $src/src/e8/doc/pdf.css DTA0:PDFCSS.XX /I
 cpto $src/src/e8/README.TX DTA0:
 cpto $src/src/e8/e8defs.pa DTA0:
 cpto $src/src/e8/e8base.pa DTA0:
