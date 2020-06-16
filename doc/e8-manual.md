@@ -372,9 +372,9 @@ letters to be all the same. For example, <kbd>^X</kbd> <kbd>^S</kbd>,
 | `^K`                  | Kill (delete) to end of line; if at end, delete CR     |
 | `^L`                  | Erase and redraw screen with cursor at the middle line |
 | `^M` (CR)             | Insert CR                                              |
-| `^N`                  | Beginning of next line                                 |
+| `^N`                  | Next line at same column or nearby                     |
 | `^O`                  | Open new line (CR, ^B)                                 |
-| `^P`                  | Beginning of previous line                             |
+| `^P`                  | Previous line at same column or nearby                 |
 | `^Q`                  | Insert next typed char as is                           |
 | `^S` or `ALT-S`       | Incremental search (case sensitive)                    |
 | `^V`                  | Forward one screen                                     |
