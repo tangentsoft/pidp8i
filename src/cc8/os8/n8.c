@@ -62,7 +62,7 @@ int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,glim;
 int cop,*n,ccm;
 int tmp;
 int tkn[BMAX];
-int bfr[BMAX];
+int bfr[LXMX];
 int smbf[DMAX];
 int lm[CMAX];		/* Auto symbol table */
 int fstk[BMAX];		/* Push down stack for For etc. */
