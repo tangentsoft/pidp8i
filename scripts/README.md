@@ -17,7 +17,7 @@ proper. Most of the scripts have one of the following prefixes:
 | `uni`  | the [OS/8 Combined Kit][unidoc] (OCK), the last formal DEC release of OS/8
 
 Some of these scripts’ outputs are based purely on the input source file
-contents, but some outpus vary based on [`configure --enable-os8-*`
+contents, but some outputs vary based on [`configure --enable-os8-*`
 parameters][os8cfg].
 
 While all of these scripts are stored in the `os8` subdirectory, they
