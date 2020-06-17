@@ -630,6 +630,7 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 
 [advent]: http://www.rickmurphy.net/advent
 [chess]:  https://chessprogramming.wikispaces.com/CHEKMO-II
+[e8]:     https://tangentsoft.com/e8/
 [os8p]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
 
 
