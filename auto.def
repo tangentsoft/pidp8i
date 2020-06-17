@@ -70,6 +70,7 @@ set os8opts {
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"
     vtedit      0  "the TECO VTEDIT setup"
+    e8          1  "Emacs-like Editor"
 }
 
 set alloptions {}
@@ -85,20 +86,22 @@ foreach {opt def desc} $os8opts {
 
 # Now define those command line options that belong only to us.
 append alloptions {
-    alt-serial-mod     => "use GPIO drive scheme suitable for James L-W's serial mod method"
-    boot-tape-config:  => "Boot tape configuration: tc08, or td12k"
-    boot-tape-version: => "OS/8 version for boot tape, either v3d or v3f"
-    cc8-cross=1        => "do not build the cc8 cross-compiler on the host"
-    debug-mode         => "create a debug build (default is release)"
-    lowercase:         => "select how lowercase input is to be handled"
-    no-lamp-simulator  => "use simple LED driver instead of incandescent lamp simulator"
-    os8-focal=1        => "leave FOCAL,1969 and U/W FOCAL off the built OS/8 RK05 image"
-    os8-minimal        => "set all --disable-os8-* options, giving minimal OS/8 bin disk"
-    os8-src=1          => "do not build v3d-src.rk05 from OS/8 source tapes"
-    savestate          => "save simulator state (regs, core, devices) on exit; restore on restart"
-    serial-mod         => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
-    throttle:          => "override the throttle values in the boot scripts"
-    usb-automount=1    => "do not automatically mount USB drives for SING_STEP + DF"
+    alt-serial-mod       => "use GPIO drive scheme suitable for James L-W's serial mod method"
+    boot-tape-config:    => "Boot tape configuration: tc08, or td12k"
+    boot-tape-version:   => "OS/8 version for boot tape, either v3d or v3f"
+    cc8-cross=1          => "do not build the cc8 cross-compiler on the host"
+    debug-mode           => "create a debug build (default is release)"
+    e8-screen-width:=80  => "fixed width of terminal screen assumed by E8 on OS/8"
+    e8-screen-height:=24 => "E8 terminal height"
+    lowercase:           => "select how lowercase input is to be handled"
+    no-lamp-simulator    => "use simple LED driver instead of incandescent lamp simulator"
+    os8-focal=1          => "leave FOCAL,1969 and U/W FOCAL off the built OS/8 RK05 image"
+    os8-minimal          => "set all --disable-os8-* options, giving minimal OS/8 bin disk"
+    os8-src=1            => "do not build v3d-src.rk05 from OS/8 source tapes"
+    savestate            => "save simulator state (regs, core, devices) on exit; restore on restart"
+    serial-mod           => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+    throttle:            => "override the throttle values in the boot scripts"
+    usb-automount=1      => "do not automatically mount USB drives for SING_STEP + DF"
 }
 
 options $alloptions
@@ -122,16 +125,31 @@ foreach {opt def desc} $os8opts {
 }
 set os8bool(src) [opt-bool os8-src]
 
-# Handle meta-options
+# Handle OS/8 meta-options
 set os8min [opt-bool os8-minimal]
 set os8src [opt-bool os8-src]
 if {![opt-bool os8-focal]} {
     set os8bool(focal69) "0"
     set os8bool(uwfocal) "0"
 }
-
 # -- do not use opt-bool os8-* below this point
 # -- use the os8bool() array
+
+# Handle E8 related options
+if {$os8bool(e8)} {
+    define E8_TU56 bin/e8.tu56
+
+    set w [opt-val e8-screen-width  80]
+    set h [opt-val e8-screen-height 24]
+
+    # Have to use Unix line endings for write-if-changed to work
+    # properly.  We convert them to OS/8 CRLFs in the os8-run step.
+    set    defs "DECIMAL\n"
+    append defs "SCRWD=$w\n"
+    append defs "SCRHT=$h\n"
+    append defs "OCTAL"      ;# trailing \n added
+    write-if-changed "src/e8/e8defs.pa" $defs
+}
 
 # Handle interdependent options
 if {$os8bool(cc8) && !$os8bool(fortran-ii)} {

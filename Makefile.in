@@ -212,6 +212,19 @@ ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
 
+E8_SRCS:= \
+	@srcdir@/src/e8/AUTHORS.md \
+	@srcdir@/doc/e8-manual.md \
+	@srcdir@/doc/e8-manual-pdf.css \
+	@srcdir@/doc/graphics/e8-buffer.svg \
+	@srcdir@/src/e8/README.TX \
+	@srcdir@/src/e8/e8cmds.tx \
+	@srcdir@/src/e8/e8srch.tx \
+	@srcdir@/src/e8/e8defs.pa \
+	@srcdir@/src/e8/e8base.pa \
+	@srcdir@/src/e8/e8file.pa \
+	@srcdir@/src/e8/e8srch.pa
+
 TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
 LIBS = -lm -ldl -lpthread
@@ -358,6 +371,8 @@ V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
 CC8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/cc8-tu56.os8
 
+E8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/e8-tu56.os8
+
 RCFILE := @ABSPREFIX@/etc/pidp8i.rc
 
 CLTXT = /boot/cmdline.txt
@@ -391,7 +406,7 @@ clean:
 		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
 		obj/*.log obj/*.pt obj/os8.opts \
-		src/config.h \
+		src/config.h src/e8/e8defs.pa \
 		@srcdir@/examples/*.err
 	@find obj \( -name \*.o -o -name \*.d \) -delete
 	@-rmdir -p $(BUILDDIRS) 2> /dev/null || true
@@ -570,6 +585,7 @@ mediainstall: instdirs
 os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 	$(OS8RUN) $(CC8_TU56_SCRIPT)
+	$(OS8RUN) $(E8_TU56_SCRIPT)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
@@ -701,7 +717,7 @@ UNI_PATCHES := \
 $(OS8_DIST_RK05): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
-$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) @CC8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(OS8_DIST_RK05) $(V3D_PATCHES) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
@@ -787,6 +803,10 @@ $(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK)
 bin/cc8.tu56: $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) $(CC8_TU56_SCRIPT) | $(OS8_DIST_RK05)
 	$(OS8RUN) $(CC8_TU56_SCRIPT)
 
+# Create the E8 distribution DECtape image
+bin/e8.tu56: $(E8_SRCS) $(E8_TU56_SCRIPT) | $(OS8_DIST_RK05)
+	$(OS8RUN) $(E8_TU56_SCRIPT)
+
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
 	bin/palbart -lr $< || cat obj/$*.err
@@ -855,6 +875,9 @@ bin/txt2ptp: bin/ptp2txt
 
 bin/deeper: obj/misc/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $^ $(LIBS)
+
+doc/e8-manual.pdf: doc/e8-manual.md
+	tools/mkmanpdf doc/e8-manual
 
 libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@

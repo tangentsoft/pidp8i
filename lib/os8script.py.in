@@ -749,7 +749,7 @@ class os8script:
       if path == None:
         print("Ignoring: \n\tcpto " + line)
         return "fail"
-      self.simh.os8_pip_to (path, m.group(2), m.group(4))
+      self.simh.os8_pip_to (path, m.group(2), m.group(4), self.debug)
     return "success"
 
 
@@ -859,7 +859,7 @@ class os8script:
         ": Patch file: " + path + " not found.")
       return "fail"
 
-    self.run_patch_file (path)
+    self.run_patch_file (path, line, script_file)
     return "success"
 
 
@@ -1134,7 +1134,7 @@ class os8script:
 
   #### run_patch_file ##################################################
   
-  def run_patch_file (self, pathname):
+  def run_patch_file (self, pathname, line, script_file):
     sys.stdout.write ("Applying patch " + os.path.basename (pathname) + "...")
     sys.stdout.flush ()
 

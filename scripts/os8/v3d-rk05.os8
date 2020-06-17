@@ -55,6 +55,7 @@ mount dt0 $os8mi/local.tu56 ro required
 # resume
 os8 DEL SYS:FORLIB.RL
 os8 COPY SYS:<DTA0:FORLIB.RL
+umount dt0
 end default fortran_iv
 
 patch $os8mi/patches/FOTP-21.19.1M-V9B.patch8
@@ -134,12 +135,23 @@ patch $os8mi/patches/TECO-31.20.13M-v5.08.patch8
 # Don't install this in v3d-dist because we need
 # v3d packs to build it.
 begin default cc8
-umount dt1
 mount dt1 $os8mo/cc8.tu56 ro required
 # resume
 os8 COPY RKA0:<DTA1:*.SV
 os8 COPY RKB0:<DTA1:*.SV/V
+umount dt1
 end default cc8
+
+# Bill Silver's E8 Emacs-like screen editor.
+# Don't install this in v3d-dist because we need
+# v3d packs to build it.
+begin default e8
+mount dt0 $os8mo/e8.tu56 ro required
+os8 COPY RKA0:<DTA0:E8.SV
+os8 COPY RKB0:<DTA0:E8CMDS.TX
+os8 COPY RKB0:<DTA0:E8SRCH.TX
+umount dt0
+end default e8
 
 # Squish our device as our last step!
 

@@ -11,7 +11,8 @@ Most of the files in this software distribution are released under the
 terms of the SIMH license, a copy of which typically appears at the top
 of each file it applies to. This includes not only SIMH proper but also
 several files written by PiDP-8/I software project contributors who
-chose to license their contributions under the same license.
+chose to license their contributions under the same license, including
+E8.
 
 For a few files, textual inclusion of the license inside the file itself
 was impractical, so this license is applied by reference to [a file

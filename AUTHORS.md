@@ -80,6 +80,10 @@
     software project. His contributions are made to the project [as
     `poetnerd`][pncomm].
 
+*   **[Bill Silver](mailto:bsilver@tidewater.net)** created E8, an
+    Emacs-like editor for the PDP-8.  See [its `AUTHORS.md` file][e8au]
+    for more info.
+
 *   **[Warren Young](mailto:tangentsoft@gmail.com)** Did everything
     listed in [the change log][cl] that is not attributed to anyone
     else.
@@ -92,6 +96,7 @@
 
 [advent]: http://www.rickmurphy.net/advent/
 [cl]:     https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
+[e8au]:   ./src/e8/AUTHORS.md
 [pncomm]: https://tangentsoft.com/pidp8i/timeline?u=poetnerd
 [thcomm]: https://tangentsoft.com/pidp8i/timeline?u=tony
 [vtedit]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT

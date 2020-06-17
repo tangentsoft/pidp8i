@@ -1060,7 +1060,8 @@ class simh:
     if self.os8_test_result (reply, "Command Decoder Prompt", "os8_pip_to 0", \
                              debug=debug) == False: return
 
-    # Give file and test for ready to send,
+    # Give file and test for ready to send.
+    if debug: print ("os8_pip_to: Sending: " + dest + '<PTR:' + option)
     reply = self.os8_cmd (dest + '<PTR:' + option, debug=debug)
     if self.os8_test_result (reply, "PIP Continue", "os8_pip_to 1", debug=debug) == False:
       # If we got "PIP Continue" we keep going. Otherwise return.

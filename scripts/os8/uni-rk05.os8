@@ -13,8 +13,24 @@ boot rk0
 # Don't install this in v3d-dist because we need
 # v3d packs to build it.
 begin default cc8
-umount dt1
 mount dt1 $os8mo/cc8.tu56 ro required
 os8 COPY RKA0:<DTA1:*.SV
 os8 COPY RKB0:<DTA1:*.SV/V
+umount dt1
 end default cc8
+
+# Bill Silver's E8 Emacs-like screen editor.
+# Don't install this in v3d-dist because we need
+# v3d packs to build it.
+begin default e8
+mount dt0 $os8mo/e8.tu56 ro required
+os8 COPY RKA0:<DTA0:E8.SV
+os8 COPY RKB0:<DTA0:E8CMDS.TX
+os8 COPY RKB0:<DTA0:E8SRCH.TX
+umount dt0
+end default e8
+
+# Squish our device as our last step!
+
+os8 SQUISH DSK:/O
+os8 SQUISH SYS:/O
