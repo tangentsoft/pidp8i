@@ -31,14 +31,14 @@ may be divided into the following logical groupings.
 These scripts create the primary OS/8 boot media, which are installed to
 `$prefix/share/media/os8`:
 
-| Script Name       | Build Product        | Function
-|-------------------|----------------------|----------------------------
-| `all-tu56`        | `v3[df]-*.tu56`      | bootable OS/8 TU56 images
-| `v3d-dist-rk05`   | `v3d-dist.rk05 OS/8` | bootable OS/8 V3D on RK05
-| `v3d-rk05`        | `v3d.rk05`           | `v3d-dist.rk05` with patches; default IF=0 boot option
-| `v3d-src-rk05`    | `v3d-src.rk05`       | combined OS/8 V3D source tape contents
-| `uni-dist-rk05`   | `uni-dist.rk05`      | OCK analogue to `v3d-dist.rk05`
-| `uni-rk05.os8`    | `uni.rk05`           | OCK analogue to `v3d.rk05`
+| Script Name       | Build Product   | Function
+|-------------------|-----------------|----------------------------
+| `all-tu56`        | `v3[df]-*.tu56` | bootable OS/8 TU56 images
+| `v3d-dist-rk05`   | `v3d-dist.rk05` | bootable OS/8 V3D on RK05
+| `v3d-rk05`        | `v3d.rk05`      | `v3d-dist.rk05` with patches; default IF=0 boot option
+| `v3d-src-rk05`    | `v3d-src.rk05`  | combined OS/8 V3D source tape contents
+| `uni-dist-rk05`   | `uni-dist.rk05` | OCK analogue to `v3d-dist.rk05`
+| `uni-rk05.os8`    | `uni.rk05`      | OCK analogue to `v3d.rk05`
 
 It should be noted that the `-dist` images are also used as internal
 stable platforms to build other things atop, so their purpose blurs a
