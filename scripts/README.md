@@ -8,65 +8,64 @@ under SIMH.  See also the [os8-run documentation][os8-run-doc].
 ## OS/8 Scripts
 
 The majority of these scripts are for building distributions of OS/8
-proper.  These are in the `os8` subdirectory:
+proper. Most of the scripts have one of the following prefixes:
 
-### Creation of Installed Images:
+| Prefix | Referent
+|--------|-----------
+| `v3d`  | OS/8 V3D
+| `v3f`  | an unofficial V3D follow-on, never formally released as such by DEC
+| `uni`  | the [OS/8 Combined Kit][unidoc] (OCK), the last formal DEC release of OS/8
 
-`v3d-dist-rk05.os8` -- Construct the `v3d-dist.rk05` OS/8 v3d rk05 image
-from distribution media, as configured by auto.def.  This image is
-used to build other subsystems that are packaged into the default boot
-image.
+[unidoc]: /doc/trunk/src/os8/uni/README.md
 
-`v3d-rk05.os8` -- Transform `v3d-dist-rk05` into the default OS/8 boot
-image, `v3d.rk05` by integrating separately built subsystems, and applying
-patches.
+Some of these scripts’ outputs are based purely on the input source file
+contents, but some may vary based on `configure --enable-os8-*`
+parameters.
 
-`v3d-src-rk05.os8` -- Construct `v3d-src.rk05`, the OS/8 rk05 image
-containing souces from distribution media.
+While all of these scripts are stored in the `os8` subdirectory, they
+may be divided into the following logical groupings.
 
-`all-tu56` -- Based on --enable parameters of v3d or v3f with tc08 or
-td12k, construct the 4 bootable tu56 images, `v3d-td12k.tu56`,
-`v3d-tc08.tu56`, `v3f-td12k.tu56`, and `v3f-tc08.tu56`.  The v3f
-images are built using the `v3f-made.rk05` intermediate object image.
 
-`uni-dist-rk05.os8` -- Construct the `uni-dist.rk05` from the Combined
-Kit intermediate object images {`uni-sys-build.os8`,
-`uni-cusps-build.os8`, `uni-bf2-build.os8`, `uni-fiv-build.os8`} as
-configured by auto.def.  This image is used to build other subsystems
-that are packaged into the default `uni.rk05` boot image.
+### Installed Image Creation
 
-`uni-rk05.os8` -- Transform `uni-dist-rk05` into the OS/8 boot image
-for normal use, `v3d.rk05` by integrating separately built subsystems,
-and applying patches.
+These scripts create the primary OS/8 boot media, which are installed to
+`$prefix/share/media/os8`:
 
-### Intermediate Object Images:
+| Script Name       | Build Product        | Function
+|-------------------|----------------------|----------------------------
+| `all-tu56`        | `v3[df]-*.tu56`      | bootable OS/8 TU56 images
+| `v3d-dist-rk05`   | `v3d-dist.rk05 OS/8` | bootable OS/8 V3D on RK05
+| `v3d-rk05`        | `v3d.rk05`           | `v3d-dist.rk05` with patches; default IF=0 boot option
+| `v3d-src-rk05`    | `v3d-src.rk05`       | combined OS/8 V3D source tape contents
+| `uni-dist-rk05`   | `uni-dist.rk05`      | OCK analogue to `v3d-dist.rk05`
+| `uni-rk05.os8`    | `uni.rk05`           | OCK analogue to `v3d.rk05`
 
-`v3f-control.os8` -- Perform assembly or BATCH operations to produce
-`v3f-made.rk05` that contains binaries from v3f sources.
+It should be noted that the `-dist` images are also used as internal
+stable platforms to build other things atop, so their purpose blurs a
+bit with the images in the next section.
 
-`uni-sys-build.os8` -- Assemble OS/8 Combined Kit SYSTEM sources to
-create `uni-sys.rk05`.
 
-`uni-cusps-build.os8` -- Assemble OS/8 Combined Kit CUSPS (Commonly
-Used System ProgramS) sources to create `uni-cusps.rk05`.
+### Intermediate Image Creation
 
-`uni-bf2-build.os8` -- Assemble OS/8 Combined Kit BASIC and FORTRAN II
-sources to create `uni-bf2.rk05`.
+Some of the above images are created in stages. The following scripts
+generally assemble OS/8 source files to produce intermediate images that
+are not installed:
 
-`uni-fiv-build.os8` -- Assemble OS/8 Combined Kit FORTRAN IV sources to
-create `uni-fiv.rk05`.
+| Script Name       | Build Product    | Function
+|-------------------|------------------|------------------------
+| `uni-cusps-build` | `uni-cusps.rk05` | Commonly Used System ProgramS (CUSPS)
+| `uni-bf2-build`   | `uni-bf2.rk05`   | BASIC and FORTRAN II
+| `uni-fiv-build`   | `uni-fiv.rk05`   | FORTRAN IV
+| `uni-sys-build`   | `uni-sys.rk05`   | SYSTEM
+| `v3f-control`     | `v3f-made.rk05`  | OS/8 V3F; input to `all-tu56` for `v3f-*.tu56`
 
-`uni-sys-build.os8` -- Assemble OS/8 Combined Kit SYSTEM sources to
-create `uni-sys.rk05`.
 
-### Utilities:
+### Utilities
 
-`cusp--copyin` --  Include script used by all-tu56 to copy Commonly Used
-System Programs onto the tu56 image under construction.
-
-`v3d-reset-tc08` -- Used to reset  the default OS/8 v3d rk05 boot image
-to use TC08 DECtape device when some script under test leaves it with
-the TD8E DECtape device enabled.
+| Script Name     | Function
+|-----------------|-------------------------------------------
+| v3d-reset-tc08  | Re-configure the IF=0 boot image to use TC08 DECtape instead of TD8E drivers
+| cusp-copyin     | Included by `all-tu56` to copy CUSPS onto the TU56 image under construction
 
 
 ## Miscellaneous Scripts
@@ -83,9 +82,9 @@ are in the `test` subdirectory:
 
 | Script Name | Function
 |-------------|-------------------------------------------
-| version     | Test `begin enabled version` functionality.
+| version     | Test the `begin enabled version` functionality in `os8-run`
 | copy        | Test the `cpto` and `cpfrom` os8-run commands.
-| err         | Provoke errors in os8-run and test behavior.
+| err         | Used to provoke errors in os8-run and test behavior.
 | restart     | Test the `restart` os8-run command.
 | patch       | Test the `patch` os8-run command.
 
@@ -96,3 +95,5 @@ are in the `test` subdirectory:
 
 Copyright © 2016-2020 by Bill Cattey. This document is licensed under
 the terms of [the SIMH license][sl].
+
+[sl]:  https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
