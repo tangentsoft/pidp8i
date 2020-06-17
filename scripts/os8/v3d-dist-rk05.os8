@@ -171,7 +171,9 @@ end default crt
 
 begin default lcmod
 os8 SUBMIT SYS:LCSYS.BI
-os8 SUBMIT SYS:LCBAS.BI
+  begin default ba
+  os8 SUBMIT SYS:LCBAS.BI
+  end default ba
 end default lcmod
 
 # INIT message setting stuff goes here

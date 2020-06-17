@@ -123,6 +123,7 @@ RKA0:<RKB1:BASIC.*
 RKA0:<RKB1:SABR.SV
 RKA0:<RKB1:LOADER.SV
 RKA0:<RKA1:RESEQ.BA
+RKA0:<RKA1:?CBAS.BI
 # Copy in the BASIC UF.PA source. Maybe make it later
 # Note it's starting address on the v3d dist is 7605.
 RKB0:<RKA1:UF.PA
@@ -223,7 +224,9 @@ end default uwfocal
 
 begin default lcmod
 os8 SUBMIT SYS:LCSYS.BI
-# os8 SUBMIT SYS:LCBAS.BI
+  begin default ba
+  os8 SUBMIT SYS:LCBAS.BI
+  end default ba
 end default lcmod
 
 # INIT message setting stuff goes here
