@@ -1,4 +1,4 @@
-# `os8-run` Scripts
+# os8-run Scripts
 
 This directory contains scripts to be run by the `os8-run` tool,
 which provides a rich language to automate actions of OS/8
@@ -16,14 +16,15 @@ proper. Most of the scripts have one of the following prefixes:
 | `v3f`  | an unofficial V3D follow-on, never formally released as such by DEC
 | `uni`  | the [OS/8 Combined Kit][unidoc] (OCK), the last formal DEC release of OS/8
 
-[unidoc]: /doc/trunk/src/os8/uni/README.md
-
 Some of these scripts’ outputs are based purely on the input source file
-contents, but some may vary based on `configure --enable-os8-*`
-parameters.
+contents, but some outpus vary based on [`configure --enable-os8-*`
+parameters][os8cfg].
 
 While all of these scripts are stored in the `os8` subdirectory, they
 may be divided into the following logical groupings.
+
+[os8cfg]: /doc/trunk/README.md#disable-os8
+[unidoc]: /doc/trunk/src/os8/uni/README.md
 
 
 ### Installed Image Creation
@@ -38,7 +39,7 @@ These scripts create the primary OS/8 boot media, which are installed to
 | `v3d-rk05`        | `v3d.rk05`      | `v3d-dist.rk05` with patches; default IF=0 boot option
 | `v3d-src-rk05`    | `v3d-src.rk05`  | combined OS/8 V3D source tape contents
 | `uni-dist-rk05`   | `uni-dist.rk05` | OCK analogue to `v3d-dist.rk05`
-| `uni-rk05.os8`    | `uni.rk05`      | OCK analogue to `v3d.rk05`
+| `uni-rk05`        | `uni.rk05`      | OCK analogue to `v3d.rk05`
 
 It should be noted that the `-dist` images are also used as internal
 stable platforms to build other things atop, so their purpose blurs a

@@ -589,6 +589,9 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 
 *   **--disable-os8-dcp** — Leave out the DCP disassembler.
 
+*   **--disable-os8-e8** — Leave out [Bill Silver’s E8][e8], an
+    Emacs-like screen editor.
+
 *   **--disable-os8-focal** - Do not install any version of FOCAL on the
     OS/8 system disk. This option sets `--disable-os8-uwfocal` and
     overrides `--enable-os8-focal69`, both discussed below.
@@ -662,8 +665,6 @@ with the following options:
     experience the historical ubiquity of typhoid fever, so do not feel
     guilty if you choose to try this option.
 
-[uvte]: https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
-
 *   **--enable-os8-focal69** — Because the default installation includes
     U/W FOCAL, we have chosen to leave [FOCAL,1969][f69] out by default
     to save space on the O/S 8 system disk. You can give this option to
@@ -693,6 +694,7 @@ with the following options:
 
 [f69]:   https://tangentsoft.com/pidp8i/wiki?name=Running+FOCAL%2C1969
 [suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
+[uvte]:  https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 
 ### --os8-minimal
@@ -703,7 +705,7 @@ all `--disable-os8-*` flags to true.  If you give this along with any
 to get "minimal plus one or two features" is to explicitly disable all
 of the optional OS/8 features you don't want.
 
-This flag's name is aspirational, rather than accurate: our current
+This flag's name is aspirational, not a promise of an ideal: our current
 "minimal" installation could still be stripped down some more.  We
 expect to add more `--disable-os8-*` flags later to reduce the delta
 between the ideal "minimal OS/8" and our current offering.  These
@@ -716,16 +718,19 @@ This option does not control some things you might think it should:
     affects only OS/8's command interpreter and OS/8's BASIC
     implementation, so we deem it to be orthogonal to the purpose of the
     `--os8-minimal` flag, which only affects the optional post-`BUILD`
-    features.  If you want a *truly* pristime OS/8 disk, you should
-    therefore also give `--lowercase=none`.
+    features. You may therefore wish to give `--lowercase=none` along
+    with `--os8-minimal`.
 
 2.  This option does not affect `--disable-os8-src`, because it only
-    suppresses optional features in the "bin" media.  If you want a
-    minimal OS/8 bin disk and no src disk, give that option as well.
+    suppresses optional features in the primary bootable OS/8 media.  If
+    you want minimal OS/8 boot media without a separate source code
+    data disk, give this option as well.
 
-3.  Although it disables *display* of the `INIT.TX` file on boot, the
-    file is still generated in case you later want to enable it, since
-    the file acts as build documentation as well as a "welcome" message.
+3.  Although this option disables *display* of the `INIT.TX` file on
+    boot, the file is still generated, on purpose.  First, it acts as
+    build documentation, recording what was built and when.  Second,
+    you may wish to enable this welcome message later, and it’s rather
+    painful to go back through the build process to regenerate it later.
 
 
 ### --help

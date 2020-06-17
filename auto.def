@@ -61,6 +61,7 @@ set os8opts {
     chess       1  "the CHECKMO-II game of chess"
     crt         1  "CRT-style rubout processing"
     dcp         1  "the DCP disassembler"
+    e8          1  "Emacs-like Editor"
     focal69     0  "FOCAL,1969"
     fortran-ii  1  "FORTRAN II"
     fortran-iv  1  "FORTRAN IV"
@@ -70,7 +71,6 @@ set os8opts {
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"
     vtedit      0  "the TECO VTEDIT setup"
-    e8          1  "Emacs-like Editor"
 }
 
 set alloptions {}
