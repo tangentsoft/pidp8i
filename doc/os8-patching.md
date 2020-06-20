@@ -51,31 +51,31 @@ OS/8 binary RK05 disk image file with your choice of patches.
 
 ## Review of Recommendations
 
-`BRTS 31.11.2O` is an optional patch which disables 8th bit parity. It
+`BRTS 31.11.2 O` is an optional patch which disables 8th bit parity. It
 is recommended because sometimes we may want to allow output that
 does not force the 8th bit.
 
-`BRTS 31.11.3O` is an optional patch that enables 132 column
+`BRTS 31.11.3 O` is an optional patch that enables 132 column
 output. It is recommended because it is expected that wide column
 output is desirable.
 
-`TECO 31.20.1O` is an optional patch that permanently forces no case
+`TECO 31.20.1 O` is an optional patch that permanently forces no case
 flagging.  It is not recommended because we want to allow the option
 of case flagging.
 
-`TECO 31.20.2O` is an optional patch that turns off verbose
+`TECO 31.20.2 O` is an optional patch that turns off verbose
 errors. It was for slow terminals and experienced users who didn't
 want to wait to see the long error messages they already knew.  It is
 not recommended because we expect a majority of users to be on high
 speed terminals needing the verbose errors.
 
-`TECO 31.20.3O` turns off a warning that you are using the `YANK`
+`TECO 31.20.3 O` turns off a warning that you are using the `YANK`
 command to completely overwrite a buffer full of text.  Issuing the
 command a second time succeeds.  It was again to avoid experienced
 users.  It is not recommended because we expect fewer advanced users
 who would be annoyed by the protection.
 
-`TECO 31.20.4O` implements rubout support specifically and uniquely
+`TECO 31.20.4 O` implements rubout support specifically and uniquely
 for the `VT05` terminal in a way that breaks it for all other video
 terminals.  It is not recommended because there are VERY few `VT05`
 deployments that would use it.
@@ -84,7 +84,7 @@ It is at this point that I began to notice that in later years, patches
 became less carefully produced, and more prone to errors. Some are not
 correctable, even today.
 
-`BASIC.UF-31.5.1M` shows:
+`BASIC.UF-31.5.1 M` shows:
 
     4044/4514 4556
 
@@ -125,7 +125,7 @@ it is mis-labeled, and is properly applied to the version with the
 Extensions kit. Until it is verified, applying this patch is *not*
 recommended.
 
-`PAL8-21.22.4M` is broken and doubly mis-labeled. Mis-label #1: It is
+`PAL8-21.22.4 M` is broken and doubly mis-labeled. Mis-label #1: It is
 an optional, not mandatory patch. Mis-label #2: It is for product
 sequence `35.14`, the `V13` codeline of `PAL-8` that, like `ABSLDR
 V6`, is in the Device Extensions kit.  The breakage: Source listing
