@@ -88,7 +88,9 @@ it. `BASIC.UF` can't work without this patch because page zero
 literals in `BRTS` are adjusted to match.  This patch has been
 incorporated into the `UF.PA` source.
 
-### TODO
+### TODO:
+
+Scope the work of applying 17 patches either in source or binary form.
 
 Bench check to see if source changes were made for:
 
