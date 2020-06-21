@@ -79,26 +79,34 @@ OS/8 V3D Device Extensions December 1978 Patches:
 before applying `FPAT.BN`.  We build from source, and have the patch
 so this is not an issue. 
 
-### Missing Patches that were fixed:
+### Applied Patches:
 
-`BASIC.UF-31.5.1 M`, a mandatory patch, was expected to have been
-integrated into the source.  The sources that "built binaries that
-matched the Combined Kit Binary Floppies did not contain
-it. `BASIC.UF` can't work without this patch because page zero
-literals in `BRTS` are adjusted to match.  This patch has been
-incorporated into the `UF.PA` source.
+The Combined Kit sources were obtained from Lee Nichols who built them
+and verified that the built binaries matched a Combined Kit binary
+distribution he had.  When the patches applied to the V3D distribution
+were reviewed, some patches dated later than the documented "through
+June 1979" application date were discovered **not** to have been
+applied.  Interpreting this state of affairs has been guided by pragmatism:
 
-### TODO:
+1. How could the documented release date of March 1979 include patches
+appearing in the June/July 1979 PDP-8 Digital Software News? Probably impossible.
+2. Was the software development team 100% accurate in their
+application of patches? Probably not.
+3. Is the statement "matches the binary distribution" from Lee
+credible? Probably yes.
+4. Is it worth the extra work to hand-integrate patches into source as
+meticulously as Lee did with the patches he did integrate, when we
+have proven binary patches and a pre-existing automated patch
+application infrastructure?  Probably not.
 
-Scope the work of applying 17 patches either in source or binary form.
+Therefore, the following patches are applied using the same mechanism
+used for the V3D distribution:
 
-Bench check to see if source changes were made for:
+OS/8 V3D patches:
 
-OS/8 V3D patches: 3 need work
-
-`CREF 21.15.1 M` Needs to be applied. Apr/May 1978. Should have been in source.
-`CREF 21.15.2 M` Needs to be applied. Feb/Mar 1980.
-`ABSLDR 21.29.1 M` is needed. (After much research.) Dec 1979/Jan 1980.
+`CREF 21.15.1 M` Apr/May 1978.  Required update to apply to `CREF V5B`.
+`CREF 21.15.2 M` Feb/Mar 1980.
+`ABSLDR 21.29.1 M` Dec 1979/Jan 1980 -- Determined necessary after much research. See below.
 
 OS/8 Extension Kit V3D patches: 11 need work.
 
@@ -128,6 +136,33 @@ OS/8 V3D Device Extensions December 1978 Patches: 2 need work.
 `BLOAD 35.51.1 M`  Needed but same as `BLOAD-31.10.1 M` for Baseline.
 
 Review and consider applying the available `MACREL v2` patches. 10 items
+
+
+### Missing / Updated Patches:
+
+`BASIC.UF-31.5.1 M`, a mandatory patch, was expected to have been
+integrated into the source.  The sources that "built binaries that
+matched the Combined Kit Binary Floppies did not contain
+it. `BASIC.UF` can't work without this patch because page zero
+literals in `BRTS` are adjusted to match.  This patch has been
+incorporated into the `UF.PA` source.
+
+The source of `CREF` was labeled version `5B` but contained no changes
+other than the version string when compared against the OS/8 V3D
+source.  The original `CREF 21.15.1 M` patch would not apply because
+the version number, 0302, did not match what it was expecting.  To for
+the Combined Kit, the patch is modified to not care what version
+number is set.
+
+### TODO:
+
+Fix 3 patches:
+
+Applying patch CREF-21.15.1M-v5B.patch8...	Old value: 0302 does not match 0301. Aborting patch.
+
+
+Confirm application and correct operation.
+
 
 ### Patch research details: 
 
