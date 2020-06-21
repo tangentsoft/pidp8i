@@ -96,9 +96,9 @@ Bench check to see if source changes were made for:
 
 OS/8 V3D patches: 3 need work
 
-`CREF 21.15.1 M` is not applied and needed.
-`CREF 21.15.2 M` is not applied and needed.
-`ABSLDR 21.29.1 M` is needed.  (After much research.)
+`CREF 21.15.1 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`CREF 21.15.2 M` Needs to be applied. Feb/Mar 1980.
+`ABSLDR 21.29.1 M` is needed. (After much research.) Dec 1979/Jan 1980.
 
 OS/8 Extension Kit V3D patches: 11 need work.
 
@@ -108,18 +108,19 @@ OS/8 Extension Kit V3D patches: 11 need work.
 output. It is recommended because it is expected that wide column
 output is desirable.
 
-`TECO 31.20.5 M` Needs to be applied.
-`TECO 31.20.6 M` Needs to be applied.
-`TECO 31.20.7 M` Needs to be applied.
-`TECO 31.20.8 M` Needs to be applied.
-`TECO 31.20.10 M` Needs to be applied.
-`TECO 31.20.11 M` Needs to be applied.
-`TECO 31.20.12 M` Needs to be applied.
-`TECO 31.20.13 M` Needs to be applied.
+`TECO 31.20.5 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`TECO 31.20.6 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`TECO 31.20.7 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`TECO 31.20.8 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`TECO 31.20.10 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`TECO 31.20.11 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`TECO 31.20.12 M` Needs to be applied. Apr/May 1978. Should have been in source.
+`TECO 31.20.13 M` Needs to be applied. Oct/Nov 1978. Should have been in source.
 
 OS/8 FORTRAN IV patches 1 needs work:
 
-`F4 51.3.2 M` Has not been applied. Looks like it might be needed.
+`F4 51.3.2 M` Has not been applied. Looks like it might be
+needed. Jun/Jul 1978. Should have been in source.
 
 OS/8 V3D Device Extensions December 1978 Patches: 2 need work.
 
@@ -146,7 +147,7 @@ Extensions kit. Until it is verified, applying this patch is *not*
 recommended.
 
 Reviewing the 6A source we have for the Combined Kit, this patch
-appears mis-labeled, and necessary for ABSLDR V6A.  This patch was not
+appears mis-labeled, and necessary for ABSLDR V6B.  This patch was not
 re-numbered as of the latest issue to be found of PDP-8 Digital
 Software News [October/November 1980 (Order Number
 AA-K629A-BA)][dsn-1980-10].

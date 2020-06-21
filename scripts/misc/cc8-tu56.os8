@@ -4,9 +4,7 @@
 # v3d.rk05 rely upon this image as a prerequisite, we
 # build with a copy of v3d-dist.rk05
 
-# copy $os8mo/v3d-dist.rk05 $os8mo/temp-v3d-dist.rk05
-# mount rk0 $os8mo/temp-v3d-dist.rk05 required
-mount rk0 $os8mo/v3d-dist.rk05 required scratch
+mount rk0 $os8mo/v3d-patched.rk05 required scratch
 mount dt0 $os8mo/cc8.tu56 new
 boot rk0
 
