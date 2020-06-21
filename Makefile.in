@@ -322,10 +322,10 @@ INC_SCRIPTS_DIR = @srcdir@/scripts/include
 MISC_SCRIPTS_DIR = @srcdir@/scripts/misc
 OS8_SCRIPTS_DIR = @srcdir@/scripts/os8
 
-V3D_DIST_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-dist-rk05.os8
-V3D_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-src-rk05.os8
-V3D_PATCH_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-patch-rk05.os8
-V3D_RK05_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d-rk05.os8
+V3D_DIST_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d/dist-rk05.os8
+V3D_SRC_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d/src-rk05.os8
+V3D_PATCH_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d/patch-rk05.os8
+V3D_RK05_SCRIPT = $(OS8_SCRIPTS_DIR)/v3d/boot-rk05.os8
 
 V3F_SRCDIR = @srcdir@/src/os8/v3f
 V3F_BUILD_RK05 = obj/v3f-build.rk05
@@ -333,7 +333,7 @@ V3F_MANIFEST = actions.txt
 
 V3F_MADE_RK05 = bin/v3f-made.rk05
 
-V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
+V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f/control.os8
 
 # OS/8 Combined Kit. Build from Source.
 # We build each object rk05 image in one large script
@@ -348,23 +348,23 @@ OS8_OCK_SRCDIR = @srcdir@/src/os8/ock
 
 OS8_OCK_SYS_SRC_RK05 = obj/ock-sys-src.rk05
 OS8_OCK_SYS_OBJ_RK05 = bin/ock-sys-obj.rk05
-OS8_OCK_SYS_MAKER = $(OS8_SCRIPTS_DIR)/ock-sys-build.os8
+OS8_OCK_SYS_MAKER = $(OS8_SCRIPTS_DIR)/ock/sys-build.os8
 
 OS8_OCK_CUSPS_SRC_RK05 = obj/ock-cusps-src.rk05
 OS8_OCK_CUSPS_OBJ_RK05 = bin/ock-cusps-obj.rk05
-OS8_OCK_CUSPS_MAKER = $(OS8_SCRIPTS_DIR)/ock-cusps-build.os8
+OS8_OCK_CUSPS_MAKER = $(OS8_SCRIPTS_DIR)/ock/cusps-build.os8
 
 OS8_OCK_BF2_SRC_RK05 = obj/ock-bf2-src.rk05
 OS8_OCK_BF2_OBJ_RK05 = bin/ock-bf2-obj.rk05
-OS8_OCK_BF2_MAKER = $(OS8_SCRIPTS_DIR)/ock-bf2-build.os8
+OS8_OCK_BF2_MAKER = $(OS8_SCRIPTS_DIR)/ock/bf2-build.os8
 
 OS8_OCK_FIV_SRC_RK05 = obj/ock-fiv-src.rk05
 OS8_OCK_FIV_OBJ_RK05 = bin/ock-fiv-obj.rk05
-OS8_OCK_FIV_MAKER = $(OS8_SCRIPTS_DIR)/ock-fiv-build.os8
+OS8_OCK_FIV_MAKER = $(OS8_SCRIPTS_DIR)/ock/fiv-build.os8
 
 OS8_OCK_DIST_RK05 = bin/ock-dist.rk05
-OS8_OCK_DIST_MAKER = $(OS8_SCRIPTS_DIR)/ock-dist-rk05.os8
-OS8_OCK_RK05_MAKER = $(OS8_SCRIPTS_DIR)/ock-rk05.os8
+OS8_OCK_DIST_MAKER = $(OS8_SCRIPTS_DIR)/ock/dist-rk05.os8
+OS8_OCK_RK05_MAKER = $(OS8_SCRIPTS_DIR)/ock/rk05.os8
 OS8_OCK_RK05 = bin/ock.rk05
 
 ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
