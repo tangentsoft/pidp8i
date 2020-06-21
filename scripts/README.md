@@ -14,7 +14,7 @@ proper. Most of the scripts have one of the following prefixes:
 |--------|-----------
 | `v3d`  | OS/8 V3D
 | `v3f`  | an unofficial V3D follow-on, never formally released as such by DEC
-| `uni`  | the [OS/8 Combined Kit][unidoc] (OCK), the last formal DEC release of OS/8
+| `ock`  | the [OS/8 Combined Kit][ockdoc] (OCK), the last formal DEC release of OS/8
 
 Some of these scripts’ outputs are based purely on the input source file
 contents, but some outputs vary based on [`configure --enable-os8-*`
@@ -24,7 +24,7 @@ While all of these scripts are stored in the `os8` subdirectory, they
 may be divided into the following logical groupings.
 
 [os8cfg]: /doc/trunk/README.md#disable-os8
-[unidoc]: /doc/trunk/src/os8/uni/README.md
+[ockdoc]: /doc/trunk/src/os8/ock/README.md
 
 
 ### Installed Image Creation
@@ -38,8 +38,8 @@ These scripts create the primary OS/8 boot media, which are installed to
 | `v3d-dist-rk05`   | `v3d-dist.rk05` | bootable OS/8 V3D on RK05
 | `v3d-rk05`        | `v3d.rk05`      | `v3d-dist.rk05` with patches; default IF=0 boot option
 | `v3d-src-rk05`    | `v3d-src.rk05`  | combined OS/8 V3D source tape contents
-| `uni-dist-rk05`   | `uni-dist.rk05` | OCK analogue to `v3d-dist.rk05`
-| `uni-rk05`        | `uni.rk05`      | OCK analogue to `v3d.rk05`
+| `ock-dist-rk05`   | `ock-dist.rk05` | OCK analogue to `v3d-dist.rk05`
+| `ock-rk05`        | `ock.rk05`      | OCK analogue to `v3d.rk05`
 
 It should be noted that the `-dist` images are also used as internal
 stable platforms to build other things atop, so their purpose blurs a
@@ -54,10 +54,10 @@ are not installed:
 
 | Script Name       | Build Product    | Function
 |-------------------|------------------|------------------------
-| `uni-cusps-build` | `uni-cusps.rk05` | Commonly Used System ProgramS (CUSPS)
-| `uni-bf2-build`   | `uni-bf2.rk05`   | BASIC and FORTRAN II
-| `uni-fiv-build`   | `uni-fiv.rk05`   | FORTRAN IV
-| `uni-sys-build`   | `uni-sys.rk05`   | SYSTEM
+| `ock-cusps-build` | `ock-cusps.rk05` | Commonly Used System ProgramS (CUSPS)
+| `ock-bf2-build`   | `ock-bf2.rk05`   | BASIC and FORTRAN II
+| `ock-fiv-build`   | `ock-fiv.rk05`   | FORTRAN IV
+| `ock-sys-build`   | `ock-sys.rk05`   | SYSTEM
 | `v3f-control`     | `v3f-made.rk05`  | OS/8 V3F; input to `all-tu56` for `v3f-*.tu56`
 
 

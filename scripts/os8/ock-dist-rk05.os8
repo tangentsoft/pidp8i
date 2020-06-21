@@ -8,11 +8,11 @@
 mount dt0 $os8mi/al-4711c-ba-os8-v3d-1.1978.tu56 required scratch
 
 # rk0 holds the media we build
-mount rk0 $os8mo/uni-dist.rk05 new
+mount rk0 $os8mo/ock-dist.rk05 new
 # rk1  holds the system object image.
-mount rk1 $os8mo/uni-sys-obj.rk05
+mount rk1 $os8mo/ock-sys-obj.rk05
 # rk2 holds the CUSPS object image
-mount rk2 $os8mo/uni-cusps-obj.rk05
+mount rk2 $os8mo/ock-cusps-obj.rk05
 
 boot dt0
 
@@ -109,7 +109,7 @@ end default crt
 umount rk1
 umount rk2
 # rk1  holds the BASIC/FORTRAN II object image.
-mount rk1 $os8mo/uni-bf2-obj.rk05
+mount rk1 $os8mo/ock-bf2-obj.rk05
 
 # We install SABR and LOADER even if F2 disabled because
 # we use them for the C compiler.
@@ -174,7 +174,7 @@ end default k12
 # FORTRAN IV
 begin default fortran-iv
 # rk1 holds the FORTRAN IV object image
-mount rk1 $os8mo/uni-fiv-obj.rk05
+mount rk1 $os8mo/ock-fiv-obj.rk05
 os8 COPY RKA0:<RKB1:*.*
 umount rk1
 end default fortran-iv
@@ -242,7 +242,7 @@ begin default init
 cpto $os8mi/init.cm
 # Location of init.tx is funky so that test-os8-run will be able to
 # sanitize it.
-cpto $build/media/os8/uni-init.tx DSK:INIT.TX
+cpto $build/media/os8/ock-init.tx DSK:INIT.TX
 os8 SET SYS INIT
 end default init
 

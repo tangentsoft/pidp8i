@@ -2,8 +2,8 @@
 # Bootstrapping issue: we use XXX-dist.rk05 to build the C compiler.
 # So we install it in this phase.
 
-copy $os8mo/uni-dist.rk05 $os8mo/uni.rk05
-mount rk0 $os8mo/uni.rk05 required
+copy $os8mo/ock-dist.rk05 $os8mo/ock.rk05
+mount rk0 $os8mo/ock.rk05 required
 
 boot rk0
 

@@ -263,7 +263,7 @@ OS8RUN_INFILES = \
 	@srcdir@/lib/pidp8i/ips.py.in \
 	@srcdir@/media/os8/init.tx.in \
 	@srcdir@/media/os8/3finit.tx.in \
-	@srcdir@/media/os8/uni-init.tx.in \
+	@srcdir@/media/os8/ock-init.tx.in \
 	@srcdir@/src/pidp8i/main.c.in \
 	$(PIDP8I_DIN)
 PRECIOUS_INFILES = \
@@ -313,8 +313,8 @@ OS8_RK05S = \
 	$(V3D_PATCHED_RK05) \
 	$(OS8_BOOT_DISK) \
 	$(OS8_SRC_RK05) \
-	$(OS8_UNI_DIST_RK05) \
-	$(OS8_UNI_RK05)
+	$(OS8_OCK_DIST_RK05) \
+	$(OS8_OCK_RK05)
 
 
 
@@ -344,28 +344,28 @@ V3F_MAKER = $(OS8_SCRIPTS_DIR)/v3f-control.os8
 # BF2: BASIC and FORTRAN II
 # FIV: FORTRAN IV
 
-OS8_UNI_SRCDIR = @srcdir@/src/os8/uni
+OS8_OCK_SRCDIR = @srcdir@/src/os8/ock
 
-OS8_UNI_SYS_SRC_RK05 = obj/uni-sys-src.rk05
-OS8_UNI_SYS_OBJ_RK05 = bin/uni-sys-obj.rk05
-OS8_UNI_SYS_MAKER = $(OS8_SCRIPTS_DIR)/uni-sys-build.os8
+OS8_OCK_SYS_SRC_RK05 = obj/ock-sys-src.rk05
+OS8_OCK_SYS_OBJ_RK05 = bin/ock-sys-obj.rk05
+OS8_OCK_SYS_MAKER = $(OS8_SCRIPTS_DIR)/ock-sys-build.os8
 
-OS8_UNI_CUSPS_SRC_RK05 = obj/uni-cusps-src.rk05
-OS8_UNI_CUSPS_OBJ_RK05 = bin/uni-cusps-obj.rk05
-OS8_UNI_CUSPS_MAKER = $(OS8_SCRIPTS_DIR)/uni-cusps-build.os8
+OS8_OCK_CUSPS_SRC_RK05 = obj/ock-cusps-src.rk05
+OS8_OCK_CUSPS_OBJ_RK05 = bin/ock-cusps-obj.rk05
+OS8_OCK_CUSPS_MAKER = $(OS8_SCRIPTS_DIR)/ock-cusps-build.os8
 
-OS8_UNI_BF2_SRC_RK05 = obj/uni-bf2-src.rk05
-OS8_UNI_BF2_OBJ_RK05 = bin/uni-bf2-obj.rk05
-OS8_UNI_BF2_MAKER = $(OS8_SCRIPTS_DIR)/uni-bf2-build.os8
+OS8_OCK_BF2_SRC_RK05 = obj/ock-bf2-src.rk05
+OS8_OCK_BF2_OBJ_RK05 = bin/ock-bf2-obj.rk05
+OS8_OCK_BF2_MAKER = $(OS8_SCRIPTS_DIR)/ock-bf2-build.os8
 
-OS8_UNI_FIV_SRC_RK05 = obj/uni-fiv-src.rk05
-OS8_UNI_FIV_OBJ_RK05 = bin/uni-fiv-obj.rk05
-OS8_UNI_FIV_MAKER = $(OS8_SCRIPTS_DIR)/uni-fiv-build.os8
+OS8_OCK_FIV_SRC_RK05 = obj/ock-fiv-src.rk05
+OS8_OCK_FIV_OBJ_RK05 = bin/ock-fiv-obj.rk05
+OS8_OCK_FIV_MAKER = $(OS8_SCRIPTS_DIR)/ock-fiv-build.os8
 
-OS8_UNI_DIST_RK05 = bin/uni-dist.rk05
-OS8_UNI_DIST_MAKER = $(OS8_SCRIPTS_DIR)/uni-dist-rk05.os8
-OS8_UNI_RK05_MAKER = $(OS8_SCRIPTS_DIR)/uni-rk05.os8
-OS8_UNI_RK05 = bin/uni.rk05
+OS8_OCK_DIST_RK05 = bin/ock-dist.rk05
+OS8_OCK_DIST_MAKER = $(OS8_SCRIPTS_DIR)/ock-dist-rk05.os8
+OS8_OCK_RK05_MAKER = $(OS8_SCRIPTS_DIR)/ock-rk05.os8
+OS8_OCK_RK05 = bin/ock.rk05
 
 ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
@@ -406,11 +406,11 @@ clean:
 		$(OUTFILES) $(ADF) \
 		$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_BUILD_RK05) $(V3D_TC08_TU56) \
 		$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) \
-		$(OS8_UNI_SYS_SRC_RK05) $(OS8_UNI_SYS_OBJ_RK05) \
-		$(OS8_UNI_CUSPS_SRC_RK05) $(OS8_UNI_CUSPS_OBJ_RK05) \
-		$(OS8_UNI_BF2_SRC_RK05) $(OS8_UNI_BF2_OBJ_RK05) \
-		$(OS8_UNI_FIV_SRC_RK05) $(OS8_UNI_FIV_OBJ_RK05) \
-		$(OS8_UNI_DIST_RK05) \
+		$(OS8_OCK_SYS_SRC_RK05) $(OS8_OCK_SYS_OBJ_RK05) \
+		$(OS8_OCK_CUSPS_SRC_RK05) $(OS8_OCK_CUSPS_OBJ_RK05) \
+		$(OS8_OCK_BF2_SRC_RK05) $(OS8_OCK_BF2_OBJ_RK05) \
+		$(OS8_OCK_FIV_SRC_RK05) $(OS8_OCK_FIV_OBJ_RK05) \
+		$(OS8_OCK_DIST_RK05) \
 		config.log cscope.out tags \
 		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
@@ -686,44 +686,44 @@ V3F_SOURCES := \
 	@srcdir@/src/os8/v3f/*.MA \
 	@srcdir@/src/os8/v3f/*.BI
 
-# Dependency on the contents of the uni source directory.
-OS8_UNI_SYS_SOURCES := \
-	@srcdir@/src/os8/uni/SYSTEM/*.PA \
-	@srcdir@/src/os8/uni/SYSTEM/*.MA \
-	@srcdir@/src/os8/uni/SYSTEM/*.BI \
-	@srcdir@/src/os8/uni/HANDLERS/*.PA \
-	@srcdir@/src/os8/uni/CUSPS/*.MA \
-	@srcdir@/src/os8/uni/CUSPS/*.BI \
-	@srcdir@/src/os8/uni/CUSPS/*.HL
+# Dependency on the contents of the ock source directory.
+OS8_OCK_SYS_SOURCES := \
+	@srcdir@/src/os8/ock/SYSTEM/*.PA \
+	@srcdir@/src/os8/ock/SYSTEM/*.MA \
+	@srcdir@/src/os8/ock/SYSTEM/*.BI \
+	@srcdir@/src/os8/ock/HANDLERS/*.PA \
+	@srcdir@/src/os8/ock/CUSPS/*.MA \
+	@srcdir@/src/os8/ock/CUSPS/*.BI \
+	@srcdir@/src/os8/ock/CUSPS/*.HL
 
-OS8_UNI_CUSPS_SOURCES :=\
-	@srcdir@/src/os8/uni/CUSPS/*.PA
+OS8_OCK_CUSPS_SOURCES :=\
+	@srcdir@/src/os8/ock/CUSPS/*.PA
 
-OS8_UNI_BF2_SOURCES := \
-	@srcdir@/src/os8/uni/LANGUAGE/BASIC/*.PA \
-	@srcdir@/src/os8/uni/LANGUAGE/BASIC/*.BA \
-	@srcdir@/src/os8/uni/LANGUAGE/BASIC/*.BI \
-	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/*.PA \
-	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/*.CO \
-	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN2/LIBRARY/*.SB
+OS8_OCK_BF2_SOURCES := \
+	@srcdir@/src/os8/ock/LANGUAGE/BASIC/*.PA \
+	@srcdir@/src/os8/ock/LANGUAGE/BASIC/*.BA \
+	@srcdir@/src/os8/ock/LANGUAGE/BASIC/*.BI \
+	@srcdir@/src/os8/ock/LANGUAGE/FORTRAN2/*.PA \
+	@srcdir@/src/os8/ock/LANGUAGE/FORTRAN2/*.CO \
+	@srcdir@/src/os8/ock/LANGUAGE/FORTRAN2/LIBRARY/*.SB
 
-OS8_UNI_FIV_SOURCES := \
-	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN4/*.PA \
-	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN4/*.BI \
-	@srcdir@/src/os8/uni/LANGUAGE/FORTRAN4/LIBRARY/*.RA
+OS8_OCK_FIV_SOURCES := \
+	@srcdir@/src/os8/ock/LANGUAGE/FORTRAN4/*.PA \
+	@srcdir@/src/os8/ock/LANGUAGE/FORTRAN4/*.BI \
+	@srcdir@/src/os8/ock/LANGUAGE/FORTRAN4/LIBRARY/*.RA
 
 # We could make FIV conditional here.
-OS8_UNI_DIST_SRCS := \
+OS8_OCK_DIST_SRCS := \
 	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
-	$(OS8_UNI_DIST_MAKER) \
+	$(OS8_OCK_DIST_MAKER) \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56 \
-	$(OS8_UNI_SYS_OBJ_RK05) $(OS8_UNI_CUSPS_OBJ_RK05) \
-	$(OS8_UNI_BF2_OBJ_RK05) $(OS8_UNI_FIV_OBJ_RK05)
+	$(OS8_OCK_SYS_OBJ_RK05) $(OS8_OCK_CUSPS_OBJ_RK05) \
+	$(OS8_OCK_BF2_OBJ_RK05) $(OS8_OCK_FIV_OBJ_RK05)
 
-UNI_PATCHES := \
-	# @srcdir@/media/os8/patches/uni/*.patch8
+OCK_PATCHES := \
+	# @srcdir@/media/os8/patches/ock/*.patch8
 
 $(V3D_DIST_RK05): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
@@ -735,8 +735,8 @@ $(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(V3D_PATCHED_RK05) @CC8_TU56@ @E8_TU56@ | 
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
-$(OS8_UNI_RK05): $(OS8_UNI_RK05_MAKER) $(OS8_UNI_DIST_RK05) $(UNI_PATCHES) @CC8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
-	$(OS8RUN)@OS8_OPTS@ $(OS8_UNI_RK05_MAKER)
+$(OS8_OCK_RK05): $(OS8_OCK_RK05_MAKER) $(OS8_OCK_DIST_RK05) $(OCK_PATCHES) @CC8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_RK05_MAKER)
 
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
@@ -762,40 +762,40 @@ $(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_BOOT_DIS
 $(V3F_MADE_RK05): $(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(OS8RUN) $(V3F_MAKER)
 
-# Build the source disk for OS/8 UNI SYS Component.
-$(OS8_UNI_SYS_SRC_RK05): $(OS8_UNI_SYS_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_SYS_SRC_RK05) -z -a $(OS8_UNI_SYS_SOURCES) RKA1:
+# Build the source disk for OS/8 OCK SYS Component.
+$(OS8_OCK_SYS_SRC_RK05): $(OS8_OCK_SYS_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_SYS_SRC_RK05) -z -a $(OS8_OCK_SYS_SOURCES) RKA1:
 
-# Make a disk with binaries assembled from the OS8_UNI SYS source disk
-$(OS8_UNI_SYS_OBJ_RK05): $(OS8_UNI_SYS_SRC_RK05) $(OS8_UNI_SYS_MAKER)
-	$(OS8RUN) $(OS8_UNI_SYS_MAKER)
+# Make a disk with binaries assembled from the OS8_OCK SYS source disk
+$(OS8_OCK_SYS_OBJ_RK05): $(OS8_OCK_SYS_SRC_RK05) $(OS8_OCK_SYS_MAKER)
+	$(OS8RUN) $(OS8_OCK_SYS_MAKER)
 
-# Build the source disk for OS/8 UNI CUSPS Component.
-$(OS8_UNI_CUSPS_SRC_RK05): $(OS8_UNI_CUSPS_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_CUSPS_SRC_RK05) -z -a $(OS8_UNI_CUSPS_SOURCES) RKA1:
+# Build the source disk for OS/8 OCK CUSPS Component.
+$(OS8_OCK_CUSPS_SRC_RK05): $(OS8_OCK_CUSPS_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_CUSPS_SRC_RK05) -z -a $(OS8_OCK_CUSPS_SOURCES) RKA1:
 
-# Make a disk with binaries assembled from the OS8_UNI SYS source disk
-$(OS8_UNI_CUSPS_OBJ_RK05): $(OS8_UNI_CUSPS_SRC_RK05) $(OS8_UNI_CUSPS_MAKER)
-	$(OS8RUN) $(OS8_UNI_CUSPS_MAKER)
+# Make a disk with binaries assembled from the OS8_OCK SYS source disk
+$(OS8_OCK_CUSPS_OBJ_RK05): $(OS8_OCK_CUSPS_SRC_RK05) $(OS8_OCK_CUSPS_MAKER)
+	$(OS8RUN) $(OS8_OCK_CUSPS_MAKER)
 
-# Build the source disk for OS/8 UNI BASIC and FORTRAN II Component.
-$(OS8_UNI_BF2_SRC_RK05): $(OS8_UNI_BF2_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_BF2_SRC_RK05) -z -a $(OS8_UNI_BF2_SOURCES) RKA1:
+# Build the source disk for OS/8 OCK BASIC and FORTRAN II Component.
+$(OS8_OCK_BF2_SRC_RK05): $(OS8_OCK_BF2_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_BF2_SRC_RK05) -z -a $(OS8_OCK_BF2_SOURCES) RKA1:
 
-# Make a disk with binaries assembled from the OS8_UNI FIRTRAN II source disk
-$(OS8_UNI_BF2_OBJ_RK05): $(OS8_UNI_BF2_SRC_RK05) $(OS8_UNI_BF2_MAKER)
-	$(OS8RUN) $(OS8_UNI_BF2_MAKER)
+# Make a disk with binaries assembled from the OS8_OCK FIRTRAN II source disk
+$(OS8_OCK_BF2_OBJ_RK05): $(OS8_OCK_BF2_SRC_RK05) $(OS8_OCK_BF2_MAKER)
+	$(OS8RUN) $(OS8_OCK_BF2_MAKER)
 
-# Build the source disk for OS/8 UNI FORTRAN IV Component.
-$(OS8_UNI_FIV_SRC_RK05): $(OS8_UNI_FIV_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_UNI_FIV_SRC_RK05) -z -a $(OS8_UNI_FIV_SOURCES) RKA1:
+# Build the source disk for OS/8 OCK FORTRAN IV Component.
+$(OS8_OCK_FIV_SRC_RK05): $(OS8_OCK_FIV_SOURCES) | $(OS8_BOOT_DISK)
+	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_FIV_SRC_RK05) -z -a $(OS8_OCK_FIV_SOURCES) RKA1:
 
-# Make a disk with binaries assembled from the OS8_UNI FORTRAN IV source disk
-$(OS8_UNI_FIV_OBJ_RK05): $(OS8_UNI_FIV_SRC_RK05) $(OS8_UNI_FIV_MAKER)
-	$(OS8RUN) $(OS8_UNI_FIV_MAKER)
+# Make a disk with binaries assembled from the OS8_OCK FORTRAN IV source disk
+$(OS8_OCK_FIV_OBJ_RK05): $(OS8_OCK_FIV_SRC_RK05) $(OS8_OCK_FIV_MAKER)
+	$(OS8RUN) $(OS8_OCK_FIV_MAKER)
 
-$(OS8_UNI_DIST_RK05): $(OS8_UNI_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
-	$(OS8RUN)@OS8_OPTS@ $(OS8_UNI_DIST_MAKER)
+$(OS8_OCK_DIST_RK05): $(OS8_OCK_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_DIST_MAKER)
 
 # Make a bootable OS/8 v3f TCO8 DECtape image
 $(V3F_TC08_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
