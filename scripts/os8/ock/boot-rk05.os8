@@ -2,12 +2,10 @@
 # Bootstrapping issue: we use XXX-dist.rk05 to build the C compiler.
 # So we install it in this phase.
 
-copy $os8mo/ock-dist.rk05 $os8mo/ock.rk05
+copy $os8mo/ock-patched.rk05 $os8mo/ock.rk05
 mount rk0 $os8mo/ock.rk05 required
 
 boot rk0
-
-# Perform patching here.
 
 # Ian Schofield's CC8 compiler
 # Don't install this in v3d-dist because we need
