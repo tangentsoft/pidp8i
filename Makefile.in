@@ -678,7 +678,7 @@ V3D_DIST_SRCS := \
 
 # Temporary: We depend on ALL the patches, but really we've picked them over.
 V3D_PATCHES := \
-	@srcdir@/media/os8/patches/*.patch8
+	@srcdir@/patches/os8/v3d/*.patch8
 
 # Dependency on the contents of the v3f source directory.
 V3F_SOURCES := \
@@ -723,7 +723,7 @@ OS8_OCK_DIST_SRCS := \
 	$(OS8_OCK_BF2_OBJ_RK05) $(OS8_OCK_FIV_OBJ_RK05)
 
 OCK_PATCHES := \
-	# @srcdir@/media/os8/patches/ock/*.patch8
+	# @srcdir@/patches/os8/ock/*.patch8
 
 $(V3D_DIST_RK05): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
