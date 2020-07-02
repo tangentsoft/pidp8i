@@ -5,11 +5,29 @@ If you are going to make any changes to the PiDP-8/I software, here are
 some rules and hints to keep in mind while you work.
 
 
+The GitHub Mirror Is Just That
+----
+
+The project’s [Fossil] repository is the primary source of truth for
+this project. The GitHub mirror is one-way, as you may guess from the
+name. This means that GitHub issues may be ignored and GitHub PRs cannot
+be accepted.
+
+Some contributions to the Fossil repo [cannot be mirrored][ghlim] due to
+limitations of Git and/or GitHub. Do not expect the mirror to have 100%
+fidelity. If you want a faithful clone of the PiDP-8/I project repo, do
+it via Fossil, not via “`git clone`” from GitHub.
+
+[Fossil]: https://fossil-scm.org/
+[ghlim]:  https://fossil-scm.org/fossil/doc/trunk/www/mirrorlimitations.md
+
+
+
 <a id="gs-fossil"></a>
 Getting Started with Fossil
 ----
 
-The PiDP-8/I software project is hosted using the [Fossil][fossil]
+The PiDP-8/I software project is hosted using the Fossil
 [distributed version control system][dvcs], which provides most of the
 features of GitHub without [the complexities of Git][fvg].
 
@@ -53,7 +71,6 @@ the [precompiled binaries][fbin] may work on your system.
 [fbook]:  https://www.fossil-scm.org/schimpf-book/home
 [fdoc]:   https://fossil-scm.org/index.html/doc/trunk/www/permutedindex.html
 [ffor]:   https://fossil-scm.org/forum/
-[fossil]: https://fossil-scm.org/
 [fqsg]:   https://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
 
 

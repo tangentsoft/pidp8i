@@ -2,17 +2,20 @@
 
 ## Orientation
 
-You will be reading this file from one of several likely places:
+You will most likely be reading this either:
 
-*   [Online][tlrm], within [the Fossil project repository][home].
+*   …[Online][tlrm], within [the Fossil project repository][home]; or
 
-*   As a text file within the [source packages][src].
+*   …as a text file within the [source packages][src]; or
 
-*   In the read-only [GitHub mirror][ghm].
+*   …in the read-only [GitHub mirror][ghm].
 
 The source packages and the GitHub mirror are secondary outputs from the
 Fossil repository, which is the primary home for the PiDP-8/I software
 development project.
+
+If you wish to contribute to the project, please see [the hackers’
+file][hack].
 
 [ghm]:  https://github.com/tangentsoft/pidp8i
 [home]: https://tangentsoft.com/pidp8i/
