@@ -1,0 +1,13 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Dependency packages
+      run: sudo apt-get -y install build-essential python3-pexpect libncurses-dev
+    - name: configure
+      run: ./configure
+    - name: make
+      run: ./tools/mmake
