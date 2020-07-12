@@ -14,13 +14,14 @@ patch $src/patches/os8/ock/CREF-21.15.1M-v5B.patch8
 patch $src/patches/os8/ock/CREF-21.15.2M-v5C.patch8
 patch $src/patches/os8/ock/BRTS-31.11.3-O.patch8
 
-begin default fortran_ii
+# We need SABR for C compiler. Patch it unconditionally.
+# begin default fortran-ii
 patch $src/patches/os8/ock/SABR-21.91.1M-v18B.patch8
-end default fortran_ii
+# end default fortran-ii
 
-begin default fortran_iv
+begin default fortran-iv
 patch $src/patches/os8/ock/F4-51.3.2M-v4x.patch8
-end default fortran_iv
+end default fortran-iv
 
 # patch $src/patches/os8/ock/TECO 31.20.1 Unconditional no case flagging. Not recommended
 # patch $src/patches/os8/ock/TECO-31.20.01O.patch8

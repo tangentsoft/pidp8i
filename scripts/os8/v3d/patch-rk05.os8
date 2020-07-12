@@ -33,7 +33,7 @@ patch $src/patches/os8/v3d/EDIT-21.17.3M-v12D.patch8
 # patch $src/patches/os8/v3d/EDIT 21.17.4 overwrites patch in 21.17.2. DO NOT APPLY THIS PATCH
 # patch $src/patches/os8/v3d/EDIT-21.17.4M-V12C.patch8
 
-begin default fortran_iv
+begin default fortran-iv
 patch $src/patches/os8/v3d/F4-21.1.2M-v4B.patch8
 patch $src/patches/os8/v3d/F4-51.3.1M-v4C.patch8
 patch $src/patches/os8/v3d/F4-51.3.2M-v4x.patch8
@@ -58,7 +58,7 @@ mount dt0 $os8mi/local.tu56 ro required
 os8 DEL SYS:FORLIB.RL
 os8 COPY SYS:<DTA0:FORLIB.RL
 umount dt0
-end default fortran_iv
+end default fortran-iv
 
 patch $src/patches/os8/v3d/FOTP-21.19.1M-V9B.patch8
 
@@ -97,9 +97,10 @@ patch $src/patches/os8/v3d/PAL8-21.22.3M-v10D.patch8
 patch $src/patches/os8/v3d/PIP-21.23.1M-v12B.patch8
 patch $src/patches/os8/v3d/PIP10-21.24.1M-v3B.patch8
 
-begin default fortran_ii
+# We need SABR for C compiler. Patch it unconditionally.
+# begin default fortran-ii
 patch $src/patches/os8/v3d/SABR-21.91.1M-v18B.patch8
-end default fortran_ii
+# end default fortran-ii
 
 patch $src/patches/os8/v3d/SET-21.26.1M-v1C.patch8
 patch $src/patches/os8/v3d/SET-21.26.2M-v1D.patch8
