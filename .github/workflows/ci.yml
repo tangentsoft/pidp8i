@@ -11,3 +11,12 @@ jobs:
       run: ./configure
     - name: make
       run: ./tools/mmake
+    - name: make install-target
+      run: make install-target DESTDIR=${GITHUB_WORKSPACE}/destdir
+    - name: Build artifact tarball
+      run: mkdir -p ${GITHUB_WORKSPACE}/artifacts && tar zcvf ${GITHUB_WORKSPACE}/artifacts/${{ github.job }}-${{ github.run_id }}.${{ github.run_number }}.tar.gz -C ${GITHUB_WORKSPACE}/destdir .
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ci-${{ github.job }}-${{ github.run_id }}.${{ github.run_number }}
+        path: artifacts/*.tar.gz
