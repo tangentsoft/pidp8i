@@ -2,11 +2,20 @@ name: ci
 on: [push, pull_request]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v2
-    - name: Dependency packages
+    - name: Dependency packages (ubuntu)
       run: sudo apt-get -y install build-essential python3-pexpect libncurses-dev
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Dependency packages (macos)
+      run: |
+        brew install coreutils ncurses
+        pip3 install pexpect
+      if: ${{ matrix.os == 'macos-latest' }}
     - name: configure
       run: ./configure
     - name: make
@@ -14,9 +23,11 @@ jobs:
     - name: make install-target
       run: make install-target DESTDIR=${GITHUB_WORKSPACE}/destdir
     - name: Build artifact tarball
-      run: mkdir -p ${GITHUB_WORKSPACE}/artifacts && tar zcvf ${GITHUB_WORKSPACE}/artifacts/${{ github.job }}-${{ github.run_id }}.${{ github.run_number }}.tar.gz -C ${GITHUB_WORKSPACE}/destdir .
+      run: |
+        mkdir -p ${GITHUB_WORKSPACE}/artifacts
+        tar zcvf ${GITHUB_WORKSPACE}/artifacts/${{ github.job }}-${{ github.run_id }}.${{ github.run_number }}-${{ matrix.os }}.tar.gz -C ${GITHUB_WORKSPACE}/destdir .
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: ci-${{ github.job }}-${{ github.run_id }}.${{ github.run_number }}
+        name: ci-${{ github.job }}-${{ github.run_id }}.${{ github.run_number }}-${{ matrix.os }}
         path: artifacts/*.tar.gz
