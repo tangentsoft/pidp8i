@@ -385,7 +385,14 @@ CC8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/cc8-tu56.os8
 
 E8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/e8-tu56.os8
 
-RCFILE := @ABSPREFIX@/etc/pidp8i.rc
+# Absolute version of --prefix passed to configure.
+PREFIX = @ABSPREFIX@
+# Normally unset.  Prepended to PREFIX to install files to a
+# different tree than / (e.g. for distribution build/CI scripts).
+# https://www.gnu.org/prep/standards/html_node/DESTDIR.html
+DESTDIR = 
+
+RCFILE := $(PREFIX)/etc/pidp8i.rc
 
 CLTXT = /boot/cmdline.txt
 
@@ -437,36 +444,69 @@ ifeq (@HAVE_PROG_CSCOPE@, 1)
 	cscope -bR -s@srcdir@
 endif
 
-install: all instdirs
-	@echo Installing to @prefix@...
+install: install-target install-system
+
+install-target: all instdirs
+	@echo Installing to $(PREFIX)...
 
 	@# Install most bin/* stuff and set their perms
 	@for f in $(BINS) ; do \
-		dest=@prefix@/$$f ; \
+		dest=$(PREFIX)/$$f ; \
 		echo "Installing binary $$dest..." ; \
-		@INSTALL@ -m 755 -D -s $$f $$dest ; \
+		@INSTALL@ -m 755 -D -s $$f $(DESTDIR)$$dest ; \
 	done
 	@for f in $(BIN_SCRIPTS) ; do \
-		dest=@prefix@/bin/$$(basename $$f) ; \
+		dest=$(PREFIX)/bin/$$(basename $$f) ; \
 		echo "Installing script $$dest..." ; \
-		@INSTALL@ -m 755 -D $$f $$dest ; \
+		@INSTALL@ -m 755 -D $$f $(DESTDIR)$$dest ; \
 	done
-	@( cd @prefix@/bin ; \
-	   echo "Installing txt2ptp symlink..." ; \
-	   ln -f ptp2txt txt2ptp ; \
-	)
-	@(test -x /sbin/setcap && \
-		for f in @prefix@/bin/pidp8i-* ; do \
-			echo "Setting real-time priority capabilities on $$(basename $$f)..." ; \
-			/sbin/setcap 'cap_sys_nice=eip' $$f ; \
-		done \
-	) || true
-	@(	test -e @MEDIADIR@/os8/os8.rk05 || \
-		test -e @MEDIADIR@/os8/os8v3d-bin.rk05 || \
-		test -e @MEDIADIR@/os8/v3d.rk05) && \
+	@echo "Installing txt2ptp symlink..."
+	@ln -f $(DESTDIR)$(PREFIX)/bin/ptp2txt $(DESTDIR)$(PREFIX)/bin/txt2ptp
+	@(	test -e $(DESTDIR)@MEDIADIR@/os8/os8.rk05 || \
+		test -e $(DESTDIR)@MEDIADIR@/os8/os8v3d-bin.rk05 || \
+		test -e $(DESTDIR)@MEDIADIR@/os8/v3d.rk05) && \
 		echo "Skipping media image and SIMH boot script reinstall." || \
 		$(MAKE) mediainstall
-	@ln -f @prefix@/bin/pidp8i-sim @prefix@/bin/pdp8  # run w/o PiDP-8/I extensions
+	@ln -f $(DESTDIR)$(PREFIX)/bin/pidp8i-sim $(DESTDIR)$(PREFIX)/bin/pdp8  # run w/o PiDP-8/I extensions
+
+	@# Install CC8 stuff if built
+	@test -n "@CC8_CROSS@" && \
+		echo "Installing cc8 cross-compiler..." ; \
+		@INSTALL@ -m 755 bin/cc8 $(DESTDIR)$(PREFIX)/bin && \
+		@INSTALL@ -m 644 @srcdir@/src/cc8/include/* $(DESTDIR)$(PREFIX)/share/include
+
+	@# Install palbart stuff
+	@@INSTALL@ -m 755 bin/palbart $(DESTDIR)$(PREFIX)/bin
+	@@INSTALL@ -m 644 @srcdir@/src/palbart/palbart.1 $(DESTDIR)$(PREFIX)/share/man/man1
+
+	@# Install os8-run and its dependencies
+	@echo "Installing os8-run..."
+	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8RUN) $(DESTDIR)$(PREFIX)/bin
+	@( for src in $(OS8RUN_PY_ALL) ; do \
+		test -e $$src || src=@srcdir@/$$src ; \
+		dest=$(PREFIX)/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
+		echo "Installing $$src to $$dest..." ; \
+	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $(DESTDIR)$${dest}  ; \
+	  done \
+	)
+	@sed -e 's#^build =.*#build = "$(PREFIX)"#' \
+	     -e 's#^media =.*#media = os.path.join (build, "share/media/")#' \
+	     -e 's#^os8mo =.*#os8mo = os8mi#' \
+		 < $(PIDP8I_DIRS) > $(DESTDIR)$(PREFIX)/$(PIDP8I_DIRS)
+	@chgrp @INSTGRP@ $(DESTDIR)$(PREFIX)/$(PIDP8I_DIRS)
+
+	@# We need a directory for PIDs and such in some cases
+	@@INSTALL@ -d -m 755 $(DESTDIR)$(PREFIX)/run
+
+install-system: install-target
+	@echo Installing system files and programs...
+
+	@(test -x /sbin/setcap && \
+		for f in $(PREFIX)/bin/pidp8i-* ; do \
+			echo "Setting real-time priority capabilities on $$(basename $$f)..." ; \
+			/sbin/setcap 'cap_sys_nice=eip' $(DESTDIR)$$f ; \
+		done \
+	) || true
 
 	@# If this is a Debian-type system, install needed helper programs
 	@test -x /usr/bin/apt-get -a ! -x /usr/bin/screen && apt-get -y install screen || true
@@ -500,7 +540,7 @@ endif
 
 	@# Install the systemd unit file if this system is systemd based.
 	@(test -x /bin/systemctl && \
-		sudo -i -u @INSTUSR@ @ABSPREFIX@/bin/pidp8i install && \
+		sudo -i -u @INSTUSR@ $(DESTDIR)$(PREFIX)/bin/pidp8i install && \
 		/bin/loginctl enable-linger @INSTUSR@ \
 	) || true
 
@@ -515,21 +555,21 @@ endif
 	) || true
 
 	@# Install runtime config file if there isn't one there already.
-	@test -f $(RCFILE) || @INSTALL@ -m 644 -o @INSTUSR@ @srcdir@/etc/pidp8i.rc $(RCFILE)
+	@test -f $(DESTDIR)$(RCFILE) || @INSTALL@ -m 644 -o @INSTUSR@ @srcdir@/etc/pidp8i.rc $(DESTDIR)$(RCFILE)
 
 	@# Add installation bin dir to the non-root user's PATH unless it's
 	@# already in there or we aren't running under sudo.
 	@(for p in .profile .bash_profile ; do \
 		test -n "$$SUDO_USER" -a -w "/home/$$SUDO_USER/$$p" && \
-			! grep -qF "@ABSPREFIX@/bin" "/home/$$SUDO_USER/$$p" && \
-			echo "export PATH=\$$PATH:@ABSPREFIX@/bin" >> "/home/$$SUDO_USER/$$p" ; \
+			! grep -qF "$(PREFIX)/bin" "/home/$$SUDO_USER/$$p" && \
+			echo "export PATH=\$$PATH:$(PREFIX)/bin" >> "/home/$$SUDO_USER/$$p" ; \
 	done) || true
 
 	@# Ditto for MANPATH
 	@(for p in .profile .bash_profile ; do \
 		test -n "$$SUDO_USER" -a -w "/home/$$SUDO_USER/$$p" && \
-			! grep -qF "@ABSPREFIX@/share/man" "/home/$$SUDO_USER/$$p" && \
-			echo "export MANPATH=\$$MANPATH:@ABSPREFIX@/share/man" >> "/home/$$SUDO_USER/$$p" ; \
+			! grep -qF "$(PREFIX)/share/man" "/home/$$SUDO_USER/$$p" && \
+			echo "export MANPATH=\$$MANPATH:$(PREFIX)/share/man" >> "/home/$$SUDO_USER/$$p" ; \
 		done \
 	) || true
 
@@ -542,38 +582,9 @@ endif
 		    -e  's/kgdboc\=[a-zA-Z0-9]+,[0-9]+ //' -i $(CLTXT) \
 	) || true
 
-	@# Install CC8 stuff if built
-	@test -n "@CC8_CROSS@" && \
-		echo "Installing cc8 cross-compiler..." ; \
-		@INSTALL@ -m 755 bin/cc8 @prefix@/bin && \
-		@INSTALL@ -m 644 @srcdir@/src/cc8/include/* @prefix@/share/include
-
-	@# Install palbart stuff
-	@@INSTALL@ -m 755 bin/palbart @prefix@/bin
-	@@INSTALL@ -m 644 @srcdir@/src/palbart/palbart.1 @prefix@/share/man/man1
-
-	@# Install os8-run and its dependencies
-	@echo "Installing os8-run..."
-	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8RUN) @prefix@/bin
-	@( for src in $(OS8RUN_PY_ALL) ; do \
-		test -e $$src || src=@srcdir@/$$src ; \
-		dest=@prefix@/$$(echo $$src | sed -e 's_^@srcdir@/__') ; \
-		echo "Installing $$src to $$dest..." ; \
-	    @INSTALL@ -m 644 -g @INSTGRP@ -D $${src}  $${dest}  ; \
-	  done \
-	)
-	@sed -e 's#^build =.*#build = "@ABSPREFIX@"#' \
-	     -e 's#^media =.*#media = os.path.join (build, "share/media/")#' \
-	     -e 's#^os8mo =.*#os8mo = os8mi#' \
-		 < $(PIDP8I_DIRS) > @prefix@/$(PIDP8I_DIRS)
-	@chgrp @INSTGRP@ @prefix@/$(PIDP8I_DIRS)
-
-	@# We need a directory for PIDs and such in some cases
-	@@INSTALL@ -d -m 755 @prefix@/run
-
 instdirs:
 	@echo "Creating installation directory tree..."
-	@for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -o @INSTUSR@ -g @INSTGRP@ -d @prefix@/$$d ; done
+	@for d in $(INSTDIRS) ; do @INSTALL@ -m 755 -o @INSTUSR@ -g @INSTGRP@ -d $(DESTDIR)$(PREFIX)/$$d ; done
 
 mediainstall: instdirs
 	@echo "[Re]installing OS and program media..."
@@ -583,13 +594,13 @@ mediainstall: instdirs
 		-name \*.dsk  -o \
 		-name \*.rk05 -o \
 		-name \*.tu56 \
-	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} @ABSPREFIX@/share/{} \;
-	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.rk05 @ABSPREFIX@/share/media/os8
-	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.tu56 @ABSPREFIX@/share/media/os8
+	\) -exec @INSTALL@ -D -m 664 -o @INSTUSR@ -g @INSTGRP@ {} $(DESTDIR)$(PREFIX)/share/{} \;
+	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.rk05 $(DESTDIR)$(PREFIX)/share/media/os8
+	@@INSTALL@ -m 644 -o @INSTUSR@ -g @INSTGRP@ bin/*.tu56 $(DESTDIR)$(PREFIX)/share/media/os8
 	for f in boot/*.script ; do \
-		sed -e 's#%HOME%/\.pidp8i-#@SHAREDIR@/save/#' < $$f > @SHAREDIR@/$$f ; \
-		chown @INSTUSR@:@INSTGRP@ @SHAREDIR@/$$f ; \
-		chmod 664 @SHAREDIR@/$$f ; \
+		sed -e 's#%HOME%/\.pidp8i-#@SHAREDIR@/save/#' < $$f > $(DESTDIR)@SHAREDIR@/$$f ; \
+		chown @INSTUSR@:@INSTGRP@ $(DESTDIR)@SHAREDIR@/$$f ; \
+		chmod 664 $(DESTDIR)@SHAREDIR@/$$f ; \
 	done
 
 # Called by test-os8-run
