@@ -62,7 +62,7 @@ SYSTEM = False
 FORCE = False
 
 # Default RK05 system image to attach if no sys specified.
-_default_sys_image = "v3d.rk05"
+_default_sys_image = "v3d-patched.rk05"
 _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = {"simh_name": "rk", "unit": "0", "image": _default_sys_path}
 # _default_att_spec = ["rk", "0", _default_sys_path]

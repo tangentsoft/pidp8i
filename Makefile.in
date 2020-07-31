@@ -104,7 +104,12 @@ GENNED_PY   := \
 SIMH_PY     := lib/simh.py
 SIMH_PY_SRC := @srcdir@/$(SIMH_PY)
 
+# Any use of $(OS8RUN) must implicitly depend on $(OS8_TOOLTIME) disk image.
 OS8RUN          = bin/os8-run
+
+# Any use of $(OS8CP) must implicitly depend on $(OS8_TOOLTIME) disk image.
+OS8CP          = bin/os8-cp
+
 OS8SCRIPT      := lib/os8script.py
 OS8RUN_PY_ALL  := $(GENNED_PY) $(OS8SCRIPT) $(SIMH_PY_SRC)
 OS8RUN_SRCS    := $(OS8RUN) $(OS8RUN_PY_ALL) $(PIDP8I_DIN)
@@ -303,19 +308,23 @@ PRECIOUS_OUTFILES := $(subst .in,,$(PRECIOUS_OUTFILES))
 OUTFILES := $(subst @srcdir@/,,$(INFILES))
 OUTFILES := $(subst .in,,$(OUTFILES))
 
-V3D_DIST_RK05 = bin/v3d-dist.rk05
-V3D_PATCHED_RK05 = bin/v3d-patched.rk05
-V3D_BOOT_DISK = bin/v3d.rk05
 OS8_SRC_RK05 = @OS8_SRC_RK05@
-OS8_BOOT_DISK = bin/@OS8_BOOT_DISK@
+OS8_BASELINE = bin/@OS8_BASELINE@
+OS8_TOOLTIME = bin/@OS8_TOOLTIME@
+
+# auto.defs will select as OS8_RUNTIME either V3D_RUNTIME or OCK_RUNTIME disk image.
+V3D_RUNTIME = bin/v3d.rk05
+OCK_RUNTIME = bin/ock.rk05
+OS8_RUNTIME = bin/@OS8_RUNTIME@
+
 OS8_RK05S = \
-	$(V3D_DIST_RK05) \
-	$(V3D_PATCHED_RK05) \
-	$(OS8_BOOT_DISK) \
+	$(OS8_BASELINE) \
+	$(OS8_TOOLTIME) \
+	$(OS8_RUNTIME) \
 	$(OS8_SRC_RK05) \
 	$(OS8_OCK_DIST_RK05) \
 	$(OS8_OCK_PATCHED_RK05) \
-	$(OS8_OCK_RK05)
+	$(OCK_RUNTIME)
 
 
 
@@ -368,7 +377,6 @@ OS8_OCK_DIST_MAKER = $(OS8_SCRIPTS_DIR)/ock/dist-rk05.os8
 OS8_OCK_PATCHED_RK05 = bin/ock-patched.rk05
 OS8_OCK_PATCHED_MAKER = $(OS8_SCRIPTS_DIR)/ock/patch-rk05.os8
 OS8_OCK_BOOT_MAKER = $(OS8_SCRIPTS_DIR)/ock/boot-rk05.os8
-OS8_OCK_RK05 = bin/ock.rk05
 
 ALL_TU56_SCRIPT = $(OS8_SCRIPTS_DIR)/all-tu56.os8
 
@@ -740,20 +748,20 @@ OS8_OCK_DIST_SRCS := \
 OCK_PATCHES := \
 	@srcdir@/patches/os8/ock/*.patch8
 
-$(V3D_DIST_RK05): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+$(OS8_BASELINE): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 
-$(V3D_PATCHED_RK05): $(V3D_PATCH_SCRIPT) $(V3D_DIST_RK05) $(V3D_PATCHES) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+$(OS8_TOOLTIME): $(V3D_PATCH_SCRIPT) $(OS8_BASELINE) $(V3D_PATCHES) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_PATCH_SCRIPT)
 
-$(OS8_BOOT_DISK): $(V3D_RK05_SCRIPT) $(V3D_PATCHED_RK05) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+$(V3D_RUNTIME): $(V3D_RK05_SCRIPT) $(OS8_TOOLTIME) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
 $(OS8_OCK_PATCHED_RK05): $(OS8_OCK_PATCHED_MAKER) $(OS8_OCK_DIST_RK05) $(OCK_PATCHES) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_PATCHED_MAKER)
 
-$(OS8_OCK_RK05): $(OS8_OCK_BOOT_MAKER) $(OS8_OCK_PATCHED_RK05) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+$(OCK_RUNTIME): $(OS8_OCK_BOOT_MAKER) $(OS8_OCK_PATCHED_RK05) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_BOOT_MAKER)
 
 
@@ -768,45 +776,45 @@ OS8_SRC_SRCS = \
 	$(V3D_SRC_SCRIPT) \
 	@srcdir@/media/os8/al-*-sa-*.tu56
 
-$(OS8_SRC_RK05): $(V3D_DIST_RK05) $(OS8_SRC_SRCS) | $(PIDP8I_SIM) $(OS8_BOOT_DISK)
+$(OS8_SRC_RK05): $(OS8_BASELINE) $(OS8_SRC_SRCS) | $(PIDP8I_SIM) $(OS8_TOOLTIME)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_SRC_SCRIPT)
 
 # Build the source disk for OS/8 V3F
-$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_BOOT_DISK)
+$(V3F_BUILD_RK05): $(V3F_SRCDIR)/$(V3F_MANIFEST) $(V3F_SOURCES) | $(OS8_TOOLTIME)
 	rm -f $(V3F_BUILD_RK05)
-	cd $(V3F_SRCDIR); @builddir@/bin/os8-cp -v --action-file $(V3F_MANIFEST)
+	cd $(V3F_SRCDIR); @builddir@/$(OS8CP) -v --action-file $(V3F_MANIFEST)
 
 # Make a disk with binaries assembled from the V3F source disk
 $(V3F_MADE_RK05): $(V3F_BUILD_RK05) $(V3F_MAKER)
 	$(OS8RUN) $(V3F_MAKER)
 
 # Build the source disk for OS/8 OCK SYS Component.
-$(OS8_OCK_SYS_SRC_RK05): $(OS8_OCK_SYS_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_SYS_SRC_RK05) -z -a $(OS8_OCK_SYS_SOURCES) RKA1:
+$(OS8_OCK_SYS_SRC_RK05): $(OS8_OCK_SYS_SOURCES) | $(OS8_TOOLTIME)
+	@builddir@/$(OS8CP) -v -rk1 $(OS8_OCK_SYS_SRC_RK05) -z -a $(OS8_OCK_SYS_SOURCES) RKA1:
 
 # Make a disk with binaries assembled from the OS8_OCK SYS source disk
 $(OS8_OCK_SYS_OBJ_RK05): $(OS8_OCK_SYS_SRC_RK05) $(OS8_OCK_SYS_MAKER)
 	$(OS8RUN) $(OS8_OCK_SYS_MAKER)
 
 # Build the source disk for OS/8 OCK CUSPS Component.
-$(OS8_OCK_CUSPS_SRC_RK05): $(OS8_OCK_CUSPS_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_CUSPS_SRC_RK05) -z -a $(OS8_OCK_CUSPS_SOURCES) RKA1:
+$(OS8_OCK_CUSPS_SRC_RK05): $(OS8_OCK_CUSPS_SOURCES) | $(OS8_TOOLTIME)
+	@builddir@/$(OS8CP) -v -rk1 $(OS8_OCK_CUSPS_SRC_RK05) -z -a $(OS8_OCK_CUSPS_SOURCES) RKA1:
 
 # Make a disk with binaries assembled from the OS8_OCK SYS source disk
 $(OS8_OCK_CUSPS_OBJ_RK05): $(OS8_OCK_CUSPS_SRC_RK05) $(OS8_OCK_CUSPS_MAKER)
 	$(OS8RUN) $(OS8_OCK_CUSPS_MAKER)
 
 # Build the source disk for OS/8 OCK BASIC and FORTRAN II Component.
-$(OS8_OCK_BF2_SRC_RK05): $(OS8_OCK_BF2_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_BF2_SRC_RK05) -z -a $(OS8_OCK_BF2_SOURCES) RKA1:
+$(OS8_OCK_BF2_SRC_RK05): $(OS8_OCK_BF2_SOURCES) | $(OS8_TOOLTIME)
+	@builddir@/$(OS8CP) -v -rk1 $(OS8_OCK_BF2_SRC_RK05) -z -a $(OS8_OCK_BF2_SOURCES) RKA1:
 
 # Make a disk with binaries assembled from the OS8_OCK FIRTRAN II source disk
 $(OS8_OCK_BF2_OBJ_RK05): $(OS8_OCK_BF2_SRC_RK05) $(OS8_OCK_BF2_MAKER)
 	$(OS8RUN) $(OS8_OCK_BF2_MAKER)
 
 # Build the source disk for OS/8 OCK FORTRAN IV Component.
-$(OS8_OCK_FIV_SRC_RK05): $(OS8_OCK_FIV_SOURCES) | $(OS8_BOOT_DISK)
-	@builddir@/bin/os8-cp -v -rk1 $(OS8_OCK_FIV_SRC_RK05) -z -a $(OS8_OCK_FIV_SOURCES) RKA1:
+$(OS8_OCK_FIV_SRC_RK05): $(OS8_OCK_FIV_SOURCES) | $(OS8_TOOLTIME)
+	@builddir@/$(OS8CP) -v -rk1 $(OS8_OCK_FIV_SRC_RK05) -z -a $(OS8_OCK_FIV_SOURCES) RKA1:
 
 # Make a disk with binaries assembled from the OS8_OCK FORTRAN IV source disk
 $(OS8_OCK_FIV_OBJ_RK05): $(OS8_OCK_FIV_SRC_RK05) $(OS8_OCK_FIV_MAKER)
@@ -824,19 +832,19 @@ $(V3F_TD12K_TU56): $(V3F_MADE_RK05) $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT)
 	$(OS8RUN)@OS8_OPTS@ $(ALL_TU56_SCRIPT) --enable v3f --enable td12k
 
 # Make a bootable OS/8 v3d TCO8 DECtape image
-$(V3D_TC08_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK) 
+$(V3D_TC08_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_TOOLTIME) 
 	$(OS8RUN)@OS8_OPTS@ $(ALL_TU56_SCRIPT)
 
 # Make a bootable OS/8 v3d TD8E 12K DECtape image
-$(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_BOOT_DISK) 
+$(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_TOOLTIME) 
 	$(OS8RUN)@OS8_OPTS@ $(ALL_TU56_SCRIPT) --enable td12k
 
 # Create the CC8 distribution DECtape image
-bin/cc8.tu56: $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) $(CC8_TU56_SCRIPT) | $(V3D_PATCHED_RK05)
+bin/cc8.tu56: $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) $(CC8_TU56_SCRIPT) | $(OS8_TOOLTIME)
 	$(OS8RUN) $(CC8_TU56_SCRIPT)
 
 # Create the E8 distribution DECtape image
-bin/e8.tu56: $(E8_SRCS) $(E8_TU56_SCRIPT) | $(V3D_PATCHED_RK05)
+bin/e8.tu56: $(E8_SRCS) $(E8_TU56_SCRIPT) | $(OS8_TOOLTIME)
 	$(OS8RUN) $(E8_TU56_SCRIPT)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.

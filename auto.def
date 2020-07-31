@@ -71,6 +71,7 @@ set os8opts {
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"
     vtedit      0  "the TECO VTEDIT setup"
+    use-ock	0  "Use OS/8 Combined Kit as boot disk"
 }
 
 set alloptions {}
@@ -102,6 +103,7 @@ append alloptions {
     serial-mod           => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:            => "override the throttle values in the boot scripts"
     usb-automount=1      => "do not automatically mount USB drives for SING_STEP + DF"
+    use-ock		 => "Boot the OS/8 Combined Kit built from source instead of binary v3d."
 }
 
 options $alloptions
@@ -215,8 +217,26 @@ if {$os8src} {
     msg-result "Will not build v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 {}
 }
-# Define our boot image. (Note, we ALWAYS apply patches.)
-define OS8_BOOT_DISK "v3d.rk05"
+
+# Define boot image used in various places.
+
+# OS8_BASELINE is used at the lowest levels of building.
+define OS8_BASELINE "v3d-dist.rk05"
+
+# OS8_TOOLTIME is used by tools, it is the patched version of OS8_BASELINE.
+# This enables tools and higher levels of building to work with the
+# most up-to-date revisions of system and utilities.
+define OS8_TOOLTIME "v3d-patched.rk05"
+
+# OS8_RUNTIME is what the end user boots.  It contains the patched OS and utilies.
+# It also contains all configured third party components.
+# This boot disk is a choice between v3d, and ock.
+# The ock image is built from source using OS8_BASELINE and OS8_TOOLTIME.
+if {[opt-bool use-ock]} {
+    define OS8_RUNTIME "ock.rk05"
+} else {
+    define OS8_RUNTIME "v3d.rk05"
+}
 
 # Compose our boot tape image name from boot-tape-config and boot-tape-version
 # Pull defaults from $btc for boot-tape-config, and $btv for boot-tape-version.
