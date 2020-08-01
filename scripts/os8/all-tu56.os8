@@ -1,6 +1,6 @@
 # Builds a bootable dectape image for either v3d or v3f.
 # Pieces come from, as needed:
-# v3d.rk05, the os8v3d device driver distribution DECtape,
+# v3d-patched.rk05, the os8v3d device driver distribution DECtape,
 # and the os8v3f-build rk05.
 # Keep this file in sync with v3d-dist.os8 which determines
 # which device drivers are available by default when running
@@ -46,7 +46,7 @@ end enabled td8e
 # So we create a scratch version of the system rk05 to prevent conflicts.
 # We have to do this anyway for TD8E since we change the DECtape configuration.
 
-mount rk0 $bin/v3d.rk05 required scratch
+mount rk0 $bin/v3d-patched.rk05 required scratch
 boot rk0
 
 # Our built image inherits whether or not INIT is set.

@@ -1,4 +1,4 @@
-mount rk0 $bin/v3d.rk05 required scratch
+mount rk0 $bin/v3d-patched.rk05 required scratch
 
 boot rk0
 

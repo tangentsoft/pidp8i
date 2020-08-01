@@ -1,4 +1,4 @@
-mount rk0 $bin/v3d.rk05 required scratch
+mount rk0 $bin/v3d-patched.rk05 required scratch
 mount dt1 $os8mi/al-4712c-ba-os8-v3d-2.1978.tu56 ro required
 
 boot rk0

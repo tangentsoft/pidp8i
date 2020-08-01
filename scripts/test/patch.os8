@@ -1,7 +1,7 @@
 # Test the patch command.
 
-# copy ./v3d-dist.rk05 ./v3d.rk05
-mount rk0 ./v3d.rk05 required
+# copy ./v3d-dist.rk05 ./v3d-patched.rk05
+mount rk0 ./v3d-patched.rk05 required
 
 boot rk0
 

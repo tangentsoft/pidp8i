@@ -1,4 +1,4 @@
-mount rk0 $bin/v3d.rk05 required scratch
+mount rk0 $bin/v3d-patched.rk05 required scratch
 mount dt0 $os8mo/pal-test.tu56 new
 mount rk1 $bin/v3d-src.rk05 required
 

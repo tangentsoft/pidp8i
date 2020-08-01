@@ -250,7 +250,7 @@ VERBOSE_USAGE = TERSE_USAGE + """
     This program compares two OS/8 media image files by attaching them
     to the SIMH PDP-8 simulater, and booting OS/8.
     The s suffix on one image spec. selects that image as the boot device.
-    If no s suffis is present, the default v3d.rk05 image is booted.
+    If no s suffix is present, the default v3d-patched.rk05 image is booted.
 
     A directory listing for each image is obtained, and the files
     are extracted into a POSIX directory.  If the image has multiple
