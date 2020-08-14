@@ -71,7 +71,7 @@ set os8opts {
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"
     vtedit      0  "the TECO VTEDIT setup"
-    use-ock	0  "Use OS/8 Combined Kit as boot disk"
+    use-ock     0  "Use OS/8 Combined Kit as boot disk"
 }
 
 set alloptions {}
@@ -103,7 +103,7 @@ append alloptions {
     serial-mod           => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:            => "override the throttle values in the boot scripts"
     usb-automount=1      => "do not automatically mount USB drives for SING_STEP + DF"
-    use-ock		 => "Boot the OS/8 Combined Kit built from source instead of binary v3d."
+    use-ock              => "Boot the OS/8 Combined Kit built from source instead of binary v3d."
 }
 
 options $alloptions
