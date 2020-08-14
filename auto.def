@@ -71,7 +71,6 @@ set os8opts {
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"
     vtedit      0  "the TECO VTEDIT setup"
-    use-ock     0  "Use OS/8 Combined Kit as boot disk"
 }
 
 set alloptions {}
