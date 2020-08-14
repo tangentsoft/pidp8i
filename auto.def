@@ -87,12 +87,12 @@ foreach {opt def desc} $os8opts {
 # Now define those command line options that belong only to us.
 append alloptions {
     alt-serial-mod       => "use GPIO drive scheme suitable for James L-W's serial mod method"
-    boot-tape-config:    => "Boot tape configuration: tc08, or td12k"
+    boot-tape-config:    => "boot tape configuration: tc08, or td12k"
     boot-tape-version:   => "OS/8 version for boot tape, either v3d or v3f"
     cc8-cross=1          => "do not build the cc8 cross-compiler on the host"
     debug-mode           => "create a debug build (default is release)"
-    e8-screen-width:=80  => "fixed width of terminal screen assumed by E8 on OS/8"
-    e8-screen-height:=24 => "E8 terminal height"
+    e8-screen-width:=80  => "set E8 terminal width"
+    e8-screen-height:=24 => "set E8 terminal height"
     lowercase:           => "select how lowercase input is to be handled"
     no-lamp-simulator    => "use simple LED driver instead of incandescent lamp simulator"
     os8-focal=1          => "leave FOCAL,1969 and U/W FOCAL off the built OS/8 RK05 image"
@@ -102,7 +102,7 @@ append alloptions {
     serial-mod           => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:            => "override the throttle values in the boot scripts"
     usb-automount=1      => "do not automatically mount USB drives for SING_STEP + DF"
-    use-ock              => "Boot the OS/8 Combined Kit built from source instead of binary v3d."
+    use-ock              => "boot the OS/8 Combined Kit built from source instead of binary v3d."
 }
 
 options $alloptions
