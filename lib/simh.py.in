@@ -295,6 +295,29 @@ class simh:
     self._child.expect (pexpect.EOF, timeout = timeout)
 
 
+  #### child_expect ###################################################
+  # Higher level accessor to _child.expect that catches the timeout.
+
+  def child_expect(self, replies, timeout=10):
+    try:
+      reply = self._child.expect(replies, timeout=timeout)
+    except pexpect.exceptions.TIMEOUT:
+      print ("pexpect timeout")
+      print("\tmatch before: {" + self._child.before.decode() + "}")
+      return -1      
+    return reply
+
+  #### child_after #####################################################
+  # Abstract accessor for the pexpect object's after contents.
+  # Copes with the possibility that we timed out or hit end of file.
+
+  def child_after (self):
+    obj = self._child.after
+    if obj == pexpect.TIMEOUT: return "TIMEOUT"
+    elif obj == pexpect.EOF: return "End Of File"
+    return self._child.after.decode()
+      
+
   #### try_wait ########################################################
   # A wrapper around self._child.expect which catches exceptions and
   # returns false on pexpect timeout.  If you pass a list instead of a
@@ -313,7 +336,6 @@ class simh:
       sys.stderr.write ("Failed to match " + str(matches) + 
           ": unknown exception.\n")
       return False
-
 
   ######################## Utility Functions #############################
     
@@ -335,7 +357,7 @@ class simh:
     if debug:
       print ("test_result: Got reply: " + str(reply) + " -> "  + reply_ID)
       print("\tmatch before: {" + self._child.before.decode() + "}")
-      print("\tmatch after: {" + self._child.after.decode() + "}")
+      print("\tmatch after: {" + self.child_after() + "}")
     if reply_ID.lower() == expected.lower():
       return True
     else:
@@ -352,13 +374,13 @@ class simh:
   # Unconditionally go to SIMH
   def esc_to_simh (self, debug=False):
     self._child.sendcontrol ('e')
-    reply = self._child.expect (self._simh_replies_rex)  # Wait to get simh prompt
+    reply = self.child_expect (self._simh_replies_rex)  # Wait to get simh prompt
     self.simh_test_result(reply, "Prompt", "esc_to_simh")
     self._context = "simh"
     if debug:
       print("esc_to_simh: reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
       print("\tmatch before: {" + self._child.before.decode() + "}")
-      print("\tmatch after: {" + self._child.after.decode() + "}")
+      print("\tmatch after: {" + self.child_after() + "}")
     return reply
 
 
@@ -398,11 +420,13 @@ class simh:
   def simh_cmd (self, cmd, replies=None, debug=False):
     if replies == None: replies = self._simh_replies_rex
     self.simh_send_line (cmd, debug=debug)
-    reply = self._child.expect(replies)
+    reply = self.child_expect(replies)
+    if reply == -1:
+      print ("simh_cmd: was sending:" + cmd)
     if debug:
       print("\tGot reply: " + str(reply) + " -> " + self._simh_replies[reply][0])
       print("\tmatch before: {" + self._child.before.decode() + "}")
-      print("\tmatch after: {" + self._child.after.decode() + "}")
+      print("\tmatch after: {" + self.child_after() + "}")
     return reply
 
 
@@ -480,8 +504,8 @@ class simh:
     
     ucname = name.upper()
     self.simh_send_line("show " + name)
-    self._child.expect(ucname + "\s+(.+)\r")
-    lines = self._child.after.decode().split ("\r")
+    if self.child_expect(ucname + "\s+(.+)\r") == -1: return []
+    lines = self.child_after().split ("\r")
     return lines
 
 
@@ -517,7 +541,7 @@ class simh:
     return attached
 
   #### do_print_lines ###################################################
-  # Debugging aid. Prints what we parsed out of _child.after.
+  # Debugging aid. Prints what we parsed out of child_after.
   def do_print_lines (self, lines):
     for line in lines:
       print(line)
@@ -853,28 +877,22 @@ class simh:
     if self._context != 'os8': 
       print("OS/8 is not running. Cannot execute: " + cmd)
       return -1
-    if debug:
-      print("os8_cmd: sending: " + cmd)
-      print("\tPrevious match before: {" + self._child.before.decode() + "}")
-      print("\tPrevious match after: {" + self._child.after.decode() + "}")
     self.os8_send_line (cmd)
-    reply = self._child.expect (replies, timeout = timeout)
-    if debug:
-      print("\tmatch before: {" + self._child.before.decode() + "}")
-      print("\tmatch after: {" + self._child.after.decode() + "}")
+
+    reply = self.child_expect (replies, timeout = timeout)
     return reply
     
 
   #### os8_cfm_monitor ##################################################
   # Confirm return to OS/8 monitor.
   # This function is necessary so that we know our command has returned to OS/8.
-  # Without this test, the next _child.expect hits a monitor prompt instead of
+  # Without this test, the next child_expect hits a monitor prompt instead of
   # what it will be looking for.
   # If caller is not empty, it will emit an error string if the prompt wasn't seen.
   # Returns True if we are where we expect.
 
   def os8_cfm_monitor (self, caller, debug=False):
-    reply = self._child.expect(self._os8_replies_rex)
+    reply = self.child_expect(self._os8_replies_rex)
     return self.os8_test_result(reply, "Monitor Prompt", caller, debug=debug)
 
 
@@ -894,11 +912,11 @@ class simh:
 
   def os8_ctrl_c (self, caller = "", debug=False):
     self.os8_send_ctrl ("c")
-    reply = self._child.expect(self._os8_replies_rex)
+    reply = self.child_expect(self._os8_replies_rex)
     uparrow = self.os8_test_result(reply, "PIP Continue", "")
-    if uparrow: reply = self._child.expect(self._os8_replies_rex)
+    if uparrow:
+      reply = self.child_expect(self._os8_replies_rex)
     return self.os8_test_result(reply, "Monitor Prompt", caller)
-
 
 
   #### os8_escape ##################################################
@@ -914,7 +932,7 @@ class simh:
 
   def os8_escape (self, caller = "", debug=False):
     self.os8_send_ctrl ('[')
-    self._child.expect("\\$")
+    self.child_expect("\\$")
     return self.os8_cfm_monitor (caller)
 
 
@@ -946,7 +964,7 @@ class simh:
   def simh_resume_os8 (self):
     self.simh_send_line ("cont")
     # Give OS/8 a chance to wake up.
-    self._child.expect("cont\r")
+    self.child_expect("cont\r")
     self.os8_kbd_delay()
 
 
@@ -1073,14 +1091,14 @@ class simh:
     # Finish transfer
     # The test for success is implicit.
     self.os8_send_ctrl ('[')
-    reply = self._child.expect (pip_rex)
+    reply = self.child_expect (pip_rex)
     if reply != 0:
       self.os8_test_result (reply - 1, "Command Decoder Prompt", "os8_pip_to 2", debug=debug)
     # If we did not return to monitor hit escape to exit PIP.
     if self._os8_replies[reply - 1][2] == False:
         self.os8_send_ctrl ('[')      # Success or Non-fatal error.
         # Must exit PIP and wait for monitor prompt. Complain if we don't get it!
-        reply = self._child.expect (self._os8_replies_rex)
+        reply = self.child_expect (self._os8_replies_rex)
         self.os8_test_result (reply, "Monitor Prompt", "os8_pip_to 3")
     # detach ptr
     # self.esc_to_simh ()
@@ -1146,7 +1164,7 @@ class simh:
 
     self.os8_send_ctrl ('[')      # exit PIP
     # Must wait for monitor prompt. Complain if we don't get it!
-    reply = self._child.expect (self._os8_replies_rex)
+    reply = self.child_expect (self._os8_replies_rex)
     self.os8_test_result (reply, "Monitor Prompt", "os8_pip_from 2")
 
     self.esc_to_simh(debug)

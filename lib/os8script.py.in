@@ -1049,7 +1049,7 @@ class os8script:
     self.simh._child.expect(expect_val_str)
   
     if old_val.isdigit():          # We need to check old value
-      found_val = self.simh._child.after.decode().strip()
+      found_val = self.simh.child_after().strip()
       if found_val != old_val:
         print("\tOld value: " + found_val + " does not match " +
             old_val + ". Aborting patch.")
@@ -1081,7 +1081,7 @@ class os8script:
     expect_futil_file_str = "\n" + fname + "\s+(.*)$"
     self.simh.os8_send_line (line)
     self.simh._child.expect(expect_futil_file_str)
-    result = self.simh._child.after.decode().strip()
+    result = self.simh.child_after().strip()
     match = _com_split_parse.match(result)
     if match == None:
       print("Aborting because unexpected return status: " + result + \
@@ -1416,7 +1416,7 @@ class os8script:
     if retval == 1:
       print("Attempt to boot non-existent device: " + line)
       return "die"
-    reply_str = self.simh._child.after.decode()
+    reply_str = self.simh.child_after()
     m = re.match("^(\S+)\s(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
         reply_str)
     if m == None:
@@ -1479,7 +1479,7 @@ class os8script:
           print ("^C failed to return to monitor. Killing script.")
           return "die"
     print ("os8_command Error: \n\t" + os8_comm)
-    print ("\t" + self.simh._child.after.decode().strip())
+    print ("\t" + self.simh.child_after().strip())
     # If this was not a fatal error, we need to ^C to get back to Monitor.
     # But sometimes OS/8 is not yet ready for ^C, so we wait half a second.
     if self.simh._os8_replies[reply][2] == False:
@@ -1533,7 +1533,7 @@ class os8script:
     reply = self.simh.os8_cmd (com_line, self._pal8_replies_rex)
     err_count = 0
     executed_line = self.simh._child.before.decode().strip()
-    reply_match_str = self.simh._child.after.decode().strip()
+    reply_match_str = self.simh.child_after().strip()
     ed  = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
     mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
     cd  = self.simh.test_result(reply, "Command Decpder Prompt", self._pal8_replies, "")
@@ -1545,16 +1545,16 @@ class os8script:
     while not mon:
       if ed:   # Got Errors Detected. Count them.
         self.simh._child.expect("\d+")
-        err_count = int(self.simh._child.after.decode().strip())
+        err_count = int(self.simh.child_after().strip())
       elif lg: 
         self.simh._child.expect("\d+")
-        link_count = int(self.simh._child.after.decode().strip())
+        link_count = int(self.simh.child_after().strip())
       elif cd: # Got Command Decoder. Exit with failure.
         if self.debug: print ("call_pal8: Non-fatal error: Sending ^C")
         # Exit pal8. We'll confirm we got back to OS/8 monitor below.
         self.simh.os8_send_ctrl ('c')      
       else:
-        err_string += ("\t" + self.simh._child.after.decode().strip() + "\n")
+        err_string += ("\t" + self.simh.child_after().strip() + "\n")
       reply = self.simh._child.expect(self._pal8_replies_rex)
       ed = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
       mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
@@ -1662,7 +1662,7 @@ class os8script:
           print("Line " + str(self.line_ct_stack[0]) + ": end BUILD")
         if self.debug:
           print("before: " + self.simh._child.before.decode().strip())
-          print("after: " + self.simh._child.after.decode().strip())
+          print("after: " + self.simh.child_after().strip())
         # Return to monitor.
         # Note! Unlike many commands build does NOT echo "^C!"
         self.simh.os8_ctrl_c ("build_subcomm end with no argument.")
