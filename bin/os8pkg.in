@@ -1,0 +1,240 @@
+#!/usr/bin/env @PYCMD@
+# -*- coding: utf-8 -*-
+########################################################################
+# Packaging software for consumption by OS/8
+# Uses os8-cp as a foundation.
+#
+# See USAGE message below for details.
+#
+# Copyright © 2020 by Bill Cattey and Warren Young
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
+
+# Our local modules
+from pidp8i import *
+
+# Other global Python modules
+import glob
+import subprocess
+import string
+import re
+import argparse
+
+
+#### GLOBALS AND CONSTANTS #############################################
+
+progmsg = True
+DEBUG = False
+VERBOSE = False
+QUIET = False
+
+# Sections found in a pspec file:
+_pspec_sections = ["format:", "inputs:", "outputs:", "build:"]
+
+# Supported file formats:
+_pspec_formats = ["tu56", "rk05"]
+
+# Default RK05 system image to attach if no sys specified.
+_default_sys_image = "@OS8_TOOLTIME@"
+_default_sys_path = dirs.os8mo + _default_sys_image
+_default_att_spec = ["rk", "0", _default_sys_path]
+
+# Regex for parsing an argument string into a sys device
+_dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
+_dev_arg_re = re.compile(_dev_arg_regex_str)
+
+# Map of SIMH device names to OS/8 device name prefixes.
+_os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "dt" : "DTA", "rx" : "RX"}
+
+_os8_partitions = {"RK": ["A", "B"]}
+
+# OS/8 file name matching regex
+_os8_file_re = re.compile("(\S+):(\S+)?")
+
+# Matches if the string begins with a dollar sign, and has at least
+# one slash, returning the string between the dollar sign and the
+# first slash in group 1 and the rest in group 2.
+# No whitespace in the string.
+_expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
+
+
+#### abort_prog ########################################################
+# Print err_string and exit with -1 return status.
+
+def abort_prog (err_str):
+  print("Abort: " + err_str)
+  sys.exit(-1)
+
+
+#### path_expand #######################################################
+# Originally developed in os8script.py, but useful here too.
+#
+# Simple minded variable substitution in a path.
+# A path beginning with a dollar sign parses the characters between
+# the dollar sign and the first slash seen becomes a name to
+# expand with a couple local names: $home and the anchor directories
+# defined in lib/pidp8i/dirs.py.
+# We abort if the path expansion fails.
+
+def path_expand (path):
+  m = re.match(_expandable_re, path)
+  if m == None: return path
+  var = m.group(1)
+
+  val = getattr (dirs, var, None)
+  if val != None:
+    return os.path.join(val,m.group(2))
+  else:
+    abort_prog ("{$" + var + "} is not a valid path expansion in " + path)
+  
+
+#### parse_pspec ########################################################
+# Parse the pspec file named by pkg
+
+def parse_pspec (pkg_name):
+  try:
+    pspec_file = open (pkg_name + ".pspec", "r")
+  except IOError:
+    print(pkg_name + ".pspec not found. Skipping.")
+    return None
+
+  pspec = {}
+  for section in _pspec_sections:
+    pspec [section] = []
+
+  pspec["format:"].append("tu56")     # Default to tu56 format.
+
+  location = ""
+  for ioline in pspec_file:
+    line = ioline.strip()
+    if line == "": continue
+    elif line[0] == "#": continue
+    elif line in _pspec_sections: location = line
+    else:
+      if location == "":
+        print ("Don't know where to put: {" + line + "}.")
+      elif location == "format:":
+        if line in _pspec_formats:
+          pspec[location][0] = line  # Last format we see wins.
+        else:
+          print ("Unsupported format: " + line)
+      else:
+        pspec[location].append(line)
+  return pspec
+
+
+#### make_mk ###########################################################
+# Make the .mk output file
+
+def make_deps (pkg_name, pspec):
+  if len(pspec["inputs:"]) == 0:
+    print ("Nothing to make")
+    return None
+
+  outstr = ""
+
+  pkg_fmt = pspec["format:"][0]
+  pkg_ucfmt = pkg_fmt.upper()
+  pkg_srcs = pkg_name.upper() + "_SRCS"
+  pkg_script = pkg_name.upper() + "_" + pkg_ucfmt + "_SCRIPT"
+  
+  outstr += (pkg_srcs + ":= ")
+  for src in pspec["inputs:"]:
+    outstr += ("\\\n\t@srcdir@/" + src)
+
+  outstr += ("\n\n" + pkg_script + " =  $(MISC_SCRIPTS_DIR)/" + pkg_name + \
+             "-" + pkg_fmt + ".os8\n")
+  
+  outstr += ("\n\nbin/" + pkg_name + "." + pkg_fmt + ": $(" + \
+             pkg_srcs + ") $(" + pkg_script + ") | $(OS8_TOOLTIME)\n")
+  outstr += ("\t$(OS8RUN) $(" + pkg_script + ")\n\n")
+
+  return outstr
+
+#### make_os8 ##########################################################
+# Make the installer .os8 file
+
+def make_script (pkg_name, pspec):
+  if len(pspec["outputs:"]) == 0:
+    print ("Nothing to make")
+    return None
+
+  pkg_fmt = pspec["format:"][0]
+  if pkg_fmt == "tu56": dev = "dt0"
+  else: dev = "rk1"
+  
+  outstr = "mount " + dev + " $os8mo/" + pkg_name + "." + pkg_fmt + " ro required\n"
+  for dest in pspec["outputs:"]:
+    outstr += ("os8 COPY " + dest + "\n")
+
+  outstr += ("umount " + dev + "\n")
+  return outstr
+
+
+#### main ##############################################################
+
+def main ():
+
+  parser = argparse.ArgumentParser(
+    description = """
+    Package manager for use under PDP-8 OS/8.""",
+    epilog = "Pick one option command.")
+  parser.add_argument("-v", "--verbose", help="increase output verbosity",
+  				   action="store_true")
+  parser.add_argument("-d", "--debug", type=int,
+                      help="set debug level", default=0)
+  parser.add_argument("command", choices=["deps", "script", "install", "build", "all"])
+  parser.add_argument('packages', nargs=argparse.REMAINDER)
+
+  args = parser.parse_args()
+
+  if len(args.packages) == 0:
+    abort_prog ("Need at least one package to work.")
+    
+  for pkg in args.packages:
+    print ("Package name:" + pkg)
+    pspec = parse_pspec(pkg)
+
+    pkg_fmt = pspec["format:"][0]
+    print ("Format: " + pkg_fmt)
+    
+    print (pkg + ".mk: ")
+
+    outstr = make_deps(pkg, pspec)
+    print (outstr)
+
+    print (pkg + "-" + pkg_fmt + ".os8: ")
+    outstr = make_script(pkg, pspec)
+    print (outstr)
+  
+if __name__ == "__main__": main()

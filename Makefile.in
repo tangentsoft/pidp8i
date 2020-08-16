@@ -279,6 +279,7 @@ PRECIOUS_INFILES = \
     @srcdir@/src/SIMH/Makefile.in \
     @srcdir@/src/SIMH/PDP8/Makefile.in
 INFILES = \
+	@srcdir@/bin/os8pkg.in \
 	@srcdir@/bin/os8-cp.in \
 	@srcdir@/tools/os8-cmp.in \
 	@srcdir@/bin/os8-run.in \
