@@ -87,6 +87,8 @@ _os8_file_re = re.compile("(\S+):(\S+)?")
 # No whitespace in the string.
 _expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
 
+# Help us strip off a ".pspec" suffix
+_pspec_suffix_re = re.compile("^(\S+)\.pspec$")
 
 #### abort_prog ########################################################
 # Print err_string and exit with -1 return status.
@@ -208,13 +210,20 @@ def main ():
   parser = argparse.ArgumentParser(
     description = """
     Package manager for use under PDP-8 OS/8.""",
-    epilog = "Pick one option command.")
+    usage = "%(prog)s [command] [options] [package ...]")
   parser.add_argument("-v", "--verbose", help="increase output verbosity",
   				   action="store_true")
-  parser.add_argument("-d", "--debug", type=int,
+  parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
                       help="set debug level", default=0)
-  parser.add_argument("command", choices=["deps", "script", "install", "build", "all"])
-  parser.add_argument('packages', nargs=argparse.REMAINDER)
+  parser.add_argument ("--target", help="target image file")
+  subparsers = parser.add_subparsers(title="commands")
+  parser_deps = subparsers.add_parser("deps", help="Create .mk format dependency file")
+  parser_deps.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
+  parser_script = subparsers.add_parser("script", help="Create os8-run script from build directives")
+  parser_script.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
+  parser_install = subparsers.add_parser("install", help="Create target image file")
+  parser_build = subparsers.add_parser("build", help="Install target image file")
+  parser_all = subparsers.add_parser("all", help="Perform all of the above.")
 
   args = parser.parse_args()
 
@@ -222,6 +231,8 @@ def main ():
     abort_prog ("Need at least one package to work.")
     
   for pkg in args.packages:
+    m = re.match(_pspec_suffix_re, pkg)
+    if m != None: pkg = m.group(1)
     print ("Package name:" + pkg)
     pspec = parse_pspec(pkg)
 
