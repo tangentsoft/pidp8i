@@ -69,6 +69,8 @@ _default_sys_image = "@OS8_TOOLTIME@"
 _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = ["rk", "0", _default_sys_path]
 
+_pkg_obj_dir = os.path.join (dirs.obj, "os8pkg/")
+
 # Regex for parsing an argument string into a sys device
 _dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
 _dev_arg_re = re.compile(_dev_arg_regex_str)
@@ -216,17 +218,23 @@ def main ():
   parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
                       help="set debug level", default=0)
   parser.add_argument ("--target", help="target image file")
+  parser.add_argument ("--dry-run", "-n", help="Dry Run. Print output. Generate no files.")
   subparsers = parser.add_subparsers(title="commands")
   parser_deps = subparsers.add_parser("deps", help="Create .mk format dependency file")
   parser_deps.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
+  parser_deps.set_defaults(command="deps")
   parser_script = subparsers.add_parser("script", help="Create os8-run script from build directives")
   parser_script.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
+  parser_script.set_defaults(command="script")
   parser_install = subparsers.add_parser("install", help="Create target image file")
   parser_install.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
+  parser_install.set_defaults(command="install")
   parser_build = subparsers.add_parser("build", help="Install target image file")
   parser_build.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
+  parser_build.set_defaults(command="build")
   parser_all = subparsers.add_parser("all", help="Perform all of the above.")
   parser_all.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
+  parser_all.set_defaults(command="all")
 
   args = parser.parse_args()
 
@@ -241,14 +249,19 @@ def main ():
 
     pkg_fmt = pspec["format:"][0]
     print ("Format: " + pkg_fmt)
-    
-    print (pkg + ".mk: ")
 
-    outstr = make_deps(pkg, pspec)
-    print (outstr)
+    if args.command == "deps":
+      outname = (pkg + ".mk")
+      outpath = os.path.join(_pkg_obj_dir, outname) 
+      print (outpath)
+      outstr = make_deps(pkg, pspec)
+      print (outstr)
 
-    print (pkg + "-" + pkg_fmt + ".os8: ")
-    outstr = make_script(pkg, pspec)
-    print (outstr)
+    if args.command == "script":
+      outname = pkg + "-" + pkg_fmt + ".os8"
+      outpath = os.path.join(_pkg_obj_dir, outname) 
+      print (outpath)
+      outstr = make_script(pkg, pspec)
+      print (outstr)
   
 if __name__ == "__main__": main()
