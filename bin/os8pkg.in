@@ -222,8 +222,11 @@ def main ():
   parser_script = subparsers.add_parser("script", help="Create os8-run script from build directives")
   parser_script.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
   parser_install = subparsers.add_parser("install", help="Create target image file")
+  parser_install.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
   parser_build = subparsers.add_parser("build", help="Install target image file")
+  parser_build.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
   parser_all = subparsers.add_parser("all", help="Perform all of the above.")
+  parser_all.add_argument('packages', nargs=argparse.REMAINDER, metavar="one or more package files")
 
   args = parser.parse_args()
 
