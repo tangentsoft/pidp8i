@@ -93,8 +93,8 @@ _expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
 _pspec_suffix_re = re.compile("^(\S+)\.pspec$")
 
 # Commands and their help strings.
-_command_set = [["deps", "Create .mk format dependency file"],
-                ["script", "Create os8-run script from build directives"],
+_command_set = [["deps", "Create .mk format dependency file from inputs"],
+                ["script", "Create os8-run install script from outputs"],
                 ["install", "Create target image file"],
                 ["build", "Install target image file"],
                 ["all", "Perform all of the above."]]
@@ -184,12 +184,22 @@ def make_deps (pkg_name, pspec):
   for src in pspec["inputs:"]:
     outstr += ("\\\n\t@srcdir@/" + src)
 
-  outstr += ("\n\n" + pkg_script + " =  $(MISC_SCRIPTS_DIR)/" + pkg_name + \
-             "-" + pkg_fmt + ".os8\n")
+  # If the build section is empty use a default build:
+  # An os8-run on a script in MISC_SCRIPTS_DIR named like the package and format.
+  if len(pspec["build:"]) > 0:
+    outstr += ("\n\nbin/" + pkg_name + "." + pkg_fmt + ": $(" + \
+               pkg_srcs + ") | $(OS8_TOOLTIME)\n")
+    for build_line in pspec["build:"]:
+      outstr += ("\t" + build_line)
+
+    outstr += "\n"
+  else:
+    outstr += ("\n\n" + pkg_script + " =  $(MISC_SCRIPTS_DIR)/" + pkg_name + \
+               "-" + pkg_fmt + ".os8\n")
   
-  outstr += ("\n\nbin/" + pkg_name + "." + pkg_fmt + ": $(" + \
-             pkg_srcs + ") $(" + pkg_script + ") | $(OS8_TOOLTIME)\n")
-  outstr += ("\t$(OS8RUN) $(" + pkg_script + ")\n\n")
+    outstr += ("\n\nbin/" + pkg_name + "." + pkg_fmt + ": $(" + \
+               pkg_srcs + ") $(" + pkg_script + ") | $(OS8_TOOLTIME)\n")
+    outstr += ("\t$(OS8RUN) $(" + pkg_script + ")\n\n")
 
   return outstr
 
