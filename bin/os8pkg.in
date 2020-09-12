@@ -87,10 +87,9 @@ _os8_file_re = re.compile("(\S+):(\S+)?")
 # one slash, returning the string between the dollar sign and the
 # first slash in group 1 and the rest in group 2.
 # No whitespace in the string.
-_expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
+_expandable_re = re.compile ("^((?:[^/]*/)*)(([^\.]*)(\.pspec)?)$")
 
-# Help us strip off a ".pspec" suffix
-_pspec_suffix_re = re.compile("^(\S+)\.pspec$")
+_pspec_strip_re = re.compile("^(\S*)\.pspec$")
 
 # Commands and their help strings.
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
@@ -130,14 +129,23 @@ def path_expand (path):
     abort_prog ("{$" + var + "} is not a valid path expansion in " + path)
   
 
+#### dest_expand ########################################################
+# Return a full path based either on the --destdir option or
+# the default _pkg_obj_dir
+
+def dest_expand (args, fname):
+  if args.destdir: return os.path.join(args.destdir, fname)
+  else: return  os.path.join(_pkg_obj_dir, fname)
+
+
 #### parse_pspec ########################################################
 # Parse the pspec file named by pkg
 
-def parse_pspec (pkg_name):
+def parse_pspec (pkg_inpath):
   try:
-    pspec_file = open (pkg_name + ".pspec", "r")
+    pspec_file = open (pkg_inpath, "r")
   except IOError:
-    print(pkg_name + ".pspec not found. Skipping.")
+    print(pkg_inpath + " not found. Skipping.")
     return None
 
   pspec = {}
@@ -235,8 +243,9 @@ def main ():
   				   action="store_true")
   parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
                       help="set debug level", default=0)
+  parser.add_argument("--destdir", help="Destination directory for output files")
   parser.add_argument ("--target", help="target image file")
-  parser.add_argument ("--dry-run", "-n", help="Dry Run. Print output. Generate no files.")
+  parser.add_argument ("--dry-run", "-n", action="store_true", help="Dry Run. Print output. Generate no files.")
 
   subparsers = parser.add_subparsers(title="commands")
 
@@ -252,28 +261,46 @@ def main ():
 
   if len(args.packages) == 0:
     abort_prog ("Need at least one package to work.")
-    
-  for pkg in args.packages:
-    m = re.match(_pspec_suffix_re, pkg)
-    if m != None: pkg = m.group(1)
-    print ("Package name:" + pkg)
-    pspec = parse_pspec(pkg)
+
+  # The pkg_spec from command line may be a package name, or a file path.
+  # We need the name, and may or may not get the ".pspec" at the end.
+  for pkg_spec in args.packages:
+    pkg_dir = os.path.dirname(pkg_spec)
+    pkg_base = os.path.basename(pkg_spec)
+    m = re.match(_pspec_strip_re, pkg_base)
+    if m == None: pkg_name = pkg_base
+    else: pkg_name = m.group(1)
+    if args.debug >0:  print ("Package name:" + pkg_name)
+    pkg_inpath = os.path.join(pkg_dir,  pkg_name + ".pspec")
+    pspec = parse_pspec(pkg_inpath)
 
     pkg_fmt = pspec["format:"][0]
-    print ("Format: " + pkg_fmt)
+    if args.debug >0:  print ("Format: " + pkg_fmt)
 
     if args.command == "deps":
-      outname = (pkg + ".mk")
-      outpath = os.path.join(_pkg_obj_dir, outname) 
-      print (outpath)
-      outstr = make_deps(pkg, pspec)
-      print (outstr)
+      outname = (pkg_name + ".mk")
+      outpath = dest_expand (args, outname)
+      if args.debug >0 or args.dry_run:  print (outpath)
+      outstr = make_deps(pkg_name, pspec)
+      if args.dry_run:
+        print (outstr)
+      else:
+        outfile = open (outpath, "w")
+        for line in outstr:
+          outfile.write(line)
+        outfile.close()
 
     if args.command == "script":
-      outname = pkg + "-" + pkg_fmt + ".os8"
-      outpath = os.path.join(_pkg_obj_dir, outname) 
-      print (outpath)
-      outstr = make_script(pkg, pspec)
-      print (outstr)
+      outname = pkg_name + "-" + pkg_fmt + ".os8"
+      outpath = dest_expand (args, outname)
+      if args.debug >0:  print (outpath)
+      outstr = make_script(pkg_name, pspec)
+      if args.dry_run:
+        print (outstr)
+      else:
+        outfile = open (outpath, "w")
+        for line in outstr:
+          outfile.write(line)
+        outfile.close()
   
 if __name__ == "__main__": main()

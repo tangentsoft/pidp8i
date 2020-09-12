@@ -124,6 +124,7 @@ BUILDDIRS := \
 	obj/d8tape \
 	obj/misc \
 	obj/palbart \
+	obj/os8pkg \
 	obj/pidp8i \
 	obj/SIMH \
 	obj/SIMH/PDP8
@@ -183,22 +184,22 @@ CC8_OBJS := \
 	obj/cc8/cross/sym.o \
 	obj/cc8/cross/while.o
 
-CC_OS8_OBJS := \
-	obj/cc8/os8/libc.sb \
-	obj/cc8/os8/c8.sb \
-	obj/cc8/os8/n8.sb \
-	obj/cc8/os8/p8.sb
-
-CC_OS8_SRCS := \
-	@srcdir@/src/cc8/os8/header.sb
-
-CC_OS8_DEMOS := \
-	obj/cc8/os8/calc.c \
-	obj/cc8/os8/fib.c \
-	obj/cc8/os8/forth.c \
-	obj/cc8/os8/hlb.c \
-	obj/cc8/os8/pd.c \
-	obj/cc8/os8/ps.c \
+#CC_OS8_OBJS := \
+#	obj/cc8/os8/libc.sb \
+#	obj/cc8/os8/c8.sb \
+#	obj/cc8/os8/n8.sb \
+#	obj/cc8/os8/p8.sb
+#
+#CC_OS8_SRCS := \
+#	@srcdir@/src/cc8/os8/header.sb
+#
+#CC_OS8_DEMOS := \
+#	obj/cc8/os8/calc.c \
+#	obj/cc8/os8/fib.c \
+#	obj/cc8/os8/forth.c \
+#	obj/cc8/os8/hlb.c \
+#	obj/cc8/os8/pd.c \
+#	obj/cc8/os8/ps.c \
 
 D8TAPE_OBJS := \
 	obj/d8tape/dasm.o \
@@ -217,18 +218,18 @@ ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
 
-E8_SRCS:= \
-	@srcdir@/src/e8/AUTHORS.md \
-	@srcdir@/doc/e8-manual.md \
-	@srcdir@/doc/e8-manual-pdf.css \
-	@srcdir@/doc/graphics/e8-buffer.svg \
-	@srcdir@/src/e8/README.TX \
-	@srcdir@/src/e8/e8cmds.tx \
-	@srcdir@/src/e8/e8srch.tx \
-	@srcdir@/src/e8/e8defs.pa \
-	@srcdir@/src/e8/e8base.pa \
-	@srcdir@/src/e8/e8file.pa \
-	@srcdir@/src/e8/e8srch.pa
+# E8_SRCS:= \
+#	@srcdir@/src/e8/AUTHORS.md \
+#	@srcdir@/doc/e8-manual.md \
+#	@srcdir@/doc/e8-manual-pdf.css \
+#	@srcdir@/doc/graphics/e8-buffer.svg \
+#	@srcdir@/src/e8/README.TX \
+#	@srcdir@/src/e8/e8cmds.tx \
+#	@srcdir@/src/e8/e8srch.tx \
+#	@srcdir@/src/e8/e8defs.pa \
+#	@srcdir@/src/e8/e8base.pa \
+#	@srcdir@/src/e8/e8file.pa \
+#	@srcdir@/src/e8/e8srch.pa
 
 TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
@@ -390,9 +391,9 @@ V3F_TC08_TU56 = bin/v3f-tc08.tu56
 V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
-CC8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/cc8-tu56.os8
+# CC8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/cc8-tu56.os8
 
-E8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/e8-tu56.os8
+# E8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/e8-tu56.os8
 
 # Absolute version of --prefix passed to configure.
 PREFIX = @ABSPREFIX@
@@ -841,12 +842,12 @@ $(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_TOOLTIME)
 	$(OS8RUN)@OS8_OPTS@ $(ALL_TU56_SCRIPT) --enable td12k
 
 # Create the CC8 distribution DECtape image
-bin/cc8.tu56: $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) $(CC8_TU56_SCRIPT) | $(OS8_TOOLTIME)
-	$(OS8RUN) $(CC8_TU56_SCRIPT)
+# bin/cc8.tu56: $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) $(CC8_TU56_SCRIPT) | $(OS8_TOOLTIME)
+#	$(OS8RUN) $(CC8_TU56_SCRIPT)
 
 # Create the E8 distribution DECtape image
-bin/e8.tu56: $(E8_SRCS) $(E8_TU56_SCRIPT) | $(OS8_TOOLTIME)
-	$(OS8RUN) $(E8_TU56_SCRIPT)
+# bin/e8.tu56: $(E8_SRCS) $(E8_TU56_SCRIPT) | $(OS8_TOOLTIME)
+# 	$(OS8RUN) $(E8_TU56_SCRIPT)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
@@ -954,3 +955,4 @@ src/pidp8i/gpio-common.c: @srcdir@/tools/version
 	$(MISC_OBJS:.o=.d) \
 	$(PALBART_OBJS:.o=.d)
 -include $(ADF)
+-include obj/os8pkg/*.mk

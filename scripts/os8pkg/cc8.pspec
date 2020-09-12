@@ -1,0 +1,17 @@
+format:
+tu56
+inputs:
+obj/cc8/os8/libc.sb
+obj/cc8/os8/c8.sb
+obj/cc8/os8/n8.sb
+obj/cc8/os8/p8.sb
+src/cc8/os8/header.sb
+obj/cc8/os8/calc.c
+obj/cc8/os8/fib.c
+obj/cc8/os8/forth.c
+obj/cc8/os8/hlb.c
+obj/cc8/os8/pd.c
+obj/cc8/os8/ps.c
+outputs:
+SYS:<DTA0:*.SV
+DSK:<DTA0:*.SV/V
