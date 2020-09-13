@@ -590,8 +590,9 @@ if {[file exists "[get-define srcdir]/src/misc/deeper.c"]} {
 
 # Generate the dependencies for packages to build, the install scripts, and
 # the list of packages selected to install
+make-template bin/os8pkg.in
+exec chmod +x bin/os8pkg
 if {![file exists "obj/os8pkg"]} { file mkdir "obj/os8pkg" }
-
 set os8pkgs_installed ""
 foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
     set pkg_name [file rootname [file tail $pspec]]
@@ -658,7 +659,6 @@ if {$status == 0} {
 make-config-header src/config.h \
     -auto {ENABLE_* HAVE_* PACKAGE_* SIZEOF_*} \
     -bare {ILS_MODE PCB_*}
-make-template bin/os8pkg.in
 make-template bin/pidp8i.in
 make-template bin/os8-cp.in
 make-template tools/os8-cmp.in
