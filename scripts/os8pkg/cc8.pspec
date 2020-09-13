@@ -13,5 +13,5 @@ obj/cc8/os8/hlb.c
 obj/cc8/os8/pd.c
 obj/cc8/os8/ps.c
 outputs:
-SYS:<DTA0:*.SV
-DSK:<DTA0:*.SV/V
+SYS:<DTA1:*.SV
+DSK:<DTA1:*.SV/V

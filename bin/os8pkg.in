@@ -83,6 +83,16 @@ _os8_partitions = {"RK": ["A", "B"]}
 # OS/8 file name matching regex
 _os8_file_re = re.compile("(\S+):(\S+)?")
 
+# Constrained spec for an outputs: line.
+# Group 1 containas the output device: SYS: or DSK:
+# Group 2 confirns '<'
+# Group 3 contains the input device: DTA1: or RKA1: or RKB1:
+# Group 4 contains the input file spec
+# Group 5 contains the filename before the dot extension.
+# Group 6 contains the dot extension.
+# Group 7 if present, contains the option string (currently just /V is allowed.)
+_output_spec_re = re.compile("^(SYS:|DSK:)(<)(DTA1:|RKA1:|RKB1:)((\*\.\*|[A-Z0-9?]{0,6})(\.[A-Z0-9?]{0,2}|\.\*)?)(/[V])?$")
+
 # Matches if the string begins with a dollar sign, and has at least
 # one slash, returning the string between the dollar sign and the
 # first slash in group 1 and the rest in group 2.
@@ -94,6 +104,7 @@ _pspec_strip_re = re.compile("^(\S*)\.pspec$")
 # Commands and their help strings.
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["script", "Create os8-run install script from outputs"],
+                ["include", "Create an include script from selected scripts"],
                 ["install", "Create target image file"],
                 ["build", "Install target image file"],
                 ["all", "Perform all of the above."]]
@@ -220,11 +231,13 @@ def make_script (pkg_name, pspec):
     return None
 
   pkg_fmt = pspec["format:"][0]
-  if pkg_fmt == "tu56": dev = "dt0"
+  if pkg_fmt == "tu56": dev = "dt1"
   else: dev = "rk1"
   
   outstr = "mount " + dev + " $os8mo/" + pkg_name + "." + pkg_fmt + " ro required\n"
   for dest in pspec["outputs:"]:
+    m = re.match (_output_spec_re, dest)
+    if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
     outstr += ("os8 COPY " + dest + "\n")
 
   outstr += ("umount " + dev + "\n")
@@ -259,8 +272,25 @@ def main ():
   
   args = parser.parse_args()
 
-  if len(args.packages) == 0:
-    abort_prog ("Need at least one package to work.")
+  if args.command == "include":
+    # We're going to assemble obj/os8pkg/pkgs.os8 from the proffered list of packages.
+    outpath = dest_expand (args, "pkgs.os8")
+    if args.debug >0 or args.dry_run:  print (outpath)
+    if len(args.packages) == 0:
+      first_line = "# No packages to include"
+    else:
+      first_line = "# Packages to include"
+    
+    if args.dry_run:
+      print (first_line)
+    else:
+      outfile = open (outpath, "w")
+      outfile.write(first_line + "\n")
+      
+  else:
+    # All other commands require one package.
+    if len(args.packages) == 0:
+      abort_prog ("Need at least one package to work.")
 
   # The pkg_spec from command line may be a package name, or a file path.
   # We need the name, and may or may not get the ".pspec" at the end.
@@ -271,11 +301,15 @@ def main ():
     if m == None: pkg_name = pkg_base
     else: pkg_name = m.group(1)
     if args.debug >0:  print ("Package name:" + pkg_name)
-    pkg_inpath = os.path.join(pkg_dir,  pkg_name + ".pspec")
-    pspec = parse_pspec(pkg_inpath)
 
-    pkg_fmt = pspec["format:"][0]
-    if args.debug >0:  print ("Format: " + pkg_fmt)
+    if args.command in ["deps", "script"]:
+      # Not all commands need parsing of pspec.
+      pkg_inpath = os.path.join(pkg_dir,  pkg_name + ".pspec")
+      pspec = parse_pspec(pkg_inpath)
+      if pspec == None: continue
+
+      pkg_fmt = pspec["format:"][0]
+      if args.debug >0:  print ("Format: " + pkg_fmt)
 
     if args.command == "deps":
       outname = (pkg_name + ".mk")
@@ -291,7 +325,7 @@ def main ():
         outfile.close()
 
     if args.command == "script":
-      outname = pkg_name + "-" + pkg_fmt + ".os8"
+      outname = pkg_name + ".os8"
       outpath = dest_expand (args, outname)
       if args.debug >0:  print (outpath)
       outstr = make_script(pkg_name, pspec)
@@ -302,5 +336,29 @@ def main ():
         for line in outstr:
           outfile.write(line)
         outfile.close()
-  
+
+    if args.command == "include":
+      # Use the list of pkgnames to concatenate the relevant .os8 scripts.
+      inpath = dest_expand (args, pkg_name + ".os8")
+      try:
+        infile = open(inpath, "r")
+      except IOError:
+        print(inpath + " not found. Skipping.")
+        continue
+      if args.dry_run:
+        print ("infile: " + inpath)
+      else:
+        outfile.write ("# Install: " + inpath + "\n")
+      for line in infile:
+        if args.dry_run:
+          print (line.strip())
+        else:
+          outfile.write (line)
+      if args.dry_run == False:
+        outfile.write("\n")
+      infile.close()
+
+  if args.command == "include" and args.dry_run == False:
+    outfile.close()
+
 if __name__ == "__main__": main()

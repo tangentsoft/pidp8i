@@ -584,24 +584,36 @@ if {[file exists "[get-define srcdir]/src/misc/deeper.c"]} {
     define BUILD_DEEPER_THOUGHT 1
 }
 
-# Generate the dependencies for packages to build and the list of packages selected to install
+# Generate the dependencies for packages to build, the install scripts, and
+# the list of packages selected to install
 if {![file exists "obj/os8pkg"]} { file mkdir "obj/os8pkg" }
 
 set os8pkgs_installed ""
 foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
     set pkg_name [file rootname [file tail $pspec]]
-    set dep_path "obj/os8pkg/${pkg_name}.mk"
+    set obj_base "obj/os8pkg/$pkg_name"
+    set dep_path "$obj_base.mk"
+    set script_path "$obj_base.os8"
     if {![file exists $dep_path]} {
-       set result [exec bin/os8pkg -d 1 deps $pspec]
-    }
-    if {[file mtime $pspec] > [file mtime $dep_path]} {
        set result [exec bin/os8pkg deps $pspec]
+    }
+    if {[file mtime $pspec] > [file mtime $dep_path] || \
+       [file mtime bin/os8pkg] > [file mtime $dep_path] } then {
+      set result [exec bin/os8pkg deps $pspec]
+    }
+    if {![file exists $script_path]} {
+       set result [exec bin/os8pkg script $pspec]
+    }
+    if {[file mtime $pspec] > [file mtime $script_path] || \
+        [file mtime bin/os8pkg] > [file mtime $dep_path] } then {
+       set result [exec bin/os8pkg script $pspec]
     }
     if {$os8bool($pkg_name)} {
       append os8pkgs_installed " $pkg_name"
     }
 }
 msg-result "Packages installed: $os8pkgs_installed"
+define OS8_PKGS_INSTALLED $os8pkgs_installed
 
 # Generate autodependency Makefile rule sets.
 #
