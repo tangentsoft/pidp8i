@@ -559,6 +559,10 @@ msg-result "Python module pkg_resources is installed here."
 
 # Check for Perl and that it can run the test corpus builder.  Not fatal
 # if it can't, since only developers and deep testers need it.
+#
+# We generate os8-run early here because test-os8-run requires it.  We
+# have a chicken-and-egg on initial configure in a clean tree otherwise.
+make-template bin/os8-run.in
 set status [catch {exec perl -e exit} result]
 if {$status == 0} {
     set status [catch {exec perl -c "[get-define srcdir]/tools/test-os8-run" 2> /dev/null} result]
@@ -657,7 +661,6 @@ make-config-header src/config.h \
 make-template bin/os8pkg.in
 make-template bin/pidp8i.in
 make-template bin/os8-cp.in
-make-template bin/os8-run.in
 make-template tools/os8-cmp.in
 make-template bin/teco-pi-demo.in
 make-template boot/common.script.in
