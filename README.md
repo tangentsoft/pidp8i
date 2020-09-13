@@ -42,7 +42,9 @@ file][hack].
 
     *   The Raspberry Pi development libraries
 
-    *   Python's `pexpect` library
+    *   Python and its `pexpect` library; we default to Python 3 if
+        available, with a fallback to Python 2, though we don’t know
+        how long we’ll be able to maintain that compatibility.
 
     *   The `ncurses` development libraries
 
@@ -50,8 +52,13 @@ file][hack].
 
         $ sudo apt update
         $ sudo apt install build-essential libraspberrypi-dev \
-             libncurses-dev python-pip
-        $ sudo pip install pexpect
+             libncurses-dev perl python-pip
+        $ pip3 install pexpect
+
+    Under Homebrew, such as on macOS, say instead:
+
+        $ brew install make perl python
+        $ pip3 install pexpect
 
 [os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 
