@@ -599,22 +599,24 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
     set obj_base "obj/os8pkg/$pkg_name"
     set dep_path "$obj_base.mk"
     set script_path "$obj_base.os8"
+
     if {![file exists $dep_path]} {
-       set result [exec bin/os8pkg deps $pspec]
+        exec bin/os8pkg deps $pspec
     }
-    if {[file mtime $pspec] > [file mtime $dep_path] || \
-       [file mtime bin/os8pkg] > [file mtime $dep_path] } then {
-      set result [exec bin/os8pkg deps $pspec]
+    if {    [file mtime $pspec]     > [file mtime $dep_path] || \
+            [file mtime bin/os8pkg] > [file mtime $dep_path] } {
+        exec bin/os8pkg deps $pspec
     }
     if {![file exists $script_path]} {
-       set result [exec bin/os8pkg script $pspec]
+        exec bin/os8pkg script $pspec
     }
-    if {[file mtime $pspec] > [file mtime $script_path] || \
-        [file mtime bin/os8pkg] > [file mtime $dep_path] } then {
-       set result [exec bin/os8pkg script $pspec]
+    if {    [file mtime $pspec]     > [file mtime $script_path] || \
+            [file mtime bin/os8pkg] > [file mtime $dep_path] } {
+        exec bin/os8pkg script $pspec
     }
+
     if {$os8bool($pkg_name)} {
-      append os8pkgs_installed " $pkg_name"
+        append os8pkgs_installed " $pkg_name"
     }
 }
 msg-result "Packages installed: $os8pkgs_installed"
