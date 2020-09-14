@@ -404,7 +404,7 @@ clean:
 		config.log cscope.out tags \
 		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
-		obj/*.log obj/*.pt obj/os8.opts \
+		obj/*.log obj/*.pt obj/os8.opts obj/os8pkg/* \
 		src/config.h src/e8/e8defs.pa \
 		@srcdir@/examples/*.err
 	@find obj \( -name \*.o -o -name \*.d \) -delete
