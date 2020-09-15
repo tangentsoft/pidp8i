@@ -709,16 +709,10 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
 append os8pkgs_all "\n"
 append os8pkgs_selected_scripts "\n"
 
-msg-result "Packages selected: $os8pkgs_selected_names"
+msg-result "Packages selected for OS/8 RUNTIME packs: $os8pkgs_selected_names"
 define OS8_PKGS_SELECTED_NAMES $os8pkgs_selected_names
-
-msg-result "Packages variable: $os8pkgs_selected"
 define OS8_PKGS_SELECTED $os8pkgs_selected
-
-msg-result "Packages selected scripts: $os8pkgs_selected_scripts"
 define OS8_PKGS_SELECTED_SCRIPTS $os8pkgs_selected_scripts
-
-msg-result "All packages: $os8pkgs_all"
 define OS8_PKGS_ALL $os8pkgs_all
 
 # Must be the last thing we do.
