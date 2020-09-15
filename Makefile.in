@@ -727,6 +727,8 @@ $(OS8_BASELINE): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 $(OS8_TOOLTIME): $(V3D_PATCH_SCRIPT) $(OS8_BASELINE) $(V3D_PATCHES) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_PATCH_SCRIPT)
 
+-include obj/os8pkg/*.mk
+
 $(V3D_RUNTIME): $(V3D_RK05_SCRIPT) $(OS8_TOOLTIME) $(PKGS_INCLUDE) $(OS8_PKGS_SELECTED) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN) @OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
@@ -922,4 +924,4 @@ src/pidp8i/gpio-common.c: @srcdir@/tools/version
 	$(MISC_OBJS:.o=.d) \
 	$(PALBART_OBJS:.o=.d)
 -include $(ADF)
--include obj/os8pkg/*.mk
+
