@@ -198,27 +198,30 @@ def make_deps (pkg_name, pspec):
   pkg_ucfmt = pkg_fmt.upper()
   pkg_srcs = pkg_name.upper() + "_SRCS"
   pkg_script = pkg_name.upper() + "_" + pkg_ucfmt + "_SCRIPT"
-  
+  pkg_bin = pkg_name.upper() + "_PKG_BIN"
+
   outstr += (pkg_srcs + ":= ")
   for src in pspec["inputs:"]:
     outstr += ("\\\n\t@srcdir@/" + src)
 
+  outstr += ("\n\n" + pkg_bin + " = bin/" + pkg_name + "." + pkg_fmt + "\n")
+
   # If the build section is empty use a default build:
   # An os8-run on a script in MISC_SCRIPTS_DIR named like the package and format.
   if len(pspec["build:"]) > 0:
-    outstr += ("\n\nbin/" + pkg_name + "." + pkg_fmt + ": $(" + \
+    outstr += ("\n\n$(" + pkg_bin + ") : $(" + \
                pkg_srcs + ") | $(OS8_TOOLTIME)\n")
     for build_line in pspec["build:"]:
       outstr += ("\t" + build_line)
 
     outstr += "\n"
   else:
-    outstr += ("\n\n" + pkg_script + " =  $(MISC_SCRIPTS_DIR)/" + pkg_name + \
+    outstr += ("\n" + pkg_script + " =  $(MISC_SCRIPTS_DIR)/" + pkg_name + \
                "-" + pkg_fmt + ".os8\n")
   
-    outstr += ("\n\nbin/" + pkg_name + "." + pkg_fmt + ": $(" + \
+    outstr += ("\n$(" + pkg_bin + ") : $(" + \
                pkg_srcs + ") $(" + pkg_script + ") | $(OS8_TOOLTIME)\n")
-    outstr += ("\t$(OS8RUN) $(" + pkg_script + ")\n\n")
+    outstr += ("\t$(OS8RUN) $(" + pkg_script + ")\n")
 
   return outstr
 

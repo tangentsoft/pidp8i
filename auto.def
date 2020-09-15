@@ -672,11 +672,13 @@ foreach f [concat [glob "$builddir/bin/*"] [glob "$builddir/tools/*"]] {
 # However, since we build Makefile.in from what is done here, THAT make-template must be later.
 if {![file exists "obj/os8pkg"]} { file mkdir "obj/os8pkg" }
 set os8pkgs_installed ""
+set os8pkgs_all ""
 foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
     set pkg_name [file rootname [file tail $pspec]]
     set obj_base "obj/os8pkg/$pkg_name"
     set dep_path "$obj_base.mk"
     set script_path "$obj_base.os8"
+    set uc_pkg_name [string toupper $pkg_name]
 
     if {![file exists $dep_path]} {
         exec bin/os8pkg deps $pspec
@@ -693,12 +695,19 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
         exec bin/os8pkg script $pspec
     }
 
+    append os8pkgs_all " \\\n\t\$(${uc_pkg_name}_PKG_BIN)"
+    
     if {$os8bool($pkg_name)} {
         append os8pkgs_installed " $pkg_name"
     }
 }
+append os8pkgs_all "\n"
+
 msg-result "Packages installed: $os8pkgs_installed"
 define OS8_PKGS_INSTALLED $os8pkgs_installed
+
+msg-result "All packages: $os8pkgs_all"
+define OS8_PKGS_ALL $os8pkgs_all
 
 # Must be the last thing we do.
 make-template Makefile.in

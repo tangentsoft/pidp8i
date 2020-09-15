@@ -377,6 +377,7 @@ CLTXT = /boot/cmdline.txt
 
 ADF := adrules.mk
 
+OS8_PKGS_All = @OS8_PKGS_ALL@
 
 #### TARGETS ###########################################################
 
@@ -735,7 +736,7 @@ $(OCK_RUNTIME): $(OS8_OCK_BOOT_MAKER) $(OS8_OCK_PATCHED_RK05) $(PKGS_INCLUDE) | 
 
 # Not sure what we depend on here.
 # At the very least we build the magic includer.
-$(PKGS_INCLUDE):
+$(PKGS_INCLUDE): $(OS8_PKGS_ALL)
 	bin/os8pkg include @OS8_PKGS_INSTALLED@
 
 
