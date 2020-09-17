@@ -85,7 +85,7 @@ correct for you, in *your* location.
 
 If you're reading this file within an unpacked distribution of the
 PiDP-8/I software, you may [skip to the next section](#configuring),
-'ecause you have already achieved this section's aim.
+because you have already achieved this section's aim.
 
 If you are reading this [online][this] and have not yet downloaded and
 unpacked the software source code onto your Pi, this section will get
