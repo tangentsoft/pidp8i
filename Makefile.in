@@ -622,6 +622,7 @@ os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
+	find . -name \*.d -delete
 	@AUTOREMAKE@
 
 release: all
