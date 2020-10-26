@@ -254,7 +254,7 @@ def main ():
   parser = argparse.ArgumentParser(
     description = """
     Package manager for use under PDP-8 OS/8.""",
-    usage = "%(prog)s [command] [options] [package ...]")
+    usage = "%(prog)s [options] [command] [package ...]")
   parser.add_argument("-v", "--verbose", help="increase output verbosity",
   				   action="store_true")
   parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
