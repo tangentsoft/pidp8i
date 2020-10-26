@@ -150,13 +150,6 @@ os8 COPY RKB0:<DTA1:*.*
 umount dt1
 end enabled music
 
-# Adventure
-begin default advent
-mount dt1 $os8mi/subsys/advent.tu56 ro required
-os8 COPY RKB0:<DTA1:*.*
-umount dt1
-end default advent
-
 # BASIC games and demos
 begin default ba
 mount dt1 $os8mi/subsys/ba.tu56 ro required

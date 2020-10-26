@@ -694,7 +694,7 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
         exec bin/os8pkg script $pspec
     }
     if {    [file mtime $pspec]     > [file mtime $script_path] || \
-            [file mtime bin/os8pkg] > [file mtime $dep_path] } {
+            [file mtime bin/os8pkg] > [file mtime $script_path] } {
         exec bin/os8pkg script $pspec
     }
 
