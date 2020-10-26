@@ -275,6 +275,10 @@ def main ():
   
   args = parser.parse_args()
 
+  if hasattr(args, 'command') == False:
+    print (parser.print_help())
+    sys.exit(-1)
+
   if args.command == "include":
     # We're going to assemble obj/os8pkg/pkgs.os8 from the proffered list of packages.
     outpath = dest_expand (args, "pkgs.os8")
