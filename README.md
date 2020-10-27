@@ -52,7 +52,7 @@ file][hack].
 
         $ sudo apt update
         $ sudo apt install build-essential libraspberrypi-dev \
-             libncurses-dev perl python-pip
+             libncurses-dev perl python-pip3
         $ pip3 install pexpect
 
     Under Homebrew, such as on macOS, say instead:
