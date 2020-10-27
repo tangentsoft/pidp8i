@@ -215,7 +215,7 @@ def make_deps (pkg_name, pspec):
     outstr += ("\n\n$(" + pkg_bin + ") : $(" + \
                pkg_srcs + ") | $(OS8_TOOLTIME)\n")
     for build_line in pspec["build:"]:
-      outstr += ("\t" + build_line)
+      outstr += ("\t" + build_line + "\n")
 
     outstr += "\n"
   else:

@@ -20,6 +20,7 @@ src/basic-games/LIFE2.BA
 src/basic-games/MONPLY.B1
 src/basic-games/MONPLY.BA
 src/basic-games/POKER.BA
+src/basic-games/README.md
 src/basic-games/ROCKET.BA
 src/basic-games/ROCKT1.BA
 src/basic-games/ROULET.BA
@@ -53,6 +54,7 @@ DSK:<DTA1:LIFE2.BA
 DSK:<DTA1:MONPLY.B1
 DSK:<DTA1:MONPLY.BA
 DSK:<DTA1:POKER.BA
+DSK:<DTA1:README.MD
 DSK:<DTA1:ROCKET.BA
 DSK:<DTA1:ROCKT1.BA
 DSK:<DTA1:ROULET.BA
@@ -67,4 +69,6 @@ DSK:<DTA1:WUMPUS.BA
 DSK:<DTA1:YAHTZE.BA
 DSK:<DTA1:YAHTZE.IN
 build:
-bin/os8-cp -dt1 bin/basic-games.tu56 -a src/basic-games/* DTA1:
+# Force creation of a new .tu56 image every time.
+rm -f bin/basic-games.tu56
+bin/os8-cp -v -dt1 bin/basic-games.tu56 -a src/basic-games/* DTA1:
