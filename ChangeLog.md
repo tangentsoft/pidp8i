@@ -1,13 +1,46 @@
 # PiDP-8/I Changes
 
-<a id="202006xx"></a>
-## Version 2020.06.xx — The Quarantine Release
+<a id="202010xx"></a>
+## Version 2020.10.xx — The Quarantine Release
 
 *   Raspberry Pi 4 support.
 
-*   [Configurable screen manager][rmsm], allowing either tmux or
-    "none" as an alternative to GNU screen.  Initial work on this
-    feature done by Ryan Finnie.
+*   Integrated Bill Silver’s E8 Emacs-like text editor for the PDP-8.
+
+*   Updated Ian Schofield’s CC8 C compiler to V2.0:
+
+    *   The OS/8 (“native”) compiler now has support for every K&R C
+        1978 construct except for `struct`, `float`, and function
+        pointers.  There are numerous compliance problems, but we’ve
+        tried to document all of them in `doc/cc8-manual.md`.
+
+        Most notably, this release adds support for `switch` and all of
+        the remaining 2-character operators: `!=`, `>=`, `<=` and `?:`
+
+    *   Added several more examples, including a Forth interpreter.
+
+*   The software build now creates a bootable RK05 disk image of the
+    [OS/8 Combined Kit (OCK)][OCK] which is effectively the last
+    official release of OS/8, with all patches. You can elect to use
+    this for the IF=0 boot option instead of OS/8 V3D by configuring the
+    software with the `--use-ock` flag.
+
+    Bill Cattey did almost all of the work for this.
+
+    Contrast the OS/8 V3F release, which wasn’t a formal release from
+    DEC, but was rather V3D plus the Device Extensions Kit to support
+    newer hardware that came out after V3D.
+
+*   Added the `os8pkg` package manager, allowing installation and
+    uninstallation of packages on the installed RK05 OS/8 boot media,
+    whether OCK or V3D. This is the new mechanism behind the existing
+    `--with-os8-*` options, allowing you to get different feature sets
+    on existing media without rebuilding it from scratch.  Bill Cattey
+    did almost all of the work on this.
+
+*   [Configurable screen manager][rmsm], allowing either tmux or "none"
+    as an alternative to GNU screen.  Initial work on this feature done
+    by Ryan Finnie.
 
 *   Added udev rules to allow mounting media from disks on USB
     floppy drives.  (Thanks to Ryan Finnie for this feature.)
@@ -36,15 +69,6 @@
     *   Many improvements to tape device handling.  (Nothing PDP-8
         specific, just generic SIMH improvements.)
 
-*   Updated Ian Schofield’s CC8 C compiler, adding:
-
-    *   `switch` statement support
-
-    *   support for several more 2-character operators: `!=`, `>=`, `<=`
-        and `?:`
-
-    *   several more examples, including a Forth interpreter
-    
 *   Fixed a bug in the `SING_STEP` + `IF` feature for switching between
     boot scripts (e.g. IF=2 for running TSS/8) that could cause the
     simulator to crash rather than execute the new script.
@@ -57,13 +81,19 @@
     simulator attached to a terminal, such as in development.
 
 *   The build system now detects the availability of Python 3 and
-    prefers it if available.
+    prefers it if available. All documentation now assumes that you’re
+    using Python 3. These changes mean we’re no longer testing regularly
+    with Python 2, so there may be breakages going forward. These should
+    be inadvertent, but we don’t rule out the possibility of a hard
+    cut-over in the future that permanently breaks compatibility with
+    Python 2. We believe we retain that compatibility in this release,
+    but this may be the last such release of the PiDP-8/I software.
 
-*   Updated Autosetup to v0.6.9+.  Allows the build system to work under
-    Tcl 8.7.
+*   Updated Autosetup to v0.6.9+, allowing builds under Tcl 8.7.
 
 *   Portability and documentation improvements.
 
+[OCK]:  https://tangentsoft.com/pidp8i/doc/trunk/src/os8/ock/README.md
 [rmsm]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
 
 
