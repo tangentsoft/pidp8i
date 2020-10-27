@@ -93,8 +93,7 @@ _os8_file_re = re.compile("(\S+):(\S+)?")
 # Group 4 contains the input file spec
 # Group 5 contains the filename before the dot extension.
 # Group 6 contains the dot extension.
-# Group 7 if present, contains the option string (currently just /V is allowed.)
-_output_spec_re = re.compile("^(SYS:|DSK:)(<)(DTA1:|RKA1:|RKB1:)((\*\.\*|[A-Z0-9?]{0,6})(\.[A-Z0-9?]{0,2}|\.\*)?)(/[V])?$")
+_output_spec_re = re.compile("^(SYS:|DSK:)(<)(DTA1:|RKA1:|RKB1:)(([A-Z0-9?]{0,6})(\.[A-Z0-9?]{0,2})?)$")
 
 # Matches if the string begins with a dollar sign, and has at least
 # one slash, returning the string between the dollar sign and the
