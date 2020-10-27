@@ -17,7 +17,6 @@ translating the data from OS/8 tape format.
 
 | DECtape Image File Name | Content Description
 | ----------------------------------------------------------------------------
-| `ba.tu56`               | Several BASIC programs in OS/8 \*.BA file format from DEC's book ["101 BASIC Computer Games"][bcg]
 | `k12.tu56`              | [Kermit-12][k12] for OS/8, OS/78, OS/278, and OS/12
 | `music.tu56`            | [RFI-based][rfi] music playback programs
 
@@ -49,7 +48,6 @@ See the [top-level `README.md` file][tlrm] for further information about
 the `--enable-os8-*` and `--disable-os8-*` configuration options.
 
 
-[bcg]:  https://archive.org/details/bitsavers_decBooks10Mar75_26006648
 [k12]:  http://www.columbia.edu/kermit/pdp8.html
 [rfi]:  https://en.wikipedia.org/wiki/Electromagnetic_interference
 [tlrm]: /doc/trunk/README.md

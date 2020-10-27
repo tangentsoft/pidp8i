@@ -56,7 +56,7 @@ define MEDIADIR "$abspfx/share/media"
 # suppresses creation of the OS/8 src rk05 by the Makefile.)
 set os8opts {
     advent      1  "Adventure"
-    ba          1  "*.BA BASIC games and demos"
+    basic-games 1  "BASIC games and demos"
     cc8         1  "the native OS/8 CC8 compiler"
     chess       1  "the CHECKMO-II game of chess"
     crt         1  "CRT-style rubout processing"

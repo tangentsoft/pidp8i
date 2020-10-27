@@ -150,13 +150,6 @@ os8 COPY RKB0:<DTA1:*.*
 umount dt1
 end enabled music
 
-# BASIC games and demos
-begin default ba
-mount dt1 $os8mi/subsys/ba.tu56 ro required
-os8 COPY RKB0:<DTA1:*.*
-umount dt1
-end default ba
-
 # Kermit-12
 begin default k12
 mount dt1 $os8mi/subsys/k12.tu56 ro required
