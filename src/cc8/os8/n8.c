@@ -46,7 +46,7 @@
 #include <init.h>
 
 #define SMAX 10
-#define CMAX 280
+#define CMAX 300
 #define BMAX 64
 #define LMAX 64
 #define DMAX 32
@@ -56,40 +56,115 @@
 int ltbf[512];
 int xlt[CMAX];
 int gm[512];		/* Global symbol table */
-int tkbf[DMAX];
+int dumy[DMAX];
 int *p,*q,*s,*ltpt;
 int gsym,lsym,gadr,ladr,stkp,lctr,*fptr,gsz,ctr,tm,ectr,glim;
 int cop,*n,ccm;
 int tmp;
 int tkn[BMAX];
-int bfr[BMAX];
+int bfr[LXMX];
 int smbf[DMAX];
 int lm[CMAX];		/* Auto symbol table */
 int fstk[BMAX];		/* Push down stack for For etc. */
 int inproc,addr,cbrk;
-int izf,ixf,idf,ssz,icd;
+int izf,idf,ssz,mode,ppflg,opeq,vl,vf,mkr;
+int dstk[DMAX],dptr;
 int Lb[128];
 int tmbf[128];
+int tkbf[128];
+
+getln()
+{
+    if (!fgets(p=Lb)) {
+        stri(0);
+#asm
+					CALL 1,CHAIN
+					ARG FNM
+					HLT
+FNM,				TEXT "CC2@@@"
+#endasm
+    }
+}
+
+gtch()
+{
+    if (!*p)
+        getln();
+    return *p++;
+}
 
 skpsp()
+{
+        while (isspace(gtch()));
+        p--;
+}
+
+
+sksps()
 {
 	while (isspace(*p))
 		p++;
 }
 
-getsym()
+
+strpad(sym)
+char *sym;
 {
-	q=tkbf;
-	skpsp();
-	while (isalnum(*p))
-		*q++=*p++;
-	*q=0;
-	skpsp();
-	return *tkbf;
+    strpd(smbf,sym);
 }
 
 
+addsym(sym,sz,flg)
+char *sym;
+int sz,flg;
+{
+    strpad(sym);
+    smbf[8]=sz;           /* Allow for 0 size symbols ... alloc via <symb>=const int */
+    if (inproc+(sz<0)) {
+        smbf[7]=stkp+1;
+        stkp=stkp+sz;
+        strcat(lm,smbf);
+        if (flg) {
+            stri(6);
+            stri(sz);
+        }
+        return;
+    }
+    smbf[7]=gadr;
+    gadr=gadr+sz;
+    strcat(gm,smbf);
+    gsz=gsz+9;
+}
+
+fndlcl(sym)
+char *sym;
+{
+    strpad(sym);
+    smbf[7]=0;
+    if (s=strstr(lm,smbf)) {
+        ssz=s[8];             /* Correct */
+        s=s+7;
+        return *s-stkp;
+    }
+    if (s=strstr(gm,smbf)) {
+        ssz=s[8];             /* Correct */
+        s=s+7;
+        return *s;
+    }
+    return 0;
+
+}
+
+ckop()
+{
+            if (opeq) {
+                stri(41);
+                opeq=0;
+            }
+}
+
 /* recursive descent parser for arithmetic/logical expressions */
+
 
 S(  ) {
 int rtv;
@@ -107,11 +182,15 @@ int rtv;
 		rtv++;
 		break;
 	case ',':
+        ccm++;
+        break;
+    case ';':
+        ppflg++;
 		break;
 	default: 
 		p--;
 	}
-	skpsp();
+	sksps();
 	return rtv;
 } /* end S */
 
@@ -121,6 +200,7 @@ J(  ) {
 	switch(*p++){
 	case '&': J( ); stri(20); break;
 	case '|': J( ); stri(4076); break;
+    case '^': J( ); stri(32); break;
 	default: p--; return;
 	}
 	stkp--;
@@ -130,6 +210,8 @@ K(  ) {
 
 	V( );
 	switch(*p++){
+    case '.': K( ); stri(30); break;
+    case ':': K( ); stri(31); break;
 	case '<': K( ); stri(11); break;
 	case '>': K( ); stri(4085); break;          /* -11 */
 	case '@': K( ); stri(11); stri(4070); break;
@@ -155,14 +237,11 @@ V(  ) {
 W(  ) {
 
 	Y( );
-	skpsp();
+	sksps();
 	switch(cop=*p++) {
 	case '*': W( ); stri(13); break;
 	case '/': W( ); stri(14); break;
 	case '%': W( ); stri(14);stri(4082); break;
-	case '=': if (*p=='=') {
-				*p='$';return;
-			  }
 	default: p--; return;
 	}
 	stkp--;
@@ -170,10 +249,10 @@ W(  ) {
 
 
 Y(  ) {
-	int o,ctx;
+	int o,ctx,ixf;
 	int txbf[10];
 
-	skpsp();
+	sksps();
 
 	if (!*p)
 		return;
@@ -193,22 +272,13 @@ Y(  ) {
 		p++;
 		return;
 	}
-	q=p;
 	if(isdigit(*p)) {
-		while(isdigit(*p))
-			p++;
 		stri(4);
-		atoi(q,&tmp);
+		p=p+atoi(p,&tmp);
 		stri(tmp);
 		return;
 	}
-	if (*p==39) {
-		stri(4);
-		stri(*++p);
-		p+=2;
-		return;
-	}
-	ixf=izf=idf=icd=0;
+	ixf=izf=idf=0;
 	if (!getsym()) {
 		switch (*p++) {
 			case '&':
@@ -216,10 +286,20 @@ Y(  ) {
 				stri(21);
 				stri(fndlcl(tkbf));
 				return;
-			case '*':
-				getsym();
-				ixf++;
-				break;
+            case '*':
+                getsym();
+                if (*tkbf) {
+                    ixf++;
+                    break;
+                }
+                J();
+                if (*p=='=') {
+                    stri(19);
+                    stkp++;
+                }
+                else 
+                    stri(22);
+                return;
 			case '!':
 				Y();
 				stri(26);
@@ -235,312 +315,363 @@ Y(  ) {
 				S();
 				return;
 			case ')':
-				icd=1;
 				return;
-			case '-':
-				Y();
-				stri(27);
-				return;
+            case '+':
+                if (*p=='+') {
+                    izf=-15;
+                    p++;
+                    getsym();
+                    break;
+                }
+                Y();
+                break;
+            case '-':
+                 if (*p=='-') {
+                    izf=-25;
+                    p++;
+                    getsym();
+                    break;
+                }
+               Y();
+                stri(27);
+                return;
+            case '=':
+                stri(40);
+                Y();
+                opeq++;
+            case ';':
+                return;
 		}
 	}
-	if(*p=='('){
-		strcpy(txbf,tkbf);
-		ctx=o=0;p++;
-		while (*p && !o) {
-			o=S( );
-			stkp++;
-			stri(19);
-			ctx++;		/* arg count */
-			if (icd)
-				break;
-		}
-		stri(9);
-		stri(ctx);
-		stkp-=ctx;
-		if ((o=strstr(gm,txbf))){
-			stri(o-gm);
-		}
-		else {
-			stri(gsz);
-			strpad(txbf);
-			strcat(gm,smbf);
-			gsz+=9;
-		}
-		return;
-	}
+    if(*p=='('){
+        strcpy(txbf,tkbf);
+        ctx=o=0;p++;
+        sksps();
+        while (*p && !o && *p-')') {
+            o=S( );
+            ckop();
+            stkp++;
+            stri(19);
+            ctx++;		/* arg count */
+        }
+        ckop();
+        if (!ctx)
+            p++;
+        stri(9);
+        stri(ctx);
+        stkp-=ctx;
+        if ((o=strstr(gm,txbf))){
+            stri(o-gm);
+        }
+        else {
+            stri(gsz);
+            strpad(txbf);
+            strcat(gm,smbf);
+            gsz=gsz+9;
+        }
+        ccm=0;
+        return;
+    }
 	/* Digraphs */
 
 	q=p+1;
 	if (tmp=*q==*p) 
 		switch (*p) {
 		case '+':
-			izf=-tmp;
-			p+=2;
+			izf=15;
+			p=p+2;
 			break;
 		case '-':
 			idf=-tmp;
-			p+=2;
+			p=p+2;
 			break;
 	}
 
 	o=fndlcl(tkbf);
 	tmp=-17;
 	if (ssz>1) {
-		if (*p=='[') {
-			stri(21);
-			stri(o);
-			stri(19);
-			stkp++;
-			p++;S();
-			stri(2);
-			if (*p=='=')
-				stri(19);
-			else {
-				stri(22);
-				stkp--;
-			}
+        if (*p=='[') {
+            stri(21);
+            stri(o);
+            stri(19);
+            stkp++;
+            p++;S();
+            stri(2);
+            if (ixf)
+                stri(22);
+            if (*p=='=')
+                stri(19);
+            else {
+                stri(22);
+                stkp--;
+            }
+            ixf=0;
 			return;
 		}
 		tmp=21;
 	}
 	switch (*p) {
 		case '=':
-			if (*q=='=')
-				break;
+            if (izf<0)
+                break;
 			tmp=8;
 			if (ixf && ssz==1)
 				tmp=-8;
 			ixf=0;
 			stkp++;
-			break;
 	}
 	stri(tmp);
 	stri(o);
 	if (izf)
-		stri(15);
+		stri(izf);
 	if (idf)
 		stri(25);
 	if (ixf)
 		stri(22);
-	return;
 } /* end Y */
-
-procst(trm)
-char trm;
-{
-	ccm=ctr=1;
-	p=q=Lb;
-	while(1) {
-		tm=fgetc();
-		ctr-=tm=='(';
-		ctr+=tm==')';
-		ccm-=tm==',';
-		if (!ctr || tm==trm)
-			break;
-		*q++=tm&127;
-	}
-	*q=0;
-	if (inproc)
-		while (*p)
-			S();
-}
-
-strpad(sym)
-char *sym;
-{
-    strpd(smbf,sym);
-}
-
-addsym(sym,sz)
-char *sym;
-int sz;
-{
-	strpad(sym);
-	smbf[8]=sz;
-	if (inproc+(sz<0)) {
-		smbf[7]=stkp+1;
-		stkp+=sz;
-		strcat(lm,smbf);
-		stri(6);
-		stri(sz);
-		return;
-	}
-	smbf[7]=gadr;
-	gadr+=sz;
-	strcat(gm,smbf);
-	gsz+=9;
-}
-
-fndlcl(sym)
-char *sym;
-{
-	strpad(sym);
-	smbf[7]=0;
-	if (s=strstr(lm,smbf)) {
-		ssz=s[8];
-		s+=7;
-		return *s-stkp;
-	}
-	if (s=strstr(gm,smbf)) {
-		ssz=s[8];
-		s+=7;
-		return *s;
-	}
-	return 0;
-}
-
-gettk()
-{
-	char xtm;
-
-	q=tkbf;
-	while (isspace(xtm=fgetc()));
-	while (isalnum(xtm)) {
-		*q++=xtm;
-		xtm=fgetc();
-	}
-	*q=0;
-	return xtm;
-}
 
 popfr()
 {
 	while (*fptr==inproc) {
 		cbrk=*--fptr;
 		stri(23);
-		stri(*--fptr);
+        fptr--;
+        if (*dptr) {
+            stri(*dptr);
+            *dptr=0;
+        }
+        else
+		    stri(*fptr);
 		stri(5);
 		stri(*fptr+2);
 		fptr--;
 	}
 }
 
-dostt()
+gtexp2()
 {
-    int flg;
-
-	p=tmbf;
-    flg=0;
-	while (1) {
-        if (!(tm-';' | flg))
-            break;
-        if (!(tm-'"'))
-            flg=!flg;
-		*p++=tm;
-		tm=fgetc();
-	}
-	*p=0;
-	strcpy(Lb,tkbf);
-	strcat(Lb,tmbf);
-	p=Lb;
-	S();
-	tm=1;
+    q=bfr;
+    mkr=0;
+    while (1) {
+        tm=*q=gtch();
+        if (tm=='"')
+            mkr=!mkr;
+        if (mkr) {
+            q++;
+            continue;
+        }
+        if (mode==1)
+            switch (*q) {
+        case '(':
+            *q=0;
+            stri(7);
+            stri(gsz);
+            strcpy(tkbf,bfr);
+            if (strstr("main",tkbf))
+                strcpy(tkbf,"XMAIN");
+            addsym(tkbf,1,1);
+            q=p;
+            ctr=2;
+            while(*q)
+                if (*q++==',')
+                    ctr++;
+            stkp=-ctr;
+            sksps();
+            while (*p-')') {
+                if (getsym()) {
+                    addsym(tkbf,-1,1);
+                    stkp=stkp+2;
+                }
+                else
+                    p++;
+            }
+            mode=0;
+            stkp=0;             /* Setup for locals */
+            cbrk=200;			/* No break at top level */
+            p++;
+            return;
+        case ';':
+            *q=0;
+            dodecl();
+            mode=0;
+            return;
+        }
+        else
+        switch(*q) {
+        case '{':
+            inproc++;
+            dptr++;
+        case ';':
+            *q=ctr=mode=0;
+            return;
+        case '}':
+            popfr();
+            inproc--;
+            dptr--;
+            *q=0;
+            if (!inproc) {
+                stri(5);
+                stri(ectr++);
+                stri(16);
+                stri(-stkp);
+                stkp = *lm = 0;
+            }
+            return;
+        }
+        q++;
+    }
 }
 
-fnbrk()
+
+getsym()
 {
-	while (tm!='(')
-		tm=fgetc();
+    q=tkbf;
+    skpsp();
+    while (isalnum(*p))
+        *q++=*p++;
+    *q=0;
+    tm=*p;
+    if (*p)
+        skpsp();
+    return *tkbf;
 }
 
-next()
-{
-	char *lp;
-	int fflg;
 
-	lp=0;
-	if (*tkbf) {
-		strcat(tkbf," ");
-		lp=strstr(tkn,tkbf);
-	}
-	fflg=lctr;
-	if (lp) {
-			switch(lp-tkn) {
-			case 0:
-				while (tm!=';' && tm!='{') {
-					tm=gettk();
-					strcpy(bfr,tkbf);
-					while (isspace(tm))
-						tm=fgetc();
-					switch (tm) {
-			case '[':
-				tm=gettk();
-				atoi(tkbf,&fflg);
-				addsym(bfr,fflg);
-				tm=fgetc();
-				break;
-			case '(':
-				stri(7);
-				stri(gsz);
-				if (strstr("main",tkbf))
-					strcpy(tkbf,"XMAIN");
-				addsym(tkbf,1);
-				procst(')');
-				stkp=-(ccm+1);
-				while (*p) {
-					getsym();
-					addsym(tkbf,-1);
-					if (*p)
-						p++;
-					stkp+=2;
-				}
-				stkp=0;
-				tm=gettk();
-				cbrk=400;
-				break;
-			case ',':
-			case ';':
-				addsym(tkbf,1);
-				break;
-					}				/* end whie */
-				}					/* end case 0: */
-				break;
-			case 4:
+cmst()
+{
+    do {
+        ccm=0;
+        S();
+        ckop();
+     } while (ccm);
+}
+
+
+dodecl()
+{
+
+    if (ctr)
+        return;             /* No dec from func arg list */
+
+    p=bfr; 
+    while (*p) {
+        vl=vf=1;
+        getsym();
+        strcpy(tmbf,tkbf);
+        if (*p)
+        switch (*p++) {
+            case '=':
+                Y();
+                stri(19);
+                vf=0;
+                break;
+            case '[':
+                p=p+atoi(p,&vl)+1;
+                sksps();
+                if (*p=='=') {
+                    p++;
+                    sksps();
+                    while (*p++-'}') {
+                        Y();
+                        sksps();
+                        stri(19);
+                        vl++;
+                    }
+                    vf=0;
+                }
+        }
+        if (*tmbf) 
+            addsym(tmbf,vl,vf);
+        sksps();
+    }
+}
+
+
+
+main()
+{
+    int i,fflg;
+
+    memset(ltbf,0,tmbf-ltbf);
+    fopen("CC.CC","r");
+    strcpy(tkn,"int   if    else  while for   break returndo    ");
+	lctr = 10;
+	ectr = 900;
+	ltpt = ltbf;
+	fptr = fstk;
+    dptr = dstk;
+	*fptr = 4095;
+	gadr = 128; /* Start of globals */
+	iinit(128);
+    ppflg++;
+    getln();
+    while (1) {
+        fflg=lctr;
+        stri(99);
+        mode=0;
+        if (getsym()) {
+            strpad(tkbf);
+            smbf[6]=0;
+            if (q=strstr(tkn,smbf))
+                mode=1+(q-tkn)/6;
+        }
+        if (ppflg && mode-3)
+            popfr();
+        switch (mode) {
+            case 0:
+                gtexp2();
+                strcat(tkbf,bfr);
+                strcpy(bfr,tkbf);
+                n=p;
+                p=bfr;
+                cmst();
+                p=n;
+                if (*p)
+                    ppflg++;
+               break;
+            case 1:
+                gtexp2();
+                break;
+            case 3:
+                stri(4073);
+                stri(400+lctr+2);
+                popfr();
+                *++fptr=400+lctr++;
+                *++fptr=cbrk;
+                *++fptr=inproc;
+                ppflg=0;
+                break;
+            case 2:
 				fflg=fflg+400;
-			case 12:
-				fnbrk();
+            case 4:
 				stri(5);
 				*++fptr=fflg;
 				stri(fflg);
-				procst(0);
+                ppflg=0;
+                p++;
+				cmst();
 				stri(12);
 				stri(tm=*fptr+2);
 				*++fptr=cbrk;
 				if (fflg<400)
 					cbrk=tm;
 				*++fptr=inproc;
-				lctr+=3;
+				lctr=lctr+3;
 				tm=0;
-				stri(99);
-				break;
-			case 7:
-				tm=0;
-				break;
-			case 18:
-				stri(23);
-				stri(cbrk);
-				break;
-			case 24:
-				if (tm-';')
-					procst(';');
-				stri(4073);
-				stri(ectr);
-				tm=1;
-				break;
-			case 31:
-				fnbrk();
-				procst(';');
+               break;
+            case 5:
+				cmst();
 				stri(5);
 				stri(lctr++);
 				*++fptr=lctr;
-				procst(';');
+				cmst();
 				stri(12);
 				stri(lctr+2);
 				stri(23);
 				stri(lctr+1);
 				stri(5);
 				stri(lctr++);
-				procst(')');
+				cmst();
 				*++fptr=cbrk;
 				*++fptr=inproc;
 				stri(23);
@@ -548,89 +679,22 @@ next()
 				stri(5);
 				stri(lctr++);
 				cbrk=lctr++;
-				tm=0;
-				break;
-			default:
-				dostt();
-		} /* End switch */
-	} else
-		switch (tm) {
-				case '{':
-					inproc++;
-					tm=1;
-					break;
-				case '`':
-					tm=1;
-					stri(29);
-				case '}':
-					break;
-				case -1:
-				case 0:
-					stri(0);
-#asm
-					CALL 1,CHAIN
-					ARG FNM
-					HLT
-FNM,				TEXT "CC2@@@"
-#endasm
-				default:
-					dostt();
-	}
-	return tm;
+				tm=ppflg=0;
+                break;
+            case 6:
+                stri(23);
+                stri(cbrk);
+                ppflg++;
+                break;
+            case 7:
+			    S();
+				stri(4073);     /* -23 */
+				stri(ectr);
+                ppflg++;
+                break;
+            case 8:
+                stri(5);
+                stri(*dptr=lctr+++200);
+        }
+    }
 }
-
-
-
-main()
-{
-	char trm;
-
-	memset(ltbf,0,tmbf-ltbf);
-	fopen("CC.CC","r");
-	strcpy(tkn,"int if else while break return for ");
-	lctr = 10;
-	ectr = 900;
-	ltpt = ltbf;
-	fptr = fstk;
-	*fptr = 4095;
-	gadr = 128; /* Start of globals */
-	iinit(128);
-	tm=gettk();
-	while (1) {
-		trm=next();
-		tm=gettk();
-		switch (trm) {
-			case '{':
-				inproc++;
-				break;
-			case '}':
-				inproc--;
-				if (!inproc) {
-					stri(5);
-					stri(ectr++);
-					stri(16);
-					stri(-stkp);
-					stkp = *lm = 0;
-					break;
-				}
-			case ';':
-			case 1:
-				stri(99);
-				if (!strcmp("else",tkbf)) {
-					stri(4073);
-					stri(400+lctr+2);
-					popfr();
-					*++fptr=400+lctr++;
-					*++fptr=cbrk;
-					*++fptr=inproc;
-				}
-				else
-					popfr();
-			case 0:
-				break;
-			default:
-				procst(';');
-		}
-	}
-}
-

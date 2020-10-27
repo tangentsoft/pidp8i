@@ -1286,16 +1286,12 @@ of the same field. This also has effects on the behavior of
 *   There is no `snprintf()`, `vprintf()`, etc.
 
 
-### <a id="sscanf"></a>`sscanf`
+### <a id="scanf" name="fscanf"></a>`fscanf`, `scanf`, `sscanf`
 
-Reads formatted input from a file.
-
-**Standard Violations:**
-
-*   `[f]scanf()` is not provided. Call [`[f]gets()`](#gets) to get a
-    string and then call `sscanf()` on it.
-
-*   This list cannot possibly be complete.
+Parse strings according to a `printf`-like format specification. `scanf`
+gets the string from the interactive terminal, `fscanf` gets it from a
+file opened with [`fopen()`](#fopen), and `sscanf` gets it from a
+NUL-terminated C string already in core.
 
 **DOCUMENTATION INCOMPLETE**
 

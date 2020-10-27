@@ -46,6 +46,17 @@
 */
 
 /* Ask for input file, copy to CC.CC and run CC1 */
+/* Update Feb 2018 */
+/* 1. Read file line by line */
+/* 2. Exclude FF (12) */
+/* 3. Implement simple #define directive **Warning** quoted text is not ignored */
+/* 4. Implement #asm/#endasm directive */
+/* Update April 2020 */
+/* 5. Implement switch satement via re-write */
+/* *** 1: default: must be included 2: Fall through is not implemented */
+/*     3: Nesting is allowed */
+/* 6: Implement logical operators !=,>=,<= via token symbols #,_,? */
+/* 7. Permit multiline comments */
 
 int ln[128],*p,*q,*tm,*dfp,tkbf[10],smbf[10];
 int dflst[1024],tmln[80];
@@ -92,22 +103,22 @@ parse()
     dfp+=10;
 }
 
-void dorep()
+int dorep()
 {
-	p=dflst;
-	while (*p) {
-		q=strstr(ln,p);
-		while (q) {
-			memset(tmln,0,80);
-			if (q-p)
-				memcpy(tmln,ln,q-ln);
-			strcat(tmln,p+512);
-			strcat(tmln,q+strlen(p));
-			memcpy(ln,tmln,80);
+    p=dflst;
+    while (*p) {
+        q=strstr(ln,p);
+        while (q) {
+            memset(tmln,0,80);
+            if (q-p)
+                memcpy(tmln,ln,q-ln);
+            strcat(tmln,p+512);
+            strcat(tmln,q+strlen(p));
+            memcpy(ln,tmln,80);
             q=strstr(ln,p);
-		}
-		p+=10;
-	}
+        }
+        p+=10;
+    }
 }
 
 
@@ -133,9 +144,9 @@ int strip()
                 switch (*q) {
                     case 't': *q=9;
                         break;
-                    case 'r': *q=10;
+                    case 'r': *q=13;
                         break;
-                    case 'n': *q=13;
+                    case 'n': *q=10;
                         break;
                 }
                 strcpy(p,q);
@@ -169,6 +180,11 @@ main()
         if (!*ln)
             break;
         swc=swp=swpbf;
+
+        /* Remove #include lines */
+
+        if (strstr(ln,"#include")) 
+            strcpy(ln,"\r\n");
 
         strip();
 
@@ -240,15 +256,31 @@ main()
                     memcpy(tm,tmln,3);
                     break;
                 case '>':
-                    if (*p=='=') {
-                        *tm=' ';
-                        *p='@';
+                    switch (*p) {
+                case '=':
+                    *tm=' ';
+                    *p='@';
+                    break;
+                case '>':
+                    *tm=' ';
+                    *p='.';
                     }
                     break;
                 case '<':
+                    switch (*p) {
+                case '=':
+                    *tm=' ';
+                    *p='#';
+                    break;
+                case '<':
+                    *tm=' ';
+                    *p=':';
+                    }
+                    break;
+                case '=':
                     if (*p=='=') {
                         *tm=' ';
-                        *p='#';
+                        *p='$';
                     }
                     break;
                 case '!':
@@ -309,7 +341,7 @@ main()
             memcpy(tmln,p,q-p);
             if (xm)
                 fputs("}\r\n");
-            sprintf(ln,"if (%s==%s) {\r\n",swc,tmln);
+            sprintf(ln,"if (%s $ %s) {\r\n",swc,tmln);
             strcat(ln,rh1);
             xm++;
         }
@@ -365,21 +397,21 @@ main()
         /* Symbols may only be alhanumeric strings. No complex macros.... */
         /* Finally, strip bit 8 to return string constants to normal */
 
-		p=strstr(ln,"#define ");
-		if (p) {
-			p=p+8;
-			parse();
+        p=strstr(ln,"#define ");
+        if (p) {
+            p=p+8;
+            parse();
         } else {
             p=ln;
             while (*p)
                 *p++&=127;
-			fputs(ln);
+            fputs(ln);
         }
     }
 
     /* Close CC.CC and write CASM.TX */
     /* CC.CC is tokenised by CC1.SV and CASM.TX will be prepended to CC.SB by CC2.SV */
-    
+
     fclose();
     fopen("HEADER.SB","r");
     fopen("CASM.TX","w");
