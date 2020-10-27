@@ -25,7 +25,12 @@ bootable media.
    multiple calls to the script command.
 
  * install -- Uses the the `.os8` files to perform an install onto a
-   particular target image file.  (Not yet implemented.)
+   particular target image file.
+
+ * uninstall -- On a specifiec target image file, parse the pspec file
+   to identify output files to remove. Remove them.
+   Additionally remove files listed in the cleanups section.
+   
 
 The `auto.defs` file knows how to look in the directory
 `.../scripts/os8pkg` and it calls the deps and script commands on
@@ -75,6 +80,9 @@ happily just adds more lines to that sections list of lines.
  * `outputs:` A specification of what outputs are integrated into the
  target media from the package file.  This looks like an OS/8 command
  decoder file copy specification.
+
+ * `cleanups:` A list of files that should also be cleaned up when uninstalling
+ a package.
 
  * `build:` A default build runs an os8-run script found in `.../scripts/misc` with a
  name composed from the package name, and the package format with a `.os8` extension.

@@ -42,6 +42,8 @@ sys.path.insert (0, os.getcwd () + '/lib')
 
 # Our local modules
 from pidp8i import *
+from simh      import *
+from os8script import *
 
 # Other global Python modules
 import glob
@@ -59,7 +61,7 @@ VERBOSE = False
 QUIET = False
 
 # Sections found in a pspec file:
-_pspec_sections = ["format:", "inputs:", "outputs:", "build:"]
+_pspec_sections = ["format:", "inputs:", "outputs:", "build:", "cleanups:"]
 
 # Supported file formats:
 _pspec_formats = ["tu56", "rk05"]
@@ -70,6 +72,7 @@ _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = ["rk", "0", _default_sys_path]
 
 _pkg_obj_dir = os.path.join (dirs.obj, "os8pkg/")
+_target_dir = dirs.os8mo
 
 # Regex for parsing an argument string into a sys device
 _dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
@@ -105,7 +108,8 @@ _pspec_strip_re = re.compile("^(\S*)\.pspec$")
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["script", "Create os8-run install script from outputs"],
                 ["include", "Create an include script from selected scripts"],
-                ["install", "Create target image file"],
+                ["install", "Perform the install script on the target image file"],
+                ["uninstall", "Delete files installed by the install script from the target image file"],
                 ["build", "Install target image file"],
                 ["all", "Perform all of the above."]]
 
@@ -144,9 +148,9 @@ def path_expand (path):
 # Return a full path based either on the --destdir option or
 # the default _pkg_obj_dir
 
-def dest_expand (args, fname):
+def dest_expand (args, fname, default):
   if args.destdir: return os.path.join(args.destdir, fname)
-  else: return  os.path.join(_pkg_obj_dir, fname)
+  else: return  os.path.join(default, fname)
 
 
 #### parse_pspec ########################################################
@@ -225,7 +229,7 @@ def make_deps (pkg_name, pspec):
 
   return outstr
 
-#### make_os8 ##########################################################
+#### make_script #######################################################
 # Make the installer .os8 file
 
 def make_script (pkg_name, pspec):
@@ -247,6 +251,23 @@ def make_script (pkg_name, pspec):
   return outstr
 
 
+#### make_delete #######################################################
+# Parse the outputs of pspec into an appropriate DEL command.
+
+def make_delete (pspec):
+  if len(pspec["outputs:"]) == 0:
+    print ("Nothing to delete")
+    return None
+
+  outstr = ""
+  for dest in pspec["outputs:"]:
+    m = re.match (_output_spec_re, dest)
+    if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
+
+    outstr += "os8 DEL " + m.group(1) + m.group(4) + "\n"
+
+  return outstr
+    
 #### main ##############################################################
 
 def main ():
@@ -260,7 +281,7 @@ def main ():
   parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
                       help="set debug level", default=0)
   parser.add_argument("--destdir", help="Destination directory for output files")
-  parser.add_argument ("--target", help="target image file")
+  parser.add_argument ("--target", help="target image file", default="v3d.rk05")
   parser.add_argument ("--dry-run", "-n", action="store_true", help="Dry Run. Print output. Generate no files.")
 
   subparsers = parser.add_subparsers(title="commands")
@@ -279,9 +300,12 @@ def main ():
     print (parser.print_help())
     sys.exit(-1)
 
+  if args.debug>0: DBG_FLAG = True
+  else: DBG_FLAG = False
+
   if args.command == "include":
     # We're going to assemble obj/os8pkg/pkgs.os8 from the proffered list of packages.
-    outpath = dest_expand (args, "pkgs.os8")
+    outpath = dest_expand (args, "pkgs.os8", _pkg_obj_dir)
     if args.debug >0 or args.dry_run:  print (outpath)
     if len(args.packages) == 0:
       first_line = "# No packages to include"
@@ -299,6 +323,28 @@ def main ():
     if len(args.packages) == 0:
       abort_prog ("Need at least one package to work.")
 
+  # The install command uses os8script to mount the target and
+  # to run the package.os8 script on it.
+  if args.command in ["install", "uninstall"]:
+    try:
+      s = simh (dirs.build, True)
+    except (RuntimeError) as e:
+      print("Could not start simulator: " + e.message + '!')
+      sys.exit (1)
+
+    if VERBOSE:
+      s.verbose = True
+      s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
+
+    os8 = os8script (s, "", "", verbose=VERBOSE, debug=DBG_FLAG)
+
+    targ_path = dest_expand (args, args.target, _target_dir)
+    if args.debug >0 or args.dry_run: print ("Perform " + args.command + " on " + targ_path)
+
+    os8.mount_command ("rk0 " + targ_path + " required", None)
+    os8.boot_command ("rk0", None)
+
+
   # The pkg_spec from command line may be a package name, or a file path.
   # We need the name, and may or may not get the ".pspec" at the end.
   for pkg_spec in args.packages:
@@ -307,11 +353,12 @@ def main ():
     m = re.match(_pspec_strip_re, pkg_base)
     if m == None: pkg_name = pkg_base
     else: pkg_name = m.group(1)
-    if args.debug >0:  print ("Package name:" + pkg_name)
+    if args.debug >0:  print ("Package name: " + pkg_name)
 
-    if args.command in ["deps", "script"]:
+    if args.command in ["deps", "script", "uninstall"]:
       # Not all commands need parsing of pspec.
       pkg_inpath = os.path.join(pkg_dir,  pkg_name + ".pspec")
+      if args.debug >0: print ("Package path: " + pkg_inpath)
       pspec = parse_pspec(pkg_inpath)
       if pspec == None: continue
 
@@ -320,7 +367,7 @@ def main ():
 
     if args.command == "deps":
       outname = (pkg_name + ".mk")
-      outpath = dest_expand (args, outname)
+      outpath = dest_expand (args, outname, _pkg_obj_dir)
       if args.debug >0 or args.dry_run:  print (outpath)
       outstr = make_deps(pkg_name, pspec)
       if args.dry_run:
@@ -333,7 +380,7 @@ def main ():
 
     if args.command == "script":
       outname = pkg_name + ".os8"
-      outpath = dest_expand (args, outname)
+      outpath = dest_expand (args, outname, _pkg_obj_dir)
       if args.debug >0:  print (outpath)
       outstr = make_script(pkg_name, pspec)
       if args.dry_run:
@@ -346,7 +393,7 @@ def main ():
 
     if args.command == "include":
       # Use the list of pkgnames to concatenate the relevant .os8 scripts.
-      inpath = dest_expand (args, pkg_name + ".os8")
+      inpath = dest_expand (args, pkg_name + ".os8", _pkg_obj_dir)
       try:
         infile = open(inpath, "r")
       except IOError:
@@ -365,7 +412,43 @@ def main ():
         outfile.write("\n")
       infile.close()
 
+    if args.command == "install":
+      # Run the .os8 script to perform an install into the designated boot device.
+      inpath = dest_expand (args, pkg_name + ".os8", _pkg_obj_dir)
+      if args.dry_run:
+        print ("Would run: " + inpath)
+      else:
+        os8.include_command (inpath, None)
+
+    if args.command == "uninstall":
+      # Parse outputs of pspect into DEL commands and run them.
+      if len(pspec["outputs:"]) == 0:
+        print ("Nothing to delete from package " + pkg_name)
+        continue
+      for dest in pspec["outputs:"]:
+        m = re.match (_output_spec_re, dest)
+        if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
+        delstr = "DEL " + m.group(1) + m.group(4) + "\n"
+        if args.dry_run:
+          print (delstr)
+        else:
+          os8.os8_command (delstr, None)
+
+      for dest in pspec["cleanups:"]:
+        delstr = "DEL " + dest + "\n"
+        if args.dry_run:
+          print (delstr)
+        else:
+          os8.os8_command (delstr, None)
+
   if args.command == "include" and args.dry_run == False:
     outfile.close()
+
+  # It is vitally important that we exit gracefully. Otherwise
+  # The install actions may not be successfully be committed to media.
+  if args.command in ["install", "uninstall"]:
+      s.simh_cmd ("detach all")
+      s._child.sendline("quit")
+
 
 if __name__ == "__main__": main()
