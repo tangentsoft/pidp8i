@@ -77,21 +77,38 @@ the [precompiled binaries][fbin] may work on your system.
 
 ## <a id="fossil-anon"></a> Fossil Anonymous Access
 
-To clone the code repository anonymously, say:
+There are two ways to clone the code repository anonymously. The easy
+way for users of Fossil 2.12 or higher is:
+
+    $ mkdir -p ~/src/pidp8i
+    $ cd ~/src/pidp8i
+    $ fossil open https://tangentsoft.com/pidp8i
+
+This clones the repository into `~/src/pidp8i/pidp8i.fossil` and opens
+it in-place, which is fine if you’re just going to work on a single
+branch at a time.
+
+The more complicated method, which has numerous advantages we’ll explain
+later is:
 
     $ mkdir -p ~/museum ~/src/pidp8i/trunk
     $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
     $ cd ~/src/pidp8i/trunk
     $ fossil open ~/museum/pidp8i.fossil
 
-The `clone` command gets you a file called `pidp8i.fossil` containing
-the full history of the PiDP-8/I software project from the upstream
-2015.12.15 release onward. You can call that clone file anything you
-like and put it in any directory you like. Even the `.fossil` extension
-is largely a convention, not a requirement.
+We recommend this method if you intend to become a long-term contributor
+to the project. It’s also necessary if you’re going to use versions of
+Fossil prior to 2.12.
 
-You only need to clone the repository once per machine. Thereafter, you
-will just be working with that same clone.
+Both methods get you a file called `pidp8i.fossil` containing
+the full history of the PiDP-8/I software project from the upstream
+2015.12.15 release onward. The second method gives you full flexibility
+of what that file is called and where it’s placed; Fossil itself doesn’t
+care except in a single case you’re unlikely to run into with this
+particular repository.
+
+You only need to do this once per machine. Thereafter, you
+will just be working with the cloned repository.
 
 
 ## <a id="login"></a> Fossil Developer Access
