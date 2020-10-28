@@ -71,4 +71,4 @@ DSK:<DTA1:YAHTZE.IN
 build:
 # Force creation of a new .tu56 image every time.
 rm -f bin/basic-games.tu56
-bin/os8-cp -v -dt1 bin/basic-games.tu56 -a src/basic-games/* DTA1:
+bin/os8-cp -dt1 bin/basic-games.tu56 -a src/basic-games/* DTA1:
