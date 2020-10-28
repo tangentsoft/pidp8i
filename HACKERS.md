@@ -1,31 +1,32 @@
-Hacking on the PiDP-8/I Software
-====
+# Hacking on the PiDP-8/I Software
 
 If you are going to make any changes to the PiDP-8/I software, here are
 some rules and hints to keep in mind while you work.
 
 
-The GitHub Mirror Is Just That
-----
+## <a id="ghm"></a> The GitHub Mirror Is Just That
 
 The project’s [Fossil] repository is the primary source of truth for
-this project. The GitHub mirror is one-way, as you may guess from the
-name. This means that GitHub issues may be ignored and GitHub PRs cannot
-be accepted.
+this project. The GitHub mirror is largely one-way, as you may guess
+from the name. You’re welcome to file GitHub issues or send PRs via
+GitHub, but realize that what’s going to happen is that we’ll push the
+change back up through the Fossil repo, so the resulting change won’t
+have any direct connection to the social graph maintained by GitHub,
+Inc.
 
-Some contributions to the Fossil repo [cannot be mirrored][ghlim] due to
-limitations of Git and/or GitHub. Do not expect the mirror to have 100%
-fidelity. If you want a faithful clone of the PiDP-8/I project repo, do
-it via Fossil, not via “`git clone`” from GitHub.
+This is not simply because setting up bidirectional mirroring is
+difficult, it is actually [impossible to achieve 100% fidelity][ghlim]
+due to limitations of Git and/or GitHub. If you want a faithful clone of
+the PiDP-8/I project repo, or if you wish to contribute to the project’s
+development with full credit for your contributions, it’s best done via
+Fossil, not via GitHub.
 
 [Fossil]: https://fossil-scm.org/
-[ghlim]:  https://fossil-scm.org/fossil/doc/trunk/www/mirrorlimitations.md
+[ghlim]:  https://fossil-scm.org/home/doc/trunk/www/mirrorlimitations.md
 
 
 
-<a id="gs-fossil"></a>
-Getting Started with Fossil
-----
+## <a id="gs-fossil"></a> Getting Started with Fossil
 
 The PiDP-8/I software project is hosted using the Fossil
 [distributed version control system][dvcs], which provides most of the
@@ -63,20 +64,18 @@ package repository doesn’t include Fossil 2.1 or higher already, one of
 the [precompiled binaries][fbin] may work on your system.
 
 
-[bffs]:   https://fossil-scm.org/index.html/doc/trunk/www/build.wiki
+[bffs]:   https://fossil-scm.org/home/doc/trunk/www/build.wiki
 [bosi]:   https://tangentsoft.com/pidp8i#bosi
 [fbin]:   https://fossil-scm.org/index.html/uv/download.html
-[fvg]:    https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
+[fvg]:    https://fossil-scm.org/home/doc/trunk/www/fossil-v-git.wiki
 [dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
 [fbook]:  https://www.fossil-scm.org/schimpf-book/home
-[fdoc]:   https://fossil-scm.org/index.html/doc/trunk/www/permutedindex.html
+[fdoc]:   https://fossil-scm.org/home/doc/trunk/www/permutedindex.html
 [ffor]:   https://fossil-scm.org/forum/
-[fqsg]:   https://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
+[fqsg]:   https://fossil-scm.org/home/doc/trunk/www/quickstart.wiki
 
 
-<a id="fossil-anon"></a>
-Fossil Anonymous Access
-----
+## <a id="fossil-anon"></a> Fossil Anonymous Access
 
 To clone the code repository anonymously, say:
 
@@ -95,9 +94,7 @@ You only need to clone the repository once per machine. Thereafter, you
 will just be working with that same clone.
 
 
-<a id="login"></a>
-Fossil Developer Access
-----
+## <a id="login"></a> Fossil Developer Access
 
 If you have a developer account on the `tangentsoft.com/pidp8i` Fossil
 instance, just add your username to the URL like so:
@@ -138,9 +135,7 @@ only when you are truly going to be offline and don’t want Fossil
 attempting to sync when you know it will fail.
 
 
-<a id="gda"></a>
-Getting Developer Access
-----
+## <a id="gda"></a> Getting Developer Access
 
 We are pretty open about giving developer access to someone who’s
 provided at least one good, substantial [patch](#patches) to the
@@ -148,9 +143,7 @@ software. If we’ve accepted one of your patches, just ask for a
 developer account [on the forum][pfor].
 
 
-<a id="tags" name="branches"></a>
-Working with Existing Tags and Branches
-----
+## <a id="tags" name="branches"></a> Working with Existing Tags and Branches
 
 The directory structure shown in the commands above is more complicated
 than strictly necessary, but it has a number of nice properties.
@@ -201,15 +194,13 @@ has [many working branches][brlist]. You can use any of those names in
 of [Fossil’s special check-in names][fscn].
 
 [brlist]: https://tangentsoft.com/pidp8i/brlist
-[fscn]:   https://fossil-scm.org/fossil/doc/trunk/www/checkin_names.wiki
-[fvg]:    https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
+[fscn]:   https://fossil-scm.org/home/doc/trunk/www/checkin_names.wiki
+[fvg]:    https://fossil-scm.org/home/doc/trunk/www/fossil-v-git.wiki
 [gitwt]:  https://git-scm.com/docs/git-worktree
 [tags]:   https://tangentsoft.com/pidp8i/taglist
 
 
-<a id="branching"></a>
-Creating Branches
-----
+## <a id="branching"></a> Creating Branches
 
 Creating a branch in Fossil is scary-simple, to the point that those
 coming from other version control systems may ask, “Is that really all
@@ -278,9 +269,7 @@ being merged into the trunk.
 [dosd]: http://amzn.to/2iEVoBL
 
 
-<a id="special"></a>
-Special Branches
-----
+## <a id="special"></a> Special Branches
 
 Most of the branches in the PiDP-8/I project are feature branches of the
 sort described in the previous section: an isolated line of development
@@ -314,9 +303,7 @@ subject to different rules than other branches:
 [relpr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCESS.md
 
 
-<a id="forum"></a>
-Developer Discussion Forum
-----
+## <a id="forum"></a> Developer Discussion Forum
 
 The “[Forum][pfor]” link at the top of the Fossil web interface is for
 discussing the development of the PiDP-8/I software only. All other
@@ -341,9 +328,7 @@ part of the permanent record of the project!
 [alert]: https://tangentsoft.com/pidp8i/alerts
 
 
-<a id="debug"></a>
-Debug Builds
-----
+## <a id="debug"></a> Debug Builds
 
 By default, the build system creates a release build, but you can force
 it to produce a binary without as much optimization and with debug
@@ -354,9 +339,7 @@ symbols included:
     $ tools/mmake
 
 
-<a id="build-system"></a>
-Manipulating the Build System Source Files
-----
+## <a id="build-system"></a> Manipulating the Build System Source Files
 
 The [autosetup build system][asbs] is composed of these files and
 directories:
@@ -417,9 +400,7 @@ here.
 [tcldoc]: http://wiki.tcl.tk/11485
 
 
-<a id="dirs"></a>
-Directory Structure
-----
+## <a id="dirs"></a> Directory Structure
 
 The directory structure of the PiDP-8/I project is as follows:
 
@@ -608,13 +589,11 @@ The directory structure of the PiDP-8/I project is as follows:
     directly at the command line or run from some other program that is
     also installed, respectively.
 
-[edoc]: https://www.fossil-scm.org/index.html/doc/trunk/www/embeddeddoc.wiki
-[uflp]: https://www.freedesktop.org/software/systemd/man/systemd.unit.html#id-1.9
+[edoc]: https://fossil-scm.org/home/doc/trunk/www/embeddeddoc.wiki
+[uflp]: https://freedesktop.org/software/systemd/man/systemd.unit.html#id-1.9
 
 
-<a id="patches"></a>
-Submitting Patches
-----
+## <a id="patches"></a> Submitting Patches
 
 If you do not have a developer login on the PiDP-8/I software
 repository, you can still send changes to the project.
@@ -673,9 +652,7 @@ otherwise.
 [viral]: https://en.wikipedia.org/wiki/Viral_license
 
 
-<a id="code-style"></a>
-The PiDP-8/I Software Project Code Style Rules
-----
+## <a id="code-style"></a> The PiDP-8/I Software Project Code Style Rules
 
 Every code base should have a common code style. Love it or
 hate it, here are PiDP-8/I’s current code style rules:
@@ -809,9 +786,8 @@ File types: `*.md`, `*.txt`
 [fmd]: https://tangentsoft.com/pidp8i/md_rules
 
 
-<a id="tickets"></a>
-Ticket Processes
-----
+## <a id="tickets"></a> Ticket Processes
+
 Normal end users of the Fossil ticket system are not expected to
 understand it properly or to fill out tickets properly. Without certain
 permissions, it is in fact not possible to completely fill out a ticket
