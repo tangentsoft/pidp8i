@@ -87,6 +87,7 @@ BINS = $(PIDP8I_SIM) @CC8_CROSS@ \
 	bin/ptp2txt \
 	libexec/scanswitch
 BIN_SCRIPTS = \
+	bin/os8pkg \
 	bin/pidp8i \
 	bin/usb-mount \
 	@srcdir@/bin/teco-pi-demo
