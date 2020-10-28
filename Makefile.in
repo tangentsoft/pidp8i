@@ -379,7 +379,7 @@ OS8_PKGS_All = @OS8_PKGS_ALL@
 OS8_PKGS_SELECTED = @OS8_PKGS_SELECTED@
 OS8_PKGS_SELECTED_NAMES = @OS8_PKGS_SELECTED_NAMES@
 OS8_PKGS_SELECTED_SCRIPTS = @OS8_PKGS_SELECTED_SCRIPTS@
-PKGS_INCLUDE = obj/os8pkgs/pkgs.os8
+PKGS_INCLUDE = obj/os8pkg/pkgs.os8
 
 #### TARGETS ###########################################################
 
