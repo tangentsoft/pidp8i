@@ -4,7 +4,7 @@
 
 You will most likely be reading this either:
 
-*   …[Online][tlrm], within [the Fossil project repository][home]; or
+*   …[online][tlrm], within [the Fossil project repository][home]; or
 
 *   …as a text file within the [source packages][src]; or
 
