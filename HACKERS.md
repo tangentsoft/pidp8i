@@ -837,21 +837,26 @@ File types: `*.md`, `*.txt`
 Normal end users of the Fossil ticket system are not expected to
 understand it properly or to fill out tickets properly. Without certain
 permissions, it is in fact not possible to completely fill out a ticket
-properly. Here’s the basic workflow:
+properly. Project developers typically must triage, augment, and correct
+submissions from the start.
+
+Here’s the basic workflow for a “code defect” ticket, colloquially
+called a bug report:
 
 ``` pikchr toggle
-      leftmargin = 2cm
       fill = bisque
+      linerad = 15px
+      leftmargin = 2cm
 
-      define diamond {
-          box $1 wid 150% invis
-          line from last.w to last.n to last.e to last.s close fill bisque behind previous
-     }
+      define diamond { \
+        box wid 150% invis
+        line from last.w to last.n to last.e to last.s close rad 0 $1
+      }
 
       oval "SUBMIT TICKET" width 150%
       down
       arrow 50%
-      file "New ticket" "marked \"Open\"" fit
+NEW:  file "New bug ticket" "marked \"Open\"" fit
       arrow same
       box "Triage," "augment &" "correct" fit
       arrow same
@@ -859,62 +864,67 @@ DC:   box "Developer comments" fit
       arrow same
 FR:   box "Filer responds" fit
       arrow 100%
-REJ:  box wid 150% invis "Reject?"
-      line from last.w to last.n to last.e to last.s close fill bisque behind previous
+REJ:  diamond("Reject?")
       right
-      arrow 50%
-      box "Mark ticket" "\"Rejected\" & \"Resolved\"" fit with .w at previous.e
+      arrow 100% "Yes" above
+      box "Mark ticket" "\"Rejected\" &" "\"Resolved\"" fit with .w at previous.e
       arrow right 50%
 REJF: file "Rejected ticket" fit
       arrow right 50%
-REOP: box wid 150% invis "Reopen?"
-      line from last.w to last.n to last.e to last.s close fill bisque behind previous
+REOP: diamond("Reopen?")
       down
-REJA: arrow 75% from REJ.s
-      "No; fix it" at 0.4 right of REJA
+REJA: arrow 75% from REJ.s "  No; fix it" ljust
 CHNG: box "Developer changes code" with .n at last arrow.s fit
-      arrow same
-FIXD: box wid 150% invis "Fixed?"
-      line from last.w to last.n to last.e to last.s close fill bisque behind previous
+      arrow 50%
+FIXD: diamond("Fixed?")
       right
 FNO:  arrow "No" above
 RES:  box "Optional:" "Update ticket resolution:" "\"Partial Fix\", etc." fit
       down
-      arrow "Yes" aligned above from FIXD.s
+      arrow 75% "  Yes" ljust from FIXD.s
       box "Mark ticket" "\"Fixed\" & \"Closed\"" fit
       arrow 50%
-      file "Resolved ticket" fit
+RESF: file "Resolved ticket" fit
       arrow same
 END:  oval "END"
 
-spline from FR.e right to (DC.e, FR.e) then right 0.25 then up 0.45 then to DC.e ->
+      line from 0.3<FR.ne,FR.se> right even with 0.25 right of DC.e then up even with DC.e then to DC.e ->
 
-spline from RES.e right 0.3 then up 0.75 then to CHNG.e ->
+      line from NEW.w left 0.5 then down even with REJ.w then to REJ.w ->
 
-spline from REOP.s "No" aligned above down 0.4
-spline from previous.s down to (previous.s, END.n) then to END.e ->
+      line from RES.e right 0.3 then up even with CHNG.e then to CHNG.e ->
 
-spline from REOP.n "Yes" aligned below up 0.3
-spline from previous.n up 0.3 then to FR.e ->
+      line from REOP.s "No" aligned above down 0.4
+      line from previous.s down to (previous.s, RESF.e) then to RESF.e ->
+
+      line from REOP.n "Yes" aligned below up 0.3
+      line from previous.n up even with 0.6<FR.ne,FR.se> then to 0.6<FR.ne,FR.se> ->
 ```
 
-The first thing that should happen to a new-filed ticket is that
-someone with sufficient privilege should triage it, set fields not
-exposed to the ticket’s filer, and fix up any incorrect settings in the
-initial submission.
+On noticing a new-filed ticket — such as because you are subscribed to
+email notifications on ticket changes — someone with sufficient
+privilege triages it, sets values for the fields not exposed to the
+ticket’s filer, and fixes up any incorrect values given in the initial
+submission.
 
-The Status of a ticket initially starts out as Open. If the person
-triaging a ticket takes the time to check that the problem actually
-occurs as the ticket filer claims or that the requested feature is in
-fact missing, the Status should change to Verified.
+The Status of a ticket initially starts out as Open; the filer cannot
+change that default value, short-circuiting the process. If the person
+triaging a ticket takes the time to check that the bug actually occurs
+as the ticket filer claims, the Status should change to Verified.
 
-If a developer implements a fix or feature in response to a ticket, he
+If a developer implements a fix in response to a ticket, he
 has two choices: change the ticket’s Status to “Review” if he wants
 someone to check out the change before closing it, or go straight to
-Closed status. Closing a ticket hides it from the Wishes and Bugs ticket
+Closed status. Closing a ticket hides it from the [Wishes] and [Bugs] ticket
 reports.
 
-Larger teams often require all ticket changes to go through Review
+The process for software feature request and documentation improvement
+request tickets is essentially the same, differing mainly in terminology
+rather than process flow: instead of verifying the existence of a bug,
+the one triaging the ticket verifies that the feature does in fact not
+exist yet, and so on.
+
+A common requrement in larger teams is that all ticket changes to go through Review
 status before getting to Closed, but the PiDP-8/I project is too small
 to require such ceremony: if we’ve given you a developer account on the
 repository, you’re expected to resolve and close tickets in the same
@@ -957,6 +967,9 @@ with anything short of a working patch, for example:
 
 > Dev B: Well, that’s different, then. Thanks for the patch! Ticket
 > marked Implemented, but still Closed.
+
+[Bugs]:   https://tangentsoft.com/pidp8i/bugs
+[Wishes]: https://tangentsoft.com/pidp8i/wishes
 
 
 ## License
