@@ -162,16 +162,16 @@ developer account [on the forum][pfor].
 
 ## <a id="tags" name="branches"></a> Working with Existing Tags and Branches
 
-The directory structure shown in the commands above is more complicated
+The directory structure shown in second “clone and open” sequence above is more complicated
 than strictly necessary, but it has a number of nice properties.
 
-First, it collects other software projects under a common top-level
-directory, which I’m calling `~/src`, but you are free to use any scheme
+First, it collects software projects under a common top-level
+directory. I’ve used `~/src` for this example, but you are free to use any scheme
 you like.
 
-Second, the project directory (`~/src/pidp8i`) stores multiple separate
-checkouts, one for each version I’m actively working with at the moment.
-So, to add a few other checkouts, you could say:
+Second, the level underneath the project directory (`~/src/pidp8i`) stores multiple separate
+checkouts, one for each version the developer is actively working with at the moment,
+so to add a few other checkouts, you could say:
 
     $ cd ~/src/pidp8i
     $ mkdir -p release          # another branch
@@ -190,7 +190,7 @@ This gives you multiple independent checkouts, which allows you to
 quickly switch between versions with “`cd`” commands. The alternative
 (favored by Git and some other version control systems) is to use a
 single working directory and switch among versions by updating that
-single working directory in place. The problem with that is that it
+single working directory in place. The problem is that this
 invalidates all of the build artifacts tied to changed files, so you
 have a longer rebuild time than simply switching among check-out
 directories. Since disk space is cheap these days — even on a small
@@ -203,7 +203,9 @@ state of that version’s branch. This means that if you created your
 “`fossil update`” today, you’ll get the release version 2019.04.25 or
 later. But, since the `v20151215` tag was made on trunk, saying
 “`fossil update`” in that check-out directory will fast-forward you to the tip of
-trunk; you won’t remain pinned to that old version.
+trunk; you won’t remain pinned to that old version. This is one of the
+essential differences between tags and branches in Fossil, which are at
+bottom otherwise nearly identical.
 
 The PiDP-8/I project uses tags for [each released version][tags], and it
 has [many working branches][brlist]. You can use any of those names in
@@ -250,14 +252,14 @@ your work back to the central repository, this means we get to see the
 branches you are still working on. This is a *good thing*. Do not fear
 committing broken or otherwise bad code to a branch. [You are not your
 code.][daff] We are software developers, too: we understand that
-software development is an iterative process, and that not all ideas
+software development is an iterative process, that not all ideas
 spring forth perfect and production-ready from the fingers of its
 developers. These public branches let your collaborators see what
 you’re up to; they may be able to lend advice, to help with the work, or
 to at least be unsurprised when your change finally lands in trunk.
 
-This is part of what I mean about Fossil fostering close cooperation
-rather than fostering wild tangents.
+Fossil fosters close cooperation, whereas Git fosters wild tangents that
+never come back home.
 
 Jim McCarthy (author of [Dynamics of Software Development][dosd]) has a
 presentation on YouTube that touches on this topic at a couple of
@@ -324,7 +326,7 @@ subject to different rules than other branches:
 
 The “[Forum][pfor]” link at the top of the Fossil web interface is for
 discussing the development of the PiDP-8/I software only. All other
-traffic should go to [the mailing list][ggml] instead. We’re not trying
+traffic should go to [the end-user focused mailing list][ggml] instead. We’re not trying
 to split the community by providing a second discussion forum; we just
 think many development-related discussions are too low-level to be of
 any interest to most of the people on the mailing list.
@@ -437,9 +439,10 @@ The directory structure of the PiDP-8/I project is as follows:
     users may quibble with our choices here.
 
     Any setting whose value may vary between users of the Fossil
-    repository should be done locally with a `fossil set` command.
+    repository should be done locally with a [`fossil setting` command][fscmd]
+    rather than by creating or editing files in this subdirectory.
 
-    Say `fossil help set` at the command line for more on this.
+    See [the Fossil settings documentation][fset] for more on this.
 
 *   <b>`autosetup`</b> — The bulk of the [Autosetup build system][asbs].
     These are generic files, not modified by the project itself. We
@@ -452,9 +455,11 @@ The directory structure of the PiDP-8/I project is as follows:
     project’s developers, while other files in this directory are
     outputs of the build system.
 
-    The content of this directory is copied to `$prefix/bin` at
+    A subset of this directory’s content is copied to `$prefix/bin` at
     installation time, which is added to the user’s `PATH` by the
-    `make install` script.
+    `make install` script. We don’t copy the whole thing as-is because
+    the build system places some files here that get installed to other
+    locations or which don’t get installed at all.
 
 *   <b>`boot`</b> — SIMH initialization scripts. The `*.script.in`
     files are written by the project developers but have local
@@ -472,36 +477,52 @@ The directory structure of the PiDP-8/I project is as follows:
     the user chooses whether to run `make mediainstall` by hand to
     overwrite all of this.
 
-*   <b>`doc`</b> — Documentation files sufficiently unimportant to a new
-    user of the software that they need not be at the top level of the
-    project tree. Such files can wait for new users to discover them.
+*   <b>`doc`</b> — Documentation files that can wait for new users to
+    discover them, which do not need to be available immediately to the
+    user on inspecting the tree for the first time.
 
     Fossil’s [embedded documentation][edoc] feature allows us to present
     the contents of `doc` to web site users all but indistinguishably
     from a wiki page.
 
     You may then ask, “Why are there two different ways to achieve the
-    same end, and how do we decide which mechanism to use?”
+    same end — embedded docs and the wiki — and how do we decide which
+    mechanism to use?” Let us explore the differences before we answer
+    the question.
 
-    The rule is simple: if a given document’s change history is tied to
-    the history of the PiDP-8/I project itself, it goes in `doc`, else
-    it goes in the wiki. When checking out older versions of the
-    PiDP-8/I software, you expect to roll back to contemporaneous
-    versions of the project documentation, which is what happens to all
-    files stored in the repository, including those in `doc`, but this
-    does not happen to the wiki documents. The wiki always presents the
-    most current version, no matter what version you have locally
-    checked out.
-
-    (Fossil’s wiki feature behaves much like Wikipedia: it keeps change
+    Fossil’s wiki feature behaves much like Wikipedia: it keeps change
     history for wiki documents, but it always presents the most recent
-    version unless you manually go poking around in the history to pull
-    up old versions. If you check out a historical version of the
-    software and then say `fossil ui` within that checkout directory,
-    the resulting web view still shows the most recent locally-available
-    version of each wiki document, not versions of the wiki documents
-    contemporaneous with the historical version of the Fossil tree you
-    have checked out.)
+    version unless you go out of your way to manually dig up a
+    historical version. This is true even if you’ve run `fossil ui` from
+    a check-out directory where you’ve rolled back to a historical
+    version. This doesn’t roll back the wiki to the same point in time;
+    it continues showing the most recent version of each article.
+
+    Embedded documentation — being files like any other committed to the
+    repository — *are* rolled back to historical versions when you say
+    something like `fossil update 2018-04-01` to see the software as of
+    April Fool’s Day 2018. You see the embedded docs as of that date as
+    well, unlike with the wiki.
+
+    That leads us to the razor we use to decide where a given document
+    lives.
+
+    Use the wiki for evergreen content: material likely to remain
+    correct for future versions of the software as well as the version
+    contemporaneous with the initial version of the document. Also use
+    the wiki for documention of conditions that change independently of
+    the software’s version history, a good example being [our OS
+    Compatibility wiki article][oscomp]. In either case, there is no tie
+    between the software’s internal version history and changes out in
+    the wider world, so the wiki’s always-current nature matches our
+    needs well.
+
+    The best case for using embedded documentation is when
+    changes to the software are likely to require changes to the
+    corresponding documentation, so that the commit changes both docs
+    and code, keeping them in lock-step.
+
+    When in doubt, use embedded documentation.
 
     The `doc/graphics` subdirectory holds JPEGs and SVGs displayed
     inline within wiki articles.
@@ -542,11 +563,11 @@ The directory structure of the PiDP-8/I project is as follows:
     primarily by other programs. Whereas a file in `lib` might have its
     interface described by a programmer’s reference manual, the
     interface of a program in `libexec` is described by its usage
-    message. Example:
+    message.
 
-    *   <b>`scanswitch`</b> — Run by `etc/pidp8i`.
-
-        <p>It is run by hand only by developers modifying its behavior.</p>
+    Currently, there is only one such program, `scanswitch`, which si
+    run primarily by `etc/pidp8i`. It is only run by hand when someone
+    is trying to debug something, as in development.
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
     *not* put into the user’s `PATH`, on purpose. If a program should
@@ -584,6 +605,12 @@ The directory structure of the PiDP-8/I project is as follows:
     build system *would* place them if they were built from something
     under `src`.
 
+    This directory also contains PDP-8 source files of various sorts,
+    mainly those used for building the SIMH media and the `os8pkg`
+    packages. These are all “built” into other forms that then appear
+    when running the simulator, rather than being used directly in this
+    source code form.
+
     There are no program sources in the top level of `src`. The file
     `src/config.h` may appear to be an exception to that restriction,
     but it is *generated output* of the `configure` script, not “source
@@ -606,8 +633,10 @@ The directory structure of the PiDP-8/I project is as follows:
     directly at the command line or run from some other program that is
     also installed, respectively.
 
-[edoc]: https://fossil-scm.org/home/doc/trunk/www/embeddeddoc.wiki
-[uflp]: https://freedesktop.org/software/systemd/man/systemd.unit.html#id-1.9
+[edoc]:  https://fossil-scm.org/home/doc/trunk/www/embeddeddoc.wiki
+[fset]:  https://fossil-scm.org/home/doc/trunk/www/settings.wiki
+[fscmd]: https://fossil-scm.org/home/help?cmd=setting
+[uflp]:  https://freedesktop.org/software/systemd/man/systemd.unit.html#id-1.9
 
 
 ## <a id="patches"></a> Submitting Patches
@@ -627,7 +656,7 @@ you wish to contribute your changes under. We suggest using the [SIMH
 license][simhl], but any [non-viral][viral] [OSI-approved license][osil]
 should suffice. We’re willing to tolerate viral licenses for standalone
 products; for example, CC8 is under the GPL, but it’s fine because it
-isn’t hard-linked into any other part of the PiDP-8/I software system.
+isn’t statically linked into any other part of the PiDP-8/I software system.
 
 If your change is more than a small patch, `fossil diff` might not
 incorporate all of the changes you have made. The old unified `diff`
@@ -803,16 +832,76 @@ File types: `*.md`, `*.txt`
 [fmd]: https://tangentsoft.com/pidp8i/md_rules
 
 
-## <a id="tickets"></a> Ticket Processes
+## <a id="tickets"></a> Ticket Workflow
 
 Normal end users of the Fossil ticket system are not expected to
 understand it properly or to fill out tickets properly. Without certain
 permissions, it is in fact not possible to completely fill out a ticket
-properly.
+properly. Here’s the basic workflow:
 
-Therefore, the first thing that should happen to a ticket is that
-someone with sufficient privilege should triage it and fix up any
-incorrect settings.
+``` pikchr toggle
+      leftmargin = 2cm
+      fill = bisque
+
+      define diamond {
+          box $1 wid 150% invis
+          line from last.w to last.n to last.e to last.s close fill bisque behind previous
+     }
+
+      oval "SUBMIT TICKET" width 150%
+      down
+      arrow 50%
+      file "New ticket" "marked \"Open\"" fit
+      arrow same
+      box "Triage," "augment &" "correct" fit
+      arrow same
+DC:   box "Developer comments" fit
+      arrow same
+FR:   box "Filer responds" fit
+      arrow 100%
+REJ:  box wid 150% invis "Reject?"
+      line from last.w to last.n to last.e to last.s close fill bisque behind previous
+      right
+      arrow 50%
+      box "Mark ticket" "\"Rejected\" & \"Resolved\"" fit with .w at previous.e
+      arrow right 50%
+REJF: file "Rejected ticket" fit
+      arrow right 50%
+REOP: box wid 150% invis "Reopen?"
+      line from last.w to last.n to last.e to last.s close fill bisque behind previous
+      down
+REJA: arrow 75% from REJ.s
+      "No; fix it" at 0.4 right of REJA
+CHNG: box "Developer changes code" with .n at last arrow.s fit
+      arrow same
+FIXD: box wid 150% invis "Fixed?"
+      line from last.w to last.n to last.e to last.s close fill bisque behind previous
+      right
+FNO:  arrow "No" above
+RES:  box "Optional:" "Update ticket resolution:" "\"Partial Fix\", etc." fit
+      down
+      arrow "Yes" aligned above from FIXD.s
+      box "Mark ticket" "\"Fixed\" & \"Closed\"" fit
+      arrow 50%
+      file "Resolved ticket" fit
+      arrow same
+END:  oval "END"
+
+spline from FR.e right to (DC.e, FR.e) then right 0.25 then up 0.45 then to DC.e ->
+
+spline from RES.e right 0.3 then up 0.75 then to CHNG.e ->
+
+spline from REOP.s "No" aligned above down 0.4
+spline from previous.s down to (previous.s, END.n) then to END.e ->
+
+spline from REOP.n "Yes" aligned below up 0.3
+spline from previous.n up 0.3 then to FR.e ->
+```
+
+The first thing that should happen to a new-filed ticket is that
+someone with sufficient privilege should triage it, set fields not
+exposed to the ticket’s filer, and fix up any incorrect settings in the
+initial submission.
 
 The Status of a ticket initially starts out as Open. If the person
 triaging a ticket takes the time to check that the problem actually
