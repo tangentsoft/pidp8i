@@ -53,6 +53,15 @@ The required dependency and integration information is stored in a file named
 for the package being managed with a '.spec` extension.  This file enables creation
 of the makefile dependencies and the installer `os8-run` script.
 
+### Syntax
+
+Blank lines are allowed. They're ignored.
+
+A line beginning with \"#\" is ignored as a comment.
+
+Leading whitespace on a line is ignored to allow human-readability-improving
+indentation.
+
 ### Sections
 
 Different sections of the `.pspec` file recored different required infomation.
@@ -75,11 +84,13 @@ happily just adds more lines to that sections list of lines.
  or instances of the `format:` section appear, the last one wins.
 
  * `inputs:` Files that are needed to build the subsystem. This is the list of
- dependencies passed to make.
+ dependencies passed to make.  POSIX wild carding is allowed.
 
  * `outputs:` A specification of what outputs are integrated into the
  target media from the package file.  This looks like an OS/8 command
- decoder file copy specification.
+ decoder file copy specification. However, no wild-carding is allowed
+ because outputs is also used for uninstall. Wild cards on uninstall would
+ wreck havoc.
 
  * `cleanups:` A list of files that should also be cleaned up when uninstalling
  a package.
