@@ -846,10 +846,9 @@ submissions from the start.
 Here’s the basic workflow for a “code defect” ticket, colloquially
 called a bug report:
 
-``` pikchr toggle
+``` pikchr toggle indent
       fill = bisque
       linerad = 15px
-      leftmargin = 2cm
 
       define diamond { \
         box wid 150% invis
@@ -895,6 +894,8 @@ RESF: file "Resolved ticket" fit
           up even with DC.e then to DC.e ->
 
       line from NEW.w left 0.5 then down even with REJ.w then to REJ.w ->
+      line invis from 2nd vertex of last line to 3rd vertex of last line \
+          "fast reject path" above aligned
 
       line from RES.e right 0.3 then up even with CHNG.e then to CHNG.e ->
 
