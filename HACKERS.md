@@ -384,11 +384,12 @@ If you do not have Tcl installed on your system, `configure` builds a
 minimal Tcl interpreter called `jimsh0`, based on the [Jim Tcl][jim]
 project. Developers working on the build system are encouraged to use
 this stripped-down version of Tcl rather than “real” Tcl because Jim Tcl
-is mostly-pure subset of Tcl, and `jimsh0` is a subset of the complete
+is a mostly-pure subset of Tcl, and `jimsh0` is a subset of the complete
 Jim Tcl distribution, so any changes you make that work with the
 `jimsh0` interpreter should also work with “real” Tcl, but not vice
 versa. If you have Tcl installed and don’t really need it, consider
-uninstalling it to force Autosetup to build and use `jimsh0`.
+uninstalling it to force Autosetup to build and use `jimsh0` to ensure
+that your changes to `auto.def` work on both interpreters.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
 excepting only that it has variables substituted into it by Autosetup
@@ -400,16 +401,18 @@ features implemented by both the GNU and BSD flavors of `make`. We do
 not anticipate any need to support any other `make` flavors.
 
 This, by the way, is why we’re not using some heavy-weight build system
-such as the GNU Autotools, CMake, etc. The primary advantage of GNU
-Autotools is that you can generate source packages that will configure
-and build on weird and ancient flavors of Unix; we don’t need that.
+such as the GNU Autotools, CMake, etc.
+
+The primary advantage of GNU Autotools is that you can generate
+standalone source packages that will configure and build on weird and
+ancient flavors of Unix. We don’t need that.
+
 Cross-platform build systems such as CMake ease building the same
-software on multiple disparate platforms straightforward, but the
-PiDP-8/I software is built primarily on and for a single operating
-system, Raspbian Linux. It also happens to build and run on [several
-other OSes][oscomp], for which we also do not need the full power of
-something like CMake. Autosetup and GNU `make` suffice for our purposes
-here.
+software on multiple disparate platforms, but the PiDP-8/I software is
+built primarily on and for a single operating system, Raspberry Pi OS,
+né Raspbian. It also happens to build and run on [several other
+OSes][oscomp], for which we also do not need the full power of something
+like CMake. Autosetup and GNU `make` suffice for our purposes here.
 
 [asbs]:   http://msteveb.github.io/autosetup/
 [bmake]:  https://www.freebsd.org/doc/en/books/developers-handbook/tools-make.html
