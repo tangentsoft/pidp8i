@@ -66,7 +66,7 @@ set os8opts {
     fortran-ii  1  "FORTRAN II"
     fortran-iv  1  "FORTRAN IV"
     init        1  "the OS/8 INIT message"
-    k12         1  "12-bit Kermit"
+    kermit-12   1  "12-bit Kermit"
     macrel      1  "the MACREL assembler"
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"

@@ -17,7 +17,6 @@ translating the data from OS/8 tape format.
 
 | DECtape Image File Name | Content Description
 | ----------------------------------------------------------------------------
-| `k12.tu56`              | [Kermit-12][k12] for OS/8, OS/78, OS/278, and OS/12
 | `music.tu56`            | [RFI-based][rfi] music playback programs
 
 

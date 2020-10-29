@@ -150,13 +150,6 @@ os8 COPY RKB0:<DTA1:*.*
 umount dt1
 end enabled music
 
-# Kermit-12
-begin default k12
-mount dt1 $os8mi/subsys/k12.tu56 ro required
-os8 COPY RKA0:<DTA1:*.*
-umount dt1
-end default k12
-
 # FORTRAN IV
 begin default fortran-iv
 # rk1 holds the FORTRAN IV object image
