@@ -869,7 +869,7 @@ REJ:  diamond("Reject?")
       arrow 100% "Yes" above
       box "Mark ticket" "\"Rejected\" &" "\"Resolved\"" fit with .w at previous.e
       arrow right 50%
-REJF: file "Rejected ticket" fit
+REJF: file "Rejected" "ticket" fit
       arrow right 50%
 REOP: diamond("Reopen?")
       down
@@ -886,9 +886,10 @@ RES:  box "Optional:" "Update ticket resolution:" "\"Partial Fix\", etc." fit
       arrow 50%
 RESF: file "Resolved ticket" fit
       arrow same
-END:  oval "END"
+      oval "END"
 
-      line from 0.3<FR.ne,FR.se> right even with 0.25 right of DC.e then up even with DC.e then to DC.e ->
+      line from 0.3<FR.ne,FR.se> right even with 0.25 right of DC.e then \
+          up even with DC.e then to DC.e ->
 
       line from NEW.w left 0.5 then down even with REJ.w then to REJ.w ->
 
