@@ -58,14 +58,6 @@ timeline only.
 [cl]: https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
 
 
-## Build and Update the Fossil Binary
-
-If a new release of Fossil has come out since the last release, the
-`wget` link in `tools/bosi` is probably stale. Build an updated binary,
-run `tools/publish-fossil`, then replace the file name part of the URL
-in `tools/bosi` to pull that new version.
-
-
 ## Update the Release Branch
 
 Run `make release` to check the `ChangeLog.md` file changes in, merge
@@ -87,7 +79,7 @@ after tagging it.
 
 ## <a id="bosi"></a>Produce the Normal Binary OS Image
 
-Start with the latest version of [Raspbian Lite][os] on a multi-core
+Start with the latest version of [Raspberry Pi OS Lite][os] (né Raspbian) on a multi-core
 Raspberry Pi.
 
 1.  If the version of the base OS has changed since the last binary OS
@@ -115,19 +107,21 @@ Raspberry Pi.
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
 
-3.  Clone the software repo and build the softare:
+3.  Clone the software repo and build the software:
 
         $ ./bosi build
 
     On reboot, say `top -H` to make sure the software is running and
-    that the CPU percentages are reasonable for the platform.
+    that the CPU percentages are reasonable for the platform: if the CPU
+    is mostly idle, the simulator isn’t running, and you need to figure
+    out why before proceeding.
 
     You may also want to check that it is running properly with a
     `pidp8i` command.  Is the configuration line printed by the
     simulator correct?  Does OS/8 run?  Are there any complaints from
     SIMH, such as about insufficient CPU power?
 
-4.  Do final inside-the-image steps:
+4.  Do the final inside-the-image steps:
 
         $ ./bosi prepare
 
@@ -187,7 +181,7 @@ upload completes.
 
 ### License
 
-Copyright © 2016-2017 by Warren Young. This document is licensed under
+Copyright © 2016-2020 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
