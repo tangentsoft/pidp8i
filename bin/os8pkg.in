@@ -267,6 +267,14 @@ def make_delete (pspec):
 
   return outstr
     
+#### fakeout_script ####################################################
+# Fake out os8script to cope with us calling it directly without
+# without a script file.
+
+def fakeout_script (os8):
+  os8.line_ct_stack.insert(0,0)
+  os8.line_ct_stack[0] = 0
+
 #### main ##############################################################
 
 def main ():
@@ -336,6 +344,10 @@ def main ():
       s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
     os8 = os8script (s, "", "", verbose=VERBOSE, debug=DBG_FLAG)
+
+    # We're calling into os8script directly without a script file
+    # Set some internal state to cope with doing so.
+    fakeout_script (os8)
 
     targ_path = dest_expand (args, args.target, _target_dir)
     if args.debug >0 or args.dry_run: print ("Perform " + args.command + " on " + targ_path)
