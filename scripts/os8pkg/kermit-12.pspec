@@ -4,7 +4,6 @@ format:
     rk05
 
 inputs:
-    src/kermit-12/README.md
     src/kermit-12/k12clr.pal
     src/kermit-12/k12crf.boo
     src/kermit-12/k12crf.enc

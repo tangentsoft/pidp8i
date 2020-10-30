@@ -21,7 +21,6 @@ inputs:
     src/basic-games/MONPLY.B1
     src/basic-games/MONPLY.BA
     src/basic-games/POKER.BA
-    src/basic-games/README.md
     src/basic-games/ROCKET.BA
     src/basic-games/ROCKT1.BA
     src/basic-games/ROULET.BA
@@ -56,7 +55,6 @@ outputs:
     DSK:<DTA1:MONPLY.B1
     DSK:<DTA1:MONPLY.BA
     DSK:<DTA1:POKER.BA
-    DSK:<DTA1:README.MD
     DSK:<DTA1:ROCKET.BA
     DSK:<DTA1:ROCKT1.BA
     DSK:<DTA1:ROULET.BA
