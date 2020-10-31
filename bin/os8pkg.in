@@ -106,12 +106,11 @@ _pspec_strip_re = re.compile("^(\S*)\.pspec$")
 
 # Commands and their help strings.
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
-                ["script", "Create os8-run install script from outputs"],
                 ["include", "Create an include script from selected scripts"],
-                ["install", "Perform the install script on the target image file"],
+                ["install", "Install pspec outputs on the target image file"],
                 ["build", "Install target image file"],
                 ["all", "Perform all of the above."],
-                ["uninstall", "Delete files installed by the install script from the target image file"],
+                ["uninstall", "Delete pspect outputs and cleanups from the target image file"],
                 ["format", "Display the output format for given package names"],
                ]
 
@@ -229,27 +228,6 @@ def make_deps (pkg_name, pspec):
                pkg_srcs + ") $(" + pkg_script + ") | $(OS8_TOOLTIME)\n")
     outstr += ("\t$(OS8RUN) $(" + pkg_script + ")\n")
 
-  return outstr
-
-#### make_script #######################################################
-# Make the installer .os8 file
-
-def make_script (pkg_name, pspec):
-  if len(pspec["outputs:"]) == 0:
-    print ("Nothing to make")
-    return None
-
-  pkg_fmt = pspec["format:"][0]
-  if pkg_fmt == "tu56": dev = "dt1"
-  else: dev = "rk1"
-  
-  outstr = "mount " + dev + " $os8mo/" + pkg_name + "." + pkg_fmt + " ro required\n"
-  for dest in pspec["outputs:"]:
-    m = re.match (_output_spec_re, dest)
-    if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
-    outstr += ("os8 COPY " + dest + "\n")
-
-  outstr += ("umount " + dev + "\n")
   return outstr
 
 
@@ -504,20 +482,6 @@ def main ():
         for line in outstr:
           depfile.write(line)
         depfile.close()
-
-    if args.command == "script" or do_all:
-      print ("Generating build script for " + pkg_name + "...")
-      outname = pkg_name + ".os8"
-      outpath = dest_expand (args, outname, _pkg_obj_dir)
-      if args.debug >0:  print (outpath)
-      outstr = make_script(pkg_name, pspec)
-      if args.dry_run:
-        print (outstr)
-      else:
-        scrfile = open (outpath, "w")
-        for line in outstr:
-          scrfile.write(line)
-        scrfile.close()
 
     if args.command == "include" or do_all:
       # Use the list of pkgnames to generate an os8-run script that performs
