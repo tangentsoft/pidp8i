@@ -72,6 +72,7 @@ _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = ["rk", "0", _default_sys_path]
 
 _pkg_obj_dir = os.path.join (dirs.obj, "os8pkg/")
+_pkg_pspec_dir = os.path.join (dirs.src, "scripts/os8pkg/")
 _target_dir = dirs.os8mo
 
 # Regex for parsing an argument string into a sys device
@@ -250,23 +251,88 @@ def make_script (pkg_name, pspec):
   return outstr
 
 
-#### make_delete #######################################################
-# Parse the outputs of pspec into an appropriate DEL command.
+#### script_install ###################################################
+# Call os8script commands to eiter perform install of pspec outputs
+# or create a file containing the install commands suitable for submission
+# to os8-run.
+# If inc_file is None, we perform the install.
+# If there is an inc_file we do NOT perform install.
+#   We append to the file.  We ignore dry_run.
+#   The dry_run option under these conditions set stdout to inc_file.
+# We do it this way so that only 1 routine is responsible for defining
+# the install commands whether the be directly executed or saved in a script.
 
-def make_delete (pspec):
+def script_install (os8, pspec, pkg_name, args, inc_file):
   if len(pspec["outputs:"]) == 0:
-    print ("Nothing to delete")
-    return None
+    print ("Nothing to install from package " + pkg_name)
+    return
 
-  outstr = ""
+  if inc_file != None:
+    inc_file.write ("# Install of " + pkg_name + "\n")
+
+  pkg_fmt = pspec["format:"][0]
+  if pkg_fmt == "tu56": dev = "dt1"
+  else: dev = "rk1"
+
+  mount_str = dev + " $os8mo/" + pkg_name + "." + pkg_fmt + " ro required\n"
+
+  if inc_file != None:
+    inc_file.write ("mount " + mount_str)
+  else:
+    if args.dry_run:
+      print ("install of " + pkg_name + ":\nmount " + mount_str)      
+    else:
+      os8.mount_command (mount_str, None)
+
   for dest in pspec["outputs:"]:
     m = re.match (_output_spec_re, dest)
     if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
+    inst_str = "COPY " + dest + "\n"
 
-    outstr += "os8 DEL " + m.group(1) + m.group(4) + "\n"
+    if inc_file != None:
+        inc_file.write ("os8 " + inst_str)
+    else:
+      if args.dry_run:
+        print (inst_str)
+      else:
+        os8.os8_command (inst_str, None)
 
-  return outstr
-    
+  if inc_file != None:
+     inc_file.write ("umount " + dev + "\n\n")
+  else:
+     if args.dry_run  and inc_file == None:
+       print ("umount " + dev)
+     else:
+       os8.umount_command (dev, None)
+
+#### script_delete ###################################################
+# Call os8script commands to perform delete of pspect outputs and cleanups
+
+def script_delete (os8, pspec, pkg_name, args):
+  if len(pspec["outputs:"]) == 0:
+    print ("Nothing to delete from package " + pkg_name)
+  return
+
+  if args.dry_run:
+    print ("uninstall of " + pkg_name)
+
+  for dest in pspec["outputs:"]:
+    m = re.match (_output_spec_re, dest)
+    if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
+    del_str = "DEL " + m.group(1) + m.group(4) + "\n"
+    if args.dry_run:
+      print (del_str)
+    else:
+      os8.os8_command (del_str, None)
+
+  for dest in pspec["cleanups:"]:
+    delstr = "DEL " + dest + "\n"
+    if args.dry_run:
+      print (del_str)
+    else:
+      os8.os8_command (del_str, None)
+
+
 #### fakeout_script ####################################################
 # Fake out os8script to cope with us calling it directly without
 # without a script file.
@@ -274,6 +340,40 @@ def make_delete (pspec):
 def fakeout_script (os8):
   os8.line_ct_stack.insert(0,0)
   os8.line_ct_stack[0] = 0
+
+#### find_pkg  #########################################################
+# Use a search heuristic to find the package given its name.
+
+def find_pkg (pkg_name, pkg_base, pkg_dir, args):
+  if args.debug > 5:
+    print ("find_pkg: Name: " + pkg_name + ", Base: " + pkg_base + ", Dir: " + pkg_dir)
+  
+  pkg_path = os.path.join(pkg_dir,  pkg_name + ".pspec")
+  if args.debug > 9: print ("Trying: " + pkg_path)
+  if os.path.exists (pkg_path):
+    if args.debug > 4: print ("Initial pkg spec succeeded.")
+    return pkg_path
+
+  if args.destdir:
+    pkg_path = os.path.join (args.destdir, pkg_name)
+    if args.debug > 9: print ("Trying: " + pkg_path)
+    if os.path.exists (pkg_path):
+      if args.debug > 4: print ("Found in " + args.destdir + " as " + pkg_ame)
+      return pkg_path
+
+    pkg_path = os.path.join (args.destdir, pkg_name + ".pspec")
+    if args.debug > 9: print ("Trying: " + pkg_path)
+    if os.path.exists (pkg_path):
+      if args.debug > 4: print ("Found in " + args.destdir + " as " + pkg_name + ".pspec")
+      return pkg_path
+  
+  pkg_path = os.path.join(_pkg_pspec_dir, pkg_name + ".pspec")
+  if args.debug > 9: print ("Trying: " + pkg_path)
+  if os.path.exists (pkg_path):
+    if args.debug > 4: print ("Found in " + _pkg_pspec_dir)
+    return pkg_path
+
+  return None
 
 #### main ##############################################################
 
@@ -366,10 +466,15 @@ def main ():
     else: pkg_name = m.group(1)
     if args.debug >0:  print ("Package name: " + pkg_name)
 
-    if args.command in ["deps", "script", "uninstall"]:
+    pkg_inpath = find_pkg (pkg_name, pkg_base, pkg_dir, args)
+    if pkg_inpath == None:
+      print ("Could not find package: " + pkg_spec)
+      continue
+
+    if args.debug >0: print ("Package path: " + pkg_inpath)
+    
+    if args.command in ["deps", "script", "install", "uninstall", "include"]:
       # Not all commands need parsing of pspec.
-      pkg_inpath = os.path.join(pkg_dir,  pkg_name + ".pspec")
-      if args.debug >0: print ("Package path: " + pkg_inpath)
       pspec = parse_pspec(pkg_inpath)
       if pspec == None: continue
 
@@ -403,54 +508,21 @@ def main ():
         outfile.close()
 
     if args.command == "include":
-      # Use the list of pkgnames to concatenate the relevant .os8 scripts.
+      # Use the list of pkgnames to generate an os8-run script that performs
+      # the relevant installs.
       inpath = dest_expand (args, pkg_name + ".os8", _pkg_obj_dir)
-      try:
-        infile = open(inpath, "r")
-      except IOError:
-        print(inpath + " not found. Skipping.")
-        continue
       if args.dry_run:
-        print ("infile: " + inpath)
+        print ("Include: " + pkg_name)
+        script_install (None, pspec, pkg_name, args, sys.stdout)
       else:
-        outfile.write ("# Install: " + inpath + "\n")
-      for line in infile:
-        if args.dry_run:
-          print (line.strip())
-        else:
-          outfile.write (line)
-      if args.dry_run == False:
-        outfile.write("\n")
-      infile.close()
+        outfile.write ("# Install: " + pkg_name + "\n")
+        script_install (None, pspec, pkg_name, args, outfile)
 
     if args.command == "install":
-      # Run the .os8 script to perform an install into the designated boot device.
-      inpath = dest_expand (args, pkg_name + ".os8", _pkg_obj_dir)
-      if args.dry_run:
-        print ("Would run: " + inpath)
-      else:
-        os8.include_command (inpath, None)
+      script_install (os8, pspec, pkg_name, args, None)
 
     if args.command == "uninstall":
-      # Parse outputs of pspect into DEL commands and run them.
-      if len(pspec["outputs:"]) == 0:
-        print ("Nothing to delete from package " + pkg_name)
-        continue
-      for dest in pspec["outputs:"]:
-        m = re.match (_output_spec_re, dest)
-        if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
-        delstr = "DEL " + m.group(1) + m.group(4) + "\n"
-        if args.dry_run:
-          print (delstr)
-        else:
-          os8.os8_command (delstr, None)
-
-      for dest in pspec["cleanups:"]:
-        delstr = "DEL " + dest + "\n"
-        if args.dry_run:
-          print (delstr)
-        else:
-          os8.os8_command (delstr, None)
+      script_delete (os8, pspec, pkg_name, args)
 
   if args.command == "include" and args.dry_run == False:
     outfile.close()

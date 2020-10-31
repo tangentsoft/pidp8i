@@ -690,13 +690,6 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
             [file mtime bin/os8pkg] > [file mtime $dep_path] } {
         exec bin/os8pkg deps $pspec
     }
-    if {![file exists $script_path]} {
-        exec bin/os8pkg script $pspec
-    }
-    if {    [file mtime $pspec]     > [file mtime $script_path] || \
-            [file mtime bin/os8pkg] > [file mtime $script_path] } {
-        exec bin/os8pkg script $pspec
-    }
 
     append os8pkgs_all " \\\n\t$pkg_bin_var"
     
