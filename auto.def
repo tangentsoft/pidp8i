@@ -537,7 +537,7 @@ msg-result "Python $pyver is installed here as '$pycmd'."
 set status [catch {exec $pycmd -c "import pexpect" 2> /dev/null} result]
 if {$status != 0} {
     set msg "The Python pexpect module is not installed here.  Fix with\n\n"
-    append msg "    sudo apt install $pycmd-pip\n"
+    append msg "    sudo apt install $pycmd-pip$pyver\n"
     append msg "\nTHEN one of:\n\n"
     append msg "    pip$pyver install --user pexpect\n"
     append msg "    sudo easy_install pexpect\n"

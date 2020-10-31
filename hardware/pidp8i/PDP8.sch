@@ -30,14 +30,14 @@ LIBS:atmel
 LIBS:contrib
 LIBS:valves
 LIBS:pdp8_library
-LIBS:PDP8-cache
+LIBS:PDP8_2019-cache
 EELAYER 27 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "11 may 2015"
+Date "22 dec 2018"
 Rev ""
 Comp ""
 Comment1 ""
@@ -1338,9 +1338,9 @@ led7
 Text GLabel 4700 2300 2    60   Input ~ 0
 led8
 Text GLabel 800  1300 0    60   Input ~ 0
-col1a
+sda
 Text GLabel 800  1400 0    60   Input ~ 0
-col2a
+scl
 Text GLabel 800  1500 0    60   Input ~ 0
 col3
 Text GLabel 800  2600 0    60   Input ~ 0
@@ -1870,24 +1870,24 @@ $EndComp
 $Comp
 L R R1
 U 1 1 5490833D
-P 2800 4150
-F 0 "R1" V 2880 4150 40  0000 C CNN
-F 1 "390" V 2807 4151 40  0000 C CNN
-F 2 "~" V 2730 4150 30  0000 C CNN
-F 3 "~" H 2800 4150 30  0000 C CNN
-	1    2800 4150
-	1    0    0    -1  
+P 2600 1500
+F 0 "R1" V 2680 1500 40  0000 C CNN
+F 1 "390" V 2607 1501 40  0000 C CNN
+F 2 "~" V 2530 1500 30  0000 C CNN
+F 3 "~" H 2600 1500 30  0000 C CNN
+	1    2600 1500
+	0    -1   -1   0   
 $EndComp
 $Comp
 L R R2
 U 1 1 5490834A
-P 2800 5700
-F 0 "R2" V 2880 5700 40  0000 C CNN
-F 1 "390" V 2807 5701 40  0000 C CNN
-F 2 "~" V 2730 5700 30  0000 C CNN
-F 3 "~" H 2800 5700 30  0000 C CNN
-	1    2800 5700
-	-1   0    0    1   
+P 2600 1600
+F 0 "R2" V 2680 1600 40  0000 C CNN
+F 1 "390" V 2607 1601 40  0000 C CNN
+F 2 "~" V 2530 1600 30  0000 C CNN
+F 3 "~" H 2600 1600 30  0000 C CNN
+	1    2600 1600
+	0    -1   -1   0   
 $EndComp
 $Comp
 L R R3
@@ -2079,20 +2079,9 @@ NoConn ~ 2250 2500
 NoConn ~ 1450 2500
 $Comp
 L GND #PWR01
-U 1 1 54B19131
-P 2300 2600
-F 0 "#PWR01" H 2300 2600 30  0001 C CNN
-F 1 "GND" H 2300 2530 30  0001 C CNN
-F 2 "" H 2300 2600 60  0000 C CNN
-F 3 "" H 2300 2600 60  0000 C CNN
-	1    2300 2600
-	0    -1   -1   0   
-$EndComp
-$Comp
-L GND #PWR02
 U 1 1 54B1913E
 P 2300 2100
-F 0 "#PWR02" H 2300 2100 30  0001 C CNN
+F 0 "#PWR01" H 2300 2100 30  0001 C CNN
 F 1 "GND" H 2300 2030 30  0001 C CNN
 F 2 "" H 2300 2100 60  0000 C CNN
 F 3 "" H 2300 2100 60  0000 C CNN
@@ -2100,44 +2089,22 @@ F 3 "" H 2300 2100 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L GND #PWR03
-U 1 1 54B19150
-P 1400 1600
-F 0 "#PWR03" H 1400 1600 30  0001 C CNN
-F 1 "GND" H 1400 1530 30  0001 C CNN
-F 2 "" H 1400 1600 60  0000 C CNN
-F 3 "" H 1400 1600 60  0000 C CNN
-	1    1400 1600
-	0    1    1    0   
-$EndComp
-$Comp
-L GND #PWR04
+L GND #PWR02
 U 1 1 54B19156
 P 2300 1400
-F 0 "#PWR04" H 2300 1400 30  0001 C CNN
+F 0 "#PWR02" H 2300 1400 30  0001 C CNN
 F 1 "GND" H 2300 1330 30  0001 C CNN
 F 2 "" H 2300 1400 60  0000 C CNN
 F 3 "" H 2300 1400 60  0000 C CNN
 	1    2300 1400
 	0    -1   -1   0   
 $EndComp
-$Comp
-L GND #PWR05
-U 1 1 54B19903
-P 1400 3100
-F 0 "#PWR05" H 1400 3100 30  0001 C CNN
-F 1 "GND" H 1400 3030 30  0001 C CNN
-F 2 "" H 1400 3100 60  0000 C CNN
-F 3 "" H 1400 3100 60  0000 C CNN
-	1    1400 3100
-	0    1    1    0   
-$EndComp
 NoConn ~ 2250 2800
 $Comp
-L +3.3V #PWR06
+L +3.3V #PWR03
 U 1 1 54B1C371
 P 1350 1100
-F 0 "#PWR06" H 1350 1060 30  0001 C CNN
+F 0 "#PWR03" H 1350 1060 30  0001 C CNN
 F 1 "+3.3V" H 1350 1210 30  0000 C CNN
 F 2 "" H 1350 1100 60  0000 C CNN
 F 3 "" H 1350 1100 60  0000 C CNN
@@ -2145,10 +2112,10 @@ F 3 "" H 1350 1100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR07
+L GND #PWR04
 U 1 1 54B1C4F8
 P 4750 2550
-F 0 "#PWR07" H 4750 2550 30  0001 C CNN
+F 0 "#PWR04" H 4750 2550 30  0001 C CNN
 F 1 "GND" H 4750 2480 30  0001 C CNN
 F 2 "" H 4750 2550 60  0000 C CNN
 F 3 "" H 4750 2550 60  0000 C CNN
@@ -2230,37 +2197,20 @@ NoConn ~ 6250 7550
 NoConn ~ 6350 7550
 NoConn ~ 6450 7550
 $Comp
-L +5V #PWR08
+L +5V #PWR05
 U 1 1 54BCFC39
 P 2400 1100
-F 0 "#PWR08" H 2400 1190 20  0001 C CNN
+F 0 "#PWR05" H 2400 1190 20  0001 C CNN
 F 1 "+5V" H 2400 1190 30  0000 C CNN
 F 2 "" H 2400 1100 60  0000 C CNN
 F 3 "" H 2400 1100 60  0000 C CNN
 	1    2400 1100
 	1    0    0    -1  
 $EndComp
-Text GLabel 2750 1500 2    60   Input ~ 0
-TX
-Text GLabel 2750 1600 2    60   Input ~ 0
-RX
-Text GLabel 1350 2900 0    60   Input ~ 0
-SPARE_IO
-Text GLabel 2300 7600 0    60   Input ~ 0
-TX
-Text GLabel 2300 7500 0    60   Input ~ 0
-RX
-$Comp
-L GND #PWR09
-U 1 1 54BD292E
-P 2850 7100
-F 0 "#PWR09" H 2850 7100 30  0001 C CNN
-F 1 "GND" H 2850 7030 30  0001 C CNN
-F 2 "" H 2850 7100 60  0000 C CNN
-F 3 "" H 2850 7100 60  0000 C CNN
-	1    2850 7100
-	-1   0    0    1   
-$EndComp
+Text GLabel 2900 1500 2    60   Input ~ 0
+col1
+Text GLabel 2900 1600 2    60   Input ~ 0
+col2
 NoConn ~ 1450 2400
 NoConn ~ 2250 1800
 $Comp
@@ -2300,10 +2250,10 @@ F 3 "" H 6750 7400 60  0000 C CNN
 $EndComp
 NoConn ~ 6750 7550
 $Comp
-L +5V #PWR010
+L +5V #PWR06
 U 1 1 54BD75EA
 P 3400 2500
-F 0 "#PWR010" H 3400 2590 20  0001 C CNN
+F 0 "#PWR06" H 3400 2590 20  0001 C CNN
 F 1 "+5V" H 3400 2590 30  0000 C CNN
 F 2 "" H 3400 2500 60  0000 C CNN
 F 3 "" H 3400 2500 60  0000 C CNN
@@ -2321,146 +2271,6 @@ F 3 "~" H 3600 2400 60  0000 C CNN
 	1    3600 2400
 	1    0    0    -1  
 $EndComp
-$Comp
-L CONN_20X2 P3
-U 1 1 554E0D39
-P 1650 5050
-F 0 "P3" H 1650 6100 60  0000 C CNN
-F 1 "EXPANSION_20X2" V 1650 5050 50  0000 C CNN
-F 2 "" H 1650 5050 60  0000 C CNN
-F 3 "" H 1650 5050 60  0000 C CNN
-	1    1650 5050
-	1    0    0    -1  
-$EndComp
-$Comp
-L +5V #PWR011
-U 1 1 554E0D4F
-P 1100 4100
-F 0 "#PWR011" H 1100 4190 20  0001 C CNN
-F 1 "+5V" H 1100 4190 30  0000 C CNN
-F 2 "" H 1100 4100 60  0000 C CNN
-F 3 "" H 1100 4100 60  0000 C CNN
-	1    1100 4100
-	0    -1   -1   0   
-$EndComp
-NoConn ~ 1250 4200
-NoConn ~ 2050 4200
-$Comp
-L +3.3V #PWR012
-U 1 1 554E0D7A
-P 1100 4300
-F 0 "#PWR012" H 1100 4260 30  0001 C CNN
-F 1 "+3.3V" H 1100 4410 30  0000 C CNN
-F 2 "" H 1100 4300 60  0000 C CNN
-F 3 "" H 1100 4300 60  0000 C CNN
-	1    1100 4300
-	0    -1   -1   0   
-$EndComp
-$Comp
-L GND #PWR013
-U 1 1 554E0D8A
-P 1100 4400
-F 0 "#PWR013" H 1100 4400 30  0001 C CNN
-F 1 "GND" H 1100 4330 30  0001 C CNN
-F 2 "" H 1100 4400 60  0000 C CNN
-F 3 "" H 1100 4400 60  0000 C CNN
-	1    1100 4400
-	0    1    1    0   
-$EndComp
-Text GLabel 1100 4800 0    60   Input ~ 0
-SPARE_IO
-Text GLabel 1100 4500 0    60   Input ~ 0
-led7
-Text GLabel 1100 4600 0    60   Input ~ 0
-led8
-Text GLabel 1100 4900 0    60   Input ~ 0
-col1
-Text GLabel 1100 5000 0    60   Input ~ 0
-col2
-Text GLabel 1100 5100 0    60   Input ~ 0
-col3
-Text GLabel 1100 5200 0    60   Input ~ 0
-col4
-Text GLabel 1100 5300 0    60   Input ~ 0
-col5
-Text GLabel 1100 5400 0    60   Input ~ 0
-col6
-Text GLabel 1100 5500 0    60   Input ~ 0
-col7
-Text GLabel 1100 5600 0    60   Input ~ 0
-col8
-Text GLabel 1100 5700 0    60   Input ~ 0
-col9
-Text GLabel 1100 5800 0    60   Input ~ 0
-col10
-Text GLabel 1100 5900 0    60   Input ~ 0
-col11
-Text GLabel 1100 6000 0    60   Input ~ 0
-col12
-Text GLabel 1100 4700 0    60   Input ~ 0
-row2
-$Comp
-L CONN_4 P5
-U 1 1 554E5206
-P 3250 7450
-F 0 "P5" V 3200 7450 50  0000 C CNN
-F 1 "SERIAL 5V TTL" V 3300 7450 50  0000 C CNN
-F 2 "" H 3250 7450 60  0000 C CNN
-F 3 "" H 3250 7450 60  0000 C CNN
-	1    3250 7450
-	1    0    0    -1  
-$EndComp
-$Comp
-L +5V #PWR014
-U 1 1 554E5213
-P 2800 7400
-F 0 "#PWR014" H 2800 7490 20  0001 C CNN
-F 1 "+5V" H 2800 7490 30  0000 C CNN
-F 2 "" H 2800 7400 60  0000 C CNN
-F 3 "" H 2800 7400 60  0000 C CNN
-	1    2800 7400
-	0    -1   -1   0   
-$EndComp
-$Comp
-L R R_S1
-U 1 1 554E5219
-P 2600 7500
-F 0 "R_S1" V 2680 7500 40  0000 C CNN
-F 1 "300" V 2607 7501 40  0000 C CNN
-F 2 "~" V 2530 7500 30  0000 C CNN
-F 3 "~" H 2600 7500 30  0000 C CNN
-	1    2600 7500
-	0    1    1    0   
-$EndComp
-$Comp
-L R R_S2
-U 1 1 554E5233
-P 2600 7300
-F 0 "R_S2" V 2680 7300 40  0000 C CNN
-F 1 "620" V 2607 7301 40  0000 C CNN
-F 2 "~" V 2530 7300 30  0000 C CNN
-F 3 "~" H 2600 7300 30  0000 C CNN
-	1    2600 7300
-	0    1    1    0   
-$EndComp
-Text GLabel 2800 3850 1    60   Input ~ 0
-col1
-Text GLabel 2800 6000 3    60   Input ~ 0
-col2
-Text GLabel 2700 4400 1    60   Input ~ 0
-col1a
-Text GLabel 2700 5450 3    60   Input ~ 0
-col2a
-Text GLabel 2900 4400 1    60   Input ~ 0
-TX
-Text GLabel 2900 5450 3    60   Input ~ 0
-RX
-Text Notes 1100 3700 0    31   ~ 0
-2 Expansion ports
-Text Notes 2350 6250 1    31   ~ 0
-Serial Port Option jumper.\nWarning: enabling Serial Port requires modification on Raspberry Pi.\nWarning2: circuit board traces 1-2 are added\non the PiDP circuit board to enable default option \n(no serial port, unmodified RPI). Cut traces and \njumper 2-3 to enable serial port after \nmodifying the RPi.
-Text Notes 2250 6800 0    31   ~ 0
-5V TTL compatible serial port (option). \nWarning: requires mod on RPi (remove R23/24)\n               & trace cut/jumper on PiDP\nWarning: do not install resistors R_S1/R_S2 until \n                this mod has been done\n
 $Comp
 L LED DPAUSE2
 U 1 1 554E5897
@@ -2491,28 +2301,6 @@ Text GLabel 11050 3100 1    60   Input ~ 0
 col5
 Text Notes 10550 2250 0    60   ~ 0
 LEDs ONLY for\nStraight Eight:
-$Comp
-L CONN_3 J_COL1
-U 1 1 554F46DF
-P 2800 4800
-F 0 "J_COL1" V 2750 4800 50  0000 C CNN
-F 1 "CONN_3" V 2850 4800 40  0000 C CNN
-F 2 "" H 2800 4800 60  0000 C CNN
-F 3 "" H 2800 4800 60  0000 C CNN
-	1    2800 4800
-	0    -1   1    0   
-$EndComp
-$Comp
-L CONN_3 J_COL2
-U 1 1 554F46EE
-P 2800 5050
-F 0 "J_COL2" V 2750 5050 50  0000 C CNN
-F 1 "CONN_3" V 2850 5050 40  0000 C CNN
-F 2 "" H 2800 5050 60  0000 C CNN
-F 3 "" H 2800 5050 60  0000 C CNN
-	1    2800 5050
-	0    -1   -1   0   
-$EndComp
 Wire Wire Line
 	9300 1050 9300 3600
 Connection ~ 9300 1150
@@ -3048,12 +2836,6 @@ Wire Wire Line
 Wire Wire Line
 	2250 2100 2300 2100
 Wire Wire Line
-	2250 2600 2300 2600
-Wire Wire Line
-	1450 1600 1400 1600
-Wire Wire Line
-	1400 3100 1450 3100
-Wire Wire Line
 	2850 2300 2900 2300
 Wire Wire Line
 	850  2200 800  2200
@@ -3120,13 +2902,7 @@ Wire Wire Line
 Wire Wire Line
 	1350 2800 1450 2800
 Wire Wire Line
-	1350 2900 1450 2900
-Wire Wire Line
 	800  3000 1450 3000
-Wire Wire Line
-	2250 1500 2750 1500
-Wire Wire Line
-	2250 1600 2750 1600
 Wire Wire Line
 	2250 1700 2350 1700
 Wire Wire Line
@@ -3149,8 +2925,6 @@ Wire Wire Line
 	1350 2300 1450 2300
 Wire Wire Line
 	2250 2400 2350 2400
-Wire Wire Line
-	2850 7100 2850 7300
 Connection ~ 1350 1200
 Connection ~ 2250 1200
 Wire Wire Line
@@ -3184,73 +2958,6 @@ Connection ~ 8200 1300
 Connection ~ 8500 1150
 Connection ~ 8800 1300
 Wire Wire Line
-	1100 4100 2050 4100
-Connection ~ 1250 4100
-Wire Wire Line
-	1100 4300 2050 4300
-Connection ~ 1250 4300
-Wire Wire Line
-	1100 4400 2050 4400
-Connection ~ 1250 4400
-Wire Wire Line
-	1100 4500 2050 4500
-Connection ~ 1250 4500
-Wire Wire Line
-	1100 4600 2050 4600
-Connection ~ 1250 4600
-Wire Wire Line
-	1100 4700 2050 4700
-Connection ~ 1250 4700
-Connection ~ 1250 4800
-Wire Wire Line
-	1100 4900 2050 4900
-Connection ~ 1250 4900
-Wire Wire Line
-	1100 4800 2050 4800
-Wire Wire Line
-	1100 5000 2050 5000
-Connection ~ 1250 5000
-Wire Wire Line
-	1100 5100 2050 5100
-Connection ~ 1250 5100
-Wire Wire Line
-	1100 5200 2050 5200
-Connection ~ 1250 5200
-Wire Wire Line
-	1100 5300 2050 5300
-Connection ~ 1250 5300
-Wire Wire Line
-	1100 5400 2050 5400
-Connection ~ 1250 5400
-Wire Wire Line
-	1100 5500 2050 5500
-Connection ~ 1250 5500
-Wire Wire Line
-	1100 5600 2050 5600
-Connection ~ 1250 5600
-Wire Wire Line
-	1100 5700 2050 5700
-Connection ~ 1250 5700
-Wire Wire Line
-	1100 5800 2050 5800
-Connection ~ 1250 5800
-Wire Wire Line
-	1100 5900 2050 5900
-Connection ~ 1250 5900
-Wire Wire Line
-	1100 6000 2050 6000
-Connection ~ 1250 6000
-Wire Wire Line
-	2300 7600 2900 7600
-Wire Wire Line
-	2850 7500 2900 7500
-Wire Wire Line
-	2800 7400 2900 7400
-Wire Wire Line
-	2850 7300 2900 7300
-Wire Wire Line
-	2350 7500 2300 7500
-Wire Wire Line
 	800  1400 1450 1400
 Wire Wire Line
 	11000 2750 11050 2750
@@ -3267,59 +2974,62 @@ Wire Notes Line
 	10500 3300 11200 3300
 Wire Notes Line
 	11200 3300 11200 2100
-Wire Notes Line
-	1750 6650 3600 6650
-Wire Notes Line
-	3600 6650 3600 7700
-Wire Notes Line
-	3600 7700 1800 7700
-Wire Notes Line
-	1800 7700 1800 6650
-Wire Notes Line
-	2250 6300 3000 6300
-Wire Notes Line
-	3000 6300 3000 3550
-Wire Notes Line
-	3000 3550 2250 3550
-Wire Notes Line
-	2250 3550 2250 6300
-Wire Wire Line
-	2700 5400 2700 5450
-Wire Wire Line
-	2800 5400 2800 5450
-Wire Wire Line
-	2900 5400 2900 5450
-Wire Wire Line
-	2800 5950 2800 6000
-Wire Wire Line
-	2800 3850 2800 3900
-Wire Wire Line
-	2700 4400 2700 4450
-Wire Wire Line
-	2800 4400 2800 4450
-Wire Wire Line
-	2900 4400 2900 4450
-Wire Wire Line
-	2900 7500 2900 7450
-Wire Wire Line
-	2900 7450 2350 7450
-Wire Wire Line
-	2350 7450 2350 7300
 Wire Wire Line
 	1450 1300 800  1300
 Wire Wire Line
 	1350 1200 1450 1200
 NoConn ~ 1450 2000
 Wire Wire Line
-	2900 4450 2800 4450
-Wire Wire Line
-	2800 5400 2900 5400
-Wire Wire Line
 	3400 2400 3500 2400
 Wire Wire Line
-	3500 2400 3500 2600
+	2250 1500 2350 1500
 Wire Wire Line
-	3500 2600 3800 2600
+	2250 1600 2350 1600
 Wire Wire Line
-	3800 2600 3800 2400
+	2850 1500 2900 1500
+Wire Wire Line
+	2850 1600 2900 1600
+$Comp
+L CONN_4 P3
+U 1 1 5C1DA337
+P 1800 4450
+F 0 "P3" V 1750 4450 50  0000 C CNN
+F 1 "CONN_4" V 1850 4450 50  0000 C CNN
+F 2 "" H 1800 4450 60  0000 C CNN
+F 3 "" H 1800 4450 60  0000 C CNN
+	1    1800 4450
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR07
+U 1 1 5C1DA3CA
+P 1350 4300
+F 0 "#PWR07" H 1350 4260 30  0001 C CNN
+F 1 "+3.3V" H 1350 4410 30  0000 C CNN
+F 2 "" H 1350 4300 60  0000 C CNN
+F 3 "" H 1350 4300 60  0000 C CNN
+	1    1350 4300
+	0    -1   -1   0   
+$EndComp
+Text GLabel 1350 4400 0    60   Input ~ 0
+sda
+Text GLabel 1350 4500 0    60   Input ~ 0
+scl
+Wire Wire Line
+	1350 4300 1450 4300
+Wire Wire Line
+	1350 4400 1450 4400
+Wire Wire Line
+	1350 4500 1450 4500
+NoConn ~ 1450 3100
+NoConn ~ 2250 2600
+Text GLabel 800  1600 0    60   Input ~ 0
+i2cgnd
+Text GLabel 1350 4600 0    60   Input ~ 0
+i2cgnd
+Wire Wire Line
+	1450 4600 1350 4600
+Wire Wire Line
+	800  1600 1450 1600
+NoConn ~ 1450 2900
 $EndSCHEMATC

@@ -4,7 +4,7 @@
 
 You will most likely be reading this either:
 
-*   …[Online][tlrm], within [the Fossil project repository][home]; or
+*   …[online][tlrm], within [the Fossil project repository][home]; or
 
 *   …as a text file within the [source packages][src]; or
 
@@ -52,7 +52,7 @@ file][hack].
 
         $ sudo apt update
         $ sudo apt install build-essential libraspberrypi-dev \
-             libncurses-dev perl python-pip
+             libncurses-dev perl python3-pip
         $ pip3 install pexpect
 
     Under Homebrew, such as on macOS, say instead:
@@ -85,7 +85,7 @@ correct for you, in *your* location.
 
 If you're reading this file within an unpacked distribution of the
 PiDP-8/I software, you may [skip to the next section](#configuring),
-'ecause you have already achieved this section's aim.
+because you have already achieved this section's aim.
 
 If you are reading this [online][this] and have not yet downloaded and
 unpacked the software source code onto your Pi, this section will get

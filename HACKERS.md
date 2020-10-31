@@ -1,31 +1,32 @@
-Hacking on the PiDP-8/I Software
-====
+# Hacking on the PiDP-8/I Software
 
 If you are going to make any changes to the PiDP-8/I software, here are
 some rules and hints to keep in mind while you work.
 
 
-The GitHub Mirror Is Just That
-----
+## <a id="ghm"></a> The GitHub Mirror Is Just That
 
 The project’s [Fossil] repository is the primary source of truth for
-this project. The GitHub mirror is one-way, as you may guess from the
-name. This means that GitHub issues may be ignored and GitHub PRs cannot
-be accepted.
+this project. The GitHub mirror is largely one-way, as you may guess
+from the name. You’re welcome to file GitHub issues or send PRs via
+GitHub, but realize that what’s going to happen is that we’ll push the
+change back up through the Fossil repo, so the resulting change won’t
+have any direct connection to the social graph maintained by GitHub,
+Inc.
 
-Some contributions to the Fossil repo [cannot be mirrored][ghlim] due to
-limitations of Git and/or GitHub. Do not expect the mirror to have 100%
-fidelity. If you want a faithful clone of the PiDP-8/I project repo, do
-it via Fossil, not via “`git clone`” from GitHub.
+This is not simply because setting up bidirectional mirroring is
+difficult, it is actually [impossible to achieve 100% fidelity][ghlim]
+due to limitations of Git and/or GitHub. If you want a faithful clone of
+the PiDP-8/I project repo, or if you wish to contribute to the project’s
+development with full credit for your contributions, it’s best done via
+Fossil, not via GitHub.
 
 [Fossil]: https://fossil-scm.org/
-[ghlim]:  https://fossil-scm.org/fossil/doc/trunk/www/mirrorlimitations.md
+[ghlim]:  https://fossil-scm.org/home/doc/trunk/www/mirrorlimitations.md
 
 
 
-<a id="gs-fossil"></a>
-Getting Started with Fossil
-----
+## <a id="gs-fossil"></a> Getting Started with Fossil
 
 The PiDP-8/I software project is hosted using the Fossil
 [distributed version control system][dvcs], which provides most of the
@@ -63,41 +64,54 @@ package repository doesn’t include Fossil 2.1 or higher already, one of
 the [precompiled binaries][fbin] may work on your system.
 
 
-[bffs]:   https://fossil-scm.org/index.html/doc/trunk/www/build.wiki
+[bffs]:   https://fossil-scm.org/home/doc/trunk/www/build.wiki
 [bosi]:   https://tangentsoft.com/pidp8i#bosi
 [fbin]:   https://fossil-scm.org/index.html/uv/download.html
-[fvg]:    https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
+[fvg]:    https://fossil-scm.org/home/doc/trunk/www/fossil-v-git.wiki
 [dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
 [fbook]:  https://www.fossil-scm.org/schimpf-book/home
-[fdoc]:   https://fossil-scm.org/index.html/doc/trunk/www/permutedindex.html
+[fdoc]:   https://fossil-scm.org/home/doc/trunk/www/permutedindex.html
 [ffor]:   https://fossil-scm.org/forum/
-[fqsg]:   https://fossil-scm.org/index.html/doc/trunk/www/quickstart.wiki
+[fqsg]:   https://fossil-scm.org/home/doc/trunk/www/quickstart.wiki
 
 
-<a id="fossil-anon"></a>
-Fossil Anonymous Access
-----
+## <a id="fossil-anon"></a> Fossil Anonymous Access
 
-To clone the code repository anonymously, say:
+There are two ways to clone the code repository anonymously. The easy
+way for users of Fossil 2.12 or higher is:
+
+    $ mkdir -p ~/src/pidp8i
+    $ cd ~/src/pidp8i
+    $ fossil open https://tangentsoft.com/pidp8i
+
+This clones the repository into `~/src/pidp8i/pidp8i.fossil` and opens
+it in-place, which is fine if you’re just going to work on a single
+branch at a time.
+
+The more complicated method, which has numerous advantages we’ll explain
+later is:
 
     $ mkdir -p ~/museum ~/src/pidp8i/trunk
     $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
     $ cd ~/src/pidp8i/trunk
     $ fossil open ~/museum/pidp8i.fossil
 
-The `clone` command gets you a file called `pidp8i.fossil` containing
+We recommend this method if you intend to become a long-term contributor
+to the project. It’s also necessary if you’re going to use versions of
+Fossil prior to 2.12.
+
+Both methods get you a file called `pidp8i.fossil` containing
 the full history of the PiDP-8/I software project from the upstream
-2015.12.15 release onward. You can call that clone file anything you
-like and put it in any directory you like. Even the `.fossil` extension
-is largely a convention, not a requirement.
+2015.12.15 release onward. The second method gives you full flexibility
+of what that file is called and where it’s placed; Fossil itself doesn’t
+care except in a single case you’re unlikely to run into with this
+particular repository.
 
-You only need to clone the repository once per machine. Thereafter, you
-will just be working with that same clone.
+You only need to do this once per machine. Thereafter, you
+will just be working with the cloned repository.
 
 
-<a id="login"></a>
-Fossil Developer Access
-----
+## <a id="login"></a> Fossil Developer Access
 
 If you have a developer account on the `tangentsoft.com/pidp8i` Fossil
 instance, just add your username to the URL like so:
@@ -138,9 +152,7 @@ only when you are truly going to be offline and don’t want Fossil
 attempting to sync when you know it will fail.
 
 
-<a id="gda"></a>
-Getting Developer Access
-----
+## <a id="gda"></a> Getting Developer Access
 
 We are pretty open about giving developer access to someone who’s
 provided at least one good, substantial [patch](#patches) to the
@@ -148,20 +160,18 @@ software. If we’ve accepted one of your patches, just ask for a
 developer account [on the forum][pfor].
 
 
-<a id="tags" name="branches"></a>
-Working with Existing Tags and Branches
-----
+## <a id="tags" name="branches"></a> Working with Existing Tags and Branches
 
-The directory structure shown in the commands above is more complicated
+The directory structure shown in second “clone and open” sequence above is more complicated
 than strictly necessary, but it has a number of nice properties.
 
-First, it collects other software projects under a common top-level
-directory, which I’m calling `~/src`, but you are free to use any scheme
+First, it collects software projects under a common top-level
+directory. I’ve used `~/src` for this example, but you are free to use any scheme
 you like.
 
-Second, the project directory (`~/src/pidp8i`) stores multiple separate
-checkouts, one for each version I’m actively working with at the moment.
-So, to add a few other checkouts, you could say:
+Second, the level underneath the project directory (`~/src/pidp8i`) stores multiple separate
+checkouts, one for each version the developer is actively working with at the moment,
+so to add a few other checkouts, you could say:
 
     $ cd ~/src/pidp8i
     $ mkdir -p release          # another branch
@@ -180,7 +190,7 @@ This gives you multiple independent checkouts, which allows you to
 quickly switch between versions with “`cd`” commands. The alternative
 (favored by Git and some other version control systems) is to use a
 single working directory and switch among versions by updating that
-single working directory in place. The problem with that is that it
+single working directory in place. The problem is that this
 invalidates all of the build artifacts tied to changed files, so you
 have a longer rebuild time than simply switching among check-out
 directories. Since disk space is cheap these days — even on a small
@@ -193,7 +203,9 @@ state of that version’s branch. This means that if you created your
 “`fossil update`” today, you’ll get the release version 2019.04.25 or
 later. But, since the `v20151215` tag was made on trunk, saying
 “`fossil update`” in that check-out directory will fast-forward you to the tip of
-trunk; you won’t remain pinned to that old version.
+trunk; you won’t remain pinned to that old version. This is one of the
+essential differences between tags and branches in Fossil, which are at
+bottom otherwise nearly identical.
 
 The PiDP-8/I project uses tags for [each released version][tags], and it
 has [many working branches][brlist]. You can use any of those names in
@@ -201,15 +213,13 @@ has [many working branches][brlist]. You can use any of those names in
 of [Fossil’s special check-in names][fscn].
 
 [brlist]: https://tangentsoft.com/pidp8i/brlist
-[fscn]:   https://fossil-scm.org/fossil/doc/trunk/www/checkin_names.wiki
-[fvg]:    https://fossil-scm.org/fossil/doc/trunk/www/fossil-v-git.wiki
+[fscn]:   https://fossil-scm.org/home/doc/trunk/www/checkin_names.wiki
+[fvg]:    https://fossil-scm.org/home/doc/trunk/www/fossil-v-git.wiki
 [gitwt]:  https://git-scm.com/docs/git-worktree
 [tags]:   https://tangentsoft.com/pidp8i/taglist
 
 
-<a id="branching"></a>
-Creating Branches
-----
+## <a id="branching"></a> Creating Branches
 
 Creating a branch in Fossil is scary-simple, to the point that those
 coming from other version control systems may ask, “Is that really all
@@ -242,14 +252,14 @@ your work back to the central repository, this means we get to see the
 branches you are still working on. This is a *good thing*. Do not fear
 committing broken or otherwise bad code to a branch. [You are not your
 code.][daff] We are software developers, too: we understand that
-software development is an iterative process, and that not all ideas
+software development is an iterative process, that not all ideas
 spring forth perfect and production-ready from the fingers of its
 developers. These public branches let your collaborators see what
 you’re up to; they may be able to lend advice, to help with the work, or
 to at least be unsurprised when your change finally lands in trunk.
 
-This is part of what I mean about Fossil fostering close cooperation
-rather than fostering wild tangents.
+Fossil fosters close cooperation, whereas Git fosters wild tangents that
+never come back home.
 
 Jim McCarthy (author of [Dynamics of Software Development][dosd]) has a
 presentation on YouTube that touches on this topic at a couple of
@@ -278,9 +288,7 @@ being merged into the trunk.
 [dosd]: http://amzn.to/2iEVoBL
 
 
-<a id="special"></a>
-Special Branches
-----
+## <a id="special"></a> Special Branches
 
 Most of the branches in the PiDP-8/I project are feature branches of the
 sort described in the previous section: an isolated line of development
@@ -314,13 +322,11 @@ subject to different rules than other branches:
 [relpr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/RELEASE-PROCESS.md
 
 
-<a id="forum"></a>
-Developer Discussion Forum
-----
+## <a id="forum"></a> Developer Discussion Forum
 
 The “[Forum][pfor]” link at the top of the Fossil web interface is for
 discussing the development of the PiDP-8/I software only. All other
-traffic should go to [the mailing list][ggml] instead. We’re not trying
+traffic should go to [the end-user focused mailing list][ggml] instead. We’re not trying
 to split the community by providing a second discussion forum; we just
 think many development-related discussions are too low-level to be of
 any interest to most of the people on the mailing list.
@@ -341,9 +347,7 @@ part of the permanent record of the project!
 [alert]: https://tangentsoft.com/pidp8i/alerts
 
 
-<a id="debug"></a>
-Debug Builds
-----
+## <a id="debug"></a> Debug Builds
 
 By default, the build system creates a release build, but you can force
 it to produce a binary without as much optimization and with debug
@@ -354,9 +358,7 @@ symbols included:
     $ tools/mmake
 
 
-<a id="build-system"></a>
-Manipulating the Build System Source Files
-----
+## <a id="build-system"></a> Manipulating the Build System Source Files
 
 The [autosetup build system][asbs] is composed of these files and
 directories:
@@ -382,11 +384,12 @@ If you do not have Tcl installed on your system, `configure` builds a
 minimal Tcl interpreter called `jimsh0`, based on the [Jim Tcl][jim]
 project. Developers working on the build system are encouraged to use
 this stripped-down version of Tcl rather than “real” Tcl because Jim Tcl
-is mostly-pure subset of Tcl, and `jimsh0` is a subset of the complete
+is a mostly-pure subset of Tcl, and `jimsh0` is a subset of the complete
 Jim Tcl distribution, so any changes you make that work with the
 `jimsh0` interpreter should also work with “real” Tcl, but not vice
 versa. If you have Tcl installed and don’t really need it, consider
-uninstalling it to force Autosetup to build and use `jimsh0`.
+uninstalling it to force Autosetup to build and use `jimsh0` to ensure
+that your changes to `auto.def` work on both interpreters.
 
 The `Makefile.in` file is largely a standard [GNU `make`][gmake] file
 excepting only that it has variables substituted into it by Autosetup
@@ -398,16 +401,18 @@ features implemented by both the GNU and BSD flavors of `make`. We do
 not anticipate any need to support any other `make` flavors.
 
 This, by the way, is why we’re not using some heavy-weight build system
-such as the GNU Autotools, CMake, etc. The primary advantage of GNU
-Autotools is that you can generate source packages that will configure
-and build on weird and ancient flavors of Unix; we don’t need that.
+such as the GNU Autotools, CMake, etc.
+
+The primary advantage of GNU Autotools is that you can generate
+standalone source packages that will configure and build on weird and
+ancient flavors of Unix. We don’t need that.
+
 Cross-platform build systems such as CMake ease building the same
-software on multiple disparate platforms straightforward, but the
-PiDP-8/I software is built primarily on and for a single operating
-system, Raspbian Linux. It also happens to build and run on [several
-other OSes][oscomp], for which we also do not need the full power of
-something like CMake. Autosetup and GNU `make` suffice for our purposes
-here.
+software on multiple disparate platforms, but the PiDP-8/I software is
+built primarily on and for a single operating system, Raspberry Pi OS,
+né Raspbian. It also happens to build and run on [several other
+OSes][oscomp], for which we also do not need the full power of something
+like CMake. Autosetup and GNU `make` suffice for our purposes here.
 
 [asbs]:   http://msteveb.github.io/autosetup/
 [bmake]:  https://www.freebsd.org/doc/en/books/developers-handbook/tools-make.html
@@ -417,9 +422,7 @@ here.
 [tcldoc]: http://wiki.tcl.tk/11485
 
 
-<a id="dirs"></a>
-Directory Structure
-----
+## <a id="dirs"></a> Directory Structure
 
 The directory structure of the PiDP-8/I project is as follows:
 
@@ -439,9 +442,10 @@ The directory structure of the PiDP-8/I project is as follows:
     users may quibble with our choices here.
 
     Any setting whose value may vary between users of the Fossil
-    repository should be done locally with a `fossil set` command.
+    repository should be done locally with a [`fossil setting` command][fscmd]
+    rather than by creating or editing files in this subdirectory.
 
-    Say `fossil help set` at the command line for more on this.
+    See [the Fossil settings documentation][fset] for more on this.
 
 *   <b>`autosetup`</b> — The bulk of the [Autosetup build system][asbs].
     These are generic files, not modified by the project itself. We
@@ -454,9 +458,11 @@ The directory structure of the PiDP-8/I project is as follows:
     project’s developers, while other files in this directory are
     outputs of the build system.
 
-    The content of this directory is copied to `$prefix/bin` at
+    A subset of this directory’s content is copied to `$prefix/bin` at
     installation time, which is added to the user’s `PATH` by the
-    `make install` script.
+    `make install` script. We don’t copy the whole thing as-is because
+    the build system places some files here that get installed to other
+    locations or which don’t get installed at all.
 
 *   <b>`boot`</b> — SIMH initialization scripts. The `*.script.in`
     files are written by the project developers but have local
@@ -474,36 +480,52 @@ The directory structure of the PiDP-8/I project is as follows:
     the user chooses whether to run `make mediainstall` by hand to
     overwrite all of this.
 
-*   <b>`doc`</b> — Documentation files sufficiently unimportant to a new
-    user of the software that they need not be at the top level of the
-    project tree. Such files can wait for new users to discover them.
+*   <b>`doc`</b> — Documentation files that can wait for new users to
+    discover them, which do not need to be available immediately to the
+    user on inspecting the tree for the first time.
 
     Fossil’s [embedded documentation][edoc] feature allows us to present
     the contents of `doc` to web site users all but indistinguishably
     from a wiki page.
 
     You may then ask, “Why are there two different ways to achieve the
-    same end, and how do we decide which mechanism to use?”
+    same end — embedded docs and the wiki — and how do we decide which
+    mechanism to use?” Let us explore the differences before we answer
+    the question.
 
-    The rule is simple: if a given document’s change history is tied to
-    the history of the PiDP-8/I project itself, it goes in `doc`, else
-    it goes in the wiki. When checking out older versions of the
-    PiDP-8/I software, you expect to roll back to contemporaneous
-    versions of the project documentation, which is what happens to all
-    files stored in the repository, including those in `doc`, but this
-    does not happen to the wiki documents. The wiki always presents the
-    most current version, no matter what version you have locally
-    checked out.
-
-    (Fossil’s wiki feature behaves much like Wikipedia: it keeps change
+    Fossil’s wiki feature behaves much like Wikipedia: it keeps change
     history for wiki documents, but it always presents the most recent
-    version unless you manually go poking around in the history to pull
-    up old versions. If you check out a historical version of the
-    software and then say `fossil ui` within that checkout directory,
-    the resulting web view still shows the most recent locally-available
-    version of each wiki document, not versions of the wiki documents
-    contemporaneous with the historical version of the Fossil tree you
-    have checked out.)
+    version unless you go out of your way to manually dig up a
+    historical version. This is true even if you’ve run `fossil ui` from
+    a check-out directory where you’ve rolled back to a historical
+    version. This doesn’t roll back the wiki to the same point in time;
+    it continues showing the most recent version of each article.
+
+    Embedded documentation — being files like any other committed to the
+    repository — *are* rolled back to historical versions when you say
+    something like `fossil update 2018-04-01` to see the software as of
+    April Fool’s Day 2018. You see the embedded docs as of that date as
+    well, unlike with the wiki.
+
+    That leads us to the razor we use to decide where a given document
+    lives.
+
+    Use the wiki for evergreen content: material likely to remain
+    correct for future versions of the software as well as the version
+    contemporaneous with the initial version of the document. Also use
+    the wiki for documention of conditions that change independently of
+    the software’s version history, a good example being [our OS
+    Compatibility wiki article][oscomp]. In either case, there is no tie
+    between the software’s internal version history and changes out in
+    the wider world, so the wiki’s always-current nature matches our
+    needs well.
+
+    The best case for using embedded documentation is when
+    changes to the software are likely to require changes to the
+    corresponding documentation, so that the commit changes both docs
+    and code, keeping them in lock-step.
+
+    When in doubt, use embedded documentation.
 
     The `doc/graphics` subdirectory holds JPEGs and SVGs displayed
     inline within wiki articles.
@@ -544,11 +566,11 @@ The directory structure of the PiDP-8/I project is as follows:
     primarily by other programs. Whereas a file in `lib` might have its
     interface described by a programmer’s reference manual, the
     interface of a program in `libexec` is described by its usage
-    message. Example:
+    message.
 
-    *   <b>`scanswitch`</b> — Run by `etc/pidp8i`.
-
-        <p>It is run by hand only by developers modifying its behavior.</p>
+    Currently, there is only one such program, `scanswitch`, which si
+    run primarily by `etc/pidp8i`. It is only run by hand when someone
+    is trying to debug something, as in development.
 
     Programs in `libexec` are installed to `$prefix/libexec`, which is
     *not* put into the user’s `PATH`, on purpose. If a program should
@@ -586,6 +608,12 @@ The directory structure of the PiDP-8/I project is as follows:
     build system *would* place them if they were built from something
     under `src`.
 
+    This directory also contains PDP-8 source files of various sorts,
+    mainly those used for building the SIMH media and the `os8pkg`
+    packages. These are all “built” into other forms that then appear
+    when running the simulator, rather than being used directly in this
+    source code form.
+
     There are no program sources in the top level of `src`. The file
     `src/config.h` may appear to be an exception to that restriction,
     but it is *generated output* of the `configure` script, not “source
@@ -608,13 +636,13 @@ The directory structure of the PiDP-8/I project is as follows:
     directly at the command line or run from some other program that is
     also installed, respectively.
 
-[edoc]: https://www.fossil-scm.org/index.html/doc/trunk/www/embeddeddoc.wiki
-[uflp]: https://www.freedesktop.org/software/systemd/man/systemd.unit.html#id-1.9
+[edoc]:  https://fossil-scm.org/home/doc/trunk/www/embeddeddoc.wiki
+[fset]:  https://fossil-scm.org/home/doc/trunk/www/settings.wiki
+[fscmd]: https://fossil-scm.org/home/help?cmd=setting
+[uflp]:  https://freedesktop.org/software/systemd/man/systemd.unit.html#id-1.9
 
 
-<a id="patches"></a>
-Submitting Patches
-----
+## <a id="patches"></a> Submitting Patches
 
 If you do not have a developer login on the PiDP-8/I software
 repository, you can still send changes to the project.
@@ -631,7 +659,7 @@ you wish to contribute your changes under. We suggest using the [SIMH
 license][simhl], but any [non-viral][viral] [OSI-approved license][osil]
 should suffice. We’re willing to tolerate viral licenses for standalone
 products; for example, CC8 is under the GPL, but it’s fine because it
-isn’t hard-linked into any other part of the PiDP-8/I software system.
+isn’t statically linked into any other part of the PiDP-8/I software system.
 
 If your change is more than a small patch, `fossil diff` might not
 incorporate all of the changes you have made. The old unified `diff`
@@ -673,9 +701,7 @@ otherwise.
 [viral]: https://en.wikipedia.org/wiki/Viral_license
 
 
-<a id="code-style"></a>
-The PiDP-8/I Software Project Code Style Rules
-----
+## <a id="code-style"></a> The PiDP-8/I Software Project Code Style Rules
 
 Every code base should have a common code style. Love it or
 hate it, here are PiDP-8/I’s current code style rules:
@@ -809,30 +835,101 @@ File types: `*.md`, `*.txt`
 [fmd]: https://tangentsoft.com/pidp8i/md_rules
 
 
-<a id="tickets"></a>
-Ticket Processes
-----
+## <a id="tickets"></a> Ticket Workflow
+
 Normal end users of the Fossil ticket system are not expected to
 understand it properly or to fill out tickets properly. Without certain
 permissions, it is in fact not possible to completely fill out a ticket
-properly.
+properly. Project developers typically must triage, augment, and correct
+submissions from the start.
 
-Therefore, the first thing that should happen to a ticket is that
-someone with sufficient privilege should triage it and fix up any
-incorrect settings.
+Here’s the basic workflow for a “code defect” ticket, colloquially
+called a bug report:
 
-The Status of a ticket initially starts out as Open. If the person
-triaging a ticket takes the time to check that the problem actually
-occurs as the ticket filer claims or that the requested feature is in
-fact missing, the Status should change to Verified.
+``` pikchr toggle indent
+      fill = bisque
+      linerad = 15px
 
-If a developer implements a fix or feature in response to a ticket, he
+      define diamond { \
+        box wid 150% invis
+        line from last.w to last.n to last.e to last.s close rad 0 $1
+      }
+
+      oval "SUBMIT TICKET" width 150%
+      down
+      arrow 50%
+NEW:  file "New bug ticket" "marked \"Open\"" fit
+      arrow same
+      box "Triage," "augment &" "correct" fit
+      arrow same
+DC:   box "Developer comments" fit
+      arrow same
+FR:   box "Filer responds" fit
+      arrow 100%
+REJ:  diamond("Reject?")
+      right
+      arrow 100% "Yes" above
+      box "Mark ticket" "\"Rejected\" &" "\"Resolved\"" fit with .w at previous.e
+      arrow right 50%
+REJF: file "Rejected" "ticket" fit
+      arrow right 50%
+REOP: diamond("Reopen?")
+      down
+REJA: arrow 75% from REJ.s "  No; fix it" ljust
+CHNG: box "Developer changes code" with .n at last arrow.s fit
+      arrow 50%
+FIXD: diamond("Fixed?")
+      right
+FNO:  arrow "No" above
+RES:  box "Optional:" "Update ticket resolution:" "\"Partial Fix\", etc." fit
+      down
+      arrow 75% "  Yes" ljust from FIXD.s
+      box "Mark ticket" "\"Fixed\" & \"Closed\"" fit
+      arrow 50%
+RESF: file "Resolved ticket" fit
+      arrow same
+      oval "END"
+
+      line from 0.3<FR.ne,FR.se> right even with 0.25 right of DC.e then \
+          up even with DC.e then to DC.e ->
+
+      line from NEW.w left 0.5 then down even with REJ.w then to REJ.w ->
+      line invis from 2nd vertex of last line to 3rd vertex of last line \
+          "fast reject path" above aligned
+
+      line from RES.e right 0.3 then up even with CHNG.e then to CHNG.e ->
+
+      line from REOP.s "No" aligned above down 0.4
+      line from previous.s down to (previous.s, RESF.e) then to RESF.e ->
+
+      line from REOP.n "Yes" aligned below up 0.3
+      line from previous.n up even with 0.6<FR.ne,FR.se> then to 0.6<FR.ne,FR.se> ->
+```
+
+On noticing a new-filed ticket — such as because you are subscribed to
+email notifications on ticket changes — someone with sufficient
+privilege triages it, sets values for the fields not exposed to the
+ticket’s filer, and fixes up any incorrect values given in the initial
+submission.
+
+The Status of a ticket initially starts out as Open; the filer cannot
+change that default value, short-circuiting the process. If the person
+triaging a ticket takes the time to check that the bug actually occurs
+as the ticket filer claims, the Status should change to Verified.
+
+If a developer implements a fix in response to a ticket, he
 has two choices: change the ticket’s Status to “Review” if he wants
 someone to check out the change before closing it, or go straight to
-Closed status. Closing a ticket hides it from the Wishes and Bugs ticket
+Closed status. Closing a ticket hides it from the [Wishes] and [Bugs] ticket
 reports.
 
-Larger teams often require all ticket changes to go through Review
+The process for software feature request and documentation improvement
+request tickets is essentially the same, differing mainly in terminology
+rather than process flow: instead of verifying the existence of a bug,
+the one triaging the ticket verifies that the feature does in fact not
+exist yet, and so on.
+
+A common requrement in larger teams is that all ticket changes to go through Review
 status before getting to Closed, but the PiDP-8/I project is too small
 to require such ceremony: if we’ve given you a developer account on the
 repository, you’re expected to resolve and close tickets in the same
@@ -875,6 +972,9 @@ with anything short of a working patch, for example:
 
 > Dev B: Well, that’s different, then. Thanks for the patch! Ticket
 > marked Implemented, but still Closed.
+
+[Bugs]:   https://tangentsoft.com/pidp8i/bugs
+[Wishes]: https://tangentsoft.com/pidp8i/wishes
 
 
 ## License

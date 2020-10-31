@@ -1,5 +1,13 @@
 examples/*.fc
 
+hardware/pidp8i/*.cmp
+hardware/pidp8i/*.dsn
+hardware/pidp8i/*.kicad_pcb
+hardware/pidp8i/*.lib
+hardware/pidp8i/*.mod
+hardware/pidp8i/*.pro
+hardware/pidp8i/*.sch
+
 src/*.[ch]
 src/*.in
 

@@ -595,6 +595,7 @@ os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
+	find . -name \*.d -delete
 	@AUTOREMAKE@
 
 release: all
@@ -866,13 +867,13 @@ $(PIDP8I_SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
 	ln -f bin/pidp8i-sim bin/pdp8
 
 bin/cc8: $(CC8_OBJS)
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) $(CC8_CROSS_CFLAGS) -o $@ $^ $(LIBS)
 
 bin/d8tape: $(D8TAPE_OBJS)
-	$(CC) -o $@ $^
+	$(CC) $(D8TAPE_CFLAGS) -o $@ $^
 
 bin/palbart: $(PALBART_OBJS)
-	$(CC) -o $@ $^
+	$(CC) $(PALBART_CFLAGS) -o $@ $^
 
 bin/pidp8i-test: obj/misc/test.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses

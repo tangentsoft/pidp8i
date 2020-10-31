@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 10/05/2015 13:43:50
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 12/22/2018 8:34:06 PM
 
 BeginCmp
 TimeStamp = /54904DF0;
@@ -823,21 +823,7 @@ BeginCmp
 TimeStamp = /54BD85A3;
 Reference = DZ1;
 ValeurCmp = ZENER;
-IdModule  = D3;
-EndCmp
-
-BeginCmp
-TimeStamp = /554F46DF;
-Reference = J_COL1;
-ValeurCmp = CONN_3;
-IdModule  = PIN_ARRAY_3X1;
-EndCmp
-
-BeginCmp
-TimeStamp = /554F46EE;
-Reference = J_COL2;
-ValeurCmp = CONN_3;
-IdModule  = PIN_ARRAY_3X1;
+IdModule  = D2;
 EndCmp
 
 BeginCmp
@@ -904,16 +890,9 @@ IdModule  = DIP-18__300;
 EndCmp
 
 BeginCmp
-TimeStamp = /554E0D39;
+TimeStamp = /5C1DA337;
 Reference = P3;
-ValeurCmp = EXPANSION_20X2;
-IdModule  = PIN_ARRAY_20X2;
-EndCmp
-
-BeginCmp
-TimeStamp = /554E5206;
-Reference = P5;
-ValeurCmp = SERIAL 5V TTL;
+ValeurCmp = CONN_4;
 IdModule  = PIN_ARRAY_4x1;
 EndCmp
 
@@ -1023,199 +1002,185 @@ IdModule  = R3;
 EndCmp
 
 BeginCmp
-TimeStamp = /554E5219;
-Reference = R_S1;
-ValeurCmp = 300;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /554E5233;
-Reference = R_S2;
-ValeurCmp = 620;
-IdModule  = R3;
-EndCmp
-
-BeginCmp
 TimeStamp = /548EFBFD;
 Reference = SW1;
 ValeurCmp = DF1;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFC03;
 Reference = SW2;
 ValeurCmp = DF2;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFC09;
 Reference = SW3;
 ValeurCmp = DF3;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFC0F;
 Reference = SW4;
 ValeurCmp = IF1;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFC15;
 Reference = SW5;
 ValeurCmp = IF2;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFC1B;
 Reference = SW6;
 ValeurCmp = IF3;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFAF8;
 Reference = SW7;
 ValeurCmp = SR1;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB27;
 Reference = SW8;
 ValeurCmp = SR2;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB2D;
 Reference = SW9;
 ValeurCmp = SR3;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB33;
 Reference = SW10;
 ValeurCmp = SR4;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB42;
 Reference = SW11;
 ValeurCmp = SR5;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB48;
 Reference = SW12;
 ValeurCmp = SR6;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB4E;
 Reference = SW13;
 ValeurCmp = SR7;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB54;
 Reference = SW14;
 ValeurCmp = SR8;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB5A;
 Reference = SW15;
 ValeurCmp = SR9;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB60;
 Reference = SW16;
 ValeurCmp = SR10;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB66;
 Reference = SW17;
 ValeurCmp = SR11;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EFB6C;
 Reference = SW18;
 ValeurCmp = SR12;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF86F;
 Reference = SW19;
 ValeurCmp = START;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF87C;
 Reference = SW20;
 ValeurCmp = LOAD_ADD;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF882;
 Reference = SW21;
 ValeurCmp = DEP;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF888;
 Reference = SW22;
 ValeurCmp = EXAM;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF88E;
 Reference = SW23;
 ValeurCmp = CONT;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF894;
 Reference = SW24;
 ValeurCmp = STOP;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF89A;
 Reference = SW25;
 ValeurCmp = SING_STEP;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 BeginCmp
 TimeStamp = /548EF8A0;
 Reference = SW26;
 ValeurCmp = SING_INST;
-IdModule  = SW_KND2_PDP2;
+IdModule  = SW_PIDP2019;
 EndCmp
 
 EndListe
