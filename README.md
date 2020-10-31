@@ -576,19 +576,13 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
 
 *   **--disable-os8-advent** — Leave out the [Adventure][advent] game.
 
-*   **--disable-os8-ba** - Leave out the BASIC games and demos which
-    come from DEC's book "101 BASIC Computer Games." These are normally
-    installed to `RKB0:` as `*.BA`, thus the option's name.
-
-    (We considered naming it `--disable-os8-basic-games-and-demos`, but
-    that's too long, and it can't be `--disable-os8-basic` because that
-    implies that it is the OS/8 BASIC subsystem that is being left out,
-    which is not even currently an option.)
+*   **--disable-os8-basic-games** - Leave out the BASIC games and demos which
+    primarily come from DEC's book "101 BASIC Computer Games."
 
 *   **--disable-os8-cc8** - Leave out Ian Schofield's native OS/8 CC8
     compiler and all of its ancillary files.
 
-*   **--disable-os8-chess** — Leave out John Comeau's
+*   **--disable-os8-chekmo** — Leave out John Comeau's
     [CHECKMO-II chess implementation][chess].
 
 *   **--disable-os8-crt** — Suppress the [console rubout behavior][tty]
@@ -619,7 +613,7 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     init message, you may want to edit `media/os8/init.tx.in` to taste
     and rebuild.
 
-*   **--disable-os8-k12** - Leave out the Kermit-12 implementation
+*   **--disable-os8-kermit-12** - Leave out the Kermit-12 implementation
     normally installed to `RKA0:`
 
 *   **--disable-os8-macrel** - Leave the MACREL v2 assembler and its
