@@ -1,0 +1,17 @@
+*.mk
+
+bin/*.pt
+bin/*.rk05
+bin/*.save
+bin/*.tu56
+
+boot/?.script
+
+config.log
+
+lib/*__pycache__/*.pyc
+
+Makefile
+*/Makefile
+
+obj/*
