@@ -488,7 +488,7 @@ def main ():
         print (line)
       if args.debug >0:  print ("Format: " + pkg_fmt)
 
-    elif args.command == "deps":
+    if args.command == "deps":
       outname = (pkg_name + ".mk")
       outpath = dest_expand (args, outname, _pkg_obj_dir)
       if args.debug >0 or args.dry_run:  print (outpath)
