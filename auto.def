@@ -694,7 +694,7 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
     
     if {$os8bool($pkg_name)} {
         append os8pkgs_selected_names " $pkg_name"
-	append os8pkgs_selected " $pkg_bin_var"
+        append os8pkgs_selected " $pkg_bin_var"
     }
 }
 append os8pkgs_all "\n"
