@@ -42,6 +42,9 @@
     as an alternative to GNU screen.  Initial work on this feature done
     by Ryan Finnie.
 
+*   Updated the PiDP-8/I KiCad hardware files to Oscar Vermeulen’s 2019
+    kit version.
+
 *   Added udev rules to allow mounting media from disks on USB
     floppy drives.  (Thanks to Ryan Finnie for this feature.)
 
