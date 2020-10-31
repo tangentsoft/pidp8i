@@ -109,9 +109,9 @@ _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["script", "Create os8-run install script from outputs"],
                 ["include", "Create an include script from selected scripts"],
                 ["install", "Perform the install script on the target image file"],
-                ["uninstall", "Delete files installed by the install script from the target image file"],
                 ["build", "Install target image file"],
                 ["all", "Perform all of the above."],
+                ["uninstall", "Delete files installed by the install script from the target image file"],
                 ["format", "Display the output format for given package names"],
                ]
 
@@ -386,7 +386,7 @@ def main ():
     Package manager for use under PDP-8 OS/8.""",
     usage = "%(prog)s [options] [command] [package ...]")
   parser.add_argument("-v", "--verbose", help="increase output verbosity",
-  				   action="store_true")
+             action="store_true")
   parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
                       help="set debug level", default=0)
   parser.add_argument("--destdir", help="Destination directory for output files")
@@ -412,7 +412,9 @@ def main ():
   if args.debug>0: DBG_FLAG = True
   else: DBG_FLAG = False
 
-  if args.command == "include":
+  do_all = args.command == "all"
+
+  if args.command == "include" or do_all:
     # We're going to assemble obj/os8pkg/pkgs.os8 from the proffered list of packages.
     outpath = dest_expand (args, "pkgs.os8", _pkg_obj_dir)
     if args.debug >0 or args.dry_run:  print (outpath)
@@ -424,8 +426,8 @@ def main ():
     if args.dry_run:
       print (first_line)
     else:
-      outfile = open (outpath, "w")
-      outfile.write(first_line + "\n")
+      incfile = open (outpath, "w")
+      incfile.write(first_line + "\n")
       
   else:
     # All other commands require one package.
@@ -434,7 +436,8 @@ def main ():
 
   # The install command uses os8script to mount the target and
   # to run the package.os8 script on it.
-  if args.command in ["install", "uninstall"]:
+  inst_cmd = args.command in ["install", "uninstall"]
+  if do_all or inst_cmd:
     try:
       s = simh (dirs.build, True)
     except (RuntimeError) as e:
@@ -475,7 +478,7 @@ def main ():
 
     if args.debug >0: print ("Package path: " + pkg_inpath)
     
-    if args.command in ["deps", "format", "script", "install", "uninstall", "include"]:
+    if do_all or inst_cmd or args.command in ["deps", "format", "script", "include"]:
       # Not all commands need parsing of pspec.
       pspec = parse_pspec(pkg_inpath)
       if pspec == None: continue
@@ -488,7 +491,8 @@ def main ():
         print (line)
       if args.debug >0:  print ("Format: " + pkg_fmt)
 
-    if args.command == "deps":
+    if args.command == "deps" or do_all:
+      print ("Generating deps for " + pkg_name + "...")
       outname = (pkg_name + ".mk")
       outpath = dest_expand (args, outname, _pkg_obj_dir)
       if args.debug >0 or args.dry_run:  print (outpath)
@@ -496,12 +500,13 @@ def main ():
       if args.dry_run:
         print (outstr)
       else:
-        outfile = open (outpath, "w")
+        depfile = open (outpath, "w")
         for line in outstr:
-          outfile.write(line)
-        outfile.close()
+          depfile.write(line)
+        depfile.close()
 
-    elif args.command == "script":
+    if args.command == "script" or do_all:
+      print ("Generating build script for " + pkg_name + "...")
       outname = pkg_name + ".os8"
       outpath = dest_expand (args, outname, _pkg_obj_dir)
       if args.debug >0:  print (outpath)
@@ -509,36 +514,39 @@ def main ():
       if args.dry_run:
         print (outstr)
       else:
-        outfile = open (outpath, "w")
+        scrfile = open (outpath, "w")
         for line in outstr:
-          outfile.write(line)
-        outfile.close()
+          scrfile.write(line)
+        scrfile.close()
 
-    elif args.command == "include":
+    if args.command == "include" or do_all:
       # Use the list of pkgnames to generate an os8-run script that performs
       # the relevant installs.
+      print ("Generating include script for " + pkg_name + "...")
       inpath = dest_expand (args, pkg_name + ".os8", _pkg_obj_dir)
       if args.dry_run:
         print ("Include: " + pkg_name)
         script_install (None, pspec, pkg_name, args, sys.stdout)
       else:
-        outfile.write ("# Install: " + pkg_name + "\n")
-        script_install (None, pspec, pkg_name, args, outfile)
+        incfile.write ("# Install: " + pkg_name + "\n")
+        script_install (None, pspec, pkg_name, args, incfile)
 
-    elif args.command == "install":
+    if args.command == "install" or do_all:
+      print ("Installing " + pkg_name + " to " + targ_path + "...")
       script_install (os8, pspec, pkg_name, args, None)
 
-    elif args.command == "uninstall":
+    if args.command == "uninstall":
+      print ("Removing " + pkg_name + " from " + targ_path + "...")
       script_delete (os8, pspec, pkg_name, args)
 
   if args.command == "include" and args.dry_run == False:
-    outfile.close()
+    incfile.close()
 
   # It is vitally important that we exit gracefully. Otherwise
   # The install actions may not be successfully be committed to media.
-  if args.command in ["install", "uninstall"]:
-      s.simh_cmd ("detach all")
-      s._child.sendline("quit")
+  if inst_cmd:
+    s.simh_cmd ("detach all")
+    s._child.sendline("quit")
 
 
 if __name__ == "__main__": main()
