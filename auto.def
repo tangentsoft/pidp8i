@@ -688,14 +688,13 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
         exec bin/os8pkg deps $pspec
     }
 
-    append os8pkgs_all " \\\n\t$pkg_bin_var"
+    append os8pkgs_all " $pkg_bin_var"
     
     if {$os8bool($pkg_name)} {
         append os8pkgs_selected_names " $pkg_name"
         append os8pkgs_selected " $pkg_bin_var"
     }
 }
-append os8pkgs_all "\n"
 
 msg-result "Packages selected for OS/8 RUNTIME packs: $os8pkgs_selected_names"
 define OS8_PKGS_SELECTED_NAMES $os8pkgs_selected_names
