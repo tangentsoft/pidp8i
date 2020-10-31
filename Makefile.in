@@ -376,7 +376,7 @@ CLTXT = /boot/cmdline.txt
 
 ADF := adrules.mk
 
-OS8_PKGS_All = @OS8_PKGS_ALL@
+OS8_PKGS_ALL = @OS8_PKGS_ALL@
 OS8_PKGS_SELECTED = @OS8_PKGS_SELECTED@
 OS8_PKGS_SELECTED_NAMES = @OS8_PKGS_SELECTED_NAMES@
 PKGS_INCLUDE = obj/os8pkg/pkgs.os8
@@ -390,7 +390,7 @@ all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
 	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
-	$(OS8_TOOLTIME) $(OS8_PKGS_ALL) \
+	$(OS8_TOOLTIME) pkg_dummy \
 	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) \
 	$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56)
 
@@ -729,6 +729,14 @@ $(OS8_TOOLTIME): $(V3D_PATCH_SCRIPT) $(OS8_BASELINE) $(V3D_PATCHES) | $(PIDP8I_S
 	$(OS8RUN)@OS8_OPTS@ $(V3D_PATCH_SCRIPT)
 
 -include obj/os8pkg/*.mk
+
+# Force building all packages
+# The include must happen before any build rules that depend on included targets.
+# pkg_dummy finesses the need for targets only defined after the .mk files are included
+# in such a way that we don't override the existence of an "all" target.
+
+pkg_dummy: $(OS8_PKGS_ALL)
+	echo -n
 
 $(V3D_RUNTIME): $(V3D_RK05_SCRIPT) $(OS8_TOOLTIME) $(PKGS_INCLUDE) $(OS8_PKGS_SELECTED) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN) @OS8_OPTS@ $(V3D_RK05_SCRIPT)

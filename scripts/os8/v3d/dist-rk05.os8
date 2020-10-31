@@ -107,12 +107,6 @@ mount dt1 $os8mi/local.tu56 ro required
 os8 COPY RKA0:<DTA1:?CSYS.BI
 os8 COPY RKA0:<DTA1:?CBAS.BI
 
-# TECO VTEDIT setup
-begin enabled vtedit
-os8 COPY RKA0:<DTA1:VTEDIT.*
-os8 COPY RKA0:<DTA1:TECO.IN
-end enabled vtedit
-
 # DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV
 begin default dcp
 os8 COPY RKA0:<DTA1:DCP24.SV,DCP.SV,DCP16.SV
