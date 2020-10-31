@@ -111,7 +111,9 @@ _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["install", "Perform the install script on the target image file"],
                 ["uninstall", "Delete files installed by the install script from the target image file"],
                 ["build", "Install target image file"],
-                ["all", "Perform all of the above."]]
+                ["all", "Perform all of the above."],
+                ["format", "Display the output format for given package names"],
+               ]
 
 
 #### abort_prog ########################################################
@@ -473,15 +475,20 @@ def main ():
 
     if args.debug >0: print ("Package path: " + pkg_inpath)
     
-    if args.command in ["deps", "script", "install", "uninstall", "include"]:
+    if args.command in ["deps", "format", "script", "install", "uninstall", "include"]:
       # Not all commands need parsing of pspec.
       pspec = parse_pspec(pkg_inpath)
       if pspec == None: continue
 
       pkg_fmt = pspec["format:"][0]
+      if args.command == "format":
+        if len(args.packages) > 1: line = pkg_name + ": "
+        else:                      line = ''
+        line += pkg_fmt
+        print (line)
       if args.debug >0:  print ("Format: " + pkg_fmt)
 
-    if args.command == "deps":
+    elif args.command == "deps":
       outname = (pkg_name + ".mk")
       outpath = dest_expand (args, outname, _pkg_obj_dir)
       if args.debug >0 or args.dry_run:  print (outpath)
@@ -494,7 +501,7 @@ def main ():
           outfile.write(line)
         outfile.close()
 
-    if args.command == "script":
+    elif args.command == "script":
       outname = pkg_name + ".os8"
       outpath = dest_expand (args, outname, _pkg_obj_dir)
       if args.debug >0:  print (outpath)
@@ -507,7 +514,7 @@ def main ():
           outfile.write(line)
         outfile.close()
 
-    if args.command == "include":
+    elif args.command == "include":
       # Use the list of pkgnames to generate an os8-run script that performs
       # the relevant installs.
       inpath = dest_expand (args, pkg_name + ".os8", _pkg_obj_dir)
@@ -518,10 +525,10 @@ def main ():
         outfile.write ("# Install: " + pkg_name + "\n")
         script_install (None, pspec, pkg_name, args, outfile)
 
-    if args.command == "install":
+    elif args.command == "install":
       script_install (os8, pspec, pkg_name, args, None)
 
-    if args.command == "uninstall":
+    elif args.command == "uninstall":
       script_delete (os8, pspec, pkg_name, args)
 
   if args.command == "include" and args.dry_run == False:
