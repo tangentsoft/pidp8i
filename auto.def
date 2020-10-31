@@ -682,10 +682,8 @@ foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
     set uc_pkg_name [string toupper $pkg_name]
     set pkg_bin_var "\$(${uc_pkg_name}_PKG_BIN)"
 
-    if {![file exists $dep_path]} {
-        exec bin/os8pkg deps $pspec
-    }
-    if {    [file mtime $pspec]     > [file mtime $dep_path] || \
+    if {   ![file exists $dep_path] || \
+            [file mtime $pspec]     > [file mtime $dep_path] || \
             [file mtime bin/os8pkg] > [file mtime $dep_path] } {
         exec bin/os8pkg deps $pspec
     }
