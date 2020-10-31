@@ -107,10 +107,6 @@ mount dt1 $os8mi/local.tu56 ro required
 os8 COPY RKA0:<DTA1:?CSYS.BI
 os8 COPY RKA0:<DTA1:?CBAS.BI
 
-begin default chess
-os8 COPY RKA0:<DTA1:CHESS.*
-end default chess
-
 # TECO VTEDIT setup
 begin enabled vtedit
 os8 COPY RKA0:<DTA1:VTEDIT.*

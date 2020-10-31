@@ -379,7 +379,6 @@ ADF := adrules.mk
 OS8_PKGS_All = @OS8_PKGS_ALL@
 OS8_PKGS_SELECTED = @OS8_PKGS_SELECTED@
 OS8_PKGS_SELECTED_NAMES = @OS8_PKGS_SELECTED_NAMES@
-OS8_PKGS_SELECTED_SCRIPTS = @OS8_PKGS_SELECTED_SCRIPTS@
 PKGS_INCLUDE = obj/os8pkg/pkgs.os8
 
 #### TARGETS ###########################################################
@@ -741,7 +740,7 @@ $(OCK_RUNTIME): $(OS8_OCK_BOOT_MAKER) $(OS8_OCK_PATCHED_RK05) $(PKGS_INCLUDE) $(
 	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_BOOT_MAKER)
 
 # To build the magic includer, we should depend on all the .os8 files to include.
-$(PKGS_INCLUDE): $(OS8_PKGS_SELECTED_SCRIPTS)
+$(PKGS_INCLUDE):
 	bin/os8pkg include $(OS8_PKGS_SELECTED_NAMES)
 
 
