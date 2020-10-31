@@ -99,13 +99,16 @@ mount dt1 $os8mi/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 ro required
 os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA,FUTIL.SV
 end default macrel
 
+# Upper Case / Lower Case batch script patches
+# Copy in from source tree.
+cpto $src/src/os8/v3d/SYSTEM/UCSYS.BI RKA0:
+cpto $src/src/os8/v3d/SYSTEM/LCSYS.BI RKA0:
+cpto $src/src/os8/v3d/BASIC/UCBAS.BI RKA0:
+cpto $src/src/os8/v3d/BASIC/LCBAS.BI RKA0:
+
 # Files from local.tu56
 umount dt1
 mount dt1 $os8mi/local.tu56 ro required
-# resume
-# Case conversion batch scripts
-os8 COPY RKA0:<DTA1:?CSYS.BI
-os8 COPY RKA0:<DTA1:?CBAS.BI
 
 # DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV
 begin default dcp
@@ -137,9 +140,9 @@ end default crt
 
 begin default lcmod
 os8 SUBMIT SYS:LCSYS.BI
-  begin default ba
+  begin default basic
   os8 SUBMIT SYS:LCBAS.BI
-  end default ba
+  end default basic
 end default lcmod
 
 # INIT message setting stuff goes here

@@ -669,6 +669,10 @@ V3D_DIST_SRCS := \
 	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
 	$(V3D_DIST_SCRIPT) \
+	@srcdir@/src/os8/v3d/SYSTEM/LCSYS.BI \
+	@srcdir@/src/os8/v3d/SYSTEM/UCSYS.BI \
+	@srcdir@/src/os8/v3d/BASIC/LCBAS.BI \
+	@srcdir@/src/os8/v3d/BASIC/UCBAS.BI \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 
