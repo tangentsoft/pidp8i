@@ -115,13 +115,6 @@ begin default dcp
 os8 COPY RKA0:<DTA1:DCP24.SV,DCP.SV,DCP16.SV
 end default dcp
 
-# FOCAL69 .BN files installed on DSK:
-begin enabled focal69
-umount dt1
-mount dt1 $os8mi/subsys/focal69.tu56 ro required
-os8 COPY RKB0:<DTA1:FOCAL.BN,4WORD.BN,4KVT.BN,8KVT.BN,8KNOVT.BN
-end enabled focal69
-
 # U/W FOCAL
 begin default uwfocal
 umount dt1
