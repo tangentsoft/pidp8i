@@ -2,8 +2,8 @@ format:
     tu56
 
 inputs:
-    src/focal69/FLOAT.ZM
-    src/focal69/FOCAL.ZM
+    src/focal69/FLOAT.ZZM
+    src/focal69/FOCAL.ZZM
     src/focal69/overlays/4KVT.PA
     src/focal69/overlays/4WORD.BN
     src/focal69/overlays/8KVT.PA
