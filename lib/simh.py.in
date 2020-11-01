@@ -1067,7 +1067,6 @@ class simh:
     # Paper tape created, so attach it read-only and copy it in.  We're
     # relying on txt2ptp to insert the Ctrl-Z EOF marker at the end of
     # the file.
-    self.esc_to_simh (debug)
     reply = self.simh_cmd ('attach -r ptr ' + pt, debug=debug)
     self.simh_test_result(reply, "Prompt", "os8_pip_to attaching ptr")
     # Enter OS/8.
@@ -1141,7 +1140,6 @@ class simh:
           ". Ignoring os8_pip_from on: " + path)
       return
 
-    self.esc_to_simh(debug)
     reply = self.simh_cmd ('attach ptp ' + path, debug=debug)
     self.simh_test_result(reply, "Prompt", "os8_pip_from attachng ptp")
     # Enter OS/8.
@@ -1167,7 +1165,6 @@ class simh:
     reply = self.child_expect (self._os8_replies_rex)
     self.os8_test_result (reply, "Monitor Prompt", "os8_pip_from 2")
 
-    self.esc_to_simh(debug)
     reply = self.simh_cmd ('detach ptp', debug=debug)  # Clean flush of buffers.
     self.simh_test_result(reply, "Prompt", "os8_pip_from detaching ptp")
     # Enter OS/8.

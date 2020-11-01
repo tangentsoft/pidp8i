@@ -142,14 +142,6 @@ end default fortran-ii
 
 # We're done with BASIC and FORTRAN II object rk05.
 
-# Copying in Music score files and source code...
-begin enabled music
-print Music score files and source code
-mount dt1 $os8mi/subsys/music.tu56 ro required
-os8 COPY RKB0:<DTA1:*.*
-umount dt1
-end enabled music
-
 # FORTRAN IV
 begin default fortran-iv
 # rk1 holds the FORTRAN IV object image
