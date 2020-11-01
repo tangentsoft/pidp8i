@@ -749,8 +749,9 @@ $(OS8_OCK_PATCHED_RK05): $(OS8_OCK_PATCHED_MAKER) $(OS8_OCK_DIST_RK05) $(OCK_PAT
 $(OCK_RUNTIME): $(OS8_OCK_BOOT_MAKER) $(OS8_OCK_PATCHED_RK05) $(PKGS_INCLUDE) $(OS8_PKGS_SELECTED) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_BOOT_MAKER)
 
-# To build the magic includer, we should depend on all the .os8 files to include.
-$(PKGS_INCLUDE):
+# To build the magic includer, we should depend on all the created packages.
+# Then a newly created one that we care about will drive creation of the include script.
+$(PKGS_INCLUDE): $(OS8_PKGS_SELECTED)
 	bin/os8pkg include $(OS8_PKGS_SELECTED_NAMES)
 
 

@@ -161,12 +161,6 @@ end default macrel
 # Files from local.tu56
 mount dt1 $os8mi/local.tu56 ro required
 
-# DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV
-begin default dcp
-os8 COPY RKA0:<DTA1:DCP24.SV,DCP.SV,DCP16.SV
-end default dcp
-umount dt1
-
 # U/W FOCAL
 begin default uwfocal
 mount dt1 $os8mi/subsys/uwfocal-v4e-2.tu56 ro required
