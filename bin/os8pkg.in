@@ -267,10 +267,11 @@ def script_install (os8, pspec, pkg_name, args, inc_file):
   for dest in pspec["outputs:"]:
     m = re.match (_output_spec_re, dest)
     if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
-    inst_str = "COPY " + dest + "\n"
+    inst_str = "COPY " + dest
 
+    if args.debug > 0 or args.verbose: print ("output: " + inst_str)
     if inc_file != None:
-        inc_file.write ("os8 " + inst_str)
+        inc_file.write ("os8 " + inst_str + "\n")
     else:
       if args.dry_run:
         print (inst_str)
@@ -291,7 +292,7 @@ def script_install (os8, pspec, pkg_name, args, inc_file):
 def script_delete (os8, pspec, pkg_name, args):
   if len(pspec["outputs:"]) == 0:
     print ("Nothing to delete from package " + pkg_name)
-  return
+    return
 
   if args.dry_run:
     print ("uninstall of " + pkg_name)
@@ -299,14 +300,16 @@ def script_delete (os8, pspec, pkg_name, args):
   for dest in pspec["outputs:"]:
     m = re.match (_output_spec_re, dest)
     if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
-    del_str = "DEL " + m.group(1) + m.group(4) + "\n"
+    del_str = "DEL " + m.group(1) + m.group(4)
+    if args.debug > 0 or args.verbose: print ("output: " + del_str)
     if args.dry_run:
       print (del_str)
     else:
       os8.os8_command (del_str, None)
 
   for dest in pspec["cleanups:"]:
-    delstr = "DEL " + dest + "\n"
+    del_str = "DEL " + dest
+    if args.debug > 0 or args.verbose: print ("cleanup: " + del_str)
     if args.dry_run:
       print (del_str)
     else:
