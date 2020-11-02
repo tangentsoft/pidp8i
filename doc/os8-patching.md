@@ -230,8 +230,8 @@ file provides that line. It also provides instructions on how to use
 `RALF` to assemble the source and on how to to use `LIBRA` to replace
 the old version of `DLOG` with the new one in `FORLIB.RL`.  I followed
 the instructions to hand-tool a patched `FORLIB.RL` which I then put
-in the `local.tu56` DECtape image along with the other local hacks.
-The `v3d-rk05.os8` script has conditional code to replace `FORLIB.RL`
+in the source tree at `.../src/os8/v3d/LANGUAGE/FORTRAN4/FORLIB.RL SYS:FORLIB.RL`
+The `patch-rk05.os8` script has conditional code to replace `FORLIB.RL`
 on `SYS:` if installation of FORTRAN IV is enabled.
 
 

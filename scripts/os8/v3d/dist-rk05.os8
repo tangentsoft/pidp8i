@@ -92,9 +92,6 @@ os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA,FUTIL.SV
 umount dt1
 end default macrel
 
-# Files from local.tu56
-mount dt1 $os8mi/local.tu56 ro required
-
 # U/W FOCAL
 begin default uwfocal
 mount dt1 $os8mi/subsys/uwfocal-v4e-2.tu56 ro required
