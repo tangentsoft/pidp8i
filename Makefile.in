@@ -87,6 +87,7 @@ BINS = $(PIDP8I_SIM) @CC8_CROSS@ \
 	bin/ptp2txt \
 	libexec/scanswitch
 BIN_SCRIPTS = \
+	bin/os8pkg \
 	bin/pidp8i \
 	bin/usb-mount \
 	@srcdir@/bin/teco-pi-demo
@@ -124,6 +125,7 @@ BUILDDIRS := \
 	obj/d8tape \
 	obj/misc \
 	obj/palbart \
+	obj/os8pkg \
 	obj/pidp8i \
 	obj/SIMH \
 	obj/SIMH/PDP8
@@ -183,23 +185,6 @@ CC8_OBJS := \
 	obj/cc8/cross/sym.o \
 	obj/cc8/cross/while.o
 
-CC_OS8_OBJS := \
-	obj/cc8/os8/libc.sb \
-	obj/cc8/os8/c8.sb \
-	obj/cc8/os8/n8.sb \
-	obj/cc8/os8/p8.sb
-
-CC_OS8_SRCS := \
-	@srcdir@/src/cc8/os8/header.sb
-
-CC_OS8_DEMOS := \
-	obj/cc8/os8/calc.c \
-	obj/cc8/os8/fib.c \
-	obj/cc8/os8/forth.c \
-	obj/cc8/os8/hlb.c \
-	obj/cc8/os8/pd.c \
-	obj/cc8/os8/ps.c \
-
 D8TAPE_OBJS := \
 	obj/d8tape/dasm.o \
 	obj/d8tape/flow.o \
@@ -216,19 +201,6 @@ PALBART_OBJS := obj/palbart/palbart.o
 ifeq (@BUILD_DEEPER_THOUGHT@, 1)
 BINS += bin/deeper
 endif
-
-E8_SRCS:= \
-	@srcdir@/src/e8/AUTHORS.md \
-	@srcdir@/doc/e8-manual.md \
-	@srcdir@/doc/e8-manual-pdf.css \
-	@srcdir@/doc/graphics/e8-buffer.svg \
-	@srcdir@/src/e8/README.TX \
-	@srcdir@/src/e8/e8cmds.tx \
-	@srcdir@/src/e8/e8srch.tx \
-	@srcdir@/src/e8/e8defs.pa \
-	@srcdir@/src/e8/e8base.pa \
-	@srcdir@/src/e8/e8file.pa \
-	@srcdir@/src/e8/e8srch.pa
 
 TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
@@ -279,6 +251,7 @@ PRECIOUS_INFILES = \
     @srcdir@/src/SIMH/Makefile.in \
     @srcdir@/src/SIMH/PDP8/Makefile.in
 INFILES = \
+	@srcdir@/bin/os8pkg.in \
 	@srcdir@/bin/os8-cp.in \
 	@srcdir@/tools/os8-cmp.in \
 	@srcdir@/bin/os8-run.in \
@@ -319,7 +292,6 @@ OS8_RUNTIME = bin/@OS8_RUNTIME@
 
 OS8_RK05S = \
 	$(OS8_BASELINE) \
-	$(OS8_TOOLTIME) \
 	$(V3D_RUNTIME) \
 	$(OS8_SRC_RK05) \
 	$(OS8_OCK_DIST_RK05) \
@@ -389,12 +361,10 @@ V3F_TC08_TU56 = bin/v3f-tc08.tu56
 V3F_TD12K_TU56 = bin/v3f-td12k.tu56
 V3F_BOOT_TAPE= bin/v3f-@OS8_TAPE_DEVICE@.tu56
 
-CC8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/cc8-tu56.os8
-
-E8_TU56_SCRIPT = $(MISC_SCRIPTS_DIR)/e8-tu56.os8
 
 # Absolute version of --prefix passed to configure.
 PREFIX = @ABSPREFIX@
+
 # Normally unset.  Prepended to PREFIX to install files to a
 # different tree than / (e.g. for distribution build/CI scripts).
 # https://www.gnu.org/prep/standards/html_node/DESTDIR.html
@@ -406,6 +376,9 @@ CLTXT = /boot/cmdline.txt
 
 ADF := adrules.mk
 
+OS8_PKGS_SELECTED = @OS8_PKGS_SELECTED@
+OS8_PKGS_SELECTED_NAMES = @OS8_PKGS_SELECTED_NAMES@
+PKGS_INCLUDE = obj/os8pkg/pkgs.os8
 
 #### TARGETS ###########################################################
 
@@ -416,6 +389,7 @@ all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
 	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
+	$(OS8_TOOLTIME) pkg_all \
 	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) \
 	$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56)
 
@@ -433,7 +407,7 @@ clean:
 		config.log cscope.out tags \
 		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
-		obj/*.log obj/*.pt obj/os8.opts \
+		obj/*.log obj/*.pt obj/os8.opts obj/os8pkg/* \
 		src/config.h src/e8/e8defs.pa \
 		@srcdir@/examples/*.err
 	@find obj \( -name \*.o -o -name \*.d \) -delete
@@ -617,8 +591,6 @@ mediainstall: instdirs
 os8-sys: test-tmp-tools
 	$(OS8RUN)@OS8_OPTS@ $(V3D_DIST_SCRIPT)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_PATCH_SCRIPT)
-	$(OS8RUN) $(CC8_TU56_SCRIPT)
-	$(OS8RUN) $(E8_TU56_SCRIPT)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 reconfig:
@@ -697,6 +669,10 @@ V3D_DIST_SRCS := \
 	$(OS8RUN) $(PIDP8I_DIN) \
 	lib/pidp8i/dirs.py \
 	$(V3D_DIST_SCRIPT) \
+	@srcdir@/src/os8/v3d/SYSTEM/LCSYS.BI \
+	@srcdir@/src/os8/v3d/SYSTEM/UCSYS.BI \
+	@srcdir@/src/os8/v3d/BASIC/LCBAS.BI \
+	@srcdir@/src/os8/v3d/BASIC/UCBAS.BI \
 	@srcdir@/media/os8/al-*-ba-*.tu56 \
 	@srcdir@/media/os8/subsys/*.tu56
 
@@ -755,15 +731,28 @@ $(OS8_BASELINE): $(V3D_DIST_SRCS) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 $(OS8_TOOLTIME): $(V3D_PATCH_SCRIPT) $(OS8_BASELINE) $(V3D_PATCHES) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(V3D_PATCH_SCRIPT)
 
-$(V3D_RUNTIME): $(V3D_RK05_SCRIPT) $(OS8_TOOLTIME) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
-	$(OS8RUN)@OS8_OPTS@ $(V3D_RK05_SCRIPT)
+-include obj/os8pkg/*.mk
+
+# Extension of "all" rule to build all packages now that we've included
+# the rules for doing so. If you move the autosetup variable below into
+# the "all" target dependency list, it won't work because it references
+# undefined variables.
+pkg_all:@OS8_PKGS_ALL@
+
+$(V3D_RUNTIME): $(V3D_RK05_SCRIPT) $(OS8_TOOLTIME) $(PKGS_INCLUDE) $(OS8_PKGS_SELECTED) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+	$(OS8RUN) @OS8_OPTS@ $(V3D_RK05_SCRIPT)
 
 
 $(OS8_OCK_PATCHED_RK05): $(OS8_OCK_PATCHED_MAKER) $(OS8_OCK_DIST_RK05) $(OCK_PATCHES) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_PATCHED_MAKER)
 
-$(OCK_RUNTIME): $(OS8_OCK_BOOT_MAKER) $(OS8_OCK_PATCHED_RK05) @CC8_TU56@ @E8_TU56@ | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
+$(OCK_RUNTIME): $(OS8_OCK_BOOT_MAKER) $(OS8_OCK_PATCHED_RK05) $(PKGS_INCLUDE) $(OS8_PKGS_SELECTED) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
 	$(OS8RUN)@OS8_OPTS@ $(OS8_OCK_BOOT_MAKER)
+
+# To build the magic includer, we should depend on all the created packages.
+# Then a newly created one that we care about will drive creation of the include script.
+$(PKGS_INCLUDE): $(OS8_PKGS_SELECTED)
+	bin/os8pkg include $(OS8_PKGS_SELECTED_NAMES)
 
 
 # Also build an OS/8 source disk, as a convenience to avoid the 
@@ -839,14 +828,6 @@ $(V3D_TC08_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_TOOLTIME)
 # Make a bootable OS/8 v3d TD8E 12K DECtape image
 $(V3D_TD12K_TU56): $(ALL_TU56_SCRIPT) $(CUSP_COPYIN_SCRIPT) | $(OS8_TOOLTIME) 
 	$(OS8RUN)@OS8_OPTS@ $(ALL_TU56_SCRIPT) --enable td12k
-
-# Create the CC8 distribution DECtape image
-bin/cc8.tu56: $(CC_OS8_OBJS) $(CC_OS8_SRCS) $(CC_OS8_DEMOS) $(CC8_TU56_SCRIPT) | $(OS8_TOOLTIME)
-	$(OS8RUN) $(CC8_TU56_SCRIPT)
-
-# Create the E8 distribution DECtape image
-bin/e8.tu56: $(E8_SRCS) $(E8_TU56_SCRIPT) | $(OS8_TOOLTIME)
-	$(OS8RUN) $(E8_TU56_SCRIPT)
 
 # Rule for building PAL assembly language programs in src/asm/*.pal.
 obj/%.lst bin/%-pal.pt: @srcdir@/src/asm/%.pal bin/palbart
@@ -954,3 +935,4 @@ src/pidp8i/gpio-common.c: @srcdir@/tools/version
 	$(MISC_OBJS:.o=.d) \
 	$(PALBART_OBJS:.o=.d)
 -include $(ADF)
+

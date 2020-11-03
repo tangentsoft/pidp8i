@@ -753,7 +753,7 @@ class os8script:
     return "success"
 
 
-  #### cpto_command ###########################################
+  #### cpfrom_command #########################################
   # Calls os8_pip_from with the command line arguments.
   
   def cpfrom_command (self, line, script_file):
@@ -1260,7 +1260,7 @@ class os8script:
     detach_comm = "det " + line
     if self.verbose: print("line: " + \
         str(self.line_ct_stack[0]) + ": " + detach_comm)
-    reply = self.simh.simh_cmd(detach_comm)
+    reply = self.simh.simh_cmd(detach_comm, debug=self.debug)
     self.simh.simh_test_result(reply, "Prompt", "umount_command")
     return "success"
 

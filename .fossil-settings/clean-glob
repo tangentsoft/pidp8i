@@ -8,6 +8,7 @@ bin/cc8
 bin/d8tape
 bin/os8-cp
 bin/os8-run
+bin/os8pkg
 bin/palbart
 bin/pdp8
 bin/pidp8i

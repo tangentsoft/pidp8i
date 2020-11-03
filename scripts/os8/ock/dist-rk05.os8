@@ -142,35 +142,6 @@ end default fortran-ii
 
 # We're done with BASIC and FORTRAN II object rk05.
 
-# Copying in Music score files and source code...
-begin enabled music
-print Music score files and source code
-mount dt1 $os8mi/subsys/music.tu56 ro required
-os8 COPY RKB0:<DTA1:*.*
-umount dt1
-end enabled music
-
-# Adventure
-begin default advent
-mount dt1 $os8mi/subsys/advent.tu56 ro required
-os8 COPY RKB0:<DTA1:*.*
-umount dt1
-end default advent
-
-# BASIC games and demos
-begin default ba
-mount dt1 $os8mi/subsys/ba.tu56 ro required
-os8 COPY RKB0:<DTA1:*.*
-umount dt1
-end default ba
-
-# Kermit-12
-begin default k12
-mount dt1 $os8mi/subsys/k12.tu56 ro required
-os8 COPY RKA0:<DTA1:*.*
-umount dt1
-end default k12
-
 # FORTRAN IV
 begin default fortran-iv
 # rk1 holds the FORTRAN IV object image
@@ -186,39 +157,6 @@ mount dt1 $os8mi/al-5642c-ba-macrel-v2-futil-v8b-by-hand.tu56 ro required
 os8 COPY RKA0:<DTA1:MACREL.SV,LINK.SV,KREF.SV,OVRDRV.MA
 umount dt1
 end default macrel
-
-# Files from local.tu56
-mount dt1 $os8mi/local.tu56 ro required
-
-begin default chess
-os8 COPY RKA0:<DTA1:CHESS.*
-end default chess
-
-# TECO VTEDIT setup
-begin enabled vtedit
-os8 COPY RKA0:<DTA1:VTEDIT.*
-os8 COPY RKA0:<DTA1:TECO.IN
-end enabled vtedit
-
-# DCP Disassembler: DCP24.SV, and DCP16.SV as DCP.SV
-begin default dcp
-os8 COPY RKA0:<DTA1:DCP24.SV,DCP.SV,DCP16.SV
-end default dcp
-umount dt1
-
-# FOCAL69 .BN files installed on DSK:
-begin enabled focal69
-mount dt1 $os8mi/subsys/focal69.tu56 ro required
-os8 COPY RKB0:<DTA1:FOCAL.BN,4WORD.BN,4KVT.BN,8KVT.BN,8KNOVT.BN
-umount dt1
-end enabled focal69
-
-# U/W FOCAL
-begin default uwfocal
-mount dt1 $os8mi/subsys/uwfocal-v4e-2.tu56 ro required
-os8 COPY RKA0:<DTA1:UWF16K.SV
-umount dt1
-end default uwfocal
 
 # Further system initialization
 
