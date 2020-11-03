@@ -73,6 +73,7 @@ _default_att_spec = ["rk", "0", _default_sys_path]
 
 _pkg_obj_dir = os.path.join (dirs.obj, "os8pkg/")
 _pkg_pspec_dir = os.path.join (dirs.src, "scripts/os8pkg/")
+_pkg_builder_dir = os.path.join (dirs.src, "scripts/misc")
 _target_dir = dirs.os8mo
 
 # Regex for parsing an argument string into a sys device
@@ -108,7 +109,7 @@ _pspec_strip_re = re.compile("^(\S*)\.pspec$")
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["include", "Create an include script from selected scripts"],
                 ["install", "Install pspec outputs on the target image file"],
-                ["build", "Install target image file"],
+                ["build", "Run package builder"],
                 ["all", "Perform all of the above."],
                 ["uninstall", "Delete pspect outputs and cleanups from the target image file"],
                 ["format", "Display the output format for given package names"],
@@ -230,6 +231,32 @@ def make_deps (pkg_name, pspec):
 
   return outstr
 
+#### run_builder #####################################################
+# Start a sub-process that executes the build: lines from the pspec file,
+# or if there aren't any, call os8-run on the builder script.
+
+def run_builder (pkg_name, pspec, args):
+  if len(pspec["build:"]) > 0:
+    # Build lines to execute
+    # We probably need a chdir here because of assumptions about where the pspec is.
+    for build_line in pspec["build:"]:
+      if args.dry_run:
+        print (build_line)
+      else:
+        subprocess.call (build_line, shell = True)
+
+  else:
+    script_name = pkg_name + "-" + pspec["format:"][0] + ".os8"
+    script_path = find_script (script_name, args)
+    if script_path == None:
+      print ("Could not find script: " + script_name)
+      return
+    tool = os.path.join (dirs.build, 'bin', "os8-run")
+    if args.dry_run:
+      print (tool + " " + script_path)
+    else:
+      subprocess.call (tool + " " + script_path, shell = True)
+      
 
 #### script_install ###################################################
 # Call os8script commands to eiter perform install of pspec outputs
@@ -358,6 +385,65 @@ def find_pkg (pkg_name, pkg_base, pkg_dir, args):
 
   return None
 
+#### find_script  ######################################################
+# Use a search heuristic to find the builder script given a package name.
+
+def find_script (script_name, args):
+  if args.debug > 5:
+    print ("find_script: Name: " + script_name)
+  
+  if args.destdir:
+    script_path = os.path.join (args.destdir, script_name)
+    if args.debug > 9: print ("Trying: " + script_path)
+    if os.path.exists (script_path):
+      if args.debug > 4: print ("Found " + script_path)
+      return script_path
+
+    script_path = os.path.join (args.destdir, _pkg_obj_dir + script_name)
+    if args.debug > 9: print ("Trying: " + script_path)
+    if os.path.exists (script_path):
+      if args.debug > 4: print ("Found " + script_path)
+      return script_path
+  
+  script_path = os.path.join(_pkg_builder_dir, script_name)
+  if args.debug > 9: print ("Trying: " + script_path)
+  if os.path.exists (script_path):
+    if args.debug > 4: print ("Found " + script_path)
+    return script_path
+
+  return None
+
+#### start_os8 #########################################################
+# Create and start up an os8 script runner
+# Find the default boot image and boot it.
+# Return the running os8 object handle.
+# If we can't start os8, it's a fatal error. Quit here!
+
+def start_os8(args):
+  try:
+    s = simh (dirs.build, True)
+  except (RuntimeError) as e:
+    print("Could not start simulator: " + e.message + '!')
+    sys.exit (1)
+
+  if VERBOSE:
+    s.verbose = True
+    s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
+
+  os8 = os8script (s, "", "", verbose=VERBOSE, debug=args.debug>0)
+
+  # We're calling into os8script directly without a script file
+  # Set some internal state to cope with doing so.
+  fakeout_script (os8)
+
+  targ_path = dest_expand (args, args.target, _target_dir)
+  if args.debug >0 or args.dry_run: print ("Perform " + args.command + " on " + targ_path)
+
+  os8.mount_command ("rk0 " + targ_path + " required", None)
+  os8.boot_command ("rk0", None)
+
+  return os8
+
 #### main ##############################################################
 
 def main ():
@@ -390,10 +476,8 @@ def main ():
     print (parser.print_help())
     sys.exit(-1)
 
-  if args.debug>0: DBG_FLAG = True
-  else: DBG_FLAG = False
-
   do_all = args.command == "all"
+  inst_cmd = args.command in ["install", "uninstall"]
 
   if args.command == "include" or do_all:
     # We're going to assemble obj/os8pkg/pkgs.os8 from the proffered list of packages.
@@ -415,33 +499,9 @@ def main ():
     if len(args.packages) == 0:
       abort_prog ("Need at least one package to work.")
 
-  # The install command uses os8script to mount the target and
-  # to run the package.os8 script on it.
-  inst_cmd = args.command in ["install", "uninstall"]
-  if do_all or inst_cmd:
-    try:
-      s = simh (dirs.build, True)
-    except (RuntimeError) as e:
-      print("Could not start simulator: " + e.message + '!')
-      sys.exit (1)
-
-    if VERBOSE:
-      s.verbose = True
-      s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
-
-    os8 = os8script (s, "", "", verbose=VERBOSE, debug=DBG_FLAG)
-
-    # We're calling into os8script directly without a script file
-    # Set some internal state to cope with doing so.
-    fakeout_script (os8)
-
-    targ_path = dest_expand (args, args.target, _target_dir)
-    if args.debug >0 or args.dry_run: print ("Perform " + args.command + " on " + targ_path)
-
-    os8.mount_command ("rk0 " + targ_path + " required", None)
-    os8.boot_command ("rk0", None)
-
-
+  # If we need an os8script object, put it here.
+  os8 = None
+  
   # The pkg_spec from command line may be a package name, or a file path.
   # We need the name, and may or may not get the ".pspec" at the end.
   for pkg_spec in args.packages:
@@ -459,18 +519,17 @@ def main ():
 
     if args.debug >0: print ("Package path: " + pkg_inpath)
     
-    if do_all or inst_cmd or args.command in ["deps", "format", "script", "include"]:
-      # Not all commands need parsing of pspec.
-      pspec = parse_pspec(pkg_inpath)
-      if pspec == None: continue
+    # We assume all command will require parsing the pspec.
+    pspec = parse_pspec(pkg_inpath)
+    if pspec == None: continue
 
-      pkg_fmt = pspec["format:"][0]
-      if args.command == "format":
-        if len(args.packages) > 1: line = pkg_name + ": "
-        else:                      line = ''
-        line += pkg_fmt
-        print (line)
-      if args.debug >0:  print ("Format: " + pkg_fmt)
+    pkg_fmt = pspec["format:"][0]
+    if args.command == "format":
+      if len(args.packages) > 1: line = pkg_name + ": "
+      else:                      line = ''
+      line += pkg_fmt
+      print (line)
+    if args.debug >0:  print ("Format: " + pkg_fmt)
 
     if args.command == "deps" or do_all:
       print ("Generating deps for " + pkg_name + "...")
@@ -497,6 +556,10 @@ def main ():
         incfile.write ("# Install: " + pkg_name + "\n")
         script_install (None, pspec, pkg_name, args, incfile)
 
+    # This calls start_os8 once if we need it.
+    if inst_cmd and os8 == None:
+      os8 = start_os8(args)
+
     if args.command == "install" or do_all:
       print ("Installing " + pkg_name + " to " + targ_path + "...")
       script_install (os8, pspec, pkg_name, args, None)
@@ -505,8 +568,13 @@ def main ():
       print ("Removing " + pkg_name + " from " + targ_path + "...")
       script_delete (os8, pspec, pkg_name, args)
 
+    if args.command == "build" or do_all:
+      run_builder(pkg_name, pspec, args)
+
+
   if args.command == "include" and args.dry_run == False:
     incfile.close()
+
 
   # It is vitally important that we exit gracefully. Otherwise
   # The install actions may not be successfully be committed to media.

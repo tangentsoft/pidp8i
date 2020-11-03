@@ -29,7 +29,11 @@ bootable media.
    to identify output files to remove. Remove them from the bootable image
    specified by --target. $os8mo/v3d.rk05 if no --target specified.
    Additionally remove files listed in the cleanups section.
-   
+
+ * build -- Run the builder, whether it be the lines from the `build:` section
+   or the default build script.  **NOTE:** Use care when building with
+   `build:` lines in the `.pspec` file.  The assumption is that your current
+   working directory is the top level of the build environment.
 
 The `auto.defs` scans `.../scripts/os8pkg` and runs the deps command on every
 `.pspec` file found there.  This sets the stage to build every known package.
