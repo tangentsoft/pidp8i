@@ -6,28 +6,6 @@ some rules and hints to keep in mind while you work.
 [home]: https://tangentsoft.com/pidp8i/
 
 
-## <a id="ghm"></a> The GitHub Mirror Is Just That
-
-The project’s [Fossil] repository is the primary source of truth for
-this project. The GitHub mirror is largely one-way, as you may guess
-from the name. You’re welcome to file GitHub issues or send PRs via
-GitHub, but realize that what’s going to happen is that we’ll push the
-change back up through the Fossil repo, so the resulting change won’t
-have any direct connection to the social graph maintained by GitHub,
-Inc.
-
-This is not simply because setting up bidirectional mirroring is
-difficult, it is actually [impossible to achieve 100% fidelity][ghlim]
-due to limitations of Git and/or GitHub. If you want a faithful clone of
-the PiDP-8/I project repo, or if you wish to contribute to the project’s
-development with full credit for your contributions, it’s best done via
-Fossil, not via GitHub.
-
-[Fossil]: https://fossil-scm.org/
-[ghlim]:  https://fossil-scm.org/home/doc/trunk/www/mirrorlimitations.md
-
-
-
 ## <a id="gs-fossil"></a> Getting Started with Fossil
 
 The PiDP-8/I software project is hosted using the Fossil
@@ -653,28 +631,41 @@ The directory structure of the PiDP-8/I project is as follows:
 
 ## <a id="patches"></a> Submitting Patches
 
-If you do not have a developer login on the PiDP-8/I software
-repository, you can still send changes to the project.
+If you do not have a developer login on the project repository, you can
+still send changes to the project.
 
-The simplest way is to say this after developing your change against the
-trunk of PiDP-8/I:
+The simplest way is to say this after developing your change against
+trunk:
 
     $ fossil diff > my-changes.patch
 
-Then either upload that file somewhere (e.g. Pastebin) and point to it
-from a [forum post][pfor] or attach the patch to a new [PiDP-8/I mailing
-list][ggml] message. Either way, include a declaration of the license
-you wish to contribute your changes under. We suggest using the [SIMH
-license][simhl], but any [non-viral][viral] [OSI-approved license][osil]
-should suffice. We’re willing to tolerate viral licenses for standalone
-products; for example, CC8 is under the GPL, but it’s fine because it
-isn’t statically linked into any other part of the PiDP-8/I software system.
+Then paste that into a [forum post][pfor] using a [fenced code
+block][fcb]. We will also accept trivial patches not needing discussion
+as text or attachments on [a Fossil ticket][tkt].
+
+If you're making a patch against a PiDP-8/I distribution tarball, you can
+generate a patch this way:
+
+    $ diff -ruN pidp8i-olddir pidp8i-newdir > mychange.patch
+
+The `diff` command is part of every Unix and Linux system, and should be
+installed by default. If you're on a Windows machine, GNU diff is part
+of [Cygwin](http://cygwin.com/) and [WSL]. Fossil is also available for
+all of these systems. There are no excuses for not being able to make
+unified diffs. :)
+
+[fcb]: https://www.markdownguide.org/extended-syntax#fenced-code-blocks
+[tkt]: https://tangentsoft.com/pidp8i/tktnew
+[WSL]: https://docs.microsoft.com/en-us/windows/wsl/install-win10
+
+
+#### Bundles Instead of Patches
 
 If your change is more than a small patch, `fossil diff` might not
 incorporate all of the changes you have made. The old unified `diff`
 format can’t encode branch names, file renamings, file deletions, tags,
 checkin comments, and other Fossil-specific information. For such
-changes, it is better to send a Fossil bundle:
+changes, it is better to send a [Fossil bundle][fb]:
 
     $ fossil set autosync 0                # disable autosync
     $ fossil checkin --branch my-changes
@@ -689,25 +680,51 @@ on a private branch until you’re ready to submit the whole thing as a
 bundle.
 
 Because you are working on a branch on your private copy of the
-PiDP-8/I Fossil repository, you are free to make as many checkins as
+project’s Fossil repository, you are free to make as many checkins as
 you like on the new branch before giving the `bundle export` command.
 
-Once you are done with the bundle, send it to the developers the same
-way you should a patch file.
+Once you are done with the bundle, upload it somewhere public and point
+to it from a forum post or ticket.
 
-If you provide a quality patch, we are likely to offer you a developer
-login on [the repository][repo] so you don’t have to continue with the
-patch or bundle methods.
+[fb]: https://fossil-scm.org/home/help?cmd=bundle
 
-Please make your patches or experimental branch bundles against the tip
-of the current trunk. PiDP-8/I often drifts enough during development
-that a patch against a stable release may not apply to the trunk cleanly
-otherwise.
+
+#### Contribution Licensing
+
+Submissions should include a declaration of the license you wish to
+contribute your changes under. We suggest using the [SIMH license][simhl],
+but any [non-viral][viral] [OSI-approved license][osil] should suffice.
+We’re willing to tolerate viral licenses for standalone products; for
+example, CC8 is under the GPL, but it’s fine because it isn’t statically
+linked into any other part of the PiDP-8/I software system.
 
 [osil]:  https://opensource.org/licenses
-[repo]:  https://tangentsoft.com/pidp8i/
 [simhl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
 [viral]: https://en.wikipedia.org/wiki/Viral_license
+
+
+#### <a id="ghm"></a> Can I Use GitHub Instead?
+
+Although the PiDP-8/I project does have a [GitHub mirror][ghm], it is
+intended as a read-only mirror for those heavily tied into Git-based
+tooling. You’re welcome to send us a PR anyway, but realize that what’s
+going to happen on the back end is that we’ll generate a patch, apply it
+to the Fossil repo by hand, test it, and then commit it to the
+repository under one of our existing Fossil developer accounts. Only
+then do we update the mirror so that the change appears on GitHub; thus,
+you don’t get GitHub credit for the PR. You avoid these problems by
+simply asking for a developer account on the Fossil repo, so you can
+commit there instead.
+
+This is not simply because setting up bidirectional mirroring is
+difficult, it is actually [impossible to achieve 100% fidelity][ghlim]
+due to limitations of Git and/or GitHub. If you want a faithful clone of
+the project repo, or if you wish to contribute to the project’s
+development with full credit for your contributions, it’s best done via
+Fossil, not via GitHub.
+
+[ghlim]: https://fossil-scm.org/home/doc/trunk/www/mirrorlimitations.md
+[ghm]:   https://github.com/tangentsoft/pidp8i/
 
 
 ## <a id="code-style"></a> The PiDP-8/I Software Project Code Style Rules
