@@ -40,7 +40,7 @@ bootable media.
    different destination devices is covered by reporting the package,
    the destination device, and the filename, even if only the filename matches.
 
-The `auto.defs` scans `.../pspec` and runs the deps command on every
+The `auto.defs` scans `$srcdir/pspec` and runs the deps command on every
 `.pspec` file found there.  This sets the stage to build every known package.
 
 `auto.defs` also evaluates the configuration and determines what
@@ -60,10 +60,11 @@ of the makefile dependencies and the installer `os8-run` script.
 
 ### Searching for .pspec files
 
-By default, all `.pspec` files live in `.../src/pspec`. However,
-`os8pkg` can manipulate target bootable images in arbitrary locations
-to install and uninstall packages by name using `.pspec` files in arbitrary
-locations. `os8pkg` searches for `.pspec` files in the following order:
+By default, all `.pspec` files live in a source top-level `pspec/`
+directory. However, `os8pkg` can manipulate target bootable images in
+arbitrary locations to install and uninstall packages by name using
+`.pspec` files in arbitrary locations. `os8pkg` searches for `.pspec`
+files in the following order:
 
 1. The path found by treating naming the package with a POSIX path. For example:
 
@@ -74,7 +75,7 @@ look the bootable image. For example:
 
     bin/os8pkg -d 10 --destdir /opt/pidp8i/share/media/os8 install mypackage
 
-3. The path found by $src/scripts/os8pkg (the build system default expectation.)
+3. The path found by `$src/pspec/` (the build system default expectation.)
 for example:
 
     bin/os8pkg install mypackage
