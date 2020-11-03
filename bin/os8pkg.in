@@ -490,7 +490,6 @@ def main ():
       # Use the list of pkgnames to generate an os8-run script that performs
       # the relevant installs.
       print ("Generating include script for " + pkg_name + "...")
-      inpath = dest_expand (args, pkg_name + ".os8", _pkg_obj_dir)
       if args.dry_run:
         print ("Include: " + pkg_name)
         script_install (None, pspec, pkg_name, args, sys.stdout)
