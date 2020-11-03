@@ -1,7 +1,9 @@
-# Hacking on the PiDP-8/I Software
+# Contributing to the PiDP-8/I Project
 
-If you are going to make any changes to the PiDP-8/I software, here are
+If you wish to make any changes to [the project’s files][home], here are
 some rules and hints to keep in mind while you work.
+
+[home]: https://tangentsoft.com/pidp8i/
 
 
 ## <a id="ghm"></a> The GitHub Mirror Is Just That
@@ -75,37 +77,44 @@ the [precompiled binaries][fbin] may work on your system.
 [fqsg]:   https://fossil-scm.org/home/doc/trunk/www/quickstart.wiki
 
 
-## <a id="fossil-anon"></a> Fossil Anonymous Access
+## <a id="fossil-anon" name="anon"></a> Fossil Anonymous Access
 
-There are two ways to clone the code repository anonymously. The easy
-way for users of Fossil 2.12 or higher is:
+There are three ways to clone the repository anonymously. The easiest
+way requires Fossil 2.14 or higher, currently unreleased but [available
+in development form][fqsg]:
+
+    $ fossil clone https://tangentsoft.com/pidp8i
+    $ cd pidp8i
+
+That gets you a clone of the `pidp8i.fossil` repository plus a check-out
+of the current trunk in a `pidp8i/` directory alongside it. We recommend
+that you do this in a directory like `~/src` so you don’t commingle
+these files with other things in your current working directory.
+
+If you have Fossil 2.12 or 2.13, the next-easiest method is:
 
     $ mkdir -p ~/src/pidp8i
     $ cd ~/src/pidp8i
     $ fossil open https://tangentsoft.com/pidp8i
 
-This clones the repository into `~/src/pidp8i/pidp8i.fossil` and opens
-it in-place, which is fine if you’re just going to work on a single
-branch at a time.
+This creates a `pidp8i` directory then clones the repository as
+`pidp8i/pidp8i.fossil`, then opens that repo into that same
+subdirectory.  The repo file ends up *inside* the check-out tree with
+this method.
 
-The more complicated method, which has numerous advantages we’ll explain
-later is:
+The complicated method works with all versions of Fossil back to 2.1,
+and it is the one we recommend to people who want to get involved with
+the project, because it has numerous advantages over the easy methods.
+We’ll explain those benefits later, but for now, the method is:
 
     $ mkdir -p ~/museum ~/src/pidp8i/trunk
     $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
     $ cd ~/src/pidp8i/trunk
     $ fossil open ~/museum/pidp8i.fossil
 
-We recommend this method if you intend to become a long-term contributor
-to the project. It’s also necessary if you’re going to use versions of
-Fossil prior to 2.12.
-
-Both methods get you a file called `pidp8i.fossil` containing
+All three methods get you a file called `pidp8i.fossil` containing
 the full history of the PiDP-8/I software project from the upstream
-2015.12.15 release onward. The second method gives you full flexibility
-of what that file is called and where it’s placed; Fossil itself doesn’t
-care except in a single case you’re unlikely to run into with this
-particular repository.
+2015.12.15 release onward.
 
 You only need to do this once per machine. Thereafter, you
 will just be working with the cloned repository.
