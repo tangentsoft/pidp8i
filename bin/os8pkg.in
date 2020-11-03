@@ -111,7 +111,8 @@ _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["install", "Install pspec outputs on the target image file"],
                 ["build", "Run package builder"],
                 ["all", "Perform all of the above."],
-                ["uninstall", "Delete pspect outputs and cleanups from the target image file"],
+                ["uninstall", "Delete pspec outputs and cleanups from the target image file"],
+                ["conflicts", "Report outputs that exist in multiple pspec files"],
                 ["format", "Display the output format for given package names"],
                ]
 
@@ -444,6 +445,34 @@ def start_os8(args):
 
   return os8
 
+
+#### conflicts ##########################################################
+# Report any members of this pspec's  output: that have been seen before.
+# A seen item contains lots of information:
+#  pkg_name, dev, name
+
+def conflicts (seen, pspec, pkg_name, args):
+  if len(pspec["outputs:"]) == 0:
+    print ("No outputs in package " + pkg_name)
+    return
+
+  for dest in pspec["outputs:"]:
+    found = False
+    m = re.match (_output_spec_re, dest)
+    if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
+    output_name = m.group(4)
+    # Save device and file name as a seen item.
+    for this in seen:
+      if this["name"] == output_name:
+        found = True
+        print  ("Warning: " + output_name + " gets installed on " + this ["dev"] + \
+                " by package " + this ["pkg_name"])
+    if found == False:
+      item = {"pkg_name": pkg_name, "dev": m.group(1), "name": output_name}
+      if args.debug > 9: print ("Adding item: " + str(item))
+      seen.append(item)
+
+
 #### main ##############################################################
 
 def main ():
@@ -501,6 +530,7 @@ def main ():
 
   # If we need an os8script object, put it here.
   os8 = None
+  seen = []
   
   # The pkg_spec from command line may be a package name, or a file path.
   # We need the name, and may or may not get the ".pspec" at the end.
@@ -570,6 +600,10 @@ def main ():
     if args.command == "uninstall":
       print ("Removing " + pkg_name + " from " + targ_path + "...")
       script_delete (os8, pspec, pkg_name, args)
+
+    if args.command == "conflicts":
+      print ("Checking for conflicts with package " + pkg_name)
+      conflicts (seen, pspec, pkg_name, args)
 
   if args.command == "include" and args.dry_run == False:
     incfile.close()

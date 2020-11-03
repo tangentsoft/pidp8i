@@ -35,6 +35,11 @@ bootable media.
    `build:` lines in the `.pspec` file.  The assumption is that your current
    working directory is the top level of the build environment.
 
+ * conflicts -- Given a list of packages, reports on any files appearing
+   in more than one package.  The case of the same file landing on two
+   different destination devices is covered by reporting the package,
+   the destination device, and the filename, even if only the filename matches.
+
 The `auto.defs` scans `.../scripts/os8pkg` and runs the deps command on every
 `.pspec` file found there.  This sets the stage to build every known package.
 
