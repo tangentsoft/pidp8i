@@ -674,7 +674,7 @@ if {![file exists "obj/os8pkg"]} { file mkdir "obj/os8pkg" }
 set os8pkgs_all ""
 set os8pkgs_selected ""
 set os8pkgs_selected_names ""
-foreach pspec [glob "$srcdir/scripts/os8pkg/*.pspec"] {
+foreach pspec [glob "$srcdir/pspec/*.pspec"] {
     set pkg_name [file rootname [file tail $pspec]]
     set obj_base "obj/os8pkg/$pkg_name"
     set dep_path "$obj_base.mk"

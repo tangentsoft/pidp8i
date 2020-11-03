@@ -72,7 +72,7 @@ _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = ["rk", "0", _default_sys_path]
 
 _pkg_obj_dir = os.path.join (dirs.obj, "os8pkg/")
-_pkg_pspec_dir = os.path.join (dirs.src, "scripts/os8pkg/")
+_pkg_pspec_dir = os.path.join (dirs.src, "pspec/")
 _pkg_builder_dir = os.path.join (dirs.src, "scripts/misc")
 _target_dir = dirs.os8mo
 
