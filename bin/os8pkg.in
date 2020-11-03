@@ -545,7 +545,7 @@ def main ():
           depfile.write(line)
         depfile.close()
 
-    if args.command == "include" or do_all:
+    if args.command == "include":
       # Use the list of pkgnames to generate an os8-run script that performs
       # the relevant installs.
       print ("Generating include script for " + pkg_name + "...")
@@ -555,6 +555,9 @@ def main ():
       else:
         incfile.write ("# Install: " + pkg_name + "\n")
         script_install (None, pspec, pkg_name, args, incfile)
+
+    if args.command == "build" or do_all:
+      run_builder(pkg_name, pspec, args)
 
     # This calls start_os8 once if we need it.
     if inst_cmd and os8 == None:
@@ -567,10 +570,6 @@ def main ():
     if args.command == "uninstall":
       print ("Removing " + pkg_name + " from " + targ_path + "...")
       script_delete (os8, pspec, pkg_name, args)
-
-    if args.command == "build" or do_all:
-      run_builder(pkg_name, pspec, args)
-
 
   if args.command == "include" and args.dry_run == False:
     incfile.close()
