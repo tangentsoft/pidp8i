@@ -162,9 +162,9 @@ end default macrel
 
 begin default lcmod
 os8 SUBMIT SYS:LCSYS.BI
-  begin default ba
+  begin default basic
   os8 SUBMIT SYS:LCBAS.BI
-  end default ba
+  end default basic
 end default lcmod
 
 # INIT message setting stuff goes here
