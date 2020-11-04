@@ -14,9 +14,10 @@ The source packages and the GitHub mirror are secondary outputs from the
 Fossil repository, which is the primary home for the PiDP-8/I software
 development project.
 
-If you wish to contribute to the project, please see [the hackers’
-file][hack].
+This is open source software: you are welcome to
+[contribute to the project][ctrb].
 
+[ctrb]: https://tangentsoft.com/pidp8i/doc/trunk/CONTRIBUTING.md
 [ghm]:  https://github.com/tangentsoft/pidp8i
 [home]: https://tangentsoft.com/pidp8i/
 [src]:  https://tangentsoft.com/pidp8i/#src
@@ -128,10 +129,8 @@ the Pi. There are many options:
 [wscp]: https://winscp.net/eng/
 
 4.  **Clone the Fossil repository** using the instructions in the
-    [`CONTRIBUTING.md` file][hack]. (Best for experts or those who wish to
+    [`CONTRIBUTING.md` file][ctrb]. (Best for experts or those who wish to
     become experts.)
-
-[hack]: https://tangentsoft.com/pidp8i/doc/trunk/CONTRIBUTING.md
 
 5.  **Switch to the binary OS installation images** available from the
     [top-level project page][cprj].  These are default installations of
