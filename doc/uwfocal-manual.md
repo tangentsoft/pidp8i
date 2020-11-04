@@ -3039,7 +3039,7 @@ made to the original text as presented here:
 
 — [Warren Young][wy], September & October 2017, Aztec, NM, USA
 
-[hack]:  https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
+[hack]:  https://tangentsoft.com/pidp8i/doc/trunk/CONTRIBUTING.md
 [ocr]:   https://archive.org/stream/bitsavers_decpdp8focct78_4144912/UW_FOCAL_Manual_V4E_Oct78_djvu.txt
 [scan]:  https://archive.org/details/bitsavers_decpdp8focct78_4144912
 [tkt]:   https://tangentsoft.com/pidp8i/tktnew

@@ -128,10 +128,10 @@ the Pi. There are many options:
 [wscp]: https://winscp.net/eng/
 
 4.  **Clone the Fossil repository** using the instructions in the
-    [`HACKERS.md` file][hack]. (Best for experts or those who wish to
+    [`CONTRIBUTING.md` file][hack]. (Best for experts or those who wish to
     become experts.)
 
-[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/CONTRIBUTING.md
 
 5.  **Switch to the binary OS installation images** available from the
     [top-level project page][cprj].  These are default installations of

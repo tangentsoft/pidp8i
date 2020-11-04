@@ -948,7 +948,7 @@ extensions.  **TODO:** Verify this for both read and write.
     current limitations on the library, but if you come up with
     something, [we accept patches][hakp].
 
-[hakp]: /doc/trunk/HACKERS.md#patches
+[hakp]: /doc/trunk/CONTRIBUTING.md#patches
 
 
 ### <a id="fprintf"></a>`fprintf(fmt, args...)`
