@@ -420,7 +420,7 @@ def find_script (script_name, args):
 # Return the running os8 object handle.
 # If we can't start os8, it's a fatal error. Quit here!
 
-def start_os8(args):
+def start_os8(targ_path, args):
   try:
     s = simh (dirs.build, True)
   except (RuntimeError) as e:
@@ -437,7 +437,6 @@ def start_os8(args):
   # Set some internal state to cope with doing so.
   fakeout_script (os8)
 
-  targ_path = dest_expand (args, args.target, _target_dir)
   if args.debug >0 or args.dry_run: print ("Perform " + args.command + " on " + targ_path)
 
   os8.mount_command ("rk0 " + targ_path + " required", None)
@@ -591,7 +590,8 @@ def main ():
 
     # This calls start_os8 once if we need it.
     if inst_cmd and os8 == None:
-      os8 = start_os8(args)
+      targ_path = dest_expand (args, args.target, _target_dir)
+      os8 = start_os8(targ_path, args)
 
     if args.command == "install" or do_all:
       print ("Installing " + pkg_name + " to " + targ_path + "...")
@@ -611,9 +611,9 @@ def main ():
 
   # It is vitally important that we exit gracefully. Otherwise
   # The install actions may not be successfully be committed to media.
-  if inst_cmd:
-    s.simh_cmd ("detach all")
-    s._child.sendline("quit")
+  if inst_cmd and os8 != None:
+    os8.simh.simh_cmd ("detach all")
+    os8.simh._child.sendline("quit")
 
 
 if __name__ == "__main__": main()
