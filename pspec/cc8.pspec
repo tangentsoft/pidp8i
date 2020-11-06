@@ -7,6 +7,7 @@ inputs:
     obj/cc8/os8/n8.sb
     obj/cc8/os8/p8.sb
     src/cc8/os8/header.sb
+    src/cc8/os8/ctbl.tx
     obj/cc8/os8/calc.c
     obj/cc8/os8/fib.c
     obj/cc8/os8/forth.c
@@ -19,6 +20,7 @@ outputs:
     SYS:<DTA1:CC1.SV
     SYS:<DTA1:CC2.SV
     DSK:<DTA1:HEADER.SB
+    DSK:<DTA1:CTBL.TX
     DSK:<DTA1:CCR.BI
     DSK:<DTA1:LIBC.RL
     DSK:<DTA1:CALC.C
