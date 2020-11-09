@@ -76,6 +76,16 @@ mount dt0 $os8mi/al-4761c-ba-os8-v3d-ext.1978.tu56 ro required
 os8 COPY RKA0:<DTA0:*.*
 umount dt0
 
+# Build from source the OCOMP Octal Compare/Dump utility.
+# And install it.
+print Build and install OCOMP
+cpto $src/src/os8/tools/ocomp/ocomp.pa RKB0:OCOMP.HL
+cpto $src/src/os8/tools/ocomp/ocomp.pa RKB0:OCOMP.PA
+pal8 RKB0:OCOMP.BN<RKB0:OCOMP.PA /8/9
+os8 LOAD RKB0:OCOMP.BN
+os8 SAVE RKA0:OCOMP.SV;12000
+os8 DEL RKB0:OCOMP.PA,OCOMP.BN
+
 # FORTRAN IV
 begin default fortran-iv
 mount dt1 $os8mi/subsys/al-4549d-ba-fr4-v3d-1.1978.tu56 ro required
