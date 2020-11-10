@@ -944,8 +944,16 @@ class os8script:
   # build, fotp, absldr
   #
   # Commands return, "success", "fail", or "die".
-  
+
   def run_script_file (self, script_path):
+    try:
+      script_file = open(script_path, "r")
+    except IOError:
+      print(script_path + " not found.")
+      return "fail"
+    return self.run_script_handle(script_file)
+    
+  def run_script_handle (self, script_file):
   # Strings, regexps, and command arrays used by run_system
     commands = {"mount": self.mount_command,
                 "boot": self.boot_command,
@@ -968,12 +976,6 @@ class os8script:
                 "restart": self.restart_command,
                 "patch": self.patch_command}
   
-    try:
-      script_file = open(script_path, "r")
-    except IOError:
-      print(script_path + " not found.")
-      return "fail"
-
     # Every time we start a new script
     # We append a new line number count of 0
     # onto our line_ct_stack
