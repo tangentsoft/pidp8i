@@ -51,6 +51,7 @@ import subprocess
 import string
 import re
 import argparse
+import io
 
 
 #### GLOBALS AND CONSTANTS #############################################
@@ -105,6 +106,18 @@ _expandable_re = re.compile ("^((?:[^/]*/)*)(([^\.]*)(\.pspec)?)$")
 
 _pspec_strip_re = re.compile("^(\S*)\.pspec$")
 
+_ocomp_script_template = Template ("""
+enable transcript
+begin cdprog SYS:OCOMP.SV
+TTY:<$infile,$outfile
+end cdprog SYS:OCOMP.SV
+""")
+
+_test_script =  """
+enable transcript
+os8 DIR
+"""
+
 # Commands and their help strings.
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["include", "Create an include script from selected scripts"],
@@ -114,6 +127,7 @@ _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["uninstall", "Delete pspec outputs and cleanups from the target image file"],
                 ["conflicts", "Report outputs that exist in multiple pspec files"],
                 ["format", "Display the output format for given package names"],
+                ["verify", "Verify the fidelity of packages installed on the target image file"],
                ]
 
 
@@ -431,7 +445,7 @@ def start_os8(targ_path, args):
     s.verbose = True
     s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
-  os8 = os8script (s, "", "", verbose=VERBOSE, debug=args.debug>0)
+  os8 = os8script (s, [], [], verbose=VERBOSE, debug=args.debug>0)
 
   # We're calling into os8script directly without a script file
   # Set some internal state to cope with doing so.
@@ -471,6 +485,35 @@ def conflicts (seen, pspec, pkg_name, args):
       if args.debug > 9: print ("Adding item: " + str(item))
       seen.append(item)
 
+#### verify ############################################################
+# Use the OCOMP program in the target to verify that the output: items
+# are present and match what is in the package target file.
+
+def verify (os8, pspec, pkg_name, args):
+  if len(pspec["outputs:"]) == 0:
+    print ("No outputs in package " + pkg_name)
+    return
+
+  pkg_fmt = pspec["format:"][0]
+  if pkg_fmt == "tu56": dev = "dt1"
+  else: dev = "rk1"
+
+  mount_str = dev + " $os8mo/" + pkg_name + "." + pkg_fmt + " ro required\n"
+  if args.debug > 0: print ("Mount: " + mount_str)
+  os8.mount_command (mount_str, None)
+
+  for dest in pspec["outputs:"]:
+    m = re.match (_output_spec_re, dest)
+    if m == None: print ("Mal-formed output: spec: " + dest + ". Ignored.")
+    input_name = m.group(3) + m.group(4)
+    output_name = m.group(1) + m.group(4)
+    if args.debug > 9: print ("\tChecking: " + output_name)
+
+
+    ocomp_script = _ocomp_script_template.substitute({'infile': input_name, 'outfile': output_name })
+    script_file = io.StringIO(ocomp_script)
+    os8.run_script_handle(script_file)
+
 
 #### main ##############################################################
 
@@ -505,7 +548,7 @@ def main ():
     sys.exit(-1)
 
   do_all = args.command == "all"
-  inst_cmd = args.command in ["install", "uninstall"]
+  inst_cmd = args.command in ["install", "uninstall", "verify"]
 
   if args.command == "include" or do_all:
     # We're going to assemble obj/os8pkg/pkgs.os8 from the proffered list of packages.
@@ -604,6 +647,10 @@ def main ():
     if args.command == "conflicts":
       print ("Checking for conflicts with package " + pkg_name)
       conflicts (seen, pspec, pkg_name, args)
+
+    if args.command == "verify":
+      print ("Verifying package " + pkg_name + " on " + targ_path)
+      verify (os8, pspec, pkg_name, args)
 
   if args.command == "include" and args.dry_run == False:
     incfile.close()
