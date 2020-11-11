@@ -2718,7 +2718,7 @@ clear that this list is not exhaustive.
 
 | Code | Character | Name | Code | Char    | Code | Char | Code | Char        |
 | ---- | --------- | ---- | ---- | ------- | ---- | ---- | ---- | ----------- |
-| 128  | `Ctrl/@`  | NULL | 160  | `SPACE` | 192  | `@`  | 224  | <code>\`</code> |
+| 128  | `Ctrl/@`  | NULL | 160  | `SPACE` | 192  | `@`  | 224  | \`        |
 | 129  | `Ctrl/A`  | SOH  | 161  | `!`     | 193  | `A`  | 225  | `a`         |
 | 130  | `Ctrl/B`  | STX  | 162  | `"`     | 194  | `B`  | 226  | `b`         |
 | 131  | `Ctrl/C`  | ETX  | 163  | `#`     | 195  | `C`  | 227  | `c`         |
