@@ -106,18 +106,6 @@ _expandable_re = re.compile ("^((?:[^/]*/)*)(([^\.]*)(\.pspec)?)$")
 
 _pspec_strip_re = re.compile("^(\S*)\.pspec$")
 
-_ocomp_script_template = Template ("""
-enable transcript
-begin cdprog SYS:OCOMP.SV
-TTY:<$infile,$outfile
-end cdprog SYS:OCOMP.SV
-""")
-
-_test_script =  """
-enable transcript
-os8 DIR
-"""
-
 # Commands and their help strings.
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
                 ["include", "Create an include script from selected scripts"],
@@ -501,6 +489,7 @@ def verify (os8, pspec, pkg_name, args):
   mount_str = dev + " $os8mo/" + pkg_name + "." + pkg_fmt + " ro required\n"
   if args.debug > 0: print ("Mount: " + mount_str)
   os8.mount_command (mount_str, None)
+  os8.resume_command ("", None)
 
   for dest in pspec["outputs:"]:
     m = re.match (_output_spec_re, dest)
@@ -508,12 +497,13 @@ def verify (os8, pspec, pkg_name, args):
     input_name = m.group(3) + m.group(4)
     output_name = m.group(1) + m.group(4)
     if args.debug > 9: print ("\tChecking: " + output_name)
+    ocomp_str = "TTY:<" + input_name + "," + output_name
 
-
-    ocomp_script = _ocomp_script_template.substitute({'infile': input_name, 'outfile': output_name })
-    script_file = io.StringIO(ocomp_script)
-    os8.run_script_handle(script_file)
-
+    result = os8.ocomp_command (ocomp_str, None)
+    if result == "fail":
+      print ("Failed verify of " + output_name)
+    else:
+      if args.verbose: print ("Successful verify of " + output_name)
 
 #### main ##############################################################
 

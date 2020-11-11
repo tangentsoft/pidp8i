@@ -14,31 +14,37 @@ bootable media.
 
 ## Commands
 
- * deps -- Emits a `.mk` Makefile include for dependencies of each of the
+ * `deps` -- Emits a `.mk` Makefile include for dependencies of each of the
    packages specified on the command line.
 
- * include -- Emits `pkgs.os8` that is a master include file
+ * `include` -- Emits `pkgs.os8` that is a master include file
    used by the .os8 script that wants to install all selected packages.
    **All** desired packages must appear in a single run of `os8pkg include`.
 
- * install -- Parses the .pspec file. Finds the installable package.
+ * `install` -- Parses the .pspec file. Finds the installable package.
    Performs the relevant os8 COPY commands to install the package
    on bootable image specified by --target.  $os8mo/v3d.rk05 if no --target.
 
- * uninstall -- On a specifiec target image file, parse the pspec file
+ * `uninstall` -- On a specifiec target image file, parse the pspec file
    to identify output files to remove. Remove them from the bootable image
    specified by --target. $os8mo/v3d.rk05 if no --target specified.
    Additionally remove files listed in the cleanups section.
 
- * build -- Run the builder, whether it be the lines from the `build:` section
+ * `build` -- Run the builder, whether it be the lines from the `build:` section
    or the default build script.  **NOTE:** Use care when building with
    `build:` lines in the `.pspec` file.  The assumption is that your current
    working directory is the top level of the build environment.
 
- * conflicts -- Given a list of packages, reports on any files appearing
+ * `all` -- Perform `deps`, then `build` then `install` on the named packages.
+
+ * `conflicts` -- Given a list of packages, reports on any files appearing
    in more than one package.  The case of the same file landing on two
    different destination devices is covered by reporting the package,
    the destination device, and the filename, even if only the filename matches.
+
+ * `verify` -- Given a list of packages and a target image file, verify for
+   each package that the files named in `outputs:` are present in the target
+   image, and are the same as what is on the built package image file.
 
 The `auto.defs` scans `$srcdir/pspec` and runs the deps command on every
 `.pspec` file found there.  This sets the stage to build every known package.
@@ -159,6 +165,25 @@ constrained input specification that is aware of what `format:` we are
 using, and constrains the device specification.
 
 os8pkg Flags an error if the line in `outputs:` fails to meet the constraints.
+
+### Examples
+
+#### verify
+
+Without the verbose option set, the output names the package and the
+target image.  If successful, there is no other output.
+
+    $ bin/os8pkg verify e8
+    Verifying package e8 on /Users/wdc/src/pidp8i/trunk/bin/v3d.rk05
+
+With the verbose option set, the individual files are reported on:
+
+    $ bin/os8pkg -v verify e8
+    Verifying package e8 on /Users/wdc/src/pidp8i/trunk/bin/v3d.rk05
+    Successful verify of SYS:E8.SV
+    Successful verify of DSK:E8CMDS.TX
+    Successful verify of DSK:E8SRCH.TX
+
 
 [os8run]:  https://tangentsoft.com/pidp8i/doc/trunk/os8-run.md
 
