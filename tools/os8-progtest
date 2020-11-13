@@ -1,0 +1,256 @@
+#!/usr/bin/env python3
+#!/usr/bin/env @PYCMD@
+# -*- coding: utf-8 -*-
+########################################################################
+# Perform a test run of a program under OS/8
+# Uses os8pkg as a foundation.
+#
+# See USAGE message below for details.
+#
+# Copyright © 2020 by Bill Cattey and Warren Young
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS LISTED ABOVE BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+# OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the names of the authors above
+# shall not be used in advertising or otherwise to promote the sale,
+# use or other dealings in this Software without prior written
+# authorization from those authors.
+########################################################################
+
+# Bring in just the basics so we can bring in our local modules
+import os
+import sys
+
+sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+sys.path.insert (0, os.getcwd () + '/lib')
+
+# Our local modules
+from pidp8i import *
+from simh      import *
+from os8script import *
+
+# Other global Python modules
+import glob
+import subprocess
+import string
+import re
+import argparse
+from time import sleep
+
+
+#### GLOBALS AND CONSTANTS #############################################
+
+progmsg = True
+DEBUG = False
+VERBOSE = False
+QUIET = False
+
+# Default RK05 system image to attach if no sys specified.
+_default_sys_image = "@OS8_TOOLTIME@"
+_default_sys_path = dirs.os8mo + _default_sys_image
+_default_att_spec = ["rk", "0", _default_sys_path]
+_target_dir = dirs.os8mo
+
+#### TEST SPECIFIC VALUES ##############################################
+
+_test_strings = {"advent":
+                 ["R FRTS\r",
+                  "ADVENT\033",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "\r",
+                  "n\r",
+                  "quit\r",
+                  "yes\r",],
+                 "cc8":
+                 ["EXE CCR\r",
+                  "ps.c\r",
+                 ],
+                 # UW Focal has a problem: We get keyboard buffer overflow
+                 # if we issue too many tests.
+                 "uwfocal":
+                 ["R UWF16K\r",
+                  "S I=3.5\r",
+                  "T I\r",
+                  # "T PI",
+                  "\003",
+                   ],
+}
+
+_test_replies = {"advent":
+                 ["\n\\*$",
+                  "LOCATION OF TEXT DATABASE\s+\(\S+\).*",
+                  "LOCATION OF TEXT INDEX\s+\(\S+\).*",
+                  "LOCATION OF SAVED GAMES\s+\(\S+\).*",
+                  "LOCATION OF TEXT INPUT\s+\(\S+\).*",
+                  "WOULD YOU LIKE INSTRUCTIONS\?.*",
+                  "\r\n> $",
+                  "DO YOU REALLY WANT TO QUIT NOW\?\r\n\r\n> ",
+                  "\n\\.$",],
+                 "cc8":
+                 ["PROGRAMME\s+>",
+                  ".*924.*COMPLETED\r\n\r\n#END BATCH\r\n\r\n.$",
+                 ],
+                 "uwfocal":
+                 ["\r\n\\*$",
+                  "\r\n\\*$",
+                  " 3\.500000000E\+00\*$",
+                  # " 3\.141592654E\+00\*$",
+                  "\n\\.$",
+                   ],
+}
+
+
+#### abort_prog ########################################################
+# Print err_string and exit with -1 return status.
+
+def abort_prog (err_str):
+  print("Abort: " + err_str)
+  sys.exit(-1)
+
+
+#### dest_expand ########################################################
+# Return a full path based either on the --destdir option or
+# the default _pkg_obj_dir
+
+def dest_expand (args, fname, default):
+  if args.destdir: return os.path.join(args.destdir, fname)
+  else: return  os.path.join(default, fname)
+
+
+#### fakeout_script ####################################################
+# Fake out os8script to cope with us calling it directly without
+# without a script file.
+
+def fakeout_script (os8):
+  os8.line_ct_stack.insert(0,0)
+  os8.line_ct_stack[0] = 0
+
+
+#### start_os8 #########################################################
+# Create and start up an os8 script runner
+# Find the default boot image and boot it.
+# Return the running os8 object handle.
+# If we can't start os8, it's a fatal error. Quit here!
+
+def start_os8(targ_path, args):
+  try:
+    s = simh (dirs.build, True)
+  except (RuntimeError) as e:
+    print("Could not start simulator: " + e.message + '!')
+    sys.exit (1)
+
+  if VERBOSE:
+    s.verbose = True
+    s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
+
+  os8 = os8script (s, [], [], verbose=VERBOSE, debug=args.debug>0)
+
+  # We're calling into os8script directly without a script file
+  # Set some internal state to cope with doing so.
+  fakeout_script (os8)
+
+  # We mount our destination in scratch mode. This lets us do many
+  # tests in parallel all independent, none conflicting.
+  os8.mount_command ("rk0 " + targ_path + " required scratch", None)
+  os8.boot_command ("rk0", None)
+
+  return os8
+
+
+#### main ##############################################################
+
+def main ():    
+  parser = argparse.ArgumentParser(
+    description = """
+    Test a program under PDP-8 OS/8.""",
+    usage = "%(prog)s [options]")
+  parser.add_argument("-v", "--verbose", help="increase output verbosity",
+             action="store_true")
+  parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
+                      help="set debug level", default=0)
+  parser.add_argument("--destdir", help="Destination directory for output files")
+  parser.add_argument ("--target", help="target image file", default="v3d.rk05")
+  parser.add_argument ("--dry-run", "-n", action="store_true", help="Dry Run. Print output. Generate no files.")
+  parser.add_argument ('programs', nargs=argparse.REMAINDER, metavar="one or more programs to test")
+
+  args = parser.parse_args()
+
+  targ_path = dest_expand (args, args.target, _target_dir)
+  os8 = start_os8(targ_path, args)
+
+  if not os8.booted:
+    print("Cannot run " + _test_name + ". OS/8 has not been booted.")
+
+  # Any os8-run command may be called after a simh command that left us
+  # in simh context. Check to see if we need to restart OS/8.
+  # We could resume, but restart is safer.
+  if os8.simh._context == "simh":
+    os8.restart_command(os8_comm, script_file)
+
+  if args.programs == None or args.programs == []:
+    print ("Nothing to test")
+    sys.exit(0)
+    
+  for program in args.programs:
+    if args.verbose or args.debug > 0: print("Testing: " + program)
+    if program not in _test_strings:
+      print ("Testing for " + program + " is not available")
+      continue
+
+    test_strings = _test_strings[program]
+    if args.debug > 5:
+      print (str(len(test_strings)) + " Test strings for " + program + ": " + str(test_strings))
+    test_replies = _test_replies[program]
+    if args.debug > 5:
+      print (str(len(test_replies)) + " Test replies: " + str(test_replies))
+    
+    if len(test_strings) != len(test_replies):
+      print ("Internal error. " + program + ": Test strings and replies are of different lengths.")
+      sys.exit(-1)
+
+    for i in range(len(test_strings)):
+      if args.debug > 0: print ("{" + test_strings[i] + "} -> " + \
+                                "{" +test_replies[i].strip() + "}")
+
+      os8.simh.os8_send_str(test_strings[i])
+
+      if args.debug == 88: reply_str = ".+"
+      else: reply_str = test_replies[i]
+    
+      try:
+        # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=5)
+        os8.simh._child.expect(reply_str, timeout=5)
+        if args.debug > 0: print("\tgot: {" + os8.simh._child.after.decode() + "}")
+      except pexpect.exceptions.TIMEOUT:
+        print ("Did not get expected reply: " + reply_str)
+        print("\tmatch before: {" + os8.simh._child.before.decode() + "}")
+        os8.simh.simh_cmd ("detach all")
+        os8.simh._child.sendline("quit")
+        sys.exit( -1)
+
+    print (program + ": Test Passes!")
+
+  os8.simh.simh_cmd ("detach all")
+  os8.simh._child.sendline("quit")
+
+if __name__ == "__main__": main()
+  
