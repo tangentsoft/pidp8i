@@ -356,6 +356,21 @@ class os8script:
     ["USER ERROR", "USER ERROR", False],
   ]
 
+  #### intern_replies ##############################################################
+  # Teach the os8script object about another set of replies.
+  # Return True if successful, False if the replies of that name are already in place
+  # If with_os8 is True, append the simh _os8_replies array.
+  
+  def intern_replies (self, name, replies, with_os8):
+    if name in self.replies: return False
+    self.replies[name] = replies
+    if with_os8: self.replies[name].extend(self.simh._os8_replies)
+    # Create the pre-compiled regex array too.
+    self.replies_rex[name] = []
+    for item in self.replies[name]:
+      self.replies_rex[name].append(re.compile(item[1].encode()))
+    return True
+
   def __init__ (self, simh, enabled_options, disabled_options, verbose=False, debug=True):
     self.lang_version = LANG_VERSION
     self.verbose = verbose
@@ -363,6 +378,9 @@ class os8script:
     self.simh = simh
     self.options_enabled = enabled_options
     self.options_disabled = disabled_options
+    self.replies = {}
+    self.replies_rex = {}
+    
     # Do we need separate stacks for enabled/disabled options?
     self.options_stack = []
     # List of scratch files to delete when we are done with all script runs.
@@ -370,31 +388,10 @@ class os8script:
     self.booted = False
     self.line_ct_stack = []
 
-    # _ocomp_replies is the union of _ocomp_rep_adds and _os8_replies
-    self._ocomp_replies = self._ocomp_rep_adds
-    self._ocomp_replies.extend(self.simh._os8_replies)
-    # Pre-compile our ocomp_replies regexps.
-    self._ocomp_replies_rex = []
-    for item in self._ocomp_replies:
-      self._ocomp_replies_rex.append(re.compile(item[1].encode()))
-
-    # _pal8_replies is the union of _pal8_rep_adds and _os8_replies
-    self._pal8_replies = self._pal8_rep_adds
-    self._pal8_replies.extend(self.simh._os8_replies)
-    # Pre-compile our pal8_replies regexps.
-    self._pal8_replies_rex = []
-    for item in self._pal8_replies:
-      self._pal8_replies_rex.append(re.compile(item[1].encode()))
-
-    # _build_replies is the union of _build_rep_adds and _os8_replies
-    self._build_replies = self._build_rep_adds
-    self._build_replies.extend(self.simh._os8_replies)
-    # Pre-compile our build_replies regexps.
-    self._build_replies_rex = []
-    for item in self._build_replies:
-      self._build_replies_rex.append(re.compile(item[1].encode()))
-
-
+    # Perform intern_replies on all known sub-commands.
+    self.intern_replies("build", self._build_rep_adds, True)
+    self.intern_replies("pal8", self._pal8_rep_adds, True)
+    self.intern_replies("ocomp", self._ocomp_rep_adds, True)
 
 
   #### path_expand #######################################################
@@ -1546,14 +1543,14 @@ class os8script:
       self.restart_command(line, script_file)
 
     # Send our command and harvest results.
-    reply = self.simh.os8_cmd (com_line, self._pal8_replies_rex)
+    reply = self.simh.os8_cmd (com_line, self.replies_rex["pal8"])
     err_count = 0
     executed_line = self.simh._child.before.decode().strip()
     reply_match_str = self.simh.child_after().strip()
-    ed  = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
-    mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
-    cd  = self.simh.test_result(reply, "Command Decoder Prompt", self._pal8_replies, "")
-    lg  = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+    ed  = self.simh.test_result(reply, "ERRORS DETECTED", self.replies["pal8"], "")
+    mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["pal8"], "")
+    cd  = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["pal8"], "")
+    lg  = self.simh.test_result(reply, "LINKS GENERATED", self.replies["pal8"], "")
     err_string = ""
     ret_val = "success"
     # We're going to print all the errors we see
@@ -1571,11 +1568,11 @@ class os8script:
         self.simh.os8_send_ctrl ('c')      
       else:
         err_string += ("\t" + self.simh.child_after().strip() + "\n")
-      reply = self.simh._child.expect(self._pal8_replies_rex)
-      ed = self.simh.test_result(reply, "ERRORS DETECTED", self._pal8_replies, "")
-      mon = self.simh.test_result(reply, "Monitor Prompt", self._pal8_replies, "")
-      cd = self.simh.test_result(reply, "Command Decoder Prompt", self._pal8_replies, "")
-      lg = self.simh.test_result(reply, "LINKS GENERATED", self._pal8_replies, "")
+      reply = self.simh._child.expect(self.replies_rex["pal8"])
+      ed = self.simh.test_result(reply, "ERRORS DETECTED", self.replies["pal8"], "")
+      mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["pal8"], "")
+      cd = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["pal8"], "")
+      lg = self.simh.test_result(reply, "LINKS GENERATED", self.replies["pal8"], "")
     if err_count > 0 or err_string != "":
       print ("PAL8 Error: \n\t" + executed_line)
       print (err_string)
@@ -1617,7 +1614,7 @@ class os8script:
       self.restart_command(line, script_file)
 
     # Send our command and harvest results.
-    reply = self.simh.os8_cmd (com_line, self._ocomp_replies_rex)
+    reply = self.simh.os8_cmd (com_line, self.replies_rex["ocomp"])
     if "transcript" in self.options_enabled:
       print (self.simh._child.before.decode().strip())
     err_count = 0
@@ -1625,12 +1622,12 @@ class os8script:
     executed_line = self.simh._child.before.decode().strip()
     if self.debug:
       print ("ocomp gave reply: " + str(reply) + " -> " + \
-             self._ocomp_replies[reply][0])
-    ok = self.simh.test_result(reply, "NOTHING OUTPUT", self._ocomp_replies, "")
-    mon = self.simh.test_result(reply, "Monitor Prompt", self._ocomp_replies, "")
-    cd  = self.simh.test_result(reply, "Command Decpder Prompt", self._ocomp_replies, "")
-    nf = self.simh.test_result(reply, "File not found", self._ocomp_replies, "")
-    ue = self.simh.test_result(reply, "USER ERROR", self._ocomp_replies, "")
+             self.replies["ocomp"][reply][0])
+    ok = self.simh.test_result(reply, "NOTHING OUTPUT", self.replies["ocomp"], "")
+    mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["ocomp"], "")
+    cd  = self.simh.test_result(reply, "Command Decpder Prompt", self.replies["ocomp"], "")
+    nf = self.simh.test_result(reply, "File not found", self.replies["ocomp"], "")
+    ue = self.simh.test_result(reply, "USER ERROR", self.replies["ocomp"], "")
     # We get return status and then clean up the state machine.
     while not mon:
       if ok:
@@ -1644,16 +1641,16 @@ class os8script:
         if self.debug: print ("call_ocomp: Non-fatal error: Sending ^C")
         # Exit OCOMP. We'll confirm we got back to OS/8 monitor below.
         self.simh.os8_send_ctrl ('c')      
-      reply = self.simh._child.expect(self._ocomp_replies_rex)
+      reply = self.simh._child.expect(self.replies_rex["ocomp"])
       if "transcript" in self.options_enabled:
         print (self.simh._child.before.decode().strip())
       if self.debug: print ("call_ocomp 2 reply: " + str (reply) + " -> " + \
-             self._ocomp_replies[reply][0])
-      ok = self.simh.test_result(reply, "NOTHING OUTPUT", self._ocomp_replies, "")
-      mon = self.simh.test_result(reply, "Monitor Prompt", self._ocomp_replies, "")
-      cd  = self.simh.test_result(reply, "Command Decoder Prompt", self._ocomp_replies, "")
-      nf = self.simh.test_result(reply, "File not found", self._ocomp_replies, "")
-      ue = self.simh.test_result(reply, "USER ERROR", self._ocomp_replies, "")
+             self.replies["ocomp"][reply][0])
+      ok = self.simh.test_result(reply, "NOTHING OUTPUT", self.replies["ocomp"], "")
+      mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["ocomp"], "")
+      cd  = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["ocomp"], "")
+      nf = self.simh.test_result(reply, "File not found", self.replies["ocomp"], "")
+      ue = self.simh.test_result(reply, "USER ERROR", self.replies["ocomp"], "")
 
     return ret_val
 
@@ -1700,8 +1697,8 @@ class os8script:
       print("Line " + str(self.line_ct_stack[0]) + ": " + os8_comm)
 
     # Run BUILD and confirm it has started successfully.
-    reply = self.simh.os8_cmd (os8_comm, self._build_replies_rex, debug=self.debug)
-    if self.simh.test_result (reply, "BUILD Prompt", self._build_replies, \
+    reply = self.simh.os8_cmd (os8_comm, self.replies_rex["build"], debug=self.debug)
+    if self.simh.test_result (reply, "BUILD Prompt", self.replies["build"], \
                               "build_subcomm startup " + os8_comm, debug=self.debug) == False:
       print ("Line " + str(self.line_ct_stack[0]) + ": " + os8_comm + " failed.")
       print ("Ignoring the rest of this block.")
@@ -1788,23 +1785,23 @@ class os8script:
                  ": BUILD KBM: " + kbm_arg + ", CD: " + cd_arg)
 
           # Confirm prompted for OS8 binary.
-          reply = self.simh.os8_cmd ("BUILD", self._build_replies_rex, debug=self.debug)
-          if self.simh.test_result(reply, "LOAD OS8", self._build_replies, "build_subcomm 5") == False:
+          reply = self.simh.os8_cmd ("BUILD", self.replies_rex["build"], debug=self.debug)
+          if self.simh.test_result(reply, "LOAD OS8", self.replies["build"], "build_subcomm 5") == False:
             print("No prompt for LOAD OS/8 in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + ".")
             print("Fatal error. Aborting script.")
             return "die"
 
           # Send it and confirm prompted for CD binary.
-          reply = self.simh.os8_cmd (kbm_arg, self._build_replies_rex, debug=self.debug)
-          if self.simh.test_result(reply, "LOAD CD", self._build_replies, "build_subcomm 6") == False:
+          reply = self.simh.os8_cmd (kbm_arg, self.replies_rex["build"], debug=self.debug)
+          if self.simh.test_result(reply, "LOAD CD", self.replies["build"], "build_subcomm 6") == False:
             print("No prompt for LOAD CD in BUILD command within BUILD at line " + \
               str(self.line_ct_stack[0]) + ".")
             print("Fatal error. Aborting script.")
             return "die"
           # Send it and confirm we're back in BUILD command mode.
-          reply = self.simh.os8_cmd (cd_arg, self._build_replies_rex, debug=self.debug)
-          if self.simh.test_result(reply, "BUILD Prompt", self._build_replies, "build_subcomm 7") == False:
+          reply = self.simh.os8_cmd (cd_arg, self.replies_rex["build"], debug=self.debug)
+          if self.simh.test_result(reply, "BUILD Prompt", self.replies["build"], "build_subcomm 7") == False:
             print ("BUILD command within build failed.  Aborting script.")
             return "die"
           if self.debug:
@@ -1815,18 +1812,18 @@ class os8script:
       comm = build_sub + " " + rest
       if self.verbose:
         print("Line " + str(self.line_ct_stack[0]) + ": BUILD-> " + comm)
-      reply = self.simh.os8_cmd (comm, self._build_replies_rex, debug=self.debug)
+      reply = self.simh.os8_cmd (comm, self.replies_rex["build"], debug=self.debug)
 
       # Special case "BOOT" sub-command: May ask, "WRITE ZERO DIRECT?"
       # Will give a monitor prompt when done.
       if build_sub == "BOOT":
-        if self.simh.test_result(reply, "WRITE ZERO DIRECT?", self._build_replies, \
+        if self.simh.test_result(reply, "WRITE ZERO DIRECT?", self.replies["build"], \
                                  "", debug=self.debug):
           if self.debug:
             print("Got, \"WRITE ZERO DIRECT?\". Sending \"Y\".")
-          reply = self.simh.os8_cmd("Y", self._build_replies_rex, debug=self.debug)
+          reply = self.simh.os8_cmd("Y", self.replies_rex["build"], debug=self.debug)
 
-        if self.simh.test_result(reply, "SYS BUILT", self._build_replies, "", debug=self.debug):
+        if self.simh.test_result(reply, "SYS BUILT", self.replies["build"], "", debug=self.debug):
           # Successful boot.  We're now at monitor level.
           # Simplest to ignore anything else in the script up to "end build"
           # Return success or failure based on finding that monitor prompt.
@@ -1841,11 +1838,11 @@ class os8script:
       # If the error is fatal, ignore rest of build block,
       # exit back to OS/8 if necessary and return fail.
       # If it's not fatal, continue running BUILD.
-      if self.simh.test_result(reply, "BUILD Prompt", self._build_replies, \
+      if self.simh.test_result(reply, "BUILD Prompt", self.replies["build"], \
                                "build_subcomm 9", debug=self.debug) == False:
         print("BUILD error at line " + str(self.line_ct_stack[0]) + \
           " with command " + self.simh._child.before.decode().strip())
-        if self._build_replies[reply][2] == True:
+        if self.replies["build"][reply][2] == True:
           print ("Fatal error.  Ignoring rest of this block.")
           self.ignore_to_subcomm_end(os8_comm, script_file, "build")
           # Confirm we're back at the monitor as expected.
