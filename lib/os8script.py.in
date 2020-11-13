@@ -1631,10 +1631,8 @@ class os8script:
       if ok:
         if self.debug: print ("Success")
         ret_val = "success"
-      elif nf:
+      elif nf or ue:
         print ("OCOMP:" + self.simh.child_after().strip() + "\n")
-      elif ue:
-        print ("User Error reported by OCOMP")
       elif cd: # Got Command Decoder. Exit with failure.
         if self.debug: print ("call_ocomp: Non-fatal error: Sending ^C")
         # Exit OCOMP. We'll confirm we got back to OS/8 monitor below.
