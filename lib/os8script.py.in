@@ -378,8 +378,6 @@ class os8script:
     self.simh = simh
     self.options_enabled = enabled_options
     self.options_disabled = disabled_options
-    self.replies = {}
-    self.replies_rex = {}
     
     # Do we need separate stacks for enabled/disabled options?
     self.options_stack = []
@@ -388,6 +386,11 @@ class os8script:
     self.booted = False
     self.line_ct_stack = []
 
+    # Create the table of reply tables.
+    # Enable access to the simh and os8 tables through this interface.
+    self.replies = {"simh": self.simh._simh_replies, "os8": self.simh._os8_replies}
+    self.replies_rex = {"simh": self.simh._simh_replies_rex, "os8": self.simh._os8_replies_rex}
+    
     # Perform intern_replies on all known sub-commands.
     self.intern_replies("build", self._build_rep_adds, True)
     self.intern_replies("pal8", self._pal8_rep_adds, True)
@@ -1452,28 +1455,40 @@ class os8script:
     return "success"
 
 
-  #### os8_command #####################################################
-  
-  def os8_command (self, line, script_file):
-    if not self.booted:
-      print("Cannot run os8 command at line " + \
-        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
-      return "die"
+  #### check_and_run ##################################################
+  # Common routine to check that we are bootable, in the right context
+  # are able to run a command under OS/8, and that we successfully run it.
+  # caller is the name we give out as our caller.
+  # Return -1 if we are not booted and the command needs to die.
+  # otherwise return the reply to the command.
+  # We generically support reporting out if transcript is enabled.
 
-    os8_comm = line
-    retval = "success"
+  def check_and_run (self, caller, os8_comm, script_file):
+    if not self.booted:
+      print("Cannot run " + caller + " command at line " + \
+        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
+      return -1
+
     if self.verbose: print("Line: " + \
-       str(self.line_ct_stack[0]) + ": os8_command: " + os8_comm)
+       str(self.line_ct_stack[0]) + ": " + caller  + "_command: " + os8_comm)
 
     # Any os8-run command may be called after a simh command that left us
     # in simh context. Check to see if we need to restart OS/8.
     # We could resume, but restart is safer.
     if self.simh._context == "simh":
-      self.restart_command(line, script_file)
+      self.restart_command(os8_comm, script_file)
 
     reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
     if "transcript" in self.options_enabled:
       print (self.simh._child.before.decode().strip())
+    return reply
+  
+  
+  #### os8_command #####################################################
+  
+  def os8_command (self, line, script_file):
+    reply = self.check_and_run("os8", line, script_file)
+    if reply == -1: return "die"
 
     # We expect that the command will exit to the OS/8 monitor when done.
     # What if it doesn't?
@@ -1491,14 +1506,14 @@ class os8script:
         if mon == false:
           print ("^C failed to return to monitor. Killing script.")
           return "die"
-    print ("os8_command Error: \n\t" + os8_comm)
+    print ("os8_command Error: \n\t" + line)
     print ("\t" + self.simh.child_after().strip())
     # If this was not a fatal error, we need to ^C to get back to Monitor.
     # But sometimes OS/8 is not yet ready for ^C, so we wait half a second.
     if self.simh._os8_replies[reply][2] == False:
       time.sleep (.5)
       print ("Sending ^C to return to monitor.")
-      escape = self.simh.os8_ctrl_c ("")
+      escape = self.simh.os8_ctrl_c ("", debug=self.debug)
       if escape: return "fail"
       else:
         print ("^C failed to return to monitor. Killing script.")
@@ -1519,43 +1534,37 @@ class os8script:
   # We do the 3 argument form with a simple "os8" script command.
   
   def pal8_command (self, line, script_file):
-    if not self.booted:
-      print("Cannot run pal8 command at line " + \
-        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
-      return "die"
-
     if self.verbose: print("Running PAL8 on: " + line)
-    reply = self.simh.os8_cmd ("R PAL8")
-    # Did the command successfully run and enter the command decoder?
+    reply = self.check_and_run("pal8", "R PAL8", script_file)
+    if reply == -1: return "die"
+
     if self.simh.os8_test_result (reply, "Command Decoder Prompt", "call_pal8") == False:
       print("PAL8 failed to start at line " + str(self.line_ct_stack[0]))
       return "fail"
 
-    com_line = line
-    retval = "success"
     if self.verbose: print("Line: " + \
-       str(self.line_ct_stack[0]) + ": pal8_command: " + com_line)
+       str(self.line_ct_stack[0]) + ": pal8_command: " + line)
 
-    # Any os8-run command may be called after a simh command that left us
-    # in simh context. Check to see if we need to restart OS/8.
-    # We could resume, but restart is safer.
-    if self.simh._context == "simh":
-      self.restart_command(line, script_file)
+    # Send our command line args and harvest results.
+    reply = self.simh.os8_cmd (line, self.replies_rex["pal8"])
 
-    # Send our command and harvest results.
-    reply = self.simh.os8_cmd (com_line, self.replies_rex["pal8"])
     err_count = 0
     executed_line = self.simh._child.before.decode().strip()
-    reply_match_str = self.simh.child_after().strip()
-    ed  = self.simh.test_result(reply, "ERRORS DETECTED", self.replies["pal8"], "")
     mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["pal8"], "")
-    cd  = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["pal8"], "")
-    lg  = self.simh.test_result(reply, "LINKS GENERATED", self.replies["pal8"], "")
     err_string = ""
     ret_val = "success"
+    expect_loop = 1
+
     # We're going to print all the errors we see
     # and keep looking till we get either a monitor or command decoder prompt.
     while not mon:
+      if self.debug: print ("Got reply [" + str(expect_loop) +"] " + str(reply) + " -> " + \
+               self.replies["pal8"] [reply][0])
+
+      ed  = self.simh.test_result(reply, "ERRORS DETECTED", self.replies["pal8"], "")
+      cd  = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["pal8"], "")
+      lg  = self.simh.test_result(reply, "LINKS GENERATED", self.replies["pal8"], "")
+ 
       if ed:   # Got Errors Detected. Count them.
         self.simh._child.expect("\d+")
         err_count = int(self.simh.child_after().strip())
@@ -1568,11 +1577,10 @@ class os8script:
         self.simh.os8_send_ctrl ('c')      
       else:
         err_string += ("\t" + self.simh.child_after().strip() + "\n")
+        
+      expect_loop += 1
       reply = self.simh._child.expect(self.replies_rex["pal8"])
-      ed = self.simh.test_result(reply, "ERRORS DETECTED", self.replies["pal8"], "")
       mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["pal8"], "")
-      cd = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["pal8"], "")
-      lg = self.simh.test_result(reply, "LINKS GENERATED", self.replies["pal8"], "")
     if err_count > 0 or err_string != "":
       print ("PAL8 Error: \n\t" + executed_line)
       print (err_string)
@@ -1590,67 +1598,56 @@ class os8script:
   # Any "USER ERROR" output means failure.
 
   def ocomp_command (self, line, script_file):
-    if not self.booted:
-      print("Cannot run ocomp command at line " + \
-        str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
-      return "die"
-
     if self.verbose: print("Running OCOMP on: " + line)
-    reply = self.simh.os8_cmd ("R OCOMP")
-    # Did the command successfully run and enter the command decoder?
+    reply = self.check_and_run("ocomp", "R OCOMP", script_file)
+    if reply == -1: return "die"
+
     if self.simh.os8_test_result (reply, "Command Decoder Prompt", "call_ocomp") == False:
       print("OCOMP failed to start at line " + str(self.line_ct_stack[0]))
       return "fail"
 
-    com_line = line
-    retval = "success"
     if self.verbose: print("Line: " + \
-       str(self.line_ct_stack[0]) + ": ocomp_command: " + com_line)
-
-    # Any os8-run command may be called after a simh command that left us
-    # in simh context. Check to see if we need to restart OS/8.
-    # We could resume, but restart is safer.
-    if self.simh._context == "simh":
-      self.restart_command(line, script_file)
+       str(self.line_ct_stack[0]) + ": ocomp_command: " + line)
 
     # Send our command and harvest results.
-    reply = self.simh.os8_cmd (com_line, self.replies_rex["ocomp"])
+    reply = self.simh.os8_cmd (line, self.replies_rex["ocomp"])
     if "transcript" in self.options_enabled:
       print (self.simh._child.before.decode().strip())
-    err_count = 0
+
     ret_val = "fail"
-    executed_line = self.simh._child.before.decode().strip()
-    if self.debug:
-      print ("ocomp gave reply: " + str(reply) + " -> " + \
-             self.replies["ocomp"][reply][0])
-    ok = self.simh.test_result(reply, "NOTHING OUTPUT", self.replies["ocomp"], "")
+    expect_loop = 1
+
     mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["ocomp"], "")
-    cd  = self.simh.test_result(reply, "Command Decpder Prompt", self.replies["ocomp"], "")
-    nf = self.simh.test_result(reply, "File not found", self.replies["ocomp"], "")
-    ue = self.simh.test_result(reply, "USER ERROR", self.replies["ocomp"], "")
     # We get return status and then clean up the state machine.
     while not mon:
+      if self.debug:
+        print ("ocomp gave reply: [" + str(expect_loop) +"] " + str(reply) + " -> " + \
+             self.replies["ocomp"][reply][0])
+      ok = self.simh.test_result(reply, "NOTHING OUTPUT", self.replies["ocomp"], "")
+      cd  = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["ocomp"], "")
+      nf = self.simh.test_result(reply, "File not found", self.replies["ocomp"], "")
+      ue = self.simh.test_result(reply, "USER ERROR", self.replies["ocomp"], "")
+
       if ok:
         if self.debug: print ("Success")
         ret_val = "success"
       elif nf:
-        print ("File not found." + self.simh._child.before.decode())
+        print ("OCOMP:" + self.simh.child_after().strip() + "\n")
       elif ue:
         print ("User Error reported by OCOMP")
       elif cd: # Got Command Decoder. Exit with failure.
         if self.debug: print ("call_ocomp: Non-fatal error: Sending ^C")
         # Exit OCOMP. We'll confirm we got back to OS/8 monitor below.
         self.simh.os8_send_ctrl ('c')      
+
       reply = self.simh._child.expect(self.replies_rex["ocomp"])
+
       if "transcript" in self.options_enabled:
         print (self.simh._child.before.decode().strip())
-      if self.debug: print ("call_ocomp 2 reply: " + str (reply) + " -> " + \
-             self.replies["ocomp"][reply][0])
-      ok = self.simh.test_result(reply, "NOTHING OUTPUT", self.replies["ocomp"], "")
+
+      expect_loop += 1
+
       mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["ocomp"], "")
-      cd  = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["ocomp"], "")
-      nf = self.simh.test_result(reply, "File not found", self.replies["ocomp"], "")
-      ue = self.simh.test_result(reply, "USER ERROR", self.replies["ocomp"], "")
 
     return ret_val
 
