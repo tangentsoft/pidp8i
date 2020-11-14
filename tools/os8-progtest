@@ -249,6 +249,13 @@ def main ():
 
     print (program + ": Test Passes!")
 
+  # After all scripts are done, we remove any scratch files,
+  # detach any mounted devices, and shut down simh gracefully.
+
+  for filename in os8.scratch_list:
+    if args.verbose: print("Deleting scratch_copy: " + filename)
+    os.remove(filename)
+
   os8.simh.simh_cmd ("detach all")
   os8.simh._child.sendline("quit")
 
