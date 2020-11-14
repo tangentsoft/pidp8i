@@ -68,6 +68,20 @@ _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = ["rk", "0", _default_sys_path]
 _target_dir = dirs.os8mo
 
+# Some tricks to getting correct operation:
+# 1. Command lines end with a carriage return '\r' or an Escape.
+# 2. Control characters are their octal values:
+#    Escape: \033
+#    ^C: \003
+# 3. TTY output you see from running the simulator gets
+#    upcased, so make all test strings upper case.
+# 4. When in doubt of what formatting happens use '\s+`
+# 5. REMEMBER to escape characters that normally have regex meaining:
+#    . + * $ ( ) \
+# 6. Explicitly call out end of string '$' when you can.
+# 7. The monitor prompt match is "\n\\.$"
+# 8. The command decoder prompt match is "\n\\*$"
+
 #### TEST SPECIFIC VALUES ##############################################
 
 _test_strings = {"advent":
