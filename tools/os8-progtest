@@ -253,7 +253,7 @@ def main ():
     clean_quit (os8, 0, args)
     
   for program in args.programs:
-    if args.verbose or args.debug > 0: print("Testing: " + program)
+    if args.debug > 0: print("Testing: " + program)
     if program not in _test_strings:
       print ("Testing for " + program + " is not available")
       continue
