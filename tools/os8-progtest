@@ -235,7 +235,13 @@ def main ():
       if args.dry_run:
         next_state = current[1][0][1]
       else:
-        os8.simh.os8_send_str(send_str)
+        if "config" in tests and "slow" in tests["config"]:
+          for char in send_str:
+            for i in range(0, len(send_str)):
+              sleep (.05)
+              os8.simh._child.send (send_str[i])
+        else:
+          os8.simh.os8_send_str(send_str)
         
         if args.debug == 88: replies = [".+"]
       
