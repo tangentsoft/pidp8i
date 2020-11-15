@@ -534,28 +534,22 @@ if {$pyver == ""} {
 define PYCMD $pycmd
 define PYVER $pyver
 msg-result "Python $pyver is installed here as '$pycmd'."
-set status [catch {exec $pycmd -c "import pexpect" 2> /dev/null} result]
-if {$status != 0} {
-    set msg "The Python pexpect module is not installed here.  Fix with\n\n"
-    append msg "    sudo apt install $pycmd-pip$pyver\n"
-    append msg "\nTHEN one of:\n\n"
-    append msg "    pip$pyver install --user pexpect\n"
-    append msg "    sudo easy_install pexpect\n"
-    append msg "    sudo apt install $pycmd-pexpect\n"
-    user-error $msg
+foreach m {pexpect pkg_resources pyyaml} {
+    set md [regsub "_" $m "-"]
+    set m [regsub "py" $m ""]
+    set test "import $m"
+    set status [catch {exec $pycmd -c $test 2> /dev/null} result]
+    if {$status != 0} {
+        set msg "The Python $m module is not installed here.  Fix with\n\n"
+        append msg "    sudo apt install $pycmd-pip$pyver\n"
+        append msg "\nTHEN one of:\n\n"
+        append msg "    pip$pyver install --user $m\n"
+        append msg "    sudo easy_install $m\n"
+        append msg "    sudo apt install $pycmd-$md\n"
+        user-error $msg
+    }
+    msg-result "Found Python module $m."
 }
-msg-result "Python module pexpect is installed here."
-set status [catch {exec $pycmd -c "import pkg_resources" 2> /dev/null} result]
-if {$status != 0} {
-    set msg "The Python pkg_resources module is not installed here.  Fix with\n"
-    append msg "\n    sudo pip$pyver install pkg_resources\n"
-    append msg "\nOR:\n"
-    append msg "\n    sudo easy_install pkg_resources\n"
-    append msg "\nOR:\n"
-    append msg "\n    sudo apt install $pycmd-pkg-resources\n"
-    user-error $msg
-}
-msg-result "Python module pkg_resources is installed here."
 
 # Check for Perl and that it can run the test corpus builder.  Not fatal
 # if it can't, since only developers and deep testers need it.

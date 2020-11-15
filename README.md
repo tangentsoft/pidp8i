@@ -43,7 +43,7 @@ This is open source software: you are welcome to
 
     *   The Raspberry Pi development libraries
 
-    *   Python and its `pexpect` library; we default to Python 3 if
+    *   Python and a few non-core libraries. We default to Python 3 if
         available, with a fallback to Python 2, though we don’t know
         how long we’ll be able to maintain that compatibility.
 
@@ -54,12 +54,12 @@ This is open source software: you are welcome to
         $ sudo apt update
         $ sudo apt install build-essential libraspberrypi-dev \
              libncurses-dev perl python3-pip
-        $ pip3 install pexpect
+        $ pip3 install pexpect pyyaml
 
     Under Homebrew, such as on macOS, say instead:
 
         $ brew install make perl python
-        $ pip3 install pexpect
+        $ pip3 install pexpect pyyaml
 
 [os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 
