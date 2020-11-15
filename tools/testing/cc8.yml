@@ -1,0 +1,4 @@
+program: cc8
+states:
+    'start': ["EXE CCR\r", [["PROGRAMME\\s+>", 'progname']]]
+    'progname': ["ps.c\r", [[".*924.*COMPLETED\r\n\r\n#END BATCH\r\n\r\n.$", 'success']]]

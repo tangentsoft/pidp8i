@@ -52,6 +52,7 @@ import subprocess
 import string
 import re
 import argparse
+import yaml
 from time import sleep
 
 
@@ -69,77 +70,22 @@ _default_att_spec = ["rk", "0", _default_sys_path]
 _target_dir = dirs.os8mo
 
 # Some tricks to getting correct operation:
+# 0. Quoting matters! Use these:
+#    Surround state names with single quotes.
+#    Surround send and reply strings with double quotes.
 # 1. Command lines end with a carriage return '\r' or an Escape.
 # 2. Control characters are their octal values:
-#    Escape: \033
-#    ^C: \003
+#    Escape: \e
+#    ^C: \x03
 # 3. TTY output you see from running the simulator gets
 #    upcased, so make all test strings upper case.
 # 4. When in doubt of what formatting happens use '\s+`
 # 5. REMEMBER to escape characters that normally have regex meaining:
 #    . + * $ ( ) \
+#    prefix each one with TWO backslashes! '?' becomes '\\?'
 # 6. Explicitly call out end of string '$' when you can.
 # 7. The monitor prompt match is "\n\\.$"
 # 8. The command decoder prompt match is "\n\\*$"
-
-#### TEST SPECIFIC VALUES ##############################################
-
-_test_strings = {"advent":
-                 ["R FRTS\r",
-                  "ADVENT\033",
-                  "\r",
-                  "\r",
-                  "\r",
-                  "\r",
-                  "n\r",
-                  "quit\r",
-                  "yes\r",],
-                 "cc8":
-                 ["EXE CCR\r",
-                  "ps.c\r",
-                 ],
-                 # UW Focal has a problem: We get keyboard buffer overflow
-                 # if we issue too many tests.
-                 "uwfocal":
-                 ["R UWF16K\r",
-                  "S I=3.5\r",
-                  "T I\r",
-                  # "T PI",
-                  "\003",
-                 ],
-                 "chekmo":
-                 ["R CHEKMO\r",
-                  "\003",
-                 ]
-}
-
-_test_replies = {"advent":
-                 ["\n\\*$",
-                  "LOCATION OF TEXT DATABASE\s+\(\S+\).*",
-                  "LOCATION OF TEXT INDEX\s+\(\S+\).*",
-                  "LOCATION OF SAVED GAMES\s+\(\S+\).*",
-                  "LOCATION OF TEXT INPUT\s+\(\S+\).*",
-                  "WOULD YOU LIKE INSTRUCTIONS\?.*",
-                  "\r\n> $",
-                  "DO YOU REALLY WANT TO QUIT NOW\?\r\n\r\n> ",
-                  "\n\\.$",],
-                 "cc8":
-                 ["PROGRAMME\s+>",
-                  ".*924.*COMPLETED\r\n\r\n#END BATCH\r\n\r\n.$",
-                 ],
-                 "uwfocal":
-                 ["\r\n\\*$",
-                  "\r\n\\*$",
-                  " 3\.500000000E\+00\*$",
-                  # " 3\.141592654E\+00\*$",
-                  "\n\\.$",
-                 ],
-                 "chekmo":
-                 ["W. YOUR MOVE\? ",
-                  "\n\\.$",
-                 ]
-
-}
 
 
 #### abort_prog ########################################################
@@ -207,6 +153,9 @@ def clean_quit (os8, status, args):
   # After all scripts are done, we remove any scratch files,
   # detach any mounted devices, and shut down simh gracefully.
 
+  # Handle dry run case:
+  if os8 == None: sys.exit (status)
+  
   for filename in os8.scratch_list:
     if args.verbose: print("Deleting scratch_copy: " + filename)
     os.remove(filename)
@@ -236,17 +185,17 @@ def main ():
   args = parser.parse_args()
 
   targ_path = dest_expand (args, args.target, _target_dir)
-  os8 = start_os8(targ_path, args)
-
-  if not os8.booted:
-    print("Cannot run " + _test_name + ". OS/8 has not been booted.")
-    clean_quit (os8, -1, args)
-
-  # Any os8-run command may be called after a simh command that left us
-  # in simh context. Check to see if we need to restart OS/8.
-  # We could resume, but restart is safer.
-  if os8.simh._context == "simh":
-    os8.restart_command(os8_comm, script_file)
+  if args.dry_run:
+    os8 = None
+    print ("Dry run: would boot: " + targ_path)
+  else:
+    # Start OS/8, confirm we're booted and in OS/8 context.
+    os8 = start_os8(targ_path, args)
+    if not os8.booted:
+      print("Cannot run " + _test_name + ". OS/8 has not been booted.")
+      clean_quit (os8, -1, args)
+    if os8.simh._context == "simh":
+      os8.restart_command(os8_comm, script_file)
 
   if args.programs == None or args.programs == []:
     print ("Nothing to test")
@@ -254,40 +203,55 @@ def main ():
     
   for program in args.programs:
     if args.debug > 0: print("Testing: " + program)
-    if program not in _test_strings:
-      print ("Testing for " + program + " is not available")
+    try:
+      test_path = "tools/testing/" + program + ".yml"
+      testfile = open(test_path)
+    except IOError:      
+      print ("Tesfile " + test_path + " not found.")
       continue
 
-    test_strings = _test_strings[program]
-    if args.debug > 5:
-      print (str(len(test_strings)) + " Test strings for " + program + ": " + str(test_strings))
-    test_replies = _test_replies[program]
-    if args.debug > 5:
-      print (str(len(test_replies)) + " Test replies: " + str(test_replies))
-    
-    if len(test_strings) != len(test_replies):
-      print ("Internal error. " + program + ": Test strings and replies are of different lengths.")
-      clean_quit (os8, -1, args)
+    tests = yaml.safe_load(testfile)
+    states = tests["states"]
 
-    for i in range(len(test_strings)):
-      if args.debug > 0: print ("{" + test_strings[i] + "} -> " + \
-                                "{" +test_replies[i].strip() + "}")
+    if args.debug >14 :
+      print ("All states:")
+      print (str (states))
 
-      os8.simh.os8_send_str(test_strings[i])
+    # Walk the state machine
+    # Recommended: Run the state machine in dry_run mode to make sure it terminates.
+    next_state = "start"
+    while next_state not in ("success", "fail"):
+      if next_state not in states:
+        print ("State machine for program " + tests["program"] + " has no state: " + next_state)
+        sys.exit(-1)
+      current = states[next_state]
 
-      if args.debug == 88: reply_str = ".+"
-      else: reply_str = test_replies[i]
-    
-      try:
-        # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=5)
-        os8.simh._child.expect(reply_str, timeout=5)
-        if args.debug > 0: print("\tgot: {" + os8.simh._child.after.decode() + "}")
-      except pexpect.exceptions.TIMEOUT:
-        print (program + ": Test Failed.")
-        print ("\tExpecting: {" + reply_str + "}")
-        print("\tGot: {" + os8.simh._child.before.decode() + "}")
-        clean_quit (os8, -1, args)
+      send_str = current[0]
+      replies = []
+      for item in current[1]:
+        replies.append (item[0])
+
+      if args.debug >9: print ("Replies: " + str(replies))
+      if args.dry_run:
+        next_state = current[1][0][1]
+      else:
+        os8.simh.os8_send_str(send_str)
         
+        if args.debug == 88: replies = [".+"]
+      
+        try:
+          # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=5)
+          reply = os8.simh._child.expect(replies, timeout=5)
+          if args.debug > 4: print("\tgot: {" + os8.simh._child.after.decode() + "}")
+        except pexpect.exceptions.TIMEOUT:
+          print (program + ": Test Failed.")
+          print ("\tExpecting: {" + str(replies) + "}")
+          print("\tGot: {" + os8.simh._child.before.decode() + "}")
+          clean_quit (os8, -1, args)
+        
+        next_state = current[1][reply][1]
+      
+      if args.debug > 0: print ("Next state: " + next_state)
     print (program + ": Test Passes!")
 
   clean_quit(os8, 0, args)
