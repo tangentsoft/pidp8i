@@ -166,6 +166,16 @@ def clean_quit (os8, status, args):
   sys.exit(status)
 
 
+#### parse_todos #######################################################
+# Parse a series of comma separated tests.
+
+def parse_todos (line, args):
+  if line == None:
+    print ("No tests specified. Doing All")
+    return ["all"]
+  parts = line.split(",")
+  return parts
+
 #### main ##############################################################
 
 def main ():    
@@ -180,7 +190,7 @@ def main ():
   parser.add_argument("--destdir", help="Destination directory for output files")
   parser.add_argument ("--target", help="target image file", default="v3d.rk05")
   parser.add_argument ("--dry-run", "-n", action="store_true", help="Dry Run. Print output. Generate no files.")
-  parser.add_argument ('programs', nargs=argparse.REMAINDER, metavar="one or more programs to test")
+  parser.add_argument ('programs', nargs=argparse.REMAINDER, metavar="programs to test, and optional subset of tests")
 
   args = parser.parse_args()
 
@@ -200,8 +210,19 @@ def main ():
   if args.programs == None or args.programs == []:
     print ("Nothing to test")
     clean_quit (os8, 0, args)
+
+  do_all = True
+
+  for prog_spec in args.programs:
+    m = re.match("(\S+):(\S+)", prog_spec)
+    if m == None:
+      program = prog_spec
+    else:
+      program = m.group(1)
+      do_all = False
+      test_list = parse_todos (m.group(2), args)
+      if args.debug > 0: print ("Test list: " + str(test_list))
     
-  for program in args.programs:
     if args.debug > 0: print("Testing: " + program)
     try:
       test_path = "tools/testing/" + program + ".yml"
@@ -211,54 +232,70 @@ def main ():
       continue
 
     tests = yaml.safe_load(testfile)
-    states = tests["states"]
 
-    if args.debug >14 :
-      print ("All states:")
-      print (str (states))
+    if do_all:
+      test_list = []
+      for key in tests.keys():
+        # Things in the test file that are not tests
+        if key in ["config"]: continue
+        test_list.append(key)
 
-    # Walk the state machine
-    # Recommended: Run the state machine in dry_run mode to make sure it terminates.
-    next_state = "start"
-    while next_state not in ("success", "fail"):
-      if next_state not in states:
-        print ("State machine for program " + tests["program"] + " has no state: " + next_state)
-        sys.exit(-1)
-      current = states[next_state]
+    for test in test_list:
+      if test not in tests:
+        print (program + " test " + test + " not found.")
+        continue
 
-      send_str = current[0]
-      replies = []
-      for item in current[1]:
-        replies.append (item[0])
+      states = tests[test]
 
-      if args.debug >9: print ("Replies: " + str(replies))
-      if args.dry_run:
-        next_state = current[1][0][1]
-      else:
-        if "config" in tests and "slow" in tests["config"]:
-          for char in send_str:
-            for i in range(0, len(send_str)):
-              sleep (.05)
-              os8.simh._child.send (send_str[i])
+      if args.debug >14 :
+        print ("All states:")
+        print (str (states))
+
+      # Walk the state machine
+      # Recommended: Run the state machine in dry_run mode to make sure it terminates.
+      next_state = "start"
+      while next_state not in ("success", "fail"):
+        if next_state not in states:
+          print ("State machine for program " + tests["program"] + " has no state: " + next_state)
+          sys.exit(-1)
+        current = states[next_state]
+
+        send_str = current[0]
+        replies = []
+        for item in current[1]:
+          replies.append (item[0])
+
+        if args.debug >9: print ("Replies: " + str(replies))
+        if args.dry_run:
+          next_state = current[1][0][1]
         else:
-          os8.simh.os8_send_str(send_str)
+          if "config" in tests and "slow" in tests["config"]:
+            for char in send_str:
+              for i in range(0, len(send_str)):
+                sleep (.05)
+                os8.simh._child.send (send_str[i])
+          else:
+            os8.simh.os8_send_str(send_str)
         
-        if args.debug == 88: replies = [".+"]
+          if args.debug == 88: replies = [".+"]
       
-        try:
-          # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=5)
-          reply = os8.simh._child.expect(replies, timeout=5)
-          if args.debug > 4: print("\tgot: {" + os8.simh._child.after.decode() + "}")
-        except pexpect.exceptions.TIMEOUT:
-          print (program + ": Test Failed.")
-          print ("\tExpecting: {" + str(replies) + "}")
-          print("\tGot: {" + os8.simh._child.before.decode() + "}")
-          clean_quit (os8, -1, args)
+          try:
+            # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=5)
+            reply = os8.simh._child.expect(replies, timeout=5)
+            if args.debug > 4: print("\tgot: {" + os8.simh._child.after.decode() + "}")
+          except pexpect.exceptions.TIMEOUT:
+            print (program + ": Test Failed.")
+            print ("\tExpecting: {" + str(replies) + "}")
+            print("\tGot: {" + os8.simh._child.before.decode() + "}")
+            clean_quit (os8, -1, args)
         
-        next_state = current[1][reply][1]
+          next_state = current[1][reply][1]
       
-      if args.debug > 0: print ("Next state: " + next_state)
-    print (program + ": Test Passes!")
+        if args.debug > 0: print ("Next state: " + next_state)
+      if next_state == "success":  
+        print (program + ":" + test + " Test Passes.")
+      else:
+        print (program + ":" + test + " Test Fails.")
 
   clean_quit(os8, 0, args)
   

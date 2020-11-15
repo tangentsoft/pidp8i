@@ -1,4 +1,6 @@
-program: cc8
-states:
+'ps':
     'start': ["EXE CCR\r", [["PROGRAMME\\s+>", 'progname']]]
     'progname': ["ps.c\r", [[".*924.*COMPLETED\r\n\r\n#END BATCH\r\n\r\n.$", 'success']]]
+'fib':
+    'start': ["EXE CCR\r", [["PROGRAMME\\s+>", 'progname']]]
+    'progname': ["fib.c\r", [["OVERFLOW AT #18 = 2584\r\n\r\n#END BATCH\r\n\r\n.$", 'success']]]

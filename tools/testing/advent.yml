@@ -1,5 +1,4 @@
-program: advent
-states: 
+'startup': 
     'start': ["R FRTS\r",[["\n\\*", 'advent']]]
     'advent': ["ADVENT\e", [[ "LOCATION OF TEXT DATABASE\\s+\\(\\S+\\).*", 'database'],
                            ["WELCOME TO ADVENTURE!!", 'instructions']]]
