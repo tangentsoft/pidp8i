@@ -152,7 +152,10 @@ string     |  Meaning
 "\n\\*$"   | OS/8 Command decoder prompt.  Often the first step in running programs.
 
 
-
-
-
 [pyyaml]: https://pyyaml.org/wiki/PyYAMLDocumentation
+
+### <a id="license"></a>License
+
+Copyright © 2020 by Bill Cattey. Licensed under the terms of [the SIMH license][sl].
+
+[sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
