@@ -67,6 +67,7 @@ QUIET = False
 _default_sys_image = "@OS8_TOOLTIME@"
 _default_sys_path = dirs.os8mo + _default_sys_image
 _default_att_spec = ["rk", "0", _default_sys_path]
+_default_tests_dir = os.path.join (dirs.src, "scripts/os8-progtest")
 _target_dir = dirs.os8mo
 
 # Some tricks to getting correct operation:
@@ -74,7 +75,7 @@ _target_dir = dirs.os8mo
 #    Surround state names with single quotes.
 #    Surround send and reply strings with double quotes.
 # 1. Command lines end with a carriage return '\r' or an Escape.
-# 2. Control characters are their octal values:
+# 2. Control characters have funky values:
 #    Escape: \e
 #    ^C: \x03
 # 3. TTY output you see from running the simulator gets
@@ -102,6 +103,15 @@ def abort_prog (err_str):
 
 def dest_expand (args, fname, default):
   if args.destdir: return os.path.join(args.destdir, fname)
+  else: return  os.path.join(default, fname)
+
+
+#### src_expand #########################################################
+# Return a full path based either on the --srcdir option or
+# the default test .yml directory
+
+def src_expand (args, fname, default):
+  if args.destdir: return os.path.join(args.srcdir, fname)
   else: return  os.path.join(default, fname)
 
 
@@ -188,6 +198,7 @@ def main ():
   parser.add_argument("-d", dest="debug", metavar="DEBUG", type=int,
                       help="set debug level", default=0)
   parser.add_argument("--destdir", help="Destination directory for output files")
+  parser.add_argument("--srcdir", help="Source directory for test .yml files")
   parser.add_argument ("--target", help="target image file", default="v3d.rk05")
   parser.add_argument ("--dry-run", "-n", action="store_true", help="Dry Run. Print output. Generate no files.")
   parser.add_argument ('programs', nargs=argparse.REMAINDER, metavar="programs to test, and optional subset of tests")
@@ -223,9 +234,9 @@ def main ():
       test_list = parse_todos (m.group(2), args)
       if args.debug > 0: print ("Test list: " + str(test_list))
     
-    if args.debug > 0: print("Testing: " + program)
     try:
-      test_path = "tools/testing/" + program + ".yml"
+      test_path = src_expand(args, program + ".yml", _default_tests_dir)
+      if args.debug > 0: print("Testing: " + program + " with script: " + test_path)
       testfile = open(test_path)
     except IOError:      
       print ("Tesfile " + test_path + " not found.")
@@ -287,7 +298,8 @@ def main ():
             print (program + ": Test Failed.")
             print ("\tExpecting: {" + str(replies) + "}")
             print("\tGot: {" + os8.simh._child.before.decode() + "}")
-            clean_quit (os8, -1, args)
+            next_state = "fail"
+            continue
         
           next_state = current[1][reply][1]
       
