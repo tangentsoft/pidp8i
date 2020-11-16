@@ -9,7 +9,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Dependency packages (ubuntu)
-      run: sudo apt-get -y install build-essential python3-pexpect python3-pyyaml libncurses-dev
+      run: sudo apt-get -y install build-essential python3-pexpect python3-yaml libncurses-dev
       if: ${{ matrix.os == 'ubuntu-latest' }}
     - name: Dependency packages (macos)
       run: |
