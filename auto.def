@@ -645,6 +645,7 @@ make-template lib/pidp8i/dirs.py.in
 make-template lib/pidp8i/ips.py.in
 make-template lib/simh.py.in
 make-template bin/os8pkg.in
+make-template tools/os8-progtest.in
 make-template media/os8/init.tx.in
 make-template media/os8/3finit.tx.in
 make-template media/os8/ock-init.tx.in
