@@ -42,7 +42,7 @@ hang until pexpect times out while waiting.
 | `--verbose, -v`      | increase output verbosity
 | `-d DEBUG`           | set debug level; 0-14
 | `--destdir DESTDIR`  | destination directory for output files
-| `--srcdir SRCDIR`    | source directory for test .yml files
+| `--srcdir SRCDIR`    | source directory for test `.yml` files
 | `--target TARGET`    | target image file
 | `--dry-run, -n`      | dry run: only print what would happen
 
@@ -167,7 +167,7 @@ A line beginning with a `#` is ignored as a comment.
 6.  To pass in regex escapes that have a backslash — for example `\s`
     for whitespace — double the backslash, so `\s` becomes `\\s`.
 
-6.  Use of regex’s end-of-string match (`$`) can often improve
+7.  Use of regex’s end-of-string match (`$`) can often improve
     reliability, because it ensures the state machine doesn’t proceed
     before OS/8 or the program running under it is ready. Keep in mind
     that `os8-progtest` runs in your host machine’s context, and while
@@ -178,11 +178,11 @@ A line beginning with a `#` is ignored as a comment.
     teletype. Some programs can get spammed if you don’t wait out the
     full reply line before sending the next bit of input.
 
-7.  Sometimes guessing the exact whitespace is difficult.  The `\\s+`
+9.  Sometimes guessing the exact whitespace is difficult.  The `\\s+`
     construct to match on one or more whitespace characters is often
     helpful.
 
-8.  Helpful match strings:
+9.  Helpful match strings:
 
     String     |  Meaning
     ---------- | -----------------
