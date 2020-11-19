@@ -1,15 +1,79 @@
+Outline:
+
+How-To as taken from os8-progtest/os8-run
+The steps needed in Main:
+
+Setup:
+
+1. Recommend using argparse to create an args structure containing
+the parsed command line arguments.
+
+2. Create the simh object that will do the work.
+
+3. Create the os8script object that calls to the simh object.
+
+Do the Work:
+
+`run_script_file` was the first use case.  A filename is passed in,
+and the library is responsible for opening the file and acting on its
+contents.  There are helper routines for enabling the script to
+find the image file to boot.
+
+`run_script_handle` is called by `run_script_file` once the
+filename has been successfully opened.  This method allows creation
+of in-memory file handles using the `io` library. For example:
+
+    import io
+
+    _test_script =  """
+    enable transcript
+    os8 DIR
+    """
+
+    script_file = io.StringIO(_test_script)
+    os8.run_script_handle(script_file)
+
+Open code calls to the API
+
+1. 
+
+4. Find the system image you want to boot to do the work.
 
 
-How to implement the state machine to drive a program under OS/8
-
-Call self.check_and_run to:
+3. Call self.check_and_run.  It will:
 
  * make sure we're booted.
  * make sure we're in the OS/8 context.
  * start the initial command.
 
-It returns -1 if we can't run, and the reply status of the
-OS/8 run command.
+It returns the reply status of the initial command or
+-1 if running is not possible.
+
+
+
+API
+
+The `os8script` object is a higher level interface to
+SIMH for executing the OS/8 environment.
+
+The creation method, `os8script` takes up to 5 arguments:
+
+`simh`: The `simh`: object that will host SIMH.  See [class-simh.md][simh-class-doc].
+`enabled_options`: List of initial options enabled for interpreting script commands.
+`disabled_options`: List of initial options disabled for interpreting script commands.
+`verbose`: Optional argument enabling verbose output. Default value of `False`.
+`debug`: Optional argument enabling debug output. Default value of `True`.
+
+The two options lists were put into the creation call initially because
+for the first use of the API, it was easy to pass the arrays returned by
+argparse.  Conceptually, an initial set of options is passed in at create
+time, and thereafter the add/remove calls are used to change the active options
+one at a time.
+
+
+
+Legacy text:
+How to implement the state machine to drive a program under OS/8
 
 Tricky bit:  If the program uses its own command prompt, we need to
 go beyond the default replies that would come back from the

@@ -384,7 +384,10 @@ class os8script:
     # List of scratch files to delete when we are done with all script runs.
     self.scratch_list = []
     self.booted = False
-    self.line_ct_stack = []
+    # Initial line count stack has a single element, value 0
+    # In this way we get graceful operation when the API
+    # is called directly without having opened a script file.
+    self.line_ct_stack = [0]
 
     # Create the table of reply tables.
     # Enable access to the simh and os8 tables through this interface.

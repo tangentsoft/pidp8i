@@ -346,14 +346,6 @@ def script_delete (os8, pspec, pkg_name, args):
       os8.os8_command (del_str, None)
 
 
-#### fakeout_script ####################################################
-# Fake out os8script to cope with us calling it directly without
-# without a script file.
-
-def fakeout_script (os8):
-  os8.line_ct_stack.insert(0,0)
-  os8.line_ct_stack[0] = 0
-
 #### find_pkg  #########################################################
 # Use a search heuristic to find the package given its name.
 
@@ -434,10 +426,6 @@ def start_os8(targ_path, args):
     s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
 
   os8 = os8script (s, [], [], verbose=VERBOSE, debug=args.debug>0)
-
-  # We're calling into os8script directly without a script file
-  # Set some internal state to cope with doing so.
-  fakeout_script (os8)
 
   if args.debug >0 or args.dry_run: print ("Perform " + args.command + " on " + targ_path)
 
