@@ -35,23 +35,128 @@ of in-memory file handles using the `io` library. For example:
 
 Open code calls to the API
 
-1. 
+1.  Find the system image you want to boot to do the work.
 
-4. Find the system image you want to boot to do the work.
-
-
-3. Call self.check_and_run.  It will:
+2. Call `check_and_run` to run an OS/8 command from the Keyboard Monitor.  It will:
 
  * make sure we're booted.
  * make sure we're in the OS/8 context.
- * start the initial command.
-
-It returns the reply status of the initial command or
--1 if running is not possible.
-
+ * run the command.
+ * returns the reply status of the initial command or -1 if any of the previous steps fail.
 
 
 API
+
+Command Calls: the calls that are brought out as [os8-run][os8-run-doc] commands
+All take two arguments:
+
+`line`: The rest of the line in the script file after the command was parsed.
+This makes the script file look like a series of command lines.  The parser
+sees the command keyword and passes the rest of the line as `line`.
+
+`script_file`: A handle on the script file.  This gets passed around from
+command to command to deal with multi-line files. We rely on this handle
+keeping track of where we are in the file over time.  If you call a command
+that doesn't deal with multiple lines, you can pass `None` as the `script_file`
+handle.  If the command needs more lines, and it sees `None` python will kill
+the program and give you a backtrace.
+
+All of these commands return a string, "success" or "fail".
+
+The `begin` command calls out to one of two sub-commands, `build` and `cdprog`.
+These embody complex state machines to step through command dialogs and detect
+error conditions.
+
+The `patch` command contains a pretty complex state machine. It knows how
+interprest patch description files as commands in either `ODT` or `FUTIL`
+to modify files under OS/8 and then save them.
+
+The `os8`, `pal8`, and `ocomp` commands contain state machines as well, albeit
+less complex ones.  There is not any command dialog, just error detection.
+
+The single most important idea to learn in producing a reliable program
+using class os8script is the notion of **The Current Context and State of the
+os8script Environment**. The `os8script` class is
+careful to validate that OS/8 is booted and active before submitting strings
+that it expects will be interpreted by the OS/8 Keyboard Monitor.  It is careful
+to escape out to SIMH when sending strings it expects will be interpreted
+as SIMH commands.  The os8script is set of layered state machines. SIMH starts off
+at its command level, then OS/8 is booted.  To issue more SIMH commands after that
+you have to escape out of OS/8, but then have to return to OS/8 to continue.
+When a program is started under OS/8 it creates a new layered state machine:
+The dialog with the program, until the program finishes and returns to the
+OS/8 keyboard monitor.
+
+When you run a complex command under os8script, you will be writing a state
+machine that will need to return to OS/8 when it is finished.
+
+The `os8-progtest` tool allows creation of state machine descriptions
+that submit text, and listen for replies to step through the states of
+a complex dialog with the program, and then return to the OS/8 keyboard
+monitor.
+
+
+command   | API method             | Notes
+--------- | ---------------------- | --------
+mount     | mount_command          | Does complex parsiing of `line` to get all the parameters needed.
+boot      | boot_command           | You need to issue this command before running any commands.
+os8       | os8_command            | Allows no dialog. Just run the command and return to the Keyboard Monitor.
+ocomp     | ocomp_command          | Simple state machine to return `success` if two files are identical.
+pal8      | pal8_command           | Contains a state machine to gather up error output nicely.
+include   | include_command        | Allows running a script within a script to arbitrary depths.
+begin     | begin_command          | Complex but constrained state machine for the OS/8 `BUILD` command or commands that use the OS/8 Command Decoder.
+end       | end_command            | Exits begin.
+print     | print_command          | Lets scripts send messages.
+umount    | umount_command         | Cleans out a mount command, except for scratch files. See [cleanups][#cleanups].
+simh      | simh_command           | Lets you send arbitrary commands to simh.
+configure | configure_command      | An interface to a constrained subset of high level PDP-8 specific configurations.
+enable    | enable_option_command  | Connects up the enable interface to scripts.
+disable   | disable_option_command | Connects the disable interface to scripts.
+cpto      | cpto_command           | The way you get files into OS/8 from the POSIX host. Relies on the OS/8 `PIP` command.  Contains a state machine for working through dialogs. Cleans up any temporary files for you.
+cpfrom    | cpfrom_command         | The way you get files out to the POSIX host from the OS/8 environment. Relies on the OS/8 `PIP` command.  Contains a state machine for working through dialogs. Cleans up any temporary files for you.
+copy      | copy_command           | Allows scripts to say, "Make me a copy of this POSIX file," which is generally an image file that serves as the basis of a modified file.
+resume    | resume_command         |
+restart   | restart_command        |
+patch     | patch_command          | Complex. 
+
+Important caveat about parallelism:
+
+The pidp8i software package does a lot of complex building both under POSIX
+and in a scripted way under OS/8.  The `tools/mmake` POSIX command
+run multiple independent instances of `make` in parallel.
+
+OS/8 comes from a single threaded, single computer design aesthetic, and the
+boot device assumes NOTHING else is touching its contents. This means if there
+is more than one instance of SIMH booting OS/8 from the same image file
+(for example in two terminal windows on the same POSIX host)
+the result is **completely unpredictable**.
+
+This was the primary driver for the creation of the `scratch` option to
+`mount` and the development of the `copy` command.  Care **must** be exercised
+to do work in a `scratch` boot environment, and manage dependencies and concurrencies.
+
+Cleanups:
+
+Gracefully unmount virtual files
+
+POSIX buffers output.  If you `mount` an image file, modify it, and quit
+the program, the buffered modifications may be lost.  In order to guarantee
+all buffers are properly flushed, you **must** call `umount` on image files
+you've modified.
+
+Quit SIMH.
+
+This is not a requirement, but is good practice.
+
+Remove scratch images.
+
+The management of scratch images is rudimentary.  The `mount` command
+creates them, and appends them to a global list `scratch_list`. There isn't
+an association created with that scratch file to know that a particular
+image was the original. The purpose instead, is for cleanup.
+
+Any program that makes use of class `os8script` that would create a
+scratch image needs to go through `scratch_list` and delete the scratch files.
 
 The `os8script` object is a higher level interface to
 SIMH for executing the OS/8 environment.
@@ -70,6 +175,51 @@ argparse.  Conceptually, an initial set of options is passed in at create
 time, and thereafter the add/remove calls are used to change the active options
 one at a time.
 
+Tables of expect matches
+
+The class `simh` library contains a table of all the normal and error
+replies that the OS/8 Keyboard Monitor and Command Decoder are known to emit
+in `_os8_replies` and pre-compiled regular expressions for each one in
+`_os8_replies_rex`.  Class `os8script` has a method `intern_replies`
+that allows management of additional tables by name, allowing, for example
+the `build_command` state machine to create a table with replies
+from the `BUILD` command **in addition to** all the OS/8 replies.
+
+`intern_replies` takes 3 arguments:
+
+`name`: The name of the new reply table.  If a table of that name already exists
+return `False`.
+
+`replies`: An array of 3 element arrays.  The three elemments are
+1. The common name of the match string.  How the common name is used is described below.
+2. The regular expression python expect will use to try and match the string.
+3. True if receiving this is a fatal error that returns to the OS/8 Keyboard Monitor.
+Knowing this state change is helpful in establishing correct expectation about
+the state of the enviromnent.
+
+The common name is used in match tests:
+
+The `simh` object instantiated within the `os8script` object has a `test_result`
+method that takes four arguments:
+
+`reply`: integer index into the array of replies.
+`name`: the common name of the result we are expecting to match.
+`replies`: the array of replies that we are testing against.
+`caller`: if not empty, an error string is printed that uses the value of
+`caller` as a preface, if the common name we expect (passed in via
+`name`0 does not match what is found in the `replies` array at the index `reply`.
+
+For example if we wanted to test a start up of `MYPROG` into the command decoder
+we could do this:
+
+    reply = self.simh.os8_cmd ("R MYPROG", debug=self.debug)
+    self.simh.os8_test_result (reply, "Command Decoder Prompt", "start_myprog")
+
+If we didn't get the Command Decoder prompt, because MYPROG wasn't found we'd
+get something like this:
+
+   start_myprog: failure
+   Expected "Command Decoder Prompt". Instead got "File not found".
 
 
 Legacy text:
