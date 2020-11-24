@@ -1,9 +1,88 @@
-Outline:
+# class os8script: A higher level interface to OS/8 under SIMH
 
-How-To as taken from os8-progtest/os8-run
-The steps needed in Main:
+## Introduction
 
-Setup:
+This class is a higher level abstraction above the class simh.
+An understanding of that class as documented in [doc/class-simh.md][class-simh-doc]
+is a prerequisite for working with this class.
+
+Development of this class was driven by the desire to create a scripting
+language to engage in complex dialogs with OS/8 commands. The first use
+cases were embodied in the `os8-run` scripting system:
+
+ * use `BUILD` to perform elaborate system configuration in a repeatable way.
+ * drive commands calling the OS/8 Command decoder to operate on specified
+ files under OS/8.
+ * apply patches, first using `ODT` and then using `FUTIL`.
+ * assemble programs using `PAL8`.
+ * reconfigure the SIMH devices, for example switching between having TC08
+ or TD8E DECtape devices. (Only one is allowed at a time, and the OS/8 system
+ areas are incompatible.)
+
+The latest use case, embodied in the `os8-progtest` utility, is to allow
+specifying arbitrary state machines that engage in complex program dialogs
+so as to permit programmed, run-time testing of functionality under OS/8.
+
+This document describes the class os8script API with an eye to assisting
+the development of stand-alone programs that use the API.
+
+## Housekeeping
+
+Before we get into calls to create the environment and calls to run
+commands, it is important to learn the rules of housekeeping in the
+`class os8script` environment.
+
+### Important caveat about parallelism:
+
+The pidp8i software package does a lot of complex building both under POSIX
+and in a scripted way under OS/8.  The `tools/mmake` POSIX command
+run multiple independent instances of `make` in parallel.
+
+OS/8 comes from a single threaded, single computer design aesthetic, and the
+boot device assumes NOTHING else is touching its contents. This means if there
+is more than one instance of SIMH booting OS/8 from the same image file
+(for example in two terminal windows on the same POSIX host)
+the result is **completely unpredictable**.
+
+This was the primary driver for the creation of the `scratch` option to
+`mount` and the development of the `copy` command.  Care **must** be exercised
+to do work in a `scratch` boot environment, and manage dependencies and concurrencies.
+
+### Gracefully unmount virtual files
+
+POSIX buffers output.  If you `mount` an image file, modify it, and quit
+the program, the buffered modifications may be lost.  In order to guarantee
+all buffers are properly flushed, you **must** call `umount` on image files
+you've modified.
+
+### Quit SIMH.
+
+This is not a requirement, but is good practice.
+
+### Remove scratch images.
+
+The management of scratch images is rudimentary.  The `mount` command
+creates them, and appends them to a global list `scratch_list`. There isn't
+an association created with that scratch file to know that a particular
+image was the original. The purpose instead, is for cleanup.
+
+Any program that makes use of class `os8script` that would create a
+scratch image needs to go through `scratch_list` and delete the scratch files.
+
+Ok, now we can learn how to set up the environment.
+
+## Setup:
+
+The following will include the libraries you need:
+
+    import os
+    import sys
+    sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+    sys.path.insert (0, os.getcwd () + '/lib')
+
+    from pidp8i import *
+    from simh   import *
+
 
 1. Recommend using argparse to create an args structure containing
 the parsed command line arguments.
@@ -12,7 +91,66 @@ the parsed command line arguments.
 
 3. Create the os8script object that calls to the simh object.
 
-Do the Work:
+The creation method, `os8script` takes up to 5 arguments:
+
+`simh`: The `simh`: object that will host SIMH.  See [class-simh.md][simh-class-doc].
+`enabled_options`: List of initial options enabled for interpreting script commands.
+`disabled_options`: List of initial options disabled for interpreting script commands.
+`verbose`: Optional argument enabling verbose output. Default value of `False`.
+`debug`: Optional argument enabling debug output. Default value of `True`.
+
+The two options lists were put into the creation call initially because
+for the first use of the API, it was easy to pass the arrays returned by
+argparse.  Conceptually, an initial set of options is passed in at create
+time, and thereafter the add/remove calls are used to change the active options
+one at a time.
+
+4. Find the system image you want to boot to do the work.
+
+In the example below we default to using the `os8mo` element from the
+dirs library that is the default media output directory where the
+build process installs the bootable images. The bootable image
+can be specified by a `--target` option and it defaults to the `v3d.rk05`
+image.
+
+5. Mount and boot the image.  Using `scratch` is **highly** recommended.
+
+`main` would look something like this:
+
+
+    def main ():    
+      parser = argparse.ArgumentParser(
+        description = """
+        Run my program under PDP-8 OS/8.""",
+        usage = "%(prog)s [options]")
+      parser.add_argument ("--target", help="target image file", default="v3d.rk05")
+      image_path = os.path.join(dirs.os8mo, args.target)
+    
+      try:
+        s = simh (dirs.build, True)
+      except (RuntimeError) as e:
+        print("Could not start simulator: " + e.message + '!')
+        sys.exit (1)
+    
+      if VERBOSE:
+        s.verbose = True
+        s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
+    
+      os8 = os8script (s, [], [], verbose=False, debug=False)
+    
+      os8.mount_command ("rk0 " + targ_path + " required scratch", None)
+      os8.boot_command ("rk0", None)
+
+
+Further details and examples can be found by reading the `main` function
+of either `bin/os8-run` or `tools/os8-progtest` with further explanation in the
+early section of [doc/class-simh.md][class-simh-doc]
+
+## Doing the Work:
+
+There are two script-based calls if you have a file on the POSIX host,
+or can assemble a string into a file handle, and express your work
+as an `os8-run` style script:
 
 `run_script_file` was the first use case.  A filename is passed in,
 and the library is responsible for opening the file and acting on its
@@ -33,22 +171,21 @@ of in-memory file handles using the `io` library. For example:
     script_file = io.StringIO(_test_script)
     os8.run_script_handle(script_file)
 
-Open code calls to the API
+Otherwise you do direct calls into the API
 
-1.  Find the system image you want to boot to do the work.
+### Environment check and command startup
 
-2. Call `check_and_run` to run an OS/8 command from the Keyboard Monitor.  It will:
+First call `check_and_run` to run your desired OS/8 command from the Keyboard Monitor.  It will:
 
  * make sure we're booted.
  * make sure we're in the OS/8 context.
  * run the command.
  * returns the reply status of the initial command or -1 if any of the previous steps fail.
 
+### `os8-run` Commands
 
-API
-
-Command Calls: the calls that are brought out as [os8-run][os8-run-doc] commands
-All take two arguments:
+The methods that implement the [os8-run][os8-run-doc] commands can be called
+directly.  They all take two arguments:
 
 `line`: The rest of the line in the script file after the command was parsed.
 This makes the script file look like a series of command lines.  The parser
@@ -119,61 +256,6 @@ resume    | resume_command         |
 restart   | restart_command        |
 patch     | patch_command          | Complex. 
 
-Important caveat about parallelism:
-
-The pidp8i software package does a lot of complex building both under POSIX
-and in a scripted way under OS/8.  The `tools/mmake` POSIX command
-run multiple independent instances of `make` in parallel.
-
-OS/8 comes from a single threaded, single computer design aesthetic, and the
-boot device assumes NOTHING else is touching its contents. This means if there
-is more than one instance of SIMH booting OS/8 from the same image file
-(for example in two terminal windows on the same POSIX host)
-the result is **completely unpredictable**.
-
-This was the primary driver for the creation of the `scratch` option to
-`mount` and the development of the `copy` command.  Care **must** be exercised
-to do work in a `scratch` boot environment, and manage dependencies and concurrencies.
-
-Cleanups:
-
-Gracefully unmount virtual files
-
-POSIX buffers output.  If you `mount` an image file, modify it, and quit
-the program, the buffered modifications may be lost.  In order to guarantee
-all buffers are properly flushed, you **must** call `umount` on image files
-you've modified.
-
-Quit SIMH.
-
-This is not a requirement, but is good practice.
-
-Remove scratch images.
-
-The management of scratch images is rudimentary.  The `mount` command
-creates them, and appends them to a global list `scratch_list`. There isn't
-an association created with that scratch file to know that a particular
-image was the original. The purpose instead, is for cleanup.
-
-Any program that makes use of class `os8script` that would create a
-scratch image needs to go through `scratch_list` and delete the scratch files.
-
-The `os8script` object is a higher level interface to
-SIMH for executing the OS/8 environment.
-
-The creation method, `os8script` takes up to 5 arguments:
-
-`simh`: The `simh`: object that will host SIMH.  See [class-simh.md][simh-class-doc].
-`enabled_options`: List of initial options enabled for interpreting script commands.
-`disabled_options`: List of initial options disabled for interpreting script commands.
-`verbose`: Optional argument enabling verbose output. Default value of `False`.
-`debug`: Optional argument enabling debug output. Default value of `True`.
-
-The two options lists were put into the creation call initially because
-for the first use of the API, it was easy to pass the arrays returned by
-argparse.  Conceptually, an initial set of options is passed in at create
-time, and thereafter the add/remove calls are used to change the active options
-one at a time.
 
 Tables of expect matches
 
@@ -320,3 +402,13 @@ prompt, and the sight of the monitor prompt is harvested from
       mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["ocomp"], "")
 
     return ret_val
+
+[class-simh-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
+[os8-run-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
+
+## <a id="license" name="credits"></a>Credits and License
+
+Written by and copyright © 2017-2020 by Warren Young and William Cattey.
+Licensed under the terms of [the SIMH license][sl].
+
+[sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
