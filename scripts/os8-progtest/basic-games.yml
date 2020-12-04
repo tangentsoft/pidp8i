@@ -1,0 +1,23 @@
+'hello':
+    'start': ["R BASIC\r", [["NEW OR OLD--$", 'old']]]
+    'old': ["OLD\r", [["FILE NAME--$", 'name']]]
+    'name': ["HELLO.BA\r", [["READY\r\n$", 'run']]]
+    'run': ["RUN\r", [["WHAT\\'S YOUR NAME  \\?$", 'basic']]]
+    'basic': ["\x03", [["READY\r\n$", 'success']]]
+    'quit': ["\x03", [["\n\\.$", 'success']]]
+
+'snoopy':
+    'start': ["R BASIC\r", [["NEW OR OLD--$", 'old']]]
+    'old': ["OLD\r", [["FILE NAME--$", 'name']]]
+    'name': ["SNOOPY.BA\r", [["READY\r\n$", 'run']]]
+    'run': ["RUN\r", [["WHICH ONE\\?$", 'keyboard']]]
+    'keyboard': ["1\r", [[".*CURSE  YOU  RED  BARON.*\r\nREADY\r\n$", 'success']]]
+    'quit': ["\x03", [["\n\\.$", 'success']]]
+
+'bunny':
+    'start': ["R BASIC\r", [["NEW OR OLD--$", 'old']]]
+    'old': ["OLD\r", [["FILE NAME--$", 'name']]]
+    'name': ["BUNNY.BA\r", [["READY\r\n$", 'run']]]
+    'run': ["RUN\r", [[".*BUNNY.*\r\nREADY\r\n$", 'success']]]
+    'quit': ["\x03", [["\n\\.$", 'success']]]
+
