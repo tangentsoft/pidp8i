@@ -669,10 +669,12 @@ if {![file exists "obj/os8pkg"]} { file mkdir "obj/os8pkg" }
 set os8pkgs_all ""
 set os8pkgs_selected ""
 set os8pkgs_selected_names ""
+set os8pkgs_testing ""
 foreach pspec [glob "$srcdir/pspec/*.pspec"] {
     set pkg_name [file rootname [file tail $pspec]]
     set obj_base "obj/os8pkg/$pkg_name"
     set dep_path "$obj_base.mk"
+    set test_path "$srcdir/scripts/os8-progtest/${pkg_name}.yml"
     set script_path "$obj_base.os8"
     set uc_pkg_name [string toupper $pkg_name]
     set pkg_bin_var "\$(${uc_pkg_name}_PKG_BIN)"
@@ -689,12 +691,18 @@ foreach pspec [glob "$srcdir/pspec/*.pspec"] {
         append os8pkgs_selected_names " $pkg_name"
         append os8pkgs_selected " $pkg_bin_var"
     }
+
+    if {[file exists $test_path]} {
+       append os8pkgs_testing " $pkg_name"
+    }
 }
 
 msg-result "Packages selected for OS/8 RUNTIME packs: $os8pkgs_selected_names"
 define OS8_PKGS_SELECTED_NAMES $os8pkgs_selected_names
 define OS8_PKGS_SELECTED $os8pkgs_selected
 define OS8_PKGS_ALL $os8pkgs_all
+define OS8_PKGS_TESTING $os8pkgs_testing
+msg-result "We can test: $os8pkgs_testing"
 
 # Must be the last thing we do.
 make-template Makefile.in
