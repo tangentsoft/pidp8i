@@ -187,6 +187,7 @@ def main ():
   parser.add_argument("--srcdir", help="Source directory for test .yml files")
   parser.add_argument ("--target", help="target image file", default="v3d.rk05")
   parser.add_argument ("--dry-run", "-n", action="store_true", help="Dry Run. Print output. Generate no files.")
+  parser.add_argument ("--exitfirst", "-x", action="store_true", help="Exit on first failure.", default=False)
   parser.add_argument ('programs', nargs=argparse.REMAINDER, metavar="programs to test, and optional subset of tests")
 
   args = parser.parse_args()
@@ -294,6 +295,7 @@ def main ():
         print (program + ":" + test + " Test Passes.")
       else:
         print (program + ":" + test + " Test Fails.")
+        if args.exitfirst: sys.exit(-1)
 
   clean_quit(os8, 0, args)
   
