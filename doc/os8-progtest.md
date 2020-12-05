@@ -39,12 +39,13 @@ hang until pexpect times out while waiting.
 | Argument             | Meaning
 | -------------------- | ----------------------------------------------
 | `--help, -h`         | show this help message and exit
-| `--verbose, -v`      | increase output verbosity
+| `--verbose`, `-v`    | increase output verbosity
 | `-d DEBUG`           | set debug level; 0-14
 | `--destdir DESTDIR`  | destination directory for output files
 | `--srcdir SRCDIR`    | source directory for test `.yml` files
 | `--target TARGET`    | target image file
-| `--dry-run, -n`      | dry run: only print what would happen
+| `--dry-run`, `-n`    | dry run: only print what would happen
+| `--exitfirst`, `-x`  | exit on first failure
 
 When `--srcdir` is not given, `os8-progtest` looks for YAML files in
 `scripts/os8-progtest` relative to the PiDP-8/I source tree root.
@@ -52,6 +53,10 @@ When `--srcdir` is not given, `os8-progtest` looks for YAML files in
 The default debug level of 0 suppresses all debug output, while 14 makes
 it quite noisy.
 
+The `--exitfirst` option is used when we want a non zero status exit from
+the run of `os8-progtest` on the very first failure, rather than the usual
+behavior of a successful run being performance all tests and reporting
+failures along the way.
 
 ## The Test Definition File
 
@@ -178,7 +183,7 @@ A line beginning with a `#` is ignored as a comment.
     teletype. Some programs can get spammed if you don’t wait out the
     full reply line before sending the next bit of input.
 
-9.  Sometimes guessing the exact whitespace is difficult.  The `\\s+`
+8.  Sometimes guessing the exact whitespace is difficult.  The `\\s+`
     construct to match on one or more whitespace characters is often
     helpful.
 
@@ -189,6 +194,73 @@ A line beginning with a `#` is ignored as a comment.
     `"\n\.$"`  | OS/8 Monitor prompt.  Always look for this at the end.
     `"\n\*$"`  | OS/8 Command decoder prompt.  Often the first step in running programs.
 
+### Problems matching against long strings of output characters.
+
+Python expect has been observed to misbehave on long strings of
+output, for example when trying out BASIC games that print typewritter
+art.  The match times out and fails, and the `before` match string is
+only a partial read of the whole output.
+
+Neither enlarging the pexpect `maxread` option for the spawned sub-process,
+nor setting a sleep between tests helped.  However, there is a work around:
+Perform another write/expect cycle.  Doing this is challenging, because
+ideally you want to send input that won't mess up the output.
+
+Under BASIC, an attempt was made to send `XOFF` ('\0x011') but sometimes, instead
+of sending `XOFF` that would be ignored, OS/8 would echo "X011".  The work-around
+that actually worked was to:
+
+1. Detect stalled output with careful crafting of additional state matches. And adding
+a new state.
+
+2. Prevent false positive tests of stalled output, by putting the longest,
+definitive match first in the list.
+
+3. Send a newline.
+
+4. Retest.
+
+5. If necessary loop a couple times.
+
+6. Make sure tests after the kick handle the additional newlines gracefully.
+
+Example:  The playboy bunny typewriter art kept hanging at random points.
+The old version:
+
+    'bunny':
+        'start': ["R BASIC\r", [["NEW OR OLD--$", 'old']]]
+        'old': ["OLD\r", [["FILE NAME--$", 'name']]]
+        'name': ["BUNNY.BA\r", [["READY\r\n$", 'run']]]
+        'run': ["RUN\r", [[".*BUNNY.*\r\nREADY\r\n$", 'success']]]
+        'quit': ["\x03", [["\n\\.$", 'success']]]
+
+becomes:
+
+    'bunny':
+        'start': ["R BASIC\r", [["NEW OR OLD--$", 'old']]]
+        'old':   ["OLD\r", [["FILE NAME--$", 'name']]]
+        'name':  ["BUNNY.BA\r", [["READY\r\n$", 'run']]]
+        'run':   ["RUN\r", [
+                   [".*BUNNY.*\r\nREADY\r\n$", 'quit'],
+                   ["^RUN.*", 'kick']
+                 ]
+        ]
+        'kick':  ["\r", [
+                   [".*\r\nREADY\r\n", 'quit'],
+                   [".*BUNNY.*", 'kick']
+                 ]
+        ]
+        'quit':  ["\x03", [["\n\\.$", 'success']]]
+
+A few subtle aspects:
+
+ * The `kick` state can loop until it gets the "READY" signifying the end of the run.
+ * The test for "READY\r\n" in the `run` state contains the detection of end of string ('$')
+   but the test in the `kick` state does not, because there will be extra newlines.
+ * The work-around here relies on the hope that there'll be a string with the whole word
+   "BUNNY" in it with the partial read.
+ * Note that the wild card matches ('.*') are non-greedy, and match on the smallest success.
+   That's why the longest match for the successful run is the first test to apply.
 
 [pyyaml]: https://pyyaml.org/wiki/PyYAMLDocumentation
 
