@@ -38,6 +38,54 @@
     on existing media without rebuilding it from scratch.  Bill Cattey
     did almost all of the work on this.
 
+*   Many packages previously copied in as binary blobs have been shifted
+    to the source tree to be built from source, or at the very least
+    as individual binary files copied in from the source tree under
+    code management.  The packages newly managed in this way:
+
+    * `chekmo` The Chekmo II chess playing program is now built from
+    source.
+
+    * `advent` The game of ADVENTURE is now built from source.
+
+    * `uwfocal` The U/W FOCAL interpreter is now partially built from
+    source. The main interpreter is built from source, but other components
+    are considered legacy and treated as binary blobs for now. This is
+    documented in the `uwfocal.pspec` file.
+
+    * `focal69` The first FOCAL interpreter is now built from source.
+
+    * `basic-games` The collection of BASIC games and demos are now under
+    source code management.
+
+    * `dcp` The dissassembler is under source code management. Source has
+    apparently been lost.
+
+    * `kermit` The communication and text encode/decode suite is now built
+    from source. We need testers for this.
+
+    * `music` The PDP-8 Music compiler is now built from source with the scores
+    under source control. Note that we still can't actually hear the output
+    owing to lack of connection between the sound generation and SIMH.
+
+    * `cc8` Ian Schofield's C compiler was always built from source, but now
+    is also under package management with `os8pkg`.
+
+    * `e8` Bill Silver's E8 editor is under package management with `os8pkg`.
+
+    * `vtedit` Although we still don't know how to test this, it is now under
+    source control.
+
+    * `lcmod` The batch scripts `UCSYS.BI`, `LCSYS.BI`, `UCBAS.BI` and `LCBAS.BI`
+    are now under source control. Doing this unearthed a bug that crept into
+    `UCBAS.BI`. This has been squashed.
+
+
+*   Added `os8-progtest` tool for testing software under OS/8. Tests
+    in `pyyaml` format create state machines for starting programs
+    engaging in run dialogs, and confirming success. Test harnesses
+    exist for advent, cc8, chekmo, uwfocal, and basic-games.
+
 *   [Configurable screen manager][rmsm], allowing either tmux or "none"
     as an alternative to GNU screen.  Initial work on this feature done
     by Ryan Finnie.
