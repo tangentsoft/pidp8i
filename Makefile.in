@@ -740,7 +740,7 @@ $(OS8_TOOLTIME): $(V3D_PATCH_SCRIPT) $(OS8_BASELINE) $(V3D_PATCHES) | $(PIDP8I_S
 # undefined variables.
 pkg_all:@OS8_PKGS_ALL@
 
-test:
+test: all
 	tools/os8-progtest -x @OS8_PKGS_TESTING@
 
 $(V3D_RUNTIME): $(V3D_RK05_SCRIPT) $(OS8_TOOLTIME) $(PKGS_INCLUDE) $(OS8_PKGS_SELECTED) | $(PIDP8I_SIM) $(OS8RUN_OUTFILES)
