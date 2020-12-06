@@ -12,15 +12,15 @@
     *   The OS/8 (“native”) compiler now has support for every K&R C
         1978 construct except for `struct`, `float`, and function
         pointers.  There are numerous compliance problems, but we’ve
-        tried to document all of them in `doc/cc8-manual.md`.
+        tried to document all of them in [`doc/cc8-manual.md`][cc8m].
 
         Most notably, this release adds support for `switch` and all of
         the remaining 2-character operators: `!=`, `>=`, `<=` and `?:`
 
     *   Added several more examples, including a Forth interpreter.
 
-*   The software build now creates a bootable RK05 disk image of the
-    [OS/8 Combined Kit (OCK)][OCK] which is effectively the last
+*   The software build now creates a [bootable RK05 disk image][OCK] of the
+    [OS/8 Combined Kit (OCK)][kit] which is effectively the last
     official release of OS/8, with all patches. You can elect to use
     this for the IF=0 boot option instead of OS/8 V3D by configuring the
     software with the `--use-ock` flag.
@@ -31,7 +31,7 @@
     DEC, but was rather V3D plus the Device Extensions Kit to support
     newer hardware that came out after V3D.
 
-*   Added the `os8pkg` package manager, allowing installation and
+*   Added the [`os8pkg` package manager][os8pkg], allowing installation and
     uninstallation of packages on the installed RK05 OS/8 boot media,
     whether OCK or V3D. This is the new mechanism behind the existing
     `--with-os8-*` options, allowing you to get different feature sets
@@ -43,28 +43,28 @@
     as individual binary files copied in from the source tree under
     code management.  The packages newly managed in this way:
 
-    * `chekmo` The Chekmo II chess playing program is now built from
+    * [`chekmo`][chekmorm] The Chekmo II chess playing program is now built from
     source.
 
-    * `advent` The game of ADVENTURE is now built from source.
+    * [`advent`][adventrm] The game of ADVENTURE is now built from source.
 
-    * `uwfocal` The U/W FOCAL interpreter is now partially built from
+    * [`uwfocal`][uwfocalrm] The U/W FOCAL interpreter is now partially built from
     source. The main interpreter is built from source, but other components
     are considered legacy and treated as binary blobs for now. This is
     documented in the `uwfocal.pspec` file.
 
-    * `focal69` The first FOCAL interpreter is now built from source.
+    * [`focal69`][focalrm] The first FOCAL interpreter is now built from source.
 
-    * `basic-games` The collection of BASIC games and demos are now under
+    * [`basic-games`][gamesrm] The collection of BASIC games and demos are now under
     source code management.
 
-    * `dcp` The dissassembler is under source code management. Source has
+    * [`dcp`][dcprm] The dissassembler is under source code management. Source has
     apparently been lost.
 
-    * `kermit` The communication and text encode/decode suite is now built
+    * [`kermit`][kermitrm] The communication and text encode/decode suite is now built
     from source. We need testers for this.
 
-    * `music` The PDP-8 Music compiler is now built from source with the scores
+    * [`music`][musicrm] The PDP-8 Music compiler is now built from source with the scores
     under source control. Note that we still can't actually hear the output
     owing to lack of connection between the sound generation and SIMH.
 
@@ -81,10 +81,12 @@
     `UCBAS.BI`. This has been squashed.
 
 
-*   Added `os8-progtest` tool for testing software under OS/8. Tests
+*   Added [`os8-progtest`][progtest] tool for testing software under OS/8. Tests
     in `pyyaml` format create state machines for starting programs
     engaging in run dialogs, and confirming success. Test harnesses
     exist for advent, cc8, chekmo, uwfocal, and basic-games.
+
+*   The distribution now follows a [documented testing protocol][testing].
 
 *   [Configurable screen manager][rmsm], allowing either tmux or "none"
     as an alternative to GNU screen.  Initial work on this feature done
@@ -92,6 +94,10 @@
 
 *   Updated the PiDP-8/I KiCad hardware files to Oscar Vermeulen’s 2019
     kit version.
+
+*   Integrated the octal comparison tool `ocomp` into the lower level
+    `dist-v3d.rk05` and `dist-ocomp.rk05` images. Used for validation of
+    packages installed by `os8pkg`.
 
 *   Added udev rules to allow mounting media from disks on USB
     floppy drives.  (Thanks to Ryan Finnie for this feature.)
@@ -144,8 +150,21 @@
 
 *   Portability and documentation improvements.
 
-[OCK]:  https://tangentsoft.com/pidp8i/doc/trunk/src/os8/ock/README.md
-[rmsm]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
+[OCK]:        https://tangentsoft.com/pidp8i/doc/trunk/src/os8/ock/README.md
+[rmsm]:       https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
+[os8pkg]:     https://tangentsoft.com/pidp8i/doc/trunk/doc/os8pkg.md
+[progtest]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-progtest.md
+[kit]:        https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-combined-kit.md
+[testing]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/testing.md
+[adventrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/advent/README.md
+[gamesrm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/basic-games/README.md
+[chekmorm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/chekmo/README.md
+[uwfocalrm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/uwfocal/README.md
+[kermitrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/kermit-12/README.md
+[ocomprm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/os8/tools/ocomp/README.md
+[musicrm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/music/README.md
+[dcprm]:      https://tangentsoft.com/pidp8i/doc/trunk/src/dcp/README.md
+[focalrm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/focal69/README.md
 
 
 <a id="20190425"></a>
