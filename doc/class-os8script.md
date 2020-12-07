@@ -8,7 +8,7 @@ is a prerequisite for working with this class.
 
 Development of this class was driven by the desire to create a scripting
 language to engage in complex dialogs with OS/8 commands. The first use
-cases were embodied in the `os8-run` scripting system:
+cases were embodied in the [`os8-run`][os8-run-doc] scripting system:
 
  * use `BUILD` to perform elaborate system configuration in a repeatable way.
  * drive commands calling the OS/8 Command decoder to operate on specified
@@ -19,7 +19,7 @@ cases were embodied in the `os8-run` scripting system:
  or TD8E DECtape devices. (Only one is allowed at a time, and the OS/8 system
  areas are incompatible.)
 
-The latest use case, embodied in the `os8-progtest` utility, is to allow
+The latest use case, embodied in the [`os8-progtest`][progtest-doc] utility, is to allow
 specifying arbitrary state machines that engage in complex program dialogs
 so as to permit programmed, run-time testing of functionality under OS/8.
 
@@ -36,17 +36,18 @@ commands, it is important to learn the rules of housekeeping in the
 
 The pidp8i software package does a lot of complex building both under POSIX
 and in a scripted way under OS/8.  The `tools/mmake` POSIX command
-run multiple independent instances of `make` in parallel.
+runs multiple independent instances of `make` in parallel.
 
-OS/8 comes from a single threaded, single computer design aesthetic, and the
-boot device assumes NOTHING else is touching its contents. This means if there
+OS/8 comes from a single threaded, single computer design paradigm. The
+boot device assumes **NOTHING** else is touching its contents. This means if there
 is more than one instance of SIMH booting OS/8 from the same image file
 (for example in two terminal windows on the same POSIX host)
 the result is **completely unpredictable**.
 
-This was the primary driver for the creation of the `scratch` option to
-`mount` and the development of the `copy` command.  Care **must** be exercised
-to do work in a `scratch` boot environment, and manage dependencies and concurrencies.
+This was the primary driver for the creation of the `scratch` option
+to the `mount` command and the development of the `copy` command.
+Care **must** be exercised to do work in a `scratch` boot environment,
+so as to manage dependencies and concurrencies.
 
 ### Gracefully unmount virtual files
 
@@ -59,17 +60,19 @@ you've modified.
 
 This is not a requirement, but is good practice.
 
-### Remove scratch images.
+### <a id="cleanups"></a>Remove scratch images.
 
 The management of scratch images is rudimentary.  The `mount` command
-creates them, and appends them to a global list `scratch_list`. There isn't
-an association created with that scratch file to know that a particular
-image was the original. The purpose instead, is for cleanup.
+creates them, and appends them to a global list `scratch_list`. This list
+must be used before exiting your program to sweep through and delete
+the scratch imagtes.
 
-Any program that makes use of class `os8script` that would create a
-scratch image needs to go through `scratch_list` and delete the scratch files.
+At this time the API keeps no other association with mounts, and makes
+no other inferences about when the scratch file might or might not be
+needed.
 
-Ok, now we can learn how to set up the environment.
+With the housekeeping rules covered, we are ready to learn how to set
+up the environment.
 
 ## Setup:
 
@@ -84,7 +87,9 @@ The following will include the libraries you need:
     from simh   import *
 
 
-1. Recommend using argparse to create an args structure containing
+Additional setup steps:
+
+1. Using the argparse library is recommended to create an args structure containing
 the parsed command line arguments.
 
 2. Create the simh object that will do the work.
@@ -93,25 +98,25 @@ the parsed command line arguments.
 
 The creation method, `os8script` takes up to 5 arguments:
 
-`simh`: The `simh`: object that will host SIMH.  See [class-simh.md][simh-class-doc].
-`enabled_options`: List of initial options enabled for interpreting script commands.
-`disabled_options`: List of initial options disabled for interpreting script commands.
-`verbose`: Optional argument enabling verbose output. Default value of `False`.
-`debug`: Optional argument enabling debug output. Default value of `True`.
+* `simh`: The `simh`: object that will host SIMH.  See [class-simh.md][simh-class-doc].
+* `enabled_options`: List of initial options enabled for interpreting script commands.
+* `disabled_options`: List of initial options disabled for interpreting script commands.
+* `verbose`: Optional argument enabling verbose output. Default value of `False`.
+* `debug`: Optional argument enabling debug output. Default value of `True`.
 
 The two options lists were put into the creation call initially because
 for the first use of the API, it was easy to pass the arrays returned by
-argparse.  Conceptually, an initial set of options is passed in at create
+`argparse`.  Conceptually, an initial set of options is passed in at create
 time, and thereafter the add/remove calls are used to change the active options
 one at a time.
 
 4. Find the system image you want to boot to do the work.
 
 In the example below we default to using the `os8mo` element from the
-dirs library that is the default media output directory where the
+`dirs` library. That is the default media output directory where the
 build process installs the bootable images. The bootable image
-can be specified by a `--target` option and it defaults to the `v3d.rk05`
-image.
+defaults to the `v3d.rk05` image or can be specified by a `--target`
+option.
 
 5. Mount and boot the image.  Using `scratch` is **highly** recommended.
 
@@ -175,45 +180,11 @@ Otherwise you do direct calls into the API
 
 ### Environment check and command startup
 
-First call `check_and_run` to run your desired OS/8 command from the Keyboard Monitor.  It will:
+The single most important idea to learn in producing a reliable
+program using class os8script is the notion of **The Current Context
+and State of the os8script Environment**.
 
- * make sure we're booted.
- * make sure we're in the OS/8 context.
- * run the command.
- * returns the reply status of the initial command or -1 if any of the previous steps fail.
-
-### `os8-run` Commands
-
-The methods that implement the [os8-run][os8-run-doc] commands can be called
-directly.  They all take two arguments:
-
-`line`: The rest of the line in the script file after the command was parsed.
-This makes the script file look like a series of command lines.  The parser
-sees the command keyword and passes the rest of the line as `line`.
-
-`script_file`: A handle on the script file.  This gets passed around from
-command to command to deal with multi-line files. We rely on this handle
-keeping track of where we are in the file over time.  If you call a command
-that doesn't deal with multiple lines, you can pass `None` as the `script_file`
-handle.  If the command needs more lines, and it sees `None` python will kill
-the program and give you a backtrace.
-
-All of these commands return a string, "success" or "fail".
-
-The `begin` command calls out to one of two sub-commands, `build` and `cdprog`.
-These embody complex state machines to step through command dialogs and detect
-error conditions.
-
-The `patch` command contains a pretty complex state machine. It knows how
-interprest patch description files as commands in either `ODT` or `FUTIL`
-to modify files under OS/8 and then save them.
-
-The `os8`, `pal8`, and `ocomp` commands contain state machines as well, albeit
-less complex ones.  There is not any command dialog, just error detection.
-
-The single most important idea to learn in producing a reliable program
-using class os8script is the notion of **The Current Context and State of the
-os8script Environment**. The `os8script` class is
+The `os8script` class is
 careful to validate that OS/8 is booted and active before submitting strings
 that it expects will be interpreted by the OS/8 Keyboard Monitor.  It is careful
 to escape out to SIMH when sending strings it expects will be interpreted
@@ -227,37 +198,35 @@ OS/8 keyboard monitor.
 When you run a complex command under os8script, you will be writing a state
 machine that will need to return to OS/8 when it is finished.
 
-The `os8-progtest` tool allows creation of state machine descriptions
-that submit text, and listen for replies to step through the states of
-a complex dialog with the program, and then return to the OS/8 keyboard
-monitor.
+The os8script class provides `check_and_run` as a high level startup
+that confirms all is well to run your desired OS/8 command from the
+Keyboard Monitor.  It will:
 
+ * make sure we're booted.
+ * make sure we're in the OS/8 context.
+ * run the command.
+ * returns the reply status of the initial command or -1 if any of the previous steps fail.
 
-command   | API method             | Notes
---------- | ---------------------- | --------
-mount     | mount_command          | Does complex parsiing of `line` to get all the parameters needed.
-boot      | boot_command           | You need to issue this command before running any commands.
-os8       | os8_command            | Allows no dialog. Just run the command and return to the Keyboard Monitor.
-ocomp     | ocomp_command          | Simple state machine to return `success` if two files are identical.
-pal8      | pal8_command           | Contains a state machine to gather up error output nicely.
-include   | include_command        | Allows running a script within a script to arbitrary depths.
-begin     | begin_command          | Complex but constrained state machine for the OS/8 `BUILD` command or commands that use the OS/8 Command Decoder.
-end       | end_command            | Exits begin.
-print     | print_command          | Lets scripts send messages.
-umount    | umount_command         | Cleans out a mount command, except for scratch files. See [cleanups][#cleanups].
-simh      | simh_command           | Lets you send arbitrary commands to simh.
-configure | configure_command      | An interface to a constrained subset of high level PDP-8 specific configurations.
-enable    | enable_option_command  | Connects up the enable interface to scripts.
-disable   | disable_option_command | Connects the disable interface to scripts.
-cpto      | cpto_command           | The way you get files into OS/8 from the POSIX host. Relies on the OS/8 `PIP` command.  Contains a state machine for working through dialogs. Cleans up any temporary files for you.
-cpfrom    | cpfrom_command         | The way you get files out to the POSIX host from the OS/8 environment. Relies on the OS/8 `PIP` command.  Contains a state machine for working through dialogs. Cleans up any temporary files for you.
-copy      | copy_command           | Allows scripts to say, "Make me a copy of this POSIX file," which is generally an image file that serves as the basis of a modified file.
-resume    | resume_command         |
-restart   | restart_command        |
-patch     | patch_command          | Complex. 
+It takes 3 arguments:
 
+* `caller`: A string to give out in debug messages signifying our caller.
+* `command`: The OS/8 command line to run.
+* `script_file`: For API compatibility with the other commands. More fully explained below.
 
-Tables of expect matches
+For example:
+
+    os8.check_and_run ("myprog_main", "DIR")
+
+Using this method is not required, but is an easy way to start up an
+OS/8 command.
+
+After startup you use the interfaces to Python expect to engage in the
+command dialog.
+
+### Using expect
+
+The Python `pexpect` library for expect allows passing in an array of responses,
+and returns the array index of what was matched.
 
 The class `simh` library contains a table of all the normal and error
 replies that the OS/8 Keyboard Monitor and Command Decoder are known to emit
@@ -269,32 +238,42 @@ from the `BUILD` command **in addition to** all the OS/8 replies.
 
 `intern_replies` takes 3 arguments:
 
-`name`: The name of the new reply table.  If a table of that name already exists
+* `name`: The name of the new reply table.  If a table of that name already exists
 return `False`.
 
-`replies`: An array of 3 element arrays.  The three elemments are
-1. The common name of the match string.  How the common name is used is described below.
-2. The regular expression python expect will use to try and match the string.
-3. True if receiving this is a fatal error that returns to the OS/8 Keyboard Monitor.
-Knowing this state change is helpful in establishing correct expectation about
-the state of the enviromnent.
+* `replies`: An array of 3 element arrays with the replies. Described below.
+
+* `with_os8`: A boolean flag. True if the array of replies is in addition to
+the OS/8 replies. False if the array of replies is instead of OS/8 replies.
+This allows fine control of the dialog. Sometimes you want to test for just
+the program output. Sometimes you want to also detect OS/8 responses.
+
+#### The replies array
+
+The three elemments for each member of the replies array are:
+
+    1. The common name of the match string.  This is used by match test routines.
+    2. The regular expression python expect will use to try and match the string.
+    3. True if receiving this is a fatal error that returns to the OS/8 Keyboard Monitor.
+    Knowing this state change is helpful in establishing correct expectation about
+    the state of the enviromnent.
 
 The common name is used in match tests:
 
 The `simh` object instantiated within the `os8script` object has a `test_result`
 method that takes four arguments:
 
-`reply`: integer index into the array of replies.
-`name`: the common name of the result we are expecting to match.
-`replies`: the array of replies that we are testing against.
-`caller`: if not empty, an error string is printed that uses the value of
+* `reply`: integer index into the array of replies.
+* `name`: the common name of the result we are expecting to match.
+* `replies`: the array of replies that we are testing against.
+* `caller`: if not empty, an error string is printed that uses the value of
 `caller` as a preface, if the common name we expect (passed in via
-`name`0 does not match what is found in the `replies` array at the index `reply`.
+`name` does not match what is found in the `replies` array at the index `reply`.
 
 For example if we wanted to test a start up of `MYPROG` into the command decoder
 we could do this:
 
-    reply = self.simh.os8_cmd ("R MYPROG", debug=self.debug)
+    reply = os8.check_and_run ("myprog_main", "R MYPROG")
     self.simh.os8_test_result (reply, "Command Decoder Prompt", "start_myprog")
 
 If we didn't get the Command Decoder prompt, because MYPROG wasn't found we'd
@@ -303,6 +282,245 @@ get something like this:
    start_myprog: failure
    Expected "Command Decoder Prompt". Instead got "File not found".
 
+<full details on a whole dialog go here>
+
+## API reference
+
+The methods that implement the [os8-run][os8-run-doc] commands can be called
+directly.  The method names all end with `_command`. They all take two arguments:
+
+* `line`: The rest of the line in the script file after the command was parsed.
+This makes the script file look like a series of command lines.  The parser
+sees the command keyword and passes the rest of the line as `line`.
+* `script_file`: A handle on the script file.  This gets passed around from
+command to command to deal with multi-line files. We rely on this handle
+keeping track of where we are in the file over time.  If you call a command
+that doesn't deal with multiple lines, you can pass `None` as the `script_file`
+handle.  If the command needs more lines, and it sees `None` python will kill
+the program and give you a backtrace.
+
+They all return a string, "success" on successful operation,  "fail" on a failed
+operation, "die" when the error is so bad that the program really should not proceed.
+
+### `basic_line_parse`
+
+This method takes the same two arguments as all `_command` APIs.
+
+It is rarely called from outside of commands, but is critical to the
+implementation of commands.  As each line is parsed, this method:
+
+* strips out leading and trailing whitespace.
+* filters out comments.
+* parses `begin` statements to enter a new begin/end level.
+* enforces `enabled` / `disabled` parsing and does the work to skip over disabled blocks.
+* parses `end` statements to pop a begin/end level.
+* returns `None` if the line in hand is empty and the caller should just exit without doing
+  anything more.
+
+### `begin_command`
+
+Although appearing early alphabetically, it's probably one of the
+last commands one would use in a program.  `begin_command` runs a
+complex but constrained state machine for the OS/8 `BUILD` command or
+commands that use the OS/8 Command Decoder.
+ 
+When `begin` is parsed from a line, it opens a new block. That block
+is either an `enable` / `disable` block for conditional execution or
+one of two sub-commands, `build_subcomm` and `cdprog_subcomm`.
+
+These embody complex state machines to step through command dialogs and detect
+error conditions.
+
+`build_subcomm` is for creating dialogs with the OS/8 `BUILD` command.
+
+`cdprog_subcomm` is for starting any OS/8 program that uses the OS/8
+Command Decoder.  It is a simple dialog:
+
+* specify one or more files in Command Decoder Syntax.
+* repeat if the program runs and gives back the command decoder asterisk `*` prompt.
+* detect return to OS/8 by getting a OS/8 keyboard monitor dot `.` prompt.
+* detect and report OS/8 errors encountered.
+* recognize whether an error is fatal or non-fatal, and act to keep the state machine
+  in a known state, generally by sending `^C` on non-fatal errors.
+
+### `boot_command`
+
+Check to see if the device to be booted has something attached.
+If not, return "die".
+If so, boot it, and set our booted state to True.
+
+You need to issue this command before running any OS/8 commands because OS/8
+must be booted up to run them.
+
+### `configure_command`
+
+An interface to a constrained subset of high level PDP-8 specific configurations.
+
+`line` is parsed into two arguments: The first arg is the item to configure.
+The second arg is the setting.
+
+The following devices and settings are configurable with this command:
+
+* `tape`: `dt` to enable the TC08 DECtape, `td` to enable the TD8E DECtape instead.
+* `rx`: `rx01` to enable the single density RX01 floppy, `rx02` to ehable the double density RX02 drive instead.
+* `tti`: `KSR` set upper case only operation, and force all lower chase to upper case before forwarding them to OS/8. `7b` to enable SIMH 7bit mode. All characters are passed to OS/8 without case conversion.
+
+### `copy_command`
+
+Allows scripts to say, "Make me a copy of this POSIX file," which is
+generally an image file that serves as the basis of a modified
+file. This is how we are able to run scripts in parallel: we create
+the destination image. If we don't create a destination image via copy
+and boot it, then the `scratch` option to `mount` is needed, as
+explained above.
+
+### `cpfrom_command`
+
+The way you get files out to the POSIX host from the OS/8
+environment. Relies on the OS/8 `PIP` command.  Contains a state
+machine for working through dialogs. Cleans up any temporary files for
+you.
+
+### `cpto_command`
+
+The way you get files into OS/8 from the POSIX host. Relies on the
+OS/8 `PIP` command.  Contains a state machine for working through
+dialogs. Cleans up any temporary files for you.
+
+### `disable_option_command`
+
+Parses the line argument as the key to enable.  The end of the key is
+the end of the line or the first whitespace character.
+
+If the key is on the `options_enabled` array, remove it, **and** add the
+key to the `options_disabled` array if it is not already there.
+
+Subtle point about `disable` vs. `enable` (as copied from the [`os8-run` Documentation][os8-run-doc]):
+
+Two lists are required because default behavior is different for
+enablement versus disablement.
+
+The `begin enabled` block is only executed if the `enabled` list
+contains the keyword. If no such keyword is found, the block is ignored.
+
+The `begin default` block is executed by default unless the `disabled`
+list contains the keyword. If such a keyword is found, the block is ignored.
+
+The `default` construct allows creation of scripts with conditional
+execution  without worrying about informing the build system about new
+enablement keywords.
+
+### `enable_option_command`
+
+Parses the line argument as the key to enable.  The end of the key is
+the end of the line or the first whitespace character.
+
+If the key is on the `options_disabled` array, remove it, **and** add the
+key to the `options_enabled` array if it is not already there.
+
+There is a special enable option `transcript`.  Within an `enable transcript`
+block, all OS/8 output is printed on the standard output of your program.
+
+###  `end_command`
+
+Ends the `begin` / `end` block.
+
+### `include_command`
+
+Allows running a script within a script to arbitrary depths.
+`line` is the name of a script file. Uses the [`path_expand`][#path_expand]
+method to expand variables appearing in the path specification.
+
+### `mount_command`
+
+Does complex parsiing of `line` to get all the parameters needed to attach
+an image file to the appropriate SIMH device.  Has additional parameters
+that are documented in the [os8-run Documentation][os8-run-doc].
+
+### `ocomp_command`
+
+Simple state machine to pass `line` as command arguments to the OS/8 `OCOMP` utility
+and return `success` if two files are identical.  This little machine is used in
+`os8pkg` in the `verify` command.
+
+### `os8_command`
+
+Allows no dialog. Just pass `line` to the OS/8 Keyboard monitor to run.
+Manage the environment state to make sure we eventually get back to the
+keyboard monitor:
+
+* detect return to OS/8 by getting a OS/8 keyboard monitor dot `.` prompt.
+* detect and report OS/8 errors encountered.
+* recognize whether an error is fatal or non-fatal, and act to keep the state machine
+  in a known state, generally by sending `^C` on non-fatal errors.
+
+### `pal8_command`
+
+Runs the OS/8 PAL8 assembler. Contains a state machine to gather up error output nicely.
+
+### `patch_command`
+
+The `patch` command contains a pretty complex state machine. It knows how
+interprest patch description files as commands in either `ODT` or `FUTIL`
+to modify files under OS/8 and then save them.
+
+### <a id="path_expand"></a>`path_expand`
+
+Simple minded variable substitution in a path.
+A path beginning with a dollar sign parses the characters between
+the dollar sign and the first slash seen becomes a name to
+expand with a couple local names: $home and the anchor directories
+defined in lib/pidp8i/dirs.py.
+Returns None if the expansion fails.  That signals the caller to fail.
+
+Takes one argument, a string, `path` that is parsed.
+
+`path_expand` knows the build-time and run-time destination
+directories and expands the following constructs using the `dirs`
+library (as copied from the [`os8-run` Documentation][os8-run-doc]):
+
+| $build/   | The absolute path to the root of the build.
+| $src/     | The absolute path to the root of the source.
+| $bin/     | The directory where executables and runable image files are installed at build time
+| $media/   | The absolute path to OS/8 media files
+| $os8mi/   | The absolute path to OS/8 media files used as input at build time
+| $os8mo/   | The absolute path to OS/8 media files produced as output at build time
+
+### print_expand
+
+Close kin to path_expand.  Takes a string that may name a path
+substitution or the magic $version value and performs the appropriate
+value substitution.
+
+Takes one argument, a string, `path` that is parsed.
+
+### print_command
+
+Lets scripts send messages.  Needed from inside `os8-run` scripts.
+Your program can just use the python `print` command.
+
+### restart_command
+
+Call os8_restart in simh to resume OS/8. Returns "die" if we've not booted.
+
+### resume_command
+
+Call os8_resume in simh to resume OS/8. Returns "die" if we've not booted.
+
+### simh_command
+
+Lets you send arbitrary commands to simh.  Recognizes the boot and
+continue commands as setting OS/8 context.  Knows how to suspend OS/8
+and escape to SIMH so you don't have to worry about managing that
+housekeeping.
+
+### umount_command
+
+Cleans out a mount command, except for scratch files. Remember you have to
+[remove scratch files][#cleanups].
+
+
+--------
 
 Legacy text:
 How to implement the state machine to drive a program under OS/8
@@ -405,6 +623,7 @@ prompt, and the sight of the monitor prompt is harvested from
 
 [class-simh-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [os8-run-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
+[progtest-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-progtest.md
 
 ## <a id="license" name="credits"></a>Credits and License
 
