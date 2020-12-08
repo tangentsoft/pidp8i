@@ -880,28 +880,33 @@ class os8script:
 
 
   #### exit_command ###############################################
-  # Call POSIX exit to exit the running program,
-  # returning a numerical status value.
-
+  # Make a graceful exit:
+  #    Remove scratch files.
+  #    Detach all devices from running image.
+  #    Quit SIMH.
+  #    Parse an exit status value from line. Default to 0.
+  #    Call POSIX exit to exit the running program,
+  
   def exit_command (self, line, script_file):
     m = re.match (_exit_arg_re, line)
-    intfound = False
     if m != None:
       if m.group(1) != None:
-        intfound = True
-        status = int(m.group(1))
+         status = int(m.group(1))
       elif m.group(2) != None:
-        intfound = True
-        status = int(m.group(2))
+         status = int(m.group(2))
       else:
-        intfound = False
+        status = 0
+    for filename in self.scratch_list:
+      if self.verbose: print("Deleting scratch_copy: " + filename)
+      os.remove(filename)
+
+    self.simh.simh_cmd ("detach all")
+    self.simh._child.sendline("quit")
+
     if self.verbose:
-      if intfound: stat_str = str(status)
-      else: stat_str = line
-      print("Calling sys.exit (" +  stat_str + ") at line: " + \
-        str(self.line_ct_stack[0]) + ".")
-    if intfound: sys.exit (status)
-    else: sys.exit(line)
+      print("Calling sys.exit (" +  str(status) + ") at line: " + \
+            str(self.line_ct_stack[0]) + ".")
+    sys.exit(status)
 
 
   #### print_command ###############################################

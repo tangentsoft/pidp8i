@@ -30,7 +30,7 @@ the development of stand-alone programs that use the API.
 
 Before we get into calls to create the environment and calls to run
 commands, it is important to learn the rules of housekeeping in the
-`class os8script` environment.
+`class os8script` environment:
 
 ### Important caveat about parallelism:
 
@@ -71,6 +71,9 @@ At this time the API keeps no other association with mounts, and makes
 no other inferences about when the scratch file might or might not be
 needed.
 
+Note that the [`exit_command`][#exit_command] will do all this housekeeping for you.
+So be sure to call it on every normal or abnormal exit from your program.
+
 With the housekeeping rules covered, we are ready to learn how to set
 up the environment.
 
@@ -85,6 +88,7 @@ The following will include the libraries you need:
 
     from pidp8i import *
     from simh   import *
+    from os8script import *
 
 
 Additional setup steps:
@@ -212,10 +216,11 @@ It takes 3 arguments:
 * `caller`: A string to give out in debug messages signifying our caller.
 * `command`: The OS/8 command line to run.
 * `script_file`: For API compatibility with the other commands. More fully explained below.
+  Often this argument is simply the empty string.
 
 For example:
 
-    os8.check_and_run ("myprog_main", "DIR")
+    os8.check_and_run ("myprog_main", "DIR", "")
 
 Using this method is not required, but is an easy way to start up an
 OS/8 command.
@@ -273,8 +278,8 @@ method that takes four arguments:
 For example if we wanted to test a start up of `MYPROG` into the command decoder
 we could do this:
 
-    reply = os8.check_and_run ("myprog_main", "R MYPROG")
-    self.simh.os8_test_result (reply, "Command Decoder Prompt", "start_myprog")
+    reply = os8.check_and_run ("myprog_main", "R MYPROG", "")
+    os8.simh.os8_test_result (reply, "Command Decoder Prompt", "start_myprog")
 
 If we didn't get the Command Decoder prompt, because MYPROG wasn't found we'd
 get something like this:
@@ -282,7 +287,51 @@ get something like this:
    start_myprog: failure
    Expected "Command Decoder Prompt". Instead got "File not found".
 
-<full details on a whole dialog go here>
+## A Complete Example
+
+The [documentation for the simh class][class-simh-doc] makes reference to programs
+in the source tree.  This document will present a simple, but complete example
+of using the `os8script` class library, with explanations and reference to
+other sections of this document and to other documents.  The goal is to give
+an approachable demonstration of how to use this powerful library.
+
+Let's call it myprog.py
+
+    #!/usr/bin/env python3
+
+    import os
+    import sys
+    sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
+    sys.path.insert (0, os.getcwd () + '/lib')
+
+    from pidp8i import *
+    from simh   import *
+
+    import argparse
+
+    def main ():    
+      parser = argparse.ArgumentParser(
+        description = """
+        Run my program under PDP-8 OS/8.""",
+        usage = "%(prog)s [options]")
+      parser.add_argument ("--target", help="target image file", default="v3d.rk05")
+      image_path = os.path.join(dirs.os8mo, args.target)
+    
+      try:
+        s = simh (dirs.build, True)
+      except (RuntimeError) as e:
+        print("Could not start simulator: " + e.message + '!')
+        sys.exit (1)
+    
+      if VERBOSE:
+        s.verbose = True
+        s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
+    
+      os8 = os8script (s, [], [], verbose=False, debug=False)
+    
+      os8.mount_command ("rk0 " + targ_path + " required scratch", None)
+      os8.boot_command ("rk0", None)
+
 
 ## API reference
 
@@ -424,6 +473,16 @@ block, all OS/8 output is printed on the standard output of your program.
 ###  `end_command`
 
 Ends the `begin` / `end` block.
+
+### <a id="exit_command"></a>"`exit_command`
+
+Make a graceful exit:
+
+1. Remove scratch files.
+2. Detach all devices from running image.
+3. Quit SIMH.
+4. Parse an exit status value from `line`. Default to 0.
+5. Call POSIX exit to exit the running program,
 
 ### `include_command`
 

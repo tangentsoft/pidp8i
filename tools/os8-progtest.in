@@ -152,15 +152,7 @@ def clean_quit (os8, status, args):
   # Handle dry run case:
   if os8 == None: sys.exit (status)
   
-  for filename in os8.scratch_list:
-    if args.verbose: print("Deleting scratch_copy: " + filename)
-    os.remove(filename)
-
-  os8.simh.simh_cmd ("detach all")
-  os8.simh._child.sendline("quit")
-
-  sys.exit(status)
-
+  os8.exit_command(str(status), "")
 
 #### parse_todos #######################################################
 # Parse a series of comma separated tests.
