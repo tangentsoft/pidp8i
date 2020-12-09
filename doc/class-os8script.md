@@ -1,36 +1,39 @@
-# class os8script: A higher level interface to OS/8 under SIMH
+# class os8script: A high-level interface to OS/8 under SIMH
 
 ## Introduction
 
 This class is a higher level abstraction above the class simh.
+
 An understanding of that class as documented in [doc/class-simh.md][class-simh-doc]
-is a prerequisite for working with this class.
+is a helpful to working with this class.
 
 Development of this class was driven by the desire to create a scripting
-language to engage in complex dialogs with OS/8 commands. The first use
+language to engage in complex dialogs programs running under OS/8. The first use
 cases were embodied in the [`os8-run`][os8-run-doc] scripting system:
 
- * use `BUILD` to perform elaborate system configuration in a repeatable way.
- * drive commands calling the OS/8 Command decoder to operate on specified
+ * Use `BUILD` to perform elaborate system configuration in a repeatable way.
+ * Drive commands calling the OS/8 Command decoder to operate on specified
  files under OS/8.
- * apply patches, first using `ODT` and then using `FUTIL`.
- * assemble programs using `PAL8`.
- * reconfigure the SIMH devices, for example switching between having TC08
+ * Apply patches, first using `ODT` and then using `FUTIL`.
+ * Assemble programs using `PAL8`.
+ * Reconfigure the SIMH devices, for example switching between having TC08
  or TD8E DECtape devices. (Only one is allowed at a time, and the OS/8 system
  areas are incompatible.)
 
-The latest use case, embodied in the [`os8-progtest`][progtest-doc] utility, is to allow
-specifying arbitrary state machines that engage in complex program dialogs
-so as to permit programmed, run-time testing of functionality under OS/8.
+The latest use case, embodied in the [`os8-progtest`][progtest-doc]
+utility, is to allow creation of arbitrary state machines that engage
+in complex program dialogs so as to permit programmed, run-time
+testing of functionality under OS/8.
 
 This document describes the class os8script API with an eye to assisting
-the development of stand-alone programs that use the API.
+the development of stand-alone programs that use it.  A complete demo
+program implementing a complex dialog is provided.
 
 ## Housekeeping
 
-Before we get into calls to create the environment and calls to run
-commands, it is important to learn the rules of housekeeping in the
-`class os8script` environment:
+Before we describe methods to create the environment and run commands,
+it is important to learn the rules of housekeeping in the `class
+os8script` environment:
 
 ### Important caveat about parallelism:
 
@@ -46,7 +49,7 @@ the result is **completely unpredictable**.
 
 This was the primary driver for the creation of the `scratch` option
 to the `mount` command and the development of the `copy` command.
-Care **must** be exercised to do work in a `scratch` boot environment,
+Care **must** be exercised to do run in a `scratch` boot environment,
 so as to manage dependencies and concurrencies.
 
 ### Gracefully unmount virtual files
@@ -71,7 +74,7 @@ At this time the API keeps no other association with mounts, and makes
 no other inferences about when the scratch file might or might not be
 needed.
 
-Note that the [`exit_command`](#exit_command) will do all this housekeeping for you.
+Note that the [`exit_command`](#exit_command) will do all this cleanup for you.
 So be sure to call it on every normal or abnormal exit from your program.
 
 With the housekeeping rules covered, we are ready to learn how to set
@@ -91,7 +94,7 @@ The following will include the libraries you need:
     from os8script import *
 
 
-Additional setup steps:
+The setup steps:
 
 1. Using the argparse library is recommended to create an args structure containing
 the parsed command line arguments.
@@ -124,36 +127,6 @@ option.
 
 5. Mount and boot the image.  Using `scratch` is **highly** recommended.
 
-`main` would look something like this:
-
-
-    def main ():    
-      parser = argparse.ArgumentParser(
-        description = """
-        Run my program under PDP-8 OS/8.""",
-        usage = "%(prog)s [options]")
-      parser.add_argument ("--target", help="target image file", default="v3d.rk05")
-      image_path = os.path.join(dirs.os8mo, args.target)
-    
-      try:
-        s = simh (dirs.build, True)
-      except (RuntimeError) as e:
-        print("Could not start simulator: " + e.message + '!')
-        sys.exit (1)
-    
-      if VERBOSE:
-        s.verbose = True
-        s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
-    
-      os8 = os8script (s, [], [], verbose=False, debug=False)
-    
-      os8.mount_command ("rk0 " + targ_path + " required scratch", None)
-      os8.boot_command ("rk0", None)
-
-
-Further details and examples can be found by reading the `main` function
-of either `bin/os8-run` or `tools/os8-progtest` with further explanation in the
-early section of [doc/class-simh.md][class-simh-doc]
 
 ## Doing the Work:
 
@@ -188,33 +161,40 @@ The single most important idea to learn in producing a reliable
 program using class os8script is the notion of **The Current Context
 and State of the os8script Environment**.
 
-The `os8script` class is
-careful to validate that OS/8 is booted and active before submitting strings
-that it expects will be interpreted by the OS/8 Keyboard Monitor.  It is careful
-to escape out to SIMH when sending strings it expects will be interpreted
-as SIMH commands.  The os8script is set of layered state machines. SIMH starts off
-at its command level, then OS/8 is booted.  To issue more SIMH commands after that
-you have to escape out of OS/8, but then have to return to OS/8 to continue.
-When a program is started under OS/8 it creates a new layered state machine:
-The dialog with the program, until the program finishes and returns to the
-OS/8 keyboard monitor.
+The `os8script` class is careful to validate that OS/8 is booted and
+active before submitting strings that it expects will be interpreted
+by the OS/8 Keyboard Monitor.  It is careful to escape out to SIMH
+when sending strings it expects will be interpreted as SIMH commands.
+The instantiated `os8script` can be thought of as a set of layered
+state machines:
 
-When you run a complex command under os8script, you will be writing a state
-machine that will need to return to OS/8 when it is finished.
+* SIMH starts off at its command level,
+  * then OS/8 is booted.
+    * When a program is started under OS/8 it creates a new layered
+      state machine, the dialog with the program,
+  * until the program finishes and returns to the OS/8 keyboard monitor.
 
-The os8script class provides `check_and_run` as a high level startup
-that confirms all is well to run your desired OS/8 command from the
-Keyboard Monitor.  It will:
+To issue more SIMH commands after that you have to escape out
+of OS/8, but then return to OS/8 and continue running the program
 
- * make sure we're booted.
- * make sure we're in the OS/8 context.
- * run the command.
- * returns the reply status of the initial command or -1 if any of the previous steps fail.
+When you run a complex command with `os8script` class, you will be
+writing a state machine that will need to return to OS/8 when it is
+finished.
 
-It acts like a bridge between the higher level paradigm of script running and
-the lower level paradigm of sending OS/8 command lines.  Conceptually, the boot check is
-a once-only check at the start up of a more complex dialog. It takes three mandatory
-arguments:
+The `os8script` class provides `check_and_run` as a high level startup
+method that confirms all is well to run your desired OS/8 command from
+the Keyboard Monitor.  It will:
+
+ * make sure we're booted,
+ * make sure we're in the OS/8 context,
+ * run the command,
+ * return the reply status of the initial command
+   or -1 if any of the previous steps fail.
+
+It acts like a bridge between the higher level paradigm of script
+running and the lower level paradigm of sending OS/8 command lines.
+Conceptually, the boot check is a once-only check at the start up of a
+more complex dialog. `check-and-run` takes three mandatory arguments:
 
 * `os8_comm`: The OS/8 command line to run.
 * `caller`: A name assigned by the calling program to help make it clear which higher
@@ -233,8 +213,21 @@ For example:
 Using this method is not required, but is an easy way to start up an
 OS/8 command.
 
-After startup you use the interfaces to Python expect to engage in the
-command dialog.
+After startup you use the interface methods to Python expect in the `simh` class
+to engage in the command dialog:
+
+Send a string and look for results:
+
+* `os8_cmd`
+
+Send a string and leave it to another call to look for results:
+
+* `os8_send_str`
+* `os8_send_ctrl`
+
+Look for results:
+
+* `_child_expect`
 
 ### Using expect
 
@@ -244,12 +237,15 @@ and returns the array index of what was matched.
 The class `simh` library contains a table of all the normal and error
 replies that the OS/8 Keyboard Monitor and Command Decoder are known to emit
 in `_os8_replies` and pre-compiled regular expressions for each one in
-`_os8_replies_rex`.  Class `os8script` has a method `intern_replies`
-that allows management of additional tables by name, allowing, for example
-the `build_command` state machine to create a table with replies
-from the `BUILD` command **in addition to** all the OS/8 replies.
+`_os8_replies_rex`.
 
-<a id="intern_replies"></a>`intern_replies` takes 3 arguments:
+<a id="intern_replies"></a>Class `os8script` has a method
+`intern_replies` that allows management of additional tables by name,
+allowing, for example the `build_command` state machine to create a
+table with replies from the `BUILD` command **in addition to** all the
+OS/8 replies.
+
+`intern_replies` takes 3 arguments:
 
 * `name`: The name of the new reply table.  If a table of that name already exists
 return `False`.
@@ -311,59 +307,99 @@ we could do this:
 If we didn't get the Command Decoder prompt, because MYPROG wasn't found we'd
 get something like this:
 
-   start_myprog: failure
-   Expected "Command Decoder Prompt". Instead got "File not found".
+    start_myprog: failure
+    Expected "Command Decoder Prompt". Instead got "File not found".
 
 ## A Complete Example
 
 The [documentation for the simh class][class-simh-doc] makes reference to programs
-in the source tree.  This document will present a simple, but complete example
-of using the `os8script` class library, with explanations and reference to
-other sections of this document and to other documents.  The goal is to give
-an approachable demonstration of how to use this powerful library.
+in the source tree as examples.  However those were written primarily to get a job
+done, rather than as a tutorial.
 
-Let's call it myprog.py
+The file [`examples/host/class-os8script-demo.py`][demo-script] was written
+specifically as a tutorial.
 
-    #!/usr/bin/env python3
+The demo program shows how to create a state machine that engages in a complex
+dialog under OS/8:
 
-    import os
-    import sys
-    sys.path.insert (0, os.path.dirname (__file__) + '/../lib')
-    sys.path.insert (0, os.getcwd () + '/lib')
+* It starts up OS/8 BASIC.
+* When OS/8 BASIC asks "OLD OR NEW" the program says "NEW".
+* When prompted, it supplies the filename, "MYPROG.BA".
+* A two-line `1 + 2 = 3` program is input.
+* The program is run, and the answer is validated.
 
-    from pidp8i import *
-    from simh   import *
+Each step of the housekeeping, setup, and work is described and performed.
 
-    import argparse
+Here is a non-verbose sample run:
 
-    def main ():    
-      parser = argparse.ArgumentParser(
-        description = """
-        Run my program under PDP-8 OS/8.""",
-        usage = "%(prog)s [options]")
-      parser.add_argument ("--target", help="target image file", default="v3d.rk05")
-      image_path = os.path.join(dirs.os8mo, args.target)
+    wdc-home-3:trunk wdc$ examples/host/class-os8script-demo.py 
+    Got Expected Result!
+
+Here is a verbose sample run:
+
+    wdc-home-3:trunk wdc$ examples/host/class-os8script-demo.py -v 
+    Line 0: mount: att rk0 /Users/wdc/src/pidp8i/trunk/bin/v3d-temp-_2mqkf24.rk05
+    att rk0 /Users/wdc/src/pidp8i/trunk/bin/v3d-temp-_2mqkf24.rk05
+    att rk0 /Users/wdc/src/pidp8i/trunk/bin/v3d-temp-_2mqkf24.rk05
+    sim> show rk0
+    att rk0 /Users/wdc/src/pidp8i/trunk/bin/v3d-temp-_2mqkf24.rk05
+    sim> show rk0
+    RK0	1662KW, attached to /Users/wdc/src/pidp8i/trunk/bin/v3d-temp-_2mqkf24.rk05, write enabled
+    Line 0: boot rk0
+    boot rk0
+    sim> boot rk0
+    boot rk0
     
-      try:
-        s = simh (dirs.build, True)
-      except (RuntimeError) as e:
-        print("Could not start simulator: " + e.message + '!')
-        sys.exit (1)
+    PIDP-8/I TRUNK:ID[0A1D0ED404] - OS/8 V3D - KBM V3Q - CCL V1F
+    CONFIGURED BY WDC@WDC-HOME-3.LAN ON 2020.12.08 AT 00:01:16 EST
     
-      if VERBOSE:
-        s.verbose = True
-        s.set_logfile (os.fdopen (sys.stdout.fileno (), 'wb', 0))
+    RESTART ADDRESS = 07600
     
-      os8 = os8script (s, [], [], verbose=False, debug=False)
+    TYPE:
+        .DIR                -  TO GET A LIST OF FILES ON DSK:
+        .DIR SYS:           -  TO GET A LIST OF FILES ON SYS:
+        .R PROGNAME         -  TO RUN A SYSTEM PROGRAM
+        .HELP FILENAME      -  TO TYPE A HELP FILE
     
-      os8.mount_command ("rk0 " + targ_path + " required scratch", None)
-      os8.boot_command ("rk0", None)
+    .Line: 0: demo_command: R BASIC
+    R BASIC
+    NEW OR OLD--Got reply: NEW OR OLD
+    NEW
+    FILE NAME--Got reply: FILENAME
+    MYPROG.BA
+    
+    READY
+    Got reply: READY
+    10 PRINT 1 + 2
+    20 END
+    RUN
+    
+    MYPROG  BA    5A    
+    
+     3 
+    
+    READY
+    Got reply: 3 READY
+    Got Expected Result!
+    Sending ^C
+    
+    .Deleting scratch_copy: /Users/wdc/src/pidp8i/trunk/bin/v3d-temp-_2mqkf24.rk05
+    
+    Simulation stopped, PC: 01210 (JMP 1207)
+    sim> detach all
+    detach all
+    sim> quit
+    Calling sys.exit (0) at line: 0.
 
 
 ## API reference
 
+This is an alphabetical reference of the public methods of the `os8script` class.
+
+There are setup, housekeeping and helper methods.
+
 The methods that implement the [os8-run][os8-run-doc] commands can be called
-directly.  The method names all end with `_command`. They all take two arguments:
+directly.  Those method names all end with `_command`. They all take two arguments:
 
 * `line`: The rest of the line in the script file after the command was parsed.
 This makes the script file look like a series of command lines.  The parser
@@ -380,7 +416,7 @@ operation, "die" when the error is so bad that the program really should not pro
 
 ### `basic_line_parse`
 
-This method takes the same two arguments as all `_command` APIs.
+This helper method takes the same two arguments as all `_command` APIs.
 
 It is rarely called from outside of commands, but is critical to the
 implementation of commands.  As each line is parsed, this method:
@@ -423,16 +459,17 @@ Command Decoder.  It is a simple dialog:
 
 Check to see if the device to be booted has something attached.
 If not, return "die".
-If so, boot it, and set our booted state to True.
+If so, boot it, and set our booted state to `True`.
 
 You need to issue this command before running any OS/8 commands because OS/8
 must be booted up to run them.
 
 ### `configure_command`
 
-An interface to a constrained subset of high level PDP-8 specific configurations.
+An interface to a constrained subset of high level PDP-8 specific
+device configuration changes under SIMH.
 
-`line` is parsed into two arguments: The first arg is the item to configure.
+`line` is parsed into two arguments: The first arg is the device to configure.
 The second arg is the setting.
 
 The following devices and settings are configurable with this command:
@@ -452,24 +489,26 @@ explained above.
 
 ### `cpfrom_command`
 
-The way you get files out to the POSIX host from the OS/8
+The way to get files out to the POSIX host from the OS/8
 environment. Relies on the OS/8 `PIP` command.  Contains a state
-machine for working through dialogs. Cleans up any temporary files for
-you.
+machine for working through dialogs. Handles coding conversion
+between POSIX ASCII (7 bit space parity, \n newline delimiter)
+and OS/8 ASCII (8 bit mark parity, \r newline delimiter.)
 
 ### `cpto_command`
 
-The way you get files into OS/8 from the POSIX host. Relies on the
+The way to get files into OS/8 from the POSIX host. Relies on the
 OS/8 `PIP` command.  Contains a state machine for working through
-dialogs. Cleans up any temporary files for you.
+dialogs. Also handles coding conversion between OS/8 ASCII and
+POSIX ASCII.
 
 ### `disable_option_command`
 
-Parses the line argument as the key to enable.  The end of the key is
-the end of the line or the first whitespace character.
+Parses the `line` argument as the key to enable.  The end of the key is
+delimited by the end of the line or the first whitespace character.
 
 If the key is on the `options_enabled` array, remove it, **and** add the
-key to the `options_disabled` array if it is not already there.
+key to the `options_disabled` array if it is not already present.
 
 Subtle point about `disable` vs. `enable` (as copied from the [`os8-run` Documentation][os8-run-doc]):
 
@@ -488,11 +527,11 @@ enablement keywords.
 
 ### `enable_option_command`
 
-Parses the line argument as the key to enable.  The end of the key is
-the end of the line or the first whitespace character.
+Parses the `line` argument as the key to enable.  The end of the key is
+delimited by the end of the line or the first whitespace character.
 
 If the key is on the `options_disabled` array, remove it, **and** add the
-key to the `options_enabled` array if it is not already there.
+key to the `options_enabled` array if it is not already present.
 
 There is a special enable option `transcript`.  Within an `enable transcript`
 block, all OS/8 output is printed on the standard output of your program.
@@ -552,12 +591,12 @@ to modify files under OS/8 and then save them.
 
 ### <a id="path_expand"></a>`path_expand`
 
-Simple minded variable substitution in a path.
-A path beginning with a dollar sign parses the characters between
-the dollar sign and the first slash seen becomes a name to
-expand with a couple local names: $home and the anchor directories
-defined in lib/pidp8i/dirs.py.
-Returns None if the expansion fails.  That signals the caller to fail.
+Helper method -- a simple minded variable substitution in a path.  A
+path beginning with a dollar sign parses the characters between the
+dollar sign and the first slash seen becomes a name to expand with a
+couple local names: $home and the anchor directories defined in
+lib/pidp8i/dirs.py.  Returns None if the expansion fails.  That
+signals the caller to fail.
 
 Takes one argument, a string, `path` that is parsed.
 
@@ -574,9 +613,9 @@ library (as copied from the [`os8-run` Documentation][os8-run-doc]):
 
 ### `print_expand`
 
-Close kin to path_expand.  Takes a string that may name a path
-substitution or the magic $version value and performs the appropriate
-value substitution.
+Helper method -- close kin to path_expand.  Takes a string that may
+name a path substitution or the magic $version value and performs the
+appropriate value substitution.
 
 Takes one argument, a string, `path` that is parsed.
 
@@ -609,6 +648,7 @@ remove scratch files. Call the [`exit_command`](#exit_command) method to do so.
 [class-simh-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [os8-run-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
 [progtest-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-progtest.md
+[demo-script]: https://tangentsoft.com/pidp8i/doc/trunk/examples/host/class-os8script-demo.py
 
 ## <a id="license" name="credits"></a>Credits and License
 
