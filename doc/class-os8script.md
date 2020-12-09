@@ -71,7 +71,7 @@ At this time the API keeps no other association with mounts, and makes
 no other inferences about when the scratch file might or might not be
 needed.
 
-Note that the [`exit_command`][#exit_command] will do all this housekeeping for you.
+Note that the [`exit_command`](#exit_command) will do all this housekeeping for you.
 So be sure to call it on every normal or abnormal exit from your program.
 
 With the housekeeping rules covered, we are ready to learn how to set
@@ -211,12 +211,20 @@ Keyboard Monitor.  It will:
  * run the command.
  * returns the reply status of the initial command or -1 if any of the previous steps fail.
 
-It takes 3 arguments:
+It acts like a bridge between the higher level paradigm of script running and
+the lower level paradigm of sending OS/8 command lines.  Conceptually, the boot check is
+a once-only check at the start up of a more complex dialog. It takes three mandatory
+arguments:
 
-* `caller`: A string to give out in debug messages signifying our caller.
-* `command`: The OS/8 command line to run.
+* `os8_comm`: The OS/8 command line to run.
+* `caller`: A name assigned by the calling program to help make it clear which higher
+  level program is calling this common start-up routine.
 * `script_file`: For API compatibility with the other commands. More fully explained below.
   Often this argument is simply the empty string.
+
+It takes one optional argument, an array of match regular expressions, as managed
+by the [`intern_replies`](#intern_replies) method of class simh.  If this argument is
+not provided, the default replies array for OS/8 is used.
 
 For example:
 
@@ -241,7 +249,7 @@ that allows management of additional tables by name, allowing, for example
 the `build_command` state machine to create a table with replies
 from the `BUILD` command **in addition to** all the OS/8 replies.
 
-`intern_replies` takes 3 arguments:
+<a id="intern_replies"></a>`intern_replies` takes 3 arguments:
 
 * `name`: The name of the new reply table.  If a table of that name already exists
 return `False`.
@@ -253,7 +261,7 @@ the OS/8 replies. False if the array of replies is instead of OS/8 replies.
 This allows fine control of the dialog. Sometimes you want to test for just
 the program output. Sometimes you want to also detect OS/8 responses.
 
-#### The replies array
+#### The `replies` array
 
 The three elemments for each member of the replies array are:
 
@@ -263,6 +271,15 @@ The three elemments for each member of the replies array are:
     Knowing this state change is helpful in establishing correct expectation about
     the state of the enviromnent.
 
+Each regular expression is compiled, and interned in the `os8script` object in
+the `replies_rex` dictionary, keyed to the `name` of the `replies` array.
+The `replies_rex` dictionary is used to make sense of commands executed by calling
+either the [`check_and_run`](#check_and_run) method or the os8_cmd method in the
+simh chass.
+
+The array itself is interned in the `os8script` object in the `replies` dictionary
+keyed to the `name` of the `replies` array.
+
 The common name is used in match tests:
 
 The `simh` object instantiated within the `os8script` object has a `test_result`
@@ -271,9 +288,18 @@ method that takes four arguments:
 * `reply`: integer index into the array of replies.
 * `name`: the common name of the result we are expecting to match.
 * `replies`: the array of replies that we are testing against.
-* `caller`: if not empty, an error string is printed that uses the value of
-`caller` as a preface, if the common name we expect (passed in via
-`name` does not match what is found in the `replies` array at the index `reply`.
+* `caller`: is used to reduce error reporting common code as describe below.
+
+If the common name supplied to `test_result` is found at the `replies`
+array at index `reply`, `True` is returned. Otherwise `False` is returned.
+
+If `caller` is not empty, and the match is False, an error is printed
+prefaced by the caller string.  However the most common use case is to
+leave the `caller` string empty, and perform several `test_result` actions
+in succession as shown in the example program.
+
+After the command is executed, driven by the `replies_rex` array, the results
+can be tested with the `replies` array.
 
 For example if we wanted to test a start up of `MYPROG` into the command decoder
 we could do this:
@@ -281,6 +307,7 @@ we could do this:
     reply = os8.check_and_run ("myprog_main", "R MYPROG", "")
     os8.simh.os8_test_result (reply, "Command Decoder Prompt", "start_myprog")
 
+(Notice we left the script file blank, and defaulted to the OS/8 replies arrays.)
 If we didn't get the Command Decoder prompt, because MYPROG wasn't found we'd
 get something like this:
 
@@ -474,7 +501,7 @@ block, all OS/8 output is printed on the standard output of your program.
 
 Ends the `begin` / `end` block.
 
-### <a id="exit_command"></a>"`exit_command`
+### <a id="exit_command"></a>`exit_command`
 
 Make a graceful exit:
 
@@ -487,7 +514,7 @@ Make a graceful exit:
 ### `include_command`
 
 Allows running a script within a script to arbitrary depths.
-`line` is the name of a script file. Uses the [`path_expand`][#path_expand]
+`line` is the name of a script file. Uses the [`path_expand`](#path_expand)
 method to expand variables appearing in the path specification.
 
 ### `mount_command`
@@ -545,7 +572,7 @@ library (as copied from the [`os8-run` Documentation][os8-run-doc]):
 | $os8mi/   | The absolute path to OS/8 media files used as input at build time
 | $os8mo/   | The absolute path to OS/8 media files produced as output at build time
 
-### print_expand
+### `print_expand`
 
 Close kin to path_expand.  Takes a string that may name a path
 substitution or the magic $version value and performs the appropriate
@@ -553,132 +580,31 @@ value substitution.
 
 Takes one argument, a string, `path` that is parsed.
 
-### print_command
+### `print_command`
 
 Lets scripts send messages.  Needed from inside `os8-run` scripts.
 Your program can just use the python `print` command.
 
-### restart_command
+### `restart_command`
 
 Call os8_restart in simh to resume OS/8. Returns "die" if we've not booted.
 
-### resume_command
+### `resume_command`
 
 Call os8_resume in simh to resume OS/8. Returns "die" if we've not booted.
 
-### simh_command
+### `simh_command`
 
 Lets you send arbitrary commands to simh.  Recognizes the boot and
 continue commands as setting OS/8 context.  Knows how to suspend OS/8
 and escape to SIMH so you don't have to worry about managing that
 housekeeping.
 
-### umount_command
+### `umount_command`
 
 Cleans out a mount command, except for scratch files. Remember you have to
-[remove scratch files][#cleanups].
+remove scratch files. Call the [`exit_command`](#exit_command) method to do so.
 
-
---------
-
-Legacy text:
-How to implement the state machine to drive a program under OS/8
-
-Tricky bit:  If the program uses its own command prompt, we need to
-go beyond the default replies that would come back from the
-os8 set. Otherwise the state machine will hang looking for a prompt
-it does not recognize.
-
-TODO: add a hook for an additional command prompt.
-
-You have a mini-state machine in your command:
-
- * Decide which results indicate "success", "fail" and/or "die".  You
- * You need to leave your command with OS/8 back at command level after
-   having recognized that the monitor prompt has been printed.  If you don't
-   the state machine gets confused and hangs.
- * You can gather intermediate results from `self.simh.child_before().strip()`
- * You can gather final results from self.simh.child_after().strip()
-
-The implementation of the OCOMP gives a good example:
-
-The "success" criterion is the "NOTHING OUTPUT" message indicating that
-both input files are identical.  When that happens the program returns to
-the OS/8 monitor, and so we exit the OCOMP state machine as soon as we
-see the monitor prompt followint the "NOTHING OUTPUT" results.
-
-The `USER ERROR` and `File not found` outputs are considedred non
-fatal erorrs.  self.simh.child_after().strip() provides detail.
-
-It is expected that the monitor prompt will be forthcoming and
-the next cycle through the while loop will see it.
-
-However, if we get a command decoder prompt, it means we need to send
-`^C` to exit the program and return to the monitor.
-
-The `while` loop does just that.
-
-For debugging purposes we use expect_loop to show how many times we've
-cycled through the output looking for stuff.
-
-The conditional on `transcript` is how we pass program output out to
-the command shell that ran `os8-run`.  It must appear after the call
-to `self.simh._child.expect(self.replies_rex["ocomp"])` so that the
-output between when we feed the command line to the command decoder
-prompt, and the sight of the monitor prompt is harvested from
-`self.simh.child_before().strip()` and displayed.
-
-  def ocomp_command (self, line, script_file):
-    if self.verbose: print("Running OCOMP on: " + line)
-    reply = self.check_and_run("ocomp", "R OCOMP", script_file)
-    if reply == -1: return "die"
-
-    if self.simh.os8_test_result (reply, "Command Decoder Prompt", "call_ocomp") == False:
-      print("OCOMP failed to start at line " + str(self.line_ct_stack[0]))
-      return "fail"
-
-    if self.verbose: print("Line: " + \
-       str(self.line_ct_stack[0]) + ": ocomp_command: " + line)
-
-    # Send our command and harvest results.
-    reply = self.simh.os8_cmd (line, self.replies_rex["ocomp"])
-    if "transcript" in self.options_enabled:
-      print (self.simh._child.before.decode().strip())
-
-    ret_val = "fail"
-    expect_loop = 1
-
-    mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["ocomp"], "")
-    # We get return status and then clean up the state machine.
-    while not mon:
-      if self.debug:
-        print ("ocomp gave reply: [" + str(expect_loop) +"] " + str(reply) + " -> " + \
-             self.replies["ocomp"][reply][0])
-      ok = self.simh.test_result(reply, "NOTHING OUTPUT", self.replies["ocomp"], "")
-      cd  = self.simh.test_result(reply, "Command Decoder Prompt", self.replies["ocomp"], "")
-      nf = self.simh.test_result(reply, "File not found", self.replies["ocomp"], "")
-      ue = self.simh.test_result(reply, "USER ERROR", self.replies["ocomp"], "")
-
-      if ok:
-        if self.debug: print ("Success")
-        ret_val = "success"
-      elif nf or ue:
-        print ("OCOMP:" + self.simh.child_after().strip() + "\n")
-      elif cd: # Got Command Decoder. Exit with failure.
-        if self.debug: print ("call_ocomp: Non-fatal error: Sending ^C")
-        # Exit OCOMP. We'll confirm we got back to OS/8 monitor below.
-        self.simh.os8_send_ctrl ('c')      
-
-      reply = self.simh._child.expect(self.replies_rex["ocomp"])
-
-      if "transcript" in self.options_enabled:
-        print (self.simh._child.before.decode().strip())
-
-      expect_loop += 1
-
-      mon = self.simh.test_result(reply, "Monitor Prompt", self.replies["ocomp"], "")
-
-    return ret_val
 
 [class-simh-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
 [os8-run-doc]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md

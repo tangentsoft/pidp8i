@@ -1471,14 +1471,14 @@ class os8script:
   # otherwise return the reply to the command.
   # We generically support reporting out if transcript is enabled.
 
-  def check_and_run (self, caller, os8_comm, script_file):
+  def check_and_run (self, caller, os8_comm, script_file, replies=None):
     if not self.booted:
-      print("Cannot run " + caller + " command at line " + \
+      print("Cannot run " + caller  + " command at line " + \
         str(self.line_ct_stack[0]) + ". OS/8 has not been booted.")
       return -1
 
     if self.verbose: print("Line: " + \
-       str(self.line_ct_stack[0]) + ": " + caller  + "_command: " + os8_comm)
+       str(self.line_ct_stack[0]) + ": " + caller + "_command: " + os8_comm)
 
     # Any os8-run command may be called after a simh command that left us
     # in simh context. Check to see if we need to restart OS/8.
@@ -1486,7 +1486,7 @@ class os8script:
     if self.simh._context == "simh":
       self.restart_command(os8_comm, script_file)
 
-    reply = self.simh.os8_cmd (os8_comm, debug=self.debug)
+    reply = self.simh.os8_cmd (os8_comm, replies, debug=self.debug)
     if "transcript" in self.options_enabled:
       print (self.simh._child.before.decode().strip())
     return reply
