@@ -543,8 +543,8 @@ foreach m {pexpect pkg_resources pyyaml} {
         set msg "The Python $m module is not installed here.  Fix with\n\n"
         append msg "    sudo apt install $pycmd-pip$pyver\n"
         append msg "\nTHEN one of:\n\n"
-        append msg "    pip$pyver install --user $m\n"
-        append msg "    sudo easy_install $m\n"
+        append msg "    pip$pyver install --user $md\n"
+        append msg "    sudo easy_install $md\n"
         append msg "    sudo apt install $pycmd-$md\n"
         user-error $msg
     }
