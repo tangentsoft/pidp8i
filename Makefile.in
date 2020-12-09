@@ -900,7 +900,7 @@ bin/txt2ptp: bin/ptp2txt
 	ln -f bin/ptp2txt bin/txt2ptp
 
 bin/deeper: obj/misc/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i/gpio-common.o
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
 
 doc/e8-manual.pdf: doc/e8-manual.md
 	tools/mkmanpdf doc/e8-manual
