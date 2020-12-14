@@ -264,60 +264,43 @@ as it still refers to his last release in December 2015.
 
 
 <a id="systemd" name="unit"></a>
-## The systemd Unit File
+## The Background Simulator Service
 
-Starting with release 2019.04.25, the PiDP-8/I software distribution is
-based on [systemd][systemd], since Raspbian is now on its third
-systemd-based release.
+The PiDP-8/I software distribution uses [systemd] to run the background
+PDP-8 simulator as user-level service.
 
-One of the features systemd gives us is the ability to set the unit to
-run as user-level service rather than as a system-wide service, which
-means you no longer need the `sudo` prefix on commands to start, stop,
-restart, and query the service. The only time you now need root
-privileges when working with the PiDP-8/I software is when installing
-it. After that, the software runs under your normal user account, as do
-all of the commands you use to manipulate the background simulator
-service.
+You no longer need the `sudo` prefix on commands to start, stop,
+restart, and query the service, as you did in early releases of the
+software; only installation requires root privileges. After that, the
+software runs under your normal user account, as do all of the commands
+you use to manipulate the background simulator service.
 
-As a result of these changes, none of these commands work any longer:
-
-    $ sudo /etc/init.d/pidp8i start
-    $ sudo service pidp8i stop
-    $ sudo systemctl restart pidp8i
-
-The correct forms, respectively, are:
+Although you can give verbose `systemctl` commands like this:
 
     $ systemctl --user start pidp8i
-    $ systemctl --user stop pidp8i
-    $ systemctl --user restart pidp8i
 
-These commands are long, so we have extended the `pidp8i` command to
-build and run `systemctl` commands for you when you pass it arguments:
+…we’ve provided a wrapper for such commands:
 
     $ pidp8i start
     $ pidp8i stop
     $ pidp8i restart
     $ pidp8i status -l
 
-If you run it without arguments, it attaches to the screen manager
-session, just as it always has.
+*All* arguments are passed to `systemctl`, not just the first, so you
+can pass any flags that `systemctl` accepts, as in the last example.
 
-The last command above shows that *all* arguments are passed to
-`systemctl`, not just the first, so you can pass any flags that
-`systemctl` accepts.
+If you run this `pidp8i` script without arguments, it attaches to the
+backgrounded simulator’s screen manager session.
 
-Our systemd service starts at boot by default after you install the
-software. To disable the service so you can run something else against
-the PiDP-8/I front panel hardware instead, such as Deeper Thought 2:
+To disable the simulator service, say one or both of:
 
     $ pidp8i stop
     $ pidp8i disable
 
-If you install this release on a system that has the old SysV init
-script on it, that service will be disabled and removed before we
-install and enable the replacement systemd user service.
+That then lets you run something like [Incandescent Thought][ith]
+without conflict.
 
-[svinit]:  https://en.wikipedia.org/wiki/Init#SysV-style
+[ith]:     https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 [systemd]: https://www.freedesktop.org/wiki/Software/systemd/
 
 
@@ -350,8 +333,7 @@ levels, which improves the quality of the display, particularly with the
 [incandescent lamp simulator][ils] feature enabled.
 
 
-<a id="lowercase"></a>
-### --lowercase
+### <a id="lowercase"></a>--lowercase
 
 The American Standards Association (predecessor to ANSI) delivered the
 second major version of the ASCII character encoding standard the same
@@ -424,8 +406,9 @@ If you build the software on a multi-core host, the PDP-8/I simulator is
 normally built with the [incandescent lamp simulator][ils] feature,
 which drives the LEDs in a way that mimics the incandescent lamps used
 in the original PDP-8/I. (We call this the ILS for short.) This feature
-currently takes too much CPU power to run on anything but a multi-core
-Raspberry Pi, currently limited to the Pi 2 and Pi 3 series.
+takes too much CPU power to run on anything but a multi-core
+Raspberry Pi, being the Pi 2 and newer full-sized boards, excluding
+the Zero series.
 
 If you configure the software on a single-core Pi — models A+, B+, and
 Zero — the simulator uses the original low-CPU-usage LED driving method
@@ -474,8 +457,7 @@ can leave both off, but you cannot pass both.
 ### --throttle
 
 See [`README-throttle.md`][thro] for the values this option takes.  If
-you don't give this option, the simulator runs as fast as possible, more
-or less.
+you don't give this option, the simulator runs as fast as possible.
 
 
 <a id="savestate"></a>
@@ -498,8 +480,8 @@ Load Addr switch, then START the CPU to restart their program without
 having to reload it from tape or disk.
 
 There were also several power fail and restart options designed and made
-available for the PDP-8 series throughout its lifetime. One of these,
-the KP8-I for the PDP-8/I would detect a power fail condition, then in
+available for the PDP-8 series throughout its lifetime. One of these —
+the KP8-I for the PDP-8/I — would detect a power fail condition, then in
 the brief time window while the power supply’s reservoir capacitors kept
 the computer running, this option card would raise an interrupt, giving
 a user-written routine up to 1 millisecond to save important registers
@@ -514,7 +496,7 @@ key simulator state — registers, core, device assignments, etc. — to a
 disk file. Then on restart, that script will reload that saved state if
 it finds the saved state file.
 
-This is not identical to a KP8-I, in that it doesn’t require any
+This is not identical to a KP8-I in that it doesn’t require any
 user-written PDP-8 code to run, which is why it’s optional: it’s
 ahistoric with respect to the way the included OSes normally ran.
 
@@ -538,7 +520,7 @@ normally would after giving the `RESTORE` command to SIMH.
 
 ### --disable-usb-automount
 
-When you install the software on a [systemd][systemd]-based Linux
+When you install the software on a [systemd]-based Linux
 system, we normally configure the OS to automatically mount USB drives
 when they are initially plugged in, which allows the `SING_STEP` + `DF`
 media image auto-attach feature to work smoothly. That is, if you plug
@@ -567,8 +549,23 @@ to be left off the bootable OS/8 RK05 disk image, as if you’d passed the
 `--disable-os8-cc8` configuration option.
 
 
-<a id="disable-os8"></a>
-### --disable-os8-\*
+### <a id="ock"></a> --use-ock
+
+By default, the boot media used for the IF=0 and IF=7 cases is an
+extended version of OS/8 V3D, as distributed by DEC, plus some patches
+and third-party software additions, per the following sections.
+
+For the late 2020 release, we have another more ambituous option, being
+[the OS/8 Combined Kit][ock], which is the last complete release of OS/8
+released by DEC. (See that link for details.)
+
+Pass this option to boot OCK rather than OS/8 V3D.
+
+[ock]: https://tangentsoft.com/pidp8i/dir?ci=tip&name=src/os8/ock
+
+
+
+### <a id="disable-os8"></a>--disable-os8-\*
 
 Several default components of the [OS/8 RK05 disk image](#os8di) used by
 boot options IF=0 and IF=7 can be left out to save space and build time:
@@ -631,14 +628,17 @@ boot options IF=0 and IF=7 can be left out to save space and build time:
     installation set because that would overrun OS/8's limitation on the
     number of files on a volume.
 
+You can later remove each of these after installation using
+[our package manager][os8pkg].
+
 [advent]: http://www.rickmurphy.net/advent
 [chess]:  https://chessprogramming.wikispaces.com/CHEKMO-II
 [e8]:     https://tangentsoft.com/e8/
-[os8p]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
+[os8pat]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
+[os8pkg]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8pkg.md
 
 
-<a id="enable-os8"></a>
-### --enable-os8-\*
+### <a id="enable-os8"></a>--enable-os8-\*
 
 There are a few file sets not normally installed to the [OS/8 RK05 disk
 image](#os8di) used by boot options IF=0 and IF=7. You can install them
@@ -696,6 +696,9 @@ with the following options:
     FOCAL, so we might then choose to switch the defaults, but that is
     just speculation at the time of this writing.
 
+You can later add each of these after installation using
+[our package manager][os8pkg].
+
 [f69]:   https://tangentsoft.com/pidp8i/wiki?name=Running+FOCAL%2C1969
 [suppd]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md#diffs
 [uvte]:  https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
@@ -703,38 +706,37 @@ with the following options:
 
 ### --os8-minimal
 
-If you set this flag, it sets all `--enable-os8-*` flags to false and
-all `--disable-os8-*` flags to true.  If you give this along with any
-`--enable-os8-*` option, minimal mode overrides it.  Alas, the only way
-to get "minimal plus one or two features" is to explicitly disable all
-of the optional OS/8 features you don't want.
+This sets all `--enable-os8-*` flags to false and all `--disable-os8-*`
+flags to true. This mode overrides any `--enable-os8-*` flag, so if you
+want a minimal install plus just one or two features, it’s simplest to
+give this flag and then use [our package manager][os8pkg] to add in the
+elements you want rather than pass a bunch of `--disable-os8-*` options.
 
-This flag's name is aspirational, not a promise of an ideal: our current
-"minimal" installation could still be stripped down some more.  We
-expect to add more `--disable-os8-*` flags later to reduce the delta
-between the ideal "minimal OS/8" and our current offering.  These
-options would then be included in `--os8-minimal`.  An example of this
-is OS/8's BASIC interpreter, which currently cannot be left out.
+This option may not do some things you think it should:
 
-This option does not control some things you might think it should:
+1.  This flag's name is aspirational, not a promise of an ideal: our
+    current "minimal" installation could be stripped down further. For
+    example, we currently have no way to leave out OS/8's BASIC
+    interpreter, even though no core OS services depend on it.
 
-1.  This option does not affect the `--lowercase` option because that
-    affects only OS/8's command interpreter and OS/8's BASIC
+2.  This option does not affect [the `--lowercase` option](#lowercase)
+    because that affects only OS/8's command interpreter and OS/8's BASIC
     implementation, so we deem it to be orthogonal to the purpose of the
     `--os8-minimal` flag, which only affects the optional post-`BUILD`
     features. You may therefore wish to give `--lowercase=none` along
     with `--os8-minimal`.
 
-2.  This option does not affect `--disable-os8-src`, because it only
+3.  This option does not affect `--disable-os8-src`, because it only
     suppresses optional features in the primary bootable OS/8 media.  If
     you want minimal OS/8 boot media without a separate source code
     data disk, give this option as well.
 
-3.  Although this option disables *display* of the `INIT.TX` file on
+4.  Although this option disables *display* of the `INIT.TX` file on
     boot, the file is still generated, on purpose.  First, it acts as
     build documentation, recording what was built and when.  Second,
     you may wish to enable this welcome message later, and it’s rather
-    painful to go back through the build process to regenerate it later.
+    painful to go back through the build process to generate it after
+    the fact.
 
 
 ### --help
@@ -742,13 +744,12 @@ This option does not control some things you might think it should:
 Run `./configure --help` for more information on your options here.
 
 
-<a id="runtime"></a>
-## Runtime Configuration
+## <a id="runtime"></a>Runtime Configuration
 
-The `pidp8i` command may be configured by the `pidp8i.rc` file,
-located by default in `/opt/pidp8i/etc/`.  This is a Bourne shell script
-which is sourced by `pidp8i` if it exists which may set the following
-variables for the `pidp8i` script to affect how it works:
+The `pidp8i` command sources a Bourne shell script called `pidp8i.rc` —
+normally installed in `/opt/pidp8i/etc` — which you may edit to override
+certain details of the way that script runs. The intended purpose is to
+give you a place to define local overrides for default variables:
 
 
 <a id="rc-screen-manager"></a>
@@ -758,13 +759,14 @@ By default, the PiDP-8/I software distribution installs and uses [GNU
 `screen(1)`][gscr] to allow the simulator to run in the background yet be
 reattached from a later terminal session, then possibly later to be
 backgrounded once again. Without the intermediation of something like
-`screen`, the simulator would either forever be in the background and
-we’d have to export the console [another way][scons] or you’d have to
-fire it up interactively any time you wanted to use it. This scheme lets
-us have it both ways.
+`screen`, the simulator would either forever be in the background — so
+we’d have to export the console [another way][scons] — or we’d have to
+give up on background startup, requiring that users fire the simulator
+up interactively any time they wanted to use it. Using a screen manager
+lets us have it both ways.
 
-The `SCREEN_MANAGER` setting is for use by those that need something
-other than GNU `screen`. There are several alternatives:
+The `SCREEN_MANAGER` setting is for use by those that want to use
+one of the alternatives to GNU `screen`:
 
 *   **screen**: The default, per above.
 
@@ -786,7 +788,7 @@ other than GNU `screen`. There are several alternatives:
 Note that the alternative screen managers are not installed by default.
 If you set `SCREEN_MANAGER=tmux`, you must then ensure that `tmux` is in
 fact installed before the `pidp8i` script goes to try and use it. On
-Raspbian, this is done by:
+Raspbian:
 
     $ sudo apt install tmux
 
@@ -798,63 +800,67 @@ simulator is stopped.
 [tmux]:  https://tmux.github.io/
 
 
-## <a id="os8di"></a>The OS/8 RK05 Disk Image
+## <a id="os8di"></a>The OS/8 Disk Images
 
 For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
 image included with the PiDP-8/I software (called `os8.rk05`) was based
 on an image of a real RK05 disk pack that someone allegedly found in a
 salvaged PDP-8 system.  Parts of the image were corrupt, and not all of
-the pieces of software on the disk worked properly with the other parts.
+the pieces of software worked properly with the other parts.
 It was also a reflection of the time it was created and used out in the
 world, which was not always what we would wish to use today.
 
-In late 2017 [several of us][aut] created the `mkos8` tool, which was
-replaced during 2018 by Bill Cattey with the `os8-run` interpreter
-and its stock scripts. The `--*-os8-*` options documented above get
-passed into `os8-run` during the PiDP-8/I software build process,
-which controls how it generates the `v3d*.rk05` RK05 disk image files.
+Starting in late 2017, [several of us][aut] built a series of tools to
+generate OS/8 media images from pristine source files in a repeatable,
+[testable][pkgtst] way, culminating in [Bill Cattey’s `os8-run`][ori],
+which backs other features like [the `--disable-os8-*` configuration
+options](#disable-os8).
 
-This set of disk images entirely replaces the old `os8.rk05` disk image,
-in that all features of the old disk image are still available. In some
-cases, features present on the old `os8.rk05` disk are now left out or
-disabled by default, and in other cases we have changed the behavior of
-features from the way they used to be on the old disk. Mostly, though,
-the new disk images are simply more functional than the old ones.
+The resulting set of media images entirely replace the old ones and go
+well beyond each besides.  All prior features are still available,
+though some features present on the old images are disabled by default,
+requiring either [`--enable-os8-*` configure options](#enable-os8) or
+[package manager commands][os8pkg] to add features back in. Mostly,
+though, the new media images are more functional than the old ones.
 
-If you wish to know the full details of how these disk images are
+If you wish to know the full details of how these media images are
 created, see the documentation for [`os8-run`][ori] and that for
 [`class simh`][cs].
 
-The remainder of this section describes some aspects of these disk
+The remainder of this section describes some aspects of these media
 images which are not clear from the descriptions of the `--*-os8-*`
 configuration options above.
 
-[aut]: https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
-[ori]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
+[aut]:    https://tangentsoft.com/pidp8i/doc/trunk/AUTHORS.md
+[ori]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-run.md
+[pkgtst]: https://tangentsoft.com/pidp8i/doc/trunk/doc/testing.md
 
 
 ### Baseline
 
-The baseline for the bootable OS/8 disk images comes from a set of
+The baseline for the bootable OS/8 media images comes from a set of
 DECtapes distributed by Digital Equipment Corporation which are now
 included with the PiDP-8/I software; see the [`media/os8/*.tu56`
 files][os8mf]. From these files and your configuration options, the
-`os8-run` script creates the baseline `v3d-dist.rk05` disk image.
+`os8-run` script creates the baseline bootable `v3d-dist.rk05` and
+`ock-dist.rk05` disk images.
 
 The default build creates a complete OS/8 V3D system including `BUILD`
-support, FORTRAN IV, MACREL v2, and more.
+support, FORTRAN IV, MACREL v2, and more, but you can switch to an
+[OCK build at compile time](#ock) if you prefer.
 
 
 ### Subtractions
 
-It turns out that it's pretty easy to run out of directory space on an
-OS/8 RK05 disk due to a limitation in the number of files on an OS/8
-filesystem.  For this reason, the archive of device drivers and TD8E
-system are left off the system packs.  They can be found in [OS/8
-Binary Distribution DECtape #2][bdt2].
+It's pretty easy to run out of space on an OS/8 RK05 disk, not just
+because of its [2 × 0.8 MWord limit][rk05td], but also because of an
+OS/8 limitation in the number of files on an OS/8 filesystem. We leave
+the archive of device drivers and the TD8E subsystem off the system
+packs to avoid hitting this second limit. You can add them later from
+[OS/8 Binary Distribution DECtape #2][bdt2], such as to create media
+for a TD8E based PDP-8/e.
 
-If you do fancy work with `BUILD`, you may need to attach that DECtape
-image and copy files in from it.
+[rk05td]: https://en.wikipedia.org/wiki/RK05#Technical_details
 
 
 ### Default Additions
@@ -891,7 +897,7 @@ In keeping with the standards of good systm management
 this image incorporates all mandatory patches, as well as
 optional patches appropriate to proper operation of the system.
 For details on the available patches, the selection criteria,
-and information about other optional patches see the [OS/8 system patches][os8p]
+and information about other optional patches see the [OS/8 system patches][os8pat]
 document.
 
 [bdt2]:  https://tangentsoft.com/pidp8i/file/media/os8/al-4712c-ba-os8-v3d-2.1978.tu56
@@ -1000,7 +1006,7 @@ the PiDP-8/I simulator back up with:
 
     $ pidp8i start
 
-See [its documentation][test] for more details.
+See [its documentation][pitest] for more details.
 
 
 <a id="sshd"></a>
@@ -1032,16 +1038,18 @@ rely on you, the system’s administrator, to do it interactively with
 Copyright © 2016-2020 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
+<div id="this-space-intentionally-left-blank" style="min-height:50em"></div>
 
-[cprj]: https://tangentsoft.com/pidp8i/
-[sm1]:  http://obsolescence.wixsite.com/obsolescence/2016-pidp-8-building-instructions
-[sm2]:  https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
-[osd]:  http://obsolescence.wixsite.com/obsolescence/pidp-8-details
-[dt2]:  https://github.com/VentureKing/Deeper-Thought-2
-[sdoc]: https://tangentsoft.com/pidp8i/uv/doc/simh/main.pdf
-[oprj]: http://obsolescence.wixsite.com/obsolescence/pidp-8
-[test]: https://tangentsoft.com/pidp8i/doc/trunk/doc/pidp8i-test.md
-[thro]: https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
-[mdif]: https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
-[sl]:   https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
-[ils]:  https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
+
+[cprj]:   https://tangentsoft.com/pidp8i/
+[sm1]:    https://obsolescence.wixsite.com/obsolescence/pidp-8-details#i7g9qvpr
+[sm2]:    https://groups.google.com/d/msg/pidp-8/-leCRMKqI1Q/Dy5RiELIFAAJ
+[osd]:    http://obsolescence.wixsite.com/obsolescence/pidp-8-details
+[dt2]:    https://github.com/VentureKing/Deeper-Thought-2
+[sdoc]:   https://tangentsoft.com/pidp8i/uv/doc/simh/main.pdf
+[oprj]:   http://obsolescence.wixsite.com/obsolescence/pidp-8
+[pitest]: https://tangentsoft.com/pidp8i/doc/trunk/doc/pidp8i-test.md
+[thro]:   https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
+[mdif]:   https://tangentsoft.com/pidp8i/wiki?name=Major+Differences
+[sl]:     https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
+[ils]:    https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Lamp+Simulator
