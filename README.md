@@ -2,17 +2,14 @@
 
 ## Orientation
 
-You will most likely be reading this either:
+You will be reading this either:
 
 *   …[online][tlrm], within [the Fossil project repository][home]; or
-
 *   …as a text file within the [source packages][src]; or
-
 *   …in the read-only [GitHub mirror][ghm].
 
-The source packages and the GitHub mirror are secondary outputs from the
-Fossil repository, which is the primary home for the PiDP-8/I software
-development project.
+The latter two are secondary outputs from the first, being the PiDP-8/I
+software development project’s home.
 
 This is open source software: you are welcome to
 [contribute to the project][ctrb].
@@ -26,30 +23,27 @@ This is open source software: you are welcome to
 
 ## Prerequisites
 
-*   A Raspberry Pi with the 40-pin GPIO connector.  That rules out the
-    first-generation Raspberry Pi model A and B boards which had a
-    26-pin GPIO connector.
+*   A Raspberry Pi with the 40-pin GPIO connector.
 
-*   An SD card containing [a compatible OS][os].
+*   An SD card imaged with Raspberry Pi OS, either [stock][rpios] or
+    [modified by us][bosi].
 
 *   This software distribution, unpacked somewhere convenient within the
-    filesystem on the Raspberry Pi.  We recommend that you unpack it
-    somewhere your user has read/write access like `$HOME/src/pidp8i`.
+    filesystem on the Raspberry Pi. That’s already done on our modified
+    OS images, in `~/pidp8i`. When adding it to the stock OS, we
+    recommend that you unpack it in your `HOME` directory or somewhere
+    else your user has read/write access.
 
-*   We require several tools and libraries that aren't always installed:
+*   While those with no Linux and Raspberry Pi knowledge may be able to
+    follow our instructions blindly, we recommend that such persons look
+    at [the official Raspberry Pi documentation][rpfd], particularly
+    their [Linux][rpfl] and [Raspberry Pi OS][rpfr] guides. The book
+    "[Linux for Makers][lfm]" by Aaron Newcomb is also well-reviewed.
 
-    *   A working C compiler and other standard Linux build tools,
-        such as `make(1)`.
+*   Building the software requires several tools and libraries, some of
+    which you may not already have.
 
-    *   The Raspberry Pi development libraries
-
-    *   Python and a few non-core libraries. We default to Python 3 if
-        available, with a fallback to Python 2, though we don’t know
-        how long we’ll be able to maintain that compatibility.
-
-    *   The `ncurses` development libraries
-
-    To install all of this on a Raspbian type OS, say:
+    On Raspberry Pi OS, say:
 
         $ sudo apt update
         $ sudo apt install build-essential libraspberrypi-dev \
@@ -61,22 +55,26 @@ This is open source software: you are welcome to
         $ brew install make perl python
         $ pip3 install pexpect pyyaml
 
-[os]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
+    On [other compatible OSes][othos], you may need different commands.
+
+[bosi]:  https://tangentsoft.com/pidp8i/#bosi
+[othos]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
+[rpfd]:  https://www.raspberrypi.org/documentation/
+[rpfl]:  https://www.raspberrypi.org/documentation/linux/
+[rpfr]:  https://www.raspberrypi.org/documentation/raspbian
+[rpios]: https://www.raspberrypi.org/software/
 
 
 <a id="preparing"></a>
 ## Preparing Your Pi
 
-If you have a working Raspberry Pi setup, you can probably [skip
-ahead](#unpacking).
-
-If you’ve just barely unpacked Raspbian onto an SD card and are now
-trying to get the PiDP-8/I software distribution working on it, stop and
-go through the [Rasbperry Pi documentation][rpd] first. At the absolute
-minimum, run `raspi-config` and make sure the Localization settings are
-correct. The defaults are for the United Kingdom, home of the Raspberry
-Pi Foundation, so unless you live there, the defaults are probably not
-correct for you, in *your* location.
+If you’ve just barely unpacked Raspberry Pi OS onto an SD card and are
+now trying to get the PiDP-8/I software distribution working on it, stop
+and go through the [Rasbperry Pi documentation][rpd] first. At the
+absolute minimum, run `raspi-config` and make sure the Localization
+settings are correct. The defaults are for the United Kingdom, home of
+the Raspberry Pi Foundation, so unless you live there, the defaults are
+probably incorrect for *your* location.
 
 [rpd]: https://www.raspberrypi.org/documentation/
 
@@ -84,39 +82,34 @@ correct for you, in *your* location.
 <a id="unpacking"></a>
 ## Getting the Software onto Your Pi
 
-If you're reading this file within an unpacked distribution of the
-PiDP-8/I software, you may [skip to the next section](#configuring),
-because you have already achieved this section's aim.
-
-If you are reading this [online][this] and have not yet downloaded and
-unpacked the software source code onto your Pi, this section will get
-you going.
-
-[this]: https://tangentsoft.com/pidp8i/doc/trunk/README.md
+This section is for those reading this on [our project home site][home]
+or via [its GitHub mirror][ghm]. If you are instead reading this as the
+`README.md` file within an unpacked distribution of the PiDP-8/I
+software, [skip to the next section](#configuring).
 
 
 <a id="transferring"></a>
-### Transferring the File to the Pi
+### Transferring the Source Tarball to the Pi
 
-The first step is to get the tarball (`*.tar.gz` file) onto
-the Pi. There are many options:
+There are many ways to get the `*.tar.gz` file onto your Pi:
 
 1.  **Copy the file to the SD card** you're using to boot the Pi.
     When inserted into a Mac or Windows PC, typically only the `/boot`
     partition mounts as a drive your OS can see.  (There's a much
     larger partition on the SD card, but most PCs cannot see it.)
     There should be enough free space left in this small partition to
-    copy the file over.  When you boot the Pi up with that SD card,
-    you will find the tarball in `/boot`.
+    copy the tarball over.  When you boot the Pi up with that SD card,
+    you will find it in `/boot`.
 
 2.  **Pull the file down to the Pi** over the web, directly to the Pi:
 
         $ wget -O pidp8i.tar.gz https://goo.gl/JowPoC
 
     That will get you a file called `pidp8i.tar.gz` in the current
-    working directory containing the latest *release* version.  (Use the
-    "bleeding edge" links on the home page if you want the tip of trunk
-    instead!)
+    working directory containing the latest *stable release.* To get the
+    bleeding edge tip-of-trunk version instead, say:
+
+        $ wget -O pidp8i.tar.gz https://tangentsoft.com/pidp8i/tarball
 
 3.  **SCP the file over** to a running Pi from another machine.
     If your Pi has [OpenSSH installed and running](#sshd), you can use
@@ -132,43 +125,18 @@ the Pi. There are many options:
     [`CONTRIBUTING.md` file][ctrb]. (Best for experts or those who wish to
     become experts.)
 
-5.  **Switch to the binary OS installation images** available from the
-    [top-level project page][cprj].  These are default installations of
-    Raspbian Lite with the PiDP-8/I software already downloaded, built,
-    and installed.  These images were produced in part using option #4
-    above, so you can use Fossil to update your software to the current
-    version at any time, as long as the Pi is connected to the Internet.
+Alternatively, switch to [the binary OS installation images][bosi],
+which are a copy of Raspberry Pi OS as of our latest stable release,
+with the PiDP-8/I software already downloaded, configured, and installed
+for you.
 
 
 <a id="unpacking"></a>
 ### Unpacking the Software on Your Pi
 
-Having transferred the distribution file onto your Pi, unpack it with a
-command roughly like:
+Having transferred the distribution file onto your Pi, unpack it with:
 
-    $ tar xvf /path/to/pidp8i-VERSION.tar.gz
-
-The final argument to that command will vary depending on what you
-downloaded, [how you transferred it to the Pi](#transferring), and where
-you put it. If you used the `wget` command above, the path is simply
-`pidp8i.tar.gz`, for example. After unpacking the tarball, you will have
-a new directory beginning with `pidp8i`.  `cd` into that directory, then
-proceed with the [configuration](#configuring) steps below.
-
-
-<a id="help"></a>
-### If You Need More Help
-
-If the above material is not sufficient to get you started, you might
-want to look at [the documentation][rpfd] provided by the Raspberry
-Pi Foundation.  In particular, we recommend their [Linux][rpfl] and
-[Raspbian][rpfr] guides.  The book "[Make: Linux for Makers][lfm]"
-by Aaron Newcomb is also supposed to be good.
-
-
-[rpfd]: https://www.raspberrypi.org/documentation/
-[rpfl]: https://www.raspberrypi.org/documentation/linux/
-[rpfr]: https://www.raspberrypi.org/documentation/raspbian
+    $ tar xf pidp8i.tar.gz
 
 [lfm]:  https://www.makershed.com/products/make-linux-for-makers
 
@@ -176,56 +144,42 @@ by Aaron Newcomb is also supposed to be good.
 <a id="configuring"></a>
 ## Configuring, Building and Installing
 
-This software distribution builds and installs in the same way as most
-other Linux/Unix software these days.  The short-and-sweet is:
+For a stock build, say:
 
-    $ ./configure && make && sudo make install
+    $ cd ~/pidp8i
+    $ ./configure && tools/mmake && sudo make install
 
-The `configure` step is generally needed only the first time you build
-the software in a new directory.  You may want to add options, described
+You may want to add options to the `configure` step, described
 [below](#options).
 
 Subsequent software updates and rebuilds should not require that you
-re-run the `configure` step, even if you gave custom options. The build
-system detects when the configuration is outdated and re-runs the
-`configure` script with the same options. If for some reason that
-automatic re-configuration fails, you can kick it off manually:
+re-run the `configure` step manually, but if automatic re-configuration
+fails, you can force it:
 
     $ make reconfig
 
-The “`make`” step above will take quite a while to run, especially on
+The “`mmake`” step above will take quite a while to run, especially on
 the slower Pi boards. The longest single step is building the OS/8 disk
 packs from source media. Be patient; the build process almost certainly
 isn’t frozen.
 
-If you’re on a multi-core Pi, You can speed the build process up some by
-running “`tools/mmake`” instead of directly calling “`make`”. It runs
-Make in a mode that lets it do a lot of work in parallel, making better
-use of your multiple CPU cores.  That OS/8 media rebuild step is choked
-down to a single thread, though, so this won’t help with that.  (This is
-a generic, portable script, so if you’re a software developer, feel free
-to reuse `mmake` and `corecount` on your own systems.)
-
-Only the `make install` step needs to be done via “`sudo`”.  For the
-most part, we’ve tried very hard to minimize the places where you need
-to use root privileges to get something done within the PiDP-8/I
-software distribution.
-
-
-<a id="using"></a>
-## Using the Software
+Only the `make install` step needs to be done via “`sudo`”. No other
+step requires root privileges.
 
 After running “`sudo make install`” the first time, you will have to log
 out and back in to get the installation’s “bin” directory into your
 `PATH`.
 
+
+<a id="using"></a>
+## Using the Software
+
 For the most part, this software distribution works like the [old stable
 2015.12.15 distribution][osd]. Its [documentation][oprj] therefore
-describes this software too, for the most part. Beyond that, you might
-find our [Learning More](/#learning) links helpful.
+describes this software too, though there are [significant
+differences][mdif].
 
-The largest user-visible difference between the two software
-distributions is that many of the shell commands are different:
+Quick start:
 
 1.  To start the simulator running in the background:
 
@@ -235,16 +189,13 @@ distributions is that many of the shell commands are different:
     service, such as in order to run one of the various [forks of Deeper
     Thought][dt2].
 
-2.  To attach the terminal you're working on to the simulator:
+2.  To attach your terminal to the running simulator, run the same
+    script without an argument:
 
         $ pidp8i
 
-    (Yes, it's the same base command as above.  The `pidp8i` script uses
-    its first argument to determine what you want it to do.  Without
-    arguments, this is what it does.)
-
 3.  To detach from the simulator's terminal interface while leaving the
-    PiDP-8/I simulator running, type <kbd>Ctrl-A d</kbd>.  You can
+    PiDP-8/I simulator running, type <kbd>Ctrl-A d</kbd>.  You can
     re-attach to it later with a `pidp8i` command.
 
 4.  To shut the simulator down while attached to its terminal interface,
@@ -253,27 +204,25 @@ distributions is that many of the shell commands are different:
     what else you can do with the simulator command language, or read
     the [SIMH Users' Guide][sdoc].
 
-5.  To shut the simulator down from the Raspbian command line:
+5.  To shut the simulator down from the command line:
 
         $ pidp8i stop
 
-There are [other significant differences][mdif] between the old stable
-distribution and this one. You’ll want to be familiar with that
-documentation’s content before reading Oscar Vermeulen’s documentation,
-as it still refers to his last release in December 2015.
+    That then lets you run something like [Incandescent Thought][ith]
+    without conflict.
+
+You might also find our [Learning More](/#learning) links helpful.
+
+[ith]:     https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 
 
 <a id="systemd" name="unit"></a>
 ## The Background Simulator Service
 
 The PiDP-8/I software distribution uses [systemd] to run the background
-PDP-8 simulator as user-level service.
-
-You no longer need the `sudo` prefix on commands to start, stop,
-restart, and query the service, as you did in early releases of the
-software; only installation requires root privileges. After that, the
-software runs under your normal user account, as do all of the commands
-you use to manipulate the background simulator service.
+PDP-8 simulator as user-level service, so you needn’t give `sudo` on any
+command to interact with that service, as you did in older versions of
+the software.
 
 Although you can give verbose `systemctl` commands like this:
 
@@ -289,18 +238,6 @@ Although you can give verbose `systemctl` commands like this:
 *All* arguments are passed to `systemctl`, not just the first, so you
 can pass any flags that `systemctl` accepts, as in the last example.
 
-If you run this `pidp8i` script without arguments, it attaches to the
-backgrounded simulator’s screen manager session.
-
-To disable the simulator service, say one or both of:
-
-    $ pidp8i stop
-    $ pidp8i disable
-
-That then lets you run something like [Incandescent Thought][ith]
-without conflict.
-
-[ith]:     https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 [systemd]: https://www.freedesktop.org/wiki/Software/systemd/
 
 
@@ -787,8 +724,8 @@ one of the alternatives to GNU `screen`:
 
 Note that the alternative screen managers are not installed by default.
 If you set `SCREEN_MANAGER=tmux`, you must then ensure that `tmux` is in
-fact installed before the `pidp8i` script goes to try and use it. On
-Raspbian:
+fact installed before the `pidp8i` script goes to try and use it. From
+the Pi’s command line:
 
     $ sudo apt install tmux
 
@@ -1017,7 +954,7 @@ binary OS images, but for security reasons, the build process we use
 to create these OS images wipes out the SSH host keys generated here
 on our build system, else everyone's PiDP-8/I would have the same
 host keys, which would be a massive security hole. Unfortunately,
-the Raspbian `sshd` service is not smart enough to regenerate these
+the `sshd` service on Raspberry Pi OS is not smart enough to regenerate these
 keys if they are missing on boot, so you need to do this once by hand:
 
     $ sudo dpkg-reconfigure openssh-server
@@ -1025,12 +962,9 @@ keys if they are missing on boot, so you need to do this once by hand:
 You should be able to log in via SSH immediately after that command
 completes.
 
-You may be wondering why we don’t do this automatically, somehow. It’s
-because, over time, we’ve removed all dependence on root access in our
-software in the name of security, so that we no longer have permission
-to make system-wide changes like this in our startup scripts.  We now
-rely on you, the system’s administrator, to do it interactively with
-`sudo` permissions.
+We can’t do this for you automatically because our software doesn’t run
+as root, so our startup script cannot make system-wide changes. This is
+properly one of the tasks for you, the system’s administrator.
 
 
 ## License
