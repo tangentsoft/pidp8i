@@ -65,13 +65,12 @@ This is open source software: you are welcome to
 [rpios]: https://www.raspberrypi.org/software/
 
 
-## <a id="sshd"></a>Enabling the SSH Server
+## Enabling the SSH Server <a id="sshd"></a>
 
 [That topic is covered elsewhere](./doc/OS-images.md#sshd).
 
 
-<a id="preparing"></a>
-## Preparing Your Pi
+## Preparing Your Pi <a id="preparing"></a>
 
 If you’ve just barely unpacked Raspberry Pi OS onto an SD card and are
 now trying to get the PiDP-8/I software distribution working on it, stop
@@ -84,8 +83,7 @@ probably incorrect for *your* location.
 [rpd]: https://www.raspberrypi.org/documentation/
 
 
-<a id="unpacking"></a>
-## Getting the Software onto Your Pi
+## Getting the Software onto Your Pi <a id="unpacking"></a>
 
 This section is for those reading this on [our project home site][home]
 or via [its GitHub mirror][ghm]. If you are instead reading this as the
@@ -93,8 +91,7 @@ or via [its GitHub mirror][ghm]. If you are instead reading this as the
 software, [skip to the next section](#configuring).
 
 
-<a id="transferring"></a>
-### Transferring the Source Tarball to the Pi
+### Transferring the Source Tarball to the Pi <a id="transferring"></a>
 
 There are many ways to get the `*.tar.gz` file onto your Pi:
 
@@ -136,8 +133,7 @@ with the PiDP-8/I software already downloaded, configured, and installed
 for you.
 
 
-<a id="unpacking"></a>
-### Unpacking the Software on Your Pi
+### Unpacking the Software on Your Pi <a id="unpacking"></a>
 
 Having transferred the distribution file onto your Pi, unpack it with:
 
@@ -146,8 +142,7 @@ Having transferred the distribution file onto your Pi, unpack it with:
 [lfm]:  https://www.makershed.com/products/make-linux-for-makers
 
 
-<a id="configuring"></a>
-## Configuring, Building and Installing
+## Configuring, Building and Installing <a id="configuring"></a>
 
 For a stock build, say:
 
@@ -176,8 +171,7 @@ out and back in to get the installation’s “bin” directory into your
 `PATH`.
 
 
-<a id="using"></a>
-## Using the Software
+## Using the Software <a id="using"></a>
 
 For the most part, this software distribution works like the [old stable
 2015.12.15 distribution][osd]. Its [documentation][oprj] therefore
@@ -221,8 +215,7 @@ You might also find our [Learning More](/#learning) links helpful.
 [ith]:     https://tangentsoft.com/pidp8i/wiki?name=Incandescent+Thought
 
 
-<a id="systemd" name="unit"></a>
-## The Background Simulator Service
+## The Background Simulator Service <a id="systemd" name="unit"></a>
 
 The PiDP-8/I software distribution uses [systemd] to run the background
 PDP-8 simulator as user-level service, so you needn’t give `sudo` on any
@@ -246,15 +239,14 @@ can pass any flags that `systemctl` accepts, as in the last example.
 [systemd]: https://www.freedesktop.org/wiki/Software/systemd/
 
 
-<a id="options"></a>
-## Configure Script Options
+
+## Configure Script Options <a id="options"></a>
 
 You can change many things about the way the software is built and
 installed by giving options to the `configure` script:
 
 
-<a id="prefix"></a>
-### --prefix
+### --prefix <a id="prefix"></a>
 
 Perhaps the most widely useful `configure` script option is `--prefix`,
 which lets you override the default installation directory, `/opt/pidp8i`.
@@ -275,7 +267,7 @@ levels, which improves the quality of the display, particularly with the
 [incandescent lamp simulator][ils] feature enabled.
 
 
-### <a id="lowercase"></a>--lowercase
+### --lowercase <a id="lowercase"></a>
 
 The American Standards Association (predecessor to ANSI) delivered the
 second major version of the ASCII character encoding standard the same
@@ -341,8 +333,7 @@ PDP-8/I to react to lowercase input:
 [tty]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 
 
-<a id="nls"></a>
-### --no-lamp-simulator
+### --no-lamp-simulator <a id="nls"></a>
 
 If you build the software on a multi-core host, the PDP-8/I simulator is
 normally built with the [incandescent lamp simulator][ils] feature,
@@ -363,8 +354,7 @@ run a lot of background tasks on your Pi 2 or Pi 3, it can also be
 helpful when the CPU is [heavily throttled][thro].
 
 
-<a id="serial-mod"></a>
-### --serial-mod
+### --serial-mod <a id="serial-mod"></a>
 
 If you have done [Oscar's serial mod][sm1] to your PiDP-8/I PCB and the
 Raspberry Pi you have connected to it, add `--serial-mod` to the
@@ -379,8 +369,7 @@ hardware will work correctly, but several lights and switches will not
 work correctly.
 
 
-<a id="alt-serial-mod"></a>
-### --alt-serial-mod
+### --alt-serial-mod <a id="alt-serial-mod"></a>
 
 This flag is for an [alternative serial mod by James L-W][sm2]. It
 doesn't require mods to the Pi, and the mods to the PiDP-8/I board are
@@ -396,14 +385,13 @@ This option is a pure alternative to [`--serial-mod`](#serial-mod): you
 can leave both off, but you cannot pass both.
 
 
-### --throttle
+### --throttle <a id="throttle"</a>
 
 See [`README-throttle.md`][thro] for the values this option takes.  If
 you don't give this option, the simulator runs as fast as possible.
 
 
-<a id="savestate"></a>
-### --enable-savestate
+### --enable-savestate <a id="savestate"></a>
 
 By default, the PiDP-8/I starts up with the core state undefined and
 runs the boot script you’ve selected either with the IF switches or by
@@ -460,7 +448,7 @@ That zeroes the key registers and prevents the CPU from running as it
 normally would after giving the `RESTORE` command to SIMH.
 
 
-### --disable-usb-automount
+### --disable-usb-automount <a id="dub"></a>
 
 When you install the software on a [systemd]-based Linux
 system, we normally configure the OS to automatically mount USB drives
@@ -480,7 +468,7 @@ disable the feature.
 USB setup rather than conflicting with it.)
 
 
-### --disable-cc8-cross
+### --disable-cc8-cross <a id="dcc8"></a>
 
 Give this option if you do not want to build Ian Schofield's `cc8` C
 cross-compiler on the host.
@@ -491,7 +479,7 @@ to be left off the bootable OS/8 RK05 disk image, as if you’d passed the
 `--disable-os8-cc8` configuration option.
 
 
-### <a id="ock"></a> --use-ock
+### --use-ock <a id="ock"></a>
 
 By default, the boot media used for the IF=0 and IF=7 cases is an
 extended version of OS/8 V3D, as distributed by DEC, plus some patches
@@ -507,7 +495,7 @@ Pass this option to boot OCK rather than OS/8 V3D.
 
 
 
-### <a id="disable-os8"></a>--disable-os8-\*
+### --disable-os8-\* <a id="disable-os8"></a>
 
 Several default components of the [OS/8 RK05 disk image](#os8di) used by
 boot options IF=0 and IF=7 can be left out to save space and build time:
@@ -580,7 +568,7 @@ You can later remove each of these after installation using
 [os8pkg]: https://tangentsoft.com/pidp8i/doc/trunk/doc/os8pkg.md
 
 
-### <a id="enable-os8"></a>--enable-os8-\*
+### --enable-os8-\* <a id="enable-os8"></a>
 
 There are a few file sets not normally installed to the [OS/8 RK05 disk
 image](#os8di) used by boot options IF=0 and IF=7. You can install them
@@ -646,7 +634,7 @@ You can later add each of these after installation using
 [uvte]:  https://tangentsoft.com/pidp8i/wiki?name=Using+VTEDIT
 
 
-### --os8-minimal
+### --os8-minimal <a id="os8-minimal"></a>
 
 This sets all `--enable-os8-*` flags to false and all `--disable-os8-*`
 flags to true. This mode overrides any `--enable-os8-*` flag, so if you
@@ -686,7 +674,7 @@ This option may not do some things you think it should:
 Run `./configure --help` for more information on your options here.
 
 
-## <a id="runtime"></a>Runtime Configuration
+## Runtime Configuration <a id="runtime"></a>
 
 The `pidp8i` command sources a Bourne shell script called `pidp8i.rc` —
 normally installed in `/opt/pidp8i/etc` — which you may edit to override
@@ -694,8 +682,7 @@ certain details of the way that script runs. The intended purpose is to
 give you a place to define local overrides for default variables:
 
 
-<a id="rc-screen-manager"></a>
-### `SCREEN_MANAGER=screen`
+### `SCREEN_MANAGER=screen` <a id="rc-screen-manager"></a>
 
 By default, the PiDP-8/I software distribution installs and uses [GNU
 `screen(1)`][gscr] to allow the simulator to run in the background yet be
@@ -742,7 +729,7 @@ simulator is stopped.
 [tmux]:  https://tmux.github.io/
 
 
-## <a id="os8di"></a>The OS/8 Disk Images
+## The OS/8 Disk Images <a id="os8di"></a>
 
 For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
 image included with the PiDP-8/I software (called `os8.rk05`) was based
@@ -849,7 +836,7 @@ document.
 [tlrm]:  https://tangentsoft.com/pidp8i/doc/trunk/README.md
 
 
-## <a id="os8ti"></a>The OS/8 TU56 Tape Image
+## The OS/8 TU56 Tape Image <a id="os8ti"></a>
 
 As with the [OS/8 disk image](#os8di), this distribution’s build system
 can create custom TU56 tape images from pristine source media.  This
@@ -874,8 +861,7 @@ The build system actually creates four such tape images according to a
 
 
 
-<a id="overwrite-setup"></a>
-## Overwriting the Local Simulator Setup
+## Overwriting the Local Simulator Setup <a id="overwrite-setup"></a>
 
 When you run `sudo make install` step on a system that already has an
 existing installation, it purposely does not overwrite two classes of
@@ -929,8 +915,7 @@ You have several options here:
     system disks, this option will overwrite those changes!
 
 
-<a id="testing"></a>
-## Testing Your PiDP-8/I Hardware
+## Testing Your PiDP-8/I Hardware <a id="testing"></a>
 
 You can test your PiDP-8/I LED and switch functions with these commands:
 
