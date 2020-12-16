@@ -29,8 +29,8 @@ This is open source software: you are welcome to
     [modified by us][bosi].
 
 *   This software distribution, unpacked somewhere convenient within the
-    filesystem on the Raspberry Pi. That’s already done on our modified
-    OS images, in `~/pidp8i`. When adding it to the stock OS, we
+    filesystem on the Raspberry Pi. That’s already done on [our modified
+    OS images][bosi], in `~/pidp8i`. When adding it to the stock OS, we
     recommend that you unpack it in your `HOME` directory or somewhere
     else your user has read/write access.
 
@@ -63,6 +63,11 @@ This is open source software: you are welcome to
 [rpfl]:  https://www.raspberrypi.org/documentation/linux/
 [rpfr]:  https://www.raspberrypi.org/documentation/raspbian
 [rpios]: https://www.raspberrypi.org/software/
+
+
+## <a id="sshd"></a>Enabling the SSH Server
+
+[That topic is covered elsewhere](./doc/OS-images.md#sshd).
 
 
 <a id="preparing"></a>
@@ -944,27 +949,6 @@ the PiDP-8/I simulator back up with:
     $ pidp8i start
 
 See [its documentation][pitest] for more details.
-
-
-<a id="sshd"></a>
-## Enabling the SSH Server on the Binary OS Images
-
-The OpenSSH server is enabled and running by default on the PiDP-8/I
-binary OS images, but for security reasons, the build process we use
-to create these OS images wipes out the SSH host keys generated here
-on our build system, else everyone's PiDP-8/I would have the same
-host keys, which would be a massive security hole. Unfortunately,
-the `sshd` service on Raspberry Pi OS is not smart enough to regenerate these
-keys if they are missing on boot, so you need to do this once by hand:
-
-    $ sudo dpkg-reconfigure openssh-server
-
-You should be able to log in via SSH immediately after that command
-completes.
-
-We can’t do this for you automatically because our software doesn’t run
-as root, so our startup script cannot make system-wide changes. This is
-properly one of the tasks for you, the system’s administrator.
 
 
 ## License
