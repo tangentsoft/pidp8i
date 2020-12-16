@@ -729,6 +729,22 @@ simulator is stopped.
 [tmux]:  https://tmux.github.io/
 
 
+## Simplifying Boot and Login <a id="auto-login"></a>
+
+The setup and installation instructions above assume you will be using
+base the Raspberry Pi OS as a network server, offering SSH if nothing
+else. Thus, we do not try to bypass any Linux security mechanisms, not
+wanting to create an insecure island on your network.
+
+However, if you want to run your system more as an appliance, you can
+cast away some of this security to get auto-login and other convenient
+behaviors:
+
+*   [Serial or Telnet PDP-8 Console](https://tangentsoft.com/pidp8i/wiki?name=Serial+or+Telnet+PDP-8+Console)
+*   [How to Run a Naked PiDP-8/i](https://tangentsoft.com/pidp8i/wiki?name=How+to+Run+a+Naked+PiDP-8/I)
+*   [VNC for Remote GUI Access](https://www.raspberrypi.org/documentation/remote-access/vnc/)
+
+
 ## The OS/8 Disk Images <a id="os8di"></a>
 
 For the first several years of the PiDP-8/I project, the OS/8 RK05 disk
