@@ -58,6 +58,7 @@ This is open source software: you are welcome to
     On [other compatible OSes][othos], you may need different commands.
 
 [bosi]:  https://tangentsoft.com/pidp8i/#bosi
+[lfm]:   https://www.makershed.com/products/make-linux-for-makers
 [othos]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 [rpfd]:  https://www.raspberrypi.org/documentation/
 [rpfl]:  https://www.raspberrypi.org/documentation/linux/
@@ -138,8 +139,6 @@ for you.
 Having transferred the distribution file onto your Pi, unpack it with:
 
     $ tar xf pidp8i.tar.gz
-
-[lfm]:  https://www.makershed.com/products/make-linux-for-makers
 
 
 ## Configuring, Building and Installing <a id="configuring"></a>
