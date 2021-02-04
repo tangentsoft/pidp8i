@@ -922,8 +922,8 @@ You have several options here:
 
 4.  If neither your previously installed simulator configuration files
     nor the binary media images are precious, you can force the
-    installation script to overwrite them both with a `sudo make
-    mediainstall` command after `sudo make install`.
+    installation script to overwrite them both with a
+    `sudo make mediainstall` command after `sudo make install`.
 
     Beware that this is potentially destructive! If you've made changes
     to your PDP-8 operating systems or have saved files to your OS
