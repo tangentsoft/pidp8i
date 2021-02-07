@@ -1573,11 +1573,12 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         inst_count += skip_count;
         skip_count = 0;
 
-        // We need to update the LED data again.  Using IR for the MB
-        // line here for same reason as above.
-        set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF, SC,
-                int_req, Pause);
-
+        // We need to update the LED data again.  Unlike above, circa
+        // line 444, we pass the final MB value, not a copy of IR, as
+        // MB is settled by this point.
+        set_pidp8i_leds (PC, SteadyMA, MB, IR, LAC, MQ, IF, DF, SC,
+                 int_req, Pause);
+ 
         // Has it been ~1s since we updated our max_skips value?
         time_t now;
         if (time(&now) > last_update) {
