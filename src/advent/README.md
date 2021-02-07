@@ -9,9 +9,10 @@ worked at Digital back in 1979 and published as DECUS 8-889. (Back then
 he went by Dick, instead of Rick.)
 
 Instructions on running ADVENT under the FORTRAN IV Runtime System,
-`FRTS`, can be found in the text file [`ADVENT.DC`](./ADVENT.DC).
+`FRTS`, can be found in the text file [`ADVENT.DC`][doc].
 
 [alive]: https://poetnerd.com/pdp8-alive/advent/timeline
+[doc]:   /doc/trunk/src/advent/ADVENT.DC
 [up]:    https://www.rickmurphy.net/advent/
 
 
