@@ -12,7 +12,7 @@ Instructions on running ADVENT under the FORTRAN IV Runtime System,
 `FRTS`, can be found in the text file [`ADVENT.DC`][doc].
 
 [alive]: https://poetnerd.com/pdp8-alive/advent/timeline
-[doc]:   /doc/trunk/src/advent/ADVENT.DC
+[doc]:   https://tangentsoft.com/pidp8i/doc/trunk/src/advent/ADVENT.DC?mimetype=text/plain
 [up]:    https://www.rickmurphy.net/advent/
 
 
