@@ -1,22 +1,19 @@
 # PDP-8 ADVENTURE
 
-Upstream is zip file found at http://www.rickmurphy.net/adventure.html
-http://www.rickmurphy.net/advent/advent.zip
-Updated 2020-09-18.
+This is a copy of the [latest upstream release][up], v2.4.  Prior
+releases are [curated separately][alive] as part of [Bill Cattey’s PDP-8
+Alive project](https://poetnerd.com/pdp8-alive/).
+
+This version of Adventure was orginally written by Rick Murphy when he
+worked at Digital back in 1979 and published as DECUS 8-889. (Back then
+he went by Dick, instead of Rick.)
 
 Instructions on running ADVENT under the FORTRAN IV Runtime System,
-`FRTS`, can be found in the text file `ADVENT.DC`.
+`FRTS`, can be found in the text file [`ADVENT.DC`](./ADVENT.DC).
 
-Orginally written by Rick Murphy when he worked at Digital back in 1979
-and published as DECUS 8-889.
+[alive]: https://poetnerd.com/pdp8-alive/advent/timeline
+[up]:    https://www.rickmurphy.net/advent/
 
-(Back then he went by Dick, instead of Rick.)
-
-Original source was recovered from Dave Gesswein's archive on www.pdp8.net:
- * [adventure_source.tu56 Image](https://www.pdp8.net/ftp/images/misc_dectapes/adventure_source.tu56)
- * [Individual files published](https://www.pdp8online.com/pdp8cgi/os8_html?act=dir;fn=images/misc_dectapes/adventure_source.tu56;sort=name)
-
-Rick has continued to curate and publish subsequent versions at:  https://www.rickmurphy.net/advent/
 
 ## Original DECUS Writeup:
 
