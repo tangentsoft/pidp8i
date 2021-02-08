@@ -121,7 +121,7 @@
 *   Added udev rules to allow mounting media from disks on USB
     floppy drives.  (Thanks to Ryan Finnie for this feature.)
 
-*   Updated SIMH to 2020-02-03 version, GitHub commit 2f66e74c50.  The
+*   Updated SIMH to 2021-02-03 version, GitHub commit 2f66e74c50.  The
     primary user-visible changes from the perspective of a PiDP-8/I user
     are:
 
