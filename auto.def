@@ -607,6 +607,29 @@ if {$status == 0} {
     user-error "Failed to generate autodependency rules: $result!"
 }
 
+# Create file symlinks.  Fossil can store these for us, but its
+# allow-symlinks setting is off by default for belt-and-suspenders
+# security reasons, so if we make use of it, we complicate the
+# process for making checkouts on new machines and on existing one
+# where this hasn't been set to "1" globally.  It's simpler to just
+# re-create them at configure time, leaving Fossil to manage only the
+# actual files.
+proc mklink {subdir name} {
+    set olddir [pwd]
+    cd $subdir
+    if {![file exists $name]} {
+        set target "../include/$name"
+        msg-result "Symlinking $name -> $target in $subdir..."
+        file link -symbolic $name $target
+    }
+    cd $olddir
+}
+set base "[get-define srcdir]/src/cc8"
+mklink "$base/examples" "libc.h"
+mklink "$base/examples" "init.h"
+mklink "$base/os8"      "libc.h"
+mklink "$base/os8"      "init.h"
+
 # Write outputs.
 #
 # NOTE: If you change the list of files here, change INFILES in
