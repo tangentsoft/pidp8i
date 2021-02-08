@@ -273,6 +273,7 @@ INFILES = \
 	@srcdir@/lib/os8script.py.in \
 	@srcdir@/lib/simh.py.in \
 	@srcdir@/src/pidp8i/gpio-common.c.in \
+	@srcdir@/tools/simh-bisect.in \
 	@srcdir@/tools/simh-update.in \
 	$(OS8RUN_INFILES)
 OS8RUN_OUTFILES := $(subst @srcdir@/,,$(OS8RUN_INFILES))
