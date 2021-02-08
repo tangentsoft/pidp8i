@@ -184,7 +184,7 @@
     tooling atop to support all of the above.  Some library behaviors
     and interfaces may have changed in ways that affect outside users.
 
-*   Updated Autosetup to v0.6.9+, allowing builds under Tcl 8.7.
+*   Updated Autosetup to v0.7.0+, allowing builds under Tcl 8.7.
 
 *   A version of the `UCBAS.BI` patch was being applied to all versions
     of OS/8 BASIC.  There are now separate V3D and OCK versions.
