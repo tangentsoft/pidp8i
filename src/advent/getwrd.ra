@@ -128,8 +128,8 @@ PUTWRD, FLDA	#PTWRD,0	/Get putwrd name
 	JA	OK		/Else ok
 TSTNEG,	FADD	K2048		/Neg more than 2048?
 	JLE	PUTERR		/Yes, errror
-OK,	FLDA%	INDX
-	FLDA%	INDX		/In range	ATX	0		/Store it
+OK,	FLDA%	INDX		/In range
+	ATX	0		/Store it
 	JA	#GOBAK		/Return
 
 PUTERR,	FLDA	SECNAM

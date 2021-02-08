@@ -1,6 +1,7 @@
 # Script to create the advent.tu56 image that hosts the
 # OS/8 Adventure, Version 2.4 packaged up by Rick Murphy.
 # See: http://www.rickmurphy.net/advent/
+# Upstream is curated at: https://poetnerd.com/pdp8-alive/advent
 # We build with the OS8_TOOLTIME packs: v3d-patched.rk05
 
 # If you want a debugging bulld rk05 left in place, comment out
@@ -27,44 +28,42 @@ os8 ZERO DTA0:
 # that was just booted.
 # We build there, and copy the binaries out to advent.tu56
 
-cpto $src/src/advent/ADVENT.FT DSK:
-cpto $src/src/advent/BUG.FT DSK:
-cpto $src/src/advent/DUMPDB.FT DSK:
-cpto $src/src/advent/GETIN.FT DSK:
-cpto $src/src/advent/INITAD.FT DSK:
-cpto $src/src/advent/IO.FT DSK:
-cpto $src/src/advent/RND.FT DSK:
-cpto $src/src/advent/RSTRGM.FT DSK:
-cpto $src/src/advent/SAVEGM.FT DSK:
-cpto $src/src/advent/YES.FT DSK:
-cpto $src/src/advent/A5TOA1.RA DSK:
-cpto $src/src/advent/AMAIN.RA DSK:
-cpto $src/src/advent/BITSET.RA DSK:
-cpto $src/src/advent/CARRY.RA DSK:
-cpto $src/src/advent/DROP.RA DSK:
-cpto $src/src/advent/DSTROY.RA DSK:
-cpto $src/src/advent/GETWRD.RA DSK:
-cpto $src/src/advent/JUGGLE.RA DSK:
-cpto $src/src/advent/MOVE.RA DSK:
-cpto $src/src/advent/PCT.RA DSK:
-cpto $src/src/advent/PSPEAK.RA DSK:
-cpto $src/src/advent/PUT.RA DSK:
-cpto $src/src/advent/RSPEAK.RA DSK:
-cpto $src/src/advent/SEED.RA DSK:
-cpto $src/src/advent/SPEAK.RA DSK:
-cpto $src/src/advent/USR.RA DSK:
-cpto $src/src/advent/VOCAB.RA DSK:
-cpto $src/src/advent/ADVENT.DC DSK:
-cpto $src/src/advent/ADVENT.TX DSK:
-cpto $src/src/advent/COMPIL.BI DSK:
-cpto $src/src/advent/LOAD.BI DSK:
+cpto $src/src/advent/a5toa1.ra DSK:
+cpto $src/src/advent/advent.ft DSK:
+cpto $src/src/advent/amain.ra DSK:
+cpto $src/src/advent/bitset.ra DSK:
+cpto $src/src/advent/bug.ft DSK:
+cpto $src/src/advent/carry.ra DSK:
+cpto $src/src/advent/drop.ra DSK:
+cpto $src/src/advent/dstroy.ra DSK:
+cpto $src/src/advent/getin.ft DSK:
+cpto $src/src/advent/getwrd.ra DSK:
+cpto $src/src/advent/initad.ft DSK:
+cpto $src/src/advent/io.ft DSK:
+cpto $src/src/advent/juggle.ra DSK:
+cpto $src/src/advent/move.ra DSK:
+cpto $src/src/advent/pct.ra DSK:
+cpto $src/src/advent/pspeak.ra DSK:
+cpto $src/src/advent/put.ra DSK:
+cpto $src/src/advent/rnd.ft DSK:
+cpto $src/src/advent/rspeak.ra DSK:
+cpto $src/src/advent/rstrgm.ft DSK:
+cpto $src/src/advent/savegm.ft DSK:
+cpto $src/src/advent/seed.ra DSK:
+cpto $src/src/advent/speak.ra DSK:
+cpto $src/src/advent/vocab.ra DSK:
+cpto $src/src/advent/usr.ra DSK:
+cpto $src/src/advent/yes.ft DSK:
+cpto $src/src/advent/advent.dc DSK:
+cpto $src/src/advent/advent.tx DSK:
+cpto $src/src/advent/compil.bi DSK:
+cpto $src/src/advent/load.bi DSK:
+cpto $src/src/advent/runad.bi DSK:
 
 os8 submit COMPIL
 os8 submit LOAD
 
+os8 COPY DTA0:<DSK:ADVENT.LD
 os8 COPY DTA0:<DSK:ADVENT.TX
 os8 COPY DTA0:<DSK:ADVENT.DC
-os8 COPY DTA0:<DSK:ADVENT.LD
-os8 COPY DTA0:<DSK:LOAD.LS
-
-
+os8 COPY DTA0:<DSK:RUNAD.BI

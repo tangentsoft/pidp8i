@@ -38,6 +38,7 @@ outputs:
     DSK:<DTA1:ADVENT.DC
     DSK:<DTA1:ADVENT.TX
     DSK:<DTA1:ADVENT.LD
+    # DSK:<DTA1:RUNAD.BI
 
 cleanups:
     DSK:ADVENT.IN

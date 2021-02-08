@@ -28,7 +28,7 @@ LOADING:
 EXECUTION:
 
 .R FRTS
-*ADVENT.ld	(the ".LD" is optional)
+*ADVENT.LD	(the ".LD" is optional)
 *$		(altmode or escape)
 
 	execution proceeds.
