@@ -620,7 +620,7 @@ proc mklink {subdir name} {
     if {![file exists $name]} {
         set target "../include/$name"
         msg-result "Symlinking $name -> $target in $subdir..."
-        file link -symbolic $name $target
+        exec ln -s $target $name
     }
     cd $olddir
 }
