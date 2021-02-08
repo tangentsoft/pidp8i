@@ -1102,7 +1102,7 @@ class os8script:
       self.simh.os8_ctrl_c (caller="futil_file")
       return "err"
     fname = match.group(2)
-    expect_futil_file_str = "\n" + fname + "\s+(.*)$"
+    expect_futil_file_str = "\n" + fname + "\s+(?!" + fname  + ")?(\S+)(.*)$"
     self.simh.os8_send_line (line)
     self.simh._child.expect(expect_futil_file_str)
     result = self.simh.child_after().strip()
