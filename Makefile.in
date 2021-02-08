@@ -7,7 +7,7 @@
 # re-build Makefile from that modified Makefile.in before proceeding to
 # do the "make" operation.
 #
-# Copyright © 2015 by Oscar Vermeulen, © 2016-2020 by Warren Young
+# Copyright © 2015 by Oscar Vermeulen, © 2016-2021 by Warren Young
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -397,16 +397,8 @@ all: \
 clean:
 	@rm -f $(BINS) $(BOOTSCRIPTS) $(ASM_PTS) $(PAL_EX_PTS) $(LISTINGS) \
 		$(OUTFILES) $(ADF) \
-		$(OS8_RK05S) $(V3F_MADE_RK05) $(V3F_BUILD_RK05) $(V3D_TC08_TU56) \
-		$(V3D_TD12K_TU56) $(V3F_TC08_TU56) $(V3F_TD12K_TU56) \
-		$(OS8_OCK_SYS_SRC_RK05) $(OS8_OCK_SYS_OBJ_RK05) \
-		$(OS8_OCK_CUSPS_SRC_RK05) $(OS8_OCK_CUSPS_OBJ_RK05) \
-		$(OS8_OCK_BF2_SRC_RK05) $(OS8_OCK_BF2_OBJ_RK05) \
-		$(OS8_OCK_FIV_SRC_RK05) $(OS8_OCK_FIV_OBJ_RK05) \
-		$(OS8_OCK_DIST_RK05) $(OS8_OCK_PATCHED_RK05) \
-		$(OS8_OCK_BOOT_RK05) \
 		config.log cscope.out tags \
-		bin/*.pt bin/*.save bin/*.tu56 bin/txt2ptp \
+		bin/*.pt bin/*.rk05 bin/*.save bin/*.tu56 bin/txt2ptp \
 		lib/*.pyc lib/*/*.pyc lib/pidp8i/dirs.py lib/pidp8i/ips.py \
 		obj/*.log obj/*.pt obj/os8.opts obj/os8pkg/* \
 		src/config.h src/e8/e8defs.pa \
