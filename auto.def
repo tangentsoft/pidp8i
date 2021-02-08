@@ -656,6 +656,7 @@ make-template src/pidp8i/gpio-common.c.in
 make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
+make-template tools/simh-bisect.in
 make-template tools/simh-update.in
 foreach f [concat [glob "$builddir/bin/*"] [glob "$builddir/tools/*"]] {
     exec chmod +x $f
