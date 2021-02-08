@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
-<a id="202010xx"></a>
-## Version 2020.10.xx — The Quarantine Release
+<a id="202102xx"></a>
+## Version 2021.02.xx — The Quarantine Release
 
 *   Raspberry Pi 4 support.
 
@@ -39,47 +39,66 @@
     did almost all of the work on this.
 
 *   Many packages previously copied in as binary blobs have been shifted
-    to the source tree to be built from source, or at the very least
-    as individual binary files copied in from the source tree under
-    code management.  The packages newly managed in this way:
+    to the source tree to be built from source, or at the very least as
+    individual binary files copied in from the source tree under code
+    management.  This not only permits “clean” builds, it allows adding
+    and removing packages from OS/8 media after installation, where
+    previously you had to rebuild the entire medium after reconfiugring
+    the source tree using `--enable-os8-*` type flags.
 
-    * [`chekmo`][chekmorm] The Chekmo II chess playing program is now built from
-    source.
+    The packages newly managed in this way are:
 
-    * [`advent`][adventrm] The game of ADVENTURE is now built from source.
+    *   [`advent`][adventrm]: The game of Adventure, built from
+        [source][advsrc].
 
-    * [`uwfocal`][uwfocalrm] The U/W FOCAL interpreter is now partially built from
-    source. The main interpreter is built from source, but other components
-    are considered legacy and treated as binary blobs for now. This is
-    documented in the `uwfocal.pspec` file.
+    *   [`basic-games`][gamesrm]: The collection of BASIC games and
+        demos.  Although this is a [collection of ASCII text
+        files][bgsrc], and OS/8 BASIC is an interpreter of those text
+        program files, not a compiler, we still build this package of
+        PDP-8 ASCII text files from POSIX ASCII text files.
 
-    * [`focal69`][focalrm] The first FOCAL interpreter is now built from source.
+        This not only permits later package add and remove options, it
+        also allows fun things like editing the sources on the Pi side,
+        rebuilding the package, and reinstalling, rather than editing
+        the sources directly under OS/8.  Or, skip the middleman and use
+        [`os8-cp`][os8cp] to copy the edited version to the boot media.
 
-    * [`basic-games`][gamesrm] The collection of BASIC games and demos are now under
-    source code management.
+    *   [`cc8`][cc8m]: Ian Schofield's C compiler was always built from
+        [source][cc8src], but now it’s built to an intermediate package
+        rather than copied straight to the OS/8 boot media.
 
-    * [`dcp`][dcprm] The dissassembler is under source code management. Source has
-    apparently been lost.
+    *   [`chekmo`][chekmorm]: The Chekmo II chess playing program, built
+        from [source][ckmsrc].
 
-    * [`kermit`][kermitrm] The communication and text encode/decode suite is now built
-    from source. We need testers for this.
+    *   [`dcp`][dcprm]: The OS/8 PDP-8 dissassembler, built from binary
+        executables, since source has apparently been lost.
 
-    * [`music`][musicrm] The PDP-8 Music compiler is now built from source with the scores
-    under source control. Note that we still can't actually hear the output
-    owing to lack of connection between the sound generation and SIMH.
+    *   [`e8`][e8man]: Bill Silver's E8 editor, built from
+        [source][e8src].
 
-    * `cc8` Ian Schofield's C compiler was always built from source, but now
-    is also under package management with `os8pkg`.
+    *   [`focal69`][focalrm]: The first DEC FOCAL interpreter, built
+        from [source][f69src].
 
-    * `e8` Bill Silver's E8 editor is under package management with `os8pkg`.
+    *   [`kermit`][kermitrm]: The communication and text encode/decode
+        suite, built from [source][krmsrc].
 
-    * `vtedit` Although we still don't know how to test this, it is now under
-    source control.
+    *   [`lcmod`][lcsrc]: The batch scripts `UCSYS.BI`, `LCSYS.BI`,
+        `UCBAS.BI` and `LCBAS.BI` are now under source control. Being
+        patches to OS/8, the sources are scattered within our [OS/8
+        source subtree][os8src].
 
-    * `lcmod` The batch scripts `UCSYS.BI`, `LCSYS.BI`, `UCBAS.BI` and `LCBAS.BI`
-    are now under source control. Doing this unearthed a bug that crept into
-    `UCBAS.BI`. This has been squashed.
+    *   [`music`][musicrm]: The PDP-8 Music compiler is now built from
+        [source][mussrc] with the scores under source control. Note that
+        we still can't actually hear the output owing to lack of
+        connection between the sound generation and SIMH.
 
+    *   [`uwfocal`][uwfocalrm]: The U/W FOCAL interpreter. The main
+        module is built from [source][uwfsrc], but other components are
+        considered legacy and treated as binary blobs for now. This is
+        documented in the `uwfocal.pspec` file.
+
+    *   [`vtedit`][vteditdoc]: The VT screen editor extensions to TECO
+        are now packaged separately, built from [source][vtesrc].
 
 *   Added [`os8-progtest`][progtest] tool for testing software under OS/8. Tests
     in `pyyaml` format create state machines for starting programs
@@ -102,8 +121,20 @@
 *   Added udev rules to allow mounting media from disks on USB
     floppy drives.  (Thanks to Ryan Finnie for this feature.)
 
-*   Updated SIMH.  The primary user-visible changes from the perspective
-    of a PiDP-8/I user are:
+*   Updated SIMH to 2020-02-03 version, GitHub commit 2f66e74c50.  The
+    primary user-visible changes from the perspective of a PiDP-8/I user
+    are:
+
+    *   The paper tape punch and LPT output devices now default to
+        append mode for existing files, rather than overwriting them on
+        `ATTACH`.  This not only follows the principle of least surprise
+        for modern users, it also replicates the way actual hardware
+        operated: reopening such devices and sending more data to them
+        just advanced the tape thru the punch or the paper thru the
+        teletypewriter.
+
+    *   RF08: Fixed a bug that could cause loss of photo cell unit
+        events.
 
     *   The simulator now does a precalibration pass to achieve a good
         initial guess at the host's IPS rate rather than drop sharply
@@ -116,6 +147,9 @@
 
         *   The `SAVE` command can now overwrite existing files.
 
+        *   The unimplemented `DUMP` command now gives a helpful
+            diagnostic message recommending use of `EXAMINE`.
+
         *   Several improvements to power-of-2 unit handling in command
             output and parameter input.
 
@@ -123,8 +157,8 @@
             PCRE syntax if available instead of the POSIX regex
             library.
 
-    *   Many improvements to tape device handling.  (Nothing PDP-8
-        specific, just generic SIMH improvements.)
+    *   Many improvements to magnetic tape device handling.  (Nothing
+        PDP-8 specific, just generic SIMH improvements.)
 
 *   Fixed a bug in the `SING_STEP` + `IF` feature for switching between
     boot scripts (e.g. IF=2 for running TSS/8) that could cause the
@@ -146,25 +180,50 @@
     Python 2. We believe we retain that compatibility in this release,
     but this may be the last such release of the PiDP-8/I software.
 
-*   Updated Autosetup to v0.6.9+, allowing builds under Tcl 8.7.
+*   Considerable updates to the Python library classes we’ve built our
+    tooling atop to support all of the above.  Some library behaviors
+    and interfaces may have changed in ways that affect outside users.
+
+*   Updated Autosetup to v0.7.0+, allowing builds under Tcl 8.7.
+
+*   A version of the `UCBAS.BI` patch was being applied to all versions
+    of OS/8 BASIC.  There are now separate V3D and OCK versions.
+
+*   Fixed a bug with the MB display in Sing Inst mode when poking around
+    with Load Add and Exam.  This only affects some configurations, not
+    all, but the fix appears benign on the non-affected ones.
 
 *   Portability and documentation improvements.
 
-[OCK]:        https://tangentsoft.com/pidp8i/doc/trunk/src/os8/ock/README.md
-[rmsm]:       https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
-[os8pkg]:     https://tangentsoft.com/pidp8i/doc/trunk/doc/os8pkg.md
-[progtest]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-progtest.md
-[kit]:        https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-combined-kit.md
-[testing]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/testing.md
-[adventrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/advent/README.md
-[gamesrm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/basic-games/README.md
-[chekmorm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/chekmo/README.md
-[uwfocalrm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/uwfocal/README.md
-[kermitrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/kermit-12/README.md
-[ocomprm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/os8/tools/ocomp/README.md
-[musicrm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/music/README.md
-[dcprm]:      https://tangentsoft.com/pidp8i/doc/trunk/src/dcp/README.md
-[focalrm]:    https://tangentsoft.com/pidp8i/doc/trunk/src/focal69/README.md
+[adventrm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/advent/README.md
+[advsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/advent
+[bgsrc]:     https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/basic-games
+[cc8src]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/cc8/os8
+[chekmorm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/chekmo/README.md
+[ckmsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/chekmo
+[dcprm]:     https://tangentsoft.com/pidp8i/doc/trunk/src/dcp/README.md
+[e8man]:     https://tangentsoft.com/pidp8i/doc/trunk/doc/e8-manual.md
+[e8src]:     https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/e8
+[f69src]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/focal69
+[focalrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/focal69/README.md
+[gamesrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/basic-games/README.md
+[kermitrm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/kermit-12/README.md
+[kit]:       https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-combined-kit.md
+[krmsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/kermit-12
+[lcsrc]:     https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/os8/ock/SYSTEM
+[musicrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/music/README.md
+[mussrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/music
+[OCK]:       https://tangentsoft.com/pidp8i/doc/trunk/src/os8/ock/README.md
+[ocomprm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/os8/tools/ocomp/README.md
+[os8cp]:     https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-cp.md
+[os8pkg]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/os8pkg.md
+[os8src]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/os8
+[progtest]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-progtest.md
+[rmsm]:      https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
+[testing]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/testing.md
+[uwfocalrm]: https://tangentsoft.com/pidp8i/doc/trunk/src/uwfocal/README.md
+[uwfsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/uwfocal
+[vtesrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/vtedit
 
 
 <a id="20190425"></a>
@@ -479,9 +538,9 @@
 *   16 months of maintenance and polishing: better documentation, build
     system improvements, etc.
 
-[cc8m]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
-[esco]: https://tangentsoft.com/pidp8i/doc/trunk/README.md#savestate
-[pv]:   https://tangentsoft.com/pidp8i/doc/trunk/README.md#systemd
+[cc8m]: https://tangentsoft.com/pidp8i/doc/release/doc/cc8-manual.md
+[esco]: https://tangentsoft.com/pidp8i/doc/release/README.md#savestate
+[pv]:   https://tangentsoft.com/pidp8i/doc/release/README.md#systemd
 [sc85]: https://github.com/ncb85/SmallC-85
 [tctd]: https://tangentsoft.com/pidp8i/wiki?name=TD8E+vs+TC08
 [v3df]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+V3D+vs+V3F
@@ -864,22 +923,22 @@
 *   Assorted portability, build system, and documentation improvements.
 
 [apt]:   https://linux.die.net/man/8/apt
-[cc8rm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/cc8-manual.md
-[csd]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/class-simh.md
+[cc8rm]: https://tangentsoft.com/pidp8i/doc/release/doc/cc8-manual.md
+[csd]:   https://tangentsoft.com/pidp8i/doc/release/doc/class-simh.md
 [dibas]: https://tangentsoft.com/pidp8i/wiki?name=Demos+in+BASIC
 [dt2vk]: https://github.com/VentureKing/Deeper-Thought-2
 [gh508]: https://github.com/simh/simh/issues/508
 [mbua]:  https://serverfault.com/a/767079
 [os8ct]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+Console+TTY+Setup
 [os8lc]: https://tangentsoft.com/pidp8i/wiki?name=OS/8+LCSYS.BI+Disassembled
-[os8p]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-patching.md
-[os8rm]: https://tangentsoft.com/pidp8i/doc/trunk/media/os8/README.md
+[os8p]:  https://tangentsoft.com/pidp8i/doc/release/doc/os8-patching.md
+[os8rm]: https://tangentsoft.com/pidp8i/doc/release/media/os8/README.md
 [pe1c]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.C
 [pe1f2]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT#fortran-ii
 [pe1f4]: https://tangentsoft.com/pidp8i/wiki?name=PEP001.FT#fortran-iv
 [pe1u]:  https://tangentsoft.com/pidp8i/wiki?name=PEP001.FC
-[uwfm]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
-[uwfs]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual-supp.md
+[uwfm]:  https://tangentsoft.com/pidp8i/doc/release/doc/uwfocal-manual.md
+[uwfs]:  https://tangentsoft.com/pidp8i/doc/release/doc/uwfocal-manual-supp.md
 
 
 <a id="20170404"></a>
@@ -1389,8 +1448,8 @@
     local files.
 
 [hltbug]:  https://tangentsoft.com/pidp8i/info/f961906a5c24f5de
-[copying]: https://tangentsoft.com/pidp8i/doc/trunk/COPYING.md
-[rmth]:    https://tangentsoft.com/pidp8i/doc/trunk/README-throttle.md
+[copying]: https://tangentsoft.com/pidp8i/doc/release/COPYING.md
+[rmth]:    https://tangentsoft.com/pidp8i/doc/release/README-throttle.md
 
 
 <a id="20170105"></a>
@@ -1702,11 +1761,11 @@
 
 *   Fixed a bunch of bugs!
 
-[tlrm]:    https://tangentsoft.com/pidp8i/doc/trunk/README.md
+[tlrm]:    https://tangentsoft.com/pidp8i/doc/release/README.md
 [dupatch]: https://groups.google.com/forum/#!topic/pidp-8/fmjt7AD1gIA
 [dudis]:   https://tangentsoft.com/pidp8i/tktview?name=e06f8ae936
 [wiki]:    https://tangentsoft.com/pidp8i/wcontent
-[ex]:      https://tangentsoft.com/pidp8i/doc/trunk/examples/README.md
+[ex]:      https://tangentsoft.com/pidp8i/doc/release/examples/README.md
 [art]:     https://tangentsoft.com/pidp8i/dir?c=trunk&name=labels
 [tix]:     https://tangentsoft.com/pidp8i/tickets
 

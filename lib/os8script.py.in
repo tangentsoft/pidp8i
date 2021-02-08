@@ -1441,7 +1441,7 @@ class os8script:
       print("Attempt to boot non-existent device: " + line)
       return "die"
     reply_str = self.simh.child_after()
-    m = re.match("^(\S+)\s(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
+    m = re.match("^(\S+)\s+(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
         reply_str)
     if m == None:
       print("Could not determine if device " + line + " is attached; " +

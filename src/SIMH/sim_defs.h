@@ -93,7 +93,8 @@
         sim_devices[]           array of pointers to simulated devices
         sim_PC                  pointer to saved PC register descriptor
         sim_interval            simulator interval to next event
-        sim_stop_messages[]     array of pointers to stop messages
+        sim_stop_messages[SCPE_BASE]     
+                                array of pointers to stop messages
         sim_instr()             instruction execution routine
         sim_load()              binary loader routine
         sim_emax                maximum number of words in an instruction
@@ -149,6 +150,10 @@ extern int sim_vax_snprintf(char *buf, size_t buf_size, const char *fmt, ...);
 #if defined(HAVE_PCRE_H)
 #include <pcre.h>
 #define USE_REGEX 1
+#endif
+
+#if (defined (__MWERKS__) && defined (macintosh)) || defined(__DECC)
+#define __FUNCTION__ __FILE__
 #endif
 
 #ifdef  __cplusplus
@@ -329,24 +334,6 @@ typedef uint32          t_addr;
 #endif
 #endif
 
-
-/* Storage class modifier for weak link definition for sim_vm_init() */
-
-#if defined(__cplusplus)
-#if defined(__GNUC__)
-#define WEAK __attribute__((weak))
-#elif defined(_MSC_VER)
-#define WEAK __declspec(selectany) 
-#else   /* !defined(__GNUC__) && !defined(_MSC_VER)  */
-#define WEAK
-#endif  /* __GNUC__ */
-#else   /* !defined(__cplusplus) */
-#if defined(__GNUC__)
-#define WEAK __attribute__((common))
-#else   /* !defined(__GNUC__) */
-#define WEAK
-#endif  /* defined(__GNUC__) */
-#endif  /* defined(__cplusplus) */
 
 /* System independent definitions */
 
@@ -609,6 +596,7 @@ struct UNIT {
     void                *up8;                           /* device specific */
     uint16              us9;                            /* device specific */
     uint16              us10;                           /* device specific */
+    uint32              disk_type;                      /* Disk specific info */
     void                *tmxr;                          /* TMXR linkage */
     uint32              recsize;                        /* Tape specific info */
     t_addr              tape_eom;                       /* Tape specific info */
