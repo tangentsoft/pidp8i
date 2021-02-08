@@ -71,6 +71,10 @@ file][cl]. If a regular user of the software cannot see a given change,
 it shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
+Immediately prior to release, `/doc`, `/dir`, `/file` and similar links
+should point to trunk, but immediately prior to release, re-point them
+to the `release` branch, since this document describes prior releases.
+
 [cl]: https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
 
 
