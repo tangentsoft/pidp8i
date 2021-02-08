@@ -15,6 +15,9 @@ features of GitHub without [the complexities of Git][fvg].
 Those new to Fossil should at least read its [Quick Start Guide][fqsg].
 If you want to go deeper, [the Schimpf book][fbook] is somewhat
 outdated, but it is still the best single coherent tutorial on Fossil.
+Those coming from Git will benefit from the approach taken by the
+“[Git to Fossil Translation Guide][gitusr].”
+
 [The official Fossil docs][fdoc] are much more up to date, but they take
 a piecemeal approach to topics, rather than the linear tutorial approach
 of a book, so it is not my first recommendation for learning Fossil.
@@ -53,13 +56,23 @@ the [precompiled binaries][fbin] may work on your system.
 [fdoc]:   https://fossil-scm.org/home/doc/trunk/www/permutedindex.html
 [ffor]:   https://fossil-scm.org/forum/
 [fqsg]:   https://fossil-scm.org/home/doc/trunk/www/quickstart.wiki
+[gitusr]: https://fossil-scm.org/home/doc/trunk/www/gitusers.md
 
 
 ## <a id="fossil-anon" name="anon"></a> Fossil Anonymous Access
 
-There are three ways to clone the repository anonymously. The easiest
-way requires Fossil 2.14 or higher, currently unreleased but [available
-in development form][fqsg]:
+There are three ways to clone the repository anonymously using Fossil.
+Each of these methods gets you a file called `pidp8i.fossil` containing
+the full history of the PiDP-8/I software project from the upstream
+2015.12.15 release onward.
+
+You only need to take one of these options, once per machine.
+Thereafter, you will just be working with the cloned repository.
+
+
+### One-Step Clone-and-Open <a id="one-step-open"></a>
+
+The easiest way requires Fossil 2.14 or higher:
 
     $ fossil clone https://tangentsoft.com/pidp8i
     $ cd pidp8i
@@ -69,33 +82,45 @@ of the current trunk in a `pidp8i/` directory alongside it. We recommend
 that you do this in a directory like `~/src` so you don’t commingle
 these files with other things in your current working directory.
 
+
+### Open from URI <a id="open-uri"></a>
+
 If you have Fossil 2.12 or 2.13, the next-easiest method is:
 
     $ mkdir -p ~/src/pidp8i
     $ cd ~/src/pidp8i
     $ fossil open https://tangentsoft.com/pidp8i
 
-This creates a `pidp8i` directory then clones the repository as
-`pidp8i/pidp8i.fossil`, then opens that repo into that same
-subdirectory.  The repo file ends up *inside* the check-out tree with
-this method.
+This opens the repository referenced by that URI into the current
+directory as `pidp8i.fossil`, then opens that repo into that same
+subdirectory.
+
+You have to create the destination directory first with this method
+because Fossil will refuse to spam a non-empty directory with the
+check-out contents when opening the repo into a directory containing
+other files unless you give it the `--force` flag.
+
+Notice that the repo file ends up *inside* the check-out tree with this
+method. This is because of a purposeful semantic difference in Fossil
+between “open” and “clone.” It may seem strange to someone coming from
+Git, but while we don’t want to get into the whys and wherefores here,
+realize there is logic behind this choice.
+
+
+### Separate Clone and Open <a id="sep-clone-open"></a>
 
 The complicated method works with all versions of Fossil back to 2.1,
 and it is the one we recommend to people who want to get involved with
-the project, because it has numerous advantages over the easy methods.
-We’ll explain those benefits later, but for now, the method is:
+the project, because it has [numerous advantages][cowf] over the easy
+methods. We’ll explain those benefits in the context of the PiDP-8/I
+project later, but for now, the method is:
 
     $ mkdir -p ~/museum ~/src/pidp8i/trunk
     $ fossil clone https://tangentsoft.com/pidp8i ~/museum/pidp8i.fossil
     $ cd ~/src/pidp8i/trunk
     $ fossil open ~/museum/pidp8i.fossil
 
-All three methods get you a file called `pidp8i.fossil` containing
-the full history of the PiDP-8/I software project from the upstream
-2015.12.15 release onward.
-
-You only need to do this once per machine. Thereafter, you
-will just be working with the cloned repository.
+[cowf]: https://fossil-scm.org/home/doc/trunk/www/ckout-workflows.md
 
 
 ## <a id="login"></a> Fossil Developer Access
@@ -141,7 +166,7 @@ attempting to sync when you know it will fail.
 
 ## <a id="gda"></a> Getting Developer Access
 
-We are pretty open about giving developer access to someone who’s
+We’re pretty open about giving developer access to someone who’s
 provided at least one good, substantial [patch](#patches) to the
 software. If we’ve accepted one of your patches, just ask for a
 developer account [on the forum][pfor].
@@ -149,8 +174,9 @@ developer account [on the forum][pfor].
 
 ## <a id="tags" name="branches"></a> Working with Existing Tags and Branches
 
-The directory structure shown in second “clone and open” sequence above is more complicated
-than strictly necessary, but it has a number of nice properties.
+The directory structure shown in the [separate clone and
+open](#sep-clone-open) sequence above is more complicated than strictly
+necessary, but it has a number of nice properties.
 
 First, it collects software projects under a common top-level
 directory. I’ve used `~/src` for this example, but you are free to use any scheme
