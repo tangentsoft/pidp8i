@@ -43,8 +43,9 @@
     individual binary files copied in from the source tree under code
     management.  This not only permits “clean” builds, it allows adding
     and removing packages from OS/8 media after installation, where
-    previously you had to rebuild the entire medium after reconfiugring
-    the source tree using `--enable-os8-*` type flags.
+    previously you had to rebuild the entire medium after reconfiguring
+    the source tree using `--enable-os8-*` type flags. Bill Cattey did
+    this integration.
 
     The packages newly managed in this way are:
 
@@ -103,7 +104,8 @@
 *   Added [`os8-progtest`][progtest] tool for testing software under OS/8. Tests
     in `pyyaml` format create state machines for starting programs
     engaging in run dialogs, and confirming success. Test harnesses
-    exist for advent, cc8, chekmo, uwfocal, and basic-games.
+    exist for advent, cc8, chekmo, uwfocal, and basic-games. Bill Cattey
+    did almost all the work on this.
 
 *   The distribution now follows a [documented testing protocol][testing].
 
@@ -116,7 +118,7 @@
 
 *   Integrated the octal comparison tool `ocomp` into the lower level
     `dist-v3d.rk05` and `dist-ocomp.rk05` images. Used for validation of
-    packages installed by `os8pkg`.
+    packages installed by `os8pkg`. Integration by Bill Cattey.
 
 *   Added udev rules to allow mounting media from disks on USB
     floppy drives.  (Thanks to Ryan Finnie for this feature.)
@@ -199,6 +201,11 @@
     with Load Add and Exam.  This only affects some configurations, not
     all, but the fix appears benign on the non-affected ones.
 
+*   The `os8script.py` class has been [documented][os8script] to explain
+    the design and assist others in writing programs that can drive operation
+    under OS/8 in SIMH using Python expect and all the layers developed
+    above it.
+
 *   Portability and documentation improvements.
 
 [adventrm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/advent/README.md
@@ -230,6 +237,7 @@
 [uwfocalrm]: https://tangentsoft.com/pidp8i/doc/trunk/src/uwfocal/README.md
 [uwfsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/uwfocal
 [vtesrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/vtedit
+[os8script]: https://tangentsoft.com/pidp8i/doc/trunk/doc/class-os8script.md
 
 
 <a id="20190425"></a>
