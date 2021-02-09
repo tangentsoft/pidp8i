@@ -186,9 +186,15 @@
 
 *   Updated Autosetup to v0.7.0+, allowing builds under Tcl 8.7.
 
-*   A version of the `UCBAS.BI` patch was being applied to all versions
-    of OS/8 BASIC.  There are now separate V3D and OCK versions.
-
+*   The previous release shipped with a broken version of the UCSYS.BI
+    script on the v3d.rk05 boot image. The script is supposed to
+    turn off forcing lower case characters to upper case in the OS/8
+    keyboard monitor, and re-enable the linefeed key's command to
+    re-echo the command line. (Cleaning up messy character echoing.)
+    Instead linefeed would hang the keyboard monitor.  This is because
+    the script for the v3f keyboard monitor was installed on the v3d
+    packs.
+	
 *   Fixed a bug with the MB display in Sing Inst mode when poking around
     with Load Add and Exam.  This only affects some configurations, not
     all, but the fix appears benign on the non-affected ones.
