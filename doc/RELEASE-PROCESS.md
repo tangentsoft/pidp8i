@@ -99,7 +99,7 @@ after tagging it.
 
 ## <a id="bosi"></a>Produce the Normal Binary OS Image
 
-Start with the latest version of [Raspberry Pi OS Lite][os] (né Raspbian) on a multi-core
+Start with the latest version of [Raspberry Pi OS Lite][os] on a multi-core
 Raspberry Pi.
 
 1.  If the version of the base OS has changed since the last binary OS
@@ -167,7 +167,7 @@ Raspberry Pi.
 
     As above, the parameter can be "ils" or left off for the ILS images.
 
-[os]: https://www.raspberrypi.org/downloads/raspbian/
+[os]: https://www.raspberrypi.org/software/operating-systems/
 
 
 ## Produce the "No Lamp Simulator" Binary OS Image
