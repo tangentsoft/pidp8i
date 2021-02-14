@@ -1,7 +1,7 @@
 # PiDP-8/I Changes
 
-<a id="202102xx"></a>
-## Version 2021.02.xx — The Quarantine Release
+<a id="20210214"></a>
+## Version 2021.02.14 — The Quarantine Release
 
 *   Raspberry Pi 4 support.
 
@@ -196,7 +196,7 @@
     Instead linefeed would hang the keyboard monitor.  This is because
     the script for the v3f keyboard monitor was installed on the v3d
     packs.
-	
+    
 *   Fixed a bug with the MB display in Sing Inst mode when poking around
     with Load Add and Exam.  This only affects some configurations, not
     all, but the fix appears benign on the non-affected ones.
@@ -208,36 +208,36 @@
 
 *   Portability and documentation improvements.
 
-[adventrm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/advent/README.md
-[advsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/advent
-[bgsrc]:     https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/basic-games
-[cc8src]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/cc8/os8
-[chekmorm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/chekmo/README.md
-[ckmsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/chekmo
-[dcprm]:     https://tangentsoft.com/pidp8i/doc/trunk/src/dcp/README.md
-[e8man]:     https://tangentsoft.com/pidp8i/doc/trunk/doc/e8-manual.md
-[e8src]:     https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/e8
-[f69src]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/focal69
-[focalrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/focal69/README.md
-[gamesrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/basic-games/README.md
-[kermitrm]:  https://tangentsoft.com/pidp8i/doc/trunk/src/kermit-12/README.md
-[kit]:       https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-combined-kit.md
-[krmsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/kermit-12
-[lcsrc]:     https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/os8/ock/SYSTEM
-[musicrm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/music/README.md
-[mussrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/music
-[OCK]:       https://tangentsoft.com/pidp8i/doc/trunk/src/os8/ock/README.md
-[ocomprm]:   https://tangentsoft.com/pidp8i/doc/trunk/src/os8/tools/ocomp/README.md
-[os8cp]:     https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-cp.md
-[os8pkg]:    https://tangentsoft.com/pidp8i/doc/trunk/doc/os8pkg.md
-[os8src]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/os8
-[progtest]:  https://tangentsoft.com/pidp8i/doc/trunk/doc/os8-progtest.md
-[rmsm]:      https://tangentsoft.com/pidp8i/doc/trunk/README.md#rc-screen-manager
-[testing]:   https://tangentsoft.com/pidp8i/doc/trunk/doc/testing.md
-[uwfocalrm]: https://tangentsoft.com/pidp8i/doc/trunk/src/uwfocal/README.md
-[uwfsrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/uwfocal
-[vtesrc]:    https://tangentsoft.com/pidp8i/dir?ci=trunk&name=src/vtedit
-[os8script]: https://tangentsoft.com/pidp8i/doc/trunk/doc/class-os8script.md
+[adventrm]:  https://tangentsoft.com/pidp8i/doc/release/src/advent/README.md
+[advsrc]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/advent
+[bgsrc]:     https://tangentsoft.com/pidp8i/dir?ci=release&name=src/basic-games
+[cc8src]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/cc8/os8
+[chekmorm]:  https://tangentsoft.com/pidp8i/doc/release/src/chekmo/README.md
+[ckmsrc]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/chekmo
+[dcprm]:     https://tangentsoft.com/pidp8i/doc/release/src/dcp/README.md
+[e8man]:     https://tangentsoft.com/pidp8i/doc/release/doc/e8-manual.md
+[e8src]:     https://tangentsoft.com/pidp8i/dir?ci=release&name=src/e8
+[f69src]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/focal69
+[focalrm]:   https://tangentsoft.com/pidp8i/doc/release/src/focal69/README.md
+[gamesrm]:   https://tangentsoft.com/pidp8i/doc/release/src/basic-games/README.md
+[kermitrm]:  https://tangentsoft.com/pidp8i/doc/release/src/kermit-12/README.md
+[kit]:       https://tangentsoft.com/pidp8i/doc/release/doc/os8-combined-kit.md
+[krmsrc]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/kermit-12
+[lcsrc]:     https://tangentsoft.com/pidp8i/dir?ci=release&name=src/os8/ock/SYSTEM
+[musicrm]:   https://tangentsoft.com/pidp8i/doc/release/src/music/README.md
+[mussrc]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/music
+[OCK]:       https://tangentsoft.com/pidp8i/doc/release/src/os8/ock/README.md
+[ocomprm]:   https://tangentsoft.com/pidp8i/doc/release/src/os8/tools/ocomp/README.md
+[os8cp]:     https://tangentsoft.com/pidp8i/doc/release/doc/os8-cp.md
+[os8pkg]:    https://tangentsoft.com/pidp8i/doc/release/doc/os8pkg.md
+[os8src]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/os8
+[progtest]:  https://tangentsoft.com/pidp8i/doc/release/doc/os8-progtest.md
+[rmsm]:      https://tangentsoft.com/pidp8i/doc/release/README.md#rc-screen-manager
+[testing]:   https://tangentsoft.com/pidp8i/doc/release/doc/testing.md
+[uwfocalrm]: https://tangentsoft.com/pidp8i/doc/release/src/uwfocal/README.md
+[uwfsrc]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/uwfocal
+[vtesrc]:    https://tangentsoft.com/pidp8i/dir?ci=release&name=src/vtedit
+[os8script]: https://tangentsoft.com/pidp8i/doc/release/doc/class-os8script.md
 
 
 <a id="20190425"></a>
