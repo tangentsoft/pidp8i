@@ -95,6 +95,9 @@ t_stat dir_cmd (int32 flg, CONST char *cptr);
 t_stat type_cmd (int32 flg, CONST char *cptr);
 t_stat delete_cmd (int32 flg, CONST char *cptr);
 t_stat copy_cmd (int32 flg, CONST char *cptr);
+t_stat rename_cmd (int32 flg, CONST char *cptr);
+t_stat mkdir_cmd (int32 flg, CONST char *cptr);
+t_stat rmdir_cmd (int32 flg, CONST char *cptr);
 t_stat brk_cmd (int32 flag, CONST char *ptr);
 t_stat do_cmd (int32 flag, CONST char *ptr);
 t_stat goto_cmd (int32 flag, CONST char *ptr);
@@ -113,6 +116,10 @@ t_stat spawn_cmd (int32 flag, CONST char *ptr);
 t_stat echo_cmd (int32 flag, CONST char *ptr);
 t_stat echof_cmd (int32 flag, CONST char *ptr);
 t_stat debug_cmd (int32 flag, CONST char *ptr);
+t_stat runlimit_cmd (int32 flag, CONST char *ptr);
+t_stat tar_cmd (int32 flag, CONST char *ptr);
+t_stat curl_cmd (int32 flag, CONST char *ptr);
+t_stat test_lib_cmd (int32 flag, CONST char *ptr);
 
 /* Allow compiler to help validate printf style format arguments */
 #if !defined __GNUC__
@@ -138,6 +145,7 @@ t_stat _sim_activate_after_abs (UNIT *uptr, double usecs_walltime);
 t_stat sim_cancel (UNIT *uptr);
 t_bool sim_is_active (UNIT *uptr);
 int32 sim_activate_time (UNIT *uptr);
+int32 _sim_activate_queue_time (UNIT *uptr);
 int32 _sim_activate_time (UNIT *uptr);
 double sim_activate_time_usecs (UNIT *uptr);
 t_stat sim_run_boot_prep (int32 flag);
@@ -154,83 +162,6 @@ const char *sim_dname (DEVICE *dptr);
 const char *sim_uname (UNIT *dptr);
 const char *sim_set_uname (UNIT *uptr, const char *uname);
 t_stat get_yn (const char *ques, t_stat deflt);
-char *sim_trim_endspc (char *cptr);
-int sim_isspace (int c);
-#ifdef isspace
-#undef isspace
-#endif
-#ifndef IN_SCP_C
-#define isspace(chr) sim_isspace (chr)
-#endif
-int sim_islower (int c);
-#ifdef islower
-#undef islower
-#endif
-#define islower(chr) sim_islower (chr)
-int sim_isupper (int c);
-#ifdef isupper
-#undef isupper
-#endif
-#define isupper(chr) sim_isupper (chr)
-int sim_isalpha (int c);
-#ifdef isalpha
-#undef isalpha
-#endif
-#ifndef IN_SCP_C
-#define isalpha(chr) sim_isalpha (chr)
-#endif
-int sim_isprint (int c);
-#ifdef isprint
-#undef isprint
-#endif
-#ifndef IN_SCP_C
-#define isprint(chr) sim_isprint (chr)
-#endif
-int sim_isdigit (int c);
-#ifdef isdigit
-#undef isdigit
-#endif
-#define isdigit(chr) sim_isdigit (chr)
-int sim_isgraph (int c);
-#ifdef isgraph
-#undef isgraph
-#endif
-#ifndef IN_SCP_C
-#define isgraph(chr) sim_isgraph (chr)
-#endif
-int sim_isalnum (int c);
-#ifdef isalnum
-#undef isalnum
-#endif
-#ifndef IN_SCP_C
-#define isalnum(chr) sim_isalnum (chr)
-#endif
-int sim_toupper (int c);
-int sim_tolower (int c);
-#ifdef toupper
-#undef toupper
-#endif
-#define toupper(chr) sim_toupper(chr)
-#ifdef tolower
-#undef tolower
-#endif
-#define tolower(chr) sim_tolower(chr)
-int sim_strncasecmp (const char *string1, const char *string2, size_t len);
-int sim_strcasecmp (const char *string1, const char *string2);
-size_t sim_strlcat (char *dst, const char *src, size_t size);
-size_t sim_strlcpy (char *dst, const char *src, size_t size);
-#ifndef strlcpy
-#define strlcpy(dst, src, size) sim_strlcpy((dst), (src), (size))
-#endif
-#ifndef strlcat
-#define strlcat(dst, src, size) sim_strlcat((dst), (src), (size))
-#endif
-#ifndef strncasecmp
-#define strncasecmp(str1, str2, len) sim_strncasecmp((str1), (str2), (len))
-#endif
-#ifndef strcasecmp
-#define strcasecmp(str1, str2) sim_strcasecmp ((str1), (str2))
-#endif
 void sim_srand (unsigned int seed);
 int sim_rand (void);
 #ifdef RAND_MAX
@@ -312,6 +243,7 @@ t_stat show_dev_debug (FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, CONST cha
 t_stat sim_add_debug_flags (DEVICE *dptr, DEBTAB *debflags);
 const char *sim_error_text (t_stat stat);
 t_stat sim_string_to_stat (const char *cptr, t_stat *cond);
+t_stat sim_sched_step (void);
 t_stat sim_cancel_step (void);
 void sim_printf (const char *fmt, ...) GCC_FMT_ATTR(1, 2);
 void sim_perror (const char *msg);
@@ -328,12 +260,12 @@ void sim_debug_bits (uint32 dbits, DEVICE* dptr, BITFIELD* bitdefs,
 #define _sim_debug_device sim_debug
 void sim_debug (uint32 dbits, DEVICE* dptr, const char *fmt, ...) GCC_FMT_ATTR(3, 4);
 #define _sim_debug_unit sim_debug_unit
-void sim_debug_unit (uint32 dbits, DEVICE* dptr, const char *fmt, ...) GCC_FMT_ATTR(3, 4);
+void sim_debug_unit (uint32 dbits, UNIT* uptr, const char *fmt, ...) GCC_FMT_ATTR(3, 4);
 #else
 void _sim_debug_unit (uint32 dbits, UNIT *uptr, const char* fmt, ...) GCC_FMT_ATTR(3, 4);
 void _sim_debug_device (uint32 dbits, DEVICE* dptr, const char* fmt, ...) GCC_FMT_ATTR(3, 4);
-#define sim_debug(dbits, dptr, ...) do { if (sim_deb && dptr && ((dptr)->dctrl & (dbits))) _sim_debug_device (dbits, dptr, __VA_ARGS__);} while (0)
-#define sim_debug_unit(dbits, uptr, ...) do { if (sim_deb && uptr && (((uptr)->dctrl | (uptr)->dptr->dctrl) & (dbits))) _sim_debug_unit (dbits, uptr, __VA_ARGS__);} while (0)
+#define sim_debug(dbits, dptr, ...) do { if ((sim_deb != NULL) && ((dptr) != NULL) && ((dptr)->dctrl & (dbits))) _sim_debug_device (dbits, dptr, __VA_ARGS__);} while (0)
+#define sim_debug_unit(dbits, uptr, ...) do { if ((sim_deb != NULL) && ((uptr) != NULL) && (uptr->dptr != NULL) && (((uptr)->dctrl | (uptr)->dptr->dctrl) & (dbits))) _sim_debug_unit (dbits, uptr, __VA_ARGS__);} while (0)
 #endif
 void sim_flush_buffered_files (void);
 
@@ -358,6 +290,15 @@ extern UNIT *sim_dfunit;
 extern int32 sim_interval;
 extern int32 sim_switches;
 extern int32 sim_switch_number;
+#define GET_SWITCHES(cp) \
+    if ((cp = get_sim_sw (cp)) == NULL) return SCPE_INVSW
+#define GET_RADIX(val,dft) \
+    if (sim_switches & SWMASK ('O')) val = 8; \
+    else if (sim_switches & SWMASK ('D')) val = 10; \
+    else if (sim_switches & SWMASK ('H')) val = 16; \
+    else if ((sim_switch_number >= 2) && (sim_switch_number <= 36)) val = sim_switch_number; \
+    else val = dft;
+extern int32 sim_show_message;
 extern int32 sim_quiet;
 extern int32 sim_step;
 extern t_stat sim_last_cmd_stat;                        /* Command Status */
@@ -385,7 +326,8 @@ extern uint32 sim_brk_dflt;
 extern uint32 sim_brk_summ;
 extern uint32 sim_brk_match_type;
 extern t_addr sim_brk_match_addr;
-extern BRKTYPTAB *sim_brk_type_desc;                      /* type descriptions */
+extern BRKTYPTAB *sim_brk_type_desc;                    /* type descriptions */
+extern const char *sim_prog_name;                       /* executable program name */
 extern FILE *stdnul;
 extern t_bool sim_asynch_enabled;
 #if defined(SIM_ASYNCH_IO)
@@ -396,6 +338,8 @@ void sim_aio_activate (ACTIVATE_API caller, UNIT *uptr, int32 event_time);
 /* VM interface */
 
 extern char sim_name[64];
+extern const char *sim_vm_release;
+extern const char *sim_vm_release_message;
 extern DEVICE *sim_devices[];
 extern REG *sim_PC;
 extern const char *sim_stop_messages[SCPE_BASE];
@@ -408,9 +352,16 @@ extern t_stat parse_sym (CONST char *cptr, t_addr addr, UNIT *uptr, t_value *val
     int32 sw);
 
 /* The per-simulator init routine is a weak global that defaults to NULL
-   The other per-simulator pointers can be overrriden by the init routine */
+   The other per-simulator pointers can be overrriden by the init routine
 
-WEAK extern void (*sim_vm_init) (void);
+extern void (*sim_vm_init) (void);
+
+   This routine is no longer invoked this way since it doesn't work reliably
+   on all simh supported compile environments.  A simulator that needs these 
+   initializations can perform them in the CPU device reset routine which will 
+   always be called before anything else can be processed.
+
+ */
 extern char *(*sim_vm_read) (char *ptr, int32 size, FILE *stream);
 extern void (*sim_vm_post) (t_bool from_scp);
 extern CTAB *sim_vm_cmd;
@@ -420,18 +371,23 @@ extern t_addr (*sim_vm_parse_addr) (DEVICE *dptr, CONST char *cptr, CONST char *
 extern t_bool (*sim_vm_fprint_stopped) (FILE *st, t_stat reason);
 extern t_value (*sim_vm_pc_value) (void);
 extern t_bool (*sim_vm_is_subroutine_call) (t_addr **ret_addrs);
+extern const char **sim_clock_precalibrate_commands;
+extern int32 sim_vm_initial_ips;                        /* base estimate of simulated instructions per second */
+extern const char *sim_vm_interval_units;               /* Simulator can change this - default "instructions" */
+extern const char *sim_vm_step_unit;                    /* Simulator can change this - default "instruction" */
+
 
 /* Core SCP libraries can potentially have unit test routines.
    These defines help implement consistent unit test functionality */
 
 #define SIM_TEST_INIT                                           \
-        int test_stat;                                          \
-        const char *sim_test;                                   \
+        volatile int test_stat;                                 \
+        const char *volatile sim_test;                          \
         jmp_buf sim_test_env;                                   \
         if ((test_stat = setjmp (sim_test_env))) {              \
             sim_printf ("Error: %d - '%s' processing: %s\n",    \
-                        test_stat, sim_error_text(test_stat),   \
-                        sim_test);                              \
+                        SCPE_BARE_STATUS(test_stat),            \
+                        sim_error_text(test_stat), sim_test);   \
             return test_stat;                                   \
             }
 #define SIM_TEST(_stat)                                         \

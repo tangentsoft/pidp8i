@@ -139,7 +139,7 @@ char *build_pidp8i_scp_cmd (char *cbuf, size_t cbufsize)
                 stop_pidp8i_gpio_thread ();
                 printf ("GPIO thread topped...\r\n");
             }
-            execlp (self_path, self_path, script_path);
+            execlp (self_path, self_path, script_path, NULL);
             return 0;
         }
         else {
@@ -747,8 +747,6 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
             resumeFromInstructionLoopExit) {
         // The initial CONT press is special: how we handle it
         // depends on the processor's state.
-        //
-        // FIXME: Are we handling MB correctly? [973271ae36]
         swCont = 1;                 // make it single-shot
         resumeFromInstructionLoopExit = 0;
         if (swSingInst) {

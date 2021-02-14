@@ -146,6 +146,7 @@ struct tmln {
     int32               xmte;                           /* xmt enable */
     int32               dstb;                           /* disable Telnet binary mode */
     t_bool              notelnet;                       /* raw binary data (no telnet interpretation) */
+    t_bool              nomessage;                      /* no connect/disconnect message on line even if telnet */
     uint8               *telnet_sent_opts;              /* Telnet Options which we have sent a DON'T/WON'T */
     int32               rxbpr;                          /* rcv buf remove */
     int32               rxbpi;                          /* rcv buf insert */
@@ -225,6 +226,7 @@ struct tmxr {
     char                *ring_ipad;                     /* incoming connection address awaiting DTR */
     SOCKET              ring_sock;                      /* incoming connection socket awaiting DTR */
     t_bool              notelnet;                       /* default telnet capability for incoming connections */
+    t_bool              nomessage;                      /* no connect/disconnect message on line even if telnet */
     t_bool              modem_control;                  /* multiplexer supports modem control behaviors */
     t_bool              port_speed_control;             /* multiplexer programmatically sets port speed */
     t_bool              packet;                         /* Lines are packet oriented */
@@ -253,6 +255,10 @@ t_stat tmxr_attach_help(FILE *st, DEVICE *dptr, UNIT *uptr, int32 flag, const ch
 char *tmxr_line_attach_string(TMLN *lp);
 t_stat tmxr_set_modem_control_passthru (TMXR *mp);
 t_stat tmxr_clear_modem_control_passthru (TMXR *mp);
+t_stat tmxr_set_notelnet (TMXR *mp);
+t_stat tmxr_clear_notelnet (TMXR *mp);
+t_stat tmxr_set_nomessage (TMXR *mp);
+t_stat tmxr_clear_nomessage (TMXR *mp);
 t_stat tmxr_set_port_speed_control (TMXR *mp);
 t_stat tmxr_clear_port_speed_control (TMXR *mp);
 t_stat tmxr_set_line_port_speed_control (TMXR *mp, int line);
@@ -291,6 +297,7 @@ t_stat tmxr_show_summ (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 t_stat tmxr_show_cstat (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 t_stat tmxr_show_lines (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 t_stat tmxr_show_open_devices (FILE* st, DEVICE *dptr, UNIT* uptr, int32 val, CONST char* desc);
+t_stat tmxr_flush_log_files (void);
 t_stat tmxr_activate (UNIT *uptr, int32 interval);
 t_stat tmxr_activate_abs (UNIT *uptr, int32 interval);
 t_stat tmxr_activate_after (UNIT *uptr, uint32 usecs_walltime);
@@ -307,6 +314,7 @@ const char *tmxr_send_line_name (const SEND *snd);
 const char *tmxr_expect_line_name (const EXPECT *exp);
 t_stat tmxr_startup (void);
 t_stat tmxr_shutdown (void);
+t_stat tmxr_sock_test (DEVICE *dptr);
 t_stat tmxr_start_poll (void);
 t_stat tmxr_stop_poll (void);
 void _tmxr_debug (uint32 dbits, TMLN *lp, const char *msg, char *buf, int bufsize);

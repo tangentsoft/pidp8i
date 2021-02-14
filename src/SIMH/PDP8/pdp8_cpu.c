@@ -472,7 +472,9 @@ while (reason == 0) {                                   /* loop until halted */
                     int_req, Pause);
 
             // Go no further in STOP mode.  In particular, fetch no more
-            // instructions, and do not touch PC!
+            // instructions, and do not touch PC!  Limit call rate in this
+            // mode; no point burning host-side CPU on this.
+            sleep_ms (10);   
             continue;
 
         case pft_halt:
@@ -1571,11 +1573,12 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         inst_count += skip_count;
         skip_count = 0;
 
-        // We need to update the LED data again.  Using IR for the MB
-        // line here for same reason as above.
-        set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF, SC,
-                int_req, Pause);
-
+        // We need to update the LED data again.  Unlike above, circa
+        // line 444, we pass the final MB value, not a copy of IR, as
+        // MB is settled by this point.
+        set_pidp8i_leds (PC, SteadyMA, MB, IR, LAC, MQ, IF, DF, SC,
+                 int_req, Pause);
+ 
         // Has it been ~1s since we updated our max_skips value?
         time_t now;
         if (time(&now) > last_update) {
@@ -1614,6 +1617,21 @@ pcq_r->qptr = pcq_p;                                    /* update pc q ptr */
 return reason;
 }                                                       /* end sim_instr */
 
+/*
+ * This sequence of instructions is a mix that hopefully
+ * represents a resonable instruction set that is a close 
+ * estimate to the normal calibrated result.
+ */
+
+static const char *pdp8_clock_precalibrate_commands[] = {
+    "106 100"
+    "-m 100 MQL MQA"
+    "-m 101 ISZ 112",
+    "-m 102 JMP I 106",
+    "-m 103 JMP I 106",
+    "PC 100",
+    NULL};
+
 /* Reset routine */
 
 t_stat cpu_reset (DEVICE *dptr)
@@ -1625,7 +1643,10 @@ UF = UB = gtf = emode = 0;
 pcq_r = find_reg ("PCQ", NULL, dptr);
 if (pcq_r)
     pcq_r->qptr = 0;
-else return SCPE_IERR;
+else 
+    return SCPE_IERR;
+sim_clock_precalibrate_commands = pdp8_clock_precalibrate_commands;
+sim_vm_initial_ips = 10 * SIM_INITIAL_IPS;
 sim_brk_types = SWMASK ('E') | SWMASK('I');
 sim_brk_dflt = SWMASK ('E');
 return SCPE_OK;

@@ -881,7 +881,7 @@ The primary sources for this supplement are:
 
 [df8]:  http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/FOCL69%20Files/DEC-08-AJAD-D.pdf
 [f71]:  http://svn.so-much-stuff.com/svn/trunk/pdp8/src/decus/focal8-177/
-[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/CONTRIBUTING.md#patches
 [uwfd]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-refcards.md

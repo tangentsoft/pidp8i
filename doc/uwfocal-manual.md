@@ -2718,7 +2718,7 @@ clear that this list is not exhaustive.
 
 | Code | Character | Name | Code | Char    | Code | Char | Code | Char        |
 | ---- | --------- | ---- | ---- | ------- | ---- | ---- | ---- | ----------- |
-| 128  | `Ctrl/@`  | NULL | 160  | `SPACE` | 192  | `@`  | 224  | <code>\`</code> |
+| 128  | `Ctrl/@`  | NULL | 160  | `SPACE` | 192  | `@`  | 224  | <code>&#96;</code> |
 | 129  | `Ctrl/A`  | SOH  | 161  | `!`     | 193  | `A`  | 225  | `a`         |
 | 130  | `Ctrl/B`  | STX  | 162  | `"`     | 194  | `B`  | 226  | `b`         |
 | 131  | `Ctrl/C`  | ETX  | 163  | `#`     | 195  | `C`  | 227  | `c`         |
@@ -3039,7 +3039,7 @@ made to the original text as presented here:
 
 — [Warren Young][wy], September & October 2017, Aztec, NM, USA
 
-[hack]:  https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md
+[hack]:  https://tangentsoft.com/pidp8i/doc/trunk/CONTRIBUTING.md
 [ocr]:   https://archive.org/stream/bitsavers_decpdp8focct78_4144912/UW_FOCAL_Manual_V4E_Oct78_djvu.txt
 [scan]:  https://archive.org/details/bitsavers_decpdp8focct78_4144912
 [tkt]:   https://tangentsoft.com/pidp8i/tktnew
