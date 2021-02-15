@@ -103,7 +103,9 @@ Start with the latest version of [Raspberry Pi OS Lite][os] on a multi-core
 Raspberry Pi.
 
 1.  If the version of the base OS has changed since the last binary OS
-    image was created, download the new one.
+    image was created, download the new one. Be sure to update the “`$os`”
+    variable at the top of `tools/bosi` to match if the major version
+    has changed.
 
     While the OS is downloading, zero the SD card you're going to use
     for this, so the prior contents don't affect this process.
@@ -112,7 +114,8 @@ Raspberry Pi.
 
 2.  Boot it up on a multi-core Pi.
 
-    Log in, then retreive and initialize BOSI:
+    Log in as user `pi`, password `raspberry`, then retreive and
+    initialize BOSI:
 
         $ wget https://tangentsoft.com/bosi
         $ chmod +x bosi
@@ -127,7 +130,10 @@ Raspberry Pi.
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
 
-3.  Clone the software repo and build the software:
+3.  Log in as user `pidp8i` since the prior step changed it from `pi`.
+    The password remains unchanged at this point.
+
+    Clone the software repo and build the software:
 
         $ ./bosi build
 
@@ -201,7 +207,7 @@ upload completes.
 
 ### License
 
-Copyright © 2016-2020 by Warren Young. This document is licensed under
+Copyright © 2016-2021 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md
