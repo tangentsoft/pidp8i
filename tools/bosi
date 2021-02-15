@@ -90,7 +90,7 @@ function do_init() {
     apt-get update && apt-get -y upgrade || true
 
     apt-get -y install fossil python3-pip || true
-    pip3 install pexpect
+    pip3 install --user pexpect pyyaml
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
 

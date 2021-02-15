@@ -112,7 +112,8 @@ Raspberry Pi.
 
 2.  Boot it up on a multi-core Pi.
 
-    Log in, then retreive and initialize BOSI:
+    Log in as user `pi`, password `raspberry`, then retreive and
+    initialize BOSI:
 
         $ wget https://tangentsoft.com/bosi
         $ chmod +x bosi
@@ -127,7 +128,10 @@ Raspberry Pi.
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
 
-3.  Clone the software repo and build the software:
+3.  Log in as user `pidp8i` since the prior step changed it from `pi`.
+    The password remains unchanged at this point.
+
+    Clone the software repo and build the software:
 
         $ ./bosi build
 
