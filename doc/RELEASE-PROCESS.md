@@ -135,7 +135,11 @@ Raspberry Pi.
 
     Clone the software repo and build the software:
 
-        $ ./bosi build
+        $ ./bosi build [nls]
+
+    Adding the “nls” parameter lets the slow single-core Pi build share
+    the multicore ILS build’s OS/8 images, saving a tremendous amount of
+    build time.
 
     On reboot, say `top -H` to make sure the software is running and
     that the CPU percentages are reasonable for the platform: if the CPU

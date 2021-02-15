@@ -119,7 +119,7 @@ function do_build() {
     if [ ! -d museum ]
     then
         mkdir -p museum $repo
-        fossil clone https://tangentsoft.com/$repo museum/$repo.fossil
+        fossil clone -u https://tangentsoft.com/$repo museum/$repo.fossil
     fi
 
     cd $repo
@@ -132,6 +132,19 @@ function do_build() {
         fossil open ~/museum/$repo.fossil release
         fossil set autosync pullonly
         ./configure
+    fi
+
+    # The NLS build can reuse the ILS build's OS/8 images, saving a huge
+    # amount of build time.
+    if [ ! -r bin/v3d.rk05 ] && [ "$tag" = "nls" ]
+    then
+        for f in '' '-dist' '-patched'
+        do
+            for g in ock v3d
+            do
+                fossil uv export ${g}${f}.rk05 bin/${g}{$f}.rk05
+            done
+        done
     fi
 
     tools/mmake
