@@ -88,8 +88,7 @@ function do_init() {
     set -x
 
     apt-get update && apt-get -y upgrade || true
-
-    apt-get -y install fossil python3-pip || true
+    apt-get -y install fossil python3-pip python3-pexpect python3-yaml || true
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
 
@@ -124,11 +123,6 @@ function do_build() {
     fi
 
     cd $repo
-
-    # Install user-only packages.  Can't do this in "init" because
-    # that's running under sudo, so it'll just install the packages for
-    # use by root, which does us no good.
-    pip3 install --user pexpect pyyaml
 
     if [ -r ChangeLog.md ]
     then
