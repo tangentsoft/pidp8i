@@ -5,6 +5,9 @@
 
 *   Raspberry Pi 4 support.
 
+*   Increased SD card requirement from 2 GB to 8 GB.  See
+    [the OS images doc](doc/OS-images.md) for details.
+
 *   Integrated Bill Silver’s E8 Emacs-like text editor for the PDP-8.
 
 *   Updated Ian Schofield’s CC8 C compiler to V2.0:
@@ -172,9 +175,6 @@
 
     Likely the only people to notice this fix are those running the
     simulator attached to a terminal, such as in development.
-
-*   Increased SD card requirement from 2 GB to 8 GB.  See [the OS images
-    doc](doc/OS-images.md) for details.
 
 *   The build system now detects the availability of Python 3 and
     prefers it if available. All documentation now assumes that you’re

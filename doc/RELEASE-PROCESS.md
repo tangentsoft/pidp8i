@@ -151,23 +151,16 @@ Raspberry Pi.
 
         $ ./bosi prepare
 
-5.  Move the SD card to a USB reader plugged into the Pi, boot the Pi
-    from its prior SD card, and shrink the OS image:
-
-        $ wget https://tangentsoft.com/bosi
-        $ chmod +x bosi
-        $ ./bosi shrink
-
-6.  Move the USB reader to the Mac,¹ then say:
+5.  After the Pi shuts down, move the SD card to a USB reader plugged
+    into the Mac¹ and say:
 
         $ bosi image [nls]
 
-    For the ILS images, you can give "ils" as a parameter or leave it
-    blank.
+    Give "ils" as a parameter or leave it blank for the ILS image.
 
-7.  The prior step rewrote the SD card with the image file it created.
+6.  The prior step rewrote the SD card with the image file it created.
     Boot it up and make sure it still works.  If you're happy with it,
-    give this command *on the desktop PC*.
+    give this command *on the Mac*.
 
         $ bosi finish [nls]
 
