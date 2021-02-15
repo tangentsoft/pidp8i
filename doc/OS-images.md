@@ -10,7 +10,13 @@ to our PiDP-8/I software images.  I particularly like using the
 card directly from the Zip file, without requiring that you unpack the
 `*.img` file within first.
 
-You will need to use a 2 GB or larger SD card.
+As of the 2021.02.14 release, you will need to use a 8 GB or larger
+SD card.  Prior releases allowed use of 2 GB cards, but you can't
+even do an "`apt upgrade`" on such a card after flashing it with a
+fresh copy of the current "Lite" OS image. We jumped from 2 GB to
+8 not only because we don't happen to have any 4 GB cards laying
+around, but because the Raspberry Pi Foundation docs recommend 8 GB
+for this release.
 
 The contents of the Zip file are:
 
