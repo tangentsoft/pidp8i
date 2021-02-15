@@ -173,6 +173,9 @@
     Likely the only people to notice this fix are those running the
     simulator attached to a terminal, such as in development.
 
+*   Increased SD card requirement from 2 GB to 8 GB.  See [the OS images
+    doc](doc/OS-images.md) for details.
+
 *   The build system now detects the availability of Python 3 and
     prefers it if available. All documentation now assumes that you’re
     using Python 3. These changes mean we’re no longer testing regularly
