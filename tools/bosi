@@ -252,7 +252,7 @@ MSG
     read -p "Is that the OS SD card? [y/N]: " answer
     case $answer in
         [Yy]*) ;;
-        *) exit 1
+        *) exit 1 ;;
     esac
 
     rdev=${dev/disk/rdisk}              # speeds zeroing and re-imaging
