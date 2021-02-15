@@ -33,7 +33,7 @@ function usage() {
     cat <<USAGE
 usage: $0 <verb> [tag]
 
-    The available verbs are init, build, prepare, shrink, image, and finish.
+    The available verbs are init, build, prepare, image, and finish.
 
     You may include a tag parameter with the 'image' and 'finish' verbs
     to override the default tag ('ils') used in image and zip file
@@ -180,45 +180,6 @@ function do_prepare() {
 }
 
 
-# Shrink the filesystem on the OS SD card we're about to image to just a
-# bit bigger than required to hold its present contents.
-#
-# The extra 100 megs in the arithmetic below accounts for the /boot
-# partition, since the `resizepart` command takes a partition end value,
-# not a size value.
-#
-# We don't calculate the actual end of the /boot partition and use that
-# value because we want a bit of slack space to buy time for an end user
-# who neglects to expand the card image into the free space available on
-# their SD card after first boot.
-function do_shrink() {
-    test "$USER" = "root" || exec sudo $this shrink
-
-    set -x
-
-    umount /dev/sda2 || true    # might auto-mount, might not
-    e2fsck -f /dev/sda2         # resize2fs demands it
-
-    # Pack it down tight
-    blocks=$(
-        resize2fs -M /dev/sda2 2>&1 |
-        grep 'blocks long' | 
-        grep -wo '[0-9]\+'
-    )
-    if [ "$blocks" -gt 0 ]
-    then
-        # And now give it a bit of breathing room
-        parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
-        resize2fs /dev/sda2
-        poweroff
-    else
-        echo "Failed to extract new filesystem size from resize2fs!"
-        echo
-        exit 1
-    fi
-}
-
-
 # This script images the OS SD card in a USB reader on a macOS box.
 function do_image() {
     dev=UNKNOWN
@@ -332,7 +293,6 @@ case "$verb" in
     in*) do_init ;;
     bu*) do_build ;;
     pr*) do_prepare ;;
-    sh*) do_shrink ;;
     im*) do_image ;;
     fi*) do_finish ;;
     *)   usage ;;
