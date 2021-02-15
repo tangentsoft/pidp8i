@@ -142,7 +142,7 @@ function do_build() {
         do
             for g in ock v3d
             do
-                fossil uv export ${g}${f}.rk05 bin/${g}{$f}.rk05
+                fossil uv export ${g}${f}.rk05 bin/${g}${f}.rk05
             done
         done
     fi
