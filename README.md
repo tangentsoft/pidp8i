@@ -47,13 +47,12 @@ This is open source software: you are welcome to
 
         $ sudo apt update
         $ sudo apt install build-essential libraspberrypi-dev \
-             libncurses-dev perl python3-pip
-        $ pip3 install pexpect pyyaml
+             libncurses-dev perl python3-pexpect python3-yaml
 
     Under Homebrew, such as on macOS, say instead:
 
         $ brew install make perl python
-        $ pip3 install pexpect pyyaml
+        $ pip3 install --user pexpect pyyaml
 
     On [other compatible OSes][othos], you may need different commands.
 
