@@ -219,7 +219,7 @@ function do_shrink() {
 }
 
 
-# This script images the OS SD card in a USB reader on a Mac OS X box.
+# This script images the OS SD card in a USB reader on a macOS box.
 function do_image() {
     dev=UNKNOWN
     ps=UNKNOWN
