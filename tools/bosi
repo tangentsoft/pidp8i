@@ -136,13 +136,15 @@ function do_build() {
 
     # The NLS build can reuse the ILS build's OS/8 images, saving a huge
     # amount of build time.
-    if [ ! -r bin/v3d.rk05 ] && [ "$tag" = "nls" ]
+    if [ "$tag" = "nls" ]
     then
         for f in '' '-dist' '-patched'
         do
             for g in ock v3d
             do
-                fossil uv export ${g}${f}.rk05 bin/${g}${f}.rk05
+                src="${g}${f}.rk05"
+                dst="bin/${g}${f}.rk05"
+                test -r bin/v3d.rk05 || fossil uv export "$src" "$dst"
             done
         done
     fi
