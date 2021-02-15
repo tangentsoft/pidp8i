@@ -155,7 +155,7 @@ Raspberry Pi.
 
         $ ./bosi prepare
 
-5.  After the Pi shuts down, move the SD card to a USB reader plugged
+5.  After the Pi shuts down, move the SD card to a micro SD card reader plugged
     into the Mac¹ and say:
 
         $ bosi image [nls]
@@ -176,7 +176,7 @@ Raspberry Pi.
 ## Produce the "No Lamp Simulator" Binary OS Image
 
 Do the same series of steps above on a single-core Raspberry Pi, except
-that you give "nls" parameters to the `image` and `finish` steps.
+that you give "nls" parameters to the `build`, `image`, and `finish` steps.
 
 
 ## Publicizing
