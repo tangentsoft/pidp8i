@@ -205,7 +205,7 @@ upload completes.
 
 ### License
 
-Copyright © 2016-2020 by Warren Young. This document is licensed under
+Copyright © 2016-2021 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

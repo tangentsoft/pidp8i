@@ -1,7 +1,7 @@
 #!/bin/bash
 # bosi - The Binary OS Image creation/update script
 #
-# Copyright © 2016-2019 by Warren Young
+# Copyright © 2016-2021 by Warren Young
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -164,18 +164,19 @@ function do_prepare() {
     sudo dd if=/dev/zero of=/junk bs=1M || true # it *will* error-out!
     sudo rm -f /junk
 
-    encpass=$(openssl passwd -1 edsonDeCastro1968)
-    sudo usermod -p $encpass pidp8i
-    sudo passwd -e pidp8i
-
     cl=/boot/cmdline.txt
     if ! grep -Fq ' init=' $cl
     then
         sudo sed -i -e 's#$# init=/usr/lib/raspi-config/init_resize.sh#' $cl
     fi
 
-    do_wait "Powering off"
-    sudo poweroff
+    # Schedule an automatic shutdown using the existing sudo creds so
+    # the next step can invalidate them without requiring a re-reset.
+    /usr/sbin/shutdown -h +1
+
+    # Must be last, else later "sudo" will fail on the expired password
+    echo 'pidp8i:edsonDeCastro1968' | sudo chpasswd &&
+        sudo passwd -e pidp8i
 }
 
 
