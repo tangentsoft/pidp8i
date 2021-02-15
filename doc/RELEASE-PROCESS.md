@@ -103,7 +103,9 @@ Start with the latest version of [Raspberry Pi OS Lite][os] on a multi-core
 Raspberry Pi.
 
 1.  If the version of the base OS has changed since the last binary OS
-    image was created, download the new one.
+    image was created, download the new one. Be sure to update the “`$os`”
+    variable at the top of `tools/bosi` to match if the major version
+    has changed.
 
     While the OS is downloading, zero the SD card you're going to use
     for this, so the prior contents don't affect this process.
