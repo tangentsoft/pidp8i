@@ -74,5 +74,6 @@ pal8 RKA1:UWF16K.BN<RKA1:16KCPR.PA,12KFNS.PA,8XFIO.PA,8XFPP.PA,16KLIB.PA /K
 
 os8 LOAD RKA1:UWF16K.BN
 os8 SAVE RKA1:UWF16K.SV;100
+patch $src/src/uwfocal/eae-modeb-clear.patch8
 
 

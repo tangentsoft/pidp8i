@@ -63,6 +63,8 @@ inputs:
     src/uwfocal/FCOM47.BN
     src/uwfocal/LPT8I.BN
     src/uwfocal/SCROLL.SV
+    # Patch
+    src/uwfocal/eae-modeb-clear.patch8
     
 outputs:
     DSK:<RKA1:CARD1.DA
