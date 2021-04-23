@@ -36,8 +36,8 @@
 
 # Git commit ID and time of the latest version of the SIMH 4 project on
 # GitHub that has been merged into this source base.
-SGCID=2f66e74c506420959d2591ffd1700a9b58d59f28
-SGCTM=2021-02-03T16:02:17+01:00
+SGCID=ab48f31317f63943cf36995d2e29feb16d122b36
+SGCTM=2021-04-20T18:37:32+02:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
