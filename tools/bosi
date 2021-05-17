@@ -171,8 +171,9 @@ function do_prepare() {
     history -c ; rm -f ~/.bash_history
 
     pidp8i stop || true                         # avoid sim hogging CPU
-    sudo systemctl enable ssh || true           # disabled by default
     sudo shred -u /etc/ssh/*key* || true        # allow multiple passes
+    sudo touch /boot/ssh                        # enable sshd on 1st boot...
+                                                # & regen keys just nuked
     sudo dphys-swapfile uninstall || true
     sudo dd if=/dev/zero of=/junk bs=1M || true # it *will* error-out!
     sudo rm -f /junk
