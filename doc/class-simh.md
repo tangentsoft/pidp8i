@@ -414,7 +414,7 @@ way than that used by `os8_cmd` and `simh_cmd`.  Here is what you need:
 | `os8_kbd_delay`  | Wait an amount of time proportional to what OS/8 should be able to handle on the hosting platform without overflowing the input buffer and dying. |
 | `os8_send_ctrl`  | Send a control character to OS/8.  Use `os8_kbd_delay` to prevent overflowin the input buffer and killing OS/8.|
 | `os8_send_str`   | Send a string of characters to OS/8, and wait for os8_kbd_delay afterwards. |
-| `os8_send_line`  | Add a carriage return to the given string and calk os8_send_str` to send it to OS/8.|
+| `os8_send_line`  | Add a carriage return to the given string and call `os8_send_str` to send it to OS/8.|
 
 
 ## Other Operations

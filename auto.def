@@ -56,16 +56,17 @@ define MEDIADIR "$abspfx/share/media"
 # suppresses creation of the OS/8 src rk05 by the Makefile.)
 set os8opts {
     advent      1  "Adventure"
-    ba          1  "*.BA BASIC games and demos"
+    basic-games 1  "BASIC games and demos"
     cc8         1  "the native OS/8 CC8 compiler"
-    chess       1  "the CHECKMO-II game of chess"
+    chekmo      1  "the CHECKMO-II game of chess"
     crt         1  "CRT-style rubout processing"
     dcp         1  "the DCP disassembler"
+    e8          1  "Emacs-like Editor"
     focal69     0  "FOCAL,1969"
     fortran-ii  1  "FORTRAN II"
     fortran-iv  1  "FORTRAN IV"
     init        1  "the OS/8 INIT message"
-    k12         1  "12-bit Kermit"
+    kermit-12   1  "12-bit Kermit"
     macrel      1  "the MACREL assembler"
     music       0  "*.MU files"
     uwfocal     1  "U/W FOCAL (only)"
@@ -85,20 +86,23 @@ foreach {opt def desc} $os8opts {
 
 # Now define those command line options that belong only to us.
 append alloptions {
-    alt-serial-mod     => "use GPIO drive scheme suitable for James L-W's serial mod method"
-    boot-tape-config:  => "Boot tape configuration: tc08, or td12k"
-    boot-tape-version: => "OS/8 version for boot tape, either v3d or v3f"
-    cc8-cross=1        => "do not build the cc8 cross-compiler on the host"
-    debug-mode         => "create a debug build (default is release)"
-    lowercase:         => "select how lowercase input is to be handled"
-    no-lamp-simulator  => "use simple LED driver instead of incandescent lamp simulator"
-    os8-focal=1        => "leave FOCAL,1969 and U/W FOCAL off the built OS/8 RK05 image"
-    os8-minimal        => "set all --disable-os8-* options, giving minimal OS/8 bin disk"
-    os8-src=1          => "do not build v3d-src.rk05 from OS/8 source tapes"
-    savestate          => "save simulator state (regs, core, devices) on exit; restore on restart"
-    serial-mod         => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
-    throttle:          => "override the throttle values in the boot scripts"
-    usb-automount=1    => "do not automatically mount USB drives for SING_STEP + DF"
+    alt-serial-mod       => "use GPIO drive scheme suitable for James L-W's serial mod method"
+    boot-tape-config:    => "boot tape configuration: tc08, or td12k"
+    boot-tape-version:   => "OS/8 version for boot tape, either v3d or v3f"
+    cc8-cross=1          => "do not build the cc8 cross-compiler on the host"
+    debug-mode           => "create a debug build (default is release)"
+    e8-screen-width:=80  => "set E8 terminal width"
+    e8-screen-height:=24 => "set E8 terminal height"
+    lowercase:           => "select how lowercase input is to be handled"
+    no-lamp-simulator    => "use simple LED driver instead of incandescent lamp simulator"
+    os8-focal=1          => "leave FOCAL,1969 and U/W FOCAL off the built OS/8 RK05 image"
+    os8-minimal          => "set all --disable-os8-* options, giving minimal OS/8 bin disk"
+    os8-src=1            => "do not build v3d-src.rk05 from OS/8 source tapes"
+    savestate            => "save simulator state (regs, core, devices) on exit; restore on restart"
+    serial-mod           => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
+    throttle:            => "override the throttle values in the boot scripts"
+    usb-automount=1      => "do not automatically mount USB drives for SING_STEP + DF"
+    use-ock              => "boot the OS/8 Combined Kit built from source instead of binary v3d."
 }
 
 options $alloptions
@@ -122,16 +126,31 @@ foreach {opt def desc} $os8opts {
 }
 set os8bool(src) [opt-bool os8-src]
 
-# Handle meta-options
+# Handle OS/8 meta-options
 set os8min [opt-bool os8-minimal]
 set os8src [opt-bool os8-src]
 if {![opt-bool os8-focal]} {
     set os8bool(focal69) "0"
     set os8bool(uwfocal) "0"
 }
-
 # -- do not use opt-bool os8-* below this point
 # -- use the os8bool() array
+
+# Handle E8 related options
+if {$os8bool(e8)} {
+    define E8_TU56 bin/e8.tu56
+
+    set w [opt-val e8-screen-width  80]
+    set h [opt-val e8-screen-height 24]
+
+    # Have to use Unix line endings for write-if-changed to work
+    # properly.  We convert them to OS/8 CRLFs in the os8-run step.
+    set    defs "DECIMAL\n"
+    append defs "SCRWD=$w\n"
+    append defs "SCRHT=$h\n"
+    append defs "OCTAL"      ;# trailing \n added
+    write-if-changed "src/e8/e8defs.pa" $defs
+}
 
 # Handle interdependent options
 if {$os8bool(cc8) && !$os8bool(fortran-ii)} {
@@ -197,8 +216,26 @@ if {$os8src} {
     msg-result "Will not build v3d-src.rk05 from OS/8 source tapes."
     define OS8_SRC_RK05 {}
 }
-# Define our boot image. (Note, we ALWAYS apply patches.)
-define OS8_BOOT_DISK "v3d.rk05"
+
+# Define boot image used in various places.
+
+# OS8_BASELINE is used at the lowest levels of building.
+define OS8_BASELINE "v3d-dist.rk05"
+
+# OS8_TOOLTIME is used by tools, it is the patched version of OS8_BASELINE.
+# This enables tools and higher levels of building to work with the
+# most up-to-date revisions of system and utilities.
+define OS8_TOOLTIME "v3d-patched.rk05"
+
+# OS8_RUNTIME is what the end user boots.  It contains the patched OS and utilies.
+# It also contains all configured third party components.
+# This boot disk is a choice between v3d, and ock.
+# The ock image is built from source using OS8_BASELINE and OS8_TOOLTIME.
+if {[opt-bool use-ock]} {
+    define OS8_RUNTIME "ock.rk05"
+} else {
+    define OS8_RUNTIME "v3d.rk05"
+}
 
 # Compose our boot tape image name from boot-tape-config and boot-tape-version
 # Pull defaults from $btc for boot-tape-config, and $btv for boot-tape-version.
@@ -497,33 +534,28 @@ if {$pyver == ""} {
 define PYCMD $pycmd
 define PYVER $pyver
 msg-result "Python $pyver is installed here as '$pycmd'."
-set status [catch {exec $pycmd -c "import pexpect" 2> /dev/null} result]
-if {$status != 0} {
-    set msg "The Python pexpect module is not installed here.  Fix with\n\n"
-    append msg "    sudo apt install $pycmd-pip\n"
-    append msg "\nTHEN:\n"
-    append msg "    sudo pip$pyver install pexpect\n"
-    append msg "\nOR:\n"
-    append msg "\n    sudo easy_install pexpect\n"
-    append msg "\nOR:\n"
-    append msg "\n    sudo apt install $pycmd-pexpect\n"
-    user-error $msg
+foreach mfull {pexpect pkg_resources pyyaml} {
+    set mshort [regsub "py" $mfull ""]
+    set mapt [regsub "_" $mshort "-"]
+    set test "import $mshort"
+    set status [catch {exec $pycmd -c $test 2> /dev/null} result]
+    if {$status != 0} {
+        set msg "The Python $mfull module is not installed here.  Fix with\n\n"
+        append msg "    sudo apt install $pycmd-pip$pyver\n"
+        append msg "    pip$pyver install --user $mfull\n"
+        append msg "\nOR on Debian type systems:\n\n"
+        append msg "    sudo apt install $pycmd-$mapt\n"
+        user-error $msg
+    }
+    msg-result "Found Python module $mfull."
 }
-msg-result "Python module pexpect is installed here."
-set status [catch {exec $pycmd -c "import pkg_resources" 2> /dev/null} result]
-if {$status != 0} {
-    set msg "The Python pkg_resources module is not installed here.  Fix with\n"
-    append msg "\n    sudo pip$pyver install pkg_resources\n"
-    append msg "\nOR:\n"
-    append msg "\n    sudo easy_install pkg_resources\n"
-    append msg "\nOR:\n"
-    append msg "\n    sudo apt install $pycmd-pkg-resources\n"
-    user-error $msg
-}
-msg-result "Python module pkg_resources is installed here."
 
 # Check for Perl and that it can run the test corpus builder.  Not fatal
 # if it can't, since only developers and deep testers need it.
+#
+# We generate os8-run early here because test-os8-run requires it.  We
+# have a chicken-and-egg on initial configure in a clean tree otherwise.
+make-template bin/os8-run.in
 set status [catch {exec perl -e exit} result]
 if {$status == 0} {
     set status [catch {exec perl -c "[get-define srcdir]/tools/test-os8-run" 2> /dev/null} result]
@@ -574,6 +606,29 @@ if {$status == 0} {
     user-error "Failed to generate autodependency rules: $result!"
 }
 
+# Create file symlinks.  Fossil can store these for us, but its
+# allow-symlinks setting is off by default for belt-and-suspenders
+# security reasons, so if we make use of it, we complicate the
+# process for making checkouts on new machines and on existing one
+# where this hasn't been set to "1" globally.  It's simpler to just
+# re-create them at configure time, leaving Fossil to manage only the
+# actual files.
+proc mklink {subdir name} {
+    set olddir [pwd]
+    cd $subdir
+    if {![file exists $name]} {
+        set target "../include/$name"
+        msg-result "Symlinking $name -> $target in $subdir..."
+        exec ln -s $target $name
+    }
+    cd $olddir
+}
+set base "[get-define srcdir]/src/cc8"
+mklink "$base/examples" "libc.h"
+mklink "$base/examples" "init.h"
+mklink "$base/os8"      "libc.h"
+mklink "$base/os8"      "init.h"
+
 # Write outputs.
 #
 # NOTE: If you change the list of files here, change INFILES in
@@ -590,7 +645,6 @@ make-config-header src/config.h \
     -bare {ILS_MODE PCB_*}
 make-template bin/pidp8i.in
 make-template bin/os8-cp.in
-make-template bin/os8-run.in
 make-template tools/os8-cmp.in
 make-template bin/teco-pi-demo.in
 make-template boot/common.script.in
@@ -612,9 +666,11 @@ make-template lib/pidp8i/__init__.py.in
 make-template lib/pidp8i/dirs.py.in
 make-template lib/pidp8i/ips.py.in
 make-template lib/simh.py.in
+make-template bin/os8pkg.in
+make-template tools/os8-progtest.in
 make-template media/os8/init.tx.in
 make-template media/os8/3finit.tx.in
-make-template media/os8/uni-init.tx.in
+make-template media/os8/ock-init.tx.in
 make-template src/Makefile.in
 make-template src/cc8/Makefile.in
 make-template src/cc8/os8/Makefile.in
@@ -622,8 +678,54 @@ make-template src/pidp8i/gpio-common.c.in
 make-template src/pidp8i/main.c.in
 make-template src/SIMH/Makefile.in
 make-template src/SIMH/PDP8/Makefile.in
+make-template tools/simh-bisect.in
 make-template tools/simh-update.in
-make-template Makefile.in
 foreach f [concat [glob "$builddir/bin/*"] [glob "$builddir/tools/*"]] {
     exec chmod +x $f
 }
+
+# Generate the dependencies for packages to build, the install scripts, and
+# the list of packages selected to install.
+# We need os8pkg and its prereqs first. So this code appears after those make-template lines.
+# However, since we build Makefile.in from what is done here, THAT make-template must be later.
+if {![file exists "obj/os8pkg"]} { file mkdir "obj/os8pkg" }
+set os8pkgs_all ""
+set os8pkgs_selected ""
+set os8pkgs_selected_names ""
+set os8pkgs_testing ""
+foreach pspec [glob "$srcdir/pspec/*.pspec"] {
+    set pkg_name [file rootname [file tail $pspec]]
+    set obj_base "obj/os8pkg/$pkg_name"
+    set dep_path "$obj_base.mk"
+    set test_path "$srcdir/scripts/os8-progtest/${pkg_name}.yml"
+    set script_path "$obj_base.os8"
+    set uc_pkg_name [string toupper $pkg_name]
+    set pkg_bin_var "\$(${uc_pkg_name}_PKG_BIN)"
+
+    if {   ![file exists $dep_path] || \
+            [file mtime $pspec]     > [file mtime $dep_path] || \
+            [file mtime bin/os8pkg] > [file mtime $dep_path] } {
+        exec bin/os8pkg deps $pspec
+    }
+
+    append os8pkgs_all " $pkg_bin_var"
+    
+    if {$os8bool($pkg_name)} {
+        append os8pkgs_selected_names " $pkg_name"
+        append os8pkgs_selected " $pkg_bin_var"
+    }
+
+    if {[file exists $test_path]} {
+       append os8pkgs_testing " $pkg_name"
+    }
+}
+
+msg-result "Packages selected for OS/8 RUNTIME packs: $os8pkgs_selected_names"
+define OS8_PKGS_SELECTED_NAMES $os8pkgs_selected_names
+define OS8_PKGS_SELECTED $os8pkgs_selected
+define OS8_PKGS_ALL $os8pkgs_all
+define OS8_PKGS_TESTING $os8pkgs_testing
+msg-result "We can test: $os8pkgs_testing"
+
+# Must be the last thing we do.
+make-template Makefile.in

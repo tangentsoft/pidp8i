@@ -1,7 +1,7 @@
 #!/bin/bash
 # bosi - The Binary OS Image creation/update script
 #
-# Copyright © 2016-2019 by Warren Young
+# Copyright © 2016-2021 by Warren Young
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -33,7 +33,7 @@ function usage() {
     cat <<USAGE
 usage: $0 <verb> [tag]
 
-    The available verbs are init, build, prepare, shrink, image, and finish.
+    The available verbs are init, build, prepare, image, and finish.
 
     You may include a tag parameter with the 'image' and 'finish' verbs
     to override the default tag ('ils') used in image and zip file
@@ -54,7 +54,7 @@ nu=pidp8i
 nh=/home/$nu
 repo=pidp8i
 dldir="$HOME/tangentsoft.com/dl"
-os=stretch-lite
+os=buster-lite
 img=$dldir/pidp8i-$(date +%Y.%m.%d)-$tag-$os.img
 greadlink=$(type -p greadlink || type -p readlink)
 this=$($greadlink -f $0)
@@ -88,9 +88,7 @@ function do_init() {
     set -x
 
     apt-get update && apt-get -y upgrade || true
-
-    apt-get -y install fossil python-pip || true
-    pip install pexpect
+    apt-get -y install fossil python3-pip python3-pexpect python3-yaml || true
 
     test -f /usr/include/curses.h || apt-get -y install libncurses-dev
 
@@ -121,7 +119,7 @@ function do_build() {
     if [ ! -d museum ]
     then
         mkdir -p museum $repo
-        fossil clone https://tangentsoft.com/$repo museum/$repo.fossil
+        fossil clone -u https://tangentsoft.com/$repo museum/$repo.fossil
     fi
 
     cd $repo
@@ -134,6 +132,21 @@ function do_build() {
         fossil open ~/museum/$repo.fossil release
         fossil set autosync pullonly
         ./configure
+    fi
+
+    # The NLS build can reuse the ILS build's OS/8 images, saving a huge
+    # amount of build time.
+    if [ "$tag" = "nls" ]
+    then
+        for f in '' '-dist' '-patched'
+        do
+            for g in ock v3d
+            do
+                src="${g}${f}.rk05"
+                dst="bin/${g}${f}.rk05"
+                test -r bin/v3d.rk05 || fossil uv export "$src" "$dst"
+            done
+        done
     fi
 
     tools/mmake
@@ -158,15 +171,12 @@ function do_prepare() {
     history -c ; rm -f ~/.bash_history
 
     pidp8i stop || true                         # avoid sim hogging CPU
-    sudo systemctl enable ssh || true           # disabled by default
     sudo shred -u /etc/ssh/*key* || true        # allow multiple passes
+    sudo touch /boot/ssh                        # enable sshd on 1st boot...
+                                                # & regen keys just nuked
     sudo dphys-swapfile uninstall || true
     sudo dd if=/dev/zero of=/junk bs=1M || true # it *will* error-out!
     sudo rm -f /junk
-
-    encpass=$(openssl passwd -1 edsonDeCastro1968)
-    sudo usermod -p $encpass pidp8i
-    sudo passwd -e pidp8i
 
     cl=/boot/cmdline.txt
     if ! grep -Fq ' init=' $cl
@@ -174,51 +184,17 @@ function do_prepare() {
         sudo sed -i -e 's#$# init=/usr/lib/raspi-config/init_resize.sh#' $cl
     fi
 
-    do_wait "Powering off"
-    sudo poweroff
+    # Schedule an automatic shutdown using the existing sudo creds so
+    # the next step can invalidate them without requiring a re-reset.
+    /usr/sbin/shutdown -h +1
+
+    # Must be last, else later "sudo" will fail on the expired password
+    echo 'pidp8i:edsonDeCastro1968' | sudo chpasswd &&
+        sudo passwd -e pidp8i
 }
 
 
-# Shrink the filesystem on the OS SD card we're about to image to just a
-# bit bigger than required to hold its present contents.
-#
-# The extra 100 megs in the arithmetic below accounts for the /boot
-# partition, since the `resizepart` command takes a partition end value,
-# not a size value.
-#
-# We don't calculate the actual end of the /boot partition and use that
-# value because we want a bit of slack space to buy time for an end user
-# who neglects to expand the card image into the free space available on
-# their SD card after first boot.
-function do_shrink() {
-    test "$USER" = "root" || exec sudo $this shrink
-
-    set -x
-
-    umount /dev/sda2 || true    # might auto-mount, might not
-    e2fsck -f /dev/sda2         # resize2fs demands it
-
-    # Pack it down tight
-    blocks=$(
-        resize2fs -M /dev/sda2 2>&1 |
-        grep 'blocks long' | 
-        grep -wo '[0-9]\+'
-    )
-    if [ "$blocks" -gt 0 ]
-    then
-        # And now give it a bit of breathing room
-        parted /dev/sda resizepart 2 $(($blocks * 4096 + 10**8))b
-        resize2fs /dev/sda2
-        poweroff
-    else
-        echo "Failed to extract new filesystem size from resize2fs!"
-        echo
-        exit 1
-    fi
-}
-
-
-# This script images the OS SD card in a USB reader on a Mac OS X box.
+# This script images the OS SD card in a USB reader on a macOS box.
 function do_image() {
     dev=UNKNOWN
     ps=UNKNOWN
@@ -277,7 +253,7 @@ MSG
     read -p "Is that the OS SD card? [y/N]: " answer
     case $answer in
         [Yy]*) ;;
-        *) exit 1
+        *) exit 1 ;;
     esac
 
     rdev=${dev/disk/rdisk}              # speeds zeroing and re-imaging
@@ -288,8 +264,8 @@ MSG
 
     set -x
 
-    diskutil unmountDisk $dev           # it auto-mounted
-    sudo time dd if=$rdev bs=1m of=$img
+    sudo diskutil unmountDisk $dev      # it auto-mounted
+    time sudo dd if=$rdev bs=1m of=$img
     sum=($(shasum -a 256 "$img"))
     bytes=($(wc -c $img))
 
@@ -308,8 +284,9 @@ MF
 
     # Now re-image the card, starting with a zeroed card to ensure a
     # clean test.  Ignore the end-of-device error from the zero step.
-    sudo time dd if=/dev/zero of=$rdev bs=1m || true
-    sudo time dd if=$img of=$rdev bs=1m
+    sudo echo -n       # avoid counting sudo blocking time in next cmd
+    time sudo dd if=/dev/zero of=$rdev bs=1m || true
+    time sudo dd if=$img of=$rdev bs=1m
     diskutil unmountDisk $dev || true   # Paragon ExtFS might be installed
 }
 
@@ -330,7 +307,6 @@ case "$verb" in
     in*) do_init ;;
     bu*) do_build ;;
     pr*) do_prepare ;;
-    sh*) do_shrink ;;
     im*) do_image ;;
     fi*) do_finish ;;
     *)   usage ;;

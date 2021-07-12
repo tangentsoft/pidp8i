@@ -209,6 +209,12 @@ do
     # parameterized version of an upstream file
 done
 
+# Remove untracked files: we don't want them appearing in the diff.
+fossil extra | grep src/SIMH | while read doomed
+do
+    rm -f "$doomed"
+done
+
 # Produce a patch file for modifying the upstream $OLD_SGCID version to
 # merge in our local changes.
 #

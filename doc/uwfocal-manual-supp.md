@@ -55,17 +55,19 @@ you in other contexts, so we encourage you to read this entire section.
 
 If you are SSHing into your PiDP-8/I, you might think to write your
 FOCAL programs in your favorite text editor on your client PC then copy
-and paste that text into U/W FOCAL over SSH. Currently, that won't work.
-(2017.10.05) We believe it is because of the way U/W FOCAL handles
-terminal I/O and interrupts. If you try, the input ends up trashed in
-FOCAL.
+and paste that text into U/W FOCAL over SSH. That won't work.
+We believe it is because of the way U/W FOCAL handles
+terminal I/O and interrupts, being written with the assumption that
+such input is coming from a 110 bps Teletype or at most a 300 bps
+“high-speed” paper tape reader. If you try this over a modern gigabit
+class SSH connection, the input ends up trashed in FOCAL.
 
 
 #### <a id="ls-pip"></a>The Way That Works
 
 "But I really really want to write my FOCAL programs in [my favorite
 text editor][mfte] and paste them into my PiDP-8/I," I hear you say.
-Dispair not. There is a path.  Follow.
+Dispair not. There is a path. Follow.
 
 The problem affecting U/W FOCAL which prevents it from handling input at
 modern paste-through-SSH speeds doesn't affect OS/8 itself, so we'll use
@@ -881,7 +883,7 @@ The primary sources for this supplement are:
 
 [df8]:  http://www.ibiblio.org/pub/academic/computer-science/history/pdp-8/FOCL69%20Files/DEC-08-AJAD-D.pdf
 [f71]:  http://svn.so-much-stuff.com/svn/trunk/pdp8/src/decus/focal8-177/
-[hack]: https://tangentsoft.com/pidp8i/doc/trunk/HACKERS.md#patches
+[hack]: https://tangentsoft.com/pidp8i/doc/trunk/CONTRIBUTING.md#patches
 [uwfd]: http://www.pdp8.net/pdp8cgi/query_docs/view.pl?id=191
 [uwfm]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-manual.md
 [uwfr]: https://tangentsoft.com/pidp8i/doc/trunk/doc/uwfocal-refcards.md
@@ -889,7 +891,7 @@ The primary sources for this supplement are:
 
 ### <a id="license"></a>License
 
-Copyright © 2017 by Warren Young and Bill Cattey. Licensed under the
+Copyright © 2017, 2021 by Warren Young and Bill Cattey. Licensed under the
 terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

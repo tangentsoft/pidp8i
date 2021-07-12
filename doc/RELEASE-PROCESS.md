@@ -36,6 +36,22 @@ If `tools/simh-update` hasn't been run recently, you might want to do
 that and re-test before publishing a new version.
 
 
+## Test
+
+1.  Build the software on the version of Raspberry Pi OS we’ll
+    [use for BOSI, below](#bosi). Fix any problems.
+
+2.  Run `make test` on the BOSI host. Fix any problems.
+
+3.  Repeat above on [all other platforms previously known to work][oscomp].
+    Update the article to list caveats and such, or fix the problems.
+
+(See “[How the PiDP-8/i Software Is Tested](./testing.md)” for details
+on the philosophy and methods behind this process.)
+
+[oscomp]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
+
+
 ## Publish OS/8 RK05s
 
 Re-configure the software with default settings, remove `bin/*.rk05`,
@@ -55,15 +71,11 @@ file][cl]. If a regular user of the software cannot see a given change,
 it shouldn't go in the `ChangeLog.md`; let it be documented via the
 timeline only.
 
+Immediately prior to release, `/doc`, `/dir`, `/file` and similar links
+should point to trunk, but immediately prior to release, re-point them
+to the `release` branch, since this document describes prior releases.
+
 [cl]: https://tangentsoft.com/pidp8i/doc/trunk/ChangeLog.md
-
-
-## Build and Update the Fossil Binary
-
-If a new release of Fossil has come out since the last release, the
-`wget` link in `tools/bosi` is probably stale. Build an updated binary,
-run `tools/publish-fossil`, then replace the file name part of the URL
-in `tools/bosi` to pull that new version.
 
 
 ## Update the Release Branch
@@ -87,11 +99,13 @@ after tagging it.
 
 ## <a id="bosi"></a>Produce the Normal Binary OS Image
 
-Start with the latest version of [Raspbian Lite][os] on a multi-core
+Start with the latest version of [Raspberry Pi OS Lite][os] on a multi-core
 Raspberry Pi.
 
 1.  If the version of the base OS has changed since the last binary OS
-    image was created, download the new one.
+    image was created, download the new one. Be sure to update the “`$os`”
+    variable at the top of `tools/bosi` to match if the major version
+    has changed.
 
     While the OS is downloading, zero the SD card you're going to use
     for this, so the prior contents don't affect this process.
@@ -100,7 +114,8 @@ Raspberry Pi.
 
 2.  Boot it up on a multi-core Pi.
 
-    Log in, then retreive and initialize BOSI:
+    Log in as user `pi`, password `raspberry`, then retreive and
+    initialize BOSI:
 
         $ wget https://tangentsoft.com/bosi
         $ chmod +x bosi
@@ -115,51 +130,53 @@ Raspberry Pi.
     It will either reboot the system after completing its tasks
     successfully or exit early, giving the reason it failed.
 
-3.  Clone the software repo and build the softare:
+3.  Log in as user `pidp8i` since the prior step changed it from `pi`.
+    The password remains unchanged at this point.
 
-        $ ./bosi build
+    Clone the software repo and build the software:
+
+        $ ./bosi build [nls]
+
+    Adding the “nls” parameter lets the slow single-core Pi build share
+    the multicore ILS build’s OS/8 images, saving a tremendous amount of
+    build time.
 
     On reboot, say `top -H` to make sure the software is running and
-    that the CPU percentages are reasonable for the platform.
+    that the CPU percentages are reasonable for the platform: if the CPU
+    is mostly idle, the simulator isn’t running, and you need to figure
+    out why before proceeding.
 
     You may also want to check that it is running properly with a
     `pidp8i` command.  Is the configuration line printed by the
     simulator correct?  Does OS/8 run?  Are there any complaints from
     SIMH, such as about insufficient CPU power?
 
-4.  Do final inside-the-image steps:
+4.  Do the final inside-the-image steps:
 
         $ ./bosi prepare
 
-5.  Move the SD card to a USB reader plugged into the Pi, boot the Pi
-    from its prior SD card, and shrink the OS image:
-
-        $ wget https://tangentsoft.com/bosi
-        $ chmod +x bosi
-        $ ./bosi shrink
-
-6.  Move the USB reader to the Mac,¹ then say:
+5.  After the Pi shuts down, move the SD card to a micro SD card reader plugged
+    into the Mac¹ and say:
 
         $ bosi image [nls]
 
-    For the ILS images, you can give "ils" as a parameter or leave it
-    blank.
+    Give "ils" as a parameter or leave it blank for the ILS image.
 
-7.  The prior step rewrote the SD card with the image file it created.
+6.  The prior step rewrote the SD card with the image file it created.
     Boot it up and make sure it still works.  If you're happy with it,
-    give this command *on the desktop PC*.
+    give this command *on the Mac*.
 
         $ bosi finish [nls]
 
     As above, the parameter can be "ils" or left off for the ILS images.
 
-[os]: https://www.raspberrypi.org/downloads/raspbian/
+[os]: https://www.raspberrypi.org/software/operating-systems/
 
 
 ## Produce the "No Lamp Simulator" Binary OS Image
 
 Do the same series of steps above on a single-core Raspberry Pi, except
-that you give "nls" parameters to the `image` and `finish` steps.
+that you give "nls" parameters to the `build`, `image`, and `finish` steps.
 
 
 ## Publicizing
@@ -187,7 +204,7 @@ upload completes.
 
 ### License
 
-Copyright © 2016-2017 by Warren Young. This document is licensed under
+Copyright © 2016-2021 by Warren Young. This document is licensed under
 the terms of [the SIMH license][sl].
 
 [sl]: https://tangentsoft.com/pidp8i/doc/trunk/SIMH-LICENSE.md

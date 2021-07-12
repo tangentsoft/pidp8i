@@ -84,7 +84,7 @@ a project for an interested person.
 | ----------------|------------------------------------------------------------
 | patches     | Contains the OS/8 patch files
 | scripts     | Contains scripts fed to os8-run to automate various actions.
-| subsys      | Images containing OS/8 subsystems such as Focal, Adventure, etc.
+| subsys      | Images containing OS/8 subsystems such as U/W Focal, Fortran IV, etc.
 
 ## Other Files
 
@@ -95,7 +95,6 @@ a project for an interested person.
 |         | various boot images.
 | `init.tx.in`    | Baseline text typed out by init.cm.  Configuration in auto.def
 |         | establishes parameters that are substituted to create `init.tx`.
-| `local.tu56`    | Files created for or vetted by the PiDP-8/I project; used at build time
 
 [dga]:  http://www.pdp8online.com/images/images/misc_dectapes.shtml
 [tlrm]: /doc/trunk/README.md

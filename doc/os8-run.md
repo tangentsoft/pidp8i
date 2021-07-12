@@ -213,7 +213,7 @@ on the net.)
     mount rk0 $bin/v3d.rk05 required
     mount rk1 $bin/os8-v3f-build.rk05 preserve
     
-    cpto $src/os8/v3f/BUILD.PA RKA1:BUILD.PA
+    cpto $src/os8/v3f/BUILD.PA RKA1:BUILD.PA /A
     
     boot rk0
     
@@ -374,6 +374,7 @@ Here is a list of the `os8-run` scripting language commands in alphabetical orde
 | [`exit`](#exit-comm)           | Exit os8-run and send status                     |
 | [`include`](#include-comm)     | Execute a subordinate script file.               |
 | [`mount`](#mount-comm)         | Mount an image file as a SIMH attached device.   |
+| [`ocomp`](#ocomp-com           | Run the OS/8 Octal Compare Utility.              |
 | [`os8`](#os8-comm)             | Run arbitrary OS/8 command.                      |
 | [`pal8`](#pal8-comm)           | Run OS/8 `PAL8` assembler.                       |
 | [`patch`](#patch-comm)         | Run a patch file.                                |
@@ -618,6 +619,10 @@ The option is either empty or exactly one of
 
 If no option is specified, `/A` is assumed.
 
+**IMPORTANT:** Because we are parsing both OS/8 and POSIX file specifications,
+we can't just parse out the slash in the options. Options must be preceded with
+whitespace. Otherwise it would be mis-parsed as part of a file spec.
+
 In the first form of the command, the OS/8 file specification is left
 out, and one is synthesized from the file component of the _posix-path_.
 
@@ -645,6 +650,10 @@ The option is either empty or exactly one of
 | `/I` | OS/8 `PIP` image format. Bit for Bit copy.
 
 If no option is specified, `/A` is assumed.
+
+**IMPORTANT:** Because we are parsing both OS/8 and POSIX file specifications,
+we can't just parse out the slash in the options. Options must be preceded with
+whitespace. Otherwise it would be mis-parsed as part of a file spec.
 
 Unlike `cpto` there is only one form of the command.  Both the
 _os8-filespec_ and the _posix-path_ must be specified.  The options
@@ -714,6 +723,67 @@ found on partition A of rk05 drive 1.
 
     pal8 RKB1:OS8.BN,OS8.LS<RKA1:OS8.PA
 
+
+### <a id="ocomp-comm"></a>`ocomp` — Run OS/8 `OCOMP` Octal Compare and Dump Utility.
+
+This command was added to allow file verification.  It wraps a call to the
+OS/8 `OCOMP` utility with some expect parsing to recognize when two files
+are identical, or when one is missing.
+
+A typical command line would look like this:
+
+    ocomp TTY:<DTA1:E8.SV,SYS:E8.SV
+
+To confirm that the `E8` executable on `SYS:` matches the one found on the
+image mounted on `DTA1:`
+
+Note that, although one can use the full power of the `OCOMP` utility, the setup
+here in `os8-run` considers anything other than the "NOTHING OUTPUT" indicating
+identical files to be a "failure".
+
+However, the `transcript` option is available so that octal dumps can be
+produced. For example, the script:
+
+    mount rk0 $bin/v3d.rk05 required scratch
+    boot rk0
+
+    enable transcript
+    ocomp TTY:<PS.C
+
+produces the following output
+
+    $ bin/os8-run scripts/test/ocomp.os8 
+    Running script file: scripts/test/ocomp.os8
+    TTY:<PS.C
+    0000   ( ABSOLUTE BLOCK 2302 )
+    0000  5257 0252 7320 4762  5356 0364 7720 1741  7343 6341 5247 0363
+    0014  7364 4762 7341 3756  5354 0345 4252 6657  5212 5257 7240 7311
+    0030  7366 5757 7745 3640  7351 4364 6240 2656  5330 0305 6703 1303
+    0044  7240 7341 7344 2640  7356 2764 7762 2240  7750 1751 7240 4746
+    0060  7354 7345 5355 0345  4252 6657 4212 5215  5215 1612 7344 3345
+    0074  7351 2756 6240 7703  6725 2316 5640 2261  4215 6612 7212 4611
+    0110  5356 0364 6741 5762  6662 6660 5254 6351  4352 6673 4212 5215
+    0124  7751 2356 7240 0755  5351 4356 4251 5215  4373 5215 7211 7746
+    0140  5362 4240 5751 0675  5673 6351 6703 2717  5716 5724 5351 5653
+    0154  7651 5640 4215 4612  7611 1341 6733 6751  5675 5661 4215 4612
+    0170  7211 7746 5362 4240  7352 4675 5655 5661  5752 0676 5273 6752
+    0204  4255 6651 4212 4611  7611 1341 6733 6752  7675 1341 5333 6752
+    0220  5261 5735 6741 5762  5752 5735 4215 4612  7211 7746 5362 4240
+    0234  5752 0275 5673 6352  5262 4252 6703 2717  5316 6724 5751 0655
+    0250  7251 5273 5253 4653  4215 4612 7611 0211  7365 1764 5250 0247
+    0264  5647 5651 4215 4612  7211 7746 5362 4240  5752 0675 5673 6352
+    0300  5751 0653 5273 5752  4253 6651 4212 4611  7611 1360 7751 2356
+    0314  5346 1250 7245 2264  7242 0654 7362 5333  5735 5651 4215 4612
+    0330  7611 1360 7751 2356  5346 1250 6734 6362  5356 4642 4273 5215
+    0344  4211 6775 7612 0211  7362 7351 5364 4346  7242 7703 7355 6360
+    0360  7345 2764 7744 1334  5334 1356 4251 6673  4212 6775 0212 0232
+    0374  0000 0000 0000 0000
+    Non-fatal error encountered in scripts/test/ocomp.os8 at line 5:
+    	ocomp TTY:<PS.C
+
+Note how `os8-run` complains about a non-fatal error.  Again, this is because
+the use-case is for detecting two identical files, and calling everything else
+a failure.
 
 ### <a id="begin-end-comm"></a>`begin` / `end` — Complex conditionals and sub-command blocks.
 

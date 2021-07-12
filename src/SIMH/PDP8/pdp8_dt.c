@@ -1,6 +1,6 @@
 /* pdp8_dt.c: PDP-8 DECtape simulator
 
-   Copyright (c) 1993-2017, Robert M Supnik
+   Copyright (c) 1993-2020, Robert M Supnik
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,7 @@
 
    dt           TC08/TU56 DECtape
 
+   01-Jul-20    RMS     Fixed comments in bootstrap (Bernhard Baehr)
    15-Mar-17    RMS     Fixed dt_seterr to clear successor states
    17-Sep-13    RMS     Changed to use central set_bootpc routine
    23-Jun-06    RMS     Fixed switch conflict in ATTACH
@@ -98,10 +99,8 @@
 #include "pdp8_defs.h"
 
 #define DT_NUMDR        8                               /* #drives */
-#define UNIT_V_WLK      (UNIT_V_UF + 0)                 /* write locked */
-#define UNIT_V_8FMT     (UNIT_V_UF + 1)                 /* 12b format */
-#define UNIT_V_11FMT    (UNIT_V_UF + 2)                 /* 16b format */
-#define UNIT_WLK        (1 << UNIT_V_WLK)
+#define UNIT_V_8FMT     (UNIT_V_UF + 0)                 /* 12b format */
+#define UNIT_V_11FMT    (UNIT_V_UF + 1)                 /* 16b format */
 #define UNIT_8FMT       (1 << UNIT_V_8FMT)
 #define UNIT_11FMT      (1 << UNIT_V_11FMT)
 #define STATE           u3                              /* unit state */
@@ -109,7 +108,6 @@
 #define WRITTEN         u5                              /* device buffer is dirty and needs flushing */
 #define DT_WC           07754                           /* word count */
 #define DT_CA           07755                           /* current addr */
-#define UNIT_WPRT       (UNIT_WLK | UNIT_RO)            /* write protect */
 
 /* System independent DECtape constants */
 
@@ -350,8 +348,10 @@ REG dt_reg[] = {
     };
 
 MTAB dt_mod[] = {
-    { UNIT_WLK, 0, "write enabled", "WRITEENABLED", NULL },
-    { UNIT_WLK, UNIT_WLK, "write locked", "LOCKED", NULL }, 
+    { MTAB_XTD|MTAB_VUN, 0, "write enabled", "WRITEENABLED", 
+        &set_writelock, &show_writelock,   NULL, "Write enable drive" },
+    { MTAB_XTD|MTAB_VUN, 1, NULL, "LOCKED", 
+        &set_writelock, NULL,   NULL, "Write lock drive" },
     { UNIT_8FMT + UNIT_11FMT, 0, "18b", NULL, NULL },
     { UNIT_8FMT + UNIT_11FMT, UNIT_8FMT, "12b", NULL, NULL },
     { UNIT_8FMT + UNIT_11FMT, UNIT_11FMT, "16b", NULL, NULL },
@@ -978,7 +978,7 @@ switch (fnc) {                                          /* at speed, check fnc *
                 dt_substate = DTO_WCO;
             if (((dtsa & DTA_MODE) == 0) || (M[DT_WC] == 0))
                 dtsb = dtsb | DTB_DTF;                  /* set DTF */
-                break;
+            break;
 
         case DTO_WCO: case DTO_WCO | DTO_SOB:           /* all done */
             dt_schedez (uptr, dir);                     /* sched end zone */
@@ -1165,7 +1165,7 @@ return SCPE_OK;
 #define BOOT_LEN        (sizeof (boot_rom) / sizeof (int16))
 
 static const uint16 boot_rom[] = {
-    07600,                      /* 200, CLA CLL */
+    07600,                      /* 200, CLA             ; group 2 */
     01216,                      /*      TAD MVB         ; move back */
     04210,                      /*      JMS DO          ; action */
     01217,                      /*      TAD K7577       ; addr */
@@ -1180,7 +1180,7 @@ static const uint16 boot_rom[] = {
     05213,                      /*      JMP .-1 */
     05610,                      /*      JMP I DO */
     00600,                      /* MVB, 0600 */
-    07577,                      /* K7577, 7757 */
+    07577,                      /* K7577, 7577 */
     07755,                      /* CA,  7755 */
     07754,                      /* WC,  7754 */
     00220                       /* RF,  0220 */
@@ -1294,6 +1294,7 @@ int32 i, k;
 uint32 ba;
 
 if (uptr->WRITTEN && uptr->hwmark && ((uptr->flags & UNIT_RO)== 0)) {    /* any data? */
+    sim_printf ("%s: writing buffer to file: %s\n", sim_uname (uptr), uptr->filename);
     rewind (uptr->fileref);                             /* start of file */
     fbuf = (uint16 *) uptr->filebuf;                    /* file buffer */
     if (uptr->flags & UNIT_8FMT)                        /* PDP8? */
@@ -1338,10 +1339,8 @@ if (sim_is_active (uptr)) {
         }
     uptr->STATE = uptr->pos = 0;
     }
-if (uptr->hwmark && ((uptr->flags & UNIT_RO)== 0)) {    /* any data? */
-    sim_printf ("%s%d: writing buffer to file\n", sim_dname (&dt_dev), u);
-    dt_flush (uptr);
-    }                                                   /* end if hwmark */
+if (uptr->hwmark && ((uptr->flags & UNIT_RO)== 0))      /* any data? */
+    dt_flush (uptr);                                    /* end if hwmark */
 free (uptr->filebuf);                                   /* release buf */
 uptr->flags = uptr->flags & ~UNIT_BUF;                  /* clear buf flag */
 uptr->filebuf = NULL;                                   /* clear buf ptr */

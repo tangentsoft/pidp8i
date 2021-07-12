@@ -772,7 +772,7 @@ void gen_umod ()
 void gen_or ()
 {
 	output_line("\tJMSI POP");
-	output_line("\tACL");
+	output_line("\tMQA");
 	stkp = stkp + INTSIZE;
 }
 
