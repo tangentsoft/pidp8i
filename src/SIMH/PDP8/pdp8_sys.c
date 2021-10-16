@@ -65,6 +65,7 @@ extern DEVICE df_dev, rf_dev;
 extern DEVICE dt_dev, td_dev;
 extern DEVICE mt_dev, ct_dev;
 extern DEVICE ttix_dev, ttox_dev;
+extern DEVICE i2cb_dev;
 extern REG cpu_reg[];
 extern uint16 M[];
 
@@ -112,6 +113,7 @@ DEVICE *sim_devices[] = {
     &td_dev,
     &mt_dev,
     &ct_dev,
+    &i2cb_dev,
     NULL
     };
 
@@ -188,7 +190,7 @@ while ((c = getc (fi)) != EOF) {                        /* read char */
     else
         if (c > 0200)                                   /* channel 8 set? */
             *newf = (c & 070) << 9;                     /* change field */
-    else 
+    else
         return c;                                       /* otherwise ok */
     }
 return EOF;
