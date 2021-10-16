@@ -128,7 +128,7 @@ UNIT i2cb_unit[] = {
 
 
 DEVICE i2cb_dev = {
-    "I2Cbridge", i2cb_unit, i2cb_reg, i2cb_mod,
+    "I2CB", i2cb_unit, i2cb_reg, i2cb_mod,
     8, 10, 31, 1, 8, 12,
     NULL, NULL, &i2cb_reset,
     &i2cb_boot, &i2cb_attach, &i2cb_detach,
@@ -302,7 +302,7 @@ dibp = (DIB *) dptr->ctxt;
 if (dibp == NULL)
     return SCPE_IERR;
 
-/* find unit index */ 
+/* find unit index */
 for (i=0; i < dibp->num ; i++) {
     if  (dptr->units +i  == uptr) 
         break;

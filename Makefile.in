@@ -53,6 +53,12 @@ ifneq "@HAVE_PCRE_H@" "0"
 SIM_CFLAGS += -DHAVE_PCRE_H
 SIM_LFLAGS := -lpcre
 endif
+
+## TODO make dependent on config checks
+SIM_CFLAGS += -DI2C_BR_DEVICE
+SIM_LFLAGS += -Wl,-rpath=/usr/local/lib
+##
+
 ifneq "@HAVE_PCREPOSIX_H@" "0"
 SIM_CFLAGS += -DHAVE_PCREPOSIX_H
 endif
@@ -154,6 +160,7 @@ SIM_OBJS := \
 	obj/SIMH/PDP8/pdp8_tsc.o \
 	obj/SIMH/PDP8/pdp8_tt.o \
 	obj/SIMH/PDP8/pdp8_ttx.o \
+        obj/SIMH/PDP8/pdp8_i2cb.o \
 	obj/SIMH/scp.o \
 	obj/SIMH/sim_card.o \
 	obj/SIMH/sim_console.o \
@@ -204,7 +211,8 @@ endif
 
 TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
-LIBS = -lm -ldl -lpthread
+#TODO handle libi2cd via configure option 
+LIBS = -lm -ldl -lpthread -li2cd
 
 ASM_PTS     := $(wildcard @srcdir@/src/asm/*.pal)
 ASM_PTS     := $(subst @srcdir@/src/asm,bin,$(ASM_PTS))
