@@ -1779,8 +1779,7 @@ for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {     /* add devices */
                 if (dspp->dsp) {                        /* any dispatch? */
                     if (dev_tab[dspp->dev]) {           /* already filled? */
                         sim_printf ("%s device number conflict at %02o\n",
-                            sim_dname (dptr), dibp->dev + j);
-                              /* TODO this mesageseems to be wrong if dev bnr are not consecutive?? */
+                            sim_dname (dptr), dspp->dev); /*TODO this is a fix see SIMH issue 1084 */ 
                         return TRUE;
                         }
                     dev_tab[dspp->dev] = dspp->dsp;     /* fill */
