@@ -63,9 +63,6 @@
 
 */
 
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-/* well the whole file is new anyway */
-
 /* TODO have a configure option here */ 
 /* ignore the entire module if not requested but do not leave it completely empty (some compilers might complain)*/
 #include "pdp8_defs.h"
@@ -471,6 +468,3 @@ return SCPE_OK;
 
 
 #endif
-
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
-
