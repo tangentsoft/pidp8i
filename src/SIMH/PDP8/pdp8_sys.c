@@ -194,7 +194,7 @@ while ((c = getc (fi)) != EOF) {                        /* read char */
     else
         if (c > 0200)                                   /* channel 8 set? */
             *newf = (c & 070) << 9;                     /* change field */
-    else
+    else 
         return c;                                       /* otherwise ok */
     }
 return EOF;
