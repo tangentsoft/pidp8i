@@ -84,6 +84,9 @@
     Emacs-like editor for the PDP-8.  See [its `AUTHORS.md` file][e8au]
     for more info.
 
+*   **[Heinz-Bernd Eggenstein](mailto:hb@tickuhr.de)** created the 
+    initial version of the I2CB (= I2C bridge) device 
+
 *   **[Warren Young](mailto:tangentsoft@gmail.com)** Did everything
     listed in [the change log][cl] that is not attributed to anyone
     else.
