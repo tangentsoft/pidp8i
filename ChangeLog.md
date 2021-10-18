@@ -1,5 +1,14 @@
 # PiDP-8/I Changes
 
+<a id="2022xxyy"></a>
+## Version 2022.xx.yy
+
+*   Added an I²C bridge device created by Heinz-Bernd Eggenstein which
+    allows external devices to be attached to the simulator and
+    addressed via IOT instructions, mimicking the effect of peripherals
+    on a PDP-8 device bus.
+
+
 <a id="20210214"></a>
 ## Version 2021.02.14 — The Quarantine Release
 
