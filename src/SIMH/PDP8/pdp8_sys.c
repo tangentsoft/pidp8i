@@ -66,7 +66,9 @@ extern DEVICE dt_dev, td_dev;
 extern DEVICE mt_dev, ct_dev;
 extern DEVICE ttix_dev, ttox_dev;
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef I2C_BR_DEVICE
 extern DEVICE i2cb_dev;
+#endif
 /* ---PiDP end--------------------------------------------------------------------------------------------- */
 extern REG cpu_reg[];
 extern uint16 M[];
@@ -116,7 +118,9 @@ DEVICE *sim_devices[] = {
     &mt_dev,
     &ct_dev,
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef I2C_BR_DEVICE
     &i2cb_dev,
+#endif
 /* ---PiDP end--------------------------------------------------------------------------------------------- */
     NULL
     };

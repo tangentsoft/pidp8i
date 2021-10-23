@@ -1,6 +1,7 @@
 /* pdp8_i2cb.c: PDP-8 I2C bridge pseudo device
 
-   Copyright (c) 2021, Heinz-Bernd Eggenstein
+   Copyright (c) 1993-2016, Robert M Supnik,
+         and (c) 2021, Heinz-Bernd Eggenstein
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -66,20 +67,16 @@
 
 */
 
-/* TODO have a configure option here */
-/* TODO ignore the entire module if not requested but do not leave it completely
-   TODO empty (some compilers might complain)*/
-#include "pdp8_defs.h"
-
+/* module is enabled by configure option */
 #ifdef I2C_BR_DEVICE
 
+#include "pdp8_defs.h"
 
-/* TODO decide which I2C abstraction to use */
-/* TODO for prototyping we use this one here:
-   TODO https://github.com/sstallion/libi2cd
-   TODO which was intended for a PiDP-11 GPIO
-   TODO extender. There is hope it might be included in the future in the PDP-8 
-   TODO sim as well.
+/* we use this I2C abstraction layer library:
+   https://github.com/sstallion/libi2cd
+   which was originally intended for a PiDP-11 GPIO
+   extender. There is hope it might be included in the future in the PDP-8
+   sim as well.
 */
 
 #include <i2cd.h>

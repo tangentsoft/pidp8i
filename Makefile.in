@@ -54,10 +54,12 @@ SIM_CFLAGS += -DHAVE_PCRE_H
 SIM_LFLAGS := -lpcre
 endif
 
-## TODO make dependent on config checks
+# optional I2C bridge device looks for libi2cd in /usr/local/lib
+ifeq (@USE_I2C_BRIDGE@, 1)
 SIM_CFLAGS += -DI2C_BR_DEVICE
-SIM_LFLAGS += -Wl,-rpath=/usr/local/lib
-##
+SIM_LFLAGS += -li2cd -Wl,-rpath=/usr/local/lib
+endif
+#
 
 ifneq "@HAVE_PCREPOSIX_H@" "0"
 SIM_CFLAGS += -DHAVE_PCREPOSIX_H
@@ -211,8 +213,7 @@ endif
 
 TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
-#TODO handle libi2cd via configure option 
-LIBS = -lm -ldl -lpthread -li2cd
+LIBS = -lm -ldl -lpthread
 
 ASM_PTS     := $(wildcard @srcdir@/src/asm/*.pal)
 ASM_PTS     := $(subst @srcdir@/src/asm,bin,$(ASM_PTS))

@@ -102,6 +102,7 @@ append alloptions {
     serial-mod           => "use GPIO drive scheme suitable for Oscar Vermeulen's serial mod method"
     throttle:            => "override the throttle values in the boot scripts"
     usb-automount=1      => "do not automatically mount USB drives for SING_STEP + DF"
+    i2c-bridge           => "include the I2C bridge device (requires libi2cd)"
     use-ock              => "boot the OS/8 Combined Kit built from source instead of binary v3d."
 }
 
@@ -119,6 +120,8 @@ set btv [opt-val boot-tape-version]
 if {$btv eq ""} {set btv "v3d"}
 
 define USB_AUTOMOUNT [opt-bool usb-automount]
+
+define USE_I2C_BRIDGE [opt-bool i2c-bridge]
 
 # Make our own array of os8 options so we can apply the meta options
 foreach {opt def desc} $os8opts {
@@ -409,6 +412,18 @@ if {![file isdirectory "/opt/vc"]} {
     define PI_LIBS   "-lbcm_host"
 }
 define LIBS $old_LIBS
+
+# check libi2cd unless i2c-bridge feature was disabled 
+if {[opt-bool i2c-bridge] && ![cc-with {-cflags "-I/usr/local/include"} {
+             cc-check-includes i2cd.h
+           }]} {
+    user-error "Could not find i2cd.h.  Try installing libi2cd."
+} elseif {[opt-bool i2c-bridge] && ![cc-with {-cflags "-L/usr/local/lib"} {
+             cc-check-function-in-lib i2cd_close i2cd
+           }]} {
+    user-error "Could not find i2cd_close() in libi2cd."
+}
+
 
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
