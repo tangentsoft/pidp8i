@@ -818,18 +818,19 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     static int swDep = 0;
     if (((switchstatus[2] & SS2_DEP) == 0) && (swDep == 0)) {
         uint16 sSR = (~switchstatus[0]) & 07777; // bit flip justified above
+        uint32 effaddr;
         *pPC = *pPC & 07777;  // sometimes high bits get set; squish 'em
-
+        effaddr= *pPC | *pIF;
 #if 0   // debugging
         printf("\r\nDEP: [IF:%o] [PC:%04o] [SR:%04o]",
                 (*pIF >> 12), *pPC, sSR);
 #endif
 
-        /* ??? in 66 handbook: strictly speaking, SR goes into AC,
-           then AC into MB. Does it clear AC afterwards? If not, needs fix */
-        pM[*pPC] = sSR;             // FIXME: shouldn't we use IF/DF here?
+        if (effaddr < MEMSIZE) {
+            pM[effaddr] = sSR;      // if deposit is outside phys. memory 
+        }                           // don't write but otherwise proceed 
         *pMB = sSR;
-        *pMA = *pPC & 07777;        // MA trails PC on FP; FIXME: OR in IF?
+        *pMA = *pPC & 07777;        // MA trails PC 
         *pPC = (*pPC + 1) & 07777;  // increment PC
         swDep = 1;                  // make it single-shot
     }
@@ -842,7 +843,14 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     // Check for EXAM switch press...
     static int swExam = 0;
     if (((switchstatus[2] & SS2_EXAM) == 0) && (swExam == 0)) {
-        *pMB = pM[*pPC];
+        uint32 effaddr;
+        *pPC = *pPC & 07777;  // sometimes high bits get set; squish 'em
+        effaddr= *pPC | *pIF;
+        if (effaddr < MEMSIZE) { 
+            *pMB = pM[effaddr];
+        } else {
+            *pMB = 0;
+        }
         *pMA = *pPC & 07777;          // MA trails PC on FP
         *pPC = (*pPC + 1) & 07777;    // increment PC
         swExam = 1;                   // make it single-shot
