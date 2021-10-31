@@ -657,7 +657,7 @@ static pidp8i_flow_t handle_sing_step (int closed)
 // The simulator passes in pointers to PDP-8 registers we may modify as
 // a side effect of handling these switches.
 
-pidp8i_flow_t handle_flow_control_switches (uint16* pM,
+pidp8i_flow_t handle_flow_control_switches (uint16* pM, uint16 memcapacity,
     uint32 *pPC, uint32 *pMA, int32 *pMB, int32 *pLAC, int32 *pIF,
     int32 *pDF, int32* pint_req)
 {
@@ -826,7 +826,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
                 (*pIF >> 12), *pPC, sSR);
 #endif
 
-        if (effaddr < MEMSIZE) {
+        if (effaddr < memcapacity) {
             pM[effaddr] = sSR;      // if deposit is outside phys. memory 
         }                           // don't write but otherwise proceed 
         *pMB = sSR;
@@ -846,7 +846,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         uint32 effaddr;
         *pPC = *pPC & 07777;  // sometimes high bits get set; squish 'em
         effaddr= *pPC | *pIF;
-        if (effaddr < MEMSIZE) { 
+        if (effaddr < memcapacity) { 
             *pMB = pM[effaddr];
         } else {
             *pMB = 0;

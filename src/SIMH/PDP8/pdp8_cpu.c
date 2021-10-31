@@ -455,7 +455,7 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-    switch (pidp8i_gpio ? handle_flow_control_switches(M, &PC, &SteadyMA,
+    switch (pidp8i_gpio ? handle_flow_control_switches(M, MEMSIZE, &PC, &SteadyMA,
             &MB, &LAC, &IF, &DF, &int_req) : pft_normal) {
         case pft_stop:
             // Tell the SIMH event queue to keep running even though

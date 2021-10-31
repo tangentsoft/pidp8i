@@ -46,7 +46,7 @@ extern char *build_pidp8i_scp_cmd (char* cbuf, size_t cbufsize);
 extern int32_t get_switch_register (void);
 extern size_t get_pidp8i_initial_max_skips (size_t updates_per_sec);
 
-extern pidp8i_flow_t handle_flow_control_switches (uint16_t* pM,
+extern pidp8i_flow_t handle_flow_control_switches (uint16_t* pM, uint16_t memcapacity,
         uint32_t *pPC, uint32_t *pMA, int32_t *pMB, int32_t *pLAC, int32_t *pIF,
         int32_t *pDF, int32_t* pint_req);
 
