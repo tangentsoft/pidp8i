@@ -388,7 +388,7 @@ int Pause = 0;
 // Set our initial IPS value from the throttle, if given.
 static time_t last_update = 0;
 static size_t max_skips = 0;
-static const size_t pidp8i_updates_per_sec = 3200;
+static const size_t pidp8i_updates_per_sec = 9600; // 3200;
 max_skips = get_pidp8i_initial_max_skips (pidp8i_updates_per_sec);
 srand48 (time (&last_update));
 
@@ -1585,11 +1585,20 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             // Yep; simulator IPS may have changed, so freshen it.
             last_update = now;
             max_skips = inst_count / pidp8i_updates_per_sec;
+
+            // if we skip here more than so many instructions,
+            // the additional benefit in saved computing time is not
+            // worth the disadvantage of sparser sampling, so limit
+            // max_skip to some reasonable max value to prevent
+            // excessive undersampling
+
+	    if(max_skips > 100) max_skips=100;
+
             //printf("Inst./repaint: %zu - %zu; %.2f MIPS\r\n",
             //        max_skips, dither, inst_count / 1e6);
             inst_count = 0;
             }
-        dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
+        dither = max_skips > 1 ? lrand48() % ((max_skips >> 1)+1) : 0;
         }
     Pause = 0;      // it's set outside the "if", so it must be *reset* outside
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -1779,7 +1788,7 @@ for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {     /* add devices */
                 if (dspp->dsp) {                        /* any dispatch? */
                     if (dev_tab[dspp->dev]) {           /* already filled? */
                         sim_printf ("%s device number conflict at %02o\n",
-                            sim_dname (dptr), dibp->dev + j);
+                            sim_dname (dptr), dspp->dev); /*TODO this is a fix see SIMH issue 1084 */ 
                         return TRUE;
                         }
                     dev_tab[dspp->dev] = dspp->dsp;     /* fill */

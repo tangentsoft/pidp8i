@@ -282,15 +282,18 @@ void swap_displays ()
             }
         }
         else {
-            // Clear old paint-from display
-            memset (pdis_paint, 0, sizeof(display));
-
-            // Send old paint-from display to CPU as new update-to
-            // display, and overwrite paint-from pointer with prior
-            // update-to pointer.
-            pdis_paint = pdis_update == display_bufs + 0 ?
-                    SWAP(1) :
-                    SWAP(0);
+	    // only swap if the new display was actually updated 
+            // at least once
+            if(pdis_update->inst_count >0) {
+                // Clear old paint-from display
+                memset (pdis_paint, 0, sizeof(display));            
+                // Send old paint-from display to CPU as new update-to
+                // display, and overwrite paint-from pointer with prior
+                // update-to pointer.
+                pdis_paint = pdis_update == display_bufs + 0 ?
+                        SWAP(1) :
+                        SWAP(0);
+            }
         }
     }
     // else, leave current LED values as-is so we don't go to a black

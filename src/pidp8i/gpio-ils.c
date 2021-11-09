@@ -49,9 +49,8 @@
 // We use an asymmetric function depending on whether the LED is turning
 // on or off to better mimic the behavior of an incandescent lamp, which
 // reaches full brightness faster than it turns fully off.
-#define RISING_FACTOR 0.012
-#define FALLING_FACTOR 0.005
-
+#define RISING_FACTOR (0.012*20.0)
+#define FALLING_FACTOR (0.005*20.0)
 
 //// gpio_core  ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
@@ -64,7 +63,7 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
     // which takes roughly 2 * intervl µs.  There's a bit of extra delay
     // over intervl in the NLS version, so the while loop iteration time
     // is about the same for both versions.
-    const us_time_t intervl = 20;
+    const us_time_t intervl = 10;
 
     // Current brightness level for each LED.  It goes from 0 to
     // MAX_BRIGHTNESS, but we keep it as a float because the decay
@@ -78,18 +77,12 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
     uint8 br_targets[NLEDROWS][NCOLS];
     memset(br_targets, 0, sizeof (br_targets));
 
-    // Current PWM brightness step
-    uint8 step = MAX_BRIGHTNESS;
 
     while (*terminate == 0) {
         // Prepare for lighting LEDs by setting col pins to output
         for (size_t i = 0; i < NCOLS; ++i) OUT_GPIO(cols[i]);
 
-        // Restart PWM cycle if prior one is complete
-        if (step == MAX_BRIGHTNESS) {
-            // Reset PWM step counter
-            step = 0;
-      
+
             // Go get the current LED "on" times, and give the SIMH
             // CPU thread a blank copy to begin updating.  Because we're
             // in control of the swap timing, we don't need to copy the
@@ -102,16 +95,13 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
             // level, which is based on the number of instructions
             // executed for this display update.
             //
-            // Handle the cases where inst_count is < 32 specially
-            // because we don't want all LEDs to go out when the
-            // simulator is heavily throttled.
-            const size_t inst_count = pdis_paint->inst_count;
-            size_t br_quant = inst_count >= 32 ? (inst_count >> 5) : 1;
+            const size_t inst_count =
+                  (pdis_paint->inst_count >0) ? pdis_paint->inst_count : 1;
+            const float one_div_inst_count = 1.0 / (float) inst_count;
             for (int row = 0; row < NLEDROWS; ++row) {
                 size_t *prow = pdis_paint->on[row];
                 for (int col = 0; col < NCOLS; ++col) {
-                    br_targets[row][col] = prow[col] / br_quant;
-
+                    br_targets[row][col] = (prow[col] << 5) * one_div_inst_count;
                 }
             }
 
@@ -121,23 +111,23 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
             // mode, but that's handled in update_led_states () because
             // we fall back to NLS in STOP mode.
             br_targets[5][2] = br_targets[5][3] = MAX_BRIGHTNESS / 2;
-        }
-        ++step;
 
-        // Update the brightness values.
-        for (int row = 0; row < NLEDROWS; ++row) {
-            size_t *prow = pdis_paint->on[row];
-            for (int col = 0; col < NCOLS; ++col) {
-                uint8 br_target = br_targets[row][col];
-                float *p = brightness[row] + col;
-                if (*p <= br_target) {
-                    *p += (br_target - *p) * RISING_FACTOR;
-                }
-                else {
-                    *p -= *p * FALLING_FACTOR;
+            // Update the brightness values.
+            for (int row = 0; row < NLEDROWS; ++row) {
+                //size_t *prow = pdis_paint->on[row];
+                for (int col = 0; col < NCOLS; ++col) {
+                    uint8 br_target = br_targets[row][col];
+                    float *p = brightness[row]+col;
+                    if (*p <= br_target) {
+                        *p += (br_target - *p) * RISING_FACTOR;
+                    }
+                    else {
+                        *p -= (*p - br_target) * FALLING_FACTOR;
+                    }
                 }
             }
-        }
+
+
 
         // Light up LEDs
         extern int swStop, swSingInst, suppressILS;
@@ -147,20 +137,25 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
             // same mechanism NLS uses.  Force a display swap if the next
             // loop iteration won't do it in case this isn't STOP mode.
             update_led_states (intervl * 60);
-            if (step != (MAX_BRIGHTNESS - 1)) swap_displays();
+            swap_displays();
         }
         else {
             // Normal case: PWM display using the on-count values
             for (size_t row = 0; row < NLEDROWS; ++row) {
                 // Output 0 (CLR) for LEDs in this row which should be on
-                size_t *prow = pdis_paint->on[row];
-                for (size_t col = 0; col < NCOLS; ++col) {
-                    if (brightness[row][col] >= step) {
-                        GPIO_CLR = 1 << cols[col];
-                    }
-                    else {
-                        GPIO_SET = 1 << cols[col];
-                    }
+                // size_t *prow = pdis_paint->on[row];
+                uint8 br[ NCOLS ];
+
+                // for each row, perfrom one PWM cycle
+
+                // convert brightness as integers just once
+                // and not for each pulse width step
+
+		for (size_t col = 0; col < NCOLS; col++ ) {
+                   int b=(int)brightness[row][col];
+                   if (b < 0)  b=0;
+                   if (b > 31) b=31;
+                   br[col]=b;
                 }
 
                 // Toggle this LED row on
@@ -168,15 +163,44 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
                 GPIO_SET = 1 << ledrows[row];
                 OUT_GPIO(ledrows[row]);
 
+                // initial switching : on or off
+
+                for (size_t col = 0; col < NCOLS; ++col) {
+                    if (br[col] > 0) {
+                        GPIO_CLR = 1 << cols[col];
+                    } else {
+                        GPIO_SET = 1 << cols[col];
+                    }
+                }
+
                 sleep_us(intervl);
+
+
+                for(int steps = 1; steps < MAX_BRIGHTNESS  ; ++steps) {
+                    // turn off those LEDS that are in the respective
+                    // brightness bin, leave the others on
+                    // creating a pulse width proportional to
+                    // br[col]
+                  for (size_t col = 0; col < NCOLS; ++col) {
+                    if (br[col] == steps) {
+                        GPIO_SET = 1 << cols[col];
+                    }
+                  }
+                  sleep_us(intervl);
+		}
+
+		// at this point every LED must be turned off again
+                // as we stepped thru all possible values of br[col]
+
 
                 // Toggle this LED row off
                 GPIO_CLR = 1 << ledrows[row]; // superstition
                 INP_GPIO(ledrows[row]);
 
                 sleep_ns(5);
-            }
-        }
+            } //  end row loop
+        } // end normal PWM case
+
 
 #if 0   // debugging
         static time_t last = 0, now;
