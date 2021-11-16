@@ -500,8 +500,8 @@ ifeq (@USB_AUTOMOUNT@, 1)
 		sed -i -e 's/MountFlags=slave/MountFlags=shared/' \
 			/lib/systemd/system/systemd-udevd.service && \
 		/bin/systemctl daemon-reload && \
-		/sbin/udevadm control --reload-rules && \
-		/sbin/udevadm trigger \
+		udevadm control --reload-rules && \
+		udevadm trigger \
 	) || true
 endif
 
