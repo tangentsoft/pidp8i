@@ -3,6 +3,7 @@
  *             lamp simulator
  * 
  * Copyright © 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
+ *           © 2021 Steve Tockey
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -115,12 +116,17 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
                 }
             }
 
+#if 0
+// This has been disabled becase Fetch and Execute are now accurate with
+// the actual major state of the simulated machine
             // Hard-code the Fetch and Execute brightnesses; in running
             // mode, they're both on half the instruction time, so we
             // just set them to 50% brightness.  Execute differs in STOP
             // mode, but that's handled in update_led_states () because
             // we fall back to NLS in STOP mode.
             br_targets[5][2] = br_targets[5][3] = MAX_BRIGHTNESS / 2;
+#endif
+
         }
         ++step;
 
@@ -140,8 +146,8 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
         }
 
         // Light up LEDs
-        extern int swStop, swSingInst, suppressILS;
-        if (swStop || swSingInst || suppressILS) {
+        extern int cpuRun, suppressILS;
+        if (cpuRun == 0 || suppressILS) {
             // The CPU is in STOP mode or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the
             // same mechanism NLS uses.  Force a display swap if the next

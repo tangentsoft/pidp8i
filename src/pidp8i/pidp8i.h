@@ -3,6 +3,9 @@
 
    Copyright © 2015-2017 by Oscar Vermeulen and Warren Young
 
+   Portions copyright © 2021 by HB Eggenstein
+                      © 2021 by Steve Tockey
+
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -36,22 +39,23 @@
 #include <stdlib.h>
 
 typedef enum {
-    pft_normal,
-    pft_halt,
-    pft_stop,
+    pft_stopped,        /* the cpu is not running */
+    pft_running,        /* the cpu is running */
+    pft_go,             /* the cpu is (re-) starting from being stopped */
+    pft_exit            /* exit(ing) SIMH */
 } pidp8i_flow_t;
 
-extern char *build_pidp8i_scp_cmd (char* cbuf, size_t cbufsize); 
+extern char *build_pidp8i_scp_cmd (char* cbuf, size_t cbufsize);
 
 extern int32_t get_switch_register (void);
 extern size_t get_pidp8i_initial_max_skips (size_t updates_per_sec);
 
-extern pidp8i_flow_t handle_flow_control_switches (uint16_t* pM,
-        uint32_t *pPC, uint32_t *pMA, int32_t *pMB, int32_t *pLAC, int32_t *pIF,
-        int32_t *pDF, int32_t* pint_req);
+extern pidp8i_flow_t handle_flow_control_switches (uint16_t* pM, uint16_t memcapacity,
+         uint32_t *pPC, uint32_t *pMA, int32_t *pMB, int32_t *pLAC, int32_t *pIF,
+         int32_t *pDF, int16_t* pMajor_State, int32_t* pint_req);
 
 extern void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint32_t sMB,
         uint16_t sIR, int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF,
-        int32_t sSC, int32_t int_req, int Pause);
+        int32_t sSC, int32_t int_req, uint16_t Major_State, int Pause);
 
 #endif // !defined(PIDP8I_H)
