@@ -279,7 +279,7 @@ void swap_displays ()
             static const int levels = 32;
             memcpy (pdis_paint->curr, ledstatus, 
                     sizeof (pdis_paint->curr));
-            pdis_paint->inst_count = levels;
+            pdis_paint->cycle_count = levels;
 
             for (size_t row = 0; row < NLEDROWS; ++row) {
                 size_t *prow = pdis_paint->on[row];
@@ -530,14 +530,15 @@ void update_led_states (const us_time_t delay)
     }
 #endif
     
-// ############################################## TBD--Override Execute here?????????????????????????????????
-
+#if 0
+// This appears to be no longer necessary in the cycle-realistic version
     // Override Execute and Run LEDs if the CPU is currently stopped,
     // since we only get set_pidp8i_leds calls while the CPU's running.
     if (cpuRun == 0) {
         pdis_paint->curr[5] &= ~(1 << 2);
         pdis_paint->curr[6] &= ~(1 << 7);
     }
+#endif
 
     for (size_t row = 0; row < NLEDROWS; ++row) {
         for (size_t col = 0; col < NCOLS; ++col) {

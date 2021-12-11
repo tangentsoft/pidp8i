@@ -48,16 +48,15 @@ static int sing_step_single_shot = 0;
 
 //##########################################################################################################
 // handle_sing_step_special_cases() sets this to nonzero and returns a value breaking
-// us out of the PDP-8 simulator's sim_instr() loop, which causes SCP to
-// call our build_pidp8i_scp_cmd(), which gives SCP a command to run:
-// either "exit" when it wants the simulator to stop (e.g the shutdown
-// and reboot combos) or "do $script" on IF + SING_STEP + ... combo.
+// us out of the PDP-8 simulator's sim_instr() loop, which causes SCP to call our
+// build_pidp8i_scp_cmd(), which gives SCP a command to run, either:
+// "exit" when it wants the simulator to stop (e.g the shutdown and reboot combos), or
+// "do $script" on IF + SING_STEP + ... combo.
 //
-// We loop the flow control from this module out into the generic SIMH
-// code and then back in here so we don't have to export this global.
-// Basically, this module global lets us remember what handle_sing_step
-// wants SCP to do in the window between switch handling time and SCP
-// command handling time.
+// We loop the flow control from this module out into the generic SIMH code and then
+// back in here so we don't have to export this global. Basically, this module global
+// lets us remember what handle_sing_step_special_cases wants SCP to do in the window
+// between switch handling time and SCP command handling time.
 //##########################################################################################################
 static enum {
     CMD_NONE = 0,            // "do nothing" idle case
@@ -323,15 +322,14 @@ void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint32_t sMB,
     uint16_t sIR, int32_t sLAC, int32_t sMQ, int32_t sIF, int32_t sDF,
     int32_t sSC, int32_t int_req, uint16_t this_Major_State, int Pause)
 {
-    // Bump the instruction count.  This should always be equal to the
-    // Fetch LED's value, but integers are too cheap to get cute here.
+    // Bump the memory cycle (major state) count.
     //
     // Note that we only update pdis_update directly once in this whole
     // process.  This is in case the display swap happens while we're
     // working: we want to finish work on the same display even though
     // it's now called the paint-from display, so it's consistent.
     display* pd = pdis_update;
-    ++pd->inst_count;
+    ++pd->cycle_count;
 
     // Rows 0-4, easy cases: single-register LED strings.
     // 
@@ -521,20 +519,22 @@ static void mount_usb_stick_file (int devNo, char *devCode)
 
 //// handle_sing_step_special_cases //////////////////////////////////////
 // This is separate from handle_flow_control_switches because there are
-// several non-trivial cases that would obscure the overall flow of our
-// calling function to do all this there.
+// several non-trivial cases that would obscure the overall flow of the
+// calling function to do all this in that function.
 
 static pidp8i_flow_t handle_sing_step_special_cases ()
 {
     // There are two sets of SING_STEP combos: first up are those where the
     // other switches involved have to be set already, and the function is
     // triggered as soon as SING_STEP closes.  These are functions we don't
-    // want re-executing repeatedly while SING_STEP remains closed.
+    // want re-executing repeatedly while SING_STEP remains closed. So, the
+    // sing_step_single_shot test blocks checking of the once-only combinations
     if (sing_step_single_shot == 0) {
 
         sing_step_single_shot == 1;                           // make it single shot
 
         // 1. (Sing_Inst + Cont) + Sing_Step
+        //    Sing_Inst and Cont must both be set before setting Sing_Step
         if ((switchstatus[2] & (SS2_S_INST | SS2_CONT)) == 0) {
 
             // 1a. Convert DF switch values to a device number, which
@@ -585,6 +585,7 @@ static pidp8i_flow_t handle_sing_step_special_cases ()
     } // end of single-shot == 0 flag
 
     // 2. Scan for host poweroff command (Sing_Inst + Stop) + Sing_Step
+    //    Sing_Inst and Stop must both be set before setting Sing_Step
     if ((switchstatus[2] & (SS2_S_INST | SS2_STOP)) == 0) {
         printf ("\r\nShutdown\r\n\r\n");
         insert_scp_cmd = CMD_EXIT;
@@ -595,6 +596,7 @@ static pidp8i_flow_t handle_sing_step_special_cases ()
     }
 
     // 3. Scan for host reboot command (Sing_Inst + Start ) + Sing_Step
+    //    Sing_Inst and Start must both be set before setting Sing_Step
     if ((switchstatus[2] & (SS2_S_INST | SS2_START)) == 0) {
         printf ("\r\nReboot\r\n\r\n");
         insert_scp_cmd = CMD_EXIT;
@@ -608,7 +610,7 @@ static pidp8i_flow_t handle_sing_step_special_cases ()
     // These combos once meant something, but no longer do. They can
     // be reactivated if useful. If you reassign them, think carefully
     // whether they should continue to be handled here and not above
-    // in the "if (single_shot == 0)" branch. If nothing prevents your
+    // in the "if (..._single_shot == 0)" branch. If nothing prevents your
     // function from being re-executed while SING_STEP remains closed
     // and re-execution would be bad, move the test under the aegis
     // of the single_shot flag.
@@ -621,9 +623,10 @@ static pidp8i_flow_t handle_sing_step_special_cases ()
     #endif
 
     // We would not be in this function without SingInst being set in the
-    // first place, so it's safe to default returning pft_stopped. But this
-    // is really only to distinguish it from the pft_exit that gets returned
-    // on PiDP8/I OS reboot via IF switches, Pi reboot, and Pi poweroff
+    // first place, so it's safe to default to returning pft_stopped. But
+    // this is really only to distinguish it from the pft_exit that gets
+    // returned on PiDP-8/I OS reboot via IF switches, Pi reboot, and
+    // Pi poweroff
     return pft_stopped;
 
 }
@@ -678,8 +681,14 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM, uint16 memcapacity,
         // registers instead, since our STOP/START behavior doesn't
         // make use of saved_*.
         REG* pibr = find_reg ("IB", NULL, &cpu_dev);
+
+        // TBD FIX, it appears that the following 2 lines lead to *pIB being
+        // null but not crashing on *pIB being a null pointer. This is why
+        // there needs to be the "if (IB == -1)" TSS-8 patch in pdp8_cpu.c
+        // When these two lines are resolved, the TSS-8 patch should be removed
         int32* pIB = pibr ? pibr->loc : 0 /* force segfault on err */ ;
         *pIB = *pIF;
+
         *pnext_Major_State = 1;// START always begins with Fetch state
         cpuRun = 1;
         swStart = 1;           // make it single-shot
@@ -725,7 +734,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM, uint16 memcapacity,
         // Do the same for IF.  The only difference comes from the fact
         // that IF is the next 3 bits down in switchstatus[1].
         *pIF = (css1 & SS1_IF_ALL) << 6;
-        *pnext_Major_State = 1;
+        *pnext_Major_State = 1;     // LOAD_ADD sets major state to Fetch
 
 #if 0   // debugging
         printf("\r\nL_ADD: [DF:%o] [IF:%o] [PC:%04o] "
@@ -762,7 +771,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM, uint16 memcapacity,
         *pMB = sSR;
         *pMA = *pPC & 07777;        // MA trails PC 
         *pPC = (*pPC + 1) & 07777;  // increment PC
-        *pnext_Major_State = 1;
+        *pnext_Major_State = 1;     // DEP sets major state to Fetch
         swDep = 1;                  // make it single-shot
     }
 
@@ -786,7 +795,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM, uint16 memcapacity,
         }
         *pMA = *pPC & 07777;          // MA trails PC on FP
         *pPC = (*pPC + 1) & 07777;    // increment PC
-        *pnext_Major_State = 1;
+        *pnext_Major_State = 1;       // EXAM sets major state to Fetch
         swExam = 1;                   // make it single-shot
     }
 
@@ -803,11 +812,12 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM, uint16 memcapacity,
             resumeFromInstructionLoopExit) {
 
 #if 0
-Is this still true? CONT should not be special any more?
+TBD--Is this still true? CONT should not be special any more so it should be
+safe to delete these comments. Also MB is (presumably) being correctly handled
         // The initial CONT press is special: how we handle it
         // depends on the processor's state.
         //
-        // FIXME: Are we handling MB correctly? [973271ae36] -- I believe so
+        // FIXME: Are we handling MB correctly? [973271ae36]
 #endif
 
         resumeFromInstructionLoopExit = 0;

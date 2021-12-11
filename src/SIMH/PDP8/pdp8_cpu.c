@@ -365,9 +365,10 @@ DEVICE cpu_dev = {
     NULL, 0
     };
 
-// Definitions to support simulation of Fetch, Defer, Execute
-// cpu major states so that Sing Step can behave as on a real pdp-8
-// major states are detailed in the 1973 small computer handbook pages 3-18 to 3-22
+// These definitions support simulation of Fetch, Defer, and Execute cpu major states
+// so that the Sing Step switch can behave as on a real pdp-8. The major states are
+// detailed in, for example, the 1973 small computer handbook on pages 3-18 to 3-22.
+// http://bitsavers.informatik.uni-stuttgart.de/pdf/dec/pdp8/handbooks/Small_Computer_Handbook_1973.pdf
 #define FETCH_state     1
 #define DEFER_state     2
 #define EXECUTE_state   3
@@ -401,11 +402,13 @@ reason = 0;
 // It seems harmless most of the time, but it's deadly on TSS-8 startup which is at
 // address 24200. Then, at 24204 is a JMS 0060. The JMS code for the EXECUTE major
 // state, below, necessarily uses IB to give correct behavior following a CIF. The
-// killer problem is that when--without this if test--that TSS-8 JMS executes,
-// IB is 0 not 2 so we interpret that as a JMS to 00060 instead of the necessary
+// killer problem is that when--without this if () test--that TSS-8 JMS executes,
+// IB is 0 not 2 so it is interpreted as a JMS to 00060 instead of the necessary
 // JMS to 20060. Having this test forces IB to be set to IF the first time through
-// so it's no longer "uninitialized" with respect to the simulated execution
-if ( IB = -1 )
+// so it's no longer "uninitialized" with respect to the simulated execution. See
+// the TBD FIX in the code for the Start switch in main.c.in. When that is fixed,
+// this can be removed.
+if (IB = -1)
     IB = IF;
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -428,8 +431,8 @@ srand48 (time (&last_update));
 // Reset display info in case we're re-entering the simulator from Ctrl-E
 extern display display_bufs[2];
 memset (display_bufs, 0, sizeof(display_bufs));
-static size_t skip_count, dither, inst_count;
-skip_count = dither = inst_count = 0;
+static size_t skip_count, dither, cycle_count;
+skip_count = dither = cycle_count = 0;
 
 // Copy a global flag set by main() to control whether we run the GPIO
 // stuff based on what name this program was called by.  We reference it
@@ -443,12 +446,7 @@ skip_count = dither = inst_count = 0;
 extern int use_pidp8i_extensions;
 const int pidp8i_gpio = use_pidp8i_extensions && pidp8i_gpio_present;
 
-
-
 extern int resumeFromInstructionLoopExit, cpuRun, swSingStep, swSingInst;
-
-
-
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
@@ -501,7 +499,7 @@ while (reason == 0) {                                   /* loop until halted */
             &MB, &LAC, &IF, &DF, &next_Major_State, &int_req) : pft_running) {
 
         case pft_exit:
-            // Need to exit SIMH altogether, clear all registers and halt the simulator
+            // Exiting SIMH altogether, clear all registers and halt the simulator
             PC  = saved_PC  = 0;
             MA  = saved_MA  = 0;
             IR  = saved_IR  = 0;
@@ -533,7 +531,8 @@ while (reason == 0) {                                   /* loop until halted */
         case pft_running:
             // the CPU is executing (i.e., running) normally, check if it needs to stop. 
             // SingStep stops at the beginning of the next major state
-            // SingInst stops at the beginning of the next instruction, i.e., the next major state is Fetch
+            // SingInst stops at the beginning of the next instruction, i.e.,
+            //    the next major state is Fetch
             if ((swSingStep == 1) || ((swSingInst == 1) && (next_Major_State == FETCH_state))) {
 
                 // The CPU needs to stop
@@ -556,10 +555,9 @@ while (reason == 0) {                                   /* loop until halted */
             break;                                                  /* continue running */
 
         case pft_go:
-            // a (re)start on swStart or swCont has to skip the check for
+            // a (re-) start on swStart or swCont has to skip the above check for
             // swSingStep and swSingInst to be sure that at least one cycle executes
             break;
-
 
     }
 
@@ -569,7 +567,7 @@ while (reason == 0) {                                   /* loop until halted */
     switch (this_Major_State) {
 
         case FETCH_state:
-            // fetch state for all instructions
+            // fetch state for all instructions, regardless of op code
             MA = IF | PC & 07777;                                   /* form PC */
             if (sim_brk_summ && 
                 sim_brk_test (MA, (1u << SIM_BKPT_V_SPC) | SWMASK ('E'))) { /* breakpoint? */
@@ -590,7 +588,6 @@ while (reason == 0) {                                   /* loop until halted */
 
             if (hst_lnt) {                                          /* history enabled? */
                 int32 ea;
-
                 hst_p = (hst_p + 1);                                /* next entry */
                 if (hst_p >= hst_lnt)
                     hst_p = 0;
@@ -623,7 +620,7 @@ while (reason == 0) {                                   /* loop until halted */
             switch (op_code) {
                 case 4: 
                     PCQ_ENTRY (MA);
-                    // intentional fall-through
+                    // intentional fall-through for JMS
                 case 0:case 1:case 2:case 3:
                     // Fetch state for MRIs: AND, TAD, ISZ, DCA, JMS
                     if (IR & 0200)                                  /* current page or zero page? */
@@ -657,8 +654,8 @@ while (reason == 0) {                                   /* loop until halted */
                             if (tsc_enb) {                          /* TSC8 enabled? */
                                 tsc_pc = (PC - 1) & 07777;          /* save PC */
                                 int_req = int_req | INT_TSC;        /* request intr */
-                                }
                             }
+                        }
                         if ((IR & 0200 == 0) &&  sim_idle_enab &&   /* current page? idling enabled? */
                             (IF == IB)) {                           /* to same bank? */
                             if (MA == ((PC - 2) & 07777)) {         /* 1) JMP *-1? */
@@ -684,7 +681,6 @@ while (reason == 0) {                                   /* loop until halted */
                     // Fetch state for IOTs
 
 /* From Bernhard Baehr's description of the TSC8-75:
-
    (In user mode) Additional to raising a user mode interrupt, the current IOT
    opcode is moved to the ERIOT register. When the IOT is a CDF instruction (62x1),
    the ECDF flag is set, otherwise it is cleared. */
@@ -1026,7 +1022,7 @@ while (reason == 0) {                                   /* loop until halted */
 
 /* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-All EAE code below remains indented/formatted as in the original as it fits better on the page
+All EAE code below remains indented/formatted as in the original file as it fits better on the page
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx */
 
@@ -1259,10 +1255,9 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 /* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-All EAE code above remains indented/formatted as in the original as it fits better on the page
+All EAE code above remains indented/formatted as in the original file as it fits better on the page
 
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx */
-
 
                         }
                         /* end of OPR group 3 */
@@ -1303,7 +1298,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         case EXECUTE_state:
             if (((IR >> 9) & 07) < 4) {                     /* AND .. DCA, or is it JMS? */
-                if (IR & 00400)                             /* it is AND .. DCA, direct or indirect */
+                if (IR & 00400)                             /* it is AND .. DCA, direct or indirect? */
                     MA = DF | (MA & 07777);                 /* indirect, use DF */
                 else
                     MA = IF | (MA & 07777);                 /* direct, use IF */
@@ -1354,7 +1349,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-    // Update the front panel with this Major State's status.
+    // Update the front panel with this Major State's ending status.
     //
     // There's no point saving *every* LED "on" count.  We just need a
     // suitable amount of oversampling.  We can skip this if we called
@@ -1364,9 +1359,9 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     // The trick here is figuring out what "recently enough" means
     // without making expensive OS timer calls.  These timers aren't
     // hopelessly slow (http://stackoverflow.com/a/13096917/142454) but
-    // we still don't want to be taking dozens of cycles per instruction
-    // just to keep our update estimate current in the face of system
-    // load changes and SET THROTTLE updates.
+    // we still don't want to be taking dozens of our cpu cycles per
+    // PiDP-8/I major state just to keep our update estimate current
+    // in the face of system load changes and SET THROTTLE updates.
     //
     // Instead, we maintain a model of the current IPS value — seeded
     // with the initial "SET THROTTLE" value, if any — to figure out
@@ -1397,8 +1392,8 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
 
     if (pidp8i_gpio && (++skip_count >= (max_skips - dither))) {
-        // Save skips to inst counter and reset
-        inst_count += skip_count;
+        // Save skips to cycle counter and reset
+        cycle_count += skip_count;
         skip_count = 0;
 
         // We need to update the LED data again.
@@ -1410,10 +1405,10 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
         if (time(&now) > last_update) {
             // Yep; simulator IPS may have changed, so freshen it.
             last_update = now;
-            max_skips = inst_count / pidp8i_updates_per_sec;
+            max_skips = cycle_count / pidp8i_updates_per_sec;
             //printf("Inst./repaint: %zu - %zu; %.2f MIPS\r\n",
-            //        max_skips, dither, inst_count / 1e6);
-            inst_count = 0;
+            //        max_skips, dither, cycle_count / 1e6);
+            cycle_count = 0;
             }
         dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
         }

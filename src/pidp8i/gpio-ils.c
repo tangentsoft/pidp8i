@@ -103,11 +103,11 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
             // level, which is based on the number of instructions
             // executed for this display update.
             //
-            // Handle the cases where inst_count is < 32 specially
+            // Handle the cases where cycle_count is < 32 specially
             // because we don't want all LEDs to go out when the
             // simulator is heavily throttled.
-            const size_t inst_count = pdis_paint->inst_count;
-            size_t br_quant = inst_count >= 32 ? (inst_count >> 5) : 1;
+            const size_t cycle_count = pdis_paint->cycle_count;
+            size_t br_quant = cycle_count >= 32 ? (cycle_count >> 5) : 1;
             for (int row = 0; row < NLEDROWS; ++row) {
                 size_t *prow = pdis_paint->on[row];
                 for (int col = 0; col < NCOLS; ++col) {
@@ -148,7 +148,7 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
         // Light up LEDs
         extern int cpuRun, suppressILS;
         if (cpuRun == 0 || suppressILS) {
-            // The CPU is in STOP mode or someone has suppressed the ILS,
+            // The CPU is not running or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the
             // same mechanism NLS uses.  Force a display swap if the next
             // loop iteration won't do it in case this isn't STOP mode.
