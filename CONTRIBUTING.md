@@ -45,33 +45,29 @@ Fossil docs quite a bit, so if your question really isn’t answered
 somewhere in the above material, I might just solve it by extending the
 Fossil docs.
 
-Fossil is pre-installed on our [binary OS images][bosi] since April
-2017.
-
-When starting from scratch on Debian-based OSes released in June 2019 or
-newer, this will work:
+Fossil 2.**x** is pre-installed on our [binary OS images][bosi] since
+April 2017, and it is included in Raspberry Pi OS (né Raspbian) since
+June 2019:
 
     $ sudo apt install fossil
 
-Older Debian-based OSes will give you Fossil 1.*x*, which won’t work with
-our repository, which requires Fossil 2.1 or higher. If you can’t
-upgrade your host OS, you’ll have to [build Fossil from source][bffs].
-
-Fossil is also available for all common desktop platforms. If your OS
-package repository doesn’t include Fossil 2.1 or higher already, one of
-the [precompiled binaries][fbin] may work on your system.
+Fossil is available in many binary package repositories, and there are
+[official precompiled binaries][fbin] for several popular platforms. The
+project repository requires at least Fossil version 2.1, so if you’re
+stuck with a Fossil 1.**x** binary, you will have to [build Fossil from
+source][bffs].
 
 
 [bffs]:   https://fossil-scm.org/home/doc/trunk/www/build.wiki
 [bosi]:   https://tangentsoft.com/pidp8i#bosi
-[fbin]:   https://fossil-scm.org/index.html/uv/download.html
-[fgloss]: https://fossil-scm.org/home/doc/trunk/www/glossary.md
-[fvg]:    https://fossil-scm.org/home/doc/trunk/www/fossil-v-git.wiki
 [dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
+[fbin]:   https://fossil-scm.org/index.html/uv/download.html
 [fbook]:  https://fossil-scm.org/fossil-book/uv/FossilBook.html
 [fdoc]:   https://fossil-scm.org/home/doc/trunk/www/permutedindex.html
 [ffor]:   https://fossil-scm.org/forum/
+[fgloss]: https://fossil-scm.org/home/doc/trunk/www/glossary.md
 [fqsg]:   https://fossil-scm.org/home/doc/trunk/www/quickstart.wiki
+[fvg]:    https://fossil-scm.org/home/doc/trunk/www/fossil-v-git.wiki
 [gitusr]: https://fossil-scm.org/home/doc/trunk/www/gitusers.md
 
 
