@@ -45,7 +45,7 @@ Fossil docs quite a bit, so if your question really isn’t answered
 somewhere in the above material, I might just solve it by extending the
 Fossil docs.
 
-Fossil 2.**x** is pre-installed on our [binary OS images][bosi] since
+Fossil 2.*x* is pre-installed on our [binary OS images][bosi] since
 April 2017, and it is included in Raspberry Pi OS (né Raspbian) since
 June 2019:
 
@@ -54,7 +54,7 @@ June 2019:
 Fossil is available in many binary package repositories, and there are
 [official precompiled binaries][fbin] for several popular platforms. The
 project repository requires at least Fossil version 2.1, so if you’re
-stuck with a Fossil 1.**x** binary, you will have to [build Fossil from
+stuck with a Fossil 1.*x* binary, you will have to [build Fossil from
 source][bffs].
 
 
