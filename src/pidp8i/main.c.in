@@ -531,7 +531,7 @@ static pidp8i_flow_t handle_sing_step_special_cases ()
     // sing_step_single_shot test blocks checking of the once-only combinations
     if (sing_step_single_shot == 0) {
 
-        sing_step_single_shot == 1;                           // make it single shot
+        sing_step_single_shot = 1;                           // make it single shot
 
         // 1. (Sing_Inst + Cont) + Sing_Step
         //    Sing_Inst and Cont must both be set before setting Sing_Step
