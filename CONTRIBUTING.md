@@ -12,17 +12,32 @@ The PiDP-8/I software project is hosted using the Fossil
 [distributed version control system][dvcs], which provides most of the
 features of GitHub without [the complexities of Git][fvg].
 
-Those new to Fossil should at least read its [Quick Start Guide][fqsg].
-If you want to go deeper, [the Schimpf book][fbook] is somewhat
-outdated, but it is still the best single coherent tutorial on Fossil.
-Those coming from Git will benefit from the approach taken by the
-“[Git to Fossil Translation Guide][gitusr].”
+I recommend one of three paths to learning Fossil:
 
-[The official Fossil docs][fdoc] are much more up to date, but they take
-a piecemeal approach to topics, rather than the linear tutorial approach
-of a book, so it is not my first recommendation for learning Fossil.
-Those docs are better for polishing your skills and for reference after
-you know Fossil reasonably well.
+*   Those coming from command line Git will benefit from the brief
+    command-based approach taken by the [Git to Fossil Translation
+    Guide][gitusr], since it builds on your existing knowledge.
+
+*   The [Fossil Quick Start][fqsg] takes you briefly through the primary
+    topics.  This is best for people with existing version control
+    knowledge, particularly those who’ve used version control primarily
+    via a GUI or web app of some sort.  This path is also good for those
+    coming from some other command-line version control system.
+
+    Note in particular the [Fossil Glossary][fgloss] linked from the
+    quick start doc: it outlines the key concepts you must internalize
+    to understand how Fossil works at the user level.
+
+*   If you prefer a linear tutorial approach or have little to no
+    experience with modern version control systems, the 3rd edition of
+    “[Fossil Version Control: A User Guide][fbook]” is worth reading.
+    It’s novella length, so you should be able to get through it in a
+    single read between mealtimes, if you don’t stop to experiment.
+
+I do *not* recommend starting with [the Fossil doc index][fdoc] and
+seeking topics out from there; not to begin with, anyway.  That path is
+best once you have some Fossil experience and know what you’re looking
+for.
 
 If you have questions about Fossil, ask on [the Fossil forum][ffor]
 where I, your humble project maintainer, am active. I also work on the
@@ -33,8 +48,8 @@ Fossil docs.
 Fossil is pre-installed on our [binary OS images][bosi] since April
 2017.
 
-When starting from Debian-based OSes released in June 2019 or newer,
-this will work:
+When starting from scratch on Debian-based OSes released in June 2019 or
+newer, this will work:
 
     $ sudo apt install fossil
 
@@ -50,9 +65,10 @@ the [precompiled binaries][fbin] may work on your system.
 [bffs]:   https://fossil-scm.org/home/doc/trunk/www/build.wiki
 [bosi]:   https://tangentsoft.com/pidp8i#bosi
 [fbin]:   https://fossil-scm.org/index.html/uv/download.html
+[fgloss]: https://fossil-scm.org/home/doc/trunk/www/glossary.md
 [fvg]:    https://fossil-scm.org/home/doc/trunk/www/fossil-v-git.wiki
 [dvcs]:   https://en.wikipedia.org/wiki/Distributed_revision_control
-[fbook]:  https://www.fossil-scm.org/schimpf-book/home
+[fbook]:  https://fossil-scm.org/fossil-book/uv/FossilBook.html
 [fdoc]:   https://fossil-scm.org/home/doc/trunk/www/permutedindex.html
 [ffor]:   https://fossil-scm.org/forum/
 [fqsg]:   https://fossil-scm.org/home/doc/trunk/www/quickstart.wiki
