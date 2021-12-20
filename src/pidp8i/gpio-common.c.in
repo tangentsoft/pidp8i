@@ -1,7 +1,8 @@
 /*
  * gpio-common.c: functions common to both gpio.c and gpio-nls.c
  *
- * Copyright © 2015 Oscar Vermeulen, © 2016-2019 by Warren Young
+ * Copyright © 2015 Oscar Vermeulen, © 2016-2018 by Warren Young
+ *           © 2021 Steve Tockey
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -37,10 +38,6 @@
 #include "pidp8i.h"
 
 #include <config.h>
-
-#if defined(HAVE_BCM_HOST_H)
-#   include <bcm_host.h>
-#endif
 
 #include <pthread.h>
 #include <sys/file.h>
@@ -145,8 +142,8 @@ static const ms_time_t debounce_ms = 50;    // time switch state must remain sta
 // modified by -- the PDP8/pidp8i module, but we can't define these
 // there because we refer to them below, and not all programs that link
 // to us link to that module as well.  For such programs, it's fine if
-// these two flags stay 0.
-int swStop = 0, swSingInst = 0;
+// these flags stay 0.
+int cpuRun = 0, swSingInst = 0, swSingStep = 0;
 
 // Flag to override ILS mode, forcing fallback to NLS mode.  Set when
 // the PDP-8 instruction decoding loop detects that we're using the
@@ -239,11 +236,22 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 
 
 //// bcm_host_get_peripheral_address ///////////////////////////////////
-// Provide fallback for non-Pi case to avoid a link error.
+// Find Pi's GPIO base address
 
-#if !defined(HAVE_BCM_HOST_H)
-    static unsigned bcm_host_get_peripheral_address(void) { return 0; }
-#endif
+static unsigned bcm_host_get_peripheral_address(void)
+{
+    unsigned address = ~0;
+    FILE *fp = fopen("/proc/device-tree/soc/ranges", "rb");
+    if (fp)
+    {   unsigned char buf[4];
+        fseek(fp, 4, SEEK_SET);
+        if (fread(buf, 1, sizeof buf, fp) == sizeof buf)
+            address = buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3] << 0;
+        fclose(fp);
+    }
+
+    return address == ~0 ? 0x20000000 : address;
+}
 
 
 //// DOUBLE BUFFERED DISPLAY MANIPULATION FUNCTIONS ////////////////////
@@ -261,7 +269,7 @@ void unmap_peripheral(struct bcm2835_peripheral *p)
 
 void swap_displays ()
 {
-    if (!swStop && !swSingInst) {
+    if (cpuRun == 1) {
         if (pidp8i_simple_gpio_mode) {
             // We're linked to a program that wants to use the old
             // ledstatus[] interface for updating the display, so copy
@@ -271,7 +279,7 @@ void swap_displays ()
             static const int levels = 32;
             memcpy (pdis_paint->curr, ledstatus, 
                     sizeof (pdis_paint->curr));
-            pdis_paint->inst_count = levels;
+            pdis_paint->cycle_count = levels;
 
             for (size_t row = 0; row < NLEDROWS; ++row) {
                 size_t *prow = pdis_paint->on[row];
@@ -522,12 +530,15 @@ void update_led_states (const us_time_t delay)
     }
 #endif
     
+#if 0
+// This appears to be no longer necessary in the cycle-realistic version
     // Override Execute and Run LEDs if the CPU is currently stopped,
     // since we only get set_pidp8i_leds calls while the CPU's running.
-    if (swStop || swSingInst) {
+    if (cpuRun == 0) {
         pdis_paint->curr[5] &= ~(1 << 2);
         pdis_paint->curr[6] &= ~(1 << 7);
     }
+#endif
 
     for (size_t row = 0; row < NLEDROWS; ++row) {
         for (size_t col = 0; col < NCOLS; ++col) {

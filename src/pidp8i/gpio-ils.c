@@ -3,6 +3,7 @@
  *             lamp simulator
  * 
  * Copyright © 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
+ *           © 2021 Steve Tockey
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -102,11 +103,11 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
             // level, which is based on the number of instructions
             // executed for this display update.
             //
-            // Handle the cases where inst_count is < 32 specially
+            // Handle the cases where cycle_count is < 32 specially
             // because we don't want all LEDs to go out when the
             // simulator is heavily throttled.
-            const size_t inst_count = pdis_paint->inst_count;
-            size_t br_quant = inst_count >= 32 ? (inst_count >> 5) : 1;
+            const size_t cycle_count = pdis_paint->cycle_count;
+            size_t br_quant = cycle_count >= 32 ? (cycle_count >> 5) : 1;
             for (int row = 0; row < NLEDROWS; ++row) {
                 size_t *prow = pdis_paint->on[row];
                 for (int col = 0; col < NCOLS; ++col) {
@@ -115,12 +116,17 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
                 }
             }
 
+#if 0
+// This has been disabled becase Fetch and Execute are now accurate with
+// the actual major state of the simulated machine
             // Hard-code the Fetch and Execute brightnesses; in running
             // mode, they're both on half the instruction time, so we
             // just set them to 50% brightness.  Execute differs in STOP
             // mode, but that's handled in update_led_states () because
             // we fall back to NLS in STOP mode.
             br_targets[5][2] = br_targets[5][3] = MAX_BRIGHTNESS / 2;
+#endif
+
         }
         ++step;
 
@@ -140,9 +146,9 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
         }
 
         // Light up LEDs
-        extern int swStop, swSingInst, suppressILS;
-        if (swStop || swSingInst || suppressILS) {
-            // The CPU is in STOP mode or someone has suppressed the ILS,
+        extern int cpuRun, suppressILS;
+        if (cpuRun == 0 || suppressILS) {
+            // The CPU is not running or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the
             // same mechanism NLS uses.  Force a display swap if the next
             // loop iteration won't do it in case this isn't STOP mode.

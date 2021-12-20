@@ -25,7 +25,10 @@
 
    ----------------------------------------------------------------------------
 
-   Portions copyright © 2015 by Oscar Vermeulen, © 2016-2018 by Warren Young
+   Portions copyright © 2015 by Oscar Vermeulen
+                      © 2016-2018 by Warren Young
+                      © 2021 by HB Eggenstein
+                      © 2021 by Steve Tockey
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -92,6 +95,9 @@
    MQ<0:11>             multiplier-quotient
    L                    link flag
    PC<0:11>             program counter
+   MA<0:11>             memory address
+   MB<0:11>             memory buffer
+   Major_State<0:1>     major state register
    IF<0:2>              instruction field
    IB<0:2>              instruction buffer
    DF<0:2>              data field
@@ -254,8 +260,11 @@ uint16 M[MAXMEMSIZE] = { 0 };                           /* main memory */
 int32 saved_LAC = 0;                                    /* saved L'AC */
 int32 saved_MQ = 0;                                     /* saved MQ */
 int32 saved_PC = 0;                                     /* saved IF'PC */
+int32 saved_MA = 0;                                     /* saved MA */
+int32 saved_IR = 0;                                     /* saved IR */
+int16 saved_Major_State = 1;                            /* saved Major State */
 int32 saved_DF = 0;                                     /* saved Data Field */
-int32 IB = 0;                                           /* Instruction Buffer */
+int32 IB = -1;                                          /* Instruction Buffer */
 int32 SF = 0;                                           /* Save Field */
 int32 emode = 0;                                        /* EAE mode */
 int32 gtf = 0;                                          /* EAE gtf flag */
@@ -300,6 +309,8 @@ UNIT cpu_unit = { UDATA (NULL, UNIT_FIX + UNIT_BINK, MAXMEMSIZE) };
 
 REG cpu_reg[] = {
     { ORDATAD (PC, saved_PC, 15, "program counter") },
+    { ORDATAD (MA, saved_MA, 12, "memory address") },
+    { ORDATAD (next_Major_State, saved_Major_State, 2, "major state") },
     { ORDATAD (AC, saved_LAC, 12, "accumulator") },
     { FLDATAD (L, saved_LAC, 12, "link") },
     { ORDATAD (MQ, saved_MQ, 12, "multiplier-quotient") },
@@ -354,10 +365,20 @@ DEVICE cpu_dev = {
     NULL, 0
     };
 
+// These definitions support simulation of Fetch, Defer, and Execute cpu major states
+// so that the Sing Step switch can behave as on a real pdp-8. The major states are
+// detailed in, for example, the 1973 small computer handbook on pages 3-18 to 3-22.
+// http://bitsavers.informatik.uni-stuttgart.de/pdf/dec/pdp8/handbooks/Small_Computer_Handbook_1973.pdf
+#define FETCH_state     1
+#define DEFER_state     2
+#define EXECUTE_state   3
+
+
 t_stat sim_instr (void)
 {
 int32 IR, MB, IF, DF, LAC, MQ;
 uint32 PC, MA;
+uint16 this_Major_State, next_Major_State;
 int32 device, pulse, temp, iot_data;
 t_stat reason;
 
@@ -366,6 +387,9 @@ t_stat reason;
 if (build_dev_tab ())                                   /* build dev_tab */
     return SCPE_STOP;
 PC = saved_PC & 007777;                                 /* load local copies */
+MA = saved_MA & 007777;
+IR = saved_IR & 007777;
+this_Major_State = next_Major_State = saved_Major_State;
 IF = saved_PC & 070000;
 DF = saved_DF & 070000;
 LAC = saved_LAC & 017777;
@@ -373,17 +397,29 @@ MQ = saved_MQ & 07777;
 int_req = INT_UPDATE;
 reason = 0;
 
+////////////////////////////////////////////////////////////////////////////////////
+// For some strange reason, there are times when IB can be essentially uninitialized.
+// It seems harmless most of the time, but it's deadly on TSS-8 startup which is at
+// address 24200. Then, at 24204 is a JMS 0060. The JMS code for the EXECUTE major
+// state, below, necessarily uses IB to give correct behavior following a CIF. The
+// killer problem is that when--without this if () test--that TSS-8 JMS executes,
+// IB is 0 not 2 so it is interpreted as a JMS to 00060 instead of the necessary
+// JMS to 20060. Having this test forces IB to be set to IF the first time through
+// so it's no longer "uninitialized" with respect to the simulated execution. See
+// the TBD FIX in the code for the Start switch in main.c.in. When that is fixed,
+// this can be removed.
+if (IB = -1)
+    IB = IF;
+////////////////////////////////////////////////////////////////////////////////////
+
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-// A copy of MA = PC | IR, held steady for the benefit of the PiDP-8/I
-// display update calls, unlike the simulator's MA register which has
-// the incorrect value at some of the set_pidp8i_leds() calls below.
-uint32 SteadyMA;
-
 // PiDP-8/I specific flag, set when the last instruction was an IOT
 // instruction to a real device.  SIMH doesn't track this, but the front
 // panel needs it.
 int Pause = 0;
+
+int op_code = 0;
 
 // Set our initial IPS value from the throttle, if given.
 static time_t last_update = 0;
@@ -395,8 +431,8 @@ srand48 (time (&last_update));
 // Reset display info in case we're re-entering the simulator from Ctrl-E
 extern display display_bufs[2];
 memset (display_bufs, 0, sizeof(display_bufs));
-static size_t skip_count, dither, inst_count;
-skip_count = dither = inst_count = 0;
+static size_t skip_count, dither, cycle_count;
+skip_count = dither = cycle_count = 0;
 
 // Copy a global flag set by main() to control whether we run the GPIO
 // stuff based on what name this program was called by.  We reference it
@@ -409,6 +445,9 @@ skip_count = dither = inst_count = 0;
 // work to feed the GPIO thread if it failed to start.
 extern int use_pidp8i_extensions;
 const int pidp8i_gpio = use_pidp8i_extensions && pidp8i_gpio_present;
+
+extern int resumeFromInstructionLoopExit, cpuRun, swSingStep, swSingInst;
+
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -424,62 +463,47 @@ while (reason == 0) {                                   /* loop until halted */
         }
 
     if (sim_interval <= 0) {                            /* check clock queue */
+
         if ((reason = sim_process_event ())) {
+
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
             // We're about to leave the instruction decode loop, so
             // pause the display driver thread and set it up so that it
             // will resume correctly if user says "cont".
-            extern int resumeFromInstructionLoopExit, swStop, swSingInst;
-            resumeFromInstructionLoopExit = swStop = swSingInst = 1;
+            resumeFromInstructionLoopExit = 1;
+            cpuRun = 0;
 
             // Repaint one last time in case the simulator is pausing —
             // e.g. due to Ctrl-E — rather than about to exit.  Without
             // this, the front panel won't show the correct state, a
             // serious problem since it'll be stuck in that state for
             // the user to study until the user gives a "cont" command.
-            //
-            // We're passing IR for the MB line on purpose.  MB doesn't
-            // have the correct value at this point.
             if (pidp8i_gpio) {
-                set_pidp8i_leds (PC, SteadyMA, IR, IR, LAC, MQ, IF, DF,
-                    SC, int_req, Pause);
+                set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF,
+                    SC, int_req, this_Major_State, Pause);
 
                 // Also copy SR hardware value to software register in
                 // case the user tries poking at it from the sim> prompt.
                 SR = get_switch_register();
                 }
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
+
             break;
             }
         }
 
+
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 
-    switch (pidp8i_gpio ? handle_flow_control_switches(M, &PC, &SteadyMA,
-            &MB, &LAC, &IF, &DF, &int_req) : pft_normal) {
-        case pft_stop:
-            // Tell the SIMH event queue to keep running even though
-            // we're stopped.  Without this, it will ignore Ctrl-E
-            // until the simulator is back in free-running mode.
-            sim_interval = sim_interval - 1;
+    switch (pidp8i_gpio ? handle_flow_control_switches(M, MEMSIZE, &PC, &MA,
+            &MB, &LAC, &IF, &DF, &next_Major_State, &int_req) : pft_running) {
 
-            // Have to keep display updated while stopped.  This does
-            // mean if the software starts with the STOP switch held
-            // down, we'll put garbage onto the display for MA, MB, and
-            // IR, but that's what the real hardware does, too.  See
-            // https://github.com/simh/simh/issues/386
-            set_pidp8i_leds (PC, SteadyMA, MB, IR, LAC, MQ, IF, DF, SC,
-                    int_req, Pause);
-
-            // Go no further in STOP mode.  In particular, fetch no more
-            // instructions, and do not touch PC!  Limit call rate in this
-            // mode; no point burning host-side CPU on this.
-            sleep_ms (10);   
-            continue;
-
-        case pft_halt:
-            // Clear all registers and halt simulator
+        case pft_exit:
+            // Exiting SIMH altogether, clear all registers and halt the simulator
             PC  = saved_PC  = 0;
+            MA  = saved_MA  = 0;
+            IR  = saved_IR  = 0;
+            this_Major_State = next_Major_State = saved_Major_State;
             IF  = saved_PC  = 0;
             DF  = saved_DF  = 0;
             LAC = saved_LAC = 0;
@@ -488,633 +512,519 @@ while (reason == 0) {                                   /* loop until halted */
             reason = STOP_HALT;
             continue;
 
-        case pft_normal:
-            // execute normally
+        case pft_stopped:
+            // the cpu is stopped, nothing to do here
+            // Tell the SIMH event queue to keep running even though
+            // we're now stopped.  Without this, it will ignore Ctrl-E
+            // until the simulator is back in free-running mode.
+            sim_interval = sim_interval - 1;
+
+            // Have to keep display updated while stopped.  This does
+            // mean if the software starts with the STOP switch held
+            // down, we'll put garbage onto the display for MA, MB, and
+            // IR, but that's what the real hardware does, too.  See
+            // https://github.com/simh/simh/issues/386
+            set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+                             int_req, this_Major_State, Pause);
+            continue;
+
+        case pft_running:
+            // the CPU is executing (i.e., running) normally, check if it needs to stop. 
+            // SingStep stops at the beginning of the next major state
+            // SingInst stops at the beginning of the next instruction, i.e.,
+            //    the next major state is Fetch
+            if ((swSingStep == 1) || ((swSingInst == 1) && (next_Major_State == FETCH_state))) {
+
+                // The CPU needs to stop
+                // Tell the SIMH event queue to keep running even though
+                // we're now stopped.  Without this, it will ignore Ctrl-E
+                // until the simulator is back in free-running mode.
+                sim_interval = sim_interval - 1;
+
+                // Have to keep display updated while stopped.  This does
+                // mean if the software starts with the STOP switch held
+                // down, we'll put garbage onto the display for MA, MB, and
+                // IR, but that's what the real hardware does, too.  See
+                // https://github.com/simh/simh/issues/386
+                cpuRun = 0;
+                set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+                                 int_req, this_Major_State, Pause);
+                continue;
+                }
+
+            break;                                                  /* continue running */
+
+        case pft_go:
+            // a (re-) start on swStart or swCont has to skip the above check for
+            // swSingStep and swSingInst to be sure that at least one cycle executes
             break;
+
     }
 
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
-    if (int_req > INT_PENDING) {                        /* interrupt? */
-        int_req = int_req & ~INT_ION;                   /* interrupts off */
-        SF = (UF << 6) | (IF >> 9) | (DF >> 12);        /* form save field */
-        PCQ_ENTRY (IF | PC);                            /* save old PC with IF */
-        IF = IB = DF = UF = UB = 0;                     /* clear mem ext */
-        M[0] = PC;                                      /* save PC in 0 */
-        PC = 1;                                         /* fetch next from 1 */
-        }
+    this_Major_State = next_Major_State;
+    switch (this_Major_State) {
 
-    MA = IF | PC;                                       /* form PC */
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-    SteadyMA = MA;                                      /* latch it for PiDP-8/I display */
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
-    if (sim_brk_summ && 
-        sim_brk_test (MA, (1u << SIM_BKPT_V_SPC) | SWMASK ('E'))) { /* breakpoint? */
-        reason = STOP_IBKPT;                            /* stop simulation */
-        break;
-        }
+        case FETCH_state:
+            // fetch state for all instructions, regardless of op code
+            MA = IF | PC & 07777;                                   /* form PC */
+            if (sim_brk_summ && 
+                sim_brk_test (MA, (1u << SIM_BKPT_V_SPC) | SWMASK ('E'))) { /* breakpoint? */
+                reason = STOP_IBKPT;                                /* stop simulation */
+                break;
+                }
 
-    IR = M[MA];                                         /* fetch instruction */
-    if (sim_brk_summ && 
-        sim_brk_test (IR, (2u << SIM_BKPT_V_SPC) | SWMASK ('I'))) { /* breakpoint? */
-        reason = STOP_OPBKPT;                            /* stop simulation */
-        break;
-        }
-    PC = (PC + 1) & 07777;                              /* increment PC */
-    int_req = int_req | INT_NO_ION_PENDING;             /* clear ION delay */
-    sim_interval = sim_interval - 1;
+            PC = (PC + 1) & 07777;                                  /* increment PC */
+            int_req = int_req | INT_NO_ION_PENDING;                 /* clear ION delay */
+            sim_interval = sim_interval - 1;
 
-/* Instruction decoding.
+            IR = MB = M[MA];                                        /* fetch instruction */
+            if (sim_brk_summ && 
+                sim_brk_test (IR, (2u << SIM_BKPT_V_SPC) | SWMASK ('I'))) { /* breakpoint? */
+                reason = STOP_OPBKPT;                               /* stop simulation */
+                break;
+                }
 
-   The opcode (IR<0:2>), indirect flag (IR<3>), and page flag (IR<4>)
-   are decoded together.  This produces 32 decode points, four per
-   major opcode.  For IOT, the extra decode points are not useful;
-   for OPR, only the group flag (IR<3>) is used.
-
-   AND, TAD, ISZ, DCA calculate a full 15b effective address.
-   JMS, JMP calculate a 12b field-relative effective address.
-
-   Autoindex calculations always occur within the same field as the
-   instruction fetch.  The field must exist; otherwise, the instruction
-   fetched would be 0000, and indirect addressing could not occur.
-
-   Note that MA contains IF'PC.
-*/
-
-    if (hst_lnt) {                                      /* history enabled? */
-        int32 ea;
-
-        hst_p = (hst_p + 1);                            /* next entry */
-        if (hst_p >= hst_lnt)
-            hst_p = 0;
-        hst[hst_p].pc = MA | HIST_PC;                   /* save PC, IR, LAC, MQ */
-        hst[hst_p].ir = IR;
-        hst[hst_p].lac = LAC;
-        hst[hst_p].mq = MQ;
-        if (IR < 06000) {                               /* mem ref? */
-            if (IR & 0200)
-                ea = (MA & 077600) | (IR & 0177);
-            else ea = IF | (IR & 0177);                 /* direct addr */
-            if (IR & 0400) {                            /* indirect? */
-                if (IR < 04000) {                       /* mem operand? */
-                    if ((ea & 07770) != 00010)
-                        ea = DF | M[ea];
-                    else ea = DF | ((M[ea] + 1) & 07777);
-                    }
-                else {                                  /* no, jms/jmp */
-                    if ((ea & 07770) != 00010)
-                        ea = IB | M[ea];
-                    else ea = IB | ((M[ea] + 1) & 07777);
+            if (hst_lnt) {                                          /* history enabled? */
+                int32 ea;
+                hst_p = (hst_p + 1);                                /* next entry */
+                if (hst_p >= hst_lnt)
+                    hst_p = 0;
+                hst[hst_p].pc = MA | HIST_PC;                       /* save PC, IR, LAC, MQ */
+                hst[hst_p].ir = IR;
+                hst[hst_p].lac = LAC;
+                hst[hst_p].mq = MQ;
+                if (IR < 06000) {                                   /* mem ref? */
+                    if (IR & 0200)
+                        ea = (MA & 077600) | (IR & 0177);
+                    else ea = IF | (IR & 0177);                     /* direct addr */
+                    if (IR & 0400) {                                /* indirect? */
+                        if (IR < 04000) {                           /* mem operand? */
+                            if ((ea & 07770) != 00010)
+                                ea = DF | M[ea];
+                            else ea = DF | ((M[ea] + 1) & 07777);
+                            }
+                        else {                                      /* no, jms/jmp */
+                            if ((ea & 07770) != 00010)
+                                ea = IB | M[ea];
+                            else ea = IB | ((M[ea] + 1) & 07777);
+                            }
+                        }
+                    hst[hst_p].ea = ea;                             /* save eff addr */
+                    hst[hst_p].opnd = M[ea];                        /* save operand */
                     }
                 }
-            hst[hst_p].ea = ea;                         /* save eff addr */
-            hst[hst_p].opnd = M[ea];                    /* save operand */
-            }
-        }
 
-switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
-
-/* Opcode 0, AND */
-
-    case 000:                                           /* AND, dir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        LAC = LAC & (M[MA] | 010000);
-        break;
-
-    case 001:                                           /* AND, dir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        LAC = LAC & (M[MA] | 010000);
-        break;
-
-    case 002:                                           /* AND, indir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        LAC = LAC & (M[MA] | 010000);
-        break;
-
-    case 003:                                           /* AND, indir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        LAC = LAC & (M[MA] | 010000);
-        break;
-
-/* Opcode 1, TAD */
-
-    case 004:                                           /* TAD, dir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        LAC = (LAC + M[MA]) & 017777;
-        break;
-
-    case 005:                                           /* TAD, dir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        LAC = (LAC + M[MA]) & 017777;
-        break;
-
-    case 006:                                           /* TAD, indir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        LAC = (LAC + M[MA]) & 017777;
-        break;
-
-    case 007:                                           /* TAD, indir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        LAC = (LAC + M[MA]) & 017777;
-        break;
-
-/* Opcode 2, ISZ */
-
-    case 010:                                           /* ISZ, dir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        M[MA] = MB = (M[MA] + 1) & 07777;               /* field must exist */
-        if (MB == 0)
-            PC = (PC + 1) & 07777;
-        break;
-
-    case 011:                                           /* ISZ, dir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        M[MA] = MB = (M[MA] + 1) & 07777;               /* field must exist */
-        if (MB == 0)
-            PC = (PC + 1) & 07777;
-        break;
-
-    case 012:                                           /* ISZ, indir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        MB = (M[MA] + 1) & 07777;
-        if (MEM_ADDR_OK (MA))
-            M[MA] = MB;
-        if (MB == 0)
-            PC = (PC + 1) & 07777;
-        break;
-
-    case 013:                                           /* ISZ, indir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        MB = (M[MA] + 1) & 07777;
-        if (MEM_ADDR_OK (MA))
-            M[MA] = MB;
-        if (MB == 0)
-            PC = (PC + 1) & 07777;
-        break;
-
-/* Opcode 3, DCA */
-
-    case 014:                                           /* DCA, dir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        M[MA] = LAC & 07777;
-        LAC = LAC & 010000;
-        break;
-
-    case 015:                                           /* DCA, dir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        M[MA] = LAC & 07777;
-        LAC = LAC & 010000;
-        break;
-
-    case 016:                                           /* DCA, indir, zero */
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        if (MEM_ADDR_OK (MA))
-            M[MA] = LAC & 07777;
-        LAC = LAC & 010000;
-        break;
-
-    case 017:                                           /* DCA, indir, curr */
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = DF | M[MA];
-        else MA = DF | (M[MA] = (M[MA] + 1) & 07777);   /* incr before use */
-        if (MEM_ADDR_OK (MA))
-            M[MA] = LAC & 07777;
-        LAC = LAC & 010000;
-        break;
-
-/* Opcode 4, JMS.  From Bernhard Baehr's description of the TSC8-75:
-
-   (In user mode) the current JMS opcode is moved to the ERIOT register, the ECDF
-   flag is cleared. The address of the JMS instruction is loaded into the ERTB
-   register and the TSC8-75 I/O flag is raised. When the TSC8-75 is enabled, the
-   target addess of the JMS is loaded into PC, but nothing else (loading of IF, UF,
-   clearing the interrupt inhibit flag, storing of the return address in the first
-   word of the subroutine) happens. When the TSC8-75 is disabled, the JMS is performed
-   as usual. */
-
-    case 020:                                           /* JMS, dir, zero */
-        PCQ_ENTRY (MA);
-        MA = IR & 0177;                                 /* dir addr, page zero */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            }
-        if (UF && tsc_enb) {                            /* user mode, TSC enab? */
-            tsc_pc = (PC - 1) & 07777;                  /* save PC */
-            int_req = int_req | INT_TSC;                /* request intr */
-            }
-        else {                                          /* normal */
-            IF = IB;                                    /* change IF */
-            UF = UB;                                    /* change UF */
-            int_req = int_req | INT_NO_CIF_PENDING;     /* clr intr inhibit */
-            MA = IF | MA;
-            if (MEM_ADDR_OK (MA))
-                M[MA] = PC;
-            }
-        PC = (MA + 1) & 07777;
-        break;
-
-    case 021:                                           /* JMS, dir, curr */
-        PCQ_ENTRY (MA);
-        MA = (MA & 007600) | (IR & 0177);               /* dir addr, curr page */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            }
-        if (UF && tsc_enb) {                            /* user mode, TSC enab? */
-            tsc_pc = (PC - 1) & 07777;                  /* save PC */
-            int_req = int_req | INT_TSC;                /* request intr */
-            }
-        else {                                          /* normal */
-            IF = IB;                                    /* change IF */
-            UF = UB;                                    /* change UF */
-            int_req = int_req | INT_NO_CIF_PENDING;     /* clr intr inhibit */
-            MA = IF | MA;
-            if (MEM_ADDR_OK (MA))
-                M[MA] = PC;
-            }
-        PC = (MA + 1) & 07777;
-        break;
-
-    case 022:                                           /* JMS, indir, zero */
-        PCQ_ENTRY (MA);
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = M[MA];
-        else MA = (M[MA] = (M[MA] + 1) & 07777);        /* incr before use */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            }
-        if (UF && tsc_enb) {                            /* user mode, TSC enab? */
-            tsc_pc = (PC - 1) & 07777;                  /* save PC */
-            int_req = int_req | INT_TSC;                /* request intr */
-            }
-        else {                                          /* normal */
-            IF = IB;                                    /* change IF */
-            UF = UB;                                    /* change UF */
-            int_req = int_req | INT_NO_CIF_PENDING;     /* clr intr inhibit */
-            MA = IF | MA;
-            if (MEM_ADDR_OK (MA))
-                M[MA] = PC;
-            }
-        PC = (MA + 1) & 07777;
-        break;
-
-    case 023:                                           /* JMS, indir, curr */
-        PCQ_ENTRY (MA);
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = M[MA];
-        else MA = (M[MA] = (M[MA] + 1) & 07777);        /* incr before use */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            }
-        if (UF && tsc_enb) {                            /* user mode, TSC enab? */
-            tsc_pc = (PC - 1) & 07777;                  /* save PC */
-            int_req = int_req | INT_TSC;                /* request intr */
-            }
-        else {                                          /* normal */
-            IF = IB;                                    /* change IF */
-            UF = UB;                                    /* change UF */
-            int_req = int_req | INT_NO_CIF_PENDING;     /* clr intr inhibit */
-            MA = IF | MA;
-            if (MEM_ADDR_OK (MA))
-                M[MA] = PC;
-            }
-        PC = (MA + 1) & 07777;
-        break;
-
+            op_code = (IR >> 9) & 07;
+            switch (op_code) {
+                case 4: 
+                    PCQ_ENTRY (MA);
+                    // intentional fall-through for JMS
+                case 0:case 1:case 2:case 3:
+                    // Fetch state for MRIs: AND, TAD, ISZ, DCA, JMS
+                    if (IR & 0200)                                  /* current page or zero page? */
+                        MA = (MA & 007600) | (IR & 0177);           /* current page */
+                    else
+                        MA = IR & 0177;                             /* zero page */
+                    if (IR & 0400)                                  /* indirect or direct? */
+                        next_Major_State = DEFER_state;             /* indirect */
+                    else
+                        next_Major_State = EXECUTE_state;           /* direct */
+                    break;
+                    // end of case op_code 0..4: AND, TAD, ISZ, DCA, JMS
+                case 5:
+                    // Fetch state for JMP
 /* Opcode 5, JMP.  From Bernhard Baehr's description of the TSC8-75:
-
    (In user mode) the current JMP opcode is moved to the ERIOT register, the ECDF
    flag is cleared. The address of the JMP instruction is loaded into the ERTB
    register and the TSC8-75 I/O flag is raised. Then the JMP is performed as usual
    (including the setting of IF, UF and clearing the interrupt inhibit flag). */
-
-
-    case 024:                                           /* JMP, dir, zero */
-        PCQ_ENTRY (MA);
-        MA = IR & 0177;                                 /* dir addr, page zero */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            if (tsc_enb) {                              /* TSC8 enabled? */
-                tsc_pc = (PC - 1) & 07777;              /* save PC */
-                int_req = int_req | INT_TSC;            /* request intr */
-                }
-            }
-        IF = IB;                                        /* change IF */
-        UF = UB;                                        /* change UF */
-        int_req = int_req | INT_NO_CIF_PENDING;         /* clr intr inhibit */
-        PC = MA;
-        break;
-
-/* If JMP direct, also check for idle (KSF/JMP *-1) and infinite loop */
-
-    case 025:                                           /* JMP, dir, curr */
-        PCQ_ENTRY (MA);
-        MA = (MA & 007600) | (IR & 0177);               /* dir addr, curr page */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            if (tsc_enb) {                              /* TSC8 enabled? */
-                tsc_pc = (PC - 1) & 07777;              /* save PC */
-                int_req = int_req | INT_TSC;            /* request intr */
-                }
-            }
-        if (sim_idle_enab &&                            /* idling enabled? */
-            (IF == IB)) {                               /* to same bank? */
-            if (MA == ((PC - 2) & 07777)) {             /* 1) JMP *-1? */
-                if (!(int_req & (INT_ION|INT_TTI)) &&   /*    iof, TTI flag off? */
-                    (M[IB|((PC - 2) & 07777)] == OP_KSF)) /*  next is KSF? */
-                    sim_idle (TMR_CLK, FALSE);          /* we're idle */
-                }                                       /* end JMP *-1 */
-            else if (MA == ((PC - 1) & 07777)) {        /* 2) JMP *? */
-                if (!(int_req & INT_ION))               /*    iof? */
-                    reason = STOP_LOOP;                 /* then infinite loop */
-                else if (!(int_req & INT_ALL))          /*    ion, not intr? */
-                    sim_idle (TMR_CLK, FALSE);          /* we're idle */
-                }                                       /* end JMP */
-            }                                           /* end idle enabled */
-        IF = IB;                                        /* change IF */
-        UF = UB;                                        /* change UF */
-        int_req = int_req | INT_NO_CIF_PENDING;         /* clr intr inhibit */
-        PC = MA;
-        break;
-
-    case 026:                                           /* JMP, indir, zero */
-        PCQ_ENTRY (MA);
-        MA = IF | (IR & 0177);                          /* dir addr, page zero */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = M[MA];
-        else MA = (M[MA] = (M[MA] + 1) & 07777);        /* incr before use */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            if (tsc_enb) {                              /* TSC8 enabled? */
-                tsc_pc = (PC - 1) & 07777;              /* save PC */
-                int_req = int_req | INT_TSC;            /* request intr */
-                }
-            }
-        IF = IB;                                        /* change IF */
-        UF = UB;                                        /* change UF */
-        int_req = int_req | INT_NO_CIF_PENDING;         /* clr intr inhibit */
-        PC = MA;
-        break;
-
-    case 027:                                           /* JMP, indir, curr */
-        PCQ_ENTRY (MA);
-        MA = (MA & 077600) | (IR & 0177);               /* dir addr, curr page */
-        if ((MA & 07770) != 00010)                      /* indirect; autoinc? */
-            MA = M[MA];
-        else MA = (M[MA] = (M[MA] + 1) & 07777);        /* incr before use */
-        if (UF) {                                       /* user mode? */
-            tsc_ir = IR;                                /* save instruction */
-            tsc_cdf = 0;                                /* clear flag */
-            if (tsc_enb) {                              /* TSC8 enabled? */
-                tsc_pc = (PC - 1) & 07777;              /* save PC */
-                int_req = int_req | INT_TSC;            /* request intr */
-                }
-            }
-        IF = IB;                                        /* change IF */
-        UF = UB;                                        /* change UF */
-        int_req = int_req | INT_NO_CIF_PENDING;         /* clr intr inhibit */
-        PC = MA;
-        break;
-
-/* Opcode 7, OPR group 1 */
-
-    case 034:case 035:                                  /* OPR, group 1 */
-        switch ((IR >> 4) & 017) {                      /* decode IR<4:7> */
-        case 0:                                         /* nop */
-            break;
-        case 1:                                         /* CML */
-            LAC = LAC ^ 010000;
-            break;
-        case 2:                                         /* CMA */
-            LAC = LAC ^ 07777;
-            break;
-        case 3:                                         /* CMA CML */
-            LAC = LAC ^ 017777;
-            break;
-        case 4:                                         /* CLL */
-            LAC = LAC & 07777;
-            break;
-        case 5:                                         /* CLL CML = STL */
-            LAC = LAC | 010000;
-            break;
-        case 6:                                         /* CLL CMA */
-            LAC = (LAC ^ 07777) & 07777;
-            break;
-        case 7:                                         /* CLL CMA CML */
-            LAC = (LAC ^ 07777) | 010000;
-            break;
-        case 010:                                       /* CLA */
-            LAC = LAC & 010000;
-            break;
-        case 011:                                       /* CLA CML */
-            LAC = (LAC & 010000) ^ 010000;
-            break;
-        case 012:                                       /* CLA CMA = STA */
-            LAC = LAC | 07777;
-            break;
-        case 013:                                       /* CLA CMA CML */
-            LAC = (LAC | 07777) ^ 010000;
-            break;
-        case 014:                                       /* CLA CLL */
-            LAC = 0;
-            break;
-        case 015:                                       /* CLA CLL CML */
-            LAC = 010000;
-            break;
-        case 016:                                       /* CLA CLL CMA */
-            LAC = 07777;
-            break;
-        case 017:                                       /* CLA CLL CMA CML */
-            LAC = 017777;
-            break;
-            }                                           /* end switch opers */
-
-        if (IR & 01)                                    /* IAC */
-            LAC = (LAC + 1) & 017777;
-        switch ((IR >> 1) & 07) {                       /* decode IR<8:10> */
-        case 0:                                         /* nop */
-            break;
-        case 1:                                         /* BSW */
-            LAC = (LAC & 010000) | ((LAC >> 6) & 077) | ((LAC & 077) << 6);
-            break;
-        case 2:                                         /* RAL */
-            LAC = ((LAC << 1) | (LAC >> 12)) & 017777;
-            break;
-        case 3:                                         /* RTL */
-            LAC = ((LAC << 2) | (LAC >> 11)) & 017777;
-            break;
-        case 4:                                         /* RAR */
-            LAC = ((LAC >> 1) | (LAC << 12)) & 017777;
-            break;
-        case 5:                                         /* RTR */
-            LAC = ((LAC >> 2) | (LAC << 11)) & 017777;
-            break;
-        case 6:                                         /* RAL RAR - undef */
-            LAC = LAC & (IR | 010000);                  /* uses AND path */
-            break;
-        case 7:                                         /* RTL RTR - undef */
-            LAC = (LAC & 010000) | (MA & 07600) | (IR & 0177);
-            break;                                      /* uses address path */
-            }                                           /* end switch shifts */
-        break;                                          /* end group 1 */
-
-/* OPR group 2.  From Bernhard Baehr's description of the TSC8-75:
-
-   (In user mode) HLT (7402), OSR (7404) and microprogrammed combinations with
-   HLT and OSR: Additional to raising a user mode interrupt, the current OPR
-   opcode is moved to the ERIOT register and the ECDF flag is cleared. */
-
-    case 036:case 037:                                  /* OPR, groups 2, 3 */
-        if ((IR & 01) == 0) {                           /* group 2 */
-            switch ((IR >> 3) & 017) {                  /* decode IR<6:8> */
-            case 0:                                     /* nop */
-                break;
-            case 1:                                     /* SKP */
-                PC = (PC + 1) & 07777;
-                break;
-            case 2:                                     /* SNL */
-                if (LAC >= 010000)
-                    PC = (PC + 1) & 07777;
-                break;
-            case 3:                                     /* SZL */
-                if (LAC < 010000)
-                    PC = (PC + 1) & 07777;
-                break;
-            case 4:                                     /* SZA */
-                if ((LAC & 07777) == 0)
-                    PC = (PC + 1) & 07777;
-                break;
-            case 5:                                     /* SNA */
-                if ((LAC & 07777)
-                    != 0) PC = (PC + 1) & 07777;
-                break;
-            case 6:                                     /* SZA | SNL */
-                if ((LAC == 0) || (LAC >= 010000))
-                    PC = (PC + 1) & 07777;
-                break;
-            case 7:                                     /* SNA & SZL */
-                if ((LAC != 0) && (LAC < 010000))
-                    PC = (PC + 1) & 07777;
-                break;
-            case 010:                                   /* SMA */
-                if ((LAC & 04000) != 0)
-                    PC = (PC + 1) & 07777;
-                break;
-            case 011:                                   /* SPA */
-                if ((LAC & 04000) == 0)
-                    PC = (PC + 1) & 07777;
-                break;
-            case 012:                                   /* SMA | SNL */
-                if (LAC >= 04000)
-                    PC = (PC + 1) & 07777;
-                break;
-            case 013:                                   /* SPA & SZL */
-                if (LAC < 04000)
-                    PC = (PC + 1) & 07777;
-                break;
-            case 014:                                   /* SMA | SZA */
-                if (((LAC & 04000) != 0) || ((LAC & 07777) == 0))
-                    PC = (PC + 1) & 07777;
-                break;
-            case 015:                                   /* SPA & SNA */
-                if (((LAC & 04000) == 0) && ((LAC & 07777) != 0))
-                    PC = (PC + 1) & 07777;
-                break;
-            case 016:                                   /* SMA | SZA | SNL */
-                if ((LAC >= 04000) || (LAC == 0))
-                    PC = (PC + 1) & 07777;
-                break;
-            case 017:                                   /* SPA & SNA & SZL */
-                if ((LAC < 04000) && (LAC != 0))
-                    PC = (PC + 1) & 07777;
-                break;
-                }                                       /* end switch skips */
-            if (IR & 0200)                              /* CLA */
-                LAC = LAC & 010000;
-            if ((IR & 06) && UF) {                      /* user mode? */
-                int_req = int_req | INT_UF;             /* request intr */
-                tsc_ir = IR;                            /* save instruction */
-                tsc_cdf = 0;                            /* clear flag */
-                }
-            else {
-                if (IR & 04) {                          /* OSR */
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-                    if (pidp8i_gpio) SR = get_switch_register();  /* get current SR */
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
-                    LAC = LAC | SR;
-                    }
-                if (IR & 02) {                          /* HLT */
-//--- PiDP change-----------------------------------------------------------------------
-                    if (pidp8i_gpio) {
-                        // We've got a front panel, so treat HLT the
-                        // same as pressing the STOP key: CONT resumes.
-                        extern int swStop;
-                        swStop = 1;
-                        }
+                    PCQ_ENTRY (MA);
+                    if (IR & 0200)                                  /* current page or zero page? */
+                        MA = (MA & 077600) | (IR & 0177);           /* current page */
+                    else
+                        MA = IF | (IR & 0177);                      /* zero page */
+                    if (IR & 0400)                                  /* direct or indirect? */
+                        next_Major_State = DEFER_state;             /* indirect JMP */
                     else {
-                        // Fall back to pure SIMH behavior: drop to sim>
-                        // prompt where user can poke at the simulator
-                        // and resume with a "cont" command.
-                        reason = STOP_HALT;
+                        if (UF) {                                   /* direct, user mode? */
+                            tsc_ir = IR;                            /* save instruction */
+                            tsc_cdf = 0;                            /* clear flag */
+                            if (tsc_enb) {                          /* TSC8 enabled? */
+                                tsc_pc = (PC - 1) & 07777;          /* save PC */
+                                int_req = int_req | INT_TSC;        /* request intr */
+                            }
                         }
-                    }
+                        if ((IR & 0200 == 0) &&  sim_idle_enab &&   /* current page? idling enabled? */
+                            (IF == IB)) {                           /* to same bank? */
+                            if (MA == ((PC - 2) & 07777)) {         /* 1) JMP *-1? */
+                                if (!(int_req & (INT_ION|INT_TTI)) &&     /*    iof, TTI flag off? */
+                                    (M[IB|((PC - 2) & 07777)] == OP_KSF)) /*  next is KSF? */
+                                    sim_idle (TMR_CLK, FALSE);      /* we're idle */
+                                }                                   /* end 1) JMP *-1 */
+                            else if (MA == ((PC - 1) & 07777)) {    /* 2) JMP *? */
+                                    if (!(int_req & INT_ION))       /*    iof? */
+                                        reason = STOP_LOOP;         /* then infinite loop */
+                                    else if (!(int_req & INT_ALL))  /*    ion, not intr? */
+                                        sim_idle (TMR_CLK, FALSE);  /* we're idle */
+                                     }                              /* end 2) JMP */
+                            }                                       /* end current page, idle enabled, same bank */
+                        IF = IB;                                    /* change IF */
+                        UF = UB;                                    /* change UF */
+                        int_req = int_req | INT_NO_CIF_PENDING;     /* clr intr inhibit */
+                        PC = MA;
+                        }                                           /* end direct JMP */
+                    break;
+                    // end of case op_code 5: JMP
+                case 6:
+                    // Fetch state for IOTs
+
+/* From Bernhard Baehr's description of the TSC8-75:
+   (In user mode) Additional to raising a user mode interrupt, the current IOT
+   opcode is moved to the ERIOT register. When the IOT is a CDF instruction (62x1),
+   the ECDF flag is set, otherwise it is cleared. */
+
+                    if (UF) {                                       /* privileged? */
+                        int_req = int_req | INT_UF;                 /* request intr */
+                        tsc_ir = IR;                                /* save instruction */
+                        if ((IR & 07707) == 06201)                  /* set/clear flag */
+                            tsc_cdf = 1;
+                        else tsc_cdf = 0;
+                        break;
+                        }
+                    device = (IR >> 3) & 077;                       /* device = IR<3:8> */
+                    pulse = IR & 07;                                /* pulse = IR<9:11> */
+                    iot_data = LAC & 07777;                         /* AC unchanged */
+                    switch (device) {                               /* decode IR<3:8> */
+                    case 000:                                       /* CPU control */
+                        switch (pulse) {                            /* decode IR<9:11> */
+
+                        case 0:                                     /* SKON */
+                            if (int_req & INT_ION)
+                                PC = (PC + 1) & 07777;
+                            int_req = int_req & ~INT_ION;
+                            break;
+
+                        case 1:                                     /* ION */
+                            int_req = (int_req | INT_ION) & ~INT_NO_ION_PENDING;
+                            break;
+
+                        case 2:                                     /* IOF */
+                            int_req = int_req & ~INT_ION;
+                            break;
+
+                        case 3:                                     /* SRQ */
+                            if (int_req & INT_ALL)
+                                PC = (PC + 1) & 07777;
+                            break;
+
+                        case 4:                                     /* GTF */
+                            LAC = (LAC & 010000) |
+                                  ((LAC & 010000) >> 1) | (gtf << 10) |
+                                  (((int_req & INT_ALL) != 0) << 9) |
+                                  (((int_req & INT_ION) != 0) << 7) | SF;
+                            break;
+
+                        case 5:                                     /* RTF */
+                            gtf = ((LAC & 02000) >> 10);
+                            UB = (LAC & 0100) >> 6;
+                            IB = (LAC & 0070) << 9;
+                            DF = (LAC & 0007) << 12;
+                            LAC = ((LAC & 04000) << 1) | iot_data;
+                            int_req = (int_req | INT_ION) & ~INT_NO_CIF_PENDING;
+                            break;
+
+                        case 6:                                     /* SGT */
+                            if (gtf)
+                                PC = (PC + 1) & 07777;
+                            break;
+
+                        case 7:                                     /* CAF */
+                            gtf = 0;
+                            emode = 0;
+                            int_req = int_req & INT_NO_CIF_PENDING;
+                            dev_done = 0;
+                            int_enable = INT_INIT_ENABLE;
+                            LAC = 0;
+                            reset_all (1);                          /* reset all dev */
+                            break;
+                            }                                       /* end switch pulse */
+                        break;
+
+                    case 020:case 021:case 022:case 023:
+                    case 024:case 025:case 026:case 027:            /* memory extension */
+                        switch (pulse) {                            /* decode IR<9:11> */
+
+                        case 1:                                     /* CDF */
+                            DF = (IR & 0070) << 9;
+                            break;
+
+                        case 2:                                     /* CIF */
+                            IB = (IR & 0070) << 9;
+                            int_req = int_req & ~INT_NO_CIF_PENDING;
+                            break;
+
+                        case 3:                                     /* CDF CIF */
+                            DF = IB = (IR & 0070) << 9;
+                            int_req = int_req & ~INT_NO_CIF_PENDING;
+                            break;
+
+                        case 4:
+                            switch (device & 07) {                  /* decode IR<6:8> */
+
+                            case 0:                                 /* CINT */
+                                int_req = int_req & ~INT_UF;
+                                break;
+
+                            case 1:                                 /* RDF */
+                                LAC = LAC | (DF >> 9);
+                                    break;
+
+                            case 2:                                 /* RIF */
+                                LAC = LAC | (IF >> 9);
+                                break;
+
+                            case 3:                                 /* RIB */
+                                LAC = LAC | SF;
+                                break;
+
+                            case 4:                                 /* RMF */
+                                UB = (SF & 0100) >> 6;
+                                IB = (SF & 0070) << 9;
+                                DF = (SF & 0007) << 12;
+                                int_req = int_req & ~INT_NO_CIF_PENDING;
+                                break;
+
+                            case 5:                                 /* SINT */
+                                if (int_req & INT_UF)
+                                    PC = (PC + 1) & 07777;
+                                break;
+
+                            case 6:                                 /* CUF */
+                                UB = 0;
+                                int_req = int_req & ~INT_NO_CIF_PENDING;
+                                break;
+
+                            case 7:                                 /* SUF */
+                                UB = 1;
+                                int_req = int_req & ~INT_NO_CIF_PENDING;
+                                break;
+                                }                                   /* end switch device */
+                            break;
+            
+                        default:
+                            reason = stop_inst;
+                            break;
+                            }                                       /* end switch pulse */
+                        break;                                      /* end case 20-27 */
+
+                    case 010:                                       /* power fail */
+                        switch (pulse) {                            /* decode IR<9:11> */
+
+                        case 1:                                     /* SBE */
+                            break;
+
+                        case 2:                                     /* SPL */
+                            if (int_req & INT_PWR)
+                                PC = (PC + 1) & 07777;
+                            break;
+
+                        case 3:                                     /* CAL */
+                            int_req = int_req & ~INT_PWR;
+                            break;
+
+                        default:
+                            reason = stop_inst;
+                            break;
+                            }                                       /* end switch pulse */
+                        break;                                      /* end case 10 */
+
+                    default:                                        /* I/O device */
+                        if (dev_tab[device]) {                      /* dev present? */
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+                            // Any other device will trigger IOP, so light pause
+                            Pause = 1;
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
+                            iot_data = dev_tab[device] (IR, iot_data);
+                            LAC = (LAC & 010000) | (iot_data & 07777);
+                            if (iot_data & IOT_SKP)
+                                PC = (PC + 1) & 07777;
+                            if (iot_data >= IOT_REASON)
+                                reason = iot_data >> IOT_V_REASON;
+                            }
+                        else reason = stop_inst;                    /* stop on flag */
+                        break;
+                        }                                           /* end switch device */
+                    break;
+                    // end of case op_code 6: IOT
+                case 7:
+                    // Fetch state for OPRs
+                    if (!(IR & 00400)) {
+                        /* OPR group 1 */
+                        if (IR & 0200)
+                            LAC = LAC & 010000;                     /* CLA is sequence 1 */
+                        if (IR & 0100)
+                            LAC = LAC & 007777;                     /* CLL is sequence 1 */
+                        if (IR & 0040)
+                            LAC = LAC ^ 007777;                     /* CMA is sequence 2 */
+                        if (IR & 0020)
+                            LAC = LAC ^ 010000;                     /* CML is sequence 2 */
+                        if (IR & 0001)
+                            LAC = (LAC + 1) & 017777;               /* IAC is sequence 3 */
+                        switch (IR & 00016) {                       /* rotates are sequence 4 */
+                            case 0000:
+                                break;
+                            case 0002:                              /* BSW */
+                                LAC = (LAC & 010000) | ((LAC >> 6) & 077) | ((LAC & 077) << 6);
+                                break;
+                            case 0004:                              /* RAL */
+                                LAC = ((LAC << 1) | (LAC >> 12)) & 017777;
+                                break;
+                            case 0006:                              /* RTL */
+                                LAC = ((LAC << 2) | (LAC >> 11)) & 017777;
+                                break;
+                            case 0010:                              /* RAR */
+                                LAC = ((LAC >> 1) | (LAC << 12)) & 017777;
+                                break;
+                            case 0012:                              /* RTR */
+                                LAC = ((LAC >> 2) | (LAC << 11)) & 017777;
+                                break;
+                            case 0014:                              /* RAL RAR - undef */
+                                LAC = LAC & (IR | 010000);          /* uses AND path */
+                                break;
+                            case 0016:                              /* RTL RTR - undef */
+                                LAC = (LAC & 010000) | (MA & 07600) | (IR & 0177); /* uses address path */
+                                break;
+                            }
+                        }
+                        /* end of OPR group 1 */
+                    else if (IR & 00400 && !(IR & 00001)) {
+                        /* OPR group 2 */
+                        switch (IR & 00170) {
+                            /* skips are sequence 1 */
+                            case 0010:                               /* SKP */
+                                PC = (PC + 1) & 07777;
+                                break;
+                            case 0020:                               /* SNL */
+                                if (LAC >= 010000)
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0030:                               /* SZL */
+                                if (LAC < 010000)
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0040:                               /* SZA */
+                                if ((LAC & 07777) == 0)
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0050:                               /* SNA */
+                                if ((LAC & 07777) != 0 )
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0060:                               /* SZA SNL */
+                                if ((LAC == 0) || (LAC >= 010000))
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0070:                               /* SNA SZL */
+                                if ((LAC != 0) && (LAC < 010000))
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0100:                               /* SMA */
+                                if ((LAC & 04000) != 0)
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0110:                               /* SPA */
+                                if ((LAC & 04000) == 0)
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0120:                               /* SMA SNL */
+                                if (LAC >= 04000)
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0130:                               /* SPA SZL */
+                                if (LAC < 04000)
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0140:                               /* SMA SZA */
+                                if (((LAC & 04000) != 0) || ((LAC & 07777) == 0))
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0150:                               /* SPA SNA */
+                                if (((LAC & 04000) == 0) && ((LAC & 07777) != 0))
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0160:                               /* SMA SZA SNL */
+                                if ((LAC >= 04000) || (LAC == 0))
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            case 0170:                               /* SPA SNA SZL */
+                                if ((LAC < 04000) && (LAC != 0))
+                                    PC = (PC + 1) & 07777;
+                                break;
+                            } // end of switch (IR & 00176)
+                            if (IR & 0200)
+                                LAC = LAC & 010000;                 /* CLA is sequence 2 */
+                            if (IR & 06) {                          /* HLT, OSR are sequence 3 */
+                                if (UF) {                           /* user mode? */
+                                    int_req = int_req | INT_UF;     /* request intr */
+                                    tsc_ir = IR;                    /* save instruction */
+                                    tsc_cdf = 0;                    /* clear flag */
+                                    }
+                                else {
+                                    if (IR & 02) {                   /* HLT */
+//--- PiDP change-----------------------------------------------------------------------
+                                        if (pidp8i_gpio) {
+                                            // We've got a front panel, so treat HLT the
+                                            // same as pressing the STOP key: CONT resumes.
+                                            cpuRun = 0;
+                                            }
+                                        else {
+                                            // Fall back to pure SIMH behavior: drop to sim>
+                                            // prompt where user can poke at the simulator
+                                            // and resume with a "cont" command.
+                                            reason = STOP_HALT;
+                                           }
+                                        }
 //--- end of PiDP change----------------------------------------------------------------
-                }
-            break;
-            }                                           /* end if group 2 */
+                                    else {                           /* OSR */
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
+                                        if (pidp8i_gpio)
+                                            SR = get_switch_register();  /* get current SR */
+/* ---PiDP end---------------------------------------------------------------------------------------------- */
+                                        LAC = LAC | SR;
+                                        }
+                                    }
+                                }
+                            }
+                        /* end of OPR group 2 */
+                    else {
+                        /* OPR group 3, standard
 
-/* OPR group 3 standard
+                               MQA!MQL exchanges AC and MQ, as follows:
 
-   MQA!MQL exchanges AC and MQ, as follows:
+                               temp = MQ;
+                               MQ = LAC & 07777;
+                               LAC = LAC & 010000 | temp;
+                        */
+                        temp = MQ;                                  /* group 3 */
+                        if (IR & 0200)                              /* CLA */
+                            LAC = LAC & 010000;
+                        if (IR & 0020) {                            /* MQL */
+                            MQ = LAC & 07777;
+                            LAC = LAC & 010000;
+                            }
+                        if (IR & 0100)                              /* MQA */
+                           LAC = LAC | temp;
+                        if ((IR & 0056) && (cpu_unit.flags & UNIT_NOEAE)) {
+                           reason = stop_inst;                      /* EAE not present */
+                            }
 
-        temp = MQ;
-        MQ = LAC & 07777;
-        LAC = LAC & 010000 | temp;
-*/
+/* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-        temp = MQ;                                      /* group 3 */
-        if (IR & 0200)                                  /* CLA */
-            LAC = LAC & 010000;
-        if (IR & 0020) {                                /* MQL */
-            MQ = LAC & 07777;
-            LAC = LAC & 010000;
-            }
-        if (IR & 0100)                                  /* MQA */
-            LAC = LAC | temp;
-        if ((IR & 0056) && (cpu_unit.flags & UNIT_NOEAE)) {
-            reason = stop_inst;                         /* EAE not present */
-            break;
-            }
+All EAE code below remains indented/formatted as in the original file as it fits better on the page
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx */
 
 /* OPR group 3 EAE
 
@@ -1340,193 +1250,106 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             PC = (PC + 1) & 07777;
             SC = emode? 037: 0;                         /* SC = 0 if mode A */
             break;
-            }                                           /* end switch */
-        break;                                          /* end case 7 */
 
-/* Opcode 6, IOT.  From Bernhard Baehr's description of the TSC8-75:
+            }                                           /* end of OPR group 3 */
 
-   (In user mode) Additional to raising a user mode interrupt, the current IOT
-   opcode is moved to the ERIOT register. When the IOT is a CDF instruction (62x1),
-   the ECDF flag is set, otherwise it is cleared. */
+/* xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-    case 030:case 031:case 032:case 033:                /* IOT */
-        if (UF) {                                       /* privileged? */
-            int_req = int_req | INT_UF;                 /* request intr */
-            tsc_ir = IR;                                /* save instruction */
-            if ((IR & 07707) == 06201)                  /* set/clear flag */
-                tsc_cdf = 1;
-            else tsc_cdf = 0;
-            break;
-            }
-        device = (IR >> 3) & 077;                       /* device = IR<3:8> */
-        pulse = IR & 07;                                /* pulse = IR<9:11> */
-        iot_data = LAC & 07777;                         /* AC unchanged */
-        switch (device) {                               /* decode IR<3:8> */
+All EAE code above remains indented/formatted as in the original file as it fits better on the page
 
-        case 000:                                       /* CPU control */
-            switch (pulse) {                            /* decode IR<9:11> */
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx */
 
-            case 0:                                     /* SKON */
-                if (int_req & INT_ION)
-                    PC = (PC + 1) & 07777;
-                int_req = int_req & ~INT_ION;
-                break;
-
-            case 1:                                     /* ION */
-                int_req = (int_req | INT_ION) & ~INT_NO_ION_PENDING;
-                break;
-
-            case 2:                                     /* IOF */
-                int_req = int_req & ~INT_ION;
-                break;
-
-            case 3:                                     /* SRQ */
-                if (int_req & INT_ALL)
-                    PC = (PC + 1) & 07777;
-                break;
-
-            case 4:                                     /* GTF */
-                LAC = (LAC & 010000) |
-                      ((LAC & 010000) >> 1) | (gtf << 10) |
-                      (((int_req & INT_ALL) != 0) << 9) |
-                      (((int_req & INT_ION) != 0) << 7) | SF;
-                break;
-
-            case 5:                                     /* RTF */
-                gtf = ((LAC & 02000) >> 10);
-                UB = (LAC & 0100) >> 6;
-                IB = (LAC & 0070) << 9;
-                DF = (LAC & 0007) << 12;
-                LAC = ((LAC & 04000) << 1) | iot_data;
-                int_req = (int_req | INT_ION) & ~INT_NO_CIF_PENDING;
-                break;
-
-            case 6:                                     /* SGT */
-                if (gtf)
-                    PC = (PC + 1) & 07777;
-                break;
-
-            case 7:                                     /* CAF */
-                gtf = 0;
-                emode = 0;
-                int_req = int_req & INT_NO_CIF_PENDING;
-                dev_done = 0;
-                int_enable = INT_INIT_ENABLE;
-                LAC = 0;
-                reset_all (1);                          /* reset all dev */
-                break;
-                }                                       /* end switch pulse */
-            break;                                      /* end case 0 */
-
-        case 020:case 021:case 022:case 023:
-        case 024:case 025:case 026:case 027:            /* memory extension */
-            switch (pulse) {                            /* decode IR<9:11> */
-
-            case 1:                                     /* CDF */
-                DF = (IR & 0070) << 9;
-                break;
-
-            case 2:                                     /* CIF */
-                IB = (IR & 0070) << 9;
-                int_req = int_req & ~INT_NO_CIF_PENDING;
-                break;
-
-            case 3:                                     /* CDF CIF */
-                DF = IB = (IR & 0070) << 9;
-                int_req = int_req & ~INT_NO_CIF_PENDING;
-                break;
-
-            case 4:
-                switch (device & 07) {                  /* decode IR<6:8> */
-
-                case 0:                                 /* CINT */
-                    int_req = int_req & ~INT_UF;
+                        }
+                        /* end of OPR group 3 */
                     break;
+                    // end of case op_code 7
 
-                case 1:                                 /* RDF */
-                    LAC = LAC | (DF >> 9);
-                        break;
-
-                case 2:                                 /* RIF */
-                    LAC = LAC | (IF >> 9);
-                    break;
-
-                case 3:                                 /* RIB */
-                    LAC = LAC | SF;
-                    break;
-
-                case 4:                                 /* RMF */
-                    UB = (SF & 0100) >> 6;
-                    IB = (SF & 0070) << 9;
-                    DF = (SF & 0007) << 12;
-                    int_req = int_req & ~INT_NO_CIF_PENDING;
-                    break;
-
-                case 5:                                 /* SINT */
-                    if (int_req & INT_UF)
-                        PC = (PC + 1) & 07777;
-                    break;
-
-                case 6:                                 /* CUF */
-                    UB = 0;
-                    int_req = int_req & ~INT_NO_CIF_PENDING;
-                    break;
-
-                case 7:                                 /* SUF */
-                    UB = 1;
-                    int_req = int_req & ~INT_NO_CIF_PENDING;
-                    break;
-                    }                                   /* end switch device */
-                break;
-            
-            default:
-                reason = stop_inst;
-                break;
-                }                                       /* end switch pulse */
-            break;                                      /* end case 20-27 */
-
-        case 010:                                       /* power fail */
-            switch (pulse) {                            /* decode IR<9:11> */
-
-            case 1:                                     /* SBE */
+                } // end of switch (op_code)
                 break;
 
-            case 2:                                     /* SPL */
-                if (int_req & INT_PWR)
-                    PC = (PC + 1) & 07777;
-                break;
+            // end of case FETCH_state
 
-            case 3:                                     /* CAL */
-                int_req = int_req & ~INT_PWR;
-                break;
-
-            default:
-                reason = stop_inst;
-                break;
-                }                                       /* end switch pulse */
-            break;                                      /* end case 10 */
-
-        default:                                        /* I/O device */
-            if (dev_tab[device]) {                      /* dev present? */
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
-                // Any other device will trigger IOP, so light pause
-                Pause = 1;
-/* ---PiDP end---------------------------------------------------------------------------------------------- */
-                iot_data = dev_tab[device] (IR, iot_data);
-                LAC = (LAC & 010000) | (iot_data & 07777);
-                if (iot_data & IOT_SKP)
-                    PC = (PC + 1) & 07777;
-                if (iot_data >= IOT_REASON)
-                    reason = iot_data >> IOT_V_REASON;
+        case DEFER_state:
+            MA = IF | MA;                                   /* defer major state uses IF */
+            MB = M[MA];
+            if ((MA & 07770) == 00010)                      /* autoincrement needed? */
+                M[MA] = ++MB & 07777;                       /* yes, do the autoincrement */
+            MA =  MB;                                       /* get the target address */
+            if (((IR >> 9) & 07) != 5)                      /* MRI or JMP? */
+                next_Major_State = EXECUTE_state;           /* it's a MRI */
+            else {
+                if (UF) {                                   /* it's a JMP, user mode? */
+                    tsc_ir = IR;                            /* save instruction */
+                    tsc_cdf = 0;                            /* clear flag */
+                    if (tsc_enb) {                          /* TSC8 enabled? */
+                        tsc_pc = (PC - 1) & 07777;          /* save PC */
+                        int_req = int_req | INT_TSC;        /* request intr */
+                    }
                 }
-            else reason = stop_inst;                    /* stop on flag */
+                IF = IB;                                    /* change IF */
+                UF = UB;                                    /* change UF */
+                int_req = int_req | INT_NO_CIF_PENDING;     /* clr intr inhibit */
+                PC = MA;
+                next_Major_State = FETCH_state;
+            }
             break;
-            }                                           /* end switch device */
-        break;                                          /* end case IOT */
-        }                                               /* end switch opcode */
+            // end of case DEFER_state
+
+
+        case EXECUTE_state:
+            if (((IR >> 9) & 07) < 4) {                     /* AND .. DCA, or is it JMS? */
+                if (IR & 00400)                             /* it is AND .. DCA, direct or indirect? */
+                    MA = DF | (MA & 07777);                 /* indirect, use DF */
+                else
+                    MA = IF | (MA & 07777);                 /* direct, use IF */
+                MB = M[MA];                                 /* get the data word */
+                switch ((IR >> 9) & 07) {
+                    case 0:                                 /* AND */
+                        LAC = LAC & (MB | 010000);
+                        break;
+                    case 1:                                 /* TAD */
+                        LAC = (LAC + MB) & 017777;
+                        break;
+                    case 2:                                 /* ISZ */
+                        M[MA] = MB = (MB + 1) & 07777;
+                        if (MB == 0)
+                            PC = (PC + 1) & 07777;
+                        break;
+                    case 3:                                 /* DCA */
+                        M[MA] = MB = LAC & 07777;
+                        LAC = LAC & 010000;
+                        break;
+                    }  // end of switch ((IR >> 9) & 07)
+                }
+            else {
+                if (UF) {                                   /* JMS, user mode? */
+                    tsc_ir = IR;                            /* save instruction */
+                    tsc_cdf = 0;                            /* clear flag */
+                    }
+                if (UF && tsc_enb) {                        /* user mode, TSC enab? */
+                    tsc_pc = (PC - 1) & 07777;              /* save PC */
+                    int_req = int_req | INT_TSC;            /* request intr */
+                    }
+                else {                                      /* normal JMS */
+                    IF = IB;                                /* change IF */
+                    UF = UB;                                /* change UF */
+                    int_req = int_req | INT_NO_CIF_PENDING; /* clr intr inhibit */
+                    MA = IF | (MA & 07777);
+                    if (MEM_ADDR_OK (MA))
+                        M[MA] = PC;                         /* write the return address */
+                    }
+                MB = MA & 07777;
+                PC = (MA + 1) & 07777;                      /* set the PC to entry + 1 */
+                }
+            next_Major_State = FETCH_state;
+            break;
+            // end of case EXECUTE_state
+
+        }  // end of switch (Major_State)
+
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-    // Update the front panel with this instruction's final state.
+    // Update the front panel with this Major State's ending status.
     //
     // There's no point saving *every* LED "on" count.  We just need a
     // suitable amount of oversampling.  We can skip this if we called
@@ -1536,9 +1359,9 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // The trick here is figuring out what "recently enough" means
     // without making expensive OS timer calls.  These timers aren't
     // hopelessly slow (http://stackoverflow.com/a/13096917/142454) but
-    // we still don't want to be taking dozens of cycles per instruction
-    // just to keep our update estimate current in the face of system
-    // load changes and SET THROTTLE updates.
+    // we still don't want to be taking dozens of our cpu cycles per
+    // PiDP-8/I major state just to keep our update estimate current
+    // in the face of system load changes and SET THROTTLE updates.
     //
     // Instead, we maintain a model of the current IPS value — seeded
     // with the initial "SET THROTTLE" value, if any — to figure out
@@ -1569,35 +1392,46 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
 
     if (pidp8i_gpio && (++skip_count >= (max_skips - dither))) {
-        // Save skips to inst counter and reset
-        inst_count += skip_count;
+        // Save skips to cycle counter and reset
+        cycle_count += skip_count;
         skip_count = 0;
 
-        // We need to update the LED data again.  Unlike above, circa
-        // line 444, we pass the final MB value, not a copy of IR, as
-        // MB is settled by this point.
-        set_pidp8i_leds (PC, SteadyMA, MB, IR, LAC, MQ, IF, DF, SC,
-                 int_req, Pause);
- 
+        // We need to update the LED data again.
+        set_pidp8i_leds (PC, MA, MB, IR, LAC, MQ, IF, DF, SC,
+                int_req, this_Major_State, Pause);
+
         // Has it been ~1s since we updated our max_skips value?
         time_t now;
         if (time(&now) > last_update) {
             // Yep; simulator IPS may have changed, so freshen it.
             last_update = now;
-            max_skips = inst_count / pidp8i_updates_per_sec;
+            max_skips = cycle_count / pidp8i_updates_per_sec;
             //printf("Inst./repaint: %zu - %zu; %.2f MIPS\r\n",
-            //        max_skips, dither, inst_count / 1e6);
-            inst_count = 0;
+            //        max_skips, dither, cycle_count / 1e6);
+            cycle_count = 0;
             }
         dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
         }
     Pause = 0;      // it's set outside the "if", so it must be *reset* outside
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
-    }                                                   /* end while */
+
+
+    // at the end of a complete instruction cycle (i.e., next major state is now Fetch)
+    // check for an interrupt request and handle it if it occurred with ION
+    if (next_Major_State == FETCH_state && int_req > INT_PENDING) {
+        int_req = int_req & ~INT_ION;                   /* occurred, so interrupts off */
+        SF = (UF << 6) | (IF >> 9) | (DF >> 12);        /* form save field */
+        PCQ_ENTRY (IF | PC);                            /* save old PC with IF */
+        IF = IB = DF = UF = UB = 0;                     /* clear mem ext */
+        M[0] = PC;                                      /* save PC in 0 */
+        PC = 1;                                         /* fetch next from 1 */
+        }
+
+    }                                                   /* end while (reason == 0) */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 // If we're leaving the simulator's CPU instruction execution loop for
-// the last time, during program shutdown, also clear all of the LEDs,
+// the last time, during program shutdown, also clears all of the LEDs,
 // else we'll leave them solidly lit.
 //
 // If instead we're leaving for a simulator pause, as with a Ctrl-E
@@ -1610,11 +1444,15 @@ if (pidp8i_gpio && (reason == SCPE_STOP) && pidp8i_gpio_present) {
 /* Simulation halted */
 
 saved_PC = IF | (PC & 07777);                           /* save copies */
+saved_MA = MA & 007777;
+saved_IR = IR & 007777;
+saved_Major_State = next_Major_State;
 saved_DF = DF & 070000;
 saved_LAC = LAC & 017777;
 saved_MQ = MQ & 07777;
 pcq_r->qptr = pcq_p;                                    /* update pc q ptr */
 return reason;
+
 }                                                       /* end sim_instr */
 
 /*
@@ -1637,13 +1475,14 @@ static const char *pdp8_clock_precalibrate_commands[] = {
 t_stat cpu_reset (DEVICE *dptr)
 {
 saved_LAC = 0;
+saved_Major_State = FETCH_state;
 int_req = (int_req & ~INT_ION) | INT_NO_CIF_PENDING;
 saved_DF = IB = saved_PC & 070000;
 UF = UB = gtf = emode = 0;
 pcq_r = find_reg ("PCQ", NULL, dptr);
 if (pcq_r)
     pcq_r->qptr = 0;
-else 
+else
     return SCPE_IERR;
 sim_clock_precalibrate_commands = pdp8_clock_precalibrate_commands;
 sim_vm_initial_ips = 10 * SIM_INITIAL_IPS;
@@ -1654,12 +1493,14 @@ return SCPE_OK;
 
 /* Set PC for boot (PC<14:12> will typically be 0) */
 
-void cpu_set_bootpc (int32 pc)
+void cpu_set_bootpc (int32 PC)
 {
-saved_PC = pc;                                          /* set PC, IF */
-saved_DF = IB = pc & 070000;                            /* set IB, DF */
+saved_PC = PC;                                          /* set PC, IF */
+saved_Major_State = FETCH_state;
+saved_DF = IB = PC & 070000;                            /* set IB, DF */
 return;
 }
+
 
 /* Memory examine */
 
@@ -1672,6 +1513,7 @@ if (vptr != NULL)
 return SCPE_OK;
 }
 
+
 /* Memory deposit */
 
 t_stat cpu_dep (t_value val, t_addr addr, UNIT *uptr, int32 sw)
@@ -1681,6 +1523,7 @@ if (addr >= MEMSIZE)
 M[addr] = val & 07777;
 return SCPE_OK;
 }
+
 
 /* Memory size change */
 
@@ -1700,6 +1543,7 @@ for (i = MEMSIZE; i < MAXMEMSIZE; i++)
     M[i] = 0;
 return SCPE_OK;
 }
+
 
 /* Change device number for a device */
 
@@ -1727,6 +1571,7 @@ dibp->dev = newdev;                                     /* store */
 return SCPE_OK;
 }
 
+
 /* Show device number for a device */
 
 t_stat show_dev (FILE *st, UNIT *uptr, int32 val, CONST void *desc)
@@ -1747,6 +1592,7 @@ if (dibp->num > 1)
     fprintf (st, "-%2o", dibp->dev + dibp->num - 1);
 return SCPE_OK;
 }
+
 
 /* CPU device handler - should never get here! */
 
@@ -1803,6 +1649,7 @@ for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {     /* add devices */
 return FALSE;
 }
 
+
 /* Set history */
 
 t_stat cpu_set_hist (UNIT *uptr, int32 val, CONST char *cptr, void *desc)
@@ -1833,6 +1680,7 @@ if (lnt) {
     }
 return SCPE_OK;
 }
+
 
 /* Show history */
 
@@ -1872,4 +1720,5 @@ for (k = 0; k < lnt; k++) {                             /* print specified */
         }                                               /* end else instruction */
     }                                                   /* end for */
 return SCPE_OK;
+
 }
