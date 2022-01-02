@@ -103,7 +103,7 @@ If you have Fossil 2.12 or 2.13, the next-easiest method is:
     $ cd ~/src/pidp8i
     $ fossil open https://tangentsoft.com/pidp8i
 
-This opens the repository referenced by that URI into the current
+This clones the repository referenced by that URI into the current
 directory as `pidp8i.fossil`, then opens that repo into that same
 subdirectory.
 
