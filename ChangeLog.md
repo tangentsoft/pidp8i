@@ -7,7 +7,7 @@
     first boot, so it is no longer necessary to manually do this at a
     console to get `sshd` running.
 
-*   Updated SIMH to 2021-01-06 version, GitHub commit 030a47bdb47.
+*   Updated SIMH to 2022-01-06 version, GitHub commit 030a47bdb47.
     Notable changes since the prior update are:
 
     -   Improved device conflict warnings.
