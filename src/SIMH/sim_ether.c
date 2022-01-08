@@ -868,7 +868,7 @@ char* eth_getdesc_byname(char* name, char* temp)
 static ETH_DEV **eth_open_devices = NULL;
 static int eth_open_device_count = 0;
 
-static char*   (*p_pcap_lib_version) (void);
+static char *(*p_pcap_lib_version) (void);
 
 static void _eth_add_to_open_list (ETH_DEV* dev)
 {
@@ -1046,12 +1046,13 @@ typedef void * pcap_t;  /* Pseudo Type to avoid compiler errors */
 */
 static int eth_host_pcap_devices(int used, int max, ETH_LIST* list)
 {
-pcap_t* conn = NULL;
-int i, j, datalink = 0;
+int i;
 
 for (i=0; i<used; ++i) {
   /* Cull any non-ethernet interface types */
 #if defined(HAVE_PCAP_NETWORK)
+  int j, datalink = 0;
+  pcap_t* conn = NULL;
   char errbuf[PCAP_ERRBUF_SIZE];
 
   conn = pcap_open_live(list[i].name, ETH_MAX_PACKET, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
@@ -1224,11 +1225,11 @@ extern "C" {
 #include <winreg.h>
 #endif
 
-#ifdef HAVE_DLOPEN
+#ifdef SIM_HAVE_DLOPEN
 #include <dlfcn.h>
 #endif
 
-#if defined(USE_SHARED) && (defined(_WIN32) || defined(HAVE_DLOPEN))
+#if defined(USE_SHARED) && (defined(_WIN32) || defined(SIM_HAVE_DLOPEN))
 /* Dynamic DLL loading technique and modified source comes from
    Etherial/WireShark capture_pcap.c */
 
@@ -1248,7 +1249,7 @@ static const char* lib_name =
 #elif defined(__APPLE__)
                           "/usr/lib/libpcap.A.dylib";
 #else
-                          "libpcap." __STR(HAVE_DLOPEN);
+                          "libpcap." __STR(SIM_HAVE_DLOPEN);
 #endif
 
 static char no_pcap[PCAP_ERRBUF_SIZE] =
@@ -1257,7 +1258,7 @@ static char no_pcap[PCAP_ERRBUF_SIZE] =
 #elif defined(__APPLE__)
     "/usr/lib/libpcap.A.dylib failed to load, install libpcap to use pcap networking";
 #else
-    "libpcap." __STR(HAVE_DLOPEN) " failed to load, install libpcap to use pcap networking";
+    "libpcap." __STR(SIM_HAVE_DLOPEN) " failed to load, install libpcap to use pcap networking";
 #endif
 #undef __STR
 #undef __STR_QUOTE
@@ -1528,7 +1529,7 @@ int pcap_setnonblock(pcap_t* a, int nonblock, char *errbuf) {
     return 0;
   }
 }
-#endif /* defined(USE_SHARED) && (defined(_WIN32) || defined(HAVE_DLOPEN)) */
+#endif /* defined(USE_SHARED) && (defined(_WIN32) || defined(SIM_HAVE_DLOPEN)) */
 
 /* Some platforms have always had pcap_sendpacket */
 #if defined(_WIN32) || defined(__VMS)
@@ -1752,6 +1753,11 @@ static void eth_get_nic_hw_addr(ETH_DEV* dev, const char *devname)
     char command[1024];
     FILE *f;
     int i;
+    char tool[CBUFSIZE];
+    const char *turnon[] = {
+        "ip link set dev %.*s up",
+        "ifconfig %.*s up", 
+        NULL};
     const char *patterns[] = {
         "ip link show %.*s | grep [0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F]",
         "ip link show %.*s | egrep [0-9a-fA-F]?[0-9a-fA-F]:[0-9a-fA-F]?[0-9a-fA-F]:[0-9a-fA-F]?[0-9a-fA-F]:[0-9a-fA-F]?[0-9a-fA-F]:[0-9a-fA-F]?[0-9a-fA-F]:[0-9a-fA-F]?[0-9a-fA-F]",
@@ -1761,40 +1767,47 @@ static void eth_get_nic_hw_addr(ETH_DEV* dev, const char *devname)
 
     memset(command, 0, sizeof(command));
     /* try to force an otherwise unused interface to be turned on */
-    snprintf(command, sizeof(command)-1, "ip link set dev %.*s up", (int)(sizeof(command) - 21), devname);
-    if (system(command)) {};
-    snprintf(command, sizeof(command)-1, "ifconfig %.*s up", (int)(sizeof(command) - 14), devname);
-    if (system(command)) {};
+    for (i=0; turnon[i]; ++i) {
+      snprintf(command, sizeof(command), turnon[i], (int)(sizeof(command) - (2 + strlen(patterns[i]))), devname);
+      get_glyph_nc (command, tool, 0);
+      if (sim_get_tool_path (tool)[0]) {
+        if (NULL != (f = popen(command, "r")))
+          pclose(f);
+        }
+      }
     for (i=0; patterns[i] && (0 == dev->have_host_nic_phy_addr); ++i) {
-      snprintf(command, sizeof(command)-1, patterns[i], (int)(sizeof(command) - (2 + strlen(patterns[i]))), devname);
-      if (NULL != (f = popen(command, "r"))) {
-        while (0 == dev->have_host_nic_phy_addr) {
-          if (fgets(command, sizeof(command)-1, f)) {
-            char *p1, *p2;
+      snprintf(command, sizeof(command), patterns[i], (int)(sizeof(command) - (2 + strlen(patterns[i]))), devname);
+      get_glyph_nc (command, tool, 0);
+      if (sim_get_tool_path (tool)[0]) {
+        if (NULL != (f = popen(command, "r"))) {
+          while (0 == dev->have_host_nic_phy_addr) {
+            if (fgets(command, sizeof(command)-1, f)) {
+              char *p1, *p2;
 
-            p1 = strchr(command, ':');
-            while (p1) {
-              p2 = strchr(p1+1, ':');
-              if (p2 <= p1+3) {
-                unsigned int mac_bytes[6];
-                if (6 == sscanf(p1-2, "%02x:%02x:%02x:%02x:%02x:%02x", &mac_bytes[0], &mac_bytes[1], &mac_bytes[2], &mac_bytes[3], &mac_bytes[4], &mac_bytes[5])) {
-                  dev->host_nic_phy_hw_addr[0] = mac_bytes[0];
-                  dev->host_nic_phy_hw_addr[1] = mac_bytes[1];
-                  dev->host_nic_phy_hw_addr[2] = mac_bytes[2];
-                  dev->host_nic_phy_hw_addr[3] = mac_bytes[3];
-                  dev->host_nic_phy_hw_addr[4] = mac_bytes[4];
-                  dev->host_nic_phy_hw_addr[5] = mac_bytes[5];
-                  dev->have_host_nic_phy_addr = 1;
+              p1 = strchr(command, ':');
+              while (p1) {
+                p2 = strchr(p1+1, ':');
+                if (p2 <= p1+3) {
+                  unsigned int mac_bytes[6];
+                  if (6 == sscanf(p1-2, "%02x:%02x:%02x:%02x:%02x:%02x", &mac_bytes[0], &mac_bytes[1], &mac_bytes[2], &mac_bytes[3], &mac_bytes[4], &mac_bytes[5])) {
+                    dev->host_nic_phy_hw_addr[0] = mac_bytes[0];
+                    dev->host_nic_phy_hw_addr[1] = mac_bytes[1];
+                    dev->host_nic_phy_hw_addr[2] = mac_bytes[2];
+                    dev->host_nic_phy_hw_addr[3] = mac_bytes[3];
+                    dev->host_nic_phy_hw_addr[4] = mac_bytes[4];
+                    dev->host_nic_phy_hw_addr[5] = mac_bytes[5];
+                    dev->have_host_nic_phy_addr = 1;
+                    }
+                  break;
                   }
-                break;
+                p1 = p2;
                 }
-              p1 = p2;
               }
+            else
+              break;
             }
-          else
-            break;
+          pclose(f);
           }
-        pclose(f);
         }
       }
     }
@@ -2381,8 +2394,7 @@ else { /* !tap: */
             char command[1024];
 
             /* try to force an otherwise unused interface to be turned on */
-            memset(command, 0, sizeof(command));
-            snprintf(command, sizeof(command)-1, "ifconfig %s up", savname);
+            snprintf(command, sizeof(command), (sim_get_tool_path ("ifconfig")[0] != '\0') ? "ifconfig %s up" : "ip link set dev %s up", savname);
             if (system(command)) {};
             errbuf[0] = '\0';
             *handle = (void*) pcap_open_live(savname, bufsz, ETH_PROMISC, PCAP_READ_TIMEOUT, errbuf);
@@ -4002,14 +4014,23 @@ return SCPE_OK;
 t_stat eth_filter(ETH_DEV* dev, int addr_count, ETH_MAC* const addresses,
                   ETH_BOOL all_multicast, ETH_BOOL promiscuous)
 {
-return eth_filter_hash(dev, addr_count, addresses, 
-                       all_multicast, promiscuous, 
-                       NULL);
+return eth_filter_hash_ex(dev, addr_count, addresses, 
+                          all_multicast, promiscuous, FALSE,
+                          NULL);
 }
 
 t_stat eth_filter_hash(ETH_DEV* dev, int addr_count, ETH_MAC* const addresses,
                        ETH_BOOL all_multicast, ETH_BOOL promiscuous, 
                        ETH_MULTIHASH* const hash)
+{
+return eth_filter_hash_ex(dev, addr_count, addresses, 
+                          all_multicast, promiscuous, TRUE,
+                          hash);
+}
+
+t_stat eth_filter_hash_ex(ETH_DEV* dev, int addr_count, ETH_MAC* const addresses,
+                          ETH_BOOL all_multicast, ETH_BOOL promiscuous, 
+                          ETH_BOOL match_broadcast, ETH_MULTIHASH* const hash)
 {
 int i;
 char buf[116+66*ETH_FILTER_MAX];
@@ -4023,7 +4044,7 @@ struct bpf_program bpf;
 if (!dev) return SCPE_UNATT;
 
 /* filter count OK? */
-if ((addr_count < 0) || (addr_count > ETH_FILTER_MAX))
+if ((addr_count < 0) || ((addr_count + (match_broadcast ? 1 : 0)) > ETH_FILTER_MAX))
   return SCPE_ARG;
 else
   if (!addresses && (addr_count != 0)) 
@@ -4037,6 +4058,11 @@ if (dev->reflections == -1)
 /* set new filter addresses */
 for (i = 0; i < addr_count; i++)
   memcpy(dev->filter_address[i], addresses[i], sizeof(ETH_MAC));
+dev->addr_count = addr_count;
+if (match_broadcast) {
+  memset(&dev->filter_address[addr_count], 0xFF, sizeof(ETH_MAC));
+  ++addr_count;
+  }
 dev->addr_count = addr_count;
 
 /* store other flags */
@@ -4207,6 +4233,26 @@ fprintf(st, "  Read Queue: High:        %d\n", dev->read_queue.high);
 fprintf(st, "  Read Queue: Loss:        %d\n", dev->read_queue.loss);
 fprintf(st, "  Peak Write Queue Size:   %d\n", dev->write_queue_peak);
 #endif
+if (dev->error_needs_reset)
+  fprintf(st, "  In Error Needs Reset:    True\n");
+if (dev->error_reopen_count)
+  fprintf(st, "  Error Reopen Count:      %d\n", (int)dev->error_reopen_count);
+if (1) {
+  int i, count = 0;
+  ETH_MAC zeros = {0, 0, 0, 0, 0, 0};
+  char  buffer[20];
+
+  for (i = 0; i < ETH_FILTER_MAX; i++) {
+    if (memcmp(zeros, &dev->filter_address[i], sizeof(ETH_MAC))) {
+      eth_mac_fmt(&dev->filter_address[i], buffer);
+      fprintf(st, "  MAC Filter[%2d]: %s\n", count++, buffer);
+      }
+    }
+  }
+if (dev->all_multicast)
+  fprintf(st, "  All Multicast mode:      Enabled\n");
+if (dev->promiscuous)
+  fprintf(st, "  Promiscuous mode:        Enabled\n");
 if (dev->bpf_filter)
   fprintf(st, "  BPF Filter: %s\n", dev->bpf_filter);
 #if defined(HAVE_SLIRP_NETWORK)

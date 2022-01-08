@@ -1,5 +1,35 @@
 # PiDP-8/I Changes
 
+<a id="2022xxyy"></a>
+## Version 2022.xx.yy — PENDING
+
+*   The BOSI images now regenerate their shredded SSH server keys on
+    first boot, so it is no longer necessary to manually do this at a
+    console to get `sshd` running.
+
+*   Updated SIMH to 2021-01-06 version, GitHub commit 030a47bdb47.
+    Notable changes since the prior update are:
+
+    -   Improved device conflict warnings.
+
+    -   Added a diagnostic mode to the real-time clock used by TSS/8.
+
+    -   The FPP can display its own device number in SIMH command
+        console output.
+
+    -   Fixed a crash in the emulated FPP when using double-precision
+        math from FORTRAN IV.  Fix by Rick Murphy.
+
+    -   Fixed a WC memory overwrite bug in the DECtape, DF32 fixed-head
+        disk, and RF08 fixed-head disk simulators.
+
+    -   Fixed RF/DF and LP decoding
+
+*   The U/W FOCAL package was silently depending on the prior state of
+    EAE mode B, making its build order-dependent relative to other
+    packages such as Adventure.
+
+
 <a id="20210214"></a>
 ## Version 2021.02.14 — The Quarantine Release
 

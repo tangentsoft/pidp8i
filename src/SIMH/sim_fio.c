@@ -50,7 +50,8 @@
    sim_fsize_ex      -       get file size as a t_offset
    sim_fsize_name_ex -       get file size as a t_offset of named file
    sim_buf_copy_swapped -    copy data swapping elements along the way
-   sim_buf_swap_data -       swap data elements inplace in buffer
+   sim_buf_swap_data -       swap data elements inplace in buffer if needed
+   sim_byte_swap_data -      swap data elements inplace in buffer
    sim_shmem_open            create or attach to a shared memory region
    sim_shmem_close           close a shared memory region
 
@@ -109,7 +110,15 @@ sim_taddr_64 = sim_toffset_64 && (sizeof(t_addr) > sizeof(int32));
 return sim_end;
 }
 
+/* Copy little endian data to local buffer swapping if needed */
 void sim_buf_swap_data (void *bptr, size_t size, size_t count)
+{
+if (sim_end || (count == 0) || (size == sizeof (char)))
+    return;
+sim_byte_swap_data (bptr, size, count);
+}
+
+void sim_byte_swap_data (void *bptr, size_t size, size_t count)
 {
 uint32 j;
 int32 k;
@@ -248,8 +257,25 @@ if ((0 != fstat (fileno (fp), &statb)) ||
 return TRUE;
 }
 
-static void _sim_expand_homedir (const char *file, char *dest, size_t dest_size)
+static char *_sim_expand_homedir (const char *file, char *dest, size_t dest_size)
 {
+uint8 *without_quotes = NULL;
+uint32 dsize = 0;
+
+errno = 0;
+if (((*file == '"') && (file[strlen (file) - 1] == '"')) ||
+    ((*file == '\'') && (file[strlen (file) - 1] == '\''))) {
+    without_quotes = (uint8*)malloc (strlen (file) + 1);
+    if (without_quotes == NULL)
+        return NULL;
+    if (SCPE_OK != sim_decode_quoted_string (file, without_quotes, &dsize)) {
+        free (without_quotes);
+        errno = EINVAL;
+        return NULL;
+    }
+    file = (const char*)without_quotes;
+}
+
 if (memcmp (file, "~/", 2) != 0)
     strlcpy (dest, file, dest_size);
 else {
@@ -269,6 +295,8 @@ else {
     while ((strchr (dest, '\\') != NULL) && ((cptr = strchr (dest, '/')) != NULL))
         *cptr = '\\';
     }
+free (without_quotes);
+return dest;
 }
 
 #if defined(_WIN32)
@@ -283,7 +311,8 @@ int sim_stat (const char *fname, struct stat *stat_str)
 {
 char namebuf[PATH_MAX + 1];
 
-_sim_expand_homedir (fname, namebuf, sizeof (namebuf));
+if (NULL == _sim_expand_homedir (fname, namebuf, sizeof (namebuf)))
+    return -1;
 return stat (namebuf, stat_str);
 }
 
@@ -291,7 +320,8 @@ int sim_chdir(const char *path)
 {
 char pathbuf[PATH_MAX + 1];
 
-_sim_expand_homedir (path, pathbuf, sizeof (pathbuf));
+if (NULL == _sim_expand_homedir (path, pathbuf, sizeof (pathbuf)))
+    return -1;
 return chdir (pathbuf);
 }
 
@@ -299,7 +329,8 @@ int sim_mkdir(const char *path)
 {
 char pathbuf[PATH_MAX + 1];
 
-_sim_expand_homedir (path, pathbuf, sizeof (pathbuf));
+if (NULL == _sim_expand_homedir (path, pathbuf, sizeof (pathbuf)))
+    return -1;
 #if defined(_WIN32)
 return mkdir (pathbuf);
 #else
@@ -311,7 +342,8 @@ int sim_rmdir(const char *path)
 {
 char pathbuf[PATH_MAX + 1];
 
-_sim_expand_homedir (path, pathbuf, sizeof (pathbuf));
+if (NULL == _sim_expand_homedir (path, pathbuf, sizeof (pathbuf)))
+    return -1;
 return rmdir (pathbuf);
 }
 
@@ -323,22 +355,9 @@ FILE* sim_fopen (const char *file, const char *mode)
 {
 FILE *f;
 char namebuf[PATH_MAX + 1];
-uint8 *without_quotes = NULL;
-uint32 dsize = 0;
 
-if (((*file == '"') && (file[strlen (file) - 1] == '"')) ||
-    ((*file == '\'') && (file[strlen (file) - 1] == '\''))) {
-    without_quotes = (uint8*)malloc (strlen (file) + 1);
-    if (without_quotes == NULL)
-        return NULL;
-    if (SCPE_OK != sim_decode_quoted_string (file, without_quotes, &dsize)) {
-        free (without_quotes);
-        errno = EINVAL;
-        return NULL;
-    }
-    file = (const char*)without_quotes;
-}
-_sim_expand_homedir (file, namebuf, sizeof (namebuf));
+if (NULL == _sim_expand_homedir (file, namebuf, sizeof (namebuf)))
+    return NULL;
 #if defined (VMS)
 f = fopen (namebuf, mode, "ALQ=32", "DEQ=4096",
                           "MBF=6", "MBC=127", "FOP=cbt,tef", "ROP=rah,wbh", "CTX=stm");
@@ -347,7 +366,6 @@ f = fopen64 (namebuf, mode);
 #else
 f = fopen (namebuf, mode);
 #endif
-free (without_quotes);
 return f;
 }
 
@@ -481,12 +499,48 @@ t_stat sim_copyfile (const char *source_file, const char *dest_file, t_bool over
 {
 char sourcename[PATH_MAX + 1], destname[PATH_MAX + 1];
 
-_sim_expand_homedir (source_file, sourcename, sizeof (sourcename));
-_sim_expand_homedir (dest_file, destname, sizeof (destname));
+if (NULL == _sim_expand_homedir (source_file, sourcename, sizeof (sourcename)))
+    return sim_messagef (SCPE_ARG, "Error Copying - Problem Parsing Source Filename '%s'\n", source_file);
+if (NULL == _sim_expand_homedir (dest_file, destname, sizeof (destname)))
+    return sim_messagef (SCPE_ARG, "Error Copying - Problem Parsing Destination Filename '%s'\n", dest_file);
 if (CopyFileA (sourcename, destname, !overwrite_existing))
     return SCPE_OK;
 return sim_messagef (SCPE_ARG, "Error Copying '%s' to '%s': %s\n", source_file, dest_file, sim_get_os_error_text (GetLastError ()));
 }
+
+static void _time_t_to_filetime (time_t ttime, FILETIME *filetime)
+{
+t_uint64 time64;
+
+time64 = 134774;                /* Days betwen Jan 1, 1601 and Jan 1, 1970 */
+time64 *= 24;                   /* Hours */
+time64 *= 3600;                 /* Seconds */
+time64 += (t_uint64)ttime;      /* include time_t seconds */
+
+time64 *= 10000000;             /* Convert seconds to 100ns units */
+filetime->dwLowDateTime = (DWORD)time64;
+filetime->dwHighDateTime = (DWORD)(time64 >> 32);
+}
+
+t_stat sim_set_file_times (const char *file_name, time_t access_time, time_t write_time)
+{
+char filename[PATH_MAX + 1];
+FILETIME accesstime, writetime;
+HANDLE hFile;
+BOOL bStat;
+
+_time_t_to_filetime (access_time, &accesstime);
+_time_t_to_filetime (write_time, &writetime);
+if (NULL == _sim_expand_homedir (file_name, filename, sizeof (filename)))
+    return sim_messagef (SCPE_ARG, "Error Setting File Times - Problem Source Filename '%s'\n", filename);
+hFile = CreateFileA (filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+if (hFile == INVALID_HANDLE_VALUE)
+    return sim_messagef (SCPE_ARG, "Can't open file '%s' to set it's times: %s\n", filename, sim_get_os_error_text (GetLastError ()));
+bStat = SetFileTime (hFile, NULL, &accesstime, &writetime);
+CloseHandle (hFile);
+return bStat ? SCPE_OK : sim_messagef (SCPE_ARG, "Error setting file '%s' times: %s\n", filename, sim_get_os_error_text (GetLastError ()));
+}
+
 
 #include <io.h>
 #include <direct.h>
@@ -591,7 +645,7 @@ return ftruncate(fileno(fptr), (off_t)size);
 
 #include <sys/stat.h>
 #include <fcntl.h>
-#if HAVE_UTIME
+#if defined (HAVE_UTIME)
 #include <utime.h>
 #endif
 
@@ -646,6 +700,22 @@ if (st == SCPE_OK) {
 return st;
 }
 
+t_stat sim_set_file_times (const char *file_name, time_t access_time, time_t write_time)
+{
+t_stat st = SCPE_IOERR;
+#if defined (HAVE_UTIME)
+struct utimbuf utim;
+
+utim.actime = access_time;
+utim.modtime = write_time;
+if (!utime (file_name, &utim))
+    st = SCPE_OK;
+#else
+st = SCPE_NOFNC;
+#endif
+return st;
+}
+
 int sim_set_fifo_nonblock (FILE *fptr)
 {
 struct stat stbuf;
@@ -661,8 +731,11 @@ if ((stbuf.st_mode & S_IFIFO)) {
 return -1;
 }
 
-#if defined (__linux__) || defined (__APPLE__) || defined (__CYGWIN__) || defined (__FreeBSD__)
+#if defined (__linux__) || defined (__APPLE__) || defined (__CYGWIN__) || defined (__FreeBSD__) || defined(__NetBSD__) || defined (__OpenBSD__)
+
+#if defined (HAVE_SHM_OPEN)
 #include <sys/mman.h>
+#endif
 
 struct SHMEM {
     int shm_fd;
@@ -713,7 +786,7 @@ else {
     struct stat statb;
 
     if ((fstat ((*shmem)->shm_fd, &statb)) ||
-        (statb.st_size != (*shmem)->shm_size)) {
+        ((size_t)statb.st_size != (*shmem)->shm_size)) {
         sim_shmem_close (*shmem);
         *shmem = NULL;
         return sim_messagef (SCPE_OPENERR, "Shared Memory segment '%s' is %d bytes instead of %d\n", name, (int)(statb.st_size), (int)size);
@@ -731,7 +804,7 @@ if ((*shmem)->shm_base == MAP_FAILED) {
 return SCPE_OK;
 #else
 *shmem = NULL;
-return SCPE_NOFNC;
+return sim_messagef (SCPE_NOFNC, "Shared memory not available - Missing shm_open() API\n");
 #endif
 }
 
@@ -846,7 +919,6 @@ return getcwd (buf, buf_size);
 char *sim_filepath_parts (const char *filepath, const char *parts)
 {
 size_t tot_len = 0, tot_size = 0;
-char *tempfilepath = NULL;
 char *fullpath = NULL, *result = NULL;
 char *c, *name, *ext;
 char chr;
@@ -855,21 +927,10 @@ char filesizebuf[32] = "";
 char filedatetimebuf[32] = "";
 char namebuf[PATH_MAX + 1];
 
-/* Remove quotes if they're present */
-if (((*filepath == '\'') || (*filepath == '"')) &&
-    (filepath[strlen (filepath) - 1] == *filepath)) {
-    size_t temp_size = 1 + strlen (filepath);
-
-    tempfilepath = (char *)malloc (temp_size);
-    if (tempfilepath == NULL)
-        return NULL;
-    strlcpy (tempfilepath, 1 + filepath, temp_size);
-    tempfilepath[strlen (tempfilepath) - 1] = '\0';
-    filepath = tempfilepath;
-    }
 
 /* Expand ~/ home directory */
-_sim_expand_homedir (filepath, namebuf, sizeof (namebuf));
+if (NULL == _sim_expand_homedir (filepath, namebuf, sizeof (namebuf)))
+    return NULL;
 filepath = namebuf;
 
 /* Check for full or current directory relative path */
@@ -878,26 +939,20 @@ if ((filepath[1] == ':')  ||
     (filepath[0] == '\\')){
         tot_len = 1 + strlen (filepath);
         fullpath = (char *)malloc (tot_len);
-        if (fullpath == NULL) {
-            free (tempfilepath);
+        if (fullpath == NULL)
             return NULL;
-            }
         strcpy (fullpath, filepath);
     }
 else {          /* Need to prepend current directory */
     char dir[PATH_MAX+1] = "";
     char *wd = sim_getcwd(dir, sizeof (dir));
 
-    if (wd == NULL) {
-        free (tempfilepath);
+    if (wd == NULL)
         return NULL;
-        }
     tot_len = 1 + strlen (filepath) + 1 + strlen (dir);
     fullpath = (char *)malloc (tot_len);
-    if (fullpath == NULL) {
-        free (tempfilepath);
+    if (fullpath == NULL)
         return NULL;
-        }
     strlcpy (fullpath, dir, tot_len);
     if ((dir[strlen (dir) - 1] != '/') &&       /* if missing a trailing directory separator? */
         (dir[strlen (dir) - 1] != '\\'))
@@ -935,7 +990,7 @@ if (ext == NULL)
     ext = name + strlen (name);
 tot_size = 0;
 if (*parts == '\0')             /* empty part specifier means strip only quotes */
-    tot_size = strlen (tempfilepath);
+    tot_size = strlen (filepath);
 if (strchr (parts, 't') ||      /* modification time or */
     strchr (parts, 'z')) {      /* or size requested? */
     struct stat filestat;
@@ -1006,7 +1061,6 @@ for (p = parts; *p; p++) {
         }
     }
 free (fullpath);
-free (tempfilepath);
 return result;
 }
 
@@ -1019,7 +1073,8 @@ WIN32_FIND_DATAA File;
 struct stat filestat;
 char WildName[PATH_MAX + 1];
 
-_sim_expand_homedir (cptr, WildName, sizeof (WildName));
+if (NULL == _sim_expand_homedir (cptr, WildName, sizeof (WildName)))
+    return SCPE_ARG;
 cptr = WildName;
 sim_trim_endspc (WildName);
 if ((hFind =  FindFirstFileA (cptr, &File)) != INVALID_HANDLE_VALUE) {
@@ -1082,7 +1137,8 @@ char DirName[PATH_MAX + 1], WholeName[PATH_MAX + 1], WildName[PATH_MAX + 1], Mat
 memset (DirName, 0, sizeof(DirName));
 memset (WholeName, 0, sizeof(WholeName));
 memset (MatchName, 0, sizeof(MatchName));
-_sim_expand_homedir (cptr, WildName, sizeof (WildName));
+if (NULL == _sim_expand_homedir (cptr, WildName, sizeof (WildName)))
+    return SCPE_ARG;
 cptr = WildName;
 sim_trim_endspc (WildName);
 c = sim_filepath_parts (cptr, "f");

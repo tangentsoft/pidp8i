@@ -64,6 +64,7 @@ int sim_fseek (FILE *st, t_addr offset, int whence);
 int sim_fseeko (FILE *st, t_offset offset, int whence);
 t_bool sim_can_seek (FILE *st);
 int sim_set_fsize (FILE *fptr, t_addr size);
+t_stat sim_set_file_times (const char *file_name, time_t access_time, time_t write_time);
 int sim_set_fifo_nonblock (FILE *fptr);
 size_t sim_fread (void *bptr, size_t size, size_t count, FILE *fptr);
 size_t sim_fwrite (const void *bptr, size_t size, size_t count, FILE *fptr);
@@ -88,6 +89,7 @@ typedef void (*DIR_ENTRY_CALLBACK)(const char *directory,
 t_stat sim_dir_scan (const char *cptr, DIR_ENTRY_CALLBACK entry, void *context);
 
 void sim_buf_swap_data (void *bptr, size_t size, size_t count);
+void sim_byte_swap_data (void *bptr, size_t size, size_t count);
 void sim_buf_copy_swapped (void *dptr, const void *bptr, size_t size, size_t count);
 const char *sim_get_os_error_text (int error);
 typedef struct SHMEM SHMEM;
