@@ -30,7 +30,7 @@ The contents of the Zip file are:
 ## Logging In
 
 Aside from having the PiDP-8/I software installed and running, the
-primary difference between our OS images those provided by the Raspberry
+primary difference between our OS images and those provided by the Raspberry
 Pi Foundation is the default user name and password:
 
 *   **username:** `pidp8i`
