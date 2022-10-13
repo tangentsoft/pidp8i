@@ -471,6 +471,10 @@ install-target: all instdirs
 		 < $(PIDP8I_DIRS) > $(DESTDIR)$(PREFIX)/$(PIDP8I_DIRS)
 	@chgrp @INSTGRP@ $(DESTDIR)$(PREFIX)/$(PIDP8I_DIRS)
 
+	# Same for os8-cp, building on above
+	@echo "Installing os8-cp..."
+	@@INSTALL@ -m 775 -g @INSTGRP@ $(OS8CP) $(DESTDIR)$(PREFIX)/bin
+
 	@# We need a directory for PIDs and such in some cases
 	@@INSTALL@ -d -m 755 $(DESTDIR)$(PREFIX)/run
 
