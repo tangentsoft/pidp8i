@@ -114,8 +114,8 @@ the `configure` script:
     IOT) execute far slower.  (See the processor's manual for details.)
 
     SIMH, on the other hand, does not discriminate.  When you say
-    `--throttle=pdp8i`, causing the build system to insert `SET THROTTLE
-    333k` commands into the SIMH boot scripts, the SIMH PDP-8 simulator
+    `--throttle=pdp8i`, causing the build system to insert `SET THROTTLE 333k`
+    commands into the SIMH boot scripts, the SIMH PDP-8 simulator
     does its best to execute exactly 333,000 instructions per second,
     regardless of the instruction type.  Consequently, if you were to
     benchmark this simulator configured with one of the options above,
