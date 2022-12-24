@@ -19,7 +19,7 @@ I'm not quite sure which source I used.  This set of sources includes a patch to
 `PLAYOV`, (that may not work for some versions of CCL) to add a `PLAY` command.
 
 SIMH does not have support to get useful sound from this program.
-However [Randy Dawson in 2017][dawson] came up with a hack that enabled SIMH to
+However [Kyle Owem in 2017][owen] came up with a hack that enabled SIMH to
 output something that was post-processed into audible sound.
 
 A detailed instruction manual can be found in the file decus-8-884.pdf.
@@ -59,4 +59,4 @@ available on paper tape.
 [8-804]: http://svn.so-much-stuff.com/svn/trunk/pdp8/src/decus/8-804
 [gesswein]: ftp://ftp.pdp8online.com/images/os8/diag-games-kermit.rk05
 [dbit]: ftp://ftp.dbit.com/pub/pdp8/nickel/music/music1/os8/
-[dawson]: http://www.classiccmp.org/pipermail/cctech/2017-April/027526.html
+[owen]: http://www.classiccmp.org/pipermail/cctech/2017-April/027526.html
