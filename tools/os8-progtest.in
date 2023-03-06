@@ -273,11 +273,14 @@ def main ():
           try:
             # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=5)
             reply = os8.simh._child.expect(replies, timeout=5)
-            if args.debug > 4: print("\tgot: {" + os8.simh._child.after.decode() + "}")
+            if args.debug > 4:
+              print ("Matched: " + replies[reply])
+              print("\tgot before: {" + os8.simh._child.before.decode() + "}")
+              print("\tgot after: {" + os8.simh._child.after.decode() + "}")
           except pexpect.exceptions.TIMEOUT:
             print (program + ": Test Failed.")
             print ("\tExpecting: {" + str(replies) + "}")
-            print("\tGot: {" + os8.simh._child.before.decode() + "}")
+            print("\tGot before: {" + os8.simh._child.before.decode() + "}")
             next_state = "fail"
             continue
         

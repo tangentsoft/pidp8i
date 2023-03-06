@@ -30,13 +30,12 @@
     'old':   ["OLD\r", [["FILE NAME--$", 'name']]]
     'name':  ["BUNNY.BA\r", [["READY\r\n$", 'run']]]
     'run':   ["RUN\r", [
-               [".*BUNNY.*\r\nREADY\r\n$", 'quit'],
-               ["^RUN.*", 'kick']
+              ["^RUN$", 'kick'],
+              [".*NY\r\n\r\nREADY\r\n$", 'quit']
              ]
     ]
     'kick':  ["\r", [
-               [".*\r\nREADY\r\n", 'quit'],
-               [".*BUNNY.*", 'kick']
+               [".*NY.*\r\n\r\nREADY\r\n|READY\r\n", 'quit'],
              ]
     ]
     'quit':  ["\x03", [["\n\\.$", 'success']]]
