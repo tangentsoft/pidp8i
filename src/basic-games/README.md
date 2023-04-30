@@ -70,7 +70,7 @@ Program fixed and run-tested.</td></tr>
 <tr><td><tt>WAR2.BA</td></td><td>-101-</td><td>Deploy 72,000 soldiers to Army, Navy, and Air Force against the computer. Written by Bob Dores, Milton, MA.</td></tr>
 <tr><td><tt>WEKDAY.BA</td></td><td>-101-</td><td>Input a birth date and learn fun facts about happenings in the elapsed time. Written by Tom Kloos, Oregon Museum of Science and 'Industry.</td></tr>
 <tr><td><tt>WUMPUS.BA</td></td><td>-----</td><td>Hunt the wumpus.</td></tr>
-<tr><td><tt>YAHTZE.BA</td></td><td>-101-</td><td>Dice game of Yahtze.  Author unknown.  Quite an elaborate and comprehensive implementation.</td></tr>
+<tr><td><tt>YAHTZE.BA</td></td><td>-101-</td><td>Dice game of Yahtze.  Author unknown.  Said in the book to be "Quite an elaborate and comprehensive implementation." However testing has shown some defects. For example, taking three  of a kind never tests for a valid collection of 3 sames.  The test for 4 sames in taking four of a kind isrelies on an ordering of the dice that is not enforced, so frequently valid four of a kind collections are ruled illegal. So it's a fun, but flawed artifact.</td></tr>
 </table>
 
 ## License
