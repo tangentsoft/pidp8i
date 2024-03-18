@@ -61,7 +61,7 @@ This is open source software: you are welcome to
 [othos]: https://tangentsoft.com/pidp8i/wiki?name=OS+Compatibility
 [rpfd]:  https://www.raspberrypi.org/documentation/
 [rpfl]:  https://www.raspberrypi.org/documentation/linux/
-[rpfr]:  https://www.raspberrypi.org/documentation/raspbian
+[rpfr]:  https://www.raspberrypi.com/documentation/computers/os.html
 [rpios]: https://www.raspberrypi.org/software/
 
 

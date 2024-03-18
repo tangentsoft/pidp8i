@@ -70,6 +70,6 @@ properly one of the tasks for you, the system’s administrator.
 [2]: https://raspberrypi.org/downloads/raspbian/
 [3]: https://raspberrypi.org/documentation/installation/installing-images/
 [4]: https://en.wikipedia.org/wiki/Internet_of_things
-[5]: http://www.testandverification.com/iot/s-iot-stands-security/
+[5]: https://www.theregister.com/2024/03/09/opinion_column_security_sjvn/
 [6]: https://tangentsoft.com/pidp8i/wiki?name=How+to+Run+a+Naked+PiDP-8/I
 [7]: https://www.balena.io/etcher
