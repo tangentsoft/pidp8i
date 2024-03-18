@@ -173,7 +173,7 @@ link, and run within the simulator, as described [below](#exes).
 For related ideas, see the PiDP-8/I wiki article “[Getting Text In][gti].”
 
 [ddj]:  https://en.wikipedia.org/wiki/Dr._Dobb%27s_Journal
-[gti]:  http://localhost:8080/wiki?name=Getting+Text+In
+[gti]:  /wiki?name=Getting+Text+In
 [krc]:  https://en.wikipedia.org/wiki/The_C_Programming_Language
 [sabr]: /wiki?name=A+Field+Guide+to+PDP-8+Assemblers#sabr
 [sc80]: https://en.wikipedia.org/wiki/Small-C
