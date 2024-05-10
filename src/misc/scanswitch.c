@@ -32,7 +32,7 @@
 
 #include <pidp8i.h>
 #include <unistd.h>
-#include "pinctrl/gpiolib.h"
+#include <gpiolib.h>
 
 #define short_wait() sleep_us(100000)
 
