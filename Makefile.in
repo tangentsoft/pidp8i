@@ -48,7 +48,7 @@ SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-DSIM_BUILD_TOOL='autosetup+gmake' \
 	-D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
-	-I @srcdir@/src/SIMH -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
+	-I @srcdir@/src/SIMH -I @srcdir@/src/pinctrl -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
 ifneq "@HAVE_PCRE_H@" "0"
 SIM_CFLAGS += -DHAVE_PCRE_H
 SIM_LFLAGS := -lpcre
