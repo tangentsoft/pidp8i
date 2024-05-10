@@ -33,14 +33,17 @@
  * www.obsolescenceguaranteed.blogspot.com
 */
 
+
+#include <unistd.h>
 #include "pidp8i.h"
+#include "pinctrl/gpiolib.h"
 
 
 //// gpio_core  ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
-void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
+void gpio_core (int* terminate)
 {
     // Light each row of LEDs 1.2 ms.  With 8 rows, that's an update
     // rate of ~100x per second.  Not coincidentally, this is the human
@@ -51,7 +54,8 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
     // This is a simplified version of what's in the gpio-ils.c version
     // of this function, so if you want more comments, read them there.
     while (*terminate == 0) {
-        for (size_t i = 0; i < NCOLS; ++i) OUT_GPIO(cols[i]);
+        for (size_t i = 0; i < NCOLS; ++i) 
+		gpio_set_drive(cols[i], DRIVE_HIGH);
         swap_displays ();
         update_led_states (intervl);
         read_switches (intervl * 1000 / 100);

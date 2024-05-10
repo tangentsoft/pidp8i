@@ -30,9 +30,10 @@
  * www.obsolescenceguaranteed.blogspot.com
 */
 
+#include <unistd.h>
 #include <pidp8i.h>
-
 #include <sim_defs.h>
+#include "pinctrl/gpiolib.h"
 
 
 //// CONSTANTS /////////////////////////////////////////////////////////
@@ -49,15 +50,22 @@
 // We use an asymmetric function depending on whether the LED is turning
 // on or off to better mimic the behavior of an incandescent lamp, which
 // reaches full brightness faster than it turns fully off.
-#define RISING_FACTOR 0.012
-#define FALLING_FACTOR 0.005
 
+// orig settings:
+//#define RISING_FACTOR 0.012
+//#define FALLING_FACTOR 0.005
+// too sharp:
+//#define RISING_FACTOR 0.008
+//#define FALLING_FACTOR 0.010
+// right:
+#define RISING_FACTOR 0.010
+#define FALLING_FACTOR 0.08
 
 //// gpio_core  ////////////////////////////////////////////////////////
 // The GPIO module's main loop core, called from thread entry point in
 // gpio-common.c.
 
-void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
+void gpio_core (int* terminate)
 {
     // The ILS version uses an iteration rate 60x faster than the NLS
     // version because we have to get through 32 PWM steps, each of
@@ -81,11 +89,13 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
     // Current PWM brightness step
     uint8 step = MAX_BRIGHTNESS;
 
-    while (*terminate == 0) {
-        // Prepare for lighting LEDs by setting col pins to output
-        for (size_t i = 0; i < NCOLS; ++i) OUT_GPIO(cols[i]);
 
-        // Restart PWM cycle if prior one is complete
+    while (*terminate == 0) {
+    	// Prepare for lighting LEDs by setting col pins to output
+	for (size_t i = 0; i < NCOLS; ++i)
+		gpio_set_fsel(cols[i], GPIO_FSEL_OUTPUT);
+        
+	// Restart PWM cycle if prior one is complete
         if (step == MAX_BRIGHTNESS) {
             // Reset PWM step counter
             step = 0;
@@ -142,7 +152,8 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
         // Light up LEDs
         extern int swStop, swSingInst, suppressILS;
         if (swStop || swSingInst || suppressILS) {
-            // The CPU is in STOP mode or someone has suppressed the ILS,
+
+	    // The CPU is in STOP mode or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the
             // same mechanism NLS uses.  Force a display swap if the next
             // loop iteration won't do it in case this isn't STOP mode.
@@ -156,25 +167,23 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
                 size_t *prow = pdis_paint->on[row];
                 for (size_t col = 0; col < NCOLS; ++col) {
                     if (brightness[row][col] >= step) {
-                        GPIO_CLR = 1 << cols[col];
+			gpio_set_drive(cols[col], DRIVE_LOW);
                     }
                     else {
-                        GPIO_SET = 1 << cols[col];
+			gpio_set_drive(cols[col], DRIVE_HIGH);
                     }
                 }
 
+
                 // Toggle this LED row on
-                INP_GPIO(ledrows[row]);
-                GPIO_SET = 1 << ledrows[row];
-                OUT_GPIO(ledrows[row]);
+		gpio_set_drive(ledrows[row], DRIVE_HIGH);
 
                 sleep_us(intervl);
 
                 // Toggle this LED row off
-                GPIO_CLR = 1 << ledrows[row]; // superstition
-                INP_GPIO(ledrows[row]);
-
-                sleep_ns(5);
+		gpio_set_drive(ledrows[row], DRIVE_LOW);
+                
+                sleep_ns(10);
             }
         }
 
@@ -204,4 +213,5 @@ void gpio_core (struct bcm2835_peripheral* pgpio, int* terminate)
         sched_yield();
 #endif
     }
+
 }

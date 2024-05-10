@@ -124,6 +124,7 @@ BUILDDIRS := \
 	obj/cc8/os8 \
 	obj/d8tape \
 	obj/misc \
+	obj/pinctrl \
 	obj/palbart \
 	obj/os8pkg \
 	obj/pidp8i \
@@ -166,6 +167,14 @@ SIM_OBJS := \
 	obj/SIMH/sim_timer.o \
 	obj/SIMH/sim_tmxr.o \
 	obj/SIMH/sim_video.o
+
+PINCTRL_OBJS := \
+	obj/pinctrl/gpiochip_bcm2712.o \
+	obj/pinctrl/gpiolib.o \
+	obj/pinctrl/gpiochip_bcm2835.o \
+	obj/pinctrl/pinctrl.o \
+	obj/pinctrl/gpiochip_rp1.o \
+	obj/pinctrl/util.o
 
 CC8_OBJS := \
 	obj/cc8/cross/code8.o \
@@ -873,7 +882,7 @@ obj/cc8/os8/%.c: @srcdir@/src/cc8/examples/%.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(PIDP8I_SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
+$(PIDP8I_SIM): $(SIM_OBJS) $(PINCTRL_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
 	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) $(SIM_LFLAGS) @PI_LIBS@
 	ln -f bin/pidp8i-sim bin/pdp8
 
@@ -886,7 +895,7 @@ bin/d8tape: $(D8TAPE_OBJS)
 bin/palbart: $(PALBART_OBJS)
 	$(CC) $(PALBART_CFLAGS) -o $@ $^
 
-bin/pidp8i-test: obj/misc/test.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
+bin/pidp8i-test: $(PINCTRL_OBJS) obj/misc/test.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
 
 bin/ptp2txt: obj/misc/ptp2txt.o
@@ -902,7 +911,7 @@ bin/deeper: obj/misc/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i
 doc/e8-manual.pdf: doc/e8-manual.md
 	tools/mkmanpdf doc/e8-manual
 
-libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
+libexec/scanswitch: $(PINCTRL_OBJS) obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
 	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
 
 # Reconfigure whenever one of the *.in or autosetup files changes unless
@@ -933,6 +942,7 @@ src/pidp8i/gpio-common.c: @srcdir@/tools/version
 	$(SIM_OBJS:.o=.d) \
 	$(CC8_OBJS:.o=.d) \
 	$(D8TAPE_OBJS:.o=.d) \
+	$(PINCTRL_OBJS:.o=.d) \
 	$(MISC_OBJS:.o=.d) \
 	$(PALBART_OBJS:.o=.d)
 -include $(ADF)

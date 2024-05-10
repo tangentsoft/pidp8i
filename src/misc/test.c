@@ -335,9 +335,12 @@ static void register_shut_down_handlers ()
 int main (int argc, char *argv[])
 {
     start_gpio ();
-    register_shut_down_handlers ();
-    init_ncurses ();
-    run_actions ();
+
+    if ((argc < 2) || (strcmp (argv[1], "-v") != 0)) {
+        register_shut_down_handlers ();
+        init_ncurses ();
+        run_actions ();
+    }
 
     return 0;
 }

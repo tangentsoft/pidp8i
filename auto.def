@@ -594,6 +594,7 @@ set status [catch {
             $srcdir \
             src/cc8/cross \
             src/d8tape \
+            src/pinctrl \
             src/misc \
             src/palbart \
             src/pidp8i \

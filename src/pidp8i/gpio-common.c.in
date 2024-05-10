@@ -55,6 +55,8 @@
 #ifdef HAVE_TIME_H
 #   include <time.h>
 #endif
+#include <unistd.h>
+#include "pinctrl/gpiolib.h"
 
 #define BLOCK_SIZE (4*1024)
 
@@ -73,14 +75,6 @@ uint8_t pidp8i_gpio_present;
 // the LED values when swapping displays internally.  The external
 // program doesn't need to know anything about struct display.
 int pidp8i_simple_gpio_mode = 0;
-
-// GPIO peripheral info, initted in start_pidp8i_gpio_thread()
-struct bcm2835_peripheral gpio;
-#define pgpio (&gpio)
-#ifdef PCB_SERIAL_MOD_JLW
-struct bcm2835_peripheral gpio2;
-#endif
-
 
 // A constant meaning "indeterminate milliseconds", used for error
 // returns from ms_time() and for the case where the switch is in the
@@ -167,84 +161,73 @@ typedef sig_t sighandler_t;
 #endif
 static sighandler_t scp_term_handler = 0;
 
-
 //// MEMORY MAPPED GPIO FUNCTIONS //////////////////////////////////////
 
 //// map_peripheral ////////////////////////////////////////////////////
 // Exposes the physical address defined in the passed structure
 
-static int map_peripheral(struct bcm2835_peripheral *p, int exclusive)
+static int map_peripheral(int exclusive)
 {
-    // Name of GPIO memory-mapped device
-    static const char* gpio_mem_dev = "/dev/gpiomem";
+int must_map=exclusive;	//!!!!!!!!!!!!!!!!!!!!!!!!!!!! VERY WRONG THIS
+	// init GPIO stuff ----------
+        int num_gpios;
+	int ret;
 
-    if (access(gpio_mem_dev, F_OK) < 0) {
-        // That dev node isn't even present, so it's probably not a Pi
-        return -1;
+	ret = gpiolib_init();
+
+	if (ret < 0)
+	{
+		printf("Failed to initialise gpiolib - %d\n", ret);
+    		if (must_map) return EFAULT;
+	}
+
+	num_gpios = ret;
+	if (!num_gpios)
+	{
+		printf("No GPIO chips found\n");
+    		if (must_map) return EFAULT;
+	}
+
+	// -----
+	int i;
+	uint32_t gpiomask[(MAX_GPIO_PINS + 31)/32] = { 0 };
+#define ARRAY_SIZE(_a) (sizeof(_a)/sizeof(_a[0]))
+	for (i = ARRAY_SIZE(gpiomask) - 1; i >= 0; i--)
+	{
+		if (gpiomask[i])
+			break;
+	}
+	if (i < 0)
+		memset(gpiomask, 0xff, sizeof(gpiomask));
+
+	ret = gpiolib_mmap();
+	if (ret)
+	{
+		if (ret == EACCES && geteuid())
+			printf("\n\nWARNING: Must be root to drive PiDP-8 front panel!\n\n\n");
+		else
+			printf("Failed to mmap gpiolib - %s\n", strerror(ret));
+    		if (must_map) return EFAULT;
+	}
+
+    // Set ledrow GPIO pins to output
+    for (size_t i = 0; i < NLEDROWS; i++) {       // Define rows as input
+	gpio_set_fsel(ledrows[i], GPIO_FSEL_OUTPUT);
+	gpio_set_drive(ledrows[i], DRIVE_LOW);
     }
-
-    // Open the GPIO device
-    if ((p->mem_fd = open(gpio_mem_dev, O_RDWR|O_SYNC)) < 0) {
-#ifdef DEBUG
-        printf("Failed to open %s: %s\n", gpio_mem_dev, strerror(errno));
-        puts("Disabling PiDP-8/I front panel functionality.");
-#endif
-        return -1;
+    // Set row GPIO pins to pull-up state
+    for (size_t i = 0; i < NROWS; i++) {       // Define rows as input
+	gpio_set_fsel(rows[i], GPIO_FSEL_INPUT);
+	gpio_set_pull(rows[i], PULL_UP);
     }
-
-    // Attempt to lock it.  If we can't, another program has it locked,
-    // so we shouldn't keep running; it'll just end in tears.
-    if (exclusive && (flock(p->mem_fd, LOCK_EX | LOCK_NB) < 0)) {
-        if (errno == EWOULDBLOCK) {
-            printf("Failed to lock %s.  Only one PiDP-8/I\n", gpio_mem_dev);
-            puts("program can be running at a given time.");
-        }
-        else {
-            printf("Failed to lock %s: %s\n", gpio_mem_dev, strerror(errno));
-            puts("Only one PiDP-8/I program can be running at a given time.");
-        }
-        return -1;
+    // Set col GPIO pins to pull-up state
+    for (size_t i = 0; i < NCOLS; i++) {       // Define columns as input
+	gpio_set_fsel(cols[i], GPIO_FSEL_INPUT);
+	gpio_set_pull(cols[i], PULL_UP);
     }
-
-    // Map the GPIO peripheral into our address space
-    if ((p->map = mmap(
-            NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
-            p->mem_fd,
-            p->addr_p)) == MAP_FAILED) {
-        perror("mmap");
-        return -1;
-    }
-
-    // Success!
-    p->addr = (volatile unsigned int *)p->map;
     pidp8i_gpio_present = 1;
     return 0;
 }
-
-
-//// unmap_peripheral //////////////////////////////////////////////////
-// Unwind the map_peripheral() steps in reverse order
-
-void unmap_peripheral(struct bcm2835_peripheral *p)
-{
-    if (pidp8i_gpio_present) {
-        if (p->mem_fd > 0) {
-            if (p->map) munmap(p->map, BLOCK_SIZE);
-            flock(p->mem_fd, LOCK_UN);
-            close(p->mem_fd);
-        }
-        pidp8i_gpio_present = 0;
-    }
-}
-
-
-//// bcm_host_get_peripheral_address ///////////////////////////////////
-// Provide fallback for non-Pi case to avoid a link error.
-
-#if !defined(HAVE_BCM_HOST_H)
-    static unsigned bcm_host_get_peripheral_address(void) { return 0; }
-#endif
-
 
 //// DOUBLE BUFFERED DISPLAY MANIPULATION FUNCTIONS ////////////////////
 
@@ -306,6 +289,7 @@ void swap_displays ()
 void sleep_ns(ns_time_t ns)
 {
     struct timespec ts = { 0, ns };
+
 #if defined(HAVE_CLOCK_NANOSLEEP)
     clock_nanosleep(CLOCK_REALTIME, 0, &ts, NULL);
 #elif defined(HAVE_NANOSLEEP)
@@ -315,6 +299,7 @@ void sleep_ns(ns_time_t ns)
 #else
 #   error Cannot build GPIO controller without high-res "sleep" function!
 #endif
+
 }
 
 
@@ -411,25 +396,26 @@ void read_switches (ns_time_t delay)
     // this pulls all switch GPIO pins high that aren't shorted to the
     // row line by the switch.
     for (size_t i = 0; i < NCOLS; ++i) {
-        INP_GPIO(cols[i]);
+	gpio_set_dir(cols[i], DIR_INPUT);
     }
 
     // Read the switch rows
     for (size_t i = 0; i < NROWS; ++i) {
         // Put 0V out on the switch row so that closed switches will
         // drag its column line down; give it time to settle.
-        OUT_GPIO(rows[i]);
-        GPIO_CLR = 1 << rows[i];
+	gpio_set_dir(rows[i], DIR_OUTPUT);
+	gpio_set_drive(rows[i], DRIVE_LOW);
         sleep_ns (delay);
 
         // Read all the switches in this row
         for (size_t j = 0; j < NCOLS; ++j) {
-            int ss = GPIO_READ(cols[j]);
-            debounce_switch(i, j, !!ss, now_ms);
+	    int ss = gpio_get_level(cols[j]);
+
+	    debounce_switch(i, j, !!ss, now_ms);
         }
 
         // Stop sinking current from this row of switches
-        INP_GPIO(rows[i]);
+	gpio_set_dir(rows[i], DIR_INPUT);
     }
 
     fflush(stdout);
@@ -445,62 +431,7 @@ void read_switches (ns_time_t delay)
 
 static const char* pi_type()
 {
-    static char ac[60] = { '\0' };
-    static const char* prefix = "Raspberry Pi ";
-
-    FILE* fp = fopen("/proc/device-tree/model", "r");
-    if (fp &&
-            fgets(ac, sizeof(ac), fp) &&
-            (strlen(ac) > 20) &&
-            (strstr(ac, prefix) == ac)) {
-        const char* kind = ac + strlen(prefix);
-        int series = 1;
-        if (kind[0] == 'M') {
-            // It's one of the "plus" models.
-            const char* pm = kind + strlen("Model ");
-            char model = *pm;
-            model = (isalpha(model) && isupper(model)) ?
-                    tolower(model) : 'x';
-            snprintf(ac, sizeof(ac), "pi%d%c", series, model);
-        }
-        else if (kind[0] == 'C') {
-            // It's one of the compute modules.  We don't actually
-            // support these, but we need to report them in case
-            // someone tries it.
-            const char* ps = kind + strlen("Compute Module");
-            char series = *ps;
-            if (series) {
-                // It's should be one of the later Compute Module series.
-                series = isdigit(ps[1]) ? ps[1] : 'x';
-                snprintf(ac, sizeof(ac), "picm%c", series);
-            }
-            else {
-                // We're at the end of the string, so it's the original
-                // Compute Module.
-                return "picm1";
-            }
-        }
-        else if (kind[0] == 'Z') {
-            // It's a Pi Zero
-            return "pi0";
-        }
-        else if ((series = atoi(kind)) > 1) {
-            // Pi 2 and newer have a number after the "Pi"
-            char* pm = strstr(kind, " Model ");
-            snprintf(ac, sizeof(ac), "pi%d%c", series,
-                    pm ? tolower(pm[7]) : 'x');
-        }
-        else {
-            // Not a model string we can parse, but it's some kind of
-            // RPi.  Two 'x's stand for unknown series and model.
-            return "pixx";
-        }
-    }
-    else {
-        return "cake";      // not pi
-    }
-
-    return ac;
+	return "pinctrl I/O";
 }
 
 
@@ -532,23 +463,22 @@ void update_led_states (const us_time_t delay)
     for (size_t row = 0; row < NLEDROWS; ++row) {
         for (size_t col = 0; col < NCOLS; ++col) {
             if ((pcurr[row] & (1 << col)) == 0) {
-                GPIO_SET = 1 << cols[col];
+                //GPIO_SET = 1 << cols[col];
+		gpio_set_drive(cols[col], DRIVE_HIGH);
             }
             else {
-                GPIO_CLR = 1 << cols[col];
+                //GPIO_CLR = 1 << cols[col];
+		gpio_set_drive(cols[col], DRIVE_LOW);
             }
         }
 
         // Toggle this LED row on
-        INP_GPIO (ledrows[row]);
-        GPIO_SET = 1 << ledrows[row];
-        OUT_GPIO (ledrows[row]);
+	gpio_set_drive(ledrows[row], DRIVE_HIGH);
 
         sleep_us (delay);
 
         // Toggle this LED row off
-        GPIO_CLR = 1 << ledrows[row]; // superstition
-        INP_GPIO (ledrows[row]);
+	gpio_set_drive(ledrows[row], DRIVE_LOW);
 
         // Small delay to reduce UDN2981 ghosting
         sleep_us (10);
@@ -563,21 +493,20 @@ void update_led_states (const us_time_t delay)
 void turn_on_pidp8i_leds ()
 {
     for (size_t row = 0; row < NLEDROWS; ++row) {
-        INP_GPIO (ledrows[row]);
-        GPIO_CLR = 1 << ledrows[row];
+	gpio_set_drive(ledrows[row], DRIVE_LOW);
     }
     for (size_t col = 0; col < NCOLS; ++col) {
-        INP_GPIO (cols[col]);
+	gpio_set_fsel(cols[col], GPIO_FSEL_OUTPUT);
     }
 }
 
 void turn_off_pidp8i_leds ()
 {
-    for (size_t col = 0; col < NCOLS; ++col) {
-        OUT_GPIO (cols[col]);
-    }
     for (size_t row = 0; row < NLEDROWS; ++row) {
-        INP_GPIO (ledrows[row]);
+	gpio_set_drive(ledrows[row], DRIVE_LOW);
+    }
+    for (size_t col = 0; col < NCOLS; ++col) {
+	gpio_set_dir(cols[col], DIR_INPUT);
     }
 }
 
@@ -589,49 +518,12 @@ void turn_off_pidp8i_leds ()
 
 void init_pidp8i_gpio (void)
 {
+
     // Set GPIO pins to their starting state
     turn_on_pidp8i_leds ();
     for (size_t i = 0; i < NROWS; i++) {       // Define rows as input
-        INP_GPIO (rows[i]);
+	gpio_set_dir(rows[i], DIR_INPUT);
     }
-
-    // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-    GPIO_PULL = 2;  // pull-up
-    usleep(1);  // must wait 150 cycles
-#if defined(PCB_SERIAL_MOD_OV) || defined(PCB_SERIAL_MOD_JLW)
-    // The Oscar Vermeulen and James L-W serial mods rearrange the PiDP-8/I
-    // GPIO matrix to use Pi GPIO pins 2..13, freeing up the hardware
-    // serial port on GPIO pins 14 & 15.
-    GPIO_PULLCLK0 = 0x03ffc;
-#else
-    // The standard PiDP-8/I board drive scheme uses Pi GPIO pins 4..15.
-    GPIO_PULLCLK0 = 0x0fff0;
-#endif
-    usleep(1);
-    GPIO_PULL = 0; // reset GPPUD register
-    usleep(1);
-    GPIO_PULLCLK0 = 0; // remove clock
-    usleep(1); // probably unnecessary
-
-    // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-    GPIO_PULL = 1;  // pull-down to avoid ghosting (dec2015)
-    usleep(1);  // must wait 150 cycles
-    GPIO_PULLCLK0 = 0x0ff00000; // selects GPIO pins 20..27
-    usleep(1);
-    GPIO_PULL = 0; // reset GPPUD register
-    usleep(1);
-    GPIO_PULLCLK0 = 0; // remove clock
-    usleep(1); // probably unnecessary
-
-    // BCM2835 ARM Peripherals PDF p 101 & elinux.org/RPi_Low-level_peripherals#Internal_Pull-Ups_.26_Pull-Downs
-    GPIO_PULL = 0;  // no pull-up no pull down just float
-    usleep(1);  // must wait 150 cycles
-    GPIO_PULLCLK0 = 0x070000; // selects GPIO pins 16..18
-    usleep(1);
-    GPIO_PULL = 0; // reset GPPUD register
-    usleep(1);
-    GPIO_PULLCLK0 = 0; // remove clock
-    usleep(1); // probably unnecessary
 }
 
 
@@ -649,7 +541,8 @@ static void *gpio_thread (void *terminate)
     // Tell the user about our configuration, succinctly
     const char* pt = pi_type();
     printf(
-        "PiDP-8/I @VERSION@ [%s] [%cls] [%spcb] [%sgpio]"
+           "PiDP-8/I @VERSION@ [%s] [%cls] [%spcb] [%sgpio]"
+
 #ifdef DEBUG
         " [debug]"
 #endif
@@ -684,8 +577,10 @@ static void *gpio_thread (void *terminate)
     // Hand off control to the gpio_core () variant linked to this
     // program: either the new incandescent lamp simulator or the old
     // stock version.
-    extern void gpio_core (struct bcm2835_peripheral*, int* terminate);
-    gpio_core (&gpio, (int*)terminate);
+    //extern void gpio_core (struct bcm2835_peripheral*, int* terminate);
+    //gpio_core (&gpio, (int*)terminate);
+    extern void gpio_core (int* terminate);
+    gpio_core ((int*)terminate);
 
     // gpio_core () leaves all cols, rows, ledrows are set to input, and
     // it's safe to leave them in that state.  No need to de-init GPIO.
@@ -693,33 +588,22 @@ static void *gpio_thread (void *terminate)
     return 0;
 }
 
-
 //// map_gpio_for_pidp8i ///////////////////////////////////////////////
 // Wrapper around map_peripheral() taking care of some higher level
 // details.  This is the interface we expose to outsiders.
 
 int map_gpio_for_pidp8i (int must_map)
 {
-    // Find GPIO address (it varies by Pi model)
-    unsigned int gpio_base_addr = bcm_host_get_peripheral_address();
-    gpio.addr_p = gpio_base_addr + 0x200000;
-
-    // Attempt to map the GPIO peripheral for our exclusive use.  Some
-    // callers care if this fails, and some don't.
-    map_peripheral (&gpio, 1);
-    if (must_map && !pidp8i_gpio_present) return EFAULT;
+    map_peripheral (1);
 
 #ifdef PCB_SERIAL_MOD_JLW
-    // James L-W's alternative serial mods were declared to be done here
-    // at configure time, so disable the hysteresis on the GPIO inputs.
-    gpio2.addr_p = gpio_base_addr + 0x100000;
-    map_peripheral (&gpio2, 0);  // assume success since prior mapping worked
-    gpio2.addr[0x0B] = (gpio2.addr[0x0B] & 0xF7) | (0x5A << 24);
+    // this does Jams L-W's mod through pinctrl:
+		gpio_set_fsel(2, GPIO_FSEL_GPIO);
+		gpio_set_fsel(3, GPIO_FSEL_GPIO);
 #endif
-
+	
     return 0;
 }
-
 
 //// pidp8i_term_handler ///////////////////////////////////////////////
 // Handle SIGTERM by shutting down our GPIO thread, then pass it on to
@@ -818,9 +702,10 @@ void stop_pidp8i_gpio_thread ()
         // time, but the flag will be cleared, so we shouldn't complain.
         printf("\r\nError joining multiplex thread\r\n");
     }
-    unmap_peripheral (&gpio);
+    //unmap_peripheral (&gpio);	// not necessary for pinctrl
 #ifdef PCB_SERIAL_MOD_JLW
-    unmap_peripheral (&gpio2);
+    gpio_set_fsel(2, GPIO_FSEL_FUNC0);	// revert back to I2C function
+    gpio_set_fsel(3, GPIO_FSEL_FUNC0);	// revert back to I2C function
 #endif
     pthread_mutex_destroy (&gpio_start_mutex);
 }
