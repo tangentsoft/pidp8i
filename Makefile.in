@@ -172,7 +172,6 @@ PINCTRL_OBJS := \
 	obj/pinctrl/gpiochip_bcm2712.o \
 	obj/pinctrl/gpiolib.o \
 	obj/pinctrl/gpiochip_bcm2835.o \
-	obj/pinctrl/pinctrl.o \
 	obj/pinctrl/gpiochip_rp1.o \
 	obj/pinctrl/util.o
 

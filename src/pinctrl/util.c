@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//OV
-#include <stddef.h>
-//--OV
-//
 #include "util.h"
 
 // We're actually going to cheat and cast the pointers, but define

@@ -3,15 +3,9 @@
 
 #include "gpiolib.h"
 
-#if defined(__APPLE__) && defined(__MACH__)
-  #define DECLARE_GPIO_CHIP(name, compatible, iface, size, data) \
-    GPIO_CHIP_T name ## _chip __attribute__ ((section ("__GPIOCHIPS,__gpiochips"))) = \
+#define DECLARE_GPIO_CHIP(name, compatible, iface, size, data) \
+    GPIO_CHIP_T name ## _chip __attribute__ ((section ("gpiochips"))) __attribute__ ((used)) = \
     { #name, compatible, iface, size, data }
-#else
-  #define DECLARE_GPIO_CHIP(name, compatible, iface, size, data) \
-    GPIO_CHIP_T name ## _chip __attribute__ ((section ("gpiochips"))) = \
-    { #name, compatible, iface, size, data }
-#endif
 
 typedef struct GPIO_CHIP_INTERFACE_ GPIO_CHIP_INTERFACE_T;
 

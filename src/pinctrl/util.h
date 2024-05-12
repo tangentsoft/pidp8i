@@ -2,7 +2,6 @@
 #define _UTIL_H
 
 #include <stdint.h>
-#include <stddef.h>
 
 #define INVALID_ADDRESS ((uint64_t)~0)
 #define ROUND_UP(n, d) ((((n) + (d) - 1) / (d)) * (d))

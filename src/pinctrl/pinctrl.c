@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -11,7 +12,7 @@
 
 #define ARRAY_SIZE(_a) (sizeof(_a)/sizeof(_a[0]))
 
-const char *xprogram_name = "pinctrl";
+const char *program_name = "pinctrl";
 
 static int pin_mode = 0;
 static int verbose_mode = 0;
@@ -57,7 +58,7 @@ static void print_gpio_alts_info(unsigned gpio)
 
 static void usage()
 {
-    const char *name = xprogram_name;
+    const char *name = program_name;
 
     printf("\n");
     printf("WARNING! %s set writes directly to the GPIO control registers\n", name);
@@ -72,9 +73,9 @@ static void usage()
     printf("Use:\n");
     printf("  %s [-p] [-v] get [GPIO]\n", name);
     printf("OR\n");
-    printf("  %s [-p] [-v] set <GPIO> [options]\n", name);
+    printf("  %s [-p] [-v] [-e] set <GPIO> [options]\n", name);
     printf("OR\n");
-    printf("  %s [-p] [-v] poll [GPIO]\n", name);
+    printf("  %s [-p] [-v] poll <GPIO>\n", name);
     printf("OR\n");
     printf("  %s [-p] [-v] funcs [GPIO]\n", name);
     printf("OR\n");
@@ -85,8 +86,9 @@ static void usage()
     printf("\n");
     printf("Note that omitting [GPIO] from \"%s get\" prints all GPIOs.\n", name);
     printf("If the -p option is given, GPIO numbers are replaced by pin numbers on the\n");
-    printf("40-way header. If the -v option is given, the output is more verbose.\n");
-    printf("%s funcs will dump all the possible GPIO alt funcions in CSV format\n", name);
+    printf("40-way header. If the -v option is given, the output is more verbose. Including\n");
+    printf("the -e option in a \"set\" causes pinctrl to echo back the new pin states.\n");
+    printf("%s funcs will dump all the possible GPIO alt functions in CSV format\n", name);
     printf("or if [GPIO] is specified the alternate funcs just for that specific GPIO.\n");
     printf("The -c option allows the alt functions (and only the alt function) for a named\n");
     printf("chip to be displayed, even if that chip is not present in the current system.\n");
@@ -94,7 +96,7 @@ static void usage()
     printf("Valid [options] for %s set are:\n", name);
     printf("  ip      set GPIO as input\n");
     printf("  op      set GPIO as output\n");
-    printf("  a1-a7   set GPIO to fsel in the range 1-7\n");
+    printf("  a0-a8   set GPIO to alt function in the range 0 to 8 (range varies by model)\n");
     printf("  no      set GPIO to no function (NONE)\n");
     printf("  pu      set GPIO in-pad pull up\n");
     printf("  pd      set GPIO pin-pad pull down\n");
@@ -106,7 +108,7 @@ static void usage()
     printf("  %s get 10           Prints state of GPIO10\n", name);
     printf("  %s get 10,11        Prints state of GPIO10 and GPIO11\n", name);
     printf("  %s set 10 a2        Set GPIO10 to fsel 2 function (nand_wen_clk)\n", name);
-    printf("  %s set 10 pu        Enable GPIO10 ~50k in-pad pull up\n", name);
+    printf("  %s -e set 10 pu     Enable GPIO10 ~50k in-pad pull up, echoing the result\n", name);
     printf("  %s set 10 pd        Enable GPIO10 ~50k in-pad pull down\n", name);
     printf("  %s set 10 op        Set GPIO10 to be an output\n", name);
     printf("  %s set 10 dl        Set GPIO10 to output low/zero (must already be set as an output)\n", name);
@@ -276,7 +278,7 @@ static void verbose_callback(const char *msg)
     printf("%s", msg);
 }
 
-int xmain(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int ret;
 
@@ -288,6 +290,7 @@ int xmain(int argc, char *argv[])
     int get = 0;
     int poll = 0;
     int funcs = 0;
+    int echo = 0;
     int pull = PULL_MAX;
     int infer_cmd = 0;
     int fsparam = GPIO_FSEL_MAX;
@@ -313,6 +316,10 @@ int xmain(int argc, char *argv[])
         {
             pin_mode = 1;
         }
+        else if (strcmp(arg, "-e") == 0)
+        {
+            echo = 1;
+        }
         else if (strcmp(arg, "-v") == 0)
         {
             verbose_mode = 1;
@@ -330,7 +337,7 @@ int xmain(int argc, char *argv[])
         else
         {
             printf("Unknown option '%s' - try \"%s help\"\n",
-                   arg, xprogram_name);
+                   arg, program_name);
             exit(1);
         }
     }
@@ -612,92 +619,33 @@ int xmain(int argc, char *argv[])
         }
     }
 
-int cols[12]={26,27,4,5,6,7,8,9,10,11,12,13};
-int rows[6]={20,21,22,23,24,25};
-int srows[3]={16,17,18};
-int ic,ir,is;
-printf("Hello\n");
-// init
-//
-    for (ir=0;ir<6;ir++)
+    for (pin = start_pin; pin < end_pin + 1; pin++)
     {
-
-	    gpio_set_fsel(rows[ir], GPIO_FSEL_OUTPUT);
-	    gpio_set_dir(rows[ir], DIR_OUTPUT);
-	    gpio_set_drive(rows[ir], DRIVE_LOW);
-	}
-    for (ic=0;ic<12;ic++)
-    {
-	    gpio_set_fsel(cols[ic], GPIO_FSEL_OUTPUT);
-	    gpio_set_pull(cols[ic], PULL_UP);
-	    gpio_set_dir(cols[ic], DIR_OUTPUT);
-	gpio_set_drive(cols[ic], DRIVE_LOW);
-	}
-    for (is=0;is<3;is++)
-    {
-	    gpio_set_fsel(srows[is], GPIO_FSEL_INPUT);
-	    //gpio_set_dir(srows[is], DIR_INPUT);
-	    gpio_set_pull(srows[is], PULL_UP);
-	}
-//
-// main loop
-//
-    do {
-	// do 6 led rows
-    for (ir=0;ir<6;ir++)
-    {
-
-	if (fsparam==DRIVE_HIGH)
-		fsparam=DRIVE_LOW;
-	else
-		fsparam=DRIVE_HIGH;
-    
-    // for each led row, do 12 leds
-	for (ic=0;ic<12;ic++)
-    {
-	pin = cols[ic];
         if (!(gpiomask[pin / 32] & (1 << (pin % 32))))
-	{ printf("err1\n");    continue;	}
-	    gpio_set_dir(cols[ic], DIR_OUTPUT);
+            continue;
 
-    gpio_set_drive(pin, fsparam);
+        if (get)
+            do_gpio_get(pin);
+        if (set)
+            do_gpio_set(pin, fsparam, drive, pull);
+        if (poll)
+            do_gpio_poll_add(pin);
+        if (funcs)
+            print_gpio_alts_info(pin);
     }
-	// light up this row with selected leds for 500 usec
-	    gpio_set_drive(rows[ir], DRIVE_HIGH);
-    usleep(500);
-    	// close down this row, and give 1 usec to avoid ghosting
-	    gpio_set_drive(rows[ir], DRIVE_LOW);
-    usleep(1);
-  	// prepare for reading switches by setting cols to input 
-    for (ic=0;ic<12;ic++)
-    {
-	    gpio_set_dir(cols[ic], DIR_INPUT);
-	}
-   // now read 3 switch rows 
-    for (is=0;is<3;is++)
-    {
-	    // set one row to OUTPUT LOW
-	    //gpio_set_fsel(srows[is], GPIO_FSEL_INPUT);
-	    gpio_set_dir(srows[is], DIR_OUTPUT);
-	    gpio_set_drive(srows[is], DRIVE_LOW);
-	    // read 12 switches
-    for (ic=0;ic<12;ic++)
-    {
-	printf("-%d",gpio_get_level(cols[ic]));
-	}
-    printf("\n");
-	// set the switch row to INPUT again
-	    gpio_set_dir(srows[is], DIR_INPUT);
-    }
-  	// prepare for lighting LEDs again by setting cols to OUTPUT again
-    for (ic=0;ic<12;ic++)
-    {
-	    gpio_set_dir(cols[ic], DIR_OUTPUT);
-	}
-    }
-    } while (1);
 
-	if (poll)
+    if (set && echo)
+    {
+        for (pin = start_pin; pin < end_pin + 1; pin++)
+        {
+            if (!(gpiomask[pin / 32] & (1 << (pin % 32))))
+                continue;
+
+            do_gpio_get(pin);
+        }
+    }
+
+    if (poll)
             do_gpio_poll();
 
     return 0;
