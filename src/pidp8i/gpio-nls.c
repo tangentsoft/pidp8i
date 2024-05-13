@@ -36,7 +36,7 @@
 
 #include <unistd.h>
 #include "pidp8i.h"
-#include "pinctrl/gpiolib.h"
+#include <gpiolib.h>
 
 
 //// gpio_core  ////////////////////////////////////////////////////////

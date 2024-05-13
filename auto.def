@@ -405,7 +405,6 @@ if {[string match "arm*" $uname_machine] && [string match "Linux" $uname_system 
         define PI_CFLAGS "-I/opt/vc/include"
         define PI_LFLAGS "-L/opt/vc/lib"
         define PI_LIBS   ""
-        define GPIO_FLAGS -I $srcdir/src/pinctrl
     } else {
         msg-result "WARNING: Building on Pi platform without libraspberrypi-dev installed!"
         define PI_CFLAGS ""
@@ -417,7 +416,6 @@ if {[string match "arm*" $uname_machine] && [string match "Linux" $uname_system 
     define PI_CFLAGS ""
     define PI_LFLAGS ""
     define PI_LIBS   ""
-    define PINCTRL_FLAGS ""
     define PIDP8I_FLAG ""
 }
 
@@ -425,7 +423,6 @@ if {[opt-bool force-pidp8i]} {
     msg-result "Forcing build of pidp8i."
     define PIDP8I_FLAG "-DPIDP8I"
     define BUILD_PIDP8I 1
-    define GPIO_FLAGS -I $srcdir/src/pinctrl
 }
 
 # Ensure we have the libncurses development files installed here, else
