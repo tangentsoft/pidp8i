@@ -93,6 +93,7 @@ append alloptions {
     debug-mode           => "create a debug build (default is release)"
     e8-screen-width:=80  => "set E8 terminal width"
     e8-screen-height:=24 => "set E8 terminal height"
+    force-pidp8i         => "Force building the pidp8i stuff even if we're not building on a pi"
     lowercase:           => "select how lowercase input is to be handled"
     no-lamp-simulator    => "use simple LED driver instead of incandescent lamp simulator"
     os8-focal=1          => "leave FOCAL,1969 and U/W FOCAL off the built OS/8 RK05 image"
@@ -389,26 +390,43 @@ cc-with {-includes signal.h} {
 }
 
 # Check for libraspberrypi-dev stuff
-set old_LIBS [get-define LIBS]      ;# don't want LIBS modded directly
-if {![file isdirectory "/opt/vc"]} {
-    msg-result "WARNING: Not building on a Pi or libraspberrypi-dev not installed!"
+# This also means that if we're not building on a raspberry pi we don't build the gpio stuff.
+# Building and linking against the gpio stuff is conditionalized on the PIDP8I #define.
+set uname_machine [exec uname -m 2>/dev/null]
+set uname_system [exec uname -s 2>/dev/null]
+
+msg-result "Arch: $uname_machine system: $uname_system"
+
+if {[string match "arm*" $uname_machine] && [string match "Linux" $uname_system ]} {
+    msg-result "We are a Pi Platform"
+    define PIDP8I_FLAG "-DPIDP8I"
+    define BUILD_PIDP8I 1
+    if {[file isdirectory "/opt/vc"]} {
+        define PI_CFLAGS "-I/opt/vc/include"
+        define PI_LFLAGS "-L/opt/vc/lib"
+        define PI_LIBS   ""
+        define GPIO_FLAGS -I $srcdir/src/pinctrl
+    } else {
+        msg-result "WARNING: Building on Pi platform without libraspberrypi-dev installed!"
+        define PI_CFLAGS ""
+        define PI_LFLAGS ""
+        define PI_LIBS   ""
+    }
+} else {
+    msg-result "We are not a Pi Platform"
     define PI_CFLAGS ""
     define PI_LFLAGS ""
     define PI_LIBS   ""
-} elseif {![cc-with {-cflags "-L/opt/vc/lib"} {
-             cc-check-function-in-lib bcm_host_get_peripheral_address bcm_host
-           }]} {
-    user-error "Found /opt/vc but cannot link to -lbcm_host!"
-} elseif {![cc-with {-cflags "-I/opt/vc/include"} {
-             cc-check-includes bcm_host.h
-           }]} {
-    user-error "Found /opt/vc but cannot #include bcm_host.h!"
-} else {
-    define PI_CFLAGS "-I/opt/vc/include"
-    define PI_LFLAGS "-L/opt/vc/lib"
-    define PI_LIBS   "-lbcm_host"
+    define PINCTRL_FLAGS ""
+    define PIDP8I_FLAG ""
 }
-define LIBS $old_LIBS
+
+if {[opt-bool force-pidp8i]} {
+    msg-result "Forcing build of pidp8i."
+    define PIDP8I_FLAG "-DPIDP8I"
+    define BUILD_PIDP8I 1
+    define GPIO_FLAGS -I $srcdir/src/pinctrl
+}
 
 # Ensure we have the libncurses development files installed here, else
 # pidp8i-test won't build.
