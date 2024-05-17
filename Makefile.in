@@ -915,7 +915,7 @@ bin/txt2ptp: bin/ptp2txt
 # The deeper, pidp8i-test, and scanswitch programs only make sense if we
 # have actual PiDP8i hardware
 ifeq (@BUILD_PIDP8I@, 1)
-bin/pidp8i-test: $(GPIO_OBJS) obj/misc/test.o obj obj/pidp8i/gpio-nls.o
+bin/pidp8i-test: $(GPIO_OBJS) obj/misc/test.o obj/pidp8i/gpio-nls.o
 	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
 
 bin/deeper: obj/misc/deeper.o $(LED_OBJ) $(GPIO_OBJS)
