@@ -131,7 +131,7 @@ cd "@builddir@"
 say Retreiving upstream SIMH versions...
 mkdir -p "$OUR_SIMH_DIR"
 mkdir -p "$CURR_SIMH_DIR"
-git clone https://github.com/simh/simh "$CURR_SIMH_DIR"
+git clone https://github.com/open-simh/simh.git "$CURR_SIMH_DIR"
 pushd "$CURR_SIMH_DIR"
 NEW_SGCID=$(git log -1 --pretty='%H')
 NEW_SGCTM=$(git log -1 --pretty='%aI')
