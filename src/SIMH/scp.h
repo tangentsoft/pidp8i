@@ -163,7 +163,7 @@ t_stat show_writelock (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 const char *sim_dname (DEVICE *dptr);
 const char *sim_uname (UNIT *dptr);
 const char *sim_set_uname (UNIT *uptr, const char *uname);
-t_stat get_yn (const char *ques, t_stat deflt);
+t_bool get_yn (const char *ques, t_bool deflt);
 void sim_srand (unsigned int seed);
 int sim_rand (void);
 #ifdef RAND_MAX
@@ -184,8 +184,8 @@ CONST char *get_range (DEVICE *dptr, CONST char *cptr, t_addr *lo, t_addr *hi,
     uint32 rdx, t_addr max, char term);
 t_stat sim_set_environment (int32 flag, CONST char *cptr);
 t_stat sim_decode_quoted_string (const char *iptr, uint8 *optr, uint32 *osize);
-char *sim_encode_quoted_string (const uint8 *iptr, uint32 size);
-void fprint_buffer_string (FILE *st, const uint8 *buf, uint32 size);
+char *sim_encode_quoted_string (const uint8 *iptr, size_t size);
+void fprint_buffer_string (FILE *st, const uint8 *buf, size_t size);
 t_value strtotv (CONST char *cptr, CONST char **endptr, uint32 radix);
 t_svalue strtotsv (CONST char *inptr, CONST char **endptr, uint32 radix);
 int Fprintf (FILE *f, const char *fmt, ...) GCC_FMT_ATTR(2, 3);
@@ -196,7 +196,7 @@ int Fprintf (FILE *f, const char *fmt, ...) GCC_FMT_ATTR(2, 3);
 t_stat sim_set_memory_load_file (const unsigned char *data, size_t size);
 int Fgetc (FILE *f);
 t_stat fprint_val (FILE *stream, t_value val, uint32 rdx, uint32 wid, uint32 fmt);
-t_stat sprint_val (char *buf, t_value val, uint32 rdx, uint32 wid, uint32 fmt);
+t_stat sprint_val (char *buf, t_value val, uint32 rdx, size_t wid, uint32 fmt);
 t_stat sim_print_val (t_value val, uint32 radix, uint32 width, uint32 format);
 const char *sim_fmt_secs (double seconds);
 const char *sim_fmt_numeric (double number);
@@ -250,6 +250,7 @@ t_stat sim_cancel_step (void);
 const char *sim_get_tool_path (const char *tool);
 void sim_printf (const char *fmt, ...) GCC_FMT_ATTR(1, 2);
 void sim_perror (const char *msg);
+t_stat sim_call_argv (int (*main_like)(int argc, char *argv[]), const char *cptr);
 t_stat sim_messagef (t_stat stat, const char *fmt, ...) GCC_FMT_ATTR(2, 3);
 void sim_data_trace(DEVICE *dptr, UNIT *uptr, const uint8 *data, const char *position, size_t len, const char *txt, uint32 reason);
 void sim_debug_bits_hdr (uint32 dbits, DEVICE* dptr, const char *header, 

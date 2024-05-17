@@ -231,9 +231,10 @@ t_stat sim_tape_show_capac (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 t_stat sim_tape_set_dens (UNIT *uptr, int32 val, CONST char *cptr, void *desc);
 t_stat sim_tape_show_dens (FILE *st, UNIT *uptr, int32 val, CONST void *desc);
 t_stat sim_tape_density_supported (char *string, size_t string_size, int32 valid_bits);
+const char *sim_tape_error_text (t_stat stat);
 t_stat sim_tape_set_asynch (UNIT *uptr, int latency);
 t_stat sim_tape_clr_asynch (UNIT *uptr);
-t_stat sim_tape_test (DEVICE *dptr);
+t_stat sim_tape_test (DEVICE *dptr, const char *cptr);
 t_stat sim_tape_add_debug (DEVICE *dptr);
 
 #ifdef  __cplusplus

@@ -23,6 +23,17 @@
    used in advertising or otherwise to promote the sale, use or other dealings
    in this Software without prior written authorization from Robert M Supnik.
 
+   06-Jun-22    RMS     Deprecated UNIT_TEXT, deleted UNIT_RAW
+   10-Mar-22    JDB     Modified REG macros to fix "stringizing" problem
+   12-Nov-21    JDB     Added UNIT_EXTEND dynamic flag
+   17-Mar-21    JDB     Added UNIT_PIPE dynamic flag
+   16-Feb-21    JDB     Added "stride" to REG to support arrays of structures
+                        Modified REG macros to initialize strides
+   21-Jan-21    JDB     Added "size" and "maxval" fields to the REG structure
+                        Modified REG macros to initialize access sizes
+   09-Nov-20    RMS     More V4.X compatibility hooks (Mark Pizzolato)
+   26-Oct-19    RMS     Removed MTAB_VAL definition
+   23-Jun-17    RMS     Added #include sim_rev.h (Mark Pizzolato)
    25-Sep-16    RMS     Removed KBD_WAIT and friends
    08-Mar-16    RMS     Added shutdown invisible switch
    24-Dec-14    JDB     Added T_ADDR_FMT
@@ -93,7 +104,7 @@
         sim_devices[]           array of pointers to simulated devices
         sim_PC                  pointer to saved PC register descriptor
         sim_interval            simulator interval to next event
-        sim_stop_messages[SCPE_BASE]     
+        sim_stop_messages[SCPE_BASE]
                                 array of pointers to stop messages
         sim_instr()             instruction execution routine
         sim_load()              binary loader routine
@@ -110,6 +121,7 @@
 #define SIM_DEFS_H_    0
 
 #include "sim_rev.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -125,6 +137,9 @@ extern int sim_vax_snprintf(char *buf, size_t buf_size, const char *fmt, ...);
 #include <errno.h>
 #include <limits.h>
 #include <ctype.h>
+#include <math.h>
+#include <setjmp.h>
+
 
 #ifndef EXIT_FAILURE
 #define EXIT_FAILURE 1
@@ -152,7 +167,7 @@ extern int sim_vax_snprintf(char *buf, size_t buf_size, const char *fmt, ...);
 #define USE_REGEX 1
 #endif
 
-#if (defined (__MWERKS__) && defined (macintosh)) || defined(__DECC)
+#if defined(__DECC)
 #define __FUNCTION__ __FILE__
 #endif
 
@@ -207,7 +222,7 @@ typedef __int32          int32;
 typedef unsigned __int8  uint8;
 typedef unsigned __int16 uint16;
 typedef unsigned __int32 uint32;
-#else                                                   
+#else
 /* All modern/standard compiler environments */
 /* any other environment needa a special case above */
 #include <stdint.h>
@@ -259,11 +274,9 @@ typedef uint32          t_value;
 #if defined (USE_INT64) && defined (USE_ADDR64)         /* 64b address */
 typedef t_uint64        t_addr;
 #define T_ADDR_W        64
-#define T_ADDR_FMT      LL_FMT
 #else                                                   /* 32b address */
 typedef uint32          t_addr;
 #define T_ADDR_W        32
-#define T_ADDR_FMT      ""
 #endif                                                  /* end 64b address */
 
 #if defined (_WIN32)
@@ -279,14 +292,11 @@ typedef uint32          t_addr;
 #endif
 
 #if defined (_WIN32) /* Actually, a GCC issue */
-#define LL_FMT "I64"
 #define LL_TYPE long long
 #else
 #if defined (__VAX) /* No 64 bit ints on VAX */
-#define LL_FMT "l"
 #define LL_TYPE long
 #else
-#define LL_FMT "ll"
 #define LL_TYPE long long
 #endif
 #endif
@@ -316,7 +326,7 @@ typedef uint32          t_addr;
 #define SIM_INLINE inline
 #define SIM_NOINLINE  __attribute__ ((noinline))
 #else
-#define SIM_INLINE 
+#define SIM_INLINE
 #define SIM_NOINLINE
 #endif
 
@@ -513,7 +523,7 @@ struct DEVICE {
                                                         /* mem size routine */
     char                *lname;                         /* logical name */
     t_stat              (*help)(FILE *st, DEVICE *dptr,
-                            UNIT *uptr, int32 flag, const char *cptr); 
+                            UNIT *uptr, int32 flag, const char *cptr);
                                                         /* help */
     t_stat              (*attach_help)(FILE *st, DEVICE *dptr,
                             UNIT *uptr, int32 flag, const char *cptr);
@@ -579,6 +589,7 @@ struct UNIT {
     char                *filename;                      /* open file name */
     FILE                *fileref;                       /* file reference */
     void                *filebuf;                       /* memory buffer */
+    void                *filebuf2;                      /* copy of initial memory buffer */
     uint32              hwmark;                         /* high water mark */
     int32               time;                           /* time out */
     uint32              flags;                          /* flags */
@@ -599,7 +610,7 @@ struct UNIT {
     uint16              us10;                           /* device specific */
     uint32              disk_type;                      /* Disk specific info */
     void                *tmxr;                          /* TMXR linkage */
-    uint32              recsize;                        /* Tape specific info */
+    size_t              recsize;                        /* Tape specific info */
     t_addr              tape_eom;                       /* Tape specific info */
     t_bool              (*cancel)(UNIT *);
     double              usecs_remaining;                /* time balance for long delays */
@@ -646,8 +657,10 @@ struct UNIT {
 #define UNIT_WLK        0100000         /* hardware write lock */
 #define UNIT_WPRT     (UNIT_WLK|UNIT_RO)/* write protect */
 
-/* Unused/meaningless flags */
-#define UNIT_TEXT       0000000         /* text mode - no effect */
+/* Deleted or deprecated */
+
+// #define UNIT_RAW        000000                          /* raw mode */
+#define UNIT_TEXT       000000                          /* text mode */
 
 #define UNIT_UFMASK_31  (((1u << UNIT_V_RSV) - 1) & ~((1u << UNIT_V_UF_31) - 1))
 #define UNIT_UFMASK     (((1u << UNIT_V_RSV) - 1) & ~((1u << UNIT_V_UF) - 1))
@@ -693,12 +706,13 @@ struct REG {
     const char          *desc;                          /* description */
     BITFIELD            *fields;                        /* bit fields */
     uint32              qptr;                           /* circ q ptr */
-    size_t              str_size;                       /* structure size */
+    size_t              stride;                         /* structure/object size (for indexing) */
     size_t              obj_size;                       /* sizeof(*loc) */
-    size_t              ele_size;                       /* sizeof(**loc) or sizeof(*loc) if depth == 1 */
+    size_t              size;                           /* sizeof(**loc) or sizeof(*loc) if depth == 1 */
     const char          *macro;                         /* Initializer Macro Name */
-    /* NOTE: Flags MUST always be last since it is initialized outside of macro definitions */
+    /* NOTE: Flags and maxval MUST always be last since they are initialized outside of macro definitions */
     uint32              flags;                          /* flags */
+    t_value             maxval;                         /* maximum value */
     };
 
 /* Register flags */
@@ -707,12 +721,10 @@ struct REG {
 #define REG_RO          00004                           /* read only */
 #define REG_HIDDEN      00010                           /* hidden */
 #define REG_NZ          00020                           /* must be non-zero */
-#define REG_UNIT        00040                           /* in unit struct */
-#define REG_STRUCT      00100                           /* in structure array */
 #define REG_CIRC        00200                           /* circular array */
 #define REG_VMIO        00400                           /* use VM data print/parse */
 #define REG_VMAD        01000                           /* use VM addr print/parse */
-#define REG_FIT         02000                           /* fit access to size */
+#define REG_FIT         00000                           /* fit access to size (obsolete) */
 #define REG_DEPOSIT     04000                           /* call VM routine after update */
 #define REG_HRO         (REG_RO | REG_HIDDEN)           /* hidden, read only */
 
@@ -783,8 +795,8 @@ struct MTAB {
 /* Search table */
 
 struct SCHTAB {
-    int32               logic;                          /* logical operator */
-    int32               boolop;                         /* boolean operator */
+    size_t              logic;                          /* logical operator */
+    size_t              boolop;                         /* boolean operator */
     uint32              count;                          /* value count in mask and comp arrays */
     t_value             *mask;                          /* mask for logical */
     t_value             *comp;                          /* comparison for boolean */
@@ -819,7 +831,7 @@ struct BRKTYPTAB {
 
 struct EXPTAB {
     uint8               *match;                         /* match string */
-    uint32              size;                           /* match string size */
+    size_t              size;                           /* match string size */
     char                *match_pattern;                 /* match pattern for format */
     int32               cnt;                            /* proceed count */
     uint32              after;                          /* delay before halting */
@@ -842,11 +854,11 @@ struct EXPECT {
     DEVICE              *dptr;                          /* Device (for Debug) */
     uint32              dbit;                           /* Debugging Bit */
     EXPTAB              *rules;                         /* match rules */
-    int32               size;                           /* count of match rules */
+    size_t              size;                           /* count of match rules */
     uint8               *buf;                           /* buffer of output data which has produced */
-    uint32              buf_ins;                        /* buffer insertion point for the next output data */
-    uint32              buf_size;                       /* buffer size */
-    uint32              buf_data;                       /* count of data in buffer */
+    size_t              buf_ins;                        /* buffer insertion point for the next output data */
+    size_t              buf_size;                       /* buffer size */
+    size_t              buf_data;                       /* count of data in buffer */
     };
 
 /* Send Context */
@@ -860,8 +872,8 @@ struct SEND {
     double              next_time;                      /* execution time when next data can be sent */
     uint8               *buffer;                        /* buffer */
     size_t              bufsize;                        /* buffer size */
-    int32               insoff;                         /* insert offset */
-    int32               extoff;                         /* extra offset */
+    size_t              insoff;                         /* insert offset */
+    size_t              extoff;                         /* extra offset */
     };
 
 /* Debug table */
@@ -891,195 +903,226 @@ struct MEMFILE {
     size_t              size;                        /* size */
     size_t              pos;                         /* data used */
     };
-/* 
+
+/*
    The following macros exist to help populate structure contents
 
-   They are dependent on the declaration order of the fields 
+   They are dependent on the declaration order of the fields
    of the structures they exist to populate.
 
  */
 
-#define UDATA(act,fl,cap) NULL,act,NULL,NULL,NULL,0,0,(fl),0,(cap),0,NULL,0,0
+#define UDATA(act,fl,cap) NULL,act,NULL,NULL,NULL,NULL,0,0,(fl),0,(cap),0,NULL,0,0
+
+/* Register initialization macros.
+
+   The following macros should be used to initialize the elements of a
+   simulator's register array.  The macros provide simplified initialization,
+   ensure that unspecified fields are set appropriately, and insulate the
+   simulator writer from changes in the underlying REG structure.
+
+   The macros take varying numbers of parameters with the following meanings:
+
+     Param  Meaning
+     -----  ------------------------------------------
+      nm    Register symbolic name
+      loc   Location of the associated variable
+      aloc  Location of the associated array
+      floc  Location of the associated structure field
+      rdx   Display and entry radix
+      wd    Field width in bits
+      off   Field offset in bits from LSB
+      dep   Number of array elements
+      siz   Element size in bytes
+      str   Array element spacing in bytes
+
+   The macros have the following uses:
+
+     Macro     Use with
+     --------  ---------------------------------------------------------------
+     ORDATA    Scalar with octal display/entry
+     DRDATA    Scalar with decimal display/entry
+     HRDATA    Scalar with hexadecimal display/entry
+     BINRDATA  Scalar with binary display/entry
+     FLDATA    Scalar with single bit display/entry
+     GRDATA    Scalar with with specification of radix/width/offset parameters
+
+     BRDATA    Singly-subscripted array
+     CRDATA    Doubly-subscripted array
+
+     SRDATA    Singly-subscripted array of general structure fields
+     URDATA    Singly-subscripted array of UNIT structure fields
+
+     XRDATA    Generic type with specification of all parameters
+     SAVEDATA  Generic type used only for persistence across SAVE/RESTORE
+
+   Normally, scalar and array locations specify the variable name; the names are
+   converted internally to pointers as needed.  However, the starting point of
+   a partial array may be specified by passing a pointer to the desired element.
+   For example:
+
+     BRDATA (SYM, array, ...)
+
+   ...specifies a register starting with array element zero, while:
+
+     BRDATA (SYM, &array[3], ...)
+
+   ...specifies a register starting with array element three.
+
+   For arrays of general structures, the names of the array and selected field
+   are given:
+
+     SRDATA (SYM, array, field, ...)
+
+   This specifies a arrayed register whose elements are array[0].field,
+   array[1].field, etc.
+
+   All above macro names from ORDATA through XRDATA have two additional
+   precisely related macros.  The first it the above name with D appended and
+   has an additional parameter which is a quoted string describing the purpose
+   of the register which is visible when displaying HELP about a device's
+   registers.  The second related macro has the above name with DF appended
+   and has two additional parameters.  The first parameter is the register
+   description, and the second is the name of a BITFIELD array which describes
+   the fields in the register's contents.  This info is used to display the
+   register contents (via EXAMINE) along with the detailed bitfield data.
+   For example:
+
+       { HRDATA  (KSP,        KSP,  32) },
+       { HRDATAD (KSP,        KSP,  32, "kernel stack pointer") },
+       { HRDATADF(PSL,        PSL,  32, "processor status longword", cpu_psl_bits) },
+     or
+       { ORDATA  (PSW, PSW, 16) },
+       { ORDATAD (PSW, PSW, 16,                "Processor Status Word") },
+       { ORDATADF(PSW, PSW, 16,                "Processor Status Word", psw_bits) },
+
+
+   Implementation notes:
+
+    1. The "_RegCheck" macro is used to ensure that each of the user macros has
+       the correct number of parameters.  This improves maintenance reliability,
+       as changes to the REG structure need to be reflected only in the
+       "_RegCheck" macro.
+
+    2. "Stringization" must occur at the first macro call level to support
+       register names that are themselves macros.  Otherwise, macro expansion
+       will occur before stringization, resulting in the wrong register name.
+
+    3. Additional REG initialization values may be supplied after a macro
+       invocation.  If present, these begin with the "flags" field which is,
+       for the most part, not specified as a macro parameter.
+
+    4. The URDATA macro is obsolescent and present for backward-compatibility.
+       It is a special case of the generic SRDATA macro, which provides the same
+       functionality.  Note also that URDATA requires a "flags" parameter value,
+       which is optional for all other macros.
+
+    5. The SAVEDATA macro is useful to indicate global variables whose values
+       must persist across a SAVE and RESTORE.  Such data is hidden from the
+       register user interface.
+*/
 
 /* Internal use ONLY (see below) Generic Register declaration for all fields */
-#define _REGDATANF(nm,loc,rdx,wd,off,dep,desc,flds,qptr,siz,elesiz,macro) \
+#define _RegCheck(nm,loc,rdx,wd,off,dep,desc,flds,qptr,siz,elesiz,macro) \
     nm, (loc), (rdx), (wd), (off), (dep), (desc), (flds), (qptr), (siz), sizeof(*(loc)), (elesiz), #macro
 
-#if defined (__STDC__) || defined (_WIN32) /* Variants which depend on how macro arguments are convered to strings */
-/* Generic Register declaration for all fields.  
-   If the register structure is extended, this macro will be retained and a 
+/* Generic Register declaration for all fields.
+   If the register structure is extended, this macro will be retained and a
    new internal macro will be provided that populates the new register structure */
 #define REGDATA(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,qptr,siz,sizeof((loc)),REGDATA),(fl)
-#define REGDATAC(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,qptr,siz,sizeof((loc)),REGDATAC),(fl)
+    _RegCheck(#nm,&(loc),rdx,wd,off,dep,desc,flds,qptr,siz,sizeof((loc)),REGDATA),(fl)
+/* v3 compatible macro */
+#define XRDATA(nm,loc,rdx,wd,off,dep,siz,str) \
+    _RegCheck(#nm,loc,rdx,wd,off,dep,NULL,NULL,0,siz,sizeof((loc)),XRDATA),(fl)
+
 /* Right Justified Octal Register Data */
 #define ORDATA(nm,loc,wd) \
-    _REGDATANF(#nm,&(loc),8,wd,0,1,NULL,NULL,0,0,sizeof((loc)),ORDATA)
+    _RegCheck(#nm,&(loc),8,wd,0,1,NULL,NULL,0,0,sizeof((loc)),ORDATA)
 #define ORDATAD(nm,loc,wd,desc) \
-    _REGDATANF(#nm,&(loc),8,wd,0,1,desc,NULL,0,0,sizeof((loc)),ORDATAD)
+    _RegCheck(#nm,&(loc),8,wd,0,1,desc,NULL,0,0,sizeof((loc)),ORDATAD)
 #define ORDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF(#nm,&(loc),8,wd,0,1,desc,flds,0,0,sizeof((loc)),ORDATADF)
+    _RegCheck(#nm,&(loc),8,wd,0,1,desc,flds,0,0,sizeof((loc)),ORDATADF)
 /* Right Justified Decimal Register Data */
 #define DRDATA(nm,loc,wd) \
-    _REGDATANF(#nm,&(loc),10,wd,0,1,NULL,NULL,0,0,sizeof((loc)),DRDATA)
+    _RegCheck(#nm,&(loc),10,wd,0,1,NULL,NULL,0,0,sizeof((loc)),DRDATA)
 #define DRDATAD(nm,loc,wd,desc) \
-    _REGDATANF(#nm,&(loc),10,wd,0,1,desc,NULL,0,0,sizeof((loc)),DRDATAD)
+    _RegCheck(#nm,&(loc),10,wd,0,1,desc,NULL,0,0,sizeof((loc)),DRDATAD)
 #define DRDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF(#nm,&(loc),10,wd,0,1,desc,flds,0,0,sizeof((loc)),DRDATADF)
+    _RegCheck(#nm,&(loc),10,wd,0,1,desc,flds,0,0,sizeof((loc)),DRDATADF)
 /* Right Justified Hexadecimal Register Data */
 #define HRDATA(nm,loc,wd) \
-    _REGDATANF(#nm,&(loc),16,wd,0,1,NULL,NULL,0,0,sizeof((loc)),HRDATA)
+    _RegCheck(#nm,&(loc),16,wd,0,1,NULL,NULL,0,0,sizeof((loc)),HRDATA)
 #define HRDATAD(nm,loc,wd,desc) \
-    _REGDATANF(#nm,&(loc),16,wd,0,1,desc,NULL,0,0,sizeof((loc)),HRDATAD)
+    _RegCheck(#nm,&(loc),16,wd,0,1,desc,NULL,0,0,sizeof((loc)),HRDATAD)
 #define HRDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF(#nm,&(loc),16,wd,0,1,desc,flds,0,0,sizeof((loc)),HRDATADF)
+    _RegCheck(#nm,&(loc),16,wd,0,1,desc,flds,0,0,sizeof((loc)),HRDATADF)
 /* Right Justified Binary Register Data */
 #define BINRDATA(nm,loc,wd) \
-    _REGDATANF(#nm,&(loc),2,wd,0,1,NULL,NULL,0,0,sizeof((loc)),BINRDATA)
+    _RegCheck(#nm,&(loc),2,wd,0,1,NULL,NULL,0,0,sizeof((loc)),BINRDATA)
 #define BINRDATAD(nm,loc,wd,desc) \
-    _REGDATANF(#nm,&(loc),2,wd,0,1,desc,NULL,0,0,sizeof((loc)),BINRDATAD)
+    _RegCheck(#nm,&(loc),2,wd,0,1,desc,NULL,0,0,sizeof((loc)),BINRDATAD)
 #define BINRDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF(#nm,&(loc),2,wd,0,1,desc,flds,0,0,sizeof((loc)),BINRDATADF)
+    _RegCheck(#nm,&(loc),2,wd,0,1,desc,flds,0,0,sizeof((loc)),BINRDATADF)
 /* One-bit binary flag at an arbitrary offset in a 32-bit word Register */
 #define FLDATA(nm,loc,pos) \
-    _REGDATANF(#nm,&(loc),2,1,pos,1,NULL,NULL,0,0,sizeof((loc)),FLDATA)
+    _RegCheck(#nm,&(loc),2,1,pos,1,NULL,NULL,0,0,sizeof((loc)),FLDATA)
 #define FLDATAD(nm,loc,pos,desc) \
-    _REGDATANF(#nm,&(loc),2,1,pos,1,desc,NULL,0,0,sizeof((loc)),FLDATAD)
+    _RegCheck(#nm,&(loc),2,1,pos,1,desc,NULL,0,0,sizeof((loc)),FLDATAD)
 #define FLDATADF(nm,loc,pos,desc,flds) \
-    _REGDATANF(#nm,&(loc),2,1,pos,1,desc,flds,0,0,sizeof((loc)),FLDATADF)
+    _RegCheck(#nm,&(loc),2,1,pos,1,desc,flds,0,0,sizeof((loc)),FLDATADF)
 /* Arbitrary location and Radix Register */
 #define GRDATA(nm,loc,rdx,wd,pos) \
-    _REGDATANF(#nm,&(loc),rdx,wd,pos,1,NULL,NULL,0,0,sizeof((loc)),GRDATA)
+    _RegCheck(#nm,&(loc),rdx,wd,pos,1,NULL,NULL,0,0,sizeof((loc)),GRDATA)
 #define GRDATAD(nm,loc,rdx,wd,pos,desc) \
-    _REGDATANF(#nm,&(loc),rdx,wd,pos,1,desc,NULL,0,0,sizeof((loc)),GRDATAD)
+    _RegCheck(#nm,&(loc),rdx,wd,pos,1,desc,NULL,0,0,sizeof((loc)),GRDATAD)
 #define GRDATADF(nm,loc,rdx,wd,pos,desc,flds) \
-    _REGDATANF(#nm,&(loc),rdx,wd,pos,1,desc,flds,0,0,sizeof((loc)),GRDATADF)
+    _RegCheck(#nm,&(loc),rdx,wd,pos,1,desc,flds,0,0,sizeof((loc)),GRDATADF)
 /* Arrayed register whose data is kept in a standard C array Register */
-#define BRDATA(nm,loc,rdx,wd,dep) \
-    _REGDATANF(#nm,&(loc),rdx,wd,0,dep,NULL,NULL,0,0,sizeof(*(loc)),BRDATA)
-#define BRDATAD(nm,loc,rdx,wd,dep,desc) \
-    _REGDATANF(#nm,&(loc),rdx,wd,0,dep,desc,NULL,0,0,sizeof(*(loc)),BRDATAD)
-#define BRDATADF(nm,loc,rdx,wd,dep,desc,flds) \
-    _REGDATANF(#nm,&(loc),rdx,wd,0,dep,desc,flds,0,0,sizeof(*(loc)),BRDATADF)
+#define BRDATA(nm,aloc,rdx,wd,dep) \
+    _RegCheck(#nm,aloc,rdx,wd,0,dep,NULL,NULL,0,sizeof(*(aloc)),sizeof(*(aloc)),BRDATA)
+#define BRDATAD(nm,aloc,rdx,wd,dep,desc) \
+    _RegCheck(#nm,aloc,rdx,wd,0,dep,desc,NULL,0,sizeof(*(aloc)),sizeof(*(aloc)),BRDATAD)
+#define BRDATADF(nm,aloc,rdx,wd,dep,desc,flds) \
+    _RegCheck(#nm,aloc,rdx,wd,0,dep,desc,flds,0,sizeof(*(aloc)),sizeof(*(aloc)),BRDATADF)
+/* Arrayed register whose data is kept in a standard C two dimensional array Register */
+#define CRDATA(nm,aloc,rdx,wd,dep) \
+    _RegCheck(#nm,&(aloc),rdx,wd,0,dep,NULL,NULL,0,sizeof(**(aloc)),sizeof(**(aloc)),CRDATA)
+#define CRDATAD(nm,aloc,rdx,wd,dep,desc) \
+    _RegCheck(#nm,&(aloc),rdx,wd,0,dep,desc,NULL,0,sizeof(**(aloc)),sizeof(**(aloc)),CRDATAD)
+#define CRDATADF(nm,aloc,rdx,wd,dep,desc,flds) \
+    _RegCheck(#nm,&(aloc),rdx,wd,0,dep,desc,flds,0,sizeof(**(aloc)),sizeof(**(aloc)),CRDATADF)
+
 /* Range of memory whose data is successive scalar values accessed like an array Register */
 #define VBRDATA(nm,loc,rdx,wd,dep) \
-    _REGDATANF(#nm,&(loc),rdx,wd,0,dep,NULL,NULL,0,0,sizeof(loc),VBRDATA)
+    _RegCheck(#nm,&(loc),rdx,wd,0,dep,NULL,NULL,0,wd/8,sizeof(loc),VBRDATA)
 #define VBRDATAD(nm,loc,rdx,wd,dep,desc) \
-    _REGDATANF(#nm,&(loc),rdx,wd,0,dep,desc,NULL,0,0,sizeof(loc),VBRDATAD)
+    _RegCheck(#nm,&(loc),rdx,wd,0,dep,desc,NULL,0,wd/8,sizeof(loc),VBRDATAD)
 #define VBRDATADF(nm,loc,rdx,wd,dep,desc,flds) \
-    _REGDATANF(#nm,&(loc),rdx,wd,0,dep,desc,flds,0,0,sizeof(loc),VBRDATADF)
+    _RegCheck(#nm,&(loc),rdx,wd,0,dep,desc,flds,0,wd/8,sizeof(loc),VBRDATADF)
 /* Arrayed register whose data is part of the UNIT structure */
 #define URDATA(nm,loc,rdx,wd,off,dep,fl) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,NULL,NULL,0,0,sizeof((loc)),URDATA),((fl) | REG_UNIT)
+    _RegCheck(#nm,&(loc),rdx,wd,off,dep,NULL,NULL,0,sizeof(UNIT),sizeof((loc)),URDATA),(fl)
 #define URDATAD(nm,loc,rdx,wd,off,dep,fl,desc) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,NULL,0,0,sizeof((loc)),URDATAD),((fl) | REG_UNIT)
+    _RegCheck(#nm,&(loc),rdx,wd,off,dep,desc,NULL,0,sizeof(UNIT),sizeof((loc)),URDATAD),(fl)
 #define URDATADF(nm,loc,rdx,wd,off,dep,fl,desc,flds) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,0,0,sizeof((loc)),URDATADF),((fl) | REG_UNIT)
+    _RegCheck(#nm,&(loc),rdx,wd,off,dep,desc,flds,0,sizeof(UNIT),sizeof((loc)),URDATADF),(fl)
 /* Arrayed register whose data is part of an arbitrary structure */
 #define STRDATA(nm,loc,rdx,wd,off,dep,siz,fl) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,NULL,NULL,0,siz,sizeof((loc)),STRDATA),((fl) | REG_STRUCT)
+    _RegCheck(#nm,&(loc),rdx,wd,off,dep,NULL,NULL,0,siz,sizeof((loc)),STRDATA),(fl)
 #define STRDATAD(nm,loc,rdx,wd,off,dep,siz,fl,desc) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,NULL,0,siz,sizeof((loc)),STRDATAD),((fl) | REG_STRUCT)
+    _RegCheck(#nm,&(loc),rdx,wd,off,dep,desc,NULL,0,siz,sizeof((loc)),STRDATAD),(fl)
 #define STRDATADF(nm,loc,rdx,wd,off,dep,siz,fl,desc,flds) \
-    _REGDATANF(#nm,&(loc),rdx,wd,off,dep,desc,flds,0,siz,sizeof((loc)),STRDATADF),((fl) | REG_STRUCT)
+    _RegCheck(#nm,&(loc),rdx,wd,off,dep,desc,flds,0,siz,sizeof((loc)),STRDATADF),(fl)
 /* Hidden Blob of Data - Only used for SAVE/RESTORE */
 #define SAVEDATA(nm,loc) \
-    _REGDATANF(#nm,&(loc),0,8,0,1,NULL,NULL,0,sizeof(loc),sizeof(loc),SAVEDATA),(REG_HRO)
+    _RegCheck(#nm,&(loc),0,8,0,1,NULL,NULL,0,sizeof(loc),sizeof(loc),SAVEDATA),(REG_HRO)
+#define STARTBIT             {"",  0x00000000, 0,  NULL, NULL}  /* Start at beginning bit */
 #define BIT(nm)              {#nm, 0xffffffff, 1,  NULL, NULL}  /* Single Bit definition */
 #define BITNC                {"",  0xffffffff, 1,  NULL, NULL}  /* Don't care Bit definition */
 #define BITF(nm,sz)          {#nm, 0xffffffff, sz, NULL, NULL}  /* Bit Field definition */
 #define BITNCF(sz)           {"",  0xffffffff, sz, NULL, NULL}  /* Don't care Bit Field definition */
 #define BITFFMT(nm,sz,fmt)   {#nm, 0xffffffff, sz, NULL, #fmt}  /* Bit Field definition with Output format */
 #define BITFNAM(nm,sz,names) {#nm, 0xffffffff, sz, names,NULL}  /* Bit Field definition with value->name map */
-#else /* For non-STD-C compiler which can't stringify macro arguments with # */
-/* Generic Register declaration for all fields.  
-   If the register structure is extended, this macro will be retained and a 
-   new macro will be provided that populates the new register structure */
-#define REGDATA(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,qptr,siz,sizeof((loc)),REGDATA),(fl)
-#define REGDATAC(nm,loc,rdx,wd,off,dep,desc,flds,fl,qptr,siz) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,qptr,siz,sizeof((loc)),REGDATAC),(fl)
-/* Right Justified Octal Register Data */
-#define ORDATA(nm,loc,wd) \
-    _REGDATANF("nm",&(loc),8,wd,0,1,NULL,NULL,0,0,sizeof((loc)),ORDATA)
-#define ORDATAD(nm,loc,wd,desc) \
-    _REGDATANF("nm",&(loc),8,wd,0,1,desc,NULL,0,0,sizeof((loc)),ORDATAD)
-#define ORDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF("nm",&(loc),8,wd,0,1,desc,flds,0,0,sizeof((loc)),ORDATADF)
-/* Right Justified Decimal Register Data */
-#define DRDATA(nm,loc,wd) \
-    _REGDATANF("nm",&(loc),10,wd,0,1,NULL,NULL,0,0,sizeof((loc)),DRDATA)
-#define DRDATAD(nm,loc,wd,desc) \
-    _REGDATANF("nm",&(loc),10,wd,0,1,desc,NULL,0,0,sizeof((loc)),DRDATAD)
-#define DRDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF("nm",&(loc),10,wd,0,1,desc,flds,0,0,sizeof((loc)),DRDATADF)
-/* Right Justified Hexadecimal Register Data */
-#define HRDATA(nm,loc,wd) \
-    _REGDATANF("nm",&(loc),16,wd,0,1,NULL,NULL,0,0,sizeof((loc)),HRDATA)
-#define HRDATAD(nm,loc,wd,desc) \
-    _REGDATANF("nm",&(loc),16,wd,0,1,desc,NULL,0,0,sizeof((loc)),HRDATAD)
-#define HRDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF("nm",&(loc),16,wd,0,1,desc,flds,0,0,sizeof((loc)),HRDATADF)
-/* Right Justified Binary Register Data */
-#define BINRDATA(nm,loc,wd) \
-    _REGDATANF("nm",&(loc),2,wd,0,1,NULL,NULL,0,0,sizeof((loc)),BINRDATA)
-#define BINRDATAD(nm,loc,wd,desc) \
-    _REGDATANF("nm",&(loc),2,wd,0,1,desc,NULL,0,0,sizeof((loc)),BINRDATAD)
-#define BINRDATADF(nm,loc,wd,desc,flds) \
-    _REGDATANF("nm",&(loc),2,wd,0,1,desc,flds,0,0,sizeof((loc)),BINRDATADF)
-/* One-bit binary flag at an arbitrary offset in a 32-bit word Register */
-#define FLDATA(nm,loc,pos) \
-    _REGDATANF("nm",&(loc),2,1,pos,1,NULL,NULL,0,0,sizeof((loc)),FLDATA)
-#define FLDATAD(nm,loc,pos,desc) \
-    _REGDATANF("nm",&(loc),2,1,pos,1,desc,NULL,0,0,sizeof((loc)),FLDATAD)
-#define FLDATADF(nm,loc,pos,desc,flds) \
-    _REGDATANF("nm",&(loc),2,1,pos,1,desc,flds,0,0,sizeof((loc)),FLDATADF)
-/* Arbitrary location and Radix Register */
-#define GRDATA(nm,loc,rdx,wd,pos) \
-    _REGDATANF("nm",&(loc),rdx,wd,pos,1,NULL,NULL,0,0,sizeof((loc)),GRDATA)
-#define GRDATAD(nm,loc,rdx,wd,pos,desc) \
-    _REGDATANF("nm",&(loc),rdx,wd,pos,1,desc,NULL,0,0,sizeof((loc)),GRDATAD)
-#define GRDATADF(nm,loc,rdx,wd,pos,desc,flds) \
-    _REGDATANF("nm",&(loc),rdx,wd,pos,1,desc,flds,0,0,sizeof((loc)),GRDATADF)
-/* Arrayed register whose data is kept in a standard C array Register */
-#define BRDATA(nm,loc,rdx,wd,dep) \
-    _REGDATANF("nm",&(loc),rdx,wd,0,dep,NULL,NULL,0,0,sizeof(*(loc)),BRDATA)
-#define BRDATAD(nm,loc,rdx,wd,dep,desc) \
-    _REGDATANF("nm",&(loc),rdx,wd,0,dep,desc,NULL,0,0,sizeof(*(loc)),BRDATAD)
-#define BRDATADF(nm,loc,rdx,wd,dep,desc,flds) \
-    _REGDATANF("nm",&(loc),rdx,wd,0,dep,desc,flds,0,0,sizeof(*(loc)),BRDATADF)
-/* Range of memory whose data is successive scalar values accessed like an array Register */
-#define VBRDATA(nm,loc,rdx,wd,dep) \
-    _REGDATANF("nm",&(loc),rdx,wd,0,dep,NULL,NULL,0,0,sizeof(loc),VBRDATA)
-#define VBRDATAD(nm,loc,rdx,wd,dep,desc) \
-    _REGDATANF("nm",&(loc),rdx,wd,0,dep,desc,NULL,0,0,sizeof(loc),VBRDATAD)
-#define VBRDATADF(nm,loc,rdx,wd,dep,desc,flds) \
-    _REGDATANF("nm",&(loc),rdx,wd,0,dep,desc,flds,0,0,sizeof(loc),VBRDATADF)
-/* Arrayed register whose data is part of the UNIT structure */
-#define URDATA(nm,loc,rdx,wd,off,dep,fl) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,NULL,NULL,0,0,sizeof((loc)),URDATA),((fl) | REG_UNIT)
-#define URDATAD(nm,loc,rdx,wd,off,dep,fl,desc) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,NULL,0,0,sizeof((loc)),URDATAD),((fl) | REG_UNIT)
-#define URDATADF(nm,loc,rdx,wd,off,dep,fl,desc,flds) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,0,0,sizeof((loc)),URDATADF),((fl) | REG_UNIT)
-/* Arrayed register whose data is part of an arbitrary structure */
-#define STRDATA(nm,loc,rdx,wd,off,dep,siz,fl) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,NULL,NULL,0,siz,sizeof((loc)),STRDATA),((fl) | REG_STRUCT)
-#define STRDATAD(nm,loc,rdx,wd,off,dep,siz,fl,desc) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,NULL,0,siz,sizeof((loc)),STRDATAD),((fl) | REG_STRUCT)
-#define STRDATADF(nm,loc,rdx,wd,off,dep,siz,fl,desc,flds) \
-    _REGDATANF("nm",&(loc),rdx,wd,off,dep,desc,flds,0,siz,sizeof((loc)),STRDATADF),((fl) | REG_STRUCT)
-/* Hidden Blob of Data - Only used for SAVE/RESTORE */
-#define SAVEDATA(nm,loc) \
-    _REGDATANF("nm",&(loc),0,8,0,1,NULL,NULL,0,sizeof(loc),sizeof(loc)),SAVEDATA),(REG_HRO)
-#define BIT(nm)              {"nm", 0xffffffff, 1,  NULL, NULL} /* Single Bit definition */
-#define BITNC                {"",   0xffffffff, 1,  NULL, NULL} /* Don't care Bit definition */
-#define BITF(nm,sz)          {"nm", 0xffffffff, sz, NULL, NULL} /* Bit Field definition */
-#define BITNCF(sz)           {"",   0xffffffff, sz, NULL, NULL} /* Don't care Bit Field definition */
-#define BITFFMT(nm,sz,fmt)   {"nm", 0xffffffff, sz, NULL, "fmt"}/* Bit Field definition with Output format */
-#define BITFNAM(nm,sz,names) {"nm", 0xffffffff, sz, names,NULL} /* Bit Field definition with value->name map */
-#endif
 #define ENDBITS {NULL}  /* end of bitfield list */
 
 
@@ -1089,6 +1132,15 @@ struct MEMFILE {
 #include "sim_console.h"
 #include "sim_timer.h"
 #include "sim_fio.h"
+#include "sim_printf_fmts.h"
+
+/* General-purpose error value for size_t types; check using
+   equality.*/
+
+#define GENERIC_SIZE_T_ERROR ((size_t) -1)
+
+#define SIZE_T_IO_ERROR      GENERIC_SIZE_T_ERROR
+#define IS_SIZE_T_IO_ERROR(thing)  ((thing) == GENERIC_SIZE_T_ERROR)
 
 /* Macro to ALWAYS execute the specified expression and fail if it evaluates to false. */
 /* This replaces any references to "assert()" which should never be invoked */
