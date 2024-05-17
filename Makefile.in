@@ -184,13 +184,8 @@ SIM_OBJS := \
 
 ifeq (@BUILD_PIDP8I@, 1)
 GPIO_OBJS := \
-	obj/pinctrl/gpiochip_bcm2712.o \
-	obj/pinctrl/gpiolib.o \
-	obj/pinctrl/gpiochip_bcm2835.o \
-	obj/pinctrl/gpiochip_rp1.o \
-	obj/pinctrl/util.o
+	obj/pidp8i/gpio-common.o
 PIDP8I_OBJS := \
-	obj/pidp8i/gpio-common.o \
 	obj/pidp8i/main.o
 LED_OBJ := obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
 endif
@@ -920,7 +915,7 @@ bin/txt2ptp: bin/ptp2txt
 # The deeper, pidp8i-test, and scanswitch programs only make sense if we
 # have actual PiDP8i hardware
 ifeq (@BUILD_PIDP8I@, 1)
-bin/pidp8i-test: $(GPIO_OBJS) obj/misc/test.o obj $(PIDP8I_OBJS) obj/pidp8i/gpio-nls.o
+bin/pidp8i-test: $(GPIO_OBJS) obj/misc/test.o obj obj/pidp8i/gpio-nls.o
 	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
 
 bin/deeper: obj/misc/deeper.o $(LED_OBJ) $(GPIO_OBJS)
