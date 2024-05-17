@@ -40,15 +40,21 @@ SGCID=030a47bdb473e59f06628b5b4ddc226963afc0ab
 SGCTM=2022-01-06T18:53:03-08:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
+
+ifeq (@BUILD_PIDP8I@, 1)
+BUILD_PIDP8I_CFLAGS = -DPIDP8I -I @srcdir@/src/pidp8i
+endif
+
 SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
-	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) -DPIDP8I \
+	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) \
 	-DSIM_ASYNCH_IO -DHAVE_GLOB \
 	-DSIM_GIT_COMMIT_ID=$(SGCID) -DSIM_GIT_COMMIT_TIME=$(SGCTM) \
 	-DSIM_BUILD_TOOL='autosetup+gmake' \
 	-D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
-	-I @srcdir@/src/SIMH -I @srcdir@/src/pidp8i -I src -I src/SIMH -I src/pidp8i
+	-I @srcdir@/src/SIMH -I src -I src/SIMH \
+	$(BUILD_PIDP8I_CFLAGS)
 ifneq "@HAVE_PCRE_H@" "0"
 SIM_CFLAGS += -DHAVE_PCRE_H
 SIM_LFLAGS := -lpcre
@@ -73,19 +79,30 @@ CC8_CROSS_CFLAGS = -w @BUILDMODE@
 D8TAPE_CFLAGS = -Wno-format @BUILDMODE@
 
 # Simpler options for src/misc/*.c
-MISC_CFLAGS = -I @srcdir@/src/pidp8i -I src/pidp8i @BUILDMODE@ -std=c99
+MISC_CFLAGS = $(BUILD_PIDP8I_CFLAGS) @BUILDMODE@ -std=c99
 
 # Even simpler options for palbart.
 PALBART_CFLAGS = @BUILDMODE@
 
 PIDP8I_SIM = bin/pidp8i-sim
 PDP8_SIM = bin/pdp8
+
+ifeq (@BUILD_PIDP8I@, 1)
+PI_BINS = \
+	libexec/scanswitch \
+	bin/pidp8i-test
+
+ifeq (@BUILD_DEEPER_THOUGHT@, 1)
+PI_BINS += bin/deeper
+endif
+endif
+
+
 BINS = $(PIDP8I_SIM) @CC8_CROSS@ \
 	bin/d8tape \
 	bin/palbart \
-	bin/pidp8i-test \
-	bin/ptp2txt \
-	libexec/scanswitch
+	bin/ptp2txt
+
 BIN_SCRIPTS = \
 	bin/os8pkg \
 	bin/pidp8i \
@@ -134,8 +151,6 @@ INSTDIRS := bin etc lib/pidp8i libexec \
 	share/boot share/include share/man/man1 share/media/os8 share/save
 
 SIM_OBJS := \
-	obj/pidp8i/gpio-common.o \
-	obj/pidp8i/main.o \
 	obj/SIMH/PDP8/pdp8_df.o \
 	obj/SIMH/PDP8/pdp8_cpu.o \
 	obj/SIMH/PDP8/pdp8_clk.o \
@@ -167,6 +182,19 @@ SIM_OBJS := \
 	obj/SIMH/sim_tmxr.o \
 	obj/SIMH/sim_video.o
 
+ifeq (@BUILD_PIDP8I@, 1)
+GPIO_OBJS := \
+	obj/pinctrl/gpiochip_bcm2712.o \
+	obj/pinctrl/gpiolib.o \
+	obj/pinctrl/gpiochip_bcm2835.o \
+	obj/pinctrl/gpiochip_rp1.o \
+	obj/pinctrl/util.o
+PIDP8I_OBJS := \
+	obj/pidp8i/gpio-common.o \
+	obj/pidp8i/main.o
+LED_OBJ := obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
+endif
+
 CC8_OBJS := \
 	obj/cc8/cross/code8.o \
 	obj/cc8/cross/data.o \
@@ -197,10 +225,6 @@ MISC_OBJS := \
 	obj/misc/test.o
 
 PALBART_OBJS := obj/palbart/palbart.o
-
-ifeq (@BUILD_DEEPER_THOUGHT@, 1)
-BINS += bin/deeper
-endif
 
 TEST_TMP_BINS = bin/os8-run bin/pdp8 bin/ptp2txt
 
@@ -389,7 +413,7 @@ PKGS_INCLUDE = obj/os8pkg/pkgs.os8
 
 all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
-	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
+	$(BUILDDIRS) $(BINS) $(PI_BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
 	$(OS8_TOOLTIME) pkg_all \
 	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) \
@@ -873,7 +897,7 @@ obj/cc8/os8/%.c: @srcdir@/src/cc8/examples/%.c
 $(BUILDDIRS):
 	mkdir -p $@
 
-$(PIDP8I_SIM): $(SIM_OBJS) obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
+$(PIDP8I_SIM): $(SIM_OBJS) $(GPIO_OBJS)  $(PIDP8I_OBJS) $(LED_OBJ)
 	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) $(SIM_LFLAGS) @PI_LIBS@
 	ln -f bin/pidp8i-sim bin/pdp8
 
@@ -886,9 +910,6 @@ bin/d8tape: $(D8TAPE_OBJS)
 bin/palbart: $(PALBART_OBJS)
 	$(CC) $(PALBART_CFLAGS) -o $@ $^
 
-bin/pidp8i-test: obj/misc/test.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
-
 bin/ptp2txt: obj/misc/ptp2txt.o
 	$(CC) -o $@ $^
 	ln -f bin/ptp2txt bin/txt2ptp
@@ -896,14 +917,21 @@ bin/ptp2txt: obj/misc/ptp2txt.o
 bin/txt2ptp: bin/ptp2txt
 	ln -f bin/ptp2txt bin/txt2ptp
 
-bin/deeper: obj/misc/deeper.o obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o obj/pidp8i/gpio-common.o
+# The deeper, pidp8i-test, and scanswitch programs only make sense if we
+# have actual PiDP8i hardware
+ifeq (@BUILD_PIDP8I@, 1)
+bin/pidp8i-test: $(GPIO_OBJS) obj/misc/test.o obj $(PIDP8I_OBJS) obj/pidp8i/gpio-nls.o
+	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
+
+bin/deeper: obj/misc/deeper.o $(LED_OBJ) $(GPIO_OBJS)
 	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+
+libexec/scanswitch: $(GPIO_OBJS) obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o
+	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+endif
 
 doc/e8-manual.pdf: doc/e8-manual.md
 	tools/mkmanpdf doc/e8-manual
-
-libexec/scanswitch: obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o obj/pidp8i/gpio-common.o
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
 
 # Reconfigure whenever one of the *.in or autosetup files changes unless
 # this is "make clean".
@@ -933,7 +961,11 @@ src/pidp8i/gpio-common.c: @srcdir@/tools/version
 	$(SIM_OBJS:.o=.d) \
 	$(CC8_OBJS:.o=.d) \
 	$(D8TAPE_OBJS:.o=.d) \
-	$(MISC_OBJS:.o=.d) \
-	$(PALBART_OBJS:.o=.d)
+	$(PALBART_OBJS:.o=.d) \
+	$(GPIO_OBJS_OBJS:.o=.d) \
+	$(PIDP8I_OBJS:.o=.d) \
+	$(LED_OBJ:.o=.d) \
+	$(MISC_OBJS:.o=.d)
+
 -include $(ADF)
 

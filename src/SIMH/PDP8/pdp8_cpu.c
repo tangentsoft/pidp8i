@@ -225,7 +225,10 @@
 #include "pdp8_defs.h"
 
 /* ---PiDP add---------------------------------------------------------------------------------------------- */
+// Note that we build on platforms that don't actually have the PiDP8I hardware
+#ifdef PIDP8I
 #include <pidp8i.h>
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 #define PCQ_SIZE        64                              /* must be 2**n */
@@ -375,6 +378,7 @@ reason = 0;
 
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef PIDP8I
 // A copy of MA = PC | IR, held steady for the benefit of the PiDP-8/I
 // display update calls, unlike the simulator's MA register which has
 // the incorrect value at some of the set_pidp8i_leds() calls below.
@@ -409,6 +413,7 @@ skip_count = dither = inst_count = 0;
 // work to feed the GPIO thread if it failed to start.
 extern int use_pidp8i_extensions;
 const int pidp8i_gpio = use_pidp8i_extensions && pidp8i_gpio_present;
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 
@@ -426,6 +431,7 @@ while (reason == 0) {                                   /* loop until halted */
     if (sim_interval <= 0) {                            /* check clock queue */
         if ((reason = sim_process_event ())) {
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef PIDP8I
             // We're about to leave the instruction decode loop, so
             // pause the display driver thread and set it up so that it
             // will resume correctly if user says "cont".
@@ -448,13 +454,14 @@ while (reason == 0) {                                   /* loop until halted */
                 // case the user tries poking at it from the sim> prompt.
                 SR = get_switch_register();
                 }
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
             break;
             }
         }
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
-
+#ifdef PIDP8I
     switch (pidp8i_gpio ? handle_flow_control_switches(M, &PC, &SteadyMA,
             &MB, &LAC, &IF, &DF, &int_req) : pft_normal) {
         case pft_stop:
@@ -492,7 +499,7 @@ while (reason == 0) {                                   /* loop until halted */
             // execute normally
             break;
     }
-
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
     if (int_req > INT_PENDING) {                        /* interrupt? */
@@ -506,7 +513,9 @@ while (reason == 0) {                                   /* loop until halted */
 
     MA = IF | PC;                                       /* form PC */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef PIDP8I
     SteadyMA = MA;                                      /* latch it for PiDP-8/I display */
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     if (sim_brk_summ && 
         sim_brk_test (MA, (1u << SIM_BKPT_V_SPC) | SWMASK ('E'))) { /* breakpoint? */
@@ -1069,12 +1078,15 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             else {
                 if (IR & 04) {                          /* OSR */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef PIDP8I
                     if (pidp8i_gpio) SR = get_switch_register();  /* get current SR */
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                     LAC = LAC | SR;
                     }
                 if (IR & 02) {                          /* HLT */
 //--- PiDP change-----------------------------------------------------------------------
+#ifdef PIDP8I
                     if (pidp8i_gpio) {
                         // We've got a front panel, so treat HLT the
                         // same as pressing the STOP key: CONT resumes.
@@ -1088,6 +1100,10 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
                         reason = STOP_HALT;
                         }
                     }
+#else
+                    reason = STOP_HALT;
+                    }
+#endif
 //--- end of PiDP change----------------------------------------------------------------
                 }
             break;
@@ -1509,8 +1525,10 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         default:                                        /* I/O device */
             if (dev_tab[device]) {                      /* dev present? */
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef PIDP8I
                 // Any other device will trigger IOP, so light pause
                 Pause = 1;
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
                 iot_data = dev_tab[device] (IR, iot_data);
                 LAC = (LAC & 010000) | (iot_data & 07777);
@@ -1526,6 +1544,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         }                                               /* end switch opcode */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef PIDP8I
     // Update the front panel with this instruction's final state.
     //
     // There's no point saving *every* LED "on" count.  We just need a
@@ -1592,10 +1611,12 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
         dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
         }
     Pause = 0;      // it's set outside the "if", so it must be *reset* outside
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
     }                                                   /* end while */
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+#ifdef PIDP8I
 // If we're leaving the simulator's CPU instruction execution loop for
 // the last time, during program shutdown, also clear all of the LEDs,
 // else we'll leave them solidly lit.
@@ -1605,6 +1626,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
 if (pidp8i_gpio && (reason == SCPE_STOP) && pidp8i_gpio_present) {
     turn_off_pidp8i_leds ();
     }
+#endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
 
 /* Simulation halted */
