@@ -1,6 +1,6 @@
 /* sim_timer.c: simulator timer library
 
-   Copyright (c) 1993-2010, Robert M Supnik
+   Copyright (c) 1993-2022, Robert M Supnik
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -23,6 +23,11 @@
    used in advertising or otherwise to promote the sale, use or other dealings
    in this Software without prior written authorization from Robert M Supnik.
 
+   27-Sep-22    RMS     Removed OS/2 and Mac "Classic" support
+   01-Feb-21    JDB     Added cast for down-conversion
+   22-May-17    RMS     Hacked for V4.0 CONST compatibility
+   23-Nov-15    RMS     Fixed calibration lost path to reinitialize timer
+   28-Mar-15    RMS     Revised to use sim_printf
    21-Oct-11    MP      Fixed throttling in several ways:
                          - Sleep for the observed clock tick size while throttling
                          - Recompute the throttling wait once every 10 seconds
@@ -88,6 +93,9 @@
 #include "sim_defs.h"
 #include <ctype.h>
 #include <math.h>
+#ifdef HAVE_WINMM
+#include <windows.h>
+#endif
 
 #define SIM_INTERNAL_CLK (SIM_NTIMERS+(1<<30))
 #define SIM_INTERNAL_UNIT sim_internal_timer_unit
@@ -462,7 +470,7 @@ return 0;
 }
 #endif /* CLOCK_REALTIME */
 
-#elif defined (_WIN32)
+#elif defined (_WIN32)  ||  defined(HAVE_WINMM)
 
 /* Win32 routines */
 
@@ -529,92 +537,6 @@ GetSystemTimeAsFileTime((FILETIME*)&now);
 now -= unixbase;
 tp->tv_sec = (long)(now/10000000);
 tp->tv_nsec = (now%10000000)*100;
-return 0;
-}
-#endif
-
-#elif defined (__OS2__)
-
-/* OS/2 routines, from Bruce Ray */
-
-const t_bool rtc_avail = FALSE;
-
-uint32 sim_os_msec (void)
-{
-return 0;
-}
-
-void sim_os_sleep (unsigned int sec)
-{
-}
-
-uint32 sim_os_ms_sleep_init (void)
-{
-return 0;
-}
-
-uint32 sim_os_ms_sleep (unsigned int msec)
-{
-return 0;
-}
-
-/* Metrowerks CodeWarrior Macintosh routines, from Ben Supnik */
-
-#elif defined (__MWERKS__) && defined (macintosh)
-
-#include <Timer.h>
-#include <Mactypes.h>
-#include <sioux.h>
-#include <unistd.h>
-#include <siouxglobals.h>
-#define NANOS_PER_MILLI     1000000
-#define MILLIS_PER_SEC      1000
-
-const t_bool rtc_avail = TRUE;
-
-uint32 sim_os_msec (void)
-{
-unsigned long long micros;
-UnsignedWide macMicros;
-unsigned long millis;
-
-Microseconds (&macMicros);
-micros = *((unsigned long long *) &macMicros);
-millis = micros / 1000LL;
-return (uint32) millis;
-}
-
-void sim_os_sleep (unsigned int sec)
-{
-sleep (sec);
-}
-
-uint32 sim_os_ms_sleep_init (void)
-{
-return _compute_minimum_sleep ();
-}
-
-uint32 sim_os_ms_sleep (unsigned int milliseconds)
-{
-uint32 stime = sim_os_msec ();
-struct timespec treq;
-
-treq.tv_sec = milliseconds / MILLIS_PER_SEC;
-treq.tv_nsec = (milliseconds % MILLIS_PER_SEC) * NANOS_PER_MILLI;
-(void) nanosleep (&treq, NULL);
-return sim_os_msec () - stime;
-}
-
-#if defined(NEED_CLOCK_GETTIME)
-int clock_gettime(int clk_id, struct timespec *tp)
-{
-struct timeval cur;
-
-if (clk_id != CLOCK_REALTIME)
-  return -1;
-gettimeofday (&cur, NULL);
-tp->tv_sec = cur.tv_sec;
-tp->tv_nsec = cur.tv_usec*1000;
 return 0;
 }
 #endif
@@ -758,6 +680,7 @@ static void _rtcn_configure_calibrated_clock (int32 newtmr);
 static t_bool _sim_coschedule_cancel (UNIT *uptr);
 static t_bool _sim_wallclock_cancel (UNIT *uptr);
 static t_bool _sim_wallclock_is_active (UNIT *uptr);
+static void _sim_timer_adjust_cal(void);
 t_stat sim_timer_show_idle_mode (FILE* st, UNIT* uptr, int32 val, CONST void *  desc);
 
 
@@ -1161,7 +1084,7 @@ do {
         sim_os_clock_resoluton_ms = clock_diff;
     clock_last = clock_now;
     } while (clock_now < clock_start + 100);
-if ((sim_idle_rate_ms != 0) && (sim_os_clock_resoluton_ms != 0))
+if ((sim_os_clock_resoluton_ms != 0) && (sim_idle_rate_ms >= sim_os_clock_resoluton_ms))
     sim_os_tick_hz = 1000/(sim_os_clock_resoluton_ms * (sim_idle_rate_ms/sim_os_clock_resoluton_ms));
 else {
     fprintf (stderr, "Can't properly determine host system clock capabilities.\n");
@@ -1831,9 +1754,10 @@ else {
         sim_throt_wait = sim_throt_val;
         }
     }
-if (sim_throt_type == SIM_THROT_SPC)    /* Set initial value while correct one is determined */
+if (sim_throt_type == SIM_THROT_SPC) {  /* Set initial value while correct one is determined */
     sim_throt_cps = (int32)((1000.0 * sim_throt_val) / (double)sim_throt_sleep_time);
-else
+    _sim_timer_adjust_cal();            /* adjust timer calibrations */
+} else
     sim_throt_cps = sim_precalibrate_ips;
 return SCPE_OK;
 }
@@ -2038,21 +1962,7 @@ switch (sim_throt_state) {
             sim_debug (DBG_THR, &sim_timer_dev, "sim_throt_svc() Throttle values a_cps = %f, d_cps = %f, wait = %d, sleep = %d ms\n", 
                                                 a_cps, d_cps, sim_throt_wait, sim_throt_sleep_time);
             sim_throt_cps = d_cps;                  /* save the desired rate */
-            /* Run through all timers and adjust the calibration for each */
-            /* one that is running to reflect the throttle rate */
-            for (tmr=0; tmr<=SIM_NTIMERS; tmr++) {
-                rtc = &rtcs[tmr];
-                if (rtc->hz) {                                      /* running? */
-                    rtc->currd = (int32)(sim_throt_cps / rtc->hz);/* use throttle calibration */
-                    rtc->ticks = rtc->hz - 1;                     /* force clock calibration on next tick */
-                    rtc->rtime = sim_throt_ms_start - 1000 + 1000/rtc->hz;/* adjust calibration parameters to reflect throttled rate */
-                    rtc->gtime = sim_throt_inst_start - sim_throt_cps + sim_throt_cps/rtc->hz;
-                    rtc->nxintv = 1000;
-                    rtc->based = rtc->currd;
-                    if (rtc->clock_unit)
-                        sim_activate_abs (rtc->clock_unit, rtc->currd);/* reschedule next tick */
-                    }
-                }
+	    _sim_timer_adjust_cal();                /* adjust timer calibrations */
             }
         break;
 
@@ -2114,6 +2024,30 @@ switch (sim_throt_state) {
 
 sim_activate (uptr, sim_throt_wait);                    /* reschedule */
 return SCPE_OK;
+}
+
+/* Run through all timers and adjust the calibration for each */
+/* one that is running to reflect the throttle rate */
+static void _sim_timer_adjust_cal(void)
+{
+    int32 tmr;
+    RTC *rtc = NULL;
+
+    for (tmr=0; tmr<=SIM_NTIMERS; tmr++) {
+        rtc = &rtcs[tmr];
+
+        if (rtc->hz) {                                      /* running? */
+            rtc->currd = (int32)(sim_throt_cps / rtc->hz);/* use throttle calibration */
+            rtc->ticks = rtc->hz - 1;                     /* force clock calibration on next tick */
+            rtc->rtime = sim_throt_ms_start - 1000 + 1000/rtc->hz;/* adjust calibration parameters to reflect throttled rate */
+            rtc->gtime = sim_throt_inst_start - sim_throt_cps + sim_throt_cps/rtc->hz;
+            rtc->nxintv = 1000;
+            rtc->based = rtc->currd;
+
+            if (rtc->clock_unit)
+                sim_activate_abs (rtc->clock_unit, rtc->currd);/* reschedule next tick */
+        }
+    }
 }
 
 /* Clock assist activites */

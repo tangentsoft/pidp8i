@@ -36,8 +36,8 @@
 
 # Git commit ID and time of the latest version of the SIMH 4 project on
 # GitHub that has been merged into this source base.
-SGCID=030a47bdb473e59f06628b5b4ddc226963afc0ab
-SGCTM=2022-01-06T18:53:03-08:00
+SGCID=ffe537a6
+SGCTM=2024-02-20T18:20:13-08:00
 
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 
@@ -45,16 +45,21 @@ ifeq (@BUILD_PIDP8I@, 1)
 BUILD_PIDP8I_CFLAGS = -I @srcdir@/src/pidp8i -I @srcdir@/src/pinctrl
 endif
 
+ifeq (@BUILD_PIDP8I@, 1)
+BUILD_PIDP8I_CFLAGS = -DPIDP8I -I @srcdir@/src/pidp8i
+endif
+
 SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
-	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) @PIDP8I_FLAG@ \
+	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) \
 	-DSIM_ASYNCH_IO -DHAVE_GLOB \
 	-DSIM_GIT_COMMIT_ID=$(SGCID) -DSIM_GIT_COMMIT_TIME=$(SGCTM) \
 	-DSIM_BUILD_TOOL='autosetup+gmake' \
 	-D_GNU_SOURCE \
 	-U__STRICT_ANSI__ \
-	-I @srcdir@/src/SIMH -I src -I src/SIMH -I src/pidp8i \
+	-I @srcdir@/src/SIMH -I src -I src/SIMH \
 	$(BUILD_PIDP8I_CFLAGS)
+
 ifneq "@HAVE_PCRE_H@" "0"
 SIM_CFLAGS += -DHAVE_PCRE_H
 SIM_LFLAGS := -lpcre
@@ -81,7 +86,7 @@ CC8_CROSS_CFLAGS = -w @BUILDMODE@
 D8TAPE_CFLAGS = -Wno-format @BUILDMODE@
 
 # Simpler options for src/misc/*.c
-MISC_CFLAGS = $(BUILD_PIDP8I_CFLAGS) -I src/pidp8i @BUILDMODE@ -std=c99
+MISC_CFLAGS = $(BUILD_PIDP8I_CFLAGS) @BUILDMODE@ -std=c99
 
 # Even simpler options for palbart.
 PALBART_CFLAGS = @BUILDMODE@
@@ -193,7 +198,6 @@ GPIO_OBJS := \
 	obj/pinctrl/gpiochip_rp1.o \
 	obj/pinctrl/util.o \
 	obj/pidp8i/gpio-common.o
-
 PIDP8I_OBJS := \
 	obj/pidp8i/main.o
 LED_OBJ := obj/pidp8i/gpio-@LED_DRIVER_MODULE@ls.o
