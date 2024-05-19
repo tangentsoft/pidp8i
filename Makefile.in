@@ -42,7 +42,7 @@ SGCTM=2024-02-20T18:20:13-08:00
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 
 ifeq (@BUILD_PIDP8I@, 1)
-BUILD_PIDP8I_CFLAGS = -I @srcdir@/src/pidp8i -I @srcdir@/src/pinctrl
+BUILD_PIDP8I_CFLAGS = -DPIDP8I -I @srcdir@/src/pidp8i -I @srcdir@/src/pinctrl
 endif
 
 SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
