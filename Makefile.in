@@ -45,10 +45,6 @@ ifeq (@BUILD_PIDP8I@, 1)
 BUILD_PIDP8I_CFLAGS = -I @srcdir@/src/pidp8i -I @srcdir@/src/pinctrl
 endif
 
-ifeq (@BUILD_PIDP8I@, 1)
-BUILD_PIDP8I_CFLAGS = -DPIDP8I -I @srcdir@/src/pidp8i
-endif
-
 SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) \
