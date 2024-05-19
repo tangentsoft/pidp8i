@@ -54,8 +54,10 @@ void gpio_core (int* terminate)
     // This is a simplified version of what's in the gpio-ils.c version
     // of this function, so if you want more comments, read them there.
     while (*terminate == 0) {
-        for (size_t i = 0; i < NCOLS; ++i) 
-		gpio_set_drive(cols[i], DRIVE_HIGH);
+        for (size_t i = 0; i < NCOLS; ++i) {
+           gpio_set_fsel(cols[i], GPIO_FSEL_OUTPUT); 
+           gpio_set_drive(cols[i], DRIVE_HIGH);
+        }
         swap_displays ();
         update_led_states (intervl);
         read_switches (intervl * 1000 / 100);
