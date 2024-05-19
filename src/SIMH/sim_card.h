@@ -53,7 +53,11 @@
                         of card.
 
     For autodetection of BCD card format, there can be no parity errors.
-    All undeterminate formats are treated as ASCII.
+    All undeterminate formats are treated as ASCII. CBN and BCD cards
+    must also contain short or full records, if the record is not terminate
+    early by a EOR flag, then only up to record size (80 for BCD and
+    160 for CBN will be read).
+
 
     ASCII mode recognizes some additional forms of input which allows the
     intermixing of binary cards with text cards. 
@@ -145,7 +149,7 @@ extern const char      sim_ascii_to_six[128];       /* Map 7 bit ASCII to BCD */
 extern const uint8     sim_parity_table[64];        /* 64 entry odd parity table */
 
 /* Unit test routine */
-extern t_stat sim_card_test (DEVICE *dptr);
+extern t_stat sim_card_test (DEVICE *dptr, const char *cptr);
 
 #ifdef  __cplusplus
 }

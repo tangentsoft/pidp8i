@@ -163,7 +163,7 @@ extern "C" {
 #define ETH_MIN_PACKET        60                        /* minimum ethernet packet size */
 #define ETH_MAX_PACKET      1514                        /* maximum ethernet packet size */
 #define ETH_MAX_JUMBO_FRAME 65536                       /* maximum ethernet jumbo frame size (or Offload Segment Size) */
-#define ETH_MAX_DEVICE        20                        /* maximum ethernet devices */
+#define ETH_MAX_DEVICE        40                        /* maximum ethernet devices */
 #define ETH_CRC_SIZE           4                        /* ethernet CRC size */
 #define ETH_FRAME_SIZE (ETH_MAX_PACKET+ETH_CRC_SIZE)    /* ethernet maximum frame size */
 #define ETH_MIN_JUMBO_FRAME ETH_MAX_PACKET              /* Threshold size for Jumbo Frame Processing */
@@ -232,6 +232,8 @@ struct eth_queue {
   struct eth_item*    item;
 };
 
+typedef unsigned char ETH_MAC[6];
+
 struct eth_list {
   char    name[ETH_DEV_NAME_MAX];
   char    desc[ETH_DEV_DESC_MAX];
@@ -239,7 +241,6 @@ struct eth_list {
 };
 
 typedef int ETH_BOOL;
-typedef unsigned char ETH_MAC[6];
 typedef unsigned char ETH_MULTIHASH[8];
 typedef struct eth_packet  ETH_PACK;
 typedef void (*ETH_PCALLBACK)(int status);
@@ -368,6 +369,7 @@ t_stat eth_show (FILE* st, UNIT* uptr,                  /* show ethernet devices
                  int32 val, CONST void* desc);
 t_stat eth_show_devices (FILE* st, DEVICE *dptr,        /* show ethernet devices */
                          UNIT* uptr, int32 val, CONST char* desc);
+int eth_devices (int max, ETH_LIST* dev, ETH_BOOL framers); /* get ethernet devices on host */
 void eth_show_dev (FILE*st, ETH_DEV* dev);              /* show ethernet device state */
 
 void eth_mac_fmt (ETH_MAC* const add, char* buffer);    /* format ethernet mac address */
@@ -385,7 +387,7 @@ void ethq_insert_data(ETH_QUE* que, int32 type,         /* insert item into FIFO
                   size_t crc_len, const uint8 *crc_data, int32 status);
 t_stat ethq_destroy(ETH_QUE* que);                      /* release FIFO queue */
 const char *eth_capabilities(void);
-t_stat sim_ether_test (DEVICE *dptr);                   /* unit test routine */
+t_stat sim_ether_test (DEVICE *dptr, const char *cptr); /* unit test routine */
 
 #if !defined(SIM_TEST_INIT)     /* Need stubs for test APIs */
 #define SIM_TEST_INIT

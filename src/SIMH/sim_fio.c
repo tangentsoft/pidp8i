@@ -54,7 +54,16 @@
    sim_byte_swap_data -      swap data elements inplace in buffer
    sim_shmem_open            create or attach to a shared memory region
    sim_shmem_close           close a shared memory region
-
+   sim_chdir                 change working directory
+   sim_mkdir                 create a directory
+   sim_rmdir                 remove a directory
+   sim_getcwd                get the current working directory
+   sim_copyfile              copy a file
+   sim_filepath_parts        expand and extract filename/path parts
+   sim_dirscan               scan for a filename pattern
+   sim_get_filelist          get a list of files matching a pattern
+   sim_free_filelist         free a filelist
+   sim_print_filelist        print the elements of a filelist
 
    sim_fopen and sim_fseek are OS-dependent.  The other routines are not.
    sim_fsize is always a 32b routine (it is used only with small capacity random
@@ -146,14 +155,13 @@ if ((size == 0) || (count == 0))                        /* check arguments */
 c = fread (bptr, size, count, fptr);                    /* read buffer */
 if (sim_end || (size == sizeof (char)) || (c == 0))     /* le, byte, or err? */
     return c;                                           /* done */
-sim_buf_swap_data (bptr, size, count);
+sim_buf_swap_data (bptr, size, c);
 return c;
 }
 
 void sim_buf_copy_swapped (void *dbuf, const void *sbuf, size_t size, size_t count)
 {
-size_t j;
-int32 k;
+size_t j, k;
 const unsigned char *sptr = (const unsigned char *)sbuf;
 unsigned char *dptr = (unsigned char *)dbuf;
 
@@ -162,8 +170,12 @@ if (sim_end || (size == sizeof (char))) {
     return;
     }
 for (j = 0; j < count; j++) {                           /* loop on items */
-    for (k = (int32)(size - 1); k >= 0; k--)
-        *(dptr + k) = *sptr++;
+    /* Unsigned countdown loop. Predecrement k before it's used inside the
+       loop so that k == 0 in the loop body to process the last item, then
+       terminate. Initialize k to size for the same reason: the predecrement
+       gives us size - 1 in the loop body. */
+    for (k = size; k > 0; /* empty */)
+        *(dptr + --k) = *sptr++;
     dptr = dptr + size;
     }
 }
@@ -345,6 +357,58 @@ char pathbuf[PATH_MAX + 1];
 if (NULL == _sim_expand_homedir (path, pathbuf, sizeof (pathbuf)))
     return -1;
 return rmdir (pathbuf);
+}
+
+static void _sim_filelist_entry (const char *directory, 
+                                 const char *filename,
+                                 t_offset FileSize,
+                                 const struct stat *filestat,
+                                 void *context)
+{
+char **filelist = *(char ***)context;
+char FullPath[PATH_MAX + 1];
+int listcount = 0;
+
+snprintf (FullPath, sizeof (FullPath), "%s%s", directory, filename);
+if (filelist != NULL) {
+    while (filelist[listcount++] != NULL);
+    --listcount;
+    }
+filelist = (char **)realloc (filelist, (listcount + 2) * sizeof (*filelist));
+filelist[listcount] = strdup (FullPath);
+filelist[listcount + 1] = NULL;
+*(char ***)context = filelist;
+}
+
+char **sim_get_filelist (const char *filename)
+{
+t_stat r;
+char **filelist = NULL;
+
+r = sim_dir_scan (filename, _sim_filelist_entry, &filelist);
+if (r == SCPE_OK)
+    return filelist;
+return NULL;
+}
+
+void sim_free_filelist (char ***pfilelist)
+{
+char **listp = *pfilelist;
+
+if (listp == NULL)
+    return;
+while (*listp != NULL)
+    free (*listp++);
+free (*pfilelist);
+*pfilelist = NULL;
+}
+
+void sim_print_filelist (char **filelist)
+{
+if (filelist == NULL)
+    return;
+while (*filelist != NULL)
+    sim_printf ("%s\n", *filelist++);
 }
 
 
@@ -892,6 +956,8 @@ char *sim_getcwd (char *buf, size_t buf_size)
 {
 #if defined (VMS)
 return getcwd (buf, buf_size, 0);
+#elif defined(__MINGW64__) ||defined(_MSC_VER) || defined(__MINGW32__)
+return _getcwd (buf, (int) buf_size);
 #else
 return getcwd (buf, buf_size);
 #endif
@@ -913,7 +979,7 @@ return getcwd (buf, buf_size);
  *
  * In the above example above %I% can be replaced by other 
  * environment variables or numeric parameters to a DO command
- * invokation.
+ * invocation.
  */
 
 char *sim_filepath_parts (const char *filepath, const char *parts)
