@@ -393,7 +393,7 @@ int Pause = 0;
 // Set our initial IPS value from the throttle, if given.
 static time_t last_update = 0;
 static size_t max_skips = 0;
-static const size_t pidp8i_updates_per_sec = 3200;
+static const size_t pidp8i_updates_per_sec = 19000;
 max_skips = get_pidp8i_initial_max_skips (pidp8i_updates_per_sec);
 srand48 (time (&last_update));
 
