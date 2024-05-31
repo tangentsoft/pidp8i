@@ -77,7 +77,7 @@ void gpio_core (int* terminate)
     // shrink the dynamic range of the brightness levels
     // the first choice results in more distinguishable brightness levels.
     // the second, commented out line is the legacy implementation with equal delay times per
-    //             brightness level. You can check the difference visually with the "test_pattern" 
+    //             brightness level. You can check the difference visually with the "test_pattern"
     //             feature below
 
     static us_time_t intervl_loop[MAX_BRIGHTNESS+1] = {1,1,1,1,1,1,1,2,2,2,3,3,3,4,5,5,6,7,7,8,10,11,12,14,15,17,20,22,25,28,31,35,40};
@@ -93,8 +93,8 @@ void gpio_core (int* terminate)
     static float filtered_cycle_ms = 0;
     static long timing_cnt = 0;
     static struct timespec last_timing_stamp;
-    static int manual_ILS_tweaking = 0;
     static int test_pattern_active = 0;
+
 
     // execute only once: check if we get manual ILS tweaking values from the env. variable
     // PIDP8I_ILS_TWEAK or PIDP8I_ILS_RAMP
@@ -104,16 +104,16 @@ void gpio_core (int* terminate)
         char* tweaking_ramp = getenv("PIDP8I_ILS_RAMP");
         char* tweaking_test = getenv("PIDP8I_ILS_TEST");
 
-        if (tweaking) {
+        if ( tweaking ) {
     	  int n = sscanf(tweaking, "%f,%f",&RISING_FACTOR,&FALLING_FACTOR);
-          if (n!=2) {
+          if ( n != 2 ||
+               RISING_FACTOR > 1.0 || RISING_FACTOR <= 0.0 ||
+               FALLING_FACTOR > 1.0 || FALLING_FACTOR <= 0.0 ) {
             RISING_FACTOR = RISING_FACTOR_DEFAULT;
             FALLING_FACTOR = FALLING_FACTOR_DEFAULT;
-          } else {
-            manual_ILS_tweaking=1;
           }
         }
-        if (tweaking_ramp) {
+        if ( tweaking_ramp ) {
           us_time_t iv[MAX_BRIGHTNESS+1];
           int n = sscanf(tweaking_ramp, "%d,%d,%d,%d,%d,%d,%d,%d,"
                                    "%d,%d,%d,%d,%d,%d,%d,%d,"
@@ -300,12 +300,11 @@ void gpio_core (int* terminate)
         // in gpio-nls.c.
         read_switches(12000);
 
-        // unless the FALLING_FACTOR AND RISING_FACTOR are explicitly set
-        // by the user externally, we try to self-calibrate those values
+        // we try to self-calibrate RISING_FACTOR and FALLING_FACTOR
         // once every 1000 cycles which should be about once every few seconds,
         // roughly
 
-        if (!manual_ILS_tweaking && timing_cnt++ == 1000){
+        if (timing_cnt++ == 1000){
             struct timespec time_now;
             clock_gettime(CLOCK_MONOTONIC,&time_now);
             if(last_timing_stamp.tv_sec || last_timing_stamp.tv_nsec) {
