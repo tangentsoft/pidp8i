@@ -99,6 +99,7 @@ endif
 
 
 BINS = $(PIDP8I_SIM) @CC8_CROSS@ \
+	$(PI_BINS) \
 	bin/d8tape \
 	bin/palbart \
 	bin/ptp2txt
@@ -408,7 +409,7 @@ PKGS_INCLUDE = obj/os8pkg/pkgs.os8
 
 all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
-	$(BUILDDIRS) $(BINS) $(PI_BINS) $(BOOTSCRIPTS) $(LISTINGS) \
+	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
 	$(OS8_TOOLTIME) pkg_all \
 	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) \
