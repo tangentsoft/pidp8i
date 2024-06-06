@@ -1,7 +1,7 @@
 /*
  * gpio-ils.c: implements gpio_core () for Ian Schofield's incandescent
  *             lamp simulator
- * 
+ *
  * Copyright © 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -68,10 +68,10 @@ static float FALLING_FACTOR = FALLING_FACTOR_DEFAULT;
 
 void gpio_core (int* terminate)
 {
-    // The ILS version uses an iteration rate a few times faster than the NLS
+    // The ILS version uses an iteration rate that is somewhat faster than the NLS
     // version, depending on execution speed of the Raspberry Pi.
-    // The overall refresh rate sould be between 100 and a few 100 per sec.
-    const us_time_t intervl = 10;
+    // The overall refresh rate sould be between 80 and ~ 200 Hz.
+    const us_time_t intervl = 20;
 
     // on-time for each brightness level increment, allows to stretch or
     // shrink the dynamic range of the brightness levels
@@ -80,8 +80,8 @@ void gpio_core (int* terminate)
     //             brightness level. You can check the difference visually with the "test_pattern"
     //             feature below
 
-    static us_time_t intervl_loop[MAX_BRIGHTNESS+1] = {1,1,1,1,1,1,1,2,2,2,3,3,3,4,5,5,6,7,7,8,10,11,12,14,15,17,20,22,25,28,31,35,40};
-//  static us_time_t intervl_loop[MAX_BRIGHTNESS+1] = {10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10};
+    static us_time_t intervl_loop[MAX_BRIGHTNESS+1] = {1,1,1,2,2,2,2,3,3,3,4,5,5,6,7,8,9,10,12,13,15,18,20,23,27,31,35,40,46,53,61,70,80};
+//  static us_time_t intervl_loop[MAX_BRIGHTNESS+1] = {20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20};
 
     const float test_pattern[]={0,3,6,9,12,15,17,20,23,26,29,32};
 
@@ -315,7 +315,7 @@ void gpio_core (int* terminate)
                 printf("\n\rTime per iteration %f ms\n\r", cycle_ms);
 #endif
 		// is this value plausible?
-		if(cycle_ms >0.5 && cycle_ms < 50.0) {
+		if(cycle_ms > 2.0 && cycle_ms < 30.0) {
 		   // adjust the RISING_FACTOR and FALLING_FACCTOR
 		   // the defaults are calibrated for a ca 7ms refresh time
                    filtered_cycle_ms=(filtered_cycle_ms==0) ? cycle_ms : filtered_cycle_ms * 0.7 + cycle_ms * 0.3;

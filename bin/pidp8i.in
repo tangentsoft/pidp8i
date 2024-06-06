@@ -48,9 +48,10 @@ ggrep=$(which ggrep grep 2> /dev/null | head -1)
 #export PIDP8I_ILS_TWEAK="0.2775,0.0975"
 #
 # visual dynamic range compression/stretching, uncomment to turn off or use your own values.
-# The sum of those 33 integers should roughly be around 300...400
-# Higher values at index i means that brighness level i-1 gets more on-time
-#export PIDP8I_ILS_RAMP="0,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10"
+# The sum of those 33 integers should roughly be around 600..700
+# Higher values at the i-th position means that brighness level i-1 gets more LED-"on"-time
+# the following restores "equal increments per brighness level" 
+#export PIDP8I_ILS_RAMP="0,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20"
 #
 # uncomment to activate ILS test pattern: Brightnesss values range 0...32 in third row
 #export PIDP8I_ILS_TEST="on"
