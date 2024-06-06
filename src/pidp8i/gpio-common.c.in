@@ -462,6 +462,7 @@ void update_led_states (const us_time_t delay)
 
     for (size_t row = 0; row < NLEDROWS; ++row) {
         for (size_t col = 0; col < NCOLS; ++col) {
+            gpio_set_fsel(cols[col], GPIO_FSEL_INPUT);
             if ((pcurr[row] & (1 << col)) == 0) {
                 //GPIO_SET = 1 << cols[col];
 		gpio_set_drive(cols[col], DRIVE_HIGH);
@@ -470,15 +471,20 @@ void update_led_states (const us_time_t delay)
                 //GPIO_CLR = 1 << cols[col];
 		gpio_set_drive(cols[col], DRIVE_LOW);
             }
+            gpio_set_fsel(cols[col], GPIO_FSEL_OUTPUT);
         }
 
         // Toggle this LED row on
-	gpio_set_drive(ledrows[row], DRIVE_HIGH);
+        gpio_set_fsel(ledrows[row], GPIO_FSEL_INPUT);
+        gpio_set_drive(ledrows[row], DRIVE_HIGH);
+        gpio_set_fsel(ledrows[row], GPIO_FSEL_OUTPUT);
 
         sleep_us (delay);
 
         // Toggle this LED row off
-	gpio_set_drive(ledrows[row], DRIVE_LOW);
+        gpio_set_fsel(ledrows[row], GPIO_FSEL_INPUT);
+        gpio_set_drive(ledrows[row], DRIVE_LOW);
+        gpio_set_fsel(ledrows[row], GPIO_FSEL_OUTPUT);
 
         // Small delay to reduce UDN2981 ghosting
         sleep_us (10);

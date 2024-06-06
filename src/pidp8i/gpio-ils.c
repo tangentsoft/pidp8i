@@ -210,10 +210,10 @@ void gpio_core (int* terminate)
 
 	    // The CPU is in STOP mode or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the
-            // same mechanism NLS uses.  Force a display swap if the next
-            // in case this isn't STOP mode.
+            // same mechanism NLS uses.  No need to force a display swap
+            // in case this isn't STOP mode as it will happen on the next
+            // loop interation anyway.
             update_led_states (intervl * 60);
-            swap_displays();
         }
         else {
             // Normal case: PWM display using the on-count values

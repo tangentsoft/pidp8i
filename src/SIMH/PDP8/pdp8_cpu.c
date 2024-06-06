@@ -1589,7 +1589,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // module and try to get GCC to inline it: that's good for a 1 MIPS
     // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
 
-    if (pidp8i_gpio && (++skip_count >= (max_skips - dither))) {
+    if (pidp8i_gpio && (++skip_count + dither >= max_skips )) {
         // Save skips to inst counter and reset
         inst_count += skip_count;
         skip_count = 0;
