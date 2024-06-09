@@ -48,6 +48,13 @@ int main()
 	}
     init_pidp8i_gpio();
 
+    // Flip columns to input.  Since the internal pull-ups are enabled,
+    // this pulls all switch GPIO pins high that aren't shorted to the
+    // row line by the switch.
+    for (size_t i = 0; i < NCOLS; ++i) {
+		gpio_set_dir(cols[i], DIR_INPUT);
+    }
+
 	// Read the switches
 	for (uint8_t row=1;row<=2;row++)		// do rows 2 (for IF switches) and 3 (for STOP switch)
 	{		
