@@ -45,7 +45,7 @@ ifeq (@BUILD_PIDP8I@, 1)
 BUILD_PIDP8I_CFLAGS = -DPIDP8I -I @srcdir@/src/pidp8i -I @srcdir@/src/pinctrl
 endif
 
-SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
+SIM_CFLAGS := @CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) \
 	-DSIM_ASYNCH_IO -DHAVE_GLOB \
@@ -102,6 +102,7 @@ endif
 
 
 BINS = $(PIDP8I_SIM) @CC8_CROSS@ \
+	$(PI_BINS) \
 	bin/d8tape \
 	bin/palbart \
 	bin/ptp2txt
@@ -417,7 +418,7 @@ PKGS_INCLUDE = obj/os8pkg/pkgs.os8
 
 all: \
 	$(OUTFILES) $(PRECIOUS_OUTFILES) \
-	$(BUILDDIRS) $(BINS) $(PI_BINS) $(BOOTSCRIPTS) $(LISTINGS) \
+	$(BUILDDIRS) $(BINS) $(BOOTSCRIPTS) $(LISTINGS) \
 	$(ASM_PTS) $(FC_EX_PTS) $(PAL_EX_PTS) \
 	$(OS8_TOOLTIME) pkg_all \
 	$(OS8_RK05S) $(V3F_MADE_RK05) $(V3D_TC08_TU56) \
@@ -902,7 +903,7 @@ $(BUILDDIRS):
 	mkdir -p $@
 
 $(PIDP8I_SIM): $(SIM_OBJS) $(GPIO_OBJS)  $(PIDP8I_OBJS) $(LED_OBJ)
-	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) $(SIM_LFLAGS) @PI_LIBS@
+	$(CC) -o $@ $^ $(LIBS) $(SIM_LFLAGS)
 	ln -f bin/pidp8i-sim bin/pdp8
 
 bin/cc8: $(CC8_OBJS)
@@ -925,13 +926,13 @@ bin/txt2ptp: bin/ptp2txt
 # have actual PiDP8i hardware
 ifeq (@BUILD_PIDP8I@, 1)
 bin/pidp8i-test: $(GPIO_OBJS) obj/misc/test.o obj/pidp8i/gpio-nls.o
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
+	$(CC) -o $@ $(CFLAGS) $^ $(LIBS) -lncurses
 
 bin/deeper: obj/misc/deeper.o $(LED_OBJ) $(GPIO_OBJS)
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+	$(CC) -o $@ $(CFLAGS) $^ $(LIBS)
 
 libexec/scanswitch: $(GPIO_OBJS) obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+	$(CC) -o $@ $(CFLAGS) $^ $(LIBS)
 endif
 
 doc/e8-manual.pdf: doc/e8-manual.md
