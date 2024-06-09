@@ -398,34 +398,13 @@ set uname_system [exec uname -s 2>/dev/null]
 msg-result "Arch: $uname_machine system: $uname_system"
 
 if {([string match "arm*" $uname_machine] || [string match "aarch64*" $uname_machine] )  && [string match "Linux" $uname_system ]} {
-    msg-result "We are a Pi Platform"
+    msg-result "We are a Pi Platform. Build for the PiDP-8/i Hardware."
     define BUILD_PIDP8I 1
-    define PI_CFLAGS ""
-    define PI_LFLAGS ""
-    define PI_LIBS   ""
-
-# 
-#    if {[file isdirectory "/opt/vc"]} {
-#        define PI_CFLAGS "-I/opt/vc/include"
-#        define PI_LFLAGS "-L/opt/vc/lib"
-#        define PI_LIBS   ""
-#    } else {
-#        msg-result "WARNING: Building on Pi platform without libraspberrypi-dev installed!"
-#        define PI_CFLAGS ""
-#        define PI_LFLAGS ""
-#        define PI_LIBS   ""
-#    }
-} else {
-    msg-result "We are not a Pi Platform"
-    define PI_CFLAGS ""
-    define PI_LFLAGS ""
-    define PI_LIBS   ""
 }
 
 if {[opt-bool force-pidp8i]} {
     msg-result "Forcing build of pidp8i."
     define BUILD_PIDP8I 1
-    # We may need the vc libs, but we leave it users of this flag to debug.
 }
 
 # Ensure we have the libncurses development files installed here, else
