@@ -150,6 +150,11 @@ int swStop = 0, swSingInst = 0;
 // conditional based on whether ILS is in fact actually enabled.
 int suppressILS = 0;
 
+// Flags to force either ILS or NLS mode, set via the executable name
+// suppressILS will override forceILS
+int forceILS = 0,  forceNLS = 0;
+
+
 // Flag set when sim_instr() exits due to some SIMH event like Ctrl-E,
 // which lets us resume from our imposed "pause" display state.
 int resumeFromInstructionLoopExit = 0;
@@ -554,7 +559,7 @@ static void *gpio_thread (void *terminate)
 #endif
         "%s",
         pt,
-        ILS_MODE ? 'i' : 'n',
+        forceNLS ? 'n' : 'i',
         pt[0] == 'p' ? 
 #ifdef PCB_SERIAL_MOD_OV
             "sermod" : 

@@ -473,6 +473,8 @@ install-target: all instdirs
 		echo "Skipping media image and SIMH boot script reinstall." || \
 		$(MAKE) mediainstall
 	@ln -f $(DESTDIR)$(PREFIX)/bin/pidp8i-sim $(DESTDIR)$(PREFIX)/bin/pdp8  # run w/o PiDP-8/I extensions
+	@ln -f $(DESTDIR)$(PREFIX)/bin/pidp8i-sim $(DESTDIR)$(PREFIX)/bin/pidp8i-sim-nls  # run with forced NLS mode
+	@ln -f $(DESTDIR)$(PREFIX)/bin/pidp8i-sim $(DESTDIR)$(PREFIX)/bin/pidp8i-sim-ils  # run with forced ILS mode
 
 	@# Install CC8 stuff if built
 	@test -n "@CC8_CROSS@" && \
@@ -905,6 +907,8 @@ $(BUILDDIRS):
 $(PIDP8I_SIM): $(SIM_OBJS) $(GPIO_OBJS)  $(PIDP8I_OBJS) $(LED_OBJ)
 	$(CC) -o $@ $^ $(LIBS) $(SIM_LFLAGS)
 	ln -f bin/pidp8i-sim bin/pdp8
+	ln -f bin/pidp8i-sim bin/pidp8i-sim-nls
+	ln -f bin/pidp8i-sim bin/pidp8i-sim-ils
 
 bin/cc8: $(CC8_OBJS)
 	$(CC) $(CC8_CROSS_CFLAGS) -o $@ $^ $(LIBS)

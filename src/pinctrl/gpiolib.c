@@ -77,25 +77,11 @@ static GPIO_CHIP_INSTANCE_T *gpio_create_instance(const GPIO_CHIP_T *chip,
     return inst;
 }
 
-static inline int gpio_get_interface(unsigned gpio,
+static int gpio_get_interface(unsigned gpio,
                               const GPIO_CHIP_INTERFACE_T **iface_ptr,
                               void **priv, unsigned *offset)
 {
-
-    static GPIO_CHIP_INSTANCE_T * cache_inst[MAX_GPIO_PINS];
     unsigned i;
-    // change May 2024
-    // Modification specifically for PiDP8i
-    // do not use in other contexts where pinctrl functions get
-    // called from different threads
-    if (gpio_num_is_valid(gpio) && cache_inst[gpio]) {
-        GPIO_CHIP_INSTANCE_T *inst =cache_inst[gpio];
-        const GPIO_CHIP_T *chip = inst->chip;
-        *iface_ptr = chip->interface;
-        *priv = inst->priv;
-        *offset = gpio - inst->base;
-        return 0;
-    }
 
     *iface_ptr = NULL;
     for (i = 0; i < num_gpio_chips; i++)
@@ -104,7 +90,6 @@ static inline int gpio_get_interface(unsigned gpio,
         const GPIO_CHIP_T *chip = inst->chip;
         if (gpio >= inst->base && gpio < (inst->base + inst->num_gpios))
         {
-            cache_inst[gpio]=inst;
             *iface_ptr = chip->interface;
             *priv = inst->priv;
             *offset = gpio - inst->base;

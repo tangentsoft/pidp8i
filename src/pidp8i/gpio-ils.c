@@ -205,8 +205,8 @@ void gpio_core (int* terminate)
         }
 
         // Light up LEDs
-        extern int swStop, swSingInst, suppressILS;
-        if (swStop || swSingInst || suppressILS) {
+        extern int swStop, swSingInst, suppressILS, forceNLS;
+        if (swStop || swSingInst || suppressILS || forceNLS) {
 
 	    // The CPU is in STOP mode or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the

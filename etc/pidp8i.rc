@@ -3,3 +3,28 @@
 
 # Alternatives: none, tmux
 SCREEN_MANAGER=screen
+
+# minimum number of cores to enable ILS mode
+PIDP8I_ILS_MIN_CORES=2
+
+# uncomment to force NLS_MODE
+#PIDP8I_FORCE_NLS=1
+
+# For experts:
+# uncomment PIDP8I_ILS_TWEAK and set values for the RISING and FALLING factors respectively 
+# for manual tweaking of the "incandescent lamp simulation" effect.
+# Values need to be between 1 and 0, higher values mean faster change, lower values
+# more sluggish response of the lights (more "glowing")
+# (this might now work as expected when using tmux instead of screen because of the
+# way tmux deals with passing the environment
+#
+#PIDP8I_ILS_TWEAK="0.2775,0.0975"
+#
+# visual dynamic range compression/stretching, uncomment to turn off or use your own values.
+# The sum of those 33 integers should roughly be around 600..700
+# Higher values at the i-th position means that brighness level i-1 gets more LED-"on"-time
+# the following restores "equal increments per brighness level" 
+#export PIDP8I_ILS_RAMP="0,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20"
+#
+# uncomment to activate ILS test pattern: Brightnesss values range 0...32 in third row
+#PIDP8I_ILS_TEST="on"

@@ -282,8 +282,11 @@
 #endif
 
 #ifdef PIDP8I
+#include <sys/sysinfo.h>
 #include <pidp8i.h>
 int use_pidp8i_extensions = 1;
+extern int forceILS;
+extern int forceNLS;
 #endif
 
 #ifndef MAX
@@ -2814,7 +2817,7 @@ for (i = 1; i < argc; i++) {                            /* loop thru args */
             return EXIT_FAILURE;
             }
         if (*cbuf)                                      /* concat args */
-            strlcat (cbuf, " ", sizeof (cbuf)); 
+            strlcat (cbuf, " ", sizeof (cbuf));
         sprintf(&cbuf[strlen(cbuf)], "%s%s%s", strchr(argv[i], ' ') ? "\"" : "", argv[i], strchr(argv[i], ' ') ? "\"" : "");
         lookswitch = FALSE;                             /* no more switches */
         }
@@ -2835,8 +2838,24 @@ if (*argv[0]) {                                         /* sim name arg? */
     setenv ("SIM_BIN_PATH", argv[0], 1);
 
 #ifdef PIDP8I
-    if (strstr (argv[0], "pidp8i-sim") == 0) use_pidp8i_extensions = 0;
-    else if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
+    if (strstr (argv[0], "pidp8i-sim") == 0) {
+        use_pidp8i_extensions = 0;
+    } else {
+        forceNLS = (strstr (argv[0], "pidp8i-sim-nls") != 0);
+        forceILS = (strstr (argv[0], "pidp8i-sim-ils") != 0);
+
+        // handle case when neither forceXXX is set
+        if ( !forceNLS && !forceILS ) {
+            // get number of cores usable by this process
+            int cores = get_nprocs();
+            char * min_cores_env = getenv("PIDP8I_ILS_MIN_CORES");
+            char * force_nls_env = getenv("PIDP8I_FORCE_NLS");
+            int min_cores = (min_cores_env) ? atoi(min_cores_env) : 2;
+            int force_nls = (force_nls_env) ? atoi(force_nls_env) : 0;
+            forceNLS = ( cores < min_cores || force_nls_env != 0 );
+        }
+        if (start_pidp8i_gpio_thread (0) != 0) exit (EXIT_FAILURE);
+    }
 #endif
     }
 
