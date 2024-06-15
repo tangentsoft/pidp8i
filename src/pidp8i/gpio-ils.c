@@ -3,6 +3,7 @@
  *             lamp simulator
  *
  * Copyright © 2015-2017 Oscar Vermeulen, Ian Schofield, and Warren Young
+ *           © 2021 Steve Tockey
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -158,21 +159,24 @@ void gpio_core (int* terminate)
 
         // Recalculate the brightness target values based on the
         // "on" counts in *pdis_paint and the quantized brightness
-        // level, which is based on the number of instructions
+        // level, which is based on the number of cycles
         // executed for this display update.
 
-        const size_t inst_count =
-              (pdis_paint->inst_count >0) ? pdis_paint->inst_count : 1;
-        const float one_div_inst_count = 1.0 / (float) inst_count;
+        const size_t cycle_count =
+              (pdis_paint->cycle_count >0) ? pdis_paint->cycle_count : 1;
+        const float one_div_cycle_count = 1.0 / (float) cycle_count;
         for (int row = 0; row < NLEDROWS; ++row) {
             size_t *prow = pdis_paint->on[row];
             for (int col = 0; col < NCOLS; ++col) {
                 // this gives range from [0 .. 32] incl (!)
                 // using ceil will boost even low but nonzero counts into
                 // brightness bin no 1 => 1 short pulse
-                br_targets[row][col] = ceilf((prow[col] << 5) * one_div_inst_count);
+                br_targets[row][col] = ceilf((prow[col] << 5) * one_div_cycle_count);
             }
         }
+#if 0
+// This has been disabled because Fetch and Execute are now accurate with
+// the actual major state of the simulated machine
 
         // Hard-code the Fetch and Execute brightnesses; in running
         // mode, they're both on half the instruction time, so we
@@ -180,6 +184,15 @@ void gpio_core (int* terminate)
         // mode, but that's handled in update_led_states () because
         // we fall back to NLS in STOP mode.
         br_targets[5][2] = br_targets[5][3] = MAX_BRIGHTNESS / 2;
+            for (int row = 0; row < NLEDROWS; ++row) {
+                size_t *prow = pdis_paint->on[row];
+                for (int col = 0; col < NCOLS; ++col) {
+                    br_targets[row][col] = prow[col] / br_quant;
+
+                }
+            }
+
+#endif
 
         // Update the brightness values.
         for (int row = 0; row < NLEDROWS; ++row) {
@@ -205,8 +218,8 @@ void gpio_core (int* terminate)
         }
 
         // Light up LEDs
-        extern int swStop, swSingInst, suppressILS, forceNLS;
-        if (swStop || swSingInst || suppressILS || forceNLS) {
+        extern int cpuRun, suppressILS, forceNLS;
+        if (cpuRun == 0 || suppressILS || forceNLS) {
 
 	    // The CPU is in STOP mode or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the
