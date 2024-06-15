@@ -465,10 +465,6 @@ install-target: all instdirs
 		echo "Installing script $$dest..." ; \
 		@INSTALL@ -m 755 -D $$f $(DESTDIR)$$dest ; \
 	done
-	@# Install runtime config file
-	@echo "Installing $(RCFILE)"
-	@INSTALL@ -m 644 -o @INSTUSR@ @srcdir@/etc/pidp8i.rc $(DESTDIR)$(RCFILE)
-
 	@echo "Installing txt2ptp symlink..."
 	@ln -f $(DESTDIR)$(PREFIX)/bin/ptp2txt $(DESTDIR)$(PREFIX)/bin/txt2ptp
 	@(	test -e $(DESTDIR)@MEDIADIR@/os8/os8.rk05 || \
@@ -568,6 +564,9 @@ endif
 		@INSTALL@ -m 440 -o root -g root @srcdir@/etc/sudoers \
 		    /etc/sudoers.d/099_pidp8i \
 	) || true
+
+	@# Install runtime config file if there isn't one there already.
+	@test -f $(DESTDIR)$(RCFILE) || @INSTALL@ -m 644 -o @INSTUSR@ @srcdir@/etc/pidp8i.rc $(DESTDIR)$(RCFILE)
 
 	@# Add installation bin dir to the non-root user's PATH unless it's
 	@# already in there or we aren't running under sudo.
