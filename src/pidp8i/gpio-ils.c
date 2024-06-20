@@ -65,7 +65,9 @@
 static int is_init = 0;
 
 static float RISING_FACTOR = RISING_FACTOR_DEFAULT;
+static float RISING_FACTOR_INIT = RISING_FACTOR_DEFAULT;
 static float FALLING_FACTOR = FALLING_FACTOR_DEFAULT;
+static float FALLING_FACTOR_INIT = FALLING_FACTOR_DEFAULT;
 
 void gpio_core (int* terminate)
 {
@@ -113,6 +115,9 @@ void gpio_core (int* terminate)
             RISING_FACTOR = RISING_FACTOR_DEFAULT;
             FALLING_FACTOR = FALLING_FACTOR_DEFAULT;
           }
+          // new values will later be fine tuned by auto-calibration
+          RISING_FACTOR_INIT = RISING_FACTOR;
+          FALLING_FACTOR_INIT = FALLING_FACTOR;
         }
         if ( tweaking_ramp ) {
           us_time_t iv[MAX_BRIGHTNESS+1];
@@ -332,8 +337,8 @@ void gpio_core (int* terminate)
 		   // adjust the RISING_FACTOR and FALLING_FACCTOR
 		   // the defaults are calibrated for a ca 7ms refresh time
                    filtered_cycle_ms=(filtered_cycle_ms==0) ? cycle_ms : filtered_cycle_ms * 0.7 + cycle_ms * 0.3;
-                   RISING_FACTOR  = 1.0L - pow((1.0L - RISING_FACTOR_DEFAULT) , filtered_cycle_ms / 7.0);
-                   FALLING_FACTOR = 1.0L - pow((1.0L - FALLING_FACTOR_DEFAULT), filtered_cycle_ms / 7.0);
+                   RISING_FACTOR  = 1.0L - pow((1.0L - RISING_FACTOR_INIT) , filtered_cycle_ms / 7.0);
+                   FALLING_FACTOR = 1.0L - pow((1.0L - FALLING_FACTOR_INIT), filtered_cycle_ms / 7.0);
 		}
 
 
