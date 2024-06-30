@@ -284,26 +284,35 @@ size_t get_pidp8i_initial_max_skips (size_t updates_per_sec)
 {
     DEVICE *pthrot = find_dev ("INT-THROTTLE");
     if (pthrot) {
-        extern int suppressILS;
         REG *ptyper = find_reg ("THROT_TYPE", NULL, pthrot);
         REG *pvalr  = find_reg ("THROT_VAL", NULL, pthrot);
-        if (ptyper && pvalr) {
+        REG *pslr   = find_reg ("THROT_SLEEP_TIME", NULL, pthrot);
+        if (ptyper && pvalr && pslr) {
+            extern int suppressILS;
             uint32 *ptype = ptyper->loc;
             uint32 *pval  =  pvalr->loc;
-            size_t ips = 0;
+            uint32 *psl   =  pslr->loc;
+            double ips = 0.0;
             switch (*ptype) {
                 case SIM_THROT_MCYC: ips = *pval * 1e6; break;
                 case SIM_THROT_KCYC: ips = *pval * 1e3; break;
                 case SIM_THROT_SPC: {
-                    suppressILS = 1;
+                    // need not be exact, we just need an approximation here
+                    ips =  ((1000.0 * *pval) / (double) *psl);
                     break;
                 }
+                case SIM_THROT_PCT: ips = 0.01 * *pval * 1e6; break;
+                case SIM_THROT_NONE: ips = 1e6;
+                default : suppressILS = 1;
             }
-            if (ips) {
+            if (ips > 0.0) {
                 suppressILS = 0;
-                printf("PiDP-8/I initial throttle = %zu IPS\r\n", ips);
+                printf("PiDP-8/I initial throttle = %f IPS\r\n", ips);
                 return ips / updates_per_sec;
-            }
+            } else {
+                // this should not happen
+                suppressILS = 1;
+	    }
         }
     }
 
@@ -389,11 +398,8 @@ void set_pidp8i_leds (uint32_t sPC, uint32_t sMA, uint32_t sMB,
     if (sLAC & 010000) set_pidp8i_led (pd, 7, 5);
 
     // If we're stopped, the display-swapping code
-    // won't happen, so copy the above over to the paint-from version.
-    extern int resumeFromInstructionLoopExit;
-    if (cpuRun == 0 || resumeFromInstructionLoopExit) {
-        memcpy(pdis_paint, pdis_update, sizeof(struct display));
-    }
+    // will take care to prefent a lights-out condition,
+    // so no need for special action here
 }
 
 

@@ -104,10 +104,10 @@ uint16_t switchstatus[NROWS];
 // zeroes it and swaps it for the current "update-to" copy, giving the
 // CPU thread a blank slate, and giving the GPIO thread a stable set of
 // LED "on" time values to work with.
-display display_bufs[2];
+display display_bufs[3];
 display* pdis_update = display_bufs + 0;    // exported to SIMH CPU thread
 display* pdis_paint  = display_bufs + 1;    // exported to gpio-*.c
-
+display* pdis_copy   = display_bufs + 2;    // used by swap_displays only
 
 // GPIO thread control variables manipulated by start/stop_*() below
 static pthread_t gpio_thread_info;
@@ -246,7 +246,6 @@ int must_map=exclusive;	//!!!!!!!!!!!!!!!!!!!!!!!!!!!! VERY WRONG THIS
 
 void swap_displays ()
 {
-    if (cpuRun == 1) {
         if (pidp8i_simple_gpio_mode) {
             // We're linked to a program that wants to use the old
             // ledstatus[] interface for updating the display, so copy
@@ -267,7 +266,9 @@ void swap_displays ()
             }
         }
         else {
-            // Clear old paint-from display
+            // Clear old paint-from display, but make a copy 
+            // first (see below)
+            memcpy (pdis_copy,pdis_paint, sizeof(display));
             memset (pdis_paint, 0, sizeof(display));
 
             // Send old paint-from display to CPU as new update-to
@@ -276,10 +277,17 @@ void swap_displays ()
             pdis_paint = pdis_update == display_bufs + 0 ?
                     SWAP(1) :
                     SWAP(0);
+
+            if (pdis_paint->cycle_count == 0) { 
+                // special case: there has been no update since last swapping
+                // which means the the old update and new paint buffer 
+                // is all zeros. In this case we bring in current LED values from the 
+                // copy we saved before switching. The ILS code will 
+                // treat this accordingly
+                memcpy(pdis_paint->curr,pdis_copy->curr,sizeof(pdis_copy->curr));
+           }
         }
-    }
-    // else, leave current LED values as-is so we don't go to a black
-    // screen while in STOP mode, either from front panel or HLT
+
 }
 
 

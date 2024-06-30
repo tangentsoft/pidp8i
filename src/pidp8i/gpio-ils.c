@@ -167,16 +167,32 @@ void gpio_core (int* terminate)
         // level, which is based on the number of cycles
         // executed for this display update.
 
-        const size_t cycle_count =
-              (pdis_paint->cycle_count >0) ? pdis_paint->cycle_count : 1;
-        const float one_div_cycle_count = 1.0 / (float) cycle_count;
-        for (int row = 0; row < NLEDROWS; ++row) {
-            size_t *prow = pdis_paint->on[row];
-            for (int col = 0; col < NCOLS; ++col) {
-                // this gives range from [0 .. 32] incl (!)
-                // using ceil will boost even low but nonzero counts into
-                // brightness bin no 1 => 1 short pulse
-                br_targets[row][col] = ceilf((prow[col] << 5) * one_div_cycle_count);
+        // Special case: no updates were made since the last
+        // double-buffer swap. In this case,  assume that LEDs
+        // have not changed their current status for the entire
+        // time between redraws, so target value is max brightness)
+        // for all currently active lamps
+
+        
+        const size_t cycle_count = pdis_paint->cycle_count;
+
+        if (cycle_count > 0) {
+            const float one_div_cycle_count = 1.0 / (float) cycle_count;
+            for (int row = 0; row < NLEDROWS; ++row) {
+                size_t *prow = pdis_paint->on[row];
+                for (int col = 0; col < NCOLS; ++col) {
+                    // this gives range from [0 .. 32] incl (!)
+                    // using ceil will boost even low but nonzero counts into
+                    // brightness bin no 1 => 1 short pulse
+                    br_targets[row][col] = ceilf((prow[col] << 5) * one_div_cycle_count);
+                }
+            }
+        } else {
+            for (int row = 0; row < NLEDROWS; ++row) {
+                uint16_t curr = pdis_paint->curr[row];
+                for (int col = 0; col < NCOLS; ++col) {
+                    br_targets[row][col] = (curr & (1 << col)) ? MAX_BRIGHTNESS : 0;
+                }
             }
         }
 #if 0
@@ -224,7 +240,7 @@ void gpio_core (int* terminate)
 
         // Light up LEDs
         extern int cpuRun, suppressILS, forceNLS;
-        if (cpuRun == 0 || suppressILS || forceNLS) {
+        if (suppressILS || forceNLS) {
 
 	    // The CPU is in STOP mode or someone has suppressed the ILS,
             // so show the current LED states full-brightness using the
