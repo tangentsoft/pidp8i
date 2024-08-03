@@ -418,13 +418,14 @@ if (IB = -1)
 
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
+int op_code = 0;
+
 #ifdef PIDP8I
 // PiDP-8/I specific flag, set when the last instruction was an IOT
 // instruction to a real device.  SIMH doesn't track this, but the front
 // panel needs it.
 int Pause = 0;
 
-int op_code = 0;
 
 // Set our initial IPS value from the throttle, if given.
 static time_t last_update = 0;
