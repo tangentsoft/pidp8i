@@ -1508,10 +1508,10 @@ class os8script:
     if cd:
       # OS/8 command returned to command decoder.  We escape.
       mon = self.simh.os8_escape ("")
-      if mon == false:
+      if mon == False:
         print ("os8_command: Escape from command decoder failed. Trying ^C.")
         mon = self.simh.os8_ctrl_c ("")
-        if mon == false:
+        if mon == False:
           print ("^C failed to return to monitor. Killing script.")
           return "die"
     print ("os8_command Error: \n\t" + line)
@@ -1976,5 +1976,5 @@ class os8script:
       image_path = dirs.os8mi + image
       if (not os.path.isfile(image_path)):
           print("Required file: " + image_path + " not found.")
-          mkos8_abort(s)
+          return "die"
       # else: print("Found " + image_path)
