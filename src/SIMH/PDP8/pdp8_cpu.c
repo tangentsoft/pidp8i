@@ -393,7 +393,7 @@ int Pause = 0;
 // Set our initial IPS value from the throttle, if given.
 static time_t last_update = 0;
 static size_t max_skips = 0;
-static const size_t pidp8i_updates_per_sec = 3200;
+static const size_t pidp8i_updates_per_sec = 10000;
 max_skips = get_pidp8i_initial_max_skips (pidp8i_updates_per_sec);
 srand48 (time (&last_update));
 
@@ -1569,10 +1569,11 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // to call.  It's also cheaper than continually asking SIMH to
     // estimate the SIMH IPS value, since it uses FP math.
     //
-    // Each LED panel repaint takes about 10 ms, so we do about 100
-    // full-panel updates per second.  We need a bare minimum of 32
-    // discernible brightness values per update for ILS, so if we don't
-    // update the LED status data at least 3,200 times per second, we
+    // Each LED panel repaint on a fast RPi 5 can take ca 3.5ms, so we
+    // do about up to 300 full-panel updates per second.  We need a
+    // bare minimum of 32 discernible brightness values per update for
+    // ILS, and better twice that, to be on the safe side, so if we don't
+    // update the LED status data at least ~ 19000 times per second, we
     // don't have enough data for smooth panel updates.  Fortunately,
     // computers are pretty quick, and our slowest script runs at 30
     // kIPS.  (5.script.)
@@ -1588,7 +1589,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
     // module and try to get GCC to inline it: that's good for a 1 MIPS
     // speed hit in my testing!  (GCC 4.9.2, Raspbian Jessie on Pi 3B.)
 
-    if (pidp8i_gpio && (++skip_count >= (max_skips - dither))) {
+    if (pidp8i_gpio && (++skip_count + dither >= max_skips )) {
         // Save skips to inst counter and reset
         inst_count += skip_count;
         skip_count = 0;
@@ -1609,7 +1610,7 @@ switch ((IR >> 7) & 037) {                              /* decode IR<0:4> */
             //        max_skips, dither, inst_count / 1e6);
             inst_count = 0;
             }
-        dither = max_skips > 32 ? lrand48() % (max_skips >> 3) : 0; // 12.5%
+        dither = lrand48() % (( max_skips > 32 ) ? max_skips >> 3 : 4); // 12.5%
         }
     Pause = 0;      // it's set outside the "if", so it must be *reset* outside
 #endif

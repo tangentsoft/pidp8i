@@ -42,10 +42,10 @@ SGCTM=2024-02-20T18:20:13-08:00
 # C build flags for the PDP-8 simulator and its PiDP-8/I extensions.
 
 ifeq (@BUILD_PIDP8I@, 1)
-BUILD_PIDP8I_CFLAGS = -DPIDP8I -I @srcdir@/src/pidp8i
+BUILD_PIDP8I_CFLAGS = -DPIDP8I -I @srcdir@/src/pidp8i -I @srcdir@/src/pinctrl
 endif
 
-SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
+SIM_CFLAGS := @CFLAGS@ @BUILDMODE@ \
 	-Wno-unused-result -Wno-parentheses \
 	-DUSE_READER_THREAD -DHAVE_DLOPEN=$(subst .,,@SH_SOEXT@) \
 	-DSIM_ASYNCH_IO -DHAVE_GLOB \
@@ -55,6 +55,7 @@ SIM_CFLAGS := @CFLAGS@ @PI_CFLAGS@ @BUILDMODE@ \
 	-U__STRICT_ANSI__ \
 	-I @srcdir@/src/SIMH -I src -I src/SIMH \
 	$(BUILD_PIDP8I_CFLAGS)
+
 ifneq "@HAVE_PCRE_H@" "0"
 SIM_CFLAGS += -DHAVE_PCRE_H
 SIM_LFLAGS := -lpcre
@@ -62,6 +63,8 @@ endif
 ifneq "@HAVE_PCREPOSIX_H@" "0"
 SIM_CFLAGS += -DHAVE_PCREPOSIX_H
 endif
+
+# These CFLAGS definitions look like the're not used, but adrules.mk uses them.
 PIDP8I_CFLAGS = $(SIM_CFLAGS)
 SIMH_CFLAGS = $(SIM_CFLAGS)
 SIMH_PDP8_CFLAGS = $(SIM_CFLAGS)
@@ -142,6 +145,7 @@ BUILDDIRS := \
 	obj/cc8/os8 \
 	obj/d8tape \
 	obj/misc \
+	obj/pinctrl \
 	obj/palbart \
 	obj/os8pkg \
 	obj/pidp8i \
@@ -185,6 +189,11 @@ SIM_OBJS := \
 
 ifeq (@BUILD_PIDP8I@, 1)
 GPIO_OBJS := \
+	obj/pinctrl/gpiochip_bcm2712.o \
+	obj/pinctrl/gpiolib.o \
+	obj/pinctrl/gpiochip_bcm2835.o \
+	obj/pinctrl/gpiochip_rp1.o \
+	obj/pinctrl/util.o \
 	obj/pidp8i/gpio-common.o
 PIDP8I_OBJS := \
 	obj/pidp8i/main.o
@@ -464,6 +473,8 @@ install-target: all instdirs
 		echo "Skipping media image and SIMH boot script reinstall." || \
 		$(MAKE) mediainstall
 	@ln -f $(DESTDIR)$(PREFIX)/bin/pidp8i-sim $(DESTDIR)$(PREFIX)/bin/pdp8  # run w/o PiDP-8/I extensions
+	@ln -f $(DESTDIR)$(PREFIX)/bin/pidp8i-sim $(DESTDIR)$(PREFIX)/bin/pidp8i-sim-nls  # run with forced NLS mode
+	@ln -f $(DESTDIR)$(PREFIX)/bin/pidp8i-sim $(DESTDIR)$(PREFIX)/bin/pidp8i-sim-ils  # run with forced ILS mode
 
 	@# Install CC8 stuff if built
 	@test -n "@CC8_CROSS@" && \
@@ -894,8 +905,10 @@ $(BUILDDIRS):
 	mkdir -p $@
 
 $(PIDP8I_SIM): $(SIM_OBJS) $(GPIO_OBJS)  $(PIDP8I_OBJS) $(LED_OBJ)
-	$(CC) -o $@ @PI_LFLAGS@ $^ $(LIBS) $(SIM_LFLAGS) @PI_LIBS@
+	$(CC) -o $@ $^ $(LIBS) $(SIM_LFLAGS)
 	ln -f bin/pidp8i-sim bin/pdp8
+	ln -f bin/pidp8i-sim bin/pidp8i-sim-nls
+	ln -f bin/pidp8i-sim bin/pidp8i-sim-ils
 
 bin/cc8: $(CC8_OBJS)
 	$(CC) $(CC8_CROSS_CFLAGS) -o $@ $^ $(LIBS)
@@ -917,13 +930,13 @@ bin/txt2ptp: bin/ptp2txt
 # have actual PiDP8i hardware
 ifeq (@BUILD_PIDP8I@, 1)
 bin/pidp8i-test: $(GPIO_OBJS) obj/misc/test.o obj/pidp8i/gpio-nls.o
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@ -lncurses
+	$(CC) -o $@ $(CFLAGS) $^ $(LIBS) -lncurses
 
 bin/deeper: obj/misc/deeper.o $(LED_OBJ) $(GPIO_OBJS)
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+	$(CC) -o $@ $(CFLAGS) $^ $(LIBS)
 
 libexec/scanswitch: $(GPIO_OBJS) obj/misc/scanswitch.o obj/pidp8i/gpio-nls.o
-	$(CC) -o $@ $(CFLAGS) @PI_CFLAGS@ @PI_LFLAGS@ $^ $(LIBS) @PI_LIBS@
+	$(CC) -o $@ $(CFLAGS) $^ $(LIBS)
 endif
 
 doc/e8-manual.pdf: doc/e8-manual.md

@@ -40,6 +40,10 @@ ggrep=$(which ggrep grep 2> /dev/null | head -1)
 if [ -e "$prefix/etc/pidp8i.rc" ]
 then
     . "$prefix/etc/pidp8i.rc"
+    export PIDP8I_ILS_MIN_CORES
+    export PIDP8I_FORCE_NLS
+    export PIDP8I_ILS_TWEAK
+    export PIDP8I_ILS_TEST
 fi
 [ -n "$SCREEN_MANAGER" ] || SCREEN_MANAGER=screen
 if [ ! -t 1 ] && [ "$SCREEN_MANAGER" = "none" ]

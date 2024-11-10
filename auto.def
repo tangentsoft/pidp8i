@@ -314,19 +314,19 @@ write-if-changed "obj/os8.opts" $os8_opts {
 # High-level definitions
 set builddir [get-define builddir]
 set srcdir [get-define srcdir]
-set cores [exec $srcdir/tools/corecount]
 
 # Translate --throttle value to a SIMH command
 set tv [opt-val throttle]
 set tvsl [string length $tv]
-if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
+
+if {$tvsl == 0  || $tv == "none"} {
     define SET_THROTTLE {set nothrottle}
     set tv "unlimited"
 } else {
     # Rewrite symbolic values with values SIMH can understand.  See
     # README-throttle.md for the justification of these values.
-    if {$tv == "single-core" || $tvsl == 0} {
-        # It's a single-core Pi board, so just tell SIMH to take half
+    if {$tv == "single-core" } {
+        # Build for a single-core Pi board, so just tell SIMH to take half
         # the host CPU power, leaving the rest left for background
         # tasks.  We can't use an IPS value here for several reasons.
         # See README-throttle.md for details.
@@ -354,29 +354,17 @@ if {($tvsl == 0 && $cores > 1) || $tv == "none"} {
     }
     # else, assume --throttle was given a legal SIMH throttle value
     
-    if {[string first "/" $tv] > -1} {
-        # Assume the ratio given will push us below 1 kIPS, where ILS
-        # fails badly because of the simulator's sleeping behavior, so
-        # disable the ILS feature if we were going to build it.
-        set cores 1
-    }
-
     define SET_THROTTLE "set throttle $tv"
 }
 msg-result "Simulator CPU throttle set to $tv"
 
-# Swap the incandescent lamp simulator feature out for the original LED
-# driving method on single-core hosts.  The user can force this on
-# multi-core hosts via --no-lamp-simulator.
-if {($cores < 2) || [opt-bool no-lamp-simulator]} {
-    msg-result "Driving PiDP-8/I front panel LEDs using low-CPU-usage method."
-    define LED_DRIVER_MODULE n
-    define ILS_MODE 0
-} else {
-    msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
-    define LED_DRIVER_MODULE i
-    define ILS_MODE 1
-}
+# Always build the ILS version. NLS can be forced by calling the 
+# executable with a special name, tho. ILS also falls back to 
+# NLS with Throttling set to a a/b "ratio".
+ 
+msg-result "Driving PiDP-8/I front panel LEDs using incandescent lamp simulator."
+define LED_DRIVER_MODULE i
+define ILS_MODE 1
 
 # Check for headers, functions, etc. whose absence we can work around
 cc-check-decls __progname
@@ -397,34 +385,14 @@ set uname_system [exec uname -s 2>/dev/null]
 
 msg-result "Arch: $uname_machine system: $uname_system"
 
-if {[string match "arm*" $uname_machine] && [string match "Linux" $uname_system ]} {
-    msg-result "We are a Pi Platform"
-    # Older versions had more rigorous testing of whether or not we could build as a bcm_host.
-    # Not going to reproduce that, because we'll upgrade to something else soon.
+if {([string match "arm*" $uname_machine] || [string match "aarch64*" $uname_machine] )  && [string match "Linux" $uname_system ]} {
+    msg-result "We are a Pi Platform. Build for the PiDP-8/i Hardware."
     define BUILD_PIDP8I 1
-    if {[file isdirectory "/opt/vc"]} {
-        define PI_CFLAGS "-I/opt/vc/include"
-        define PI_LFLAGS "-L/opt/vc/lib"
-        define PI_LIBS   "-lbcm_host"
-    } else {
-        msg-result "WARNING: Building on Pi platform without libraspberrypi-dev installed!"
-        define PI_CFLAGS ""
-        define PI_LFLAGS ""
-        define PI_LIBS   ""
-    }
-} else {
-    msg-result "We are not a Pi Platform"
-    define PI_CFLAGS ""
-    define PI_LFLAGS ""
-    define PI_LIBS   ""
 }
 
 if {[opt-bool force-pidp8i]} {
     msg-result "Forcing build of pidp8i."
     define BUILD_PIDP8I 1
-    define PI_CFLAGS "-I/opt/vc/include"
-    define PI_LFLAGS "-L/opt/vc/lib"
-    define PI_LIBS   "-lbcm_host"
 }
 
 # Ensure we have the libncurses development files installed here, else
@@ -611,6 +579,7 @@ set status [catch {
             $srcdir \
             src/cc8/cross \
             src/d8tape \
+            src/pinctrl \
             src/misc \
             src/palbart \
             src/pidp8i \

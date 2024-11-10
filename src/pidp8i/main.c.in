@@ -699,6 +699,11 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
         swStop = 1;     // still stopped on leaving SING_INST mode
     }
 
+// bug fix oscarv 20240225: start/load_add/dep/exam/cont should only 
+// respond in stop mode!
+if (swStop)
+{
+
     // Check for START switch press...
     static int swStart = 0;
     if (((switchstatus[2] & SS2_START) == 0) && (swStart == 0)) {
@@ -852,7 +857,7 @@ pidp8i_flow_t handle_flow_control_switches (uint16* pM,
     if (swExam && (switchstatus[2] & SS2_EXAM)) {
         swExam = 0;
     }
-
+}
     // Check for STOP switch press.  No "and release" because we get out of
     // STOP mode with START or CONT, not by releasing STOP, and while in
     // STOP mode, this switch's function is idempotent.

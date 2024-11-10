@@ -31,46 +31,57 @@
 */
 
 #include <pidp8i.h>
+#include <unistd.h>
+#include <gpiolib.h>
+#include <gpio-common.h>
 
 #define short_wait() sleep_us(100000)
-
-#define pgpio (&gpio)
 
 
 int main()
 {
 	int i,j,k,switchscan[2], tmp;
 
-	extern struct bcm2835_peripheral gpio;
     if (map_gpio_for_pidp8i (1) != 0)
 	{	printf("Failed to map the GPIO SoC peripheral into our VM space.\n");
 		return 127;
 	}
     init_pidp8i_gpio();
 
+    // Flip columns to input.  Since the internal pull-ups are enabled,
+    // this pulls all switch GPIO pins high that aren't shorted to the
+    // row line by the switch.
+    for (size_t i = 0; i < NCOLS; ++i) {
+		gpio_set_dir(cols[i], DIR_INPUT);
+    }
+
 	// Read the switches
 	for (uint8_t row=1;row<=2;row++)		// do rows 2 (for IF switches) and 3 (for STOP switch)
 	{		
-		INP_GPIO(rows[row]);
-		OUT_GPIO(rows[row]);			// turn on one switch row
-		GPIO_CLR = 1 << rows[row];		// and output 0V to overrule built-in pull-up from column input pin
+		gpio_set_dir(rows[row], DIR_OUTPUT);
+		gpio_set_drive(rows[row], DRIVE_LOW);
 	
 		sleep_us(10);                   // unnecessarily long?
 		switchscan[row-1]=0;
 
 		for (j=0;j<NCOLS;j++)			// 12 switches in each row
-		{	tmp = GPIO_READ(cols[j]);
+		{
+	    		tmp = gpio_get_level(cols[j]);
+
 			if (tmp==0)
 				switchscan[row-1] += 1<<j;
 		}
-		INP_GPIO(rows[row]);			// stop sinking current from this row of switches
+		gpio_set_dir(rows[row], DIR_INPUT);
 	}
 
-	unmap_peripheral(&gpio);
 
 	if ( ((switchscan[1] >> 6) & 1) == 1 )	// STOP switch enabled,
+	{
 		return 8;				// 8: STOP enabled, no bootscript
-	else
+	}	
+			else
+	{
 		return (switchscan[0] >> 6) & 07;	// 0-7: x.script to be used in PiDP-8/I
+	}
 }
 
