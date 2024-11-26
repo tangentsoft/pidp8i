@@ -99,10 +99,14 @@ begin cdprog RKB1:SABR.SV
 RKB1:FLOAT.RL<RKA1:FLOAT.SB
 end cdprog RKB1:SABR.SV
 
-print GENIOX
-begin cdprog RKB1:SABR.SV
-RKB1:GENIOX.RL<RKA1:GENIOX.SB
-end cdprog RKB1:SABR.SV
+# GENIOX is a Legacy module that conflicts with UTIL
+# Although all other SB modules are documented in the
+# OS/8 LANGUAGE REFERENCE MANUAL - AA-H609A-TA
+# GENIOX is not mentioned.
+# print GENIOX
+# begin cdprog RKB1:SABR.SV
+# RKB1:GENIOX.RL<RKA1:GENIOX.SB
+# end cdprog RKB1:SABR.SV
 
 print INTEGR
 begin cdprog RKB1:SABR.SV
@@ -152,7 +156,7 @@ end cdprog RKB1:SABR.SV
 print Use our newly built LIBSET to create LIB8.RL from our library RL files.
 
 begin cdprog RKB1:LIBSET.SV
-RKB1:LIB8.RL<RKB1:ATAN.RL,RKB1:FLOAT.RL,RKB1:GENIOX.RL,RKB1:INTEGR.RL
+RKB1:LIB8.RL<RKB1:ATAN.RL,RKB1:FLOAT.RL,RKB1:INTEGR.RL
 RKB1:IOH.RL,RKB1:IOPEN.RL,RKB1:IPOWRS.RL,RKB1:POWERS.RL,RKB1:RWTAPE.RL
 RKB1:SQRT.RL,RKB1:TRIG.RL,RKB1:UTILTY.RL
 end cdprog RKB1:LIBSET.SV
