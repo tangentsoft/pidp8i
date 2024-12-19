@@ -83,57 +83,57 @@ class InputError(Error):
 
 # Identify a begin enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_begin_en_dis_comm_re = re.compile ("^begin\s+(enabled|default|version)\s+(.+)$")
+_begin_en_dis_comm_re = re.compile (r"^begin\s+(enabled|default|version)\s+(.+)$")
   
 # Identify an end enabled/not_disabled command. group(1) contains either the enabled or
 # disabled flag. Put the rest of the line in group(2)
-_end_en_dis_comm_re = re.compile ("^end\s+(enabled|default|version)\s+(.+)$")
+_end_en_dis_comm_re = re.compile (r"^end\s+(enabled|default|version)\s+(.+)$")
   
 # Identify an end comm and put the rest of the line in group(1)
-_end_comm_re = re.compile ("^end\s+(.+)?$")
+_end_comm_re = re.compile (r"^end\s+(.+)?$")
   
 # Identify an end option command and put the rest of the line in group(1)
-_end_option_comm_re = re.compile ("^end\s+option\s+(.+)$")
+_end_option_comm_re = re.compile (r"^end\s+option\s+(.+)$")
 
 # A valid version spec
-_version_parse_re = re.compile ("^((\d+\.)*)?(\d+)?$")
+_version_parse_re = re.compile (r"^((\d+\.)*)?(\d+)?$")
   
 # Name of the DECtape image file we create
 _new_sys_tape_prefix = "system"
 
 # Parser regexps used in patcher
-_com_os8_parse_str = "^\.([a-zA-Z]+)\s*(.*)$"
+_com_os8_parse_str = r"^\.([a-zA-Z]+)\s*(.*)$"
 _com_os8_parse = re.compile(_com_os8_parse_str)
-_com_split_str = "^([a-zA-Z]+)\s*(.*)$"
+_com_split_str = r"^([a-zA-Z]+)\s*(.*)$"
 _com_split_parse = re.compile(_com_split_str)
-_odt_parse_str = "^([0-7]+)\s*/\s*(\S+)\s+([0-7;]+)"
+_odt_parse_str = r"^([0-7]+)\s*/\s*(\S+)\s+([0-7;]+)"
 _odt_parse = re.compile(_odt_parse_str)
 
 # Put command keyword in group(1) and the rest is in group(3)
-_comm_re_str = "^(\S+)(\s+(.+))?$"
+_comm_re_str = r"^(\S+)(\s+(.+))?$"
 _comm_re = re.compile(_comm_re_str)
 
 # Identify an end comm and put the rest of the line in group(1)
-_end_comm_re = re.compile ("^end\s+(.+)?$")
+_end_comm_re = re.compile (r"^end\s+(.+)?$")
 
 # Identify an end option command and put the rest of the line in group(1)
-_end_option_comm_re = re.compile ("^end\s+option\s+(.+)$")
+_end_option_comm_re = re.compile (r"^end\s+option\s+(.+)$")
 
 # Identify a begin command and put the rest of the line in group(1)
-_begin_option_comm_re = re.compile ("^begin\s+option\s+(.+)$")
+_begin_option_comm_re = re.compile (r"^begin\s+option\s+(.+)$")
 
 # Parse an argument string into a sys device with
 # device name in group(1), unit number in group(2)
 # We put all bootable devices into this string so that when
 # we add more devices, for example rl for RL01, we change one
 # string not many.
-_simh_boot_dev_str = "(rk|td|dt|rx)(\d*)"
+_simh_boot_dev_str = r"(rk|td|dt|rx)(\d*)"
 _simh_boot_re = re.compile("^" + _simh_boot_dev_str + "$")
 
 # Parse an argument string for mount into SIMH device
 # device name in group(1), unit number in group(2)
 # And the rest in group (3)
-_mount_regex_str = "^" + _simh_boot_dev_str + "\s+(.+)$"
+_mount_regex_str = "^" + _simh_boot_dev_str + r"\s+(.+)$"
 _mount_re = re.compile(_mount_regex_str)
 
 # Map of SIMH device names to OS/8 device name prefixes.
@@ -142,11 +142,11 @@ _os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "dt" : "DTA", "rx" : "RX"}
 _os8_partitions = {"RK": ["A", "B"]}
 
 # OS/8 file name matching regex
-_os8_file_re = re.compile("(\S+):(\S+)?")
+_os8_file_re = re.compile(r"(\S+):(\S+)?")
 
 # Regular expression for syntax checking inside FOTP
 # Destination is in group(1), Source is in group(3)
-_fotp_re = re.compile ("^((\S+:)?\S+)<((\S+:)?\S+)$")
+_fotp_re = re.compile (r"^((\S+:)?\S+)<((\S+:)?\S+)$")
 
 # Regular expression for detecting the 2 arg and 3 arg forms
 # of the "pal8" script command.
@@ -155,19 +155,19 @@ _fotp_re = re.compile ("^((\S+:)?\S+)<((\S+:)?\S+)$")
 # Optional device spec, i.e. DTA0:
 # File spec with a specific extension or no extension.
 
-_os8_fspec = Template ("((\S+:)?([A-Z0-9]{1,6}|[A-Z0-9]{1,6}\.$ext))")
+_os8_fspec = Template (r"((\S+:)?([A-Z0-9]{1,6}|[A-Z0-9]{1,6}\.$ext))")
 _os8_BN_fspec = _os8_fspec.substitute(ext="BN")
 _os8_PA_fspec = _os8_fspec.substitute(ext="PA")
 _os8_LS_fspec = _os8_fspec.substitute(ext="LS")
 
 # Regex to parse a valid OS/8 option string either with slash or parens.
-_opt_str =  "((/[A-Z0-9])+|\([A-Z0-9]+\))?"
+_opt_str = r"((/[A-Z0-9])+|\([A-Z0-9]+\))?"
 
 # Regular expression for syntax checking inside ABSLDR
 # FIXME: Use (and test) _opt_str for full OS/8 Option spec compatibility
 # One or more OS/8 binary files and optional args beginning with a slash.
 
-_absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$")
+_absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + r")*(/\S)*$")
 
 # Regular expressions for syntax checking for cpto and cpfrom.
 # May be <source> where destination and default option /A is implied.
@@ -180,25 +180,25 @@ _absldr_re = re.compile ("^" + _os8_BN_fspec + "(," + _os8_BN_fspec + ")*(/\S)*$
 # Option is one of /I /B /A in group 4.
 
 # source in group 1, option in group 3.
-_from_to_re_1 = re.compile ("^(\S+)(\s+(/[AIB]))?$")
+_from_to_re_1 = re.compile (r"^(\S+)(\s+(/[AIB]))?$")
 # source in group 1, destination in group 2, option in group 4.
-_from_to_re_2 = re.compile ("^(\S+)\s+(\S+)(\s+(/[AIB]))?$")
+_from_to_re_2 = re.compile (r"^(\S+)\s+(\S+)(\s+(/[AIB]))?$")
 
 # Array of regular expressions for syntax checking inside BUILD
-_build_comm_regs = {"LOAD"  : re.compile("^(\S+:)?\S+(.BN)?$"),
-                    "UNLOAD": re.compile("^\S+(,\S+)?$"),
-                    "INSERT": re.compile("^\S+,\S+(,\S+)?$"),
-                    "DELETE": re.compile("^\S+(,\S+)?$"),
-                    "SYSTEM": re.compile("^\S+$"),
-                    "DSK"   : re.compile("^(\S+:)?\S+$"),
-                    "BUILD" : re.compile("^(\S+(.BN)?)\s+(\S+(.BN)?)$"),
+_build_comm_regs = {"LOAD"  : re.compile(r"^(\S+:)?\S+(.BN)?$"),
+                    "UNLOAD": re.compile(r"^\S+(,\S+)?$"),
+                    "INSERT": re.compile(r"^\S+,\S+(,\S+)?$"),
+                    "DELETE": re.compile(r"^\S+(,\S+)?$"),
+                    "SYSTEM": re.compile(r"^\S+$"),
+                    "DSK"   : re.compile(r"^(\S+:)?\S+$"),
+                    "BUILD" : re.compile(r"^(\S+(.BN)?)\s+(\S+(.BN)?)$"),
                     "PRINT" : None,
                     "BOOT"  : None,
                     "end"   : None}
 
 
 # Parse two whitspace separated arguments into group(1) and group(2)
-_two_args_re = re.compile("^(\S+)\s+(\S+)$")
+_two_args_re = re.compile(r"^(\S+)\s+(\S+)$")
 
 _rx_settings = ["rx01", "rx02", "RX8E", "RX28"]
 _tape_settings = ["td", "dt"]
@@ -210,10 +210,10 @@ _configurables = {"rx": _rx_settings, "tape": _tape_settings,
 # one slash, returning the string between the dollar sign and the
 # first slash in group 1 and the rest in group 2.
 # No whitespace in the string.
-_expandable_re = re.compile ("^\$([^/\s]+)/(\S*)$")
+_expandable_re = re.compile (r"^\$([^/\s]+)/(\S*)$")
 
 # Parse an exit arg for an integer or an integer in parentheses
-_exit_arg_re = re.compile ("^(\s*[+-]?\s*\d+)|\s*\(\s*([+-]?\s*\d+)\s*\)\s*$")
+_exit_arg_re = re.compile (r"^(\s*[+-]?\s*\d+)|\s*\(\s*([+-]?\s*\d+)\s*\)\s*$")
 
 # Options enabled/not_disabled for conditional execution in scripts.
 #
@@ -297,26 +297,26 @@ class os8script:
     ["ERRORS DETECTED", "ERRORS DETECTED: ", False],
     ["LINKS GENERATED", "LINKS GENERATED: ", False],
     # Errors:
-    ["Buffer Exceeded", "BE\s+\S+.*\r", True],
-    ["Cref not Found", "CF\s+\S+.*\r", False],
-    ["Device Error", "DE\s+\S+.*\r", True],
-    ["Device Full", "DF\r", True],
-    ["Illegal Character", "IC\s+\S+.*\r", False],
-    ["Illegal re-Definition", "ID\s+\S+.*\r", False],
-    ["Illegal Equals", "IE\s+\S+.*\r", False],
-    ["Illegal Indirect", "II\s+\S+.*\r", False],
-    ["Illegal PseudoOp", "IP\s+\S+.*\r", False],
-    ["Illegal page Zero reference", "IZ\s+\S+.*\r", False],
-    ["Loader not founD", "LD\s+\S+.*\r", False],
-    ["Link Generated", "LG\s+\S+.*\r", False],
-    ["current Page Exceeded", "PE\s+\S+.*\r", False],
-    ["PHase Error", "PH\s+\S+.*\r", False],
-    ["Re Definition", "RD\s+\S+.*\r", False],
-    ["Symbol table Exceeded", "SE\s+\S+.*\r", False],
-    ["Undefined Origin", "UO\s+\S+.*\r", False],
-    ["Undefined Symbol", "US\s+\S.*\r", False],
-    ["page Zero Exceeded", "ZE\s+\S+.*\r", False],
-    ["NOT FOUND", "\S+ NOT FOUND", False],
+    ["Buffer Exceeded", r"BE\s+\S+.*\r", True],
+    ["Cref not Found", r"CF\s+\S+.*\r", False],
+    ["Device Error", r"DE\s+\S+.*\r", True],
+    ["Device Full", r"DF\r", True],
+    ["Illegal Character", r"IC\s+\S+.*\r", False],
+    ["Illegal re-Definition", r"ID\s+\S+.*\r", False],
+    ["Illegal Equals", r"IE\s+\S+.*\r", False],
+    ["Illegal Indirect", r"II\s+\S+.*\r", False],
+    ["Illegal PseudoOp", r"IP\s+\S+.*\r", False],
+    ["Illegal page Zero reference", r"IZ\s+\S+.*\r", False],
+    ["Loader not founD", r"LD\s+\S+.*\r", False],
+    ["Link Generated", r"LG\s+\S+.*\r", False],
+    ["current Page Exceeded", r"PE\s+\S+.*\r", False],
+    ["PHase Error", r"PH\s+\S+.*\r", False],
+    ["Re Definition", r"RD\s+\S+.*\r", False],
+    ["Symbol table Exceeded", r"SE\s+\S+.*\r", False],
+    ["Undefined Origin", r"UO\s+\S+.*\r", False],
+    ["Undefined Symbol", r"US\s+\S.*\r", False],
+    ["page Zero Exceeded", r"ZE\s+\S+.*\r", False],
+    ["NOT FOUND", r"\S+ NOT FOUND", False],
   ]
   
   _build_rep_adds = [
@@ -347,7 +347,7 @@ class os8script:
     ["SYNTAX", "\\?SYNTAX", False],
     ["SYS", "\\?SYS", False],
     ["SYS ERR", "SYS ERR", False],
-    ["File NOT FOUND", "\S+ NOT FOUND", False]
+    ["File NOT FOUND", r"\S+ NOT FOUND", False]
   ]
 
   _ocomp_rep_adds = [
@@ -431,7 +431,7 @@ class os8script:
     end = str.find("$")
     if end == -1: return str
 
-    m = re.findall("\$\S+",str)
+    m = re.findall(r"\$\S+",str)
     if m == None: return str
 
     outstr = ""
@@ -1064,7 +1064,7 @@ class os8script:
     loc = match.group(1)
     old_val = match.group(2)
     new_val = match.group(3)
-    expect_val_str = "\s*[0-7]{4} "
+    expect_val_str = r"\s*[0-7]{4} "
     
     if self.debug:
       print("Loc: " + loc + ", old_val: " + old_val + ", new_val: " + \
@@ -1102,7 +1102,7 @@ class os8script:
       self.simh.os8_ctrl_c (caller="futil_file")
       return "err"
     fname = match.group(2)
-    expect_futil_file_str = "\n" + fname + "\s+(?!" + fname  + ")?(\S+)(.*)$"
+    expect_futil_file_str = "\n" + fname + r"\s+(?!" + fname  + r")?(\S+)(.*)$"
     self.simh.os8_send_line (line)
     self.simh._child.expect(expect_futil_file_str)
     result = self.simh.child_after().strip()
@@ -1434,14 +1434,14 @@ class os8script:
   def boot_command (self, line, script_file):
     # First confirm something is attached to boot from.
     ucname = line.upper()
-    boot_replies = [ucname + "\s+(.+)\r", "Non-existent device"]
+    boot_replies = [ucname + r"\s+(.+)\r", "Non-existent device"]
     self.simh.simh_send_line("show " + line)
     retval = self.simh._child.expect(boot_replies)
     if retval == 1:
       print("Attempt to boot non-existent device: " + line)
       return "die"
     reply_str = self.simh.child_after()
-    m = re.match("^(\S+)\s+(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
+    m = re.match(r"^(\S+)\s+(\S+),\s+(attached to |not attached)(\S+)?,\s+(.+)\r",
         reply_str)
     if m == None:
       print("Could not determine if device " + line + " is attached; " +
@@ -1574,10 +1574,10 @@ class os8script:
       lg  = self.simh.test_result(reply, "LINKS GENERATED", self.replies["pal8"], "")
  
       if ed:   # Got Errors Detected. Count them.
-        self.simh._child.expect("\d+")
+        self.simh._child.expect(r"\d+")
         err_count = int(self.simh.child_after().strip())
       elif lg: 
-        self.simh._child.expect("\d+")
+        self.simh._child.expect(r"\d+")
         link_count = int(self.simh.child_after().strip())
       elif cd: # Got Command Decoder. Exit with failure.
         if self.debug: print ("call_pal8: Non-fatal error: Sending ^C")
