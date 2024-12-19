@@ -78,7 +78,7 @@ _pkg_builder_dir = os.path.join (dirs.src, "scripts/misc")
 _target_dir = dirs.os8mo
 
 # Regex for parsing an argument string into a sys device
-_dev_arg_regex_str = "-(rk|td|dt|rx)(\d?)(s)?"
+_dev_arg_regex_str = r"-(rk|td|dt|rx)(\d?)(s)?"
 _dev_arg_re = re.compile(_dev_arg_regex_str)
 
 # Map of SIMH device names to OS/8 device name prefixes.
@@ -87,7 +87,7 @@ _os8_from_simh_dev = {"rk" : "RK", "td" : "DTA", "dt" : "DTA", "rx" : "RX"}
 _os8_partitions = {"RK": ["A", "B"]}
 
 # OS/8 file name matching regex
-_os8_file_re = re.compile("(\S+):(\S+)?")
+_os8_file_re = re.compile(r"(\S+):(\S+)?")
 
 # Constrained spec for an outputs: line.
 # Group 1 containas the output device: SYS: or DSK:
@@ -96,15 +96,15 @@ _os8_file_re = re.compile("(\S+):(\S+)?")
 # Group 4 contains the input file spec
 # Group 5 contains the filename before the dot extension.
 # Group 6 contains the dot extension.
-_output_spec_re = re.compile("^(SYS:|DSK:)(<)(DTA1:|RKA1:|RKB1:)(([A-Z0-9?]{0,6})(\.[A-Z0-9?]{0,2})?)$")
+_output_spec_re = re.compile(r"^(SYS:|DSK:)(<)(DTA1:|RKA1:|RKB1:)(([A-Z0-9?]{0,6})(\.[A-Z0-9?]{0,2})?)$")
 
 # Matches if the string begins with a dollar sign, and has at least
 # one slash, returning the string between the dollar sign and the
 # first slash in group 1 and the rest in group 2.
 # No whitespace in the string.
-_expandable_re = re.compile ("^((?:[^/]*/)*)(([^\.]*)(\.pspec)?)$")
+_expandable_re = re.compile (r"^((?:[^/]*/)*)(([^\.]*)(\.pspec)?)$")
 
-_pspec_strip_re = re.compile("^(\S*)\.pspec$")
+_pspec_strip_re = re.compile(r"^(\S*)\.pspec$")
 
 # Commands and their help strings.
 _command_set = [["deps", "Create .mk format dependency file from inputs"],
