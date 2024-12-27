@@ -134,7 +134,7 @@ extern uint8_t ledrows[];
 extern uint8_t rows[];
 extern uint8_t pidp8i_gpio_present;
 
-extern int start_pidp8i_gpio_thread (const char* must_map);
+extern int start_pidp8i_gpio_thread (const int must_map);
 extern void stop_pidp8i_gpio_thread ();
 extern void turn_on_pidp8i_leds ();
 extern void turn_off_pidp8i_leds ();

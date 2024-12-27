@@ -605,7 +605,8 @@ static void *gpio_thread (void *terminate)
 
 int map_gpio_for_pidp8i (int must_map)
 {
-    map_peripheral (1);
+    int retval = map_peripheral (1);
+    if (retval !=0) return retval;
 
 #ifdef PCB_SERIAL_MOD_JLW
     // this does Jams L-W's mod through pinctrl:
@@ -641,11 +642,11 @@ pidp8i_term_handler (int sig)
 // export gpio_thread() directly so this module's users don't have to
 // know anything about pthreads and such.
 
-int start_pidp8i_gpio_thread (const char* must_map)
+int start_pidp8i_gpio_thread (const int must_map)
 {
     char errs[100];
     
-    if (map_gpio_for_pidp8i (must_map != 0) != 0) {
+    if (map_gpio_for_pidp8i (must_map) != 0) {
         return EFAULT;
     }
 
