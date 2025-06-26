@@ -639,7 +639,6 @@ while (reason == 0) {                                   /* loop until halted */
                     MA = (MA & 077600) | (IR & 0177); 
                     next_Major_State = EXECUTE_state;
                     break;
-
                 case 0022:case 0026:  /* JMS/JMP, Set PCQ_ENTRY and fall through. */
                     PCQ_ENTRY (MA);
                 case 002:case 006:case 0012:case 0016: /* Page zero: Defer AND TAD ISZ DCA JMS */
@@ -654,8 +653,7 @@ while (reason == 0) {                                   /* loop until halted */
                     MA = (MA & 007600) | (IR & 0177); 
                     next_Major_State = DEFER_state;
                     break;
-                                
-                               
+            
                     /* Opcode 5, JMP.  From Bernhard Baehr's description of the TSC8-75:
                 
                     (In user mode) the current JMP opcode is moved to the ERIOT register, the ECDF
@@ -888,7 +886,7 @@ while (reason == 0) {                                   /* loop until halted */
                                     if (pidp8i_gpio) {
                                         // We've got a front panel, so treat HLT the
                                         // same as pressing the STOP key: CONT resumes.
-                                        cpuRun = 0
+                                        cpuRun = 0;
                                         }
                                     else {
                                         // Fall back to pure SIMH behavior: drop to sim>
