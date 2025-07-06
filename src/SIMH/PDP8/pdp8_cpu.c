@@ -416,16 +416,14 @@ if (IB = -1)
     IB = IF;
 ////////////////////////////////////////////////////////////////////////////////////
 
-
-/* ---PiDP add--------------------------------------------------------------------------------------------- */
 int op_code = 0;
+/* ---PiDP add--------------------------------------------------------------------------------------------- */
 
 #ifdef PIDP8I
 // PiDP-8/I specific flag, set when the last instruction was an IOT
 // instruction to a real device.  SIMH doesn't track this, but the front
 // panel needs it.
 int Pause = 0;
-
 
 // Set our initial IPS value from the throttle, if given.
 static time_t last_update = 0;
@@ -451,7 +449,6 @@ skip_count = dither = cycle_count = 0;
 // work to feed the GPIO thread if it failed to start.
 extern int use_pidp8i_extensions;
 const int pidp8i_gpio = use_pidp8i_extensions && pidp8i_gpio_present;
-
 extern int resumeFromInstructionLoopExit, cpuRun, swSingStep, swSingInst;
 #endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -469,7 +466,6 @@ while (reason == 0) {                                   /* loop until halted */
         }
 
     if (sim_interval <= 0) {                            /* check clock queue */
-
         if ((reason = sim_process_event ())) {
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
@@ -495,11 +491,9 @@ while (reason == 0) {                                   /* loop until halted */
                 }
 #endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
-
             break;
             }
         }
-
 
 /* ---PiDP add--------------------------------------------------------------------------------------------- */
 #ifdef PIDP8I
@@ -523,7 +517,7 @@ while (reason == 0) {                                   /* loop until halted */
         case pft_stopped:
             // the cpu is stopped, nothing to do here
             // Tell the SIMH event queue to keep running even though
-            // we're now stopped.  Without this, it will ignore Ctrl-E
+            // we're stopped.  Without this, it will ignore Ctrl-E
             // until the simulator is back in free-running mode.
             sim_interval = sim_interval - 1;
 
@@ -566,7 +560,6 @@ while (reason == 0) {                                   /* loop until halted */
             // a (re-) start on swStart or swCont has to skip the above check for
             // swSingStep and swSingInst to be sure that at least one cycle executes
             break;
-
     }
 #endif
 /* ---PiDP end---------------------------------------------------------------------------------------------- */
@@ -594,33 +587,33 @@ while (reason == 0) {                                   /* loop until halted */
                 break;
                 }
 
-            if (hst_lnt) {                                          /* history enabled? */
+            if (hst_lnt) {                                      /* history enabled? */
                 int32 ea;
-                hst_p = (hst_p + 1);                                /* next entry */
+                hst_p = (hst_p + 1);                            /* next entry */
                 if (hst_p >= hst_lnt)
                     hst_p = 0;
-                hst[hst_p].pc = MA | HIST_PC;                       /* save PC, IR, LAC, MQ */
+                hst[hst_p].pc = MA | HIST_PC;                   /* save PC, IR, LAC, MQ */
                 hst[hst_p].ir = IR;
                 hst[hst_p].lac = LAC;
                 hst[hst_p].mq = MQ;
-                if (IR < 06000) {                                   /* mem ref? */
+                if (IR < 06000) {                               /* mem ref? */
                     if (IR & 0200)
                         ea = (MA & 077600) | (IR & 0177);
-                    else ea = IF | (IR & 0177);                     /* direct addr */
-                    if (IR & 0400) {                                /* indirect? */
-                        if (IR < 04000) {                           /* mem operand? */
+                    else ea = IF | (IR & 0177);                 /* direct addr */
+                    if (IR & 0400) {                            /* indirect? */
+                        if (IR < 04000) {                       /* mem operand? */
                             if ((ea & 07770) != 00010)
                                 ea = DF | M[ea];
                             else ea = DF | ((M[ea] + 1) & 07777);
                             }
-                        else {                                      /* no, jms/jmp */
+                        else {                                  /* no, jms/jmp */
                             if ((ea & 07770) != 00010)
                                 ea = IB | M[ea];
                             else ea = IB | ((M[ea] + 1) & 07777);
                             }
                         }
-                    hst[hst_p].ea = ea;                             /* save eff addr */
-                    hst[hst_p].opnd = M[ea];                        /* save operand */
+                    hst[hst_p].ea = ea;                         /* save eff addr */
+                    hst[hst_p].opnd = M[ea];                    /* save operand */
                     }
                 }
 
@@ -1298,6 +1291,13 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
             if (((IR >> 9) & 07) != 5)                      /* MRI or JMP? */
                 next_Major_State = EXECUTE_state;           /* it's a MRI */
             else {
+/* Opcode 5, JMP.  From Bernhard Baehr's description of the TSC8-75:
+
+   (In user mode) the current JMP opcode is moved to the ERIOT register, the ECDF
+   flag is cleared. The address of the JMP instruction is loaded into the ERTB
+   register and the TSC8-75 I/O flag is raised. Then the JMP is performed as usual
+   (including the setting of IF, UF and clearing the interrupt inhibit flag). */
+
                 if (UF) {                                   /* it's a JMP, user mode? */
                     tsc_ir = IR;                            /* save instruction */
                     tsc_cdf = 0;                            /* clear flag */
@@ -1342,6 +1342,18 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                     }  // end of switch ((IR >> 9) & 07)
                 }
             else {
+
+/* Opcode 4 JMS.  From Bernhard Baehr's description of the TSC8-75:
+
+   (In user mode) the current JMS opcode is moved to the ERIOT register, the ECDF
+   flag is cleared. The address of the JMS instruction is loaded into the ERTB
+   register and the TSC8-75 I/O flag is raised. When the TSC8-75 is enabled, the
+   target addess of the JMS is loaded into PC, but nothing else (loading of IF, UF,
+   clearing the interrupt inhibit flag, storing of the return address in the first
+   word of the subroutine) happens. When the TSC8-75 is disabled, the JMS is performed
+   as usual. */
+
+
                 if (UF) {                                   /* JMS, user mode? */
                     tsc_ir = IR;                            /* save instruction */
                     tsc_cdf = 0;                            /* clear flag */
@@ -1477,7 +1489,6 @@ saved_LAC = LAC & 017777;
 saved_MQ = MQ & 07777;
 pcq_r->qptr = pcq_p;                                    /* update pc q ptr */
 return reason;
-
 }                                                       /* end sim_instr */
 
 /*
@@ -1526,7 +1537,6 @@ saved_DF = IB = PC & 070000;                            /* set IB, DF */
 return;
 }
 
-
 /* Memory examine */
 
 t_stat cpu_ex (t_value *vptr, t_addr addr, UNIT *uptr, int32 sw)
@@ -1538,7 +1548,6 @@ if (vptr != NULL)
 return SCPE_OK;
 }
 
-
 /* Memory deposit */
 
 t_stat cpu_dep (t_value val, t_addr addr, UNIT *uptr, int32 sw)
@@ -1548,7 +1557,6 @@ if (addr >= MEMSIZE)
 M[addr] = val & 07777;
 return SCPE_OK;
 }
-
 
 /* Memory size change */
 
@@ -1568,7 +1576,6 @@ for (i = MEMSIZE; i < MAXMEMSIZE; i++)
     M[i] = 0;
 return SCPE_OK;
 }
-
 
 /* Change device number for a device */
 
@@ -1596,7 +1603,6 @@ dibp->dev = newdev;                                     /* store */
 return SCPE_OK;
 }
 
-
 /* Show device number for a device */
 
 t_stat show_dev (FILE *st, UNIT *uptr, int32 val, CONST void *desc)
@@ -1617,7 +1623,6 @@ if (dibp->num > 1)
     fprintf (st, "-%2o", dibp->dev + dibp->num - 1);
 return SCPE_OK;
 }
-
 
 /* CPU device handler - should never get here! */
 
@@ -1674,7 +1679,6 @@ for (i = 0; (dptr = sim_devices[i]) != NULL; i++) {     /* add devices */
 return FALSE;
 }
 
-
 /* Set history */
 
 t_stat cpu_set_hist (UNIT *uptr, int32 val, CONST char *cptr, void *desc)
@@ -1705,7 +1709,6 @@ if (lnt) {
     }
 return SCPE_OK;
 }
-
 
 /* Show history */
 
@@ -1745,5 +1748,4 @@ for (k = 0; k < lnt; k++) {                             /* print specified */
         }                                               /* end else instruction */
     }                                                   /* end for */
 return SCPE_OK;
-
 }
