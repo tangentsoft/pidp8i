@@ -62,6 +62,10 @@ DEBUG = False
 VERBOSE = False
 QUIET = False
 
+# Expect timeout in seconds.
+# Experience has shown that 5 is too low on a Pi3 with cycle-accurate.
+_timeout = 15
+
 # Default RK05 system image to attach if no sys specified.
 _default_sys_image = "@OS8_TOOLTIME@"
 _default_sys_path = dirs.os8mo + _default_sys_image
@@ -271,14 +275,14 @@ def main ():
           if args.debug == 88: replies = [".+"]
       
           try:
-            # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=5)
-            reply = os8.simh._child.expect(replies, timeout=5)
+            # os8.simh._child.expect(re.compile(reply_str.encode()), timeout=_timeout)
+            reply = os8.simh._child.expect(replies, timeout=_timeout)
             if args.debug > 4:
               print ("Matched: " + replies[reply])
               print("\tgot before: {" + os8.simh._child.before.decode() + "}")
               print("\tgot after: {" + os8.simh._child.after.decode() + "}")
           except pexpect.exceptions.TIMEOUT:
-            print (program + ": Test Failed.")
+            print (program + ": Test Failed with timeout after " + str(_timeout) + "seconds.")
             print ("\tExpecting: {" + str(replies) + "}")
             print("\tGot before: {" + os8.simh._child.before.decode() + "}")
             next_state = "fail"
