@@ -113,8 +113,8 @@ typedef struct display {
     // ILS in STOP mode.  (One bitfield per row.)
     uint16_t curr[NLEDROWS];
 
-    // Number of instructions executed since this display was cleared
-    int inst_count;
+    // Number of cycles (major states) executed since this display was cleared
+    int cycle_count;
 } display;
 extern display* pdis_update, *pdis_paint;
 
