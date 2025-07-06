@@ -282,7 +282,7 @@ def main ():
               print("\tgot before: {" + os8.simh._child.before.decode() + "}")
               print("\tgot after: {" + os8.simh._child.after.decode() + "}")
           except pexpect.exceptions.TIMEOUT:
-            print (program + ": Test Failed with timeout after " + str(_timeout) + "seconds.")
+            print (program + ": Test Failed with timeout after " + str(_timeout) + " seconds.")
             print ("\tExpecting: {" + str(replies) + "}")
             print("\tGot before: {" + os8.simh._child.before.decode() + "}")
             next_state = "fail"
